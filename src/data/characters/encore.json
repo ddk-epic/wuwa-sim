@@ -1,0 +1,637 @@
+{
+  "id": 1203,
+  "name": "Encore",
+  "element": "Fusion",
+  "weaponType": 5,
+  "rarity": "SSR",
+  "stats": {
+    "hp": {
+      "base": 841,
+      "max": 10512.5
+    },
+    "atk": {
+      "base": 34,
+      "max": 425
+    },
+    "def": {
+      "base": 102,
+      "max": 1246.6644
+    },
+    "critRate": {
+      "base": 0.05,
+      "max": null
+    },
+    "critDmg": {
+      "base": 1.5,
+      "max": null
+    }
+  },
+  "skills": [
+    {
+      "id": 1000701,
+      "type": "Normal Attack",
+      "name": "Wooly Attack",
+      "attributes": [
+        {
+          "name": "Stage 1 DMG",
+          "value": "55.66%"
+        },
+        {
+          "name": "Stage 2 DMG",
+          "value": "66.20%"
+        },
+        {
+          "name": "Stage 3 DMG",
+          "value": "66.30%*2"
+        },
+        {
+          "name": "Stage 4 DMG",
+          "value": "38.27%*4"
+        },
+        {
+          "name": "Woolies Damage",
+          "value": "238.57%"
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "value": "187.08%"
+        },
+        {
+          "name": "Heavy Attack STA Cost",
+          "value": "25"
+        },
+        {
+          "name": "Mid-air Attack",
+          "value": "123.26%"
+        },
+        {
+          "name": "Mid-air Attack STA Cost",
+          "value": "30"
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "value": "125.94%*2"
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.5566,
+          "energy": 0.7,
+          "elementPower": 1.4,
+          "toughLv": 0.224,
+          "weaknessLv": 0.336
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.662,
+          "energy": 0.83,
+          "elementPower": 1.66,
+          "toughLv": 0.2664,
+          "weaknessLv": 0.3996
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.663,
+          "energy": 0.83,
+          "elementPower": 1.66,
+          "toughLv": 0.2668,
+          "weaknessLv": 0.4002
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.663,
+          "energy": 0.83,
+          "elementPower": 1.66,
+          "toughLv": 0.2668,
+          "weaknessLv": 0.4002
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.3827,
+          "energy": 0.48,
+          "elementPower": 0.96,
+          "toughLv": 0.154,
+          "weaknessLv": 0.231
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 2.3857,
+          "energy": 3,
+          "elementPower": 6,
+          "toughLv": 0.96,
+          "weaknessLv": 1.44
+        },
+        {
+          "type": "Heavy Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.8708,
+          "energy": 2.35,
+          "elementPower": 4.7,
+          "toughLv": 0.7528,
+          "weaknessLv": 1.1292
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.2326,
+          "energy": 0.51,
+          "elementPower": 1,
+          "toughLv": 0.496,
+          "weaknessLv": 1.44
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.2594,
+          "energy": 1.58,
+          "elementPower": 1.66,
+          "toughLv": 0.75,
+          "weaknessLv": 0.4002
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.2594,
+          "energy": 1.58,
+          "elementPower": 1.66,
+          "toughLv": 0.75,
+          "weaknessLv": 0.4002
+        }
+      ]
+    },
+    {
+      "id": 1000702,
+      "type": "Resonance Skill",
+      "name": "Flaming Woolies",
+      "attributes": [
+        {
+          "name": "Flaming Woolies Damage",
+          "value": "76.61%*8"
+        },
+        {
+          "name": "Energetic Welcome Damage",
+          "value": "339.16%"
+        },
+        {
+          "name": "Flaming Woolies Concerto Regen",
+          "value": "15"
+        },
+        {
+          "name": "Energetic Welcome Concerto Regen",
+          "value": "5"
+        },
+        {
+          "name": "Cooldown",
+          "value": "10"
+        }
+      ],
+      "damage": [
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.7661,
+          "energy": 1.91,
+          "elementPower": 0,
+          "toughLv": 0.25,
+          "weaknessLv": 0.32
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 3.3916,
+          "energy": 0.75,
+          "elementPower": 1.51,
+          "toughLv": 0.6048,
+          "weaknessLv": 0.9072
+        }
+      ]
+    },
+    {
+      "id": 1000703,
+      "type": "Resonance Liberation",
+      "name": "Cosmos Rave",
+      "attributes": [
+        {
+          "name": "Cosmos: Frolicking Stage 1 DMG",
+          "value": "90.18%*2"
+        },
+        {
+          "name": "Cosmos: Frolicking Stage 2 DMG",
+          "value": "56.40%*3"
+        },
+        {
+          "name": "Cosmos: Frolicking Stage 3 DMG",
+          "value": "65.99%*4"
+        },
+        {
+          "name": "Stage 4 DMG",
+          "value": "194.01%*3"
+        },
+        {
+          "name": "Cosmos: Heavy Attack DMG",
+          "value": "217.58%"
+        },
+        {
+          "name": "Cosmos: Heavy Attack STA Cost",
+          "value": "25"
+        },
+        {
+          "name": "Cosmos Rampage Damage",
+          "value": "63.32%*4"
+        },
+        {
+          "name": "Cosmos Rampage Cooldown",
+          "value": "4"
+        },
+        {
+          "name": "Cosmos: Dodge Counter DMG",
+          "value": "65.99%*4"
+        },
+        {
+          "name": "Cosmos Rave Duration",
+          "value": "10"
+        },
+        {
+          "name": "Cooldown",
+          "value": "16"
+        },
+        {
+          "name": "Concerto Regen",
+          "value": "20"
+        },
+        {
+          "name": "Resonance Cost",
+          "value": "125"
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.9018,
+          "energy": 0.66,
+          "elementPower": 1.33,
+          "toughLv": 0.2132,
+          "weaknessLv": 0.3198
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.9018,
+          "energy": 0.66,
+          "elementPower": 1.33,
+          "toughLv": 0.2132,
+          "weaknessLv": 0.3198
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.564,
+          "energy": 0.41,
+          "elementPower": 0.83,
+          "toughLv": 0.1333,
+          "weaknessLv": 0.2
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.564,
+          "energy": 0.41,
+          "elementPower": 0.83,
+          "toughLv": 0.1333,
+          "weaknessLv": 0.2
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.564,
+          "energy": 0.41,
+          "elementPower": 0.83,
+          "toughLv": 0.1333,
+          "weaknessLv": 0.2
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.48,
+          "elementPower": 0.97,
+          "toughLv": 0.156,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.48,
+          "elementPower": 0.97,
+          "toughLv": 0.156,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.48,
+          "elementPower": 0.97,
+          "toughLv": 0.156,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.48,
+          "elementPower": 0.97,
+          "toughLv": 0.156,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.9401,
+          "energy": 1.43,
+          "elementPower": 2.86,
+          "toughLv": 0.4586,
+          "weaknessLv": 0.688
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.9401,
+          "energy": 1.43,
+          "elementPower": 2.86,
+          "toughLv": 0.4586,
+          "weaknessLv": 0.688
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.9401,
+          "energy": 1.43,
+          "elementPower": 2.86,
+          "toughLv": 0.4586,
+          "weaknessLv": 0.688
+        },
+        {
+          "type": "Heavy Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 2.1758,
+          "energy": 1.6,
+          "elementPower": 3.21,
+          "toughLv": 0.5144,
+          "weaknessLv": 0.7716
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6332,
+          "energy": 1.64,
+          "elementPower": 2,
+          "toughLv": 0.5,
+          "weaknessLv": 0.1542
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6332,
+          "energy": 1.64,
+          "elementPower": 2,
+          "toughLv": 0.5,
+          "weaknessLv": 0.1542
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6332,
+          "energy": 1.64,
+          "elementPower": 2,
+          "toughLv": 0.5,
+          "weaknessLv": 0.1542
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.86,
+          "elementPower": 0.97,
+          "toughLv": 0.375,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.86,
+          "elementPower": 0.97,
+          "toughLv": 0.375,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.86,
+          "elementPower": 0.97,
+          "toughLv": 0.375,
+          "weaknessLv": 0.234
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6599,
+          "energy": 0.86,
+          "elementPower": 0.97,
+          "toughLv": 0.375,
+          "weaknessLv": 0.234
+        }
+      ]
+    },
+    {
+      "id": 1000704,
+      "type": "Inherent Skill",
+      "name": "Angry Cosmos",
+      "attributes": [],
+      "damage": []
+    },
+    {
+      "id": 1000705,
+      "type": "Inherent Skill",
+      "name": "Woolies Cheer Dance",
+      "attributes": [],
+      "damage": []
+    },
+    {
+      "id": 1000706,
+      "type": "Intro Skill",
+      "name": "Woolies Helpers",
+      "attributes": [
+        {
+          "name": "Skill DMG",
+          "value": "198.81%"
+        },
+        {
+          "name": "Concerto Regen",
+          "value": "10"
+        }
+      ],
+      "damage": [
+        {
+          "type": "Intro Skill",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 1.9881,
+          "energy": 10,
+          "elementPower": 0,
+          "toughLv": 1.0088,
+          "weaknessLv": 1.5132
+        }
+      ]
+    },
+    {
+      "id": 1000707,
+      "type": "Forte Circuit",
+      "name": "Black & White Woolies",
+      "attributes": [
+        {
+          "name": "Cloudy Frenzy Damage",
+          "value": "334.00%"
+        },
+        {
+          "name": "Cosmos Rupture Damage",
+          "value": "46.42%*6+495.21%"
+        },
+        {
+          "name": "Cloudy Frenzy Concerto Regen",
+          "value": "10"
+        },
+        {
+          "name": "Cosmos Rupture Concerto Regen",
+          "value": "10"
+        }
+      ],
+      "damage": [
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 3.34,
+          "energy": 10,
+          "elementPower": 0,
+          "toughLv": 2.688,
+          "weaknessLv": 4.032
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 4.676,
+          "energy": 10,
+          "elementPower": 0,
+          "toughLv": 2.688,
+          "weaknessLv": 4.032
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 4.9521,
+          "energy": 0,
+          "elementPower": 0,
+          "toughLv": 1.9927,
+          "weaknessLv": 2.9891
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.4642,
+          "energy": 0,
+          "elementPower": 0,
+          "toughLv": 0.1868,
+          "weaknessLv": 0.2803
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 6.9329,
+          "energy": 0,
+          "elementPower": 0,
+          "toughLv": 1.9927,
+          "weaknessLv": 2.9891
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "ATK",
+          "rate": 0.6499,
+          "energy": 0,
+          "elementPower": 0,
+          "toughLv": 0.1868,
+          "weaknessLv": 0.2803
+        }
+      ]
+    },
+    {
+      "id": 1000708,
+      "type": "Inherent Skill",
+      "name": "Skillful Cooking",
+      "attributes": [],
+      "damage": []
+    },
+    {
+      "id": 1000709,
+      "type": "Outro Skill",
+      "name": "Thermal Field",
+      "attributes": [],
+      "damage": []
+    },
+    {
+      "id": 1000710,
+      "type": "Tune Break",
+      "name": "",
+      "attributes": [],
+      "damage": []
+    }
+  ]
+}
