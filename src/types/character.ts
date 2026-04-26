@@ -14,6 +14,8 @@ export interface CharacterStats {
 export interface SkillAttribute {
   name: string
   value: string
+  staCost?: number
+  cooldown?: number
   damage?: DamageEntry[]
 }
 
@@ -32,6 +34,7 @@ export interface Skill {
   id: number
   type: string
   name: string
+  cooldown?: number
   attributes: SkillAttribute[]
   damage: DamageEntry[]
 }

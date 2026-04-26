@@ -155,6 +155,7 @@
         {
           "name": "Heavy Attack DMG",
           "value": "187.08%",
+          "staCost": 25,
           "damage": [
             {
               "type": "Heavy Attack",
@@ -169,12 +170,9 @@
           ]
         },
         {
-          "name": "Heavy Attack STA Cost",
-          "value": "25"
-        },
-        {
           "name": "Mid-air Attack",
           "value": "123.26%",
+          "staCost": 30,
           "damage": [
             {
               "type": "Basic Attack",
@@ -187,10 +185,6 @@
               "weaknessLv": 1.44
             }
           ]
-        },
-        {
-          "name": "Mid-air Attack STA Cost",
-          "value": "30"
         },
         {
           "name": "Dodge Counter DMG",
@@ -225,6 +219,7 @@
       "id": 1000702,
       "type": "Resonance Skill",
       "name": "Flaming Woolies",
+      "cooldown": 10,
       "attributes": [
         {
           "name": "Flaming Woolies Damage",
@@ -335,10 +330,6 @@
         {
           "name": "Energetic Welcome Concerto Regen",
           "value": "5"
-        },
-        {
-          "name": "Cooldown",
-          "value": "10"
         }
       ],
       "damage": []
@@ -347,6 +338,7 @@
       "id": 1000703,
       "type": "Resonance Liberation",
       "name": "Cosmos Rave",
+      "cooldown": 16,
       "attributes": [
         {
           "name": "Cosmos: Frolicking Stage 1 DMG",
@@ -495,6 +487,7 @@
         {
           "name": "Cosmos: Heavy Attack DMG",
           "value": "217.58%",
+          "staCost": 25,
           "damage": [
             {
               "type": "Heavy Attack",
@@ -509,12 +502,9 @@
           ]
         },
         {
-          "name": "Cosmos: Heavy Attack STA Cost",
-          "value": "25"
-        },
-        {
           "name": "Cosmos Rampage Damage",
           "value": "63.32%*4",
+          "cooldown": 4,
           "damage": [
             {
               "type": "Resonance Skill",
@@ -557,10 +547,6 @@
               "weaknessLv": 0.1542
             }
           ]
-        },
-        {
-          "name": "Cosmos Rampage Cooldown",
-          "value": "4"
         },
         {
           "name": "Cosmos: Dodge Counter DMG",
@@ -611,10 +597,6 @@
         {
           "name": "Cosmos Rave Duration",
           "value": "10"
-        },
-        {
-          "name": "Cooldown",
-          "value": "16"
         },
         {
           "name": "Concerto Regen",

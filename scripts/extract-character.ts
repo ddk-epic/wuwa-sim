@@ -143,7 +143,7 @@ function parseRatesFromValue(value: string): ParsedRate[] {
 function enrichSkill(
   attributes: ApiSkillAttribute[],
   damageList: ApiDamageEntry[],
-): { attributes: SkillAttribute[]; damage: DamageEntry[] } {
+): { attributes: SkillAttribute[]; damage: DamageEntry[]; cooldown?: number } {
   const pool = mapDamageEntries(damageList)
 
   const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
@@ -184,12 +184,54 @@ function enrichSkill(
     },
   )
 
-  return { attributes: enrichedAttributes, damage: pool }
+  const STA_COST_SUFFIX = ' STA Cost'
+  const COOLDOWN_SUFFIX = ' Cooldown'
+  let skillCooldown: number | undefined
+
+  const finalAttributes = enrichedAttributes.filter((attr) => {
+    if (attr.name === 'Cooldown') {
+      skillCooldown = parseFloat(attr.value)
+      return false
+    }
+    if (attr.name.endsWith(STA_COST_SUFFIX)) {
+      const keyword = attr.name.slice(0, -STA_COST_SUFFIX.length)
+      const target = enrichedAttributes.find(
+        (a) => a !== attr && a.name.includes(keyword),
+      )
+      if (target) target.staCost = parseFloat(attr.value)
+      return false
+    }
+    if (attr.name.endsWith(COOLDOWN_SUFFIX)) {
+      const keyword = attr.name.slice(0, -COOLDOWN_SUFFIX.length)
+      const target = enrichedAttributes.find(
+        (a) => a !== attr && a.name.includes(keyword),
+      )
+      if (target) target.cooldown = parseFloat(attr.value)
+      return false
+    }
+    return true
+  })
+
+  const orderedAttributes = finalAttributes.map(
+    ({ name, value, staCost, cooldown, damage }) => ({
+      name,
+      value,
+      ...(staCost !== undefined && { staCost }),
+      ...(cooldown !== undefined && { cooldown }),
+      ...(damage !== undefined && { damage }),
+    }),
+  )
+
+  return {
+    attributes: orderedAttributes,
+    damage: pool,
+    cooldown: skillCooldown,
+  }
 }
 
 function mapSkills(skills: ApiSkill[]): Skill[] {
   return (skills ?? []).map((skill) => {
-    const { attributes, damage } = enrichSkill(
+    const { attributes, damage, cooldown } = enrichSkill(
       skill.SkillAttributes,
       skill.DamageList,
     )
@@ -197,6 +239,7 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
       id: skill.SkillId,
       type: skill.SkillType,
       name: skill.SkillName,
+      ...(cooldown !== undefined && { cooldown }),
       attributes,
       damage,
     }
