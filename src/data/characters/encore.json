@@ -31,7 +31,7 @@
       "id": 1000701,
       "type": "Normal Attack",
       "name": "Wooly Attack",
-      "attributes": [
+      "stages": [
         {
           "name": "Stage 1 DMG",
           "value": "55.66%",
@@ -42,7 +42,7 @@
               "scalingStat": "ATK",
               "rate": 0.5566,
               "energy": 0.7,
-              "elementPower": 1.4,
+              "concerto": 1.4,
               "toughLv": 0.224,
               "weaknessLv": 0.336
             }
@@ -58,7 +58,7 @@
               "scalingStat": "ATK",
               "rate": 0.662,
               "energy": 0.83,
-              "elementPower": 1.66,
+              "concerto": 1.66,
               "toughLv": 0.2664,
               "weaknessLv": 0.3996
             }
@@ -74,7 +74,7 @@
               "scalingStat": "ATK",
               "rate": 0.663,
               "energy": 0.83,
-              "elementPower": 1.66,
+              "concerto": 1.66,
               "toughLv": 0.2668,
               "weaknessLv": 0.4002
             },
@@ -84,7 +84,7 @@
               "scalingStat": "ATK",
               "rate": 0.663,
               "energy": 0.83,
-              "elementPower": 1.66,
+              "concerto": 1.66,
               "toughLv": 0.2668,
               "weaknessLv": 0.4002
             }
@@ -100,7 +100,7 @@
               "scalingStat": "ATK",
               "rate": 0.3827,
               "energy": 0.48,
-              "elementPower": 0.96,
+              "concerto": 0.96,
               "toughLv": 0.154,
               "weaknessLv": 0.231
             },
@@ -110,7 +110,7 @@
               "scalingStat": "ATK",
               "rate": 0.3827,
               "energy": 0.48,
-              "elementPower": 0.96,
+              "concerto": 0.96,
               "toughLv": 0.154,
               "weaknessLv": 0.231
             },
@@ -120,7 +120,7 @@
               "scalingStat": "ATK",
               "rate": 0.3827,
               "energy": 0.48,
-              "elementPower": 0.96,
+              "concerto": 0.96,
               "toughLv": 0.154,
               "weaknessLv": 0.231
             },
@@ -130,7 +130,7 @@
               "scalingStat": "ATK",
               "rate": 0.3827,
               "energy": 0.48,
-              "elementPower": 0.96,
+              "concerto": 0.96,
               "toughLv": 0.154,
               "weaknessLv": 0.231
             }
@@ -146,7 +146,7 @@
               "scalingStat": "ATK",
               "rate": 2.3857,
               "energy": 3,
-              "elementPower": 6,
+              "concerto": 6,
               "toughLv": 0.96,
               "weaknessLv": 1.44
             }
@@ -163,7 +163,7 @@
               "scalingStat": "ATK",
               "rate": 1.8708,
               "energy": 2.35,
-              "elementPower": 4.7,
+              "concerto": 4.7,
               "toughLv": 0.7528,
               "weaknessLv": 1.1292
             }
@@ -180,7 +180,7 @@
               "scalingStat": "ATK",
               "rate": 1.2326,
               "energy": 0.51,
-              "elementPower": 1,
+              "concerto": 1,
               "toughLv": 0.496,
               "weaknessLv": 1.44
             }
@@ -196,7 +196,7 @@
               "scalingStat": "ATK",
               "rate": 1.2594,
               "energy": 1.58,
-              "elementPower": 1.66,
+              "concerto": 1.66,
               "toughLv": 0.75,
               "weaknessLv": 0.4002
             },
@@ -206,7 +206,7 @@
               "scalingStat": "ATK",
               "rate": 1.2594,
               "energy": 1.58,
-              "elementPower": 1.66,
+              "concerto": 1.66,
               "toughLv": 0.75,
               "weaknessLv": 0.4002
             }
@@ -220,10 +220,11 @@
       "type": "Resonance Skill",
       "name": "Flaming Woolies",
       "cooldown": 10,
-      "attributes": [
+      "stages": [
         {
           "name": "Flaming Woolies Damage",
           "value": "76.61%*8",
+          "concerto": 15,
           "damage": [
             {
               "type": "Resonance Skill",
@@ -231,7 +232,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -241,7 +242,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -251,7 +252,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -261,7 +262,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -271,7 +272,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -281,7 +282,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -291,7 +292,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             },
@@ -301,7 +302,7 @@
               "scalingStat": "ATK",
               "rate": 0.7661,
               "energy": 1.91,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.25,
               "weaknessLv": 0.32
             }
@@ -310,6 +311,7 @@
         {
           "name": "Energetic Welcome Damage",
           "value": "339.16%",
+          "concerto": 5,
           "damage": [
             {
               "type": "Resonance Skill",
@@ -317,19 +319,11 @@
               "scalingStat": "ATK",
               "rate": 3.3916,
               "energy": 0.75,
-              "elementPower": 1.51,
+              "concerto": 1.51,
               "toughLv": 0.6048,
               "weaknessLv": 0.9072
             }
           ]
-        },
-        {
-          "name": "Flaming Woolies Concerto Regen",
-          "value": "15"
-        },
-        {
-          "name": "Energetic Welcome Concerto Regen",
-          "value": "5"
         }
       ],
       "damage": []
@@ -339,7 +333,9 @@
       "type": "Resonance Liberation",
       "name": "Cosmos Rave",
       "cooldown": 16,
-      "attributes": [
+      "duration": 10,
+      "concerto": 20,
+      "stages": [
         {
           "name": "Cosmos: Frolicking Stage 1 DMG",
           "value": "90.18%*2",
@@ -350,7 +346,7 @@
               "scalingStat": "ATK",
               "rate": 0.9018,
               "energy": 0.66,
-              "elementPower": 1.33,
+              "concerto": 1.33,
               "toughLv": 0.2132,
               "weaknessLv": 0.3198
             },
@@ -360,7 +356,7 @@
               "scalingStat": "ATK",
               "rate": 0.9018,
               "energy": 0.66,
-              "elementPower": 1.33,
+              "concerto": 1.33,
               "toughLv": 0.2132,
               "weaknessLv": 0.3198
             }
@@ -376,7 +372,7 @@
               "scalingStat": "ATK",
               "rate": 0.564,
               "energy": 0.41,
-              "elementPower": 0.83,
+              "concerto": 0.83,
               "toughLv": 0.1333,
               "weaknessLv": 0.2
             },
@@ -386,7 +382,7 @@
               "scalingStat": "ATK",
               "rate": 0.564,
               "energy": 0.41,
-              "elementPower": 0.83,
+              "concerto": 0.83,
               "toughLv": 0.1333,
               "weaknessLv": 0.2
             },
@@ -396,7 +392,7 @@
               "scalingStat": "ATK",
               "rate": 0.564,
               "energy": 0.41,
-              "elementPower": 0.83,
+              "concerto": 0.83,
               "toughLv": 0.1333,
               "weaknessLv": 0.2
             }
@@ -412,7 +408,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.48,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.156,
               "weaknessLv": 0.234
             },
@@ -422,7 +418,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.48,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.156,
               "weaknessLv": 0.234
             },
@@ -432,7 +428,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.48,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.156,
               "weaknessLv": 0.234
             },
@@ -442,7 +438,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.48,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.156,
               "weaknessLv": 0.234
             }
@@ -458,7 +454,7 @@
               "scalingStat": "ATK",
               "rate": 1.9401,
               "energy": 1.43,
-              "elementPower": 2.86,
+              "concerto": 2.86,
               "toughLv": 0.4586,
               "weaknessLv": 0.688
             },
@@ -468,7 +464,7 @@
               "scalingStat": "ATK",
               "rate": 1.9401,
               "energy": 1.43,
-              "elementPower": 2.86,
+              "concerto": 2.86,
               "toughLv": 0.4586,
               "weaknessLv": 0.688
             },
@@ -478,7 +474,7 @@
               "scalingStat": "ATK",
               "rate": 1.9401,
               "energy": 1.43,
-              "elementPower": 2.86,
+              "concerto": 2.86,
               "toughLv": 0.4586,
               "weaknessLv": 0.688
             }
@@ -495,7 +491,7 @@
               "scalingStat": "ATK",
               "rate": 2.1758,
               "energy": 1.6,
-              "elementPower": 3.21,
+              "concerto": 3.21,
               "toughLv": 0.5144,
               "weaknessLv": 0.7716
             }
@@ -512,7 +508,7 @@
               "scalingStat": "ATK",
               "rate": 0.6332,
               "energy": 1.64,
-              "elementPower": 2,
+              "concerto": 2,
               "toughLv": 0.5,
               "weaknessLv": 0.1542
             },
@@ -522,7 +518,7 @@
               "scalingStat": "ATK",
               "rate": 0.6332,
               "energy": 1.64,
-              "elementPower": 2,
+              "concerto": 2,
               "toughLv": 0.5,
               "weaknessLv": 0.1542
             },
@@ -532,7 +528,7 @@
               "scalingStat": "ATK",
               "rate": 0.6332,
               "energy": 1.64,
-              "elementPower": 2,
+              "concerto": 2,
               "toughLv": 0.5,
               "weaknessLv": 0.1542
             },
@@ -542,7 +538,7 @@
               "scalingStat": "ATK",
               "rate": 0.6332,
               "energy": 1.64,
-              "elementPower": 2,
+              "concerto": 2,
               "toughLv": 0.5,
               "weaknessLv": 0.1542
             }
@@ -558,7 +554,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.86,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.375,
               "weaknessLv": 0.234
             },
@@ -568,7 +564,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.86,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.375,
               "weaknessLv": 0.234
             },
@@ -578,7 +574,7 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.86,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.375,
               "weaknessLv": 0.234
             },
@@ -588,19 +584,11 @@
               "scalingStat": "ATK",
               "rate": 0.6599,
               "energy": 0.86,
-              "elementPower": 0.97,
+              "concerto": 0.97,
               "toughLv": 0.375,
               "weaknessLv": 0.234
             }
           ]
-        },
-        {
-          "name": "Cosmos Rave Duration",
-          "value": "10"
-        },
-        {
-          "name": "Concerto Regen",
-          "value": "20"
         },
         {
           "name": "Resonance Cost",
@@ -613,21 +601,22 @@
       "id": 1000704,
       "type": "Inherent Skill",
       "name": "Angry Cosmos",
-      "attributes": [],
+      "stages": [],
       "damage": []
     },
     {
       "id": 1000705,
       "type": "Inherent Skill",
       "name": "Woolies Cheer Dance",
-      "attributes": [],
+      "stages": [],
       "damage": []
     },
     {
       "id": 1000706,
       "type": "Intro Skill",
       "name": "Woolies Helpers",
-      "attributes": [
+      "concerto": 10,
+      "stages": [
         {
           "name": "Skill DMG",
           "value": "198.81%",
@@ -638,15 +627,11 @@
               "scalingStat": "ATK",
               "rate": 1.9881,
               "energy": 10,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 1.0088,
               "weaknessLv": 1.5132
             }
           ]
-        },
-        {
-          "name": "Concerto Regen",
-          "value": "10"
         }
       ],
       "damage": []
@@ -655,10 +640,11 @@
       "id": 1000707,
       "type": "Forte Circuit",
       "name": "Black & White Woolies",
-      "attributes": [
+      "stages": [
         {
           "name": "Cloudy Frenzy Damage",
           "value": "334.00%",
+          "concerto": 10,
           "damage": [
             {
               "type": "Resonance Liberation",
@@ -666,7 +652,7 @@
               "scalingStat": "ATK",
               "rate": 3.34,
               "energy": 10,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 2.688,
               "weaknessLv": 4.032
             }
@@ -675,6 +661,7 @@
         {
           "name": "Cosmos Rupture Damage",
           "value": "46.42%*6+495.21%",
+          "concerto": 10,
           "damage": [
             {
               "type": "Resonance Liberation",
@@ -682,7 +669,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -692,7 +679,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -702,7 +689,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -712,7 +699,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -722,7 +709,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -732,7 +719,7 @@
               "scalingStat": "ATK",
               "rate": 0.4642,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 0.1868,
               "weaknessLv": 0.2803
             },
@@ -742,19 +729,11 @@
               "scalingStat": "ATK",
               "rate": 4.9521,
               "energy": 0,
-              "elementPower": 0,
+              "concerto": 0,
               "toughLv": 1.9927,
               "weaknessLv": 2.9891
             }
           ]
-        },
-        {
-          "name": "Cloudy Frenzy Concerto Regen",
-          "value": "10"
-        },
-        {
-          "name": "Cosmos Rupture Concerto Regen",
-          "value": "10"
         }
       ],
       "damage": [
@@ -764,7 +743,7 @@
           "scalingStat": "ATK",
           "rate": 4.676,
           "energy": 10,
-          "elementPower": 0,
+          "concerto": 0,
           "toughLv": 2.688,
           "weaknessLv": 4.032
         },
@@ -774,7 +753,7 @@
           "scalingStat": "ATK",
           "rate": 6.9329,
           "energy": 0,
-          "elementPower": 0,
+          "concerto": 0,
           "toughLv": 1.9927,
           "weaknessLv": 2.9891
         },
@@ -784,7 +763,7 @@
           "scalingStat": "ATK",
           "rate": 0.6499,
           "energy": 0,
-          "elementPower": 0,
+          "concerto": 0,
           "toughLv": 0.1868,
           "weaknessLv": 0.2803
         }
@@ -794,21 +773,21 @@
       "id": 1000708,
       "type": "Inherent Skill",
       "name": "Skillful Cooking",
-      "attributes": [],
+      "stages": [],
       "damage": []
     },
     {
       "id": 1000709,
       "type": "Outro Skill",
       "name": "Thermal Field",
-      "attributes": [],
+      "stages": [],
       "damage": []
     },
     {
       "id": 1000710,
       "type": "Tune Break",
       "name": "",
-      "attributes": [],
+      "stages": [],
       "damage": []
     }
   ]

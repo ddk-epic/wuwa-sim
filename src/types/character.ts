@@ -16,6 +16,7 @@ export interface SkillAttribute {
   value: string
   staCost?: number
   cooldown?: number
+  concerto?: number
   damage?: DamageEntry[]
 }
 
@@ -25,7 +26,7 @@ export interface DamageEntry {
   scalingStat: string
   rate: number
   energy: number
-  elementPower: number
+  concerto: number
   toughLv: number
   weaknessLv: number
 }
@@ -35,7 +36,9 @@ export interface Skill {
   type: string
   name: string
   cooldown?: number
-  attributes: SkillAttribute[]
+  duration?: number
+  concerto?: number
+  stages: SkillAttribute[]
   damage: DamageEntry[]
 }
 

@@ -113,7 +113,7 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     scalingStat: entry.PropertyName,
     rate: parseRate(entry.RateLv[9]),
     energy: entry.Energy[0],
-    elementPower: entry.ElementPower[0],
+    concerto: entry.ElementPower[0],
     toughLv: entry.ToughLv[0],
     weaknessLv: entry.WeaknessLvl[0],
   }))
@@ -143,7 +143,13 @@ function parseRatesFromValue(value: string): ParsedRate[] {
 function enrichSkill(
   attributes: ApiSkillAttribute[],
   damageList: ApiDamageEntry[],
-): { attributes: SkillAttribute[]; damage: DamageEntry[]; cooldown?: number } {
+): {
+  stages: SkillAttribute[]
+  damage: DamageEntry[]
+  cooldown?: number
+  duration?: number
+  concerto?: number
+} {
   const pool = mapDamageEntries(damageList)
 
   const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
@@ -186,11 +192,22 @@ function enrichSkill(
 
   const STA_COST_SUFFIX = ' STA Cost'
   const COOLDOWN_SUFFIX = ' Cooldown'
+  const CONCERTO_SUFFIX = ' Concerto Regen'
   let skillCooldown: number | undefined
+  let skillDuration: number | undefined
+  let skillConcerto: number | undefined
 
   const finalAttributes = enrichedAttributes.filter((attr) => {
     if (attr.name === 'Cooldown') {
       skillCooldown = parseFloat(attr.value)
+      return false
+    }
+    if (attr.name === 'Concerto Regen') {
+      skillConcerto = parseFloat(attr.value)
+      return false
+    }
+    if (attr.name.endsWith('Duration')) {
+      skillDuration = parseFloat(attr.value)
       return false
     }
     if (attr.name.endsWith(STA_COST_SUFFIX)) {
@@ -209,29 +226,40 @@ function enrichSkill(
       if (target) target.cooldown = parseFloat(attr.value)
       return false
     }
+    if (attr.name.endsWith(CONCERTO_SUFFIX)) {
+      const keyword = attr.name.slice(0, -CONCERTO_SUFFIX.length)
+      const target = enrichedAttributes.find(
+        (a) => a !== attr && a.name.includes(keyword),
+      )
+      if (target) target.concerto = parseFloat(attr.value)
+      return false
+    }
     return true
   })
 
   const orderedAttributes = finalAttributes.map(
-    ({ name, value, staCost, cooldown, damage }) => ({
+    ({ name, value, staCost, cooldown, concerto, damage }) => ({
       name,
       value,
       ...(staCost !== undefined && { staCost }),
       ...(cooldown !== undefined && { cooldown }),
+      ...(concerto !== undefined && { concerto }),
       ...(damage !== undefined && { damage }),
     }),
   )
 
   return {
-    attributes: orderedAttributes,
+    stages: orderedAttributes,
     damage: pool,
     cooldown: skillCooldown,
+    duration: skillDuration,
+    concerto: skillConcerto,
   }
 }
 
 function mapSkills(skills: ApiSkill[]): Skill[] {
   return (skills ?? []).map((skill) => {
-    const { attributes, damage, cooldown } = enrichSkill(
+    const { stages, damage, cooldown, duration, concerto } = enrichSkill(
       skill.SkillAttributes,
       skill.DamageList,
     )
@@ -240,7 +268,9 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
       type: skill.SkillType,
       name: skill.SkillName,
       ...(cooldown !== undefined && { cooldown }),
-      attributes,
+      ...(duration !== undefined && { duration }),
+      ...(concerto !== undefined && { concerto }),
+      stages,
       damage,
     }
   })
