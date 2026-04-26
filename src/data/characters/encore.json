@@ -29,8 +29,8 @@
   "skills": [
     {
       "id": 1000701,
-      "type": "Normal Attack",
       "name": "Wooly Attack",
+      "type": "Normal Attack",
       "stages": [
         {
           "name": "Stage 1 DMG",
@@ -217,8 +217,8 @@
     },
     {
       "id": 1000702,
-      "type": "Resonance Skill",
       "name": "Flaming Woolies",
+      "type": "Resonance Skill",
       "cooldown": 10,
       "stages": [
         {
@@ -330,8 +330,8 @@
     },
     {
       "id": 1000703,
-      "type": "Resonance Liberation",
       "name": "Cosmos Rave",
+      "type": "Resonance Liberation",
       "cooldown": 16,
       "duration": 10,
       "concerto": 20,
@@ -599,22 +599,22 @@
     },
     {
       "id": 1000704,
-      "type": "Inherent Skill",
       "name": "Angry Cosmos",
+      "type": "Inherent Skill",
       "stages": [],
       "damage": []
     },
     {
       "id": 1000705,
-      "type": "Inherent Skill",
       "name": "Woolies Cheer Dance",
+      "type": "Inherent Skill",
       "stages": [],
       "damage": []
     },
     {
       "id": 1000706,
-      "type": "Intro Skill",
       "name": "Woolies Helpers",
+      "type": "Intro Skill",
       "concerto": 10,
       "stages": [
         {
@@ -638,8 +638,8 @@
     },
     {
       "id": 1000707,
-      "type": "Forte Circuit",
       "name": "Black & White Woolies",
+      "type": "Forte Circuit",
       "stages": [
         {
           "name": "Cloudy Frenzy Damage",
@@ -771,22 +771,22 @@
     },
     {
       "id": 1000708,
-      "type": "Inherent Skill",
       "name": "Skillful Cooking",
+      "type": "Inherent Skill",
       "stages": [],
       "damage": []
     },
     {
       "id": 1000709,
-      "type": "Outro Skill",
       "name": "Thermal Field",
+      "type": "Outro Skill",
       "stages": [],
       "damage": []
     },
     {
       "id": 1000710,
-      "type": "Tune Break",
       "name": "",
+      "type": "Tune Break",
       "stages": [],
       "damage": []
     }

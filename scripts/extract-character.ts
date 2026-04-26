@@ -265,8 +265,8 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
     )
     return {
       id: skill.SkillId,
-      type: skill.SkillType,
       name: skill.SkillName,
+      type: skill.SkillType,
       ...(cooldown !== undefined && { cooldown }),
       ...(duration !== undefined && { duration }),
       ...(concerto !== undefined && { concerto }),

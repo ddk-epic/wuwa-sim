@@ -33,8 +33,8 @@ export interface DamageEntry {
 
 export interface Skill {
   id: number
-  type: string
   name: string
+  type: string
   cooldown?: number
   duration?: number
   concerto?: number
