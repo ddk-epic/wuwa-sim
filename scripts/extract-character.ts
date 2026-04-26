@@ -105,7 +105,9 @@ function lastOf<T>(arr: T[]): T {
 }
 
 function parseRate(rateStr: string): number {
-  return parseFloat(rateStr.replace('%', '')) / 100
+  const pct = rateStr.replace('%', '')
+  const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+  return Number((parseFloat(pct) / 100).toFixed(decimals))
 }
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
