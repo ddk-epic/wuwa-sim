@@ -100,7 +100,7 @@ function mapStats(properties: ApiProperty[]): CharacterStats {
   return stats
 }
 
-function parseRate(rateStr: string): number {
+function parseValue(rateStr: string): number {
   const pct = rateStr.replace('%', '')
   const decimals = (pct.split('.')[1]?.length ?? 0) + 2
   return Number((parseFloat(pct) / 100).toFixed(decimals))
@@ -111,7 +111,7 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     type: entry.Type,
     dmgType: entry.DmgType ?? 'damage',
     scalingStat: entry.PropertyName,
-    rate: parseRate(entry.RateLv[9]),
+    value: parseValue(entry.RateLv[9]),
     energy: entry.Energy[0],
     concerto: entry.ElementPower[0],
     toughLv: entry.ToughLv[0],
@@ -120,11 +120,11 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
 }
 
 interface ParsedRate {
-  rate: number
+  value: number
   count: number
 }
 
-function parseRatesFromValue(value: string): ParsedRate[] {
+function parseValuesFromValue(value: string): ParsedRate[] {
   const results: ParsedRate[] = []
   const regex = /([\d.]+)%(?:\*(\d+))?/g
   let match
@@ -133,7 +133,7 @@ function parseRatesFromValue(value: string): ParsedRate[] {
     const count = match[2] ? parseInt(match[2], 10) : 1
     const decimals = (pct.split('.')[1]?.length ?? 0) + 2
     results.push({
-      rate: Number((parseFloat(pct) / 100).toFixed(decimals)),
+      value: Number((parseFloat(pct) / 100).toFixed(decimals)),
       count,
     })
   }
@@ -155,17 +155,17 @@ function enrichSkill(
   const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
     (attr) => {
       const value = attr.values[9] ?? ''
-      const parsedRates = parseRatesFromValue(value)
+      const parsedRates = parseValuesFromValue(value)
 
       if (parsedRates.length === 0) {
         return { name: attr.attributeName, value }
       }
 
       const matched: DamageEntry[] = []
-      for (const { rate, count } of parsedRates) {
+      for (const { value, count } of parsedRates) {
         let consumed = 0
         for (let i = 0; i < pool.length && consumed < count; i++) {
-          if (pool[i].rate === rate) {
+          if (pool[i].value === value) {
             matched.push(...pool.splice(i, 1))
             i--
             consumed++
@@ -174,7 +174,7 @@ function enrichSkill(
         if (consumed > 0 && consumed < count) {
           const missing = count - consumed
           console.warn(
-            `  [fill] "${attr.attributeName}" expects ${count}× rate ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
+            `  [fill] "${attr.attributeName}" expects ${count}× value ${value} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
           )
           for (let i = 0; i < missing; i++) {
             matched.push({ ...matched[matched.length - 1] })
