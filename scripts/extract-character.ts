@@ -100,10 +100,6 @@ function mapStats(properties: ApiProperty[]): CharacterStats {
   return stats
 }
 
-function lastOf<T>(arr: T[]): T {
-  return arr[arr.length - 1]
-}
-
 function parseRate(rateStr: string): number {
   const pct = rateStr.replace('%', '')
   const decimals = (pct.split('.')[1]?.length ?? 0) + 2
@@ -115,18 +111,18 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     type: entry.Type,
     dmgType: entry.DmgType ?? 'damage',
     scalingStat: entry.PropertyName,
-    rate: parseRate(lastOf(entry.RateLv)),
-    energy: lastOf(entry.Energy),
-    elementPower: lastOf(entry.ElementPower),
-    toughLv: lastOf(entry.ToughLv),
-    weaknessLv: lastOf(entry.WeaknessLvl),
+    rate: parseRate(entry.RateLv[9]),
+    energy: entry.Energy[0],
+    elementPower: entry.ElementPower[0],
+    toughLv: entry.ToughLv[0],
+    weaknessLv: entry.WeaknessLvl[0],
   }))
 }
 
 function mapSkillAttributes(attributes: ApiSkillAttribute[]): SkillAttribute[] {
   return (attributes ?? []).map((attr) => ({
     name: attr.attributeName,
-    value: lastOf(attr.values) ?? '',
+    value: attr.values[9] ?? '',
   }))
 }
 
