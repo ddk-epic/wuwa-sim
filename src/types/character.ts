@@ -14,6 +14,7 @@ export interface CharacterStats {
 export interface SkillAttribute {
   name: string
   value: string
+  damage?: DamageEntry[]
 }
 
 export interface DamageEntry {

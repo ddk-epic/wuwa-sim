@@ -119,21 +119,88 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   }))
 }
 
-function mapSkillAttributes(attributes: ApiSkillAttribute[]): SkillAttribute[] {
-  return (attributes ?? []).map((attr) => ({
-    name: attr.attributeName,
-    value: attr.values[9] ?? '',
-  }))
+interface ParsedRate {
+  rate: number
+  count: number
+}
+
+function parseRatesFromValue(value: string): ParsedRate[] {
+  const results: ParsedRate[] = []
+  const regex = /([\d.]+)%(?:\*(\d+))?/g
+  let match
+  while ((match = regex.exec(value)) !== null) {
+    const pct = match[1]
+    const count = match[2] ? parseInt(match[2], 10) : 1
+    const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+    results.push({
+      rate: Number((parseFloat(pct) / 100).toFixed(decimals)),
+      count,
+    })
+  }
+  return results
+}
+
+function enrichSkill(
+  attributes: ApiSkillAttribute[],
+  damageList: ApiDamageEntry[],
+): { attributes: SkillAttribute[]; damage: DamageEntry[] } {
+  const pool = mapDamageEntries(damageList)
+
+  const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
+    (attr) => {
+      const value = attr.values[9] ?? ''
+      const parsedRates = parseRatesFromValue(value)
+
+      if (parsedRates.length === 0) {
+        return { name: attr.attributeName, value }
+      }
+
+      const matched: DamageEntry[] = []
+      for (const { rate, count } of parsedRates) {
+        let consumed = 0
+        for (let i = 0; i < pool.length && consumed < count; i++) {
+          if (pool[i].rate === rate) {
+            matched.push(...pool.splice(i, 1))
+            i--
+            consumed++
+          }
+        }
+        if (consumed > 0 && consumed < count) {
+          const missing = count - consumed
+          console.warn(
+            `  [fill] "${attr.attributeName}" expects ${count}× rate ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
+          )
+          for (let i = 0; i < missing; i++) {
+            matched.push({ ...matched[matched.length - 1] })
+          }
+        }
+      }
+
+      if (matched.length === 0) {
+        return { name: attr.attributeName, value }
+      }
+
+      return { name: attr.attributeName, value, damage: matched }
+    },
+  )
+
+  return { attributes: enrichedAttributes, damage: pool }
 }
 
 function mapSkills(skills: ApiSkill[]): Skill[] {
-  return (skills ?? []).map((skill) => ({
-    id: skill.SkillId,
-    type: skill.SkillType,
-    name: skill.SkillName,
-    attributes: mapSkillAttributes(skill.SkillAttributes),
-    damage: mapDamageEntries(skill.DamageList),
-  }))
+  return (skills ?? []).map((skill) => {
+    const { attributes, damage } = enrichSkill(
+      skill.SkillAttributes,
+      skill.DamageList,
+    )
+    return {
+      id: skill.SkillId,
+      type: skill.SkillType,
+      name: skill.SkillName,
+      attributes,
+      damage,
+    }
+  })
 }
 
 // --- Main ---
