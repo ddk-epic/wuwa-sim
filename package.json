@@ -13,7 +13,8 @@
     "lint": "eslint",
     "format": "prettier --check .",
     "check": "prettier --write . && eslint --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "extract": "tsx scripts/extract-character.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -45,6 +46,7 @@
     "prettier": "^3.8.1",
     "typescript": "^5.7.2",
     "vite": "^8.0.0",
+    "tsx": "^4.19.2",
     "vitest": "^3.0.5"
   },
   "pnpm": {
