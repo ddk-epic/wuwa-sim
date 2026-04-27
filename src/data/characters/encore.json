@@ -325,6 +325,7 @@
       "cooldown": 16,
       "duration": 10,
       "concerto": 20,
+      "resonanceCost": 125,
       "stages": [
         {
           "name": "Cosmos: Frolicking Stage 1 DMG",
@@ -579,10 +580,6 @@
               "weakness": 0.234
             }
           ]
-        },
-        {
-          "name": "Resonance Cost",
-          "value": "125"
         }
       ],
       "damage": []

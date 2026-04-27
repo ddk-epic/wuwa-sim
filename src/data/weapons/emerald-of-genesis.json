@@ -1,0 +1,29 @@
+{
+  "id": 21020015,
+  "name": "Emerald of Genesis",
+  "rarity": "SSR",
+  "weaponType": "Sword",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 47,
+      "max": 587.5
+    },
+    "sub": {
+      "name": "Crit. Rate",
+      "base": 0.054,
+      "max": 0.243
+    }
+  },
+  "passive": {
+    "name": "Stormy Resolution",
+    "description": "Increases Energy Regen by 12.8%/16%/19.2%/22.4%/25.6%. When Resonance Skill is cast, increases ATK by 6%/7.5%/9%/10.5%/12%, stacking up to 2/2/2/2/2 time(s). This effect lasts for 10/10/10/10/10s.",
+    "params": [
+      [0.128, 0.06, 2, 10],
+      [0.16, 0.075, 2, 10],
+      [0.192, 0.09, 2, 10],
+      [0.224, 0.105, 2, 10],
+      [0.256, 0.12, 2, 10]
+    ]
+  }
+}

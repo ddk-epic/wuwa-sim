@@ -267,6 +267,7 @@
       "type": "Resonance Liberation",
       "cooldown": 16,
       "concerto": 20,
+      "resonanceCost": 100,
       "stages": [
         {
           "name": "Skill DMG",
@@ -283,10 +284,6 @@
               "weakness": 6.144
             }
           ]
-        },
-        {
-          "name": "Resonance Cost",
-          "value": "100"
         }
       ],
       "damage": []
@@ -339,6 +336,7 @@
         {
           "name": "Detonate Damage",
           "value": "186.29%*2",
+          "concerto": 15,
           "damage": [
             {
               "type": "Heavy Attack",
@@ -411,10 +409,6 @@
               "weakness": 0
             }
           ]
-        },
-        {
-          "name": "Detonate Concerto Energy",
-          "value": "15"
         }
       ],
       "damage": []

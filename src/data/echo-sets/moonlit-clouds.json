@@ -1,0 +1,14 @@
+{
+  "id": 8,
+  "name": "Moonlit Clouds",
+  "effects": [
+    {
+      "pieces": 2,
+      "description": "Energy Regen + 10%."
+    },
+    {
+      "pieces": 5,
+      "description": "Upon using Outro Skill, increases the ATK of the next Resonator by 22.5% for 15s."
+    }
+  ]
+}
