@@ -2,12 +2,12 @@
 
 ## Characters
 
-| Term            | Definition                                                                                      | Aliases to avoid    |
-| --------------- | ----------------------------------------------------------------------------------------------- | ------------------- |
-| **Character**   | A playable unit with an element, weapon type, rarity, stats, and skills                         | Resonator           |
-| **Element**     | The damage attribute of a Character (Fusion, Glacio, Electro, Aero, Havoc, Spectro)             | Attribute, type     |
-| **Weapon Type** | The category of weapon a Character can equip (Rectifier, Sword, Broadblade, Pistols, Gauntlets) | Class, weapon class |
-| **Rarity**      | The quality tier of a Character or Weapon (SSR, SR)                                             | Grade, tier         |
+| Term            | Definition                                                                                                                                                   | Aliases to avoid    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| **Character**   | A playable unit with an element, weapon type, rarity, stats, and skills; called "Resonator" in-game but **Character** is the canonical term for this project | Resonator           |
+| **Element**     | The damage attribute of a Character (Fusion, Glacio, Electro, Aero, Havoc, Spectro)                                                                          | Attribute, type     |
+| **Weapon Type** | The category of weapon a Character can equip (Rectifier, Sword, Broadblade, Pistols, Gauntlets)                                                              | Class, weapon class |
+| **Rarity**      | The quality tier of a Character or Weapon (SSR, SR)                                                                                                          | Grade, tier         |
 
 ## Skills
 
@@ -70,4 +70,4 @@
 
 ## Flagged ambiguities
 
-- **"Character" vs "Resonator"** — the game calls them Resonators, but the codebase type is `Character`. Use **Character** in code and documentation to stay consistent with the type definitions.
+None.
