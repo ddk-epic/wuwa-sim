@@ -27,7 +27,6 @@ export interface DamageEntry {
   concerto: number
   toughness: number
   weakness: number
-  hardness?: number
 }
 
 export interface Skill {

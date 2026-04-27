@@ -5,8 +5,7 @@ export type { DamageEntry }
 export interface EchoSkill {
   cooldown: number
   description: string
-  params: number[]
-  damage: DamageEntry[]
+  hits: DamageEntry[]
 }
 
 export interface Echo {

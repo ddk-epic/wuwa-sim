@@ -20,19 +20,13 @@ interface ApiDamageEntry {
   RateLv: string[]
   Energy: number[]
   ElementPower: number[]
-  HardnessLv: number[]
   ToughLv: number[]
   WeaknessLvl: number[]
-}
-
-interface ApiLevelDescStr {
-  ArrayString: string[]
 }
 
 interface ApiSkill {
   SkillCD: number
   DescriptionEx: string
-  LevelDescStrArray: ApiLevelDescStr[]
   DamageList: ApiDamageEntry[]
 }
 
@@ -83,13 +77,6 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '')
 }
 
-function parseParamValue(v: string): number {
-  if (!v.endsWith('%')) return parseFloat(v)
-  const pct = v.replace('%', '')
-  const decimals = (pct.split('.')[1]?.length ?? 0) + 2
-  return Number((parseFloat(pct) / 100).toFixed(decimals))
-}
-
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   return (damageList ?? []).map((entry) => ({
     type: entry.Type,
@@ -100,7 +87,6 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     concerto: entry.ElementPower[0],
     toughness: entry.ToughLv[0],
     weakness: entry.WeaknessLvl[0],
-    hardness: entry.HardnessLv[0],
   }))
 }
 
@@ -108,8 +94,7 @@ function mapSkill(skill: ApiSkill): EchoSkill {
   return {
     cooldown: skill.SkillCD,
     description: stripHtml(skill.DescriptionEx),
-    params: skill.LevelDescStrArray[4].ArrayString.map(parseParamValue),
-    damage: mapDamageEntries(skill.DamageList),
+    hits: mapDamageEntries(skill.DamageList),
   }
 }
 
@@ -132,7 +117,7 @@ function mapEchoSet(
 
 // --- Main ---
 
-async function extractEcho(id: string): Promise<void> {
+export async function extractEcho(id: string): Promise<void> {
   console.log(`Fetching echo ${id}...`)
 
   const res = await fetch(`${BASE_URL}/echo/${id}`)
@@ -197,13 +182,14 @@ async function extractEcho(id: string): Promise<void> {
   }
 }
 
-const id = process.argv[2]
-if (!id) {
-  console.error('Usage: pnpm extract-echo <echo-id>')
-  process.exit(1)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const id = process.argv[2]
+  if (!id) {
+    console.error('Usage: pnpm extract-echo <echo-id>')
+    process.exit(1)
+  }
+  extractEcho(id).catch((err) => {
+    console.error(err.message)
+    process.exit(1)
+  })
 }
-
-extractEcho(id).catch((err) => {
-  console.error(err.message)
-  process.exit(1)
-})

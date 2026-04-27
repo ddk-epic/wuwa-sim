@@ -6,8 +6,7 @@
   "skill": {
     "cooldown": 20,
     "description": "Transform into the Inferno Rider to launch up to 3 consecutive slashes in a row, each slash dealing 242.40%, 282.80%, and 282.80% Fusion DMG respectively.After the final hit, increase the current Resonator's Fusion DMG by 12.00% and Basic Attack DMG by 12.00% for 15s.Long press the Echo Skill to transform into the Inferno Rider and enter Riding Mode. When exiting Riding Mode, deal 282.80% Fusion DMG to enemies in front.CD: 20s",
-    "params": [2.424, 2.828, 2.828, 0.12, 0.12, 15, 20],
-    "damage": [
+    "hits": [
       {
         "type": "Echo Skill",
         "dmgType": "Damage",
@@ -16,8 +15,7 @@
         "energy": 3.78,
         "concerto": 0,
         "toughness": 1.515,
-        "weakness": 0,
-        "hardness": 1
+        "weakness": 0
       },
       {
         "type": "Echo Skill",
@@ -27,8 +25,7 @@
         "energy": 4.41,
         "concerto": 0,
         "toughness": 1.7675,
-        "weakness": 0,
-        "hardness": 1
+        "weakness": 0
       },
       {
         "type": "Echo Skill",
@@ -38,8 +35,7 @@
         "energy": 4.41,
         "concerto": 0,
         "toughness": 1.7675,
-        "weakness": 0,
-        "hardness": 1
+        "weakness": 0
       },
       {
         "type": "Echo Skill",
@@ -49,8 +45,7 @@
         "energy": 4.41,
         "concerto": 0,
         "toughness": 1.7675,
-        "weakness": 0,
-        "hardness": 1
+        "weakness": 0
       }
     ]
   },
