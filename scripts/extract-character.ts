@@ -279,7 +279,7 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
 
 // --- Main ---
 
-async function extractCharacter(id: string): Promise<void> {
+export async function extractCharacter(id: string): Promise<void> {
   console.log(`Fetching character ${id}...`)
 
   const res = await fetch(`${BASE_URL}/character/${id}`)
@@ -332,13 +332,14 @@ async function extractCharacter(id: string): Promise<void> {
   console.log(`Written to src/data/characters/${slug}.json`)
 }
 
-const id = process.argv[2]
-if (!id) {
-  console.error('Usage: pnpm extract <character-id>')
-  process.exit(1)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const id = process.argv[2]
+  if (!id) {
+    console.error('Usage: pnpm extract-character <character-id>')
+    process.exit(1)
+  }
+  extractCharacter(id).catch((err) => {
+    console.error(err.message)
+    process.exit(1)
+  })
 }
-
-extractCharacter(id).catch((err) => {
-  console.error(err.message)
-  process.exit(1)
-})

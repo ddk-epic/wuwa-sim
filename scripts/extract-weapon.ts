@@ -82,7 +82,7 @@ function stripHtml(html: string): string {
 
 // --- Main ---
 
-async function extractWeapon(id: string): Promise<void> {
+export async function extractWeapon(id: string): Promise<void> {
   console.log(`Fetching weapon ${id}...`)
 
   const res = await fetch(`${BASE_URL}/weapon/${id}`)
@@ -130,13 +130,14 @@ async function extractWeapon(id: string): Promise<void> {
   console.log(`Written to src/data/weapons/${slug}.json`)
 }
 
-const id = process.argv[2]
-if (!id) {
-  console.error('Usage: pnpm extract-weapon <weapon-id>')
-  process.exit(1)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const id = process.argv[2]
+  if (!id) {
+    console.error('Usage: pnpm extract-weapon <weapon-id>')
+    process.exit(1)
+  }
+  extractWeapon(id).catch((err) => {
+    console.error(err.message)
+    process.exit(1)
+  })
 }
-
-extractWeapon(id).catch((err) => {
-  console.error(err.message)
-  process.exit(1)
-})
