@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTeam } from '#/hooks/useTeam'
+import { useTimeline } from '#/hooks/useTimeline'
 import { ALL_CHARACTERS } from '#/data/characters/index'
 import { ALL_WEAPONS } from '#/data/weapons/index'
 import { ALL_ECHOES } from '#/data/echoes/index'
@@ -7,6 +8,7 @@ import { ALL_ECHO_SETS } from '#/data/echo-sets/index'
 import { SkillSidebar } from '#/components/SkillSidebar'
 import { TeamBar } from '#/components/TeamBar'
 import { TeamModal } from '#/components/TeamModal'
+import { TimelineView } from '#/components/TimelineView'
 
 export function CharacterSelector() {
   const {
@@ -20,6 +22,7 @@ export function CharacterSelector() {
     setEchoSet,
   } = useTeam()
 
+  const { entries, addEntry, removeEntry } = useTimeline()
   const [modalOpen, setModalOpen] = useState(false)
 
   const focusedCharacter =
@@ -35,14 +38,19 @@ export function CharacterSelector() {
         onEditTeam={() => setModalOpen(true)}
       />
       <div className="flex flex-1 min-h-0">
-        <div className="flex-[70] flex items-center justify-center min-h-0">
-          <span className="text-gray-500 text-sm">
-            Select a stage from the sidebar to build your rotation
-          </span>
+        <div className="flex-[70] flex flex-col min-h-0">
+          <TimelineView
+            entries={entries}
+            characters={ALL_CHARACTERS}
+            onRemove={removeEntry}
+          />
         </div>
         <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">
           {focusedCharacter !== null ? (
-            <SkillSidebar character={focusedCharacter} />
+            <SkillSidebar
+              character={focusedCharacter}
+              onStageClick={addEntry}
+            />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 text-sm">
               Select a character to view skills
