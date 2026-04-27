@@ -1,5 +1,5 @@
 import type { Character } from '#/types/character'
-import type { Slots } from '#/hooks/useTeam'
+import type { Slots } from '#/types/loadout'
 
 const ELEMENT_CLASSES: Record<string, string> = {
   Fusion: 'border-orange-500 bg-orange-500/10',

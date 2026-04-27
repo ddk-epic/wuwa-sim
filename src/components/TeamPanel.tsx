@@ -1,8 +1,7 @@
 import type { Character } from '#/types/character'
 import type { Weapon } from '#/types/weapon'
 import type { Echo, EchoSet } from '#/types/echo'
-import type { SlotLoadout } from '#/types/loadout'
-import type { Slots } from '#/hooks/useTeam'
+import type { Slots, SlotLoadout } from '#/types/loadout'
 
 interface TeamPanelProps {
   slots: Slots

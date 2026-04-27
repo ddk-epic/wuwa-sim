@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import type { SlotLoadout } from '#/types/loadout'
+import type { Slots, SlotLoadout } from '#/types/loadout'
 import { CHARACTER_TEMPLATES } from '#/data/templates'
 import { ALL_ECHOES } from '#/data/echoes/index'
 import { ALL_ECHO_SETS } from '#/data/echo-sets/index'
-
-export type Slots = [number | null, number | null, number | null]
 
 const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
