@@ -7,4 +7,10 @@ export const CHARACTER_TEMPLATES: CharacterTemplate[] = [
     echoId: 390080007, // Inferno Rider
     echoSetId: 2, // Molten Rift
   },
+  {
+    characterId: 1102, // Sanhua
+    weaponId: 21020015, // Emerald of Genesis
+    echoId: 6000052, // Impermanence Heron
+    echoSetId: 8, // Moonlit Clouds
+  },
 ]

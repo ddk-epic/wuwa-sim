@@ -36,6 +36,7 @@ export interface Skill {
   cooldown?: number
   duration?: number
   concerto?: number
+  resonanceCost?: number
   stages: SkillAttribute[]
   damage: DamageEntry[]
 }

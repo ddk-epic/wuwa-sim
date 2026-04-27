@@ -150,6 +150,7 @@ function enrichSkill(
   cooldown?: number
   duration?: number
   concerto?: number
+  resonanceCost?: number
 } {
   const pool = mapDamageEntries(damageList)
 
@@ -194,9 +195,11 @@ function enrichSkill(
   const STA_COST_SUFFIX = ' STA Cost'
   const COOLDOWN_SUFFIX = ' Cooldown'
   const CONCERTO_SUFFIX = ' Concerto Regen'
+  const CONCERTO_ENERGY_SUFFIX = ' Concerto Energy'
   let skillCooldown: number | undefined
   let skillDuration: number | undefined
   let skillConcerto: number | undefined
+  let skillResonanceCost: number | undefined
 
   const finalAttributes = enrichedAttributes.filter((attr) => {
     if (attr.name === 'Cooldown') {
@@ -205,6 +208,10 @@ function enrichSkill(
     }
     if (attr.name === 'Concerto Regen') {
       skillConcerto = parseFloat(attr.value)
+      return false
+    }
+    if (attr.name === 'Resonance Cost') {
+      skillResonanceCost = parseFloat(attr.value)
       return false
     }
     if (attr.name.endsWith('Duration')) {
@@ -235,6 +242,14 @@ function enrichSkill(
       if (target) target.concerto = parseFloat(attr.value)
       return false
     }
+    if (attr.name.endsWith(CONCERTO_ENERGY_SUFFIX)) {
+      const keyword = attr.name.slice(0, -CONCERTO_ENERGY_SUFFIX.length)
+      const target = enrichedAttributes.find(
+        (a) => a !== attr && a.name.includes(keyword),
+      )
+      if (target) target.concerto = parseFloat(attr.value)
+      return false
+    }
     return true
   })
 
@@ -255,15 +270,14 @@ function enrichSkill(
     cooldown: skillCooldown,
     duration: skillDuration,
     concerto: skillConcerto,
+    resonanceCost: skillResonanceCost,
   }
 }
 
 function mapSkills(skills: ApiSkill[]): Skill[] {
   return (skills ?? []).map((skill) => {
-    const { stages, damage, cooldown, duration, concerto } = enrichSkill(
-      skill.SkillAttributes,
-      skill.DamageList,
-    )
+    const { stages, damage, cooldown, duration, concerto, resonanceCost } =
+      enrichSkill(skill.SkillAttributes, skill.DamageList)
     return {
       id: skill.SkillId,
       name: skill.SkillName,
@@ -271,6 +285,7 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
       ...(cooldown !== undefined && { cooldown }),
       ...(duration !== undefined && { duration }),
       ...(concerto !== undefined && { concerto }),
+      ...(resonanceCost !== undefined && { resonanceCost }),
       stages,
       damage,
     }
