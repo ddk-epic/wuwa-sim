@@ -1,14 +1,12 @@
-export interface StatValue {
-  base: number
-  max: number
+export interface StatGroup {
+  hp: number
+  atk: number
+  def: number
 }
 
 export interface CharacterStats {
-  hp: StatValue
-  atk: StatValue
-  def: StatValue
-  critRate: StatValue
-  critDmg: StatValue
+  base: StatGroup
+  max: StatGroup
 }
 
 export interface SkillAttribute {
@@ -27,8 +25,9 @@ export interface DamageEntry {
   value: number
   energy: number
   concerto: number
-  toughLv: number
-  weaknessLv: number
+  toughness: number
+  weakness: number
+  hardness?: number
 }
 
 export interface Skill {
@@ -46,7 +45,7 @@ export interface Character {
   id: number
   name: string
   element: string
-  weaponType: number
+  weaponType: string
   rarity: string
   stats: CharacterStats
   skills: Skill[]

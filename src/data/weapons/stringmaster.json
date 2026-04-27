@@ -1,0 +1,29 @@
+{
+  "id": 21050016,
+  "name": "Stringmaster",
+  "rarity": "SSR",
+  "weaponType": "Rectifier",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 40,
+      "max": 500
+    },
+    "sub": {
+      "name": "Crit. Rate",
+      "base": 0.08,
+      "max": 0.36
+    }
+  },
+  "passive": {
+    "name": "Electric Amplification",
+    "description": "Grants 12%/15%/18%/21%/24% Attribute DMG Bonus. When dealing Resonance Skill DMG, increases ATK by 12%/15%/18%/21%/24%, stacking up to 2/2/2/2/2 times. This effect lasts for 5/5/5/5/5s. When the wielder is not on the field, increases their ATK by an additional 12%/15%/18%/21%/24%.",
+    "params": [
+      [0.12, 0.12, 2, 5, 0.12],
+      [0.15, 0.15, 2, 5, 0.15],
+      [0.18, 0.18, 2, 5, 0.18],
+      [0.21, 0.21, 2, 5, 0.21],
+      [0.24, 0.24, 2, 5, 0.24]
+    ]
+  }
+}

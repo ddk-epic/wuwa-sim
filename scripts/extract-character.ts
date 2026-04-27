@@ -7,6 +7,7 @@ import type {
   DamageEntry,
   Skill,
   SkillAttribute,
+  StatGroup,
 } from '../src/types/character.js'
 
 const PROJECT_ROOT = path.resolve(
@@ -70,34 +71,34 @@ interface ApiCharacter {
 
 // --- Mapping ---
 
-const STAT_KEY_MAP: Record<string, keyof CharacterStats> = {
+const WEAPON_TYPE_MAP: Record<number, string> = {
+  1: 'Broadblade',
+  2: 'Sword',
+  3: 'Pistols',
+  4: 'Gauntlets',
+  5: 'Rectifier',
+}
+
+const STAT_KEY_MAP: Record<string, keyof StatGroup> = {
   HP: 'hp',
   ATK: 'atk',
   DEF: 'def',
-  'Crit. Rate': 'critRate',
-  'Crit. DMG': 'critDmg',
 }
 
-const PERCENTAGE_STATS = new Set(['Crit. Rate', 'Crit. DMG'])
-
 function mapStats(properties: ApiProperty[]): CharacterStats {
-  const stats = {} as CharacterStats
+  const base = {} as StatGroup
+  const max = {} as StatGroup
 
   for (const prop of properties) {
     const key = STAT_KEY_MAP[prop.Name]
     if (!key) continue
 
+    base[key] = prop.BaseValue
     const maxGrowth = prop.GrowthValues[prop.GrowthValues.length - 1]
-    const maxRaw = maxGrowth?.value ?? prop.BaseValue
-    const divisor = PERCENTAGE_STATS.has(prop.Name) ? 10000 : 1
-
-    stats[key] = {
-      base: prop.BaseValue / divisor,
-      max: maxRaw / divisor,
-    }
+    max[key] = maxGrowth?.value ?? prop.BaseValue
   }
 
-  return stats
+  return { base, max }
 }
 
 function parseValue(rateStr: string): number {
@@ -114,8 +115,8 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     value: parseValue(entry.RateLv[9]),
     energy: entry.Energy[0],
     concerto: entry.ElementPower[0],
-    toughLv: entry.ToughLv[0],
-    weaknessLv: entry.WeaknessLvl[0],
+    toughness: entry.ToughLv[0],
+    weakness: entry.WeaknessLvl[0],
   }))
 }
 
@@ -298,11 +299,18 @@ async function extractCharacter(id: string): Promise<void> {
     )
   }
 
+  const weaponType = WEAPON_TYPE_MAP[data.WeaponType]
+  if (!weaponType) {
+    console.warn(
+      `Warning: unknown WeaponType ${data.WeaponType}, using raw value`,
+    )
+  }
+
   const character: Character = {
     id: data.Id,
     name: data.Name.Content,
     element: data.ElementName,
-    weaponType: data.WeaponType,
+    weaponType: weaponType ?? String(data.WeaponType),
     rarity: data.QualityName,
     stats: mapStats(data.Properties),
     skills: mapSkills(data.Skills),

@@ -1,0 +1,444 @@
+{
+  "id": 1102,
+  "name": "Sanhua",
+  "element": "Glacio",
+  "weaponType": "Sword",
+  "rarity": "SR",
+  "stats": {
+    "base": {
+      "hp": 805,
+      "atk": 22,
+      "def": 77
+    },
+    "max": {
+      "hp": 10062.5,
+      "atk": 275,
+      "def": 941.1094
+    }
+  },
+  "skills": [
+    {
+      "id": 1000501,
+      "name": "Frigid Light",
+      "type": "Normal Attack",
+      "stages": [
+        {
+          "name": "Stage 1 DMG",
+          "value": "48.71%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.4871,
+              "energy": 0.87,
+              "concerto": 2,
+              "toughness": 0.35,
+              "weakness": 0.28
+            }
+          ]
+        },
+        {
+          "name": "Stage 2 DMG",
+          "value": "73.76%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.7376,
+              "energy": 1.32,
+              "concerto": 4,
+              "toughness": 0.53,
+              "weakness": 0.424
+            }
+          ]
+        },
+        {
+          "name": "Stage 3 DMG",
+          "value": "21.58%*4",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2158,
+              "energy": 0.38,
+              "concerto": 2,
+              "toughness": 0.155,
+              "weakness": 0.124
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2158,
+              "energy": 0.38,
+              "concerto": 2,
+              "toughness": 0.155,
+              "weakness": 0.124
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2158,
+              "energy": 0.38,
+              "concerto": 2,
+              "toughness": 0.155,
+              "weakness": 0.124
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2158,
+              "energy": 0.38,
+              "concerto": 2,
+              "toughness": 0.155,
+              "weakness": 0.124
+            }
+          ]
+        },
+        {
+          "name": "Stage 4 DMG",
+          "value": "39.67%*2",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.3967,
+              "energy": 0.71,
+              "concerto": 4,
+              "toughness": 0.285,
+              "weakness": 0.228
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.3967,
+              "energy": 0.71,
+              "concerto": 4,
+              "toughness": 0.285,
+              "weakness": 0.228
+            }
+          ]
+        },
+        {
+          "name": "Stage 5 DMG",
+          "value": "233.81%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 2.3381,
+              "energy": 4.2,
+              "concerto": 10,
+              "toughness": 1.68,
+              "weakness": 1.344
+            }
+          ]
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "value": "22.27%*5",
+          "staCost": 25,
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2227,
+              "energy": 0.4,
+              "concerto": 1.6,
+              "toughness": 0.16,
+              "weakness": 0.16
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2227,
+              "energy": 0.4,
+              "concerto": 1.6,
+              "toughness": 0.16,
+              "weakness": 0.16
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2227,
+              "energy": 0.4,
+              "concerto": 1.6,
+              "toughness": 0.16,
+              "weakness": 0.16
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2227,
+              "energy": 0.4,
+              "concerto": 1.6,
+              "toughness": 0.16,
+              "weakness": 0.16
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.2227,
+              "energy": 0.4,
+              "concerto": 1.6,
+              "toughness": 0.16,
+              "weakness": 0.16
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack DMG",
+          "value": "86.29%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.8629,
+              "energy": 0.51,
+              "concerto": 1,
+              "toughness": 0.62,
+              "weakness": 0.952
+            }
+          ]
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "value": "167.01%",
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 1.6701,
+              "energy": 3,
+              "concerto": 6,
+              "toughness": 1.5,
+              "weakness": 0.96
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000502,
+      "name": "Eternal Frost",
+      "type": "Resonance Skill",
+      "cooldown": 10,
+      "concerto": 15,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "359.85%",
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 3.5985,
+              "energy": 10,
+              "concerto": 0,
+              "toughness": 1,
+              "weakness": 0.8
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000503,
+      "name": "Glacial Gaze",
+      "type": "Resonance Liberation",
+      "cooldown": 16,
+      "concerto": 20,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "809.48%",
+          "damage": [
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 8.0948,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 3,
+              "weakness": 6.144
+            }
+          ]
+        },
+        {
+          "name": "Resonance Cost",
+          "value": "100"
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000504,
+      "name": "Condensation",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000505,
+      "name": "Avalanche",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000506,
+      "name": "Freezing Thorns",
+      "type": "Intro Skill",
+      "concerto": 10,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "139.17%",
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 1.3917,
+              "energy": 10,
+              "concerto": 0,
+              "toughness": 0.8,
+              "weakness": 0.7304
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000507,
+      "name": "Clarity of Mind",
+      "type": "Forte Circuit",
+      "duration": 8,
+      "stages": [
+        {
+          "name": "Detonate Damage",
+          "value": "186.29%*2",
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 1.8629,
+              "energy": 2.34,
+              "concerto": 7.5,
+              "toughness": 0.937,
+              "weakness": 0.7496
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 1.8629,
+              "energy": 2.34,
+              "concerto": 7.5,
+              "toughness": 0.937,
+              "weakness": 0.7496
+            }
+          ]
+        },
+        {
+          "name": "Glacier Burst Damage",
+          "value": "139.17%",
+          "concerto": 15,
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 1.3917,
+              "energy": 7,
+              "concerto": 0,
+              "toughness": 1,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Ice Prism Burst Damage",
+          "value": "79.53%",
+          "concerto": 15,
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.7953,
+              "energy": 7,
+              "concerto": 0,
+              "toughness": 1,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Ice Thorn Burst Damage",
+          "value": "59.65%",
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "value": 0.5965,
+              "energy": 2,
+              "concerto": 0,
+              "toughness": 0.8,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Detonate Concerto Energy",
+          "value": "15"
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000508,
+      "name": "",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000509,
+      "name": "Silversnow",
+      "type": "Outro Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000510,
+      "name": "",
+      "type": "Tune Break",
+      "stages": [],
+      "damage": []
+    }
+  ]
+}

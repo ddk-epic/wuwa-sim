@@ -14,7 +14,9 @@
     "format": "prettier --check .",
     "check": "prettier --write . && eslint --fix",
     "prepare": "husky",
-    "extract": "tsx scripts/extract-character.ts"
+    "extract": "tsx scripts/extract-character.ts",
+    "extract-weapon": "tsx scripts/extract-weapon.ts",
+    "extract-echo": "tsx scripts/extract-echo.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

@@ -2,28 +2,18 @@
   "id": 1203,
   "name": "Encore",
   "element": "Fusion",
-  "weaponType": 5,
+  "weaponType": "Rectifier",
   "rarity": "SSR",
   "stats": {
-    "hp": {
-      "base": 841,
-      "max": 10512.5
+    "base": {
+      "hp": 841,
+      "atk": 34,
+      "def": 102
     },
-    "atk": {
-      "base": 34,
-      "max": 425
-    },
-    "def": {
-      "base": 102,
-      "max": 1246.6644
-    },
-    "critRate": {
-      "base": 0.05,
-      "max": null
-    },
-    "critDmg": {
-      "base": 1.5,
-      "max": null
+    "max": {
+      "hp": 10512.5,
+      "atk": 425,
+      "def": 1246.6644
     }
   },
   "skills": [
@@ -43,8 +33,8 @@
               "value": 0.5566,
               "energy": 0.7,
               "concerto": 1.4,
-              "toughLv": 0.224,
-              "weaknessLv": 0.336
+              "toughness": 0.224,
+              "weakness": 0.336
             }
           ]
         },
@@ -59,8 +49,8 @@
               "value": 0.662,
               "energy": 0.83,
               "concerto": 1.66,
-              "toughLv": 0.2664,
-              "weaknessLv": 0.3996
+              "toughness": 0.2664,
+              "weakness": 0.3996
             }
           ]
         },
@@ -75,8 +65,8 @@
               "value": 0.663,
               "energy": 0.83,
               "concerto": 1.66,
-              "toughLv": 0.2668,
-              "weaknessLv": 0.4002
+              "toughness": 0.2668,
+              "weakness": 0.4002
             },
             {
               "type": "Basic Attack",
@@ -85,8 +75,8 @@
               "value": 0.663,
               "energy": 0.83,
               "concerto": 1.66,
-              "toughLv": 0.2668,
-              "weaknessLv": 0.4002
+              "toughness": 0.2668,
+              "weakness": 0.4002
             }
           ]
         },
@@ -101,8 +91,8 @@
               "value": 0.3827,
               "energy": 0.48,
               "concerto": 0.96,
-              "toughLv": 0.154,
-              "weaknessLv": 0.231
+              "toughness": 0.154,
+              "weakness": 0.231
             },
             {
               "type": "Basic Attack",
@@ -111,8 +101,8 @@
               "value": 0.3827,
               "energy": 0.48,
               "concerto": 0.96,
-              "toughLv": 0.154,
-              "weaknessLv": 0.231
+              "toughness": 0.154,
+              "weakness": 0.231
             },
             {
               "type": "Basic Attack",
@@ -121,8 +111,8 @@
               "value": 0.3827,
               "energy": 0.48,
               "concerto": 0.96,
-              "toughLv": 0.154,
-              "weaknessLv": 0.231
+              "toughness": 0.154,
+              "weakness": 0.231
             },
             {
               "type": "Basic Attack",
@@ -131,8 +121,8 @@
               "value": 0.3827,
               "energy": 0.48,
               "concerto": 0.96,
-              "toughLv": 0.154,
-              "weaknessLv": 0.231
+              "toughness": 0.154,
+              "weakness": 0.231
             }
           ]
         },
@@ -147,8 +137,8 @@
               "value": 2.3857,
               "energy": 3,
               "concerto": 6,
-              "toughLv": 0.96,
-              "weaknessLv": 1.44
+              "toughness": 0.96,
+              "weakness": 1.44
             }
           ]
         },
@@ -164,8 +154,8 @@
               "value": 1.8708,
               "energy": 2.35,
               "concerto": 4.7,
-              "toughLv": 0.7528,
-              "weaknessLv": 1.1292
+              "toughness": 0.7528,
+              "weakness": 1.1292
             }
           ]
         },
@@ -181,8 +171,8 @@
               "value": 1.2326,
               "energy": 0.51,
               "concerto": 1,
-              "toughLv": 0.496,
-              "weaknessLv": 1.44
+              "toughness": 0.496,
+              "weakness": 1.44
             }
           ]
         },
@@ -197,8 +187,8 @@
               "value": 1.2594,
               "energy": 1.58,
               "concerto": 1.66,
-              "toughLv": 0.75,
-              "weaknessLv": 0.4002
+              "toughness": 0.75,
+              "weakness": 0.4002
             },
             {
               "type": "Basic Attack",
@@ -207,8 +197,8 @@
               "value": 1.2594,
               "energy": 1.58,
               "concerto": 1.66,
-              "toughLv": 0.75,
-              "weaknessLv": 0.4002
+              "toughness": 0.75,
+              "weakness": 0.4002
             }
           ]
         }
@@ -233,8 +223,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -243,8 +233,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -253,8 +243,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -263,8 +253,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -273,8 +263,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -283,8 +273,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -293,8 +283,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             },
             {
               "type": "Resonance Skill",
@@ -303,8 +293,8 @@
               "value": 0.7661,
               "energy": 1.91,
               "concerto": 0,
-              "toughLv": 0.25,
-              "weaknessLv": 0.32
+              "toughness": 0.25,
+              "weakness": 0.32
             }
           ]
         },
@@ -320,8 +310,8 @@
               "value": 3.3916,
               "energy": 0.75,
               "concerto": 1.51,
-              "toughLv": 0.6048,
-              "weaknessLv": 0.9072
+              "toughness": 0.6048,
+              "weakness": 0.9072
             }
           ]
         }
@@ -347,8 +337,8 @@
               "value": 0.9018,
               "energy": 0.66,
               "concerto": 1.33,
-              "toughLv": 0.2132,
-              "weaknessLv": 0.3198
+              "toughness": 0.2132,
+              "weakness": 0.3198
             },
             {
               "type": "Basic Attack",
@@ -357,8 +347,8 @@
               "value": 0.9018,
               "energy": 0.66,
               "concerto": 1.33,
-              "toughLv": 0.2132,
-              "weaknessLv": 0.3198
+              "toughness": 0.2132,
+              "weakness": 0.3198
             }
           ]
         },
@@ -373,8 +363,8 @@
               "value": 0.564,
               "energy": 0.41,
               "concerto": 0.83,
-              "toughLv": 0.1333,
-              "weaknessLv": 0.2
+              "toughness": 0.1333,
+              "weakness": 0.2
             },
             {
               "type": "Basic Attack",
@@ -383,8 +373,8 @@
               "value": 0.564,
               "energy": 0.41,
               "concerto": 0.83,
-              "toughLv": 0.1333,
-              "weaknessLv": 0.2
+              "toughness": 0.1333,
+              "weakness": 0.2
             },
             {
               "type": "Basic Attack",
@@ -393,8 +383,8 @@
               "value": 0.564,
               "energy": 0.41,
               "concerto": 0.83,
-              "toughLv": 0.1333,
-              "weaknessLv": 0.2
+              "toughness": 0.1333,
+              "weakness": 0.2
             }
           ]
         },
@@ -409,8 +399,8 @@
               "value": 0.6599,
               "energy": 0.48,
               "concerto": 0.97,
-              "toughLv": 0.156,
-              "weaknessLv": 0.234
+              "toughness": 0.156,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -419,8 +409,8 @@
               "value": 0.6599,
               "energy": 0.48,
               "concerto": 0.97,
-              "toughLv": 0.156,
-              "weaknessLv": 0.234
+              "toughness": 0.156,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -429,8 +419,8 @@
               "value": 0.6599,
               "energy": 0.48,
               "concerto": 0.97,
-              "toughLv": 0.156,
-              "weaknessLv": 0.234
+              "toughness": 0.156,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -439,8 +429,8 @@
               "value": 0.6599,
               "energy": 0.48,
               "concerto": 0.97,
-              "toughLv": 0.156,
-              "weaknessLv": 0.234
+              "toughness": 0.156,
+              "weakness": 0.234
             }
           ]
         },
@@ -455,8 +445,8 @@
               "value": 1.9401,
               "energy": 1.43,
               "concerto": 2.86,
-              "toughLv": 0.4586,
-              "weaknessLv": 0.688
+              "toughness": 0.4586,
+              "weakness": 0.688
             },
             {
               "type": "Basic Attack",
@@ -465,8 +455,8 @@
               "value": 1.9401,
               "energy": 1.43,
               "concerto": 2.86,
-              "toughLv": 0.4586,
-              "weaknessLv": 0.688
+              "toughness": 0.4586,
+              "weakness": 0.688
             },
             {
               "type": "Basic Attack",
@@ -475,8 +465,8 @@
               "value": 1.9401,
               "energy": 1.43,
               "concerto": 2.86,
-              "toughLv": 0.4586,
-              "weaknessLv": 0.688
+              "toughness": 0.4586,
+              "weakness": 0.688
             }
           ]
         },
@@ -492,8 +482,8 @@
               "value": 2.1758,
               "energy": 1.6,
               "concerto": 3.21,
-              "toughLv": 0.5144,
-              "weaknessLv": 0.7716
+              "toughness": 0.5144,
+              "weakness": 0.7716
             }
           ]
         },
@@ -509,8 +499,8 @@
               "value": 0.6332,
               "energy": 1.64,
               "concerto": 2,
-              "toughLv": 0.5,
-              "weaknessLv": 0.1542
+              "toughness": 0.5,
+              "weakness": 0.1542
             },
             {
               "type": "Resonance Skill",
@@ -519,8 +509,8 @@
               "value": 0.6332,
               "energy": 1.64,
               "concerto": 2,
-              "toughLv": 0.5,
-              "weaknessLv": 0.1542
+              "toughness": 0.5,
+              "weakness": 0.1542
             },
             {
               "type": "Resonance Skill",
@@ -529,8 +519,8 @@
               "value": 0.6332,
               "energy": 1.64,
               "concerto": 2,
-              "toughLv": 0.5,
-              "weaknessLv": 0.1542
+              "toughness": 0.5,
+              "weakness": 0.1542
             },
             {
               "type": "Resonance Skill",
@@ -539,8 +529,8 @@
               "value": 0.6332,
               "energy": 1.64,
               "concerto": 2,
-              "toughLv": 0.5,
-              "weaknessLv": 0.1542
+              "toughness": 0.5,
+              "weakness": 0.1542
             }
           ]
         },
@@ -555,8 +545,8 @@
               "value": 0.6599,
               "energy": 0.86,
               "concerto": 0.97,
-              "toughLv": 0.375,
-              "weaknessLv": 0.234
+              "toughness": 0.375,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -565,8 +555,8 @@
               "value": 0.6599,
               "energy": 0.86,
               "concerto": 0.97,
-              "toughLv": 0.375,
-              "weaknessLv": 0.234
+              "toughness": 0.375,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -575,8 +565,8 @@
               "value": 0.6599,
               "energy": 0.86,
               "concerto": 0.97,
-              "toughLv": 0.375,
-              "weaknessLv": 0.234
+              "toughness": 0.375,
+              "weakness": 0.234
             },
             {
               "type": "Basic Attack",
@@ -585,8 +575,8 @@
               "value": 0.6599,
               "energy": 0.86,
               "concerto": 0.97,
-              "toughLv": 0.375,
-              "weaknessLv": 0.234
+              "toughness": 0.375,
+              "weakness": 0.234
             }
           ]
         },
@@ -628,8 +618,8 @@
               "value": 1.9881,
               "energy": 10,
               "concerto": 0,
-              "toughLv": 1.0088,
-              "weaknessLv": 1.5132
+              "toughness": 1.0088,
+              "weakness": 1.5132
             }
           ]
         }
@@ -653,8 +643,8 @@
               "value": 3.34,
               "energy": 10,
               "concerto": 0,
-              "toughLv": 2.688,
-              "weaknessLv": 4.032
+              "toughness": 2.688,
+              "weakness": 4.032
             }
           ]
         },
@@ -670,8 +660,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -680,8 +670,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -690,8 +680,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -700,8 +690,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -710,8 +700,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -720,8 +710,8 @@
               "value": 0.4642,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 0.1868,
-              "weaknessLv": 0.2803
+              "toughness": 0.1868,
+              "weakness": 0.2803
             },
             {
               "type": "Resonance Liberation",
@@ -730,8 +720,8 @@
               "value": 4.9521,
               "energy": 0,
               "concerto": 0,
-              "toughLv": 1.9927,
-              "weaknessLv": 2.9891
+              "toughness": 1.9927,
+              "weakness": 2.9891
             }
           ]
         }
@@ -744,8 +734,8 @@
           "value": 4.676,
           "energy": 10,
           "concerto": 0,
-          "toughLv": 2.688,
-          "weaknessLv": 4.032
+          "toughness": 2.688,
+          "weakness": 4.032
         },
         {
           "type": "Resonance Liberation",
@@ -754,8 +744,8 @@
           "value": 6.9329,
           "energy": 0,
           "concerto": 0,
-          "toughLv": 1.9927,
-          "weaknessLv": 2.9891
+          "toughness": 1.9927,
+          "weakness": 2.9891
         },
         {
           "type": "Resonance Liberation",
@@ -764,8 +754,8 @@
           "value": 0.6499,
           "energy": 0,
           "concerto": 0,
-          "toughLv": 0.1868,
-          "weaknessLv": 0.2803
+          "toughness": 0.1868,
+          "weakness": 0.2803
         }
       ]
     },
