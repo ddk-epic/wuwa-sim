@@ -17,6 +17,7 @@ export function CharacterSelector() {
     focusedId,
     selectedCount,
     toggleCharacter,
+    focusCharacter,
     setWeapon,
     setEcho,
     setEchoSet,
@@ -24,11 +25,6 @@ export function CharacterSelector() {
 
   const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
   const [modalOpen, setModalOpen] = useState(false)
-
-  const focusedCharacter =
-    focusedId !== null
-      ? (ALL_CHARACTERS.find((c) => c.id === focusedId) ?? null)
-      : null
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -47,9 +43,12 @@ export function CharacterSelector() {
           />
         </div>
         <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">
-          {focusedCharacter !== null ? (
+          {slots.some((id) => id !== null) ? (
             <SkillSidebar
-              character={focusedCharacter}
+              slots={slots}
+              characters={ALL_CHARACTERS}
+              focusedId={focusedId}
+              onFocus={focusCharacter}
               onStageClick={addEntry}
             />
           ) : (
