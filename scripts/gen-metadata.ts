@@ -2,43 +2,52 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { EnrichedSkillAttribute, SkillMetadata } from '#/types/character'
+import type { SkillMetadata, StageMetadata } from '#/types/character'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 const charsDir = join(root, 'src', 'data', 'characters')
 const metaPath = join(charsDir, 'skill-metadata.ts')
 
-const { SKILL_METADATA } =
-  (await import('#/data/characters/skill-metadata')) as {
-    SKILL_METADATA: Record<number, SkillMetadata>
-  }
-const current: Record<number, SkillMetadata> = { ...SKILL_METADATA }
+const { SKILL_METADATA } = await import('#/data/characters/skill-metadata')
+const current: Record<string, SkillMetadata[]> = { ...SKILL_METADATA }
 
 const files = (await readdir(charsDir)).filter((f) => f.endsWith('.json'))
 
 for (const file of files) {
   const char = JSON.parse(await readFile(join(charsDir, file), 'utf-8')) as {
-    skills: Array<{ id: number; stages: Array<{ name: string }> }>
+    name: string
+    skills: Array<{ name: string; stages: Array<{ name: string }> }>
   }
+  const charName = char.name
+  const existing: SkillMetadata[] = current[charName] ?? []
+
   for (const skill of char.skills) {
-    const entry: SkillMetadata = current[skill.id] ?? {}
-    const existing = entry.stageOverrides ?? {}
-    const stageOverrides: Record<string, Partial<EnrichedSkillAttribute>> = {
-      ...existing,
-    }
+    if (!skill.name) continue
+    const skillEntry = existing.find((m) => m.name === skill.name)
+    const existingStages: StageMetadata[] = skillEntry?.stages ?? []
+    const stages: StageMetadata[] = [...existingStages]
     let changed = false
+
     for (const stage of skill.stages) {
       if (!stage.name) continue
-      if (!(stage.name in stageOverrides)) {
-        stageOverrides[stage.name] = { actionTime: 0 }
+      if (!stages.find((s) => s.name === stage.name)) {
+        stages.push({ name: stage.name, actionTime: 0 })
         changed = true
       }
     }
-    if (changed || !(skill.id in current)) {
-      current[skill.id] = { ...entry, stageOverrides }
+
+    if (changed || !skillEntry) {
+      const idx = existing.findIndex((m) => m.name === skill.name)
+      const updated: SkillMetadata = skillEntry
+        ? { ...skillEntry, stages }
+        : { name: skill.name, stages }
+      if (idx >= 0) existing[idx] = updated
+      else existing.push(updated)
     }
   }
+
+  current[charName] = existing
 }
 
 function serialize(val: unknown, depth = 0): string {
@@ -57,11 +66,9 @@ function serialize(val: unknown, depth = 0): string {
     if (!entries.length) return '{}'
     const lines = entries.map(([k, v]) => {
       const isIdentifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
-      const isNumber = /^\d+$/.test(k)
-      const key =
-        isIdentifier || isNumber
-          ? k
-          : `'${k.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+      const key = isIdentifier
+        ? k
+        : `'${k.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
       return `${inner}${key}: ${serialize(v, depth + 1)}`
     })
     return `{\n${lines.join(',\n')},\n${pad}}`
@@ -70,7 +77,7 @@ function serialize(val: unknown, depth = 0): string {
 }
 
 const body = serialize(current)
-const output = `import type { SkillMetadata } from '#/types/character'\n\nexport const SKILL_METADATA: Record<number, SkillMetadata> = ${body}\n`
+const output = `import type { SkillMetadata } from '#/types/character'\n\nexport const SKILL_METADATA: Record<string, SkillMetadata[]> = ${body}\n`
 
 await writeFile(metaPath, output, 'utf-8')
 console.log(`gen:metadata: updated ${metaPath}`)

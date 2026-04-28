@@ -15,23 +15,24 @@ function enrichStage(
 
 export function enrichCharacters(
   characters: Character[],
-  metadata: Record<number, SkillMetadata>,
+  metadata: Record<string, SkillMetadata[]>,
 ): EnrichedCharacter[] {
   return characters.map((char) => ({
     ...char,
     skills: char.skills.map((skill): EnrichedSkill => {
-      const override = metadata[skill.id]
-      const stageOverrides = override?.stageOverrides
+      const skillMeta = metadata[char.name]?.find((m) => m.name === skill.name)
       const stages = skill.stages.map((stage) => {
         const enriched = enrichStage(stage)
-        const stageOverride = stageOverrides?.[stage.name]
-        return stageOverride ? { ...enriched, ...stageOverride } : enriched
+        const stageMeta = skillMeta?.stages.find((s) => s.name === stage.name)
+        if (!stageMeta) return enriched
+        const { name: _name, ...stageOverride } = stageMeta
+        return { ...enriched, ...stageOverride }
       })
       const base: EnrichedSkill = { ...skill, stages }
-      if (!override) return base
-
-      const { stageOverrides: _stageOverrides, ...skillOverride } = override
-      return { ...base, ...skillOverride }
+      if (!skillMeta) return base
+      return skillMeta.hidden !== undefined
+        ? { ...base, hidden: skillMeta.hidden }
+        : base
     }),
   }))
 }

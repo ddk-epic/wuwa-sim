@@ -34,18 +34,18 @@ describe('enrichCharacters', () => {
     expect(enriched.skills[1].stages[0]).not.toHaveProperty('staCost')
   })
 
-  it('applies metadata override to matching skill', () => {
+  it('skill metadata matched by character name and skill name', () => {
     const [enriched] = enrichCharacters([base], {
-      9001: { animationLock: 0.5 },
+      Test: [{ name: 'Slash', hidden: true, stages: [] }],
     })
-    expect(enriched.skills[0].animationLock).toBe(0.5)
+    expect(enriched.skills[0].hidden).toBe(true)
   })
 
-  it('does not apply metadata to non-matching skill', () => {
+  it('skill metadata does not apply to unmatched skill names', () => {
     const [enriched] = enrichCharacters([base], {
-      9001: { animationLock: 0.5 },
+      Test: [{ name: 'Slash', hidden: true, stages: [] }],
     })
-    expect(enriched.skills[1].animationLock).toBeUndefined()
+    expect(enriched.skills[1].hidden).toBeUndefined()
   })
 
   it('leaves skills with no metadata entry otherwise unchanged', () => {
@@ -55,7 +55,9 @@ describe('enrichCharacters', () => {
   })
 
   it('metadata hidden flag surfaces on skill', () => {
-    const [enriched] = enrichCharacters([base], { 9002: { hidden: true } })
+    const [enriched] = enrichCharacters([base], {
+      Test: [{ name: 'Guard', hidden: true, stages: [] }],
+    })
     expect(enriched.skills[1].hidden).toBe(true)
     expect(enriched.skills[0].hidden).toBeUndefined()
   })
@@ -66,17 +68,24 @@ describe('enrichCharacters', () => {
     expect(enriched.skills[1].stages[0].actionTime).toBe(0)
   })
 
-  it('stageOverrides with matching stage name applies actionTime', () => {
+  it('stage metadata applies actionTime by stage name', () => {
     const [enriched] = enrichCharacters([base], {
-      9001: { stageOverrides: { 'Stage 1': { actionTime: 30 } } },
+      Test: [{ name: 'Slash', stages: [{ name: 'Stage 1', actionTime: 30 }] }],
     })
     expect(enriched.skills[0].stages[0].actionTime).toBe(30)
   })
 
-  it('stageOverrides does not affect non-matching stage names', () => {
+  it('stage metadata does not affect non-matching stage names', () => {
     const [enriched] = enrichCharacters([base], {
-      9001: { stageOverrides: { 'Stage 2': { actionTime: 30 } } },
+      Test: [{ name: 'Slash', stages: [{ name: 'Stage 2', actionTime: 30 }] }],
     })
     expect(enriched.skills[0].stages[0].actionTime).toBe(0)
+  })
+
+  it('stage-level hidden surfaces on stage', () => {
+    const [enriched] = enrichCharacters([base], {
+      Test: [{ name: 'Slash', stages: [{ name: 'Stage 1', hidden: true }] }],
+    })
+    expect(enriched.skills[0].stages[0].hidden).toBe(true)
   })
 })
