@@ -50,3 +50,13 @@ export interface Character {
   stats: CharacterStats
   skills: Skill[]
 }
+
+export type EnrichedSkillAttribute = Omit<SkillAttribute, 'staCost'>
+
+export interface EnrichedSkill extends Omit<Skill, 'stages'> {
+  stages: EnrichedSkillAttribute[]
+  animationLock?: number
+  hidden?: boolean
+}
+
+export type SkillMetadata = Partial<Omit<EnrichedSkill, 'id'>>
