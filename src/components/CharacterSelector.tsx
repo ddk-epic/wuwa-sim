@@ -22,7 +22,7 @@ export function CharacterSelector() {
     setEchoSet,
   } = useTeam()
 
-  const { entries, addEntry, removeEntry } = useTimeline()
+  const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
   const [modalOpen, setModalOpen] = useState(false)
 
   const focusedCharacter =
@@ -36,6 +36,7 @@ export function CharacterSelector() {
         slots={slots}
         characters={ALL_CHARACTERS}
         onEditTeam={() => setModalOpen(true)}
+        onResetTimeline={clearTimeline}
       />
       <div className="flex flex-1 min-h-0">
         <div className="flex-[70] flex flex-col min-h-0">
