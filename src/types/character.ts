@@ -51,7 +51,9 @@ export interface Character {
   skills: Skill[]
 }
 
-export type EnrichedSkillAttribute = Omit<SkillAttribute, 'staCost'>
+export type EnrichedSkillAttribute = Omit<SkillAttribute, 'staCost'> & {
+  actionTime: number
+}
 
 export interface EnrichedSkill extends Omit<Skill, 'stages'> {
   stages: EnrichedSkillAttribute[]
@@ -59,7 +61,9 @@ export interface EnrichedSkill extends Omit<Skill, 'stages'> {
   hidden?: boolean
 }
 
-export type SkillMetadata = Partial<Omit<EnrichedSkill, 'id'>>
+export type SkillMetadata = Partial<Omit<EnrichedSkill, 'id' | 'stages'>> & {
+  stageOverrides?: Record<string, Partial<EnrichedSkillAttribute>>
+}
 
 export interface EnrichedCharacter extends Omit<Character, 'skills'> {
   skills: EnrichedSkill[]

@@ -11,7 +11,7 @@ function enrichStage(
 ): EnrichedSkillAttribute {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { staCost: _staCost, ...rest } = stage
-  return rest
+  return { ...rest, actionTime: 0 }
 }
 
 export function enrichCharacters(
@@ -21,13 +21,18 @@ export function enrichCharacters(
   return characters.map((char) => ({
     ...char,
     skills: char.skills.map((skill): EnrichedSkill => {
-      const base: EnrichedSkill = {
-        ...skill,
-        stages: skill.stages.map(enrichStage),
-      }
       const override = metadata[skill.id]
+      const stageOverrides = override?.stageOverrides
+      const stages = skill.stages.map((stage) => {
+        const enriched = enrichStage(stage)
+        const stageOverride = stageOverrides?.[stage.name]
+        return stageOverride ? { ...enriched, ...stageOverride } : enriched
+      })
+      const base: EnrichedSkill = { ...skill, stages }
       if (!override) return base
-      return { ...base, ...override }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { stageOverrides: _stageOverrides, ...skillOverride } = override
+      return { ...base, ...skillOverride }
     }),
   }))
 }

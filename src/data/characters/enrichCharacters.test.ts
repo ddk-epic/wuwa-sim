@@ -59,4 +59,24 @@ describe('enrichCharacters', () => {
     expect(enriched.skills[1].hidden).toBe(true)
     expect(enriched.skills[0].hidden).toBeUndefined()
   })
+
+  it('each stage gets actionTime: 0 by default', () => {
+    const [enriched] = enrichCharacters([base], {})
+    expect(enriched.skills[0].stages[0].actionTime).toBe(0)
+    expect(enriched.skills[1].stages[0].actionTime).toBe(0)
+  })
+
+  it('stageOverrides with matching stage name applies actionTime', () => {
+    const [enriched] = enrichCharacters([base], {
+      9001: { stageOverrides: { 'Stage 1': { actionTime: 30 } } },
+    })
+    expect(enriched.skills[0].stages[0].actionTime).toBe(30)
+  })
+
+  it('stageOverrides does not affect non-matching stage names', () => {
+    const [enriched] = enrichCharacters([base], {
+      9001: { stageOverrides: { 'Stage 2': { actionTime: 30 } } },
+    })
+    expect(enriched.skills[0].stages[0].actionTime).toBe(0)
+  })
 })

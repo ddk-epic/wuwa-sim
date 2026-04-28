@@ -21,6 +21,7 @@ const char1: EnrichedCharacter = {
         {
           name: 'Stage 1',
           value: '1',
+          actionTime: 0,
           damage: [
             {
               type: 'Basic Attack',
@@ -42,7 +43,7 @@ const char1: EnrichedCharacter = {
       name: 'Hidden Skill',
       type: 'Normal Attack',
       hidden: true,
-      stages: [{ name: 'Hidden Stage', value: '1', damage: [] }],
+      stages: [{ name: 'Hidden Stage', value: '1', actionTime: 0, damage: [] }],
       damage: [],
     },
   ],
@@ -60,7 +61,7 @@ const char2: EnrichedCharacter = {
       id: 201,
       name: 'Normal Attack',
       type: 'Normal Attack',
-      stages: [{ name: 'Stage 1', value: '1', damage: [] }],
+      stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
       damage: [],
     },
   ],
