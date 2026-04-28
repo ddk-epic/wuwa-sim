@@ -8,6 +8,7 @@ interface TeamBarProps {
   characters: Character[]
   onEditTeam: () => void
   onResetTimeline: () => void
+  timelineEmpty: boolean
 }
 
 export function TeamBar({
@@ -15,6 +16,7 @@ export function TeamBar({
   characters,
   onEditTeam,
   onResetTimeline,
+  timelineEmpty,
 }: TeamBarProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -34,7 +36,8 @@ export function TeamBar({
         {label}
       </button>
       <button
-        className="ml-auto px-3 py-1 rounded bg-gray-700 hover:bg-red-600 text-sm text-white transition-colors"
+        className="ml-auto px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-red-600"
+        disabled={timelineEmpty}
         onClick={() => setConfirmOpen(true)}
       >
         Reset Timeline
