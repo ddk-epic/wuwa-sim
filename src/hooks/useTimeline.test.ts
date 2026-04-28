@@ -58,4 +58,17 @@ describe('useTimeline', () => {
     const ids = result.current.entries.map((e) => e.id)
     expect(new Set(ids).size).toBe(3)
   })
+
+  it('clearTimeline resets entries to empty array', () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+      result.current.addEntry(sample)
+    })
+    expect(result.current.entries).toHaveLength(2)
+    act(() => {
+      result.current.clearTimeline()
+    })
+    expect(result.current.entries).toHaveLength(0)
+  })
 })

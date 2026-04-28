@@ -14,5 +14,9 @@ export function useTimeline() {
     setEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
-  return { entries, addEntry, removeEntry }
+  function clearTimeline() {
+    setEntries([])
+  }
+
+  return { entries, addEntry, removeEntry, clearTimeline }
 }
