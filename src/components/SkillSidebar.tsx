@@ -106,7 +106,7 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
       skillType: skill.type,
       skillName: `${skill.name} · ${stage.name}`,
       attackType,
-      duration: skill.duration ?? 0,
+      actionTime: stage.actionTime,
       multiplier,
     })
   }

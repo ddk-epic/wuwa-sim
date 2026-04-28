@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import type { TimelineEntry } from '#/types/timeline'
 import { accumulateTime, computeDamage } from './timeline'
 
-function entry(duration: number, multiplier = 0): TimelineEntry {
+function entry(actionTime: number, multiplier = 0): TimelineEntry {
   return {
     id: 'x',
     characterId: 1,
     skillType: 'Normal Attack',
     skillName: 'Normal Attack · Stage 1',
     attackType: 'Basic Attack',
-    duration,
+    actionTime,
     multiplier,
   }
 }

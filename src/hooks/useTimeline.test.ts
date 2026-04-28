@@ -12,7 +12,7 @@ const sample = {
   skillType: 'Normal Attack',
   skillName: 'Normal Attack · Stage 1',
   attackType: 'Basic Attack',
-  duration: 3,
+  actionTime: 3,
   multiplier: 1.5,
 }
 

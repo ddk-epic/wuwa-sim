@@ -5,7 +5,7 @@ export function accumulateTime(entries: TimelineEntry[]): number[] {
   let cumulative = 0
   for (const entry of entries) {
     times.push(cumulative)
-    cumulative += entry.duration
+    cumulative += entry.actionTime
   }
   return times
 }

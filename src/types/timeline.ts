@@ -4,6 +4,6 @@ export interface TimelineEntry {
   skillType: string
   skillName: string
   attackType: string
-  duration: number
+  actionTime: number
   multiplier: number
 }
