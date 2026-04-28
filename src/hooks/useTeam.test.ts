@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTeam } from './useTeam'
+
+beforeEach(() => {
+  localStorage.clear()
+})
 
 describe('useTeam — focusCharacter', () => {
   it('focusCharacter updates focusedId to the given id', () => {

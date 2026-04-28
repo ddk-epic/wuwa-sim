@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import type { Slots, SlotLoadout } from '#/types/loadout'
+import { useLocalStorage } from './useLocalStorage'
 import { CHARACTER_TEMPLATES } from '#/data/templates'
 import { ALL_ECHOES } from '#/data/echoes/index'
 import { ALL_ECHO_SETS } from '#/data/echo-sets/index'
@@ -38,11 +38,18 @@ function updateSlot(
 }
 
 export function useTeam() {
-  const [slots, setSlots] = useState<Slots>([null, null, null])
-  const [loadouts, setLoadouts] = useState<
+  const [slots, setSlots] = useLocalStorage<Slots>('wuwa.team.slots', [
+    null,
+    null,
+    null,
+  ])
+  const [loadouts, setLoadouts] = useLocalStorage<
     [SlotLoadout, SlotLoadout, SlotLoadout]
-  >([emptyLoadout(), emptyLoadout(), emptyLoadout()])
-  const [focusedId, setFocusedId] = useState<number | null>(null)
+  >('wuwa.team.loadouts', [emptyLoadout(), emptyLoadout(), emptyLoadout()])
+  const [focusedId, setFocusedId] = useLocalStorage<number | null>(
+    'wuwa.team.focusedId',
+    null,
+  )
 
   function toggleCharacter(characterId: number) {
     const slotIndex = slots.indexOf(characterId)

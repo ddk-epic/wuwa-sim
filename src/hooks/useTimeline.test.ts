@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTimeline } from './useTimeline'
+
+beforeEach(() => {
+  localStorage.clear()
+})
 
 const sample = {
   characterId: 1,

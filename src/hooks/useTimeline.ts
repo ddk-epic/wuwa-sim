@@ -1,10 +1,13 @@
-import { useState } from 'react'
 import type { TimelineEntry } from '#/types/timeline'
+import { useLocalStorage } from './useLocalStorage'
 
 type NewEntry = Omit<TimelineEntry, 'id'>
 
 export function useTimeline() {
-  const [entries, setEntries] = useState<TimelineEntry[]>([])
+  const [entries, setEntries] = useLocalStorage<TimelineEntry[]>(
+    'wuwa.timeline.entries',
+    [],
+  )
 
   function addEntry(entry: NewEntry) {
     setEntries((prev) => [...prev, { ...entry, id: crypto.randomUUID() }])
