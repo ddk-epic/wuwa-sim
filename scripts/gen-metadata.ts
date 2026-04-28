@@ -22,8 +22,7 @@ for (const file of files) {
     skills: Array<{ id: number; stages: Array<{ name: string }> }>
   }
   for (const skill of char.skills) {
-    const entry: SkillMetadata =
-      (current[skill.id] as SkillMetadata | undefined) ?? {}
+    const entry: SkillMetadata = current[skill.id] ?? {}
     const existing = entry.stageOverrides ?? {}
     const stageOverrides: Record<string, Partial<EnrichedSkillAttribute>> = {
       ...existing,

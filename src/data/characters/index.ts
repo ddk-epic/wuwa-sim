@@ -7,6 +7,6 @@ import sanhuaData from './sanhua.json'
 const rawCharacters = [encoreData, sanhuaData]
 
 export const ALL_CHARACTERS: EnrichedCharacter[] = enrichCharacters(
-  rawCharacters as Parameters<typeof enrichCharacters>[0],
+  rawCharacters,
   SKILL_METADATA,
 )

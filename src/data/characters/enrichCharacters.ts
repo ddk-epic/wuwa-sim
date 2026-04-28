@@ -9,7 +9,6 @@ import type {
 function enrichStage(
   stage: Character['skills'][number]['stages'][number],
 ): EnrichedSkillAttribute {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { staCost: _staCost, ...rest } = stage
   return { ...rest, actionTime: 0 }
 }
@@ -30,7 +29,7 @@ export function enrichCharacters(
       })
       const base: EnrichedSkill = { ...skill, stages }
       if (!override) return base
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       const { stageOverrides: _stageOverrides, ...skillOverride } = override
       return { ...base, ...skillOverride }
     }),
