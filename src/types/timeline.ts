@@ -4,6 +4,7 @@ export interface TimelineEntry {
   skillType: string
   skillName: string
   attackType: string
+  /** Duration of this action in frames (60 fps). Integer. */
   actionTime: number
   multiplier: number
 }

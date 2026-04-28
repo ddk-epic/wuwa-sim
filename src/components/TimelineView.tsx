@@ -55,7 +55,7 @@ export function TimelineView({
                 <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
                 <td className="px-3 py-2 text-gray-200">{entry.skillName}</td>
                 <td className="px-3 py-2 text-gray-300">
-                  {times[i].toFixed(2)}s
+                  {(times[i] / 60).toFixed(2)}s
                 </td>
                 <td className="px-3 py-2 text-yellow-400">
                   {damage !== null ? damage.toLocaleString() : '—'}
