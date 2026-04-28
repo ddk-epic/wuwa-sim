@@ -68,6 +68,10 @@ export function useTeam() {
     }
   }
 
+  function focusCharacter(id: number) {
+    setFocusedId(id)
+  }
+
   function setWeapon(slotIndex: number, weaponId: number) {
     setLoadouts((prev) =>
       updateSlot(prev, slotIndex, (slot) => ({ ...slot, weaponId })),
@@ -100,6 +104,7 @@ export function useTeam() {
     focusedId,
     selectedCount: slots.filter((s) => s !== null).length,
     toggleCharacter,
+    focusCharacter,
     setWeapon,
     setEcho,
     setEchoSet,
