@@ -3,6 +3,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { SkillMetadata, StageMetadata } from '#/types/character'
+import { RELEVANT_SKILL_TYPES } from '#/data/skill-types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
@@ -17,13 +18,18 @@ const files = (await readdir(charsDir)).filter((f) => f.endsWith('.json'))
 for (const file of files) {
   const char = JSON.parse(await readFile(join(charsDir, file), 'utf-8')) as {
     name: string
-    skills: Array<{ name: string; stages: Array<{ name: string }> }>
+    skills: Array<{
+      name: string
+      type: string
+      stages: Array<{ name: string }>
+    }>
   }
   const charName = char.name
   const existing: SkillMetadata[] = current[charName] ?? []
 
   for (const skill of char.skills) {
     if (!skill.name) continue
+    if (!RELEVANT_SKILL_TYPES.has(skill.type)) continue
     const skillEntry = existing.find((m) => m.name === skill.name)
     const existingStages: StageMetadata[] = skillEntry?.stages ?? []
     const stages: StageMetadata[] = [...existingStages]

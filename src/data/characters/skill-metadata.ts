@@ -7,7 +7,7 @@ export const SKILL_METADATA: Record<string, SkillMetadata[]> = {
       stages: [
         {
           name: 'Stage 1 DMG',
-          actionTime: 0,
+          actionTime: 30,
         },
         {
           name: 'Stage 2 DMG',

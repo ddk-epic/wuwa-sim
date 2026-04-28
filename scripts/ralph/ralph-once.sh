@@ -1,3 +1,4 @@
-set -e
+prompt=$(cat scripts/ralph/prompt.md)
 
-claude --permission-mode acceptEdits "@progress.txt prompt.md"
+claude --permission-mode acceptEdits \
+"$prompt"

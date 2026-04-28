@@ -6,16 +6,7 @@ import type {
 import type { Slots } from '#/types/loadout'
 import type { TimelineEntry } from '#/types/timeline'
 import { ELEMENT_BORDER_CLASSES } from '#/data/elements'
-
-const RELEVANT_SKILL_TYPES = new Set([
-  'Normal Attack',
-  'Resonance Skill',
-  'Resonance Liberation',
-  'Forte Circuit',
-  'Intro Skill',
-  'Outro Skill',
-  'Tune Break',
-])
+import { RELEVANT_SKILL_TYPES } from '#/data/skill-types'
 
 type NewEntry = Omit<TimelineEntry, 'id'>
 
