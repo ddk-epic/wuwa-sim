@@ -1,4 +1,8 @@
-import type { Character, Skill, SkillAttribute } from '#/types/character'
+import type {
+  EnrichedCharacter,
+  EnrichedSkill,
+  EnrichedSkillAttribute,
+} from '#/types/character'
 import type { Slots } from '#/types/loadout'
 import type { TimelineEntry } from '#/types/timeline'
 import { ELEMENT_BORDER_CLASSES } from '#/data/elements'
@@ -17,7 +21,7 @@ type NewEntry = Omit<TimelineEntry, 'id'>
 
 interface SkillSidebarProps {
   slots: Slots
-  characters: Character[]
+  characters: EnrichedCharacter[]
   focusedId: number | null
   onFocus: (id: number) => void
   onStageClick: (entry: NewEntry) => void
@@ -33,14 +37,15 @@ export function SkillSidebar({
   const filledCharacters = slots
     .filter((id): id is number => id !== null)
     .map((id) => characters.find((c) => c.id === id))
-    .filter((c): c is Character => c !== undefined)
+    .filter((c): c is EnrichedCharacter => c !== undefined)
 
   const focusedCharacter =
     filledCharacters.find((c) => c.id === focusedId) ?? null
 
   const skills =
-    focusedCharacter?.skills.filter((s) => RELEVANT_SKILL_TYPES.has(s.type)) ??
-    []
+    focusedCharacter?.skills.filter(
+      (s) => RELEVANT_SKILL_TYPES.has(s.type) && !s.hidden,
+    ) ?? []
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -86,8 +91,8 @@ export function SkillSidebar({
 }
 
 interface StageRowProps {
-  skill: Skill
-  stage: SkillAttribute
+  skill: EnrichedSkill
+  stage: EnrichedSkillAttribute
   characterId: number
   onStageClick: (entry: NewEntry) => void
 }

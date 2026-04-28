@@ -2,10 +2,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { SkillSidebar } from './SkillSidebar'
-import type { Character } from '#/types/character'
+import type { EnrichedCharacter } from '#/types/character'
 import type { Slots } from '#/types/loadout'
 
-const char1: Character = {
+const char1: EnrichedCharacter = {
   id: 1,
   name: 'Encore',
   element: 'Fusion',
@@ -37,10 +37,18 @@ const char1: Character = {
       ],
       damage: [],
     },
+    {
+      id: 102,
+      name: 'Hidden Skill',
+      type: 'Normal Attack',
+      hidden: true,
+      stages: [{ name: 'Hidden Stage', value: '1', damage: [] }],
+      damage: [],
+    },
   ],
 }
 
-const char2: Character = {
+const char2: EnrichedCharacter = {
   id: 2,
   name: 'Sanhua',
   element: 'Glacio',
@@ -122,5 +130,20 @@ describe('SkillSidebar — tab strip', () => {
     )
     expect(container.textContent).not.toContain('rarity')
     expect(container.textContent).not.toContain(char1.rarity)
+  })
+
+  it('hides skills with hidden: true', () => {
+    const slots: Slots = [1, null, null]
+    render(
+      <SkillSidebar
+        slots={slots}
+        characters={characters}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.queryByText('Hidden Stage')).toBeNull()
+    expect(screen.queryByText('Hidden Skill')).toBeNull()
   })
 })
