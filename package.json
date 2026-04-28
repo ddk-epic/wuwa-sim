@@ -14,7 +14,9 @@
     "format": "prettier --check .",
     "check": "prettier --write . && eslint --fix",
     "prepare": "husky",
-    "extract": "tsx scripts/extract.ts"
+    "ralph": "bash scripts/ralph/ralph-once.sh",
+    "extract": "tsx scripts/extract.ts",
+    "gen:metadata": "tsx scripts/gen-metadata.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
