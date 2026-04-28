@@ -60,3 +60,7 @@ export interface EnrichedSkill extends Omit<Skill, 'stages'> {
 }
 
 export type SkillMetadata = Partial<Omit<EnrichedSkill, 'id'>>
+
+export interface EnrichedCharacter extends Omit<Character, 'skills'> {
+  skills: EnrichedSkill[]
+}
