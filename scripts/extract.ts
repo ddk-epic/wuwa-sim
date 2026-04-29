@@ -15,7 +15,9 @@ const args = process.argv.slice(2)
 const typeIndex = args.indexOf('--type')
 const explicitType =
   typeIndex !== -1 ? (args[typeIndex + 1] as EntityType) : undefined
-const id = args.find((_, i) => !args[i].startsWith('--') && i !== typeIndex + 1)
+const id = args.find(
+  (a, i) => !a.startsWith('--') && (typeIndex === -1 || i !== typeIndex + 1),
+)
 
 if (!id) {
   console.error('Usage: pnpm extract <id> [--type character|weapon|echo]')
