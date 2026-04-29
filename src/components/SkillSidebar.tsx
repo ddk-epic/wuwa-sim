@@ -109,7 +109,7 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
     >
       <span className="text-xs text-gray-400">{skill.name}</span>
       <span className="text-sm text-gray-200">
-        {stage.newName ?? stage.name}
+        {stage.newName || stage.name}
       </span>
     </button>
   )

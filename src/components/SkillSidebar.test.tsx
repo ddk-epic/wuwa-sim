@@ -133,6 +133,28 @@ describe('SkillSidebar — tab strip', () => {
     expect(container.textContent).not.toContain(char1.rarity)
   })
 
+  it('falls back to name when newName is empty string', () => {
+    const charWithEmptyNewName: EnrichedCharacter = {
+      ...char1,
+      skills: [
+        {
+          ...char1.skills[0],
+          stages: [{ ...char1.skills[0].stages[0], newName: '' }],
+        },
+      ],
+    }
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        characters={[charWithEmptyNewName]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Stage 1')).toBeTruthy()
+  })
+
   it('renders newName instead of name when set on a stage', () => {
     const charWithNewName: EnrichedCharacter = {
       ...char1,
