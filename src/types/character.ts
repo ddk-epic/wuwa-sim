@@ -54,6 +54,7 @@ export interface Character {
 export type EnrichedSkillAttribute = Omit<SkillAttribute, 'staCost'> & {
   actionTime: number
   hidden?: boolean
+  newName?: string
 }
 
 export interface EnrichedSkill extends Omit<Skill, 'stages'> {
