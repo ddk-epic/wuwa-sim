@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import { useTeam } from '#/hooks/useTeam'
-import { useTimeline } from '#/hooks/useTimeline'
-import { ALL_CHARACTERS } from '#/data/characters/index'
-import { ALL_WEAPONS } from '#/data/weapons/index'
-import { ALL_ECHOES } from '#/data/echoes/index'
-import { ALL_ECHO_SETS } from '#/data/echo-sets/index'
-import { SkillSidebar } from '#/components/SkillSidebar'
-import { TeamBar } from '#/components/TeamBar'
-import { TeamModal } from '#/components/TeamModal'
-import { TimelineView } from '#/components/TimelineView'
+import { useState } from "react"
+import { useTeam } from "#/hooks/useTeam"
+import { useTimeline } from "#/hooks/useTimeline"
+import { ALL_CHARACTERS } from "#/data/characters/index"
+import { ALL_WEAPONS } from "#/data/weapons/index"
+import { ALL_ECHOES } from "#/data/echoes/index"
+import { ALL_ECHO_SETS } from "#/data/echo-sets/index"
+import { SkillSidebar } from "#/components/SkillSidebar"
+import { TeamBar } from "#/components/TeamBar"
+import { TeamModal } from "#/components/TeamModal"
+import { TimelineView } from "#/components/TimelineView"
+import { computeDamage } from "#/lib/timeline"
 
 export function CharacterSelector() {
   const {
@@ -26,6 +27,16 @@ export function CharacterSelector() {
   const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
   const [modalOpen, setModalOpen] = useState(false)
 
+  const totalDmg = entries.reduce((sum, entry) => {
+    if (entry.multiplier <= 0) return sum
+    const char = ALL_CHARACTERS.find((c) => c.id === entry.characterId)
+    const maxAtk = char?.stats.max.atk ?? 0
+    return sum + computeDamage(entry.multiplier, maxAtk)
+  }, 0)
+  const totalFrames = entries.reduce((sum, entry) => sum + entry.actionTime, 0)
+  const totalTimeSec = totalFrames / 60
+  const dps = totalTimeSec > 0 ? Math.round(totalDmg / totalTimeSec) : 0
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <TeamBar
@@ -34,6 +45,9 @@ export function CharacterSelector() {
         onEditTeam={() => setModalOpen(true)}
         onResetTimeline={clearTimeline}
         timelineEmpty={entries.length === 0}
+        totalDmg={totalDmg}
+        dps={dps}
+        totalTimeSec={totalTimeSec}
       />
       <div className="flex flex-1 min-h-0">
         <div className="flex-[70] flex flex-col min-h-0">
