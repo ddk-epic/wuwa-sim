@@ -13,6 +13,7 @@ const char1: EnrichedCharacter = {
   weaponType: "Rectifier",
   rarity: "5",
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
   skills: [
     {
       id: 101,
@@ -57,6 +58,7 @@ const char2: EnrichedCharacter = {
   weaponType: "Sword",
   rarity: "4",
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
   skills: [
     {
       id: 201,

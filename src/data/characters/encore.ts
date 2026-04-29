@@ -10,6 +10,11 @@ export const encore = {
     base: { hp: 841, atk: 34, def: 102 },
     max: { hp: 10512.5, atk: 425, def: 1246.6644 },
   },
+  template: {
+    weapon: "Stringmaster",
+    echo: "Inferno Rider",
+    echoSet: "Molten Rift",
+  },
   skills: [
     {
       id: 1000701,

@@ -2,6 +2,26 @@ import { describe, it, expect } from "vitest"
 import { sanhua } from "./sanhua"
 import { encore } from "./encore"
 
+describe("encore template", () => {
+  it("has correct weapon, echo, and echoSet names", () => {
+    expect(encore.template).toEqual({
+      weapon: "Stringmaster",
+      echo: "Inferno Rider",
+      echoSet: "Molten Rift",
+    })
+  })
+})
+
+describe("sanhua template", () => {
+  it("has correct weapon, echo, and echoSet names", () => {
+    expect(sanhua.template).toEqual({
+      weapon: "Emerald of Genesis",
+      echo: "Impermanence Heron",
+      echoSet: "Moonlit Clouds",
+    })
+  })
+})
+
 describe("sanhua outro skill", () => {
   const outroSkill = sanhua.skills.find((s) => s.type === "Outro Skill")
 

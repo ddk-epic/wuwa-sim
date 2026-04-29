@@ -10,6 +10,11 @@ export const sanhua = {
     base: { hp: 805, atk: 22, def: 77 },
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
+  template: {
+    weapon: "Emerald of Genesis",
+    echo: "Impermanence Heron",
+    echoSet: "Moonlit Clouds",
+  },
   skills: [
     {
       id: 1000501,

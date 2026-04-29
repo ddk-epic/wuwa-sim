@@ -51,13 +51,13 @@ export interface Character {
   skills: Skill[]
 }
 
-export type EnrichedSkillAttribute = Omit<SkillAttribute, 'staCost'> & {
+export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
   actionTime: number
   hidden?: boolean
   newName?: string
 }
 
-export interface EnrichedSkill extends Omit<Skill, 'stages'> {
+export interface EnrichedSkill extends Omit<Skill, "stages"> {
   stages: EnrichedSkillAttribute[]
   animationLock?: number
   hidden?: boolean
@@ -75,6 +75,13 @@ export interface SkillMetadata {
   stages: StageMetadata[]
 }
 
-export interface EnrichedCharacter extends Omit<Character, 'skills'> {
+export interface CharacterTemplate {
+  weapon: string
+  echo: string
+  echoSet: string
+}
+
+export interface EnrichedCharacter extends Omit<Character, "skills"> {
   skills: EnrichedSkill[]
+  template: CharacterTemplate
 }

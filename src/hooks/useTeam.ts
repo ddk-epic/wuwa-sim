@@ -1,8 +1,9 @@
-import type { Slots, SlotLoadout } from '#/types/loadout'
-import { useLocalStorage } from './useLocalStorage'
-import { CHARACTER_TEMPLATES } from '#/data/templates'
-import { ALL_ECHOES } from '#/data/echoes/index'
-import { ALL_ECHO_SETS } from '#/data/echo-sets/index'
+import type { Slots, SlotLoadout } from "#/types/loadout"
+import { useLocalStorage } from "./useLocalStorage"
+import { ALL_CHARACTERS } from "#/data/characters/index"
+import { ALL_WEAPONS } from "#/data/weapons/index"
+import { ALL_ECHOES } from "#/data/echoes/index"
+import { ALL_ECHO_SETS } from "#/data/echo-sets/index"
 
 const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
@@ -11,16 +12,16 @@ const emptyLoadout = (): SlotLoadout => ({
 })
 
 function loadoutFromTemplate(characterId: number): SlotLoadout {
-  const template = CHARACTER_TEMPLATES.find(
-    (t) => t.characterId === characterId,
-  )
-  return template
-    ? {
-        weaponId: template.weaponId,
-        echoId: template.echoId,
-        echoSetId: template.echoSetId,
-      }
-    : emptyLoadout()
+  const char = ALL_CHARACTERS.find((c) => c.id === characterId)
+  if (!char) return emptyLoadout()
+  const weapon = ALL_WEAPONS.find((w) => w.name === char.template.weapon)
+  const echo = ALL_ECHOES.find((e) => e.name === char.template.echo)
+  const echoSet = ALL_ECHO_SETS.find((s) => s.name === char.template.echoSet)
+  return {
+    weaponId: weapon?.id ?? null,
+    echoId: echo?.id ?? null,
+    echoSetId: echoSet?.id ?? null,
+  }
 }
 
 function updateSlot(
@@ -38,16 +39,16 @@ function updateSlot(
 }
 
 export function useTeam() {
-  const [slots, setSlots] = useLocalStorage<Slots>('wuwa.team.slots', [
+  const [slots, setSlots] = useLocalStorage<Slots>("wuwa.team.slots", [
     null,
     null,
     null,
   ])
   const [loadouts, setLoadouts] = useLocalStorage<
     [SlotLoadout, SlotLoadout, SlotLoadout]
-  >('wuwa.team.loadouts', [emptyLoadout(), emptyLoadout(), emptyLoadout()])
+  >("wuwa.team.loadouts", [emptyLoadout(), emptyLoadout(), emptyLoadout()])
   const [focusedId, setFocusedId] = useLocalStorage<number | null>(
-    'wuwa.team.focusedId',
+    "wuwa.team.focusedId",
     null,
   )
 
