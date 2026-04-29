@@ -6,7 +6,7 @@ import type {
 import type { Slots } from '#/types/loadout'
 import type { TimelineEntry } from '#/types/timeline'
 import { ELEMENT_BORDER_CLASSES } from '#/data/elements'
-import { RELEVANT_SKILL_TYPES } from '#/data/skill-types'
+import { STAGE_TYPE_LABELS } from '#/data/skill-types'
 
 type NewEntry = Omit<TimelineEntry, 'id'>
 
@@ -33,10 +33,7 @@ export function SkillSidebar({
   const focusedCharacter =
     filledCharacters.find((c) => c.id === focusedId) ?? null
 
-  const skills =
-    focusedCharacter?.skills.filter(
-      (s) => RELEVANT_SKILL_TYPES.has(s.type) && !s.hidden,
-    ) ?? []
+  const skills = focusedCharacter?.skills.filter((s) => !s.hidden) ?? []
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -65,7 +62,7 @@ export function SkillSidebar({
       <div className="flex-1 overflow-y-auto">
         {skills.flatMap((skill) =>
           skill.stages
-            .filter((stage) => stage.name !== '')
+            .filter((stage) => stage.name !== '' && !stage.hidden)
             .map((stage, i) => (
               <StageRow
                 key={`${skill.id}-${i}`}
@@ -89,13 +86,17 @@ interface StageRowProps {
 }
 
 function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
+  const attackType = stage.damage?.[0]?.type ?? skill.type
+  const typeLabel = STAGE_TYPE_LABELS[attackType] ?? ''
+
   function handleClick() {
     const multiplier = (stage.damage ?? []).reduce((sum, d) => sum + d.value, 0)
-    const attackType = stage.damage?.[0]?.type ?? skill.type
     onStageClick({
       characterId,
       skillType: skill.type,
-      skillName: `${skill.name} · ${stage.name}`,
+      skillName: stage.newName
+        ? `${skill.name} · ${stage.newName}`
+        : skill.name,
       attackType,
       actionTime: stage.actionTime,
       multiplier,
@@ -104,12 +105,14 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
 
   return (
     <button
-      className="w-full flex flex-col px-4 py-2 text-left hover:bg-gray-800 border-b border-gray-700/50 transition-colors"
+      className="w-full flex items-center px-4 py-2 text-left hover:bg-gray-800 border-b border-gray-700/50 transition-colors"
       onClick={handleClick}
     >
-      <span className="text-xs text-gray-400">{skill.name}</span>
-      <span className="text-sm text-gray-200">
-        {stage.newName || stage.name}
+      <span className="flex-1 text-sm text-gray-200">
+        {stage.newName ? `${skill.name} · ${stage.newName}` : skill.name}
+      </span>
+      <span className="w-12 text-right font-mono text-xs text-gray-500">
+        {typeLabel}
       </span>
     </button>
   )

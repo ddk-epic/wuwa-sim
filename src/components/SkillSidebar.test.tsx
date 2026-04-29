@@ -98,8 +98,8 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    // Sanhua's skill stage should appear in the skill list
-    expect(screen.getAllByText('Stage 1').length).toBeGreaterThan(0)
+    // Sanhua's skill stage should appear using the skill name as label
+    expect(screen.getAllByText('Normal Attack').length).toBeGreaterThan(0)
   })
 
   it('clicking an unfocused tab calls onFocus with that character id', () => {
@@ -152,7 +152,7 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Stage 1')).toBeTruthy()
+    expect(screen.getByText('Normal Attack')).toBeTruthy()
   })
 
   it('renders newName instead of name when set on a stage', () => {
@@ -174,7 +174,7 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Override Label')).toBeTruthy()
+    expect(screen.getByText('Normal Attack · Override Label')).toBeTruthy()
     expect(screen.queryByText('Stage 1')).toBeNull()
   })
 
@@ -191,5 +191,76 @@ describe('SkillSidebar — tab strip', () => {
     )
     expect(screen.queryByText('Hidden Stage')).toBeNull()
     expect(screen.queryByText('Hidden Skill')).toBeNull()
+  })
+})
+
+describe('SkillSidebar — attack type labels', () => {
+  it('shows BASIC label for a stage with Basic Attack damage type', () => {
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('BASIC')).toBeTruthy()
+  })
+
+  it('shows no abbreviation label when attack type is unknown', () => {
+    const charUnknown: EnrichedCharacter = {
+      ...char2,
+      skills: [
+        {
+          ...char2.skills[0],
+          type: 'Normal Attack',
+          stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
+        },
+      ],
+    }
+    const { container } = render(
+      <SkillSidebar
+        slots={[2, null, null]}
+        characters={[charUnknown]}
+        focusedId={2}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    for (const label of [
+      'BASIC',
+      'HEAVY',
+      'SKILL',
+      'LIBER',
+      'FORTE',
+      'INTRO',
+      'OUTRO',
+    ]) {
+      expect(container.textContent).not.toContain(label)
+    }
+  })
+
+  it('shows SKILL label when skill type is Resonance Skill and no damage entries', () => {
+    const charSkill: EnrichedCharacter = {
+      ...char2,
+      skills: [
+        {
+          ...char2.skills[0],
+          type: 'Resonance Skill',
+          stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
+        },
+      ],
+    }
+    render(
+      <SkillSidebar
+        slots={[2, null, null]}
+        characters={[charSkill]}
+        focusedId={2}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('SKILL')).toBeTruthy()
   })
 })
