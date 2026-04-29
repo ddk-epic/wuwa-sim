@@ -27,3 +27,21 @@ export interface EchoSet {
   name: string
   effects: EchoSetEffect[]
 }
+
+export interface EnrichedEchoStage {
+  name: string
+  newName: string
+  actionTime: number
+  hidden?: boolean
+  damage: DamageEntry[]
+}
+
+export interface EnrichedEchoSkill {
+  cooldown: number
+  description: string
+  stages: EnrichedEchoStage[]
+}
+
+export interface EnrichedEcho extends Omit<Echo, 'skill'> {
+  skill: EnrichedEchoSkill
+}

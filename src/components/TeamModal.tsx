@@ -1,6 +1,6 @@
 import type { Character } from '#/types/character'
 import type { Weapon } from '#/types/weapon'
-import type { Echo, EchoSet } from '#/types/echo'
+import type { EnrichedEcho, EchoSet } from '#/types/echo'
 import type { Slots, SlotLoadout } from '#/types/loadout'
 import { CharacterGrid } from '#/components/CharacterGrid'
 import { TeamPanel } from '#/components/TeamPanel'
@@ -12,7 +12,7 @@ interface TeamModalProps {
   selectedCount: number
   characters: Character[]
   weapons: Weapon[]
-  echoes: Echo[]
+  echoes: EnrichedEcho[]
   echoSets: EchoSet[]
   onToggle: (characterId: number) => void
   onWeaponChange: (slotIndex: number, weaponId: number) => void

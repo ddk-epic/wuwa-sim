@@ -156,7 +156,7 @@ export async function extractEcho(id: string): Promise<void> {
   const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, '-')
   const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, '-')
 
-  const echoDir = path.join(PROJECT_ROOT, 'src/data/echoes')
+  const echoDir = path.join(PROJECT_ROOT, 'src/data/echoes/raw')
   const setDir = path.join(PROJECT_ROOT, 'src/data/echo-sets')
 
   await fs.mkdir(echoDir, { recursive: true })
@@ -170,7 +170,7 @@ export async function extractEcho(id: string): Promise<void> {
     // File doesn't exist yet
   }
   await fs.writeFile(echoPath, JSON.stringify(echo, null, 2))
-  console.log(`Written to src/data/echoes/${echoSlug}.json`)
+  console.log(`Written to src/data/echoes/raw/${echoSlug}.json`)
 
   const setPath = path.join(setDir, `${setSlug}.json`)
   try {

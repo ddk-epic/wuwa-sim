@@ -1,6 +1,6 @@
 import type { Character } from '#/types/character'
 import type { Weapon } from '#/types/weapon'
-import type { Echo, EchoSet } from '#/types/echo'
+import type { EnrichedEcho, EchoSet } from '#/types/echo'
 import type { Slots, SlotLoadout } from '#/types/loadout'
 
 interface TeamPanelProps {
@@ -8,7 +8,7 @@ interface TeamPanelProps {
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
   characters: Character[]
   weapons: Weapon[]
-  echoes: Echo[]
+  echoes: EnrichedEcho[]
   echoSets: EchoSet[]
   onWeaponChange: (slotIndex: number, weaponId: number) => void
   onEchoChange: (slotIndex: number, echoId: number) => void
@@ -62,7 +62,7 @@ interface TeamSlotProps {
   character: Character | null
   loadout: SlotLoadout
   weapons: Weapon[]
-  echoes: Echo[]
+  echoes: EnrichedEcho[]
   echoSets: EchoSet[]
   onWeaponChange: (weaponId: number) => void
   onEchoChange: (echoId: number) => void

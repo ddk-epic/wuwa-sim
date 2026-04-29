@@ -1,8 +1,5 @@
-import type { Echo } from '#/types/echo'
-import impermanenceHeronData from './impermanence-heron.json'
-import infernoRiderData from './inferno-rider.json'
+import type { EnrichedEcho } from '#/types/echo'
+import { impermanenceHeron } from './impermanence-heron'
+import { infernoRider } from './inferno-rider'
 
-export const ALL_ECHOES: Echo[] = [
-  impermanenceHeronData,
-  infernoRiderData,
-] as Echo[]
+export const ALL_ECHOES: EnrichedEcho[] = [impermanenceHeron, infernoRider]
