@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { SkillSidebar } from './SkillSidebar'
 import type { EnrichedCharacter } from '#/types/character'
-import type { Slots } from '#/types/loadout'
+import type { EnrichedEcho } from '#/types/echo'
+import type { Slots, SlotLoadout } from '#/types/loadout'
 
 const char1: EnrichedCharacter = {
   id: 1,
@@ -67,7 +68,52 @@ const char2: EnrichedCharacter = {
   ],
 }
 
+const testEcho: EnrichedEcho = {
+  id: 9001,
+  name: 'Test Echo',
+  cost: 4,
+  element: 'Fusion',
+  set: 'Test Set',
+  skill: {
+    cooldown: 20,
+    description: 'A test echo',
+    stages: [
+      {
+        name: 'Tap',
+        newName: 'Tap',
+        actionTime: 30,
+        damage: [
+          {
+            type: 'Echo Skill',
+            dmgType: 'Damage',
+            scalingStat: 'ATK',
+            value: 2.5,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+        ],
+      },
+      {
+        name: 'Hold',
+        newName: 'Hold',
+        actionTime: 0,
+        hidden: true,
+        damage: [],
+      },
+    ],
+  },
+}
+
+const noLoadouts: SlotLoadout[] = [
+  { weaponId: null, echoId: null, echoSetId: null },
+  { weaponId: null, echoId: null, echoSetId: null },
+  { weaponId: null, echoId: null, echoSetId: null },
+]
+
 const characters = [char1, char2]
+const echoes = [testEcho]
 
 afterEach(cleanup)
 
@@ -77,6 +123,8 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={slots}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
@@ -92,13 +140,14 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={slots}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={characters}
         focusedId={2}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
       />,
     )
-    // Sanhua's skill stage should appear using the skill name as label
     expect(screen.getAllByText('Normal Attack').length).toBeGreaterThan(0)
   })
 
@@ -108,6 +157,8 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={slots}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={characters}
         focusedId={1}
         onFocus={onFocus}
@@ -123,6 +174,8 @@ describe('SkillSidebar — tab strip', () => {
     const { container } = render(
       <SkillSidebar
         slots={slots}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
@@ -146,6 +199,8 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={[charWithEmptyNewName]}
         focusedId={1}
         onFocus={vi.fn()}
@@ -168,6 +223,8 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={[charWithNewName]}
         focusedId={1}
         onFocus={vi.fn()}
@@ -183,6 +240,8 @@ describe('SkillSidebar — tab strip', () => {
     render(
       <SkillSidebar
         slots={slots}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
@@ -199,6 +258,8 @@ describe('SkillSidebar — attack type labels', () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
@@ -222,6 +283,8 @@ describe('SkillSidebar — attack type labels', () => {
     const { container } = render(
       <SkillSidebar
         slots={[2, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={[charUnknown]}
         focusedId={2}
         onFocus={vi.fn()}
@@ -255,6 +318,8 @@ describe('SkillSidebar — attack type labels', () => {
     render(
       <SkillSidebar
         slots={[2, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
         characters={[charSkill]}
         focusedId={2}
         onFocus={vi.fn()}
@@ -262,5 +327,82 @@ describe('SkillSidebar — attack type labels', () => {
       />,
     )
     expect(screen.getByText('SKILL')).toBeTruthy()
+  })
+})
+
+describe('SkillSidebar — echo stages', () => {
+  const loadoutsWithEcho: SlotLoadout[] = [
+    { weaponId: null, echoId: 9001, echoSetId: null },
+    { weaponId: null, echoId: null, echoSetId: null },
+    { weaponId: null, echoId: null, echoSetId: null },
+  ]
+
+  it('renders visible echo stages above character stages', () => {
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={loadoutsWithEcho}
+        echoes={echoes}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Test Echo · Tap')).toBeTruthy()
+  })
+
+  it('does not render echo stages with hidden: true', () => {
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={loadoutsWithEcho}
+        echoes={echoes}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.queryByText('Test Echo · Hold')).toBeNull()
+  })
+
+  it('renders no echo stages when slot has no echo', () => {
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={noLoadouts}
+        echoes={echoes}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.queryByText(/Test Echo/)).toBeNull()
+  })
+
+  it('clicking echo stage calls onStageClick with Echo Skill attackType', () => {
+    const onStageClick = vi.fn()
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={loadoutsWithEcho}
+        echoes={echoes}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={onStageClick}
+      />,
+    )
+    fireEvent.click(screen.getByText('Test Echo · Tap'))
+    expect(onStageClick).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attackType: 'Echo Skill',
+        multiplier: 2.5,
+        actionTime: 30,
+        characterId: 1,
+      }),
+    )
   })
 })

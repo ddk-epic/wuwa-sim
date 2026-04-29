@@ -1,17 +1,31 @@
 import type {
   EnrichedCharacter,
   EnrichedSkill,
-  EnrichedSkillAttribute,
+  DamageEntry,
 } from '#/types/character'
-import type { Slots } from '#/types/loadout'
+import type { SlotLoadout, Slots } from '#/types/loadout'
+import type { EnrichedEcho } from '#/types/echo'
 import type { TimelineEntry } from '#/types/timeline'
 import { ELEMENT_BORDER_CLASSES } from '#/data/elements'
 import { STAGE_TYPE_LABELS } from '#/data/skill-types'
 
 type NewEntry = Omit<TimelineEntry, 'id'>
 
+interface SkillInfo {
+  name: string
+  type: string
+}
+
+interface StageInfo {
+  newName?: string
+  actionTime: number
+  damage?: DamageEntry[]
+}
+
 interface SkillSidebarProps {
   slots: Slots
+  loadouts: SlotLoadout[]
+  echoes: EnrichedEcho[]
   characters: EnrichedCharacter[]
   focusedId: number | null
   onFocus: (id: number) => void
@@ -20,6 +34,8 @@ interface SkillSidebarProps {
 
 export function SkillSidebar({
   slots,
+  loadouts,
+  echoes,
   characters,
   focusedId,
   onFocus,
@@ -33,7 +49,21 @@ export function SkillSidebar({
   const focusedCharacter =
     filledCharacters.find((c) => c.id === focusedId) ?? null
 
-  const skills = focusedCharacter?.skills.filter((s) => !s.hidden) ?? []
+  const focusedSlotIndex = slots.findIndex((id) => id === focusedId)
+  const echoId =
+    focusedSlotIndex >= 0 ? (loadouts[focusedSlotIndex]?.echoId ?? null) : null
+  const focusedEcho =
+    echoId !== null ? (echoes.find((e) => e.id === echoId) ?? null) : null
+
+  const echoStages = focusedEcho?.skill.stages.filter((s) => !s.hidden) ?? []
+
+  const skills: EnrichedSkill[] =
+    focusedCharacter?.skills.filter((s) => !s.hidden) ?? []
+
+  const hasEchoStages = echoStages.length > 0
+  const hasCharacterStages = skills.some(
+    (s) => s.stages.filter((st) => st.name !== '' && !st.hidden).length > 0,
+  )
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -60,6 +90,20 @@ export function SkillSidebar({
         })}
       </div>
       <div className="flex-1 overflow-y-auto">
+        {hasEchoStages &&
+          focusedEcho !== null &&
+          echoStages.map((stage, i) => (
+            <StageRow
+              key={`echo-${i}`}
+              skill={{ name: focusedEcho.name, type: 'Echo Skill' }}
+              stage={stage}
+              characterId={focusedCharacter?.id ?? 0}
+              onStageClick={onStageClick}
+            />
+          ))}
+        {hasEchoStages && hasCharacterStages && (
+          <div className="border-b border-gray-600 my-1 mx-2" />
+        )}
         {skills.flatMap((skill) =>
           skill.stages
             .filter((stage) => stage.name !== '' && !stage.hidden)
@@ -79,8 +123,8 @@ export function SkillSidebar({
 }
 
 interface StageRowProps {
-  skill: EnrichedSkill
-  stage: EnrichedSkillAttribute
+  skill: SkillInfo
+  stage: StageInfo
   characterId: number
   onStageClick: (entry: NewEntry) => void
 }
@@ -105,14 +149,14 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
 
   return (
     <button
-      className="w-full flex items-center px-4 py-2 text-left hover:bg-gray-800 border-b border-gray-700/50 transition-colors"
+      className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-b border-gray-700/50 transition-colors"
       onClick={handleClick}
     >
+      <span className="w-12 pr-2 text-right font-mono text-xs text-gray-500">
+        {typeLabel}
+      </span>
       <span className="flex-1 text-sm text-gray-200">
         {stage.newName ? `${skill.name} · ${stage.newName}` : skill.name}
-      </span>
-      <span className="w-12 text-right font-mono text-xs text-gray-500">
-        {typeLabel}
       </span>
     </button>
   )

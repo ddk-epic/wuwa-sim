@@ -47,6 +47,8 @@ export function CharacterSelector() {
           {slots.some((id) => id !== null) ? (
             <SkillSidebar
               slots={slots}
+              loadouts={loadouts}
+              echoes={ALL_ECHOES}
               characters={ALL_CHARACTERS}
               focusedId={focusedId}
               onFocus={focusCharacter}
