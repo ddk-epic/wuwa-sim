@@ -13,7 +13,7 @@ export const impermanenceHeron = {
     stages: [
       {
         name: "Tap",
-        newName: "",
+        newName: "(Tap)",
         actionTime: 0,
         damage: [
           {

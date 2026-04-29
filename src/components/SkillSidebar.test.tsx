@@ -1,33 +1,33 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { SkillSidebar } from './SkillSidebar'
-import type { EnrichedCharacter } from '#/types/character'
-import type { EnrichedEcho } from '#/types/echo'
-import type { Slots, SlotLoadout } from '#/types/loadout'
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { render, screen, fireEvent, cleanup } from "@testing-library/react"
+import { SkillSidebar } from "./SkillSidebar"
+import type { EnrichedCharacter } from "#/types/character"
+import type { EnrichedEcho } from "#/types/echo"
+import type { Slots, SlotLoadout } from "#/types/loadout"
 
 const char1: EnrichedCharacter = {
   id: 1,
-  name: 'Encore',
-  element: 'Fusion',
-  weaponType: 'Rectifier',
-  rarity: '5',
+  name: "Encore",
+  element: "Fusion",
+  weaponType: "Rectifier",
+  rarity: "5",
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
   skills: [
     {
       id: 101,
-      name: 'Normal Attack',
-      type: 'Normal Attack',
+      name: "Normal Attack",
+      type: "Normal Attack",
       stages: [
         {
-          name: 'Stage 1',
-          value: '1',
+          name: "Stage 1",
+          value: "1",
           actionTime: 0,
           damage: [
             {
-              type: 'Basic Attack',
-              dmgType: 'Physical',
-              scalingStat: 'ATK',
+              type: "Basic Attack",
+              dmgType: "Physical",
+              scalingStat: "ATK",
               value: 1.5,
               energy: 0,
               concerto: 0,
@@ -41,10 +41,10 @@ const char1: EnrichedCharacter = {
     },
     {
       id: 102,
-      name: 'Hidden Skill',
-      type: 'Normal Attack',
+      name: "Hidden Skill",
+      type: "Normal Attack",
       hidden: true,
-      stages: [{ name: 'Hidden Stage', value: '1', actionTime: 0, damage: [] }],
+      stages: [{ name: "Hidden Stage", value: "1", actionTime: 0, damage: [] }],
       damage: [],
     },
   ],
@@ -52,17 +52,17 @@ const char1: EnrichedCharacter = {
 
 const char2: EnrichedCharacter = {
   id: 2,
-  name: 'Sanhua',
-  element: 'Glacio',
-  weaponType: 'Sword',
-  rarity: '4',
+  name: "Sanhua",
+  element: "Glacio",
+  weaponType: "Sword",
+  rarity: "4",
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
   skills: [
     {
       id: 201,
-      name: 'Normal Attack',
-      type: 'Normal Attack',
-      stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
+      name: "Normal Attack",
+      type: "Normal Attack",
+      stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
       damage: [],
     },
   ],
@@ -70,23 +70,23 @@ const char2: EnrichedCharacter = {
 
 const testEcho: EnrichedEcho = {
   id: 9001,
-  name: 'Test Echo',
+  name: "Test Echo",
   cost: 4,
-  element: 'Fusion',
-  set: 'Test Set',
+  element: "Fusion",
+  set: "Test Set",
   skill: {
     cooldown: 20,
-    description: 'A test echo',
+    description: "A test echo",
     stages: [
       {
-        name: 'Tap',
-        newName: 'Tap',
+        name: "Tap",
+        newName: "Tap",
         actionTime: 30,
         damage: [
           {
-            type: 'Echo Skill',
-            dmgType: 'Damage',
-            scalingStat: 'ATK',
+            type: "Echo Skill",
+            dmgType: "Damage",
+            scalingStat: "ATK",
             value: 2.5,
             energy: 0,
             concerto: 0,
@@ -96,8 +96,8 @@ const testEcho: EnrichedEcho = {
         ],
       },
       {
-        name: 'Hold',
-        newName: 'Hold',
+        name: "Hold",
+        newName: "Hold",
         actionTime: 0,
         hidden: true,
         damage: [],
@@ -117,8 +117,8 @@ const echoes = [testEcho]
 
 afterEach(cleanup)
 
-describe('SkillSidebar — tab strip', () => {
-  it('renders one tab per filled slot', () => {
+describe("SkillSidebar — tab strip", () => {
+  it("renders one tab per filled slot", () => {
     const slots: Slots = [1, 2, null]
     render(
       <SkillSidebar
@@ -131,11 +131,11 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Encore')).toBeTruthy()
-    expect(screen.getByText('Sanhua')).toBeTruthy()
+    expect(screen.getByText("Encore")).toBeTruthy()
+    expect(screen.getByText("Sanhua")).toBeTruthy()
   })
 
-  it('shows skills for the focused character', () => {
+  it("shows skills for the focused character", () => {
     const slots: Slots = [1, 2, null]
     render(
       <SkillSidebar
@@ -148,10 +148,10 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getAllByText('Normal Attack').length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Normal Attack").length).toBeGreaterThan(0)
   })
 
-  it('clicking an unfocused tab calls onFocus with that character id', () => {
+  it("clicking an unfocused tab calls onFocus with that character id", () => {
     const slots: Slots = [1, 2, null]
     const onFocus = vi.fn()
     render(
@@ -165,11 +165,11 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Sanhua/ }))
+    fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
     expect(onFocus).toHaveBeenCalledWith(2)
   })
 
-  it('does not display rarity anywhere', () => {
+  it("does not display rarity anywhere", () => {
     const slots: Slots = [1, null, null]
     const { container } = render(
       <SkillSidebar
@@ -182,17 +182,17 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(container.textContent).not.toContain('rarity')
+    expect(container.textContent).not.toContain("rarity")
     expect(container.textContent).not.toContain(char1.rarity)
   })
 
-  it('falls back to name when newName is empty string', () => {
+  it("falls back to name when newName is empty string", () => {
     const charWithEmptyNewName: EnrichedCharacter = {
       ...char1,
       skills: [
         {
           ...char1.skills[0],
-          stages: [{ ...char1.skills[0].stages[0], newName: '' }],
+          stages: [{ ...char1.skills[0].stages[0], newName: "" }],
         },
       ],
     }
@@ -207,16 +207,16 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Normal Attack')).toBeTruthy()
+    expect(screen.getByText("Normal Attack")).toBeTruthy()
   })
 
-  it('renders newName instead of name when set on a stage', () => {
+  it("renders newName instead of name when set on a stage", () => {
     const charWithNewName: EnrichedCharacter = {
       ...char1,
       skills: [
         {
           ...char1.skills[0],
-          stages: [{ ...char1.skills[0].stages[0], newName: 'Override Label' }],
+          stages: [{ ...char1.skills[0].stages[0], newName: "Override Label" }],
         },
       ],
     }
@@ -231,11 +231,11 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Normal Attack · Override Label')).toBeTruthy()
-    expect(screen.queryByText('Stage 1')).toBeNull()
+    expect(screen.getByText("Normal Attack · Override Label")).toBeTruthy()
+    expect(screen.queryByText("Stage 1")).toBeNull()
   })
 
-  it('hides skills with hidden: true', () => {
+  it("hides skills with hidden: true", () => {
     const slots: Slots = [1, null, null]
     render(
       <SkillSidebar
@@ -248,13 +248,13 @@ describe('SkillSidebar — tab strip', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.queryByText('Hidden Stage')).toBeNull()
-    expect(screen.queryByText('Hidden Skill')).toBeNull()
+    expect(screen.queryByText("Hidden Stage")).toBeNull()
+    expect(screen.queryByText("Hidden Skill")).toBeNull()
   })
 })
 
-describe('SkillSidebar — attack type labels', () => {
-  it('shows BASIC label for a stage with Basic Attack damage type', () => {
+describe("SkillSidebar — attack type labels", () => {
+  it("shows BASIC label for a stage with Basic Attack damage type", () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
@@ -266,17 +266,17 @@ describe('SkillSidebar — attack type labels', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('BASIC')).toBeTruthy()
+    expect(screen.getByText("BASIC")).toBeTruthy()
   })
 
-  it('shows no abbreviation label when attack type is unknown', () => {
+  it("shows no abbreviation label when attack type is unknown", () => {
     const charUnknown: EnrichedCharacter = {
       ...char2,
       skills: [
         {
           ...char2.skills[0],
-          type: 'Normal Attack',
-          stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
+          type: "Normal Attack",
+          stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
         },
       ],
     }
@@ -292,26 +292,26 @@ describe('SkillSidebar — attack type labels', () => {
       />,
     )
     for (const label of [
-      'BASIC',
-      'HEAVY',
-      'SKILL',
-      'LIBER',
-      'FORTE',
-      'INTRO',
-      'OUTRO',
+      "BASIC",
+      "HEAVY",
+      "SKILL",
+      "LIBER",
+      "FORTE",
+      "INTRO",
+      "OUTRO",
     ]) {
       expect(container.textContent).not.toContain(label)
     }
   })
 
-  it('shows SKILL label when skill type is Resonance Skill and no damage entries', () => {
+  it("shows SKILL label when skill type is Resonance Skill and no damage entries", () => {
     const charSkill: EnrichedCharacter = {
       ...char2,
       skills: [
         {
           ...char2.skills[0],
-          type: 'Resonance Skill',
-          stages: [{ name: 'Stage 1', value: '1', actionTime: 0, damage: [] }],
+          type: "Resonance Skill",
+          stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
         },
       ],
     }
@@ -326,18 +326,83 @@ describe('SkillSidebar — attack type labels', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('SKILL')).toBeTruthy()
+    expect(screen.getByText("SKILL")).toBeTruthy()
   })
 })
 
-describe('SkillSidebar — echo stages', () => {
+describe("SkillSidebar — outro stages", () => {
+  const charWithOutro: EnrichedCharacter = {
+    ...char2,
+    id: 3,
+    name: "OutroChar",
+    skills: [
+      {
+        id: 301,
+        name: "Silversnow",
+        type: "Outro Skill",
+        stages: [
+          {
+            name: "Outro DMG",
+            newName: "",
+            value: "0%",
+            actionTime: 0,
+            damage: [],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("renders the outro stage row with OUTRO label", () => {
+    render(
+      <SkillSidebar
+        slots={[3, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
+        characters={[charWithOutro]}
+        focusedId={3}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText("OUTRO")).toBeTruthy()
+    expect(screen.getByText("Silversnow")).toBeTruthy()
+  })
+
+  it("clicking outro stage calls onStageClick with attackType Outro Skill", () => {
+    const onStageClick = vi.fn()
+    render(
+      <SkillSidebar
+        slots={[3, null, null]}
+        loadouts={noLoadouts}
+        echoes={[]}
+        characters={[charWithOutro]}
+        focusedId={3}
+        onFocus={vi.fn()}
+        onStageClick={onStageClick}
+      />,
+    )
+    fireEvent.click(screen.getByText("Silversnow"))
+    expect(onStageClick).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attackType: "Outro Skill",
+        multiplier: 0,
+        actionTime: 0,
+        characterId: 3,
+      }),
+    )
+  })
+})
+
+describe("SkillSidebar — echo stages", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
     { weaponId: null, echoId: 9001, echoSetId: null },
     { weaponId: null, echoId: null, echoSetId: null },
     { weaponId: null, echoId: null, echoSetId: null },
   ]
 
-  it('renders visible echo stages above character stages', () => {
+  it("renders visible echo stages above character stages", () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
@@ -349,10 +414,10 @@ describe('SkillSidebar — echo stages', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Test Echo · Tap')).toBeTruthy()
+    expect(screen.getByText("Test Echo · Tap")).toBeTruthy()
   })
 
-  it('does not render echo stages with hidden: true', () => {
+  it("does not render echo stages with hidden: true", () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
@@ -364,10 +429,10 @@ describe('SkillSidebar — echo stages', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.queryByText('Test Echo · Hold')).toBeNull()
+    expect(screen.queryByText("Test Echo · Hold")).toBeNull()
   })
 
-  it('renders no echo stages when slot has no echo', () => {
+  it("renders no echo stages when slot has no echo", () => {
     render(
       <SkillSidebar
         slots={[1, null, null]}
@@ -382,7 +447,7 @@ describe('SkillSidebar — echo stages', () => {
     expect(screen.queryByText(/Test Echo/)).toBeNull()
   })
 
-  it('clicking echo stage calls onStageClick with Echo Skill attackType', () => {
+  it("clicking echo stage calls onStageClick with Echo Skill attackType", () => {
     const onStageClick = vi.fn()
     render(
       <SkillSidebar
@@ -395,10 +460,10 @@ describe('SkillSidebar — echo stages', () => {
         onStageClick={onStageClick}
       />,
     )
-    fireEvent.click(screen.getByText('Test Echo · Tap'))
+    fireEvent.click(screen.getByText("Test Echo · Tap"))
     expect(onStageClick).toHaveBeenCalledWith(
       expect.objectContaining({
-        attackType: 'Echo Skill',
+        attackType: "Echo Skill",
         multiplier: 2.5,
         actionTime: 30,
         characterId: 1,
@@ -406,13 +471,13 @@ describe('SkillSidebar — echo stages', () => {
     )
   })
 
-  it('renders parenthesised newName with space separator (no bullet)', () => {
+  it("renders parenthesised newName with space separator (no bullet)", () => {
     const echoParenName: EnrichedEcho = {
       ...testEcho,
       id: 9002,
       skill: {
         ...testEcho.skill,
-        stages: [{ ...testEcho.skill.stages[0], newName: '(Tap)' }],
+        stages: [{ ...testEcho.skill.stages[0], newName: "(Tap)" }],
       },
     }
     const loadoutsWithParen: SlotLoadout[] = [
@@ -431,17 +496,17 @@ describe('SkillSidebar — echo stages', () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText('Test Echo (Tap)')).toBeTruthy()
-    expect(screen.queryByText('Test Echo · (Tap)')).toBeNull()
+    expect(screen.getByText("Test Echo (Tap)")).toBeTruthy()
+    expect(screen.queryByText("Test Echo · (Tap)")).toBeNull()
   })
 
-  it('passes space-separated skillName to onStageClick for parenthesised newName', () => {
+  it("passes space-separated skillName to onStageClick for parenthesised newName", () => {
     const echoParenName: EnrichedEcho = {
       ...testEcho,
       id: 9002,
       skill: {
         ...testEcho.skill,
-        stages: [{ ...testEcho.skill.stages[0], newName: '(Tap)' }],
+        stages: [{ ...testEcho.skill.stages[0], newName: "(Tap)" }],
       },
     }
     const loadoutsWithParen: SlotLoadout[] = [
@@ -461,9 +526,9 @@ describe('SkillSidebar — echo stages', () => {
         onStageClick={onStageClick}
       />,
     )
-    fireEvent.click(screen.getByText('Test Echo (Tap)'))
+    fireEvent.click(screen.getByText("Test Echo (Tap)"))
     expect(onStageClick).toHaveBeenCalledWith(
-      expect.objectContaining({ skillName: 'Test Echo (Tap)' }),
+      expect.objectContaining({ skillName: "Test Echo (Tap)" }),
     )
   })
 })

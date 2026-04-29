@@ -468,7 +468,15 @@ export const sanhua = {
       type: "Outro Skill",
       // hidden: true,
       // animationLock: 0,
-      stages: [],
+      stages: [
+        {
+          name: "Outro DMG",
+          newName: "",
+          value: "0%",
+          actionTime: 0,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
