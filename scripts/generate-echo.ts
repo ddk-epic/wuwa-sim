@@ -33,20 +33,22 @@ function formatDamageEntry(d: DamageEntry, level: number): string {
   ].join('\n')
 }
 
-function formatStage(
+export function formatStage(
   stageName: string,
   hits: DamageEntry[],
   level: number,
+  hidden = false,
 ): string {
   const l = ind(level)
   const l1 = ind(level + 1)
   const lines: string[] = [
     `${l}{`,
     `${l1}name: ${s(stageName)},`,
-    `${l1}newName: '',`,
-    `${l1}actionTime: 0,`,
-    `${l1}damage: [`,
+    `${l1}newName: '(${stageName})',`,
   ]
+  if (hidden) lines.push(`${l1}hidden: true,`)
+  lines.push(`${l1}actionTime: 0,`)
+  lines.push(`${l1}damage: [`)
   for (const d of hits) {
     lines.push(formatDamageEntry(d, level + 2) + ',')
   }
@@ -96,7 +98,7 @@ async function generateEcho(name: string): Promise<void> {
   ]
 
   lines.push(formatStage('Tap', echo.skill.hits, 3) + ',')
-  lines.push(formatStage('Hold', echo.skill.hits, 3) + ',')
+  lines.push(formatStage('Hold', echo.skill.hits, 3, true) + ',')
 
   lines.push(`    ],`)
   lines.push(`  },`)
