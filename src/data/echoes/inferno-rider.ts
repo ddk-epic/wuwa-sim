@@ -13,7 +13,7 @@ export const infernoRider = {
     stages: [
       {
         name: 'Tap',
-        newName: 'Tap',
+        newName: '(Tap)',
         actionTime: 0,
         damage: [
           {
@@ -50,7 +50,8 @@ export const infernoRider = {
       },
       {
         name: 'Hold',
-        newName: 'Hold',
+        newName: '(Hold)',
+        hidden: true,
         actionTime: 0,
         damage: [
           {
