@@ -37,6 +37,7 @@ export function formatStage(
   stageName: string,
   hits: DamageEntry[],
   level: number,
+  newName = '',
   hidden = false,
 ): string {
   const l = ind(level)
@@ -44,7 +45,7 @@ export function formatStage(
   const lines: string[] = [
     `${l}{`,
     `${l1}name: ${s(stageName)},`,
-    `${l1}newName: '(${stageName})',`,
+    `${l1}newName: ${s(newName)},`,
   ]
   if (hidden) lines.push(`${l1}hidden: true,`)
   lines.push(`${l1}actionTime: 0,`)
@@ -98,7 +99,7 @@ async function generateEcho(name: string): Promise<void> {
   ]
 
   lines.push(formatStage('Tap', echo.skill.hits, 3) + ',')
-  lines.push(formatStage('Hold', echo.skill.hits, 3, true) + ',')
+  lines.push(formatStage('Hold', echo.skill.hits, 3, '(Hold)', true) + ',')
 
   lines.push(`    ],`)
   lines.push(`  },`)
