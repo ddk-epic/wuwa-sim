@@ -332,7 +332,7 @@ export async function extractCharacter(id: string): Promise<void> {
   }
 
   const slug = data.Name.Content.toLowerCase().replace(/\s+/g, '-')
-  const outputDir = path.join(PROJECT_ROOT, 'src/data/characters')
+  const outputDir = path.join(PROJECT_ROOT, 'src/data/characters/raw')
   const outputPath = path.join(outputDir, `${slug}.json`)
 
   try {
@@ -344,7 +344,7 @@ export async function extractCharacter(id: string): Promise<void> {
 
   await fs.mkdir(outputDir, { recursive: true })
   await fs.writeFile(outputPath, JSON.stringify(character, null, 2))
-  console.log(`Written to src/data/characters/${slug}.json`)
+  console.log(`Written to src/data/characters/raw/${slug}.json`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
