@@ -149,7 +149,7 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
 
   return (
     <button
-      className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-b border-gray-700/50 transition-colors"
+      className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-gray-700/50 transition-colors"
       onClick={handleClick}
     >
       <span className="w-12 pr-2 text-right font-mono text-xs text-gray-500">
