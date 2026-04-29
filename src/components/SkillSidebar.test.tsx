@@ -405,4 +405,65 @@ describe('SkillSidebar — echo stages', () => {
       }),
     )
   })
+
+  it('renders parenthesised newName with space separator (no bullet)', () => {
+    const echoParenName: EnrichedEcho = {
+      ...testEcho,
+      id: 9002,
+      skill: {
+        ...testEcho.skill,
+        stages: [{ ...testEcho.skill.stages[0], newName: '(Tap)' }],
+      },
+    }
+    const loadoutsWithParen: SlotLoadout[] = [
+      { weaponId: null, echoId: 9002, echoSetId: null },
+      { weaponId: null, echoId: null, echoSetId: null },
+      { weaponId: null, echoId: null, echoSetId: null },
+    ]
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={loadoutsWithParen}
+        echoes={[echoParenName]}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Test Echo (Tap)')).toBeTruthy()
+    expect(screen.queryByText('Test Echo · (Tap)')).toBeNull()
+  })
+
+  it('passes space-separated skillName to onStageClick for parenthesised newName', () => {
+    const echoParenName: EnrichedEcho = {
+      ...testEcho,
+      id: 9002,
+      skill: {
+        ...testEcho.skill,
+        stages: [{ ...testEcho.skill.stages[0], newName: '(Tap)' }],
+      },
+    }
+    const loadoutsWithParen: SlotLoadout[] = [
+      { weaponId: null, echoId: 9002, echoSetId: null },
+      { weaponId: null, echoId: null, echoSetId: null },
+      { weaponId: null, echoId: null, echoSetId: null },
+    ]
+    const onStageClick = vi.fn()
+    render(
+      <SkillSidebar
+        slots={[1, null, null]}
+        loadouts={loadoutsWithParen}
+        echoes={[echoParenName]}
+        characters={[char1]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={onStageClick}
+      />,
+    )
+    fireEvent.click(screen.getByText('Test Echo (Tap)'))
+    expect(onStageClick).toHaveBeenCalledWith(
+      expect.objectContaining({ skillName: 'Test Echo (Tap)' }),
+    )
+  })
 })

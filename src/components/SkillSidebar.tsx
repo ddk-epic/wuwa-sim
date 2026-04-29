@@ -129,18 +129,23 @@ interface StageRowProps {
   onStageClick: (entry: NewEntry) => void
 }
 
+function skillLabel(skillName: string, newName?: string): string {
+  if (!newName) return skillName
+  if (newName.startsWith('(')) return `${skillName} ${newName}`
+  return `${skillName} · ${newName}`
+}
+
 function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
   const attackType = stage.damage?.[0]?.type ?? skill.type
   const typeLabel = STAGE_TYPE_LABELS[attackType] ?? ''
+  const label = skillLabel(skill.name, stage.newName)
 
   function handleClick() {
     const multiplier = (stage.damage ?? []).reduce((sum, d) => sum + d.value, 0)
     onStageClick({
       characterId,
       skillType: skill.type,
-      skillName: stage.newName
-        ? `${skill.name} · ${stage.newName}`
-        : skill.name,
+      skillName: label,
       attackType,
       actionTime: stage.actionTime,
       multiplier,
@@ -155,9 +160,7 @@ function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
       <span className="w-12 pr-2 text-right font-mono text-xs text-gray-500">
         {typeLabel}
       </span>
-      <span className="flex-1 text-sm text-gray-200">
-        {stage.newName ? `${skill.name} · ${stage.newName}` : skill.name}
-      </span>
+      <span className="flex-1 text-sm text-gray-200">{label}</span>
     </button>
   )
 }
