@@ -25,6 +25,7 @@
 | **Attack Modifier** | A buff that targets a specific Normal Attack sub-type (e.g. Basic Attack DMG, Heavy Attack DMG) rather than the Normal Attack group as a whole | Damage bonus (when sub-type specific)                     |
 | **Duration**        | The length of time (in seconds) a Skill's buff effect remains active; relevant only for Skills that apply buffs — not a timing concept         | Action time, animation lock                               |
 | **Action Time**     | The number of frames (at 60 fps) a Stage occupies before the next Stage can be queued; defined per Stage, not per Skill                        | Animation lock, cast time, duration (when meaning timing) |
+| **Action Frame**    | The frame offset from the start of a Stage at which a specific Damage Entry's hit lands on the target; defined per Damage Entry, not per Stage | Hit frame, impact frame                                   |
 | **Hidden**          | A flag on a Skill that excludes it from the UI; the Skill still exists in the data but is never shown to the user                              | Blacklisted, disabled, invisible                          |
 
 ## Skill Metadata
@@ -77,6 +78,7 @@
 - Every **Raw Skill** is merged with its **Skill Metadata** entry (if one exists) to produce an **Enriched Skill**; all downstream code operates on **Enriched Skills**
 - **Duration** lives at the **Skill** level and describes how long a buff effect remains active; it is not an action-timing concept
 - **Action Time** lives at the **Stage** level and is expressed in frames (60 fps); each Stage has its own independent Action Time
+- **Action Frame** lives at the **Damage Entry** level and is expressed in frames (60 fps); it is always ≤ the Action Time of its parent Stage
 - A **Hidden** Skill is present in the data layer but absent from the sidebar UI
 - A **Timeline** is composed of **Stages**; a **Rotation** is composed of **Timelines** across Characters and is not modelled by this tool
 
@@ -84,7 +86,11 @@
 
 > **Dev:** "A weapon passive says '+15% Basic Attack DMG' — does that apply to the whole Normal Attack Skill?"
 >
-> **Domain expert:** "No. Normal Attack is the group. Basic Attack is a combo attack Stage within it. Heavy Attacks, Mid-Air Attacks, and Dodge Counters are separate sub-types. That modifier is a Basic Attack Attack Modifier — it does not touch the others."
+> **Domain expert:** "No. It applies to exactly the Damage Entries whose `type` field is `'Basic Attack'`. A Stage can contain multiple Damage Entries of different types, so the modifier is surgical — it targets entries, not Stages or Skills."
+>
+> **Dev:** "So which Stages actually have Basic Attack Damage Entries?"
+>
+> **Domain expert:** "The combo Stages of the Normal Attack Skill — Stage 1, Stage 2, and so on. With possible exceptions, those are always typed as Basic Attack, so they all get buffed. Heavy Attack Stages, Dodge Counters, and Mid-Air Attacks carry their own types and are unaffected."
 >
 > **Dev:** "The character API doesn't give us Action Time values per Stage. Can we add them without touching the Character JSON?"
 >
