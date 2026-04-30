@@ -1,5 +1,5 @@
 import type { EnrichedCharacter } from "#/types/character"
-import type { Weapon } from "#/types/weapon"
+import type { EnrichedWeapon } from "#/types/weapon"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import { ALL_CHARACTERS } from "#/data/characters/index"
 import { ALL_WEAPONS } from "#/data/weapons/index"
@@ -10,7 +10,7 @@ export function getCharacterById(id: number): EnrichedCharacter | null {
   return ALL_CHARACTERS.find((c) => c.id === id) ?? null
 }
 
-export function getWeaponById(id: number): Weapon | null {
+export function getWeaponById(id: number): EnrichedWeapon | null {
   return ALL_WEAPONS.find((w) => w.id === id) ?? null
 }
 
@@ -22,7 +22,7 @@ export function getEchoSetById(id: number): EchoSet | null {
   return ALL_ECHO_SETS.find((s) => s.id === id) ?? null
 }
 
-export function findWeaponByName(name: string): Weapon | null {
+export function findWeaponByName(name: string): EnrichedWeapon | null {
   return ALL_WEAPONS.find((w) => w.name === name) ?? null
 }
 
@@ -38,7 +38,7 @@ export function listCharacters(): EnrichedCharacter[] {
   return ALL_CHARACTERS
 }
 
-export function listWeapons(): Weapon[] {
+export function listWeapons(): EnrichedWeapon[] {
   return ALL_WEAPONS
 }
 
@@ -50,7 +50,7 @@ export function listEchoSets(): EchoSet[] {
   return ALL_ECHO_SETS
 }
 
-export function listWeaponsByType(weaponType: string): Weapon[] {
+export function listWeaponsByType(weaponType: string): EnrichedWeapon[] {
   return ALL_WEAPONS.filter((w) => w.weaponType === weaponType)
 }
 

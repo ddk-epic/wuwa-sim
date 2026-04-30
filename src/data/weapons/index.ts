@@ -1,8 +1,5 @@
-import type { Weapon } from "#/types/weapon"
-import stringmasterData from "./raw/stringmaster.json"
-import emeraldOfGenesisData from "./raw/emerald-of-genesis.json"
+import type { EnrichedWeapon } from "#/types/weapon"
+import { emeraldOfGenesis } from "./emerald-of-genesis"
+import { stringmaster } from "./stringmaster"
 
-export const ALL_WEAPONS: Weapon[] = [
-  emeraldOfGenesisData,
-  stringmasterData,
-] as Weapon[]
+export const ALL_WEAPONS: EnrichedWeapon[] = [emeraldOfGenesis, stringmaster]

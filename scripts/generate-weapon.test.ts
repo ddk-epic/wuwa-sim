@@ -19,6 +19,11 @@ const sampleWeapon: Weapon = {
 }
 
 describe("formatWeapon", () => {
+  it("emits the weapon id", () => {
+    const out = formatWeapon(sampleWeapon, "emeraldOfGenesis")
+    expect(out).toContain("id: 21020015")
+  })
+
   it("emits satisfies EnrichedWeapon", () => {
     const out = formatWeapon(sampleWeapon, "emeraldOfGenesis")
     expect(out).toContain("satisfies EnrichedWeapon")

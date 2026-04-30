@@ -35,6 +35,7 @@ export interface EnrichedWeaponStats {
 }
 
 export interface EnrichedWeapon {
+  id: number
   name: string
   weaponType: string
   stats: EnrichedWeaponStats

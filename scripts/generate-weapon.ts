@@ -14,6 +14,7 @@ export function formatWeapon(weapon: Weapon, varName: string): string {
     `import type { EnrichedWeapon } from '#/types/weapon'`,
     ``,
     `export const ${varName} = {`,
+    `  id: ${weapon.id},`,
     `  name: ${s(weapon.name)},`,
     `  weaponType: ${s(weapon.weaponType)},`,
     `  stats: {`,
