@@ -1,32 +1,11 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
+import { getCharacterById } from "#/lib/catalog"
 import {
-  getCharacterById,
-  getEchoById,
-  findWeaponByName,
-  findEchoByName,
-  findEchoSetByName,
-  getEchoSetForEcho,
-} from "#/lib/catalog"
-
-const emptyLoadout = (): SlotLoadout => ({
-  weaponId: null,
-  echoId: null,
-  echoSetId: null,
-})
-
-function loadoutFromTemplate(characterId: number): SlotLoadout {
-  const char = getCharacterById(characterId)
-  if (!char) return emptyLoadout()
-  const weapon = findWeaponByName(char.template.weapon)
-  const echo = findEchoByName(char.template.echo)
-  const echoSet = findEchoSetByName(char.template.echoSet)
-  return {
-    weaponId: weapon?.id ?? null,
-    echoId: echo?.id ?? null,
-    echoSetId: echoSet?.id ?? null,
-  }
-}
+  emptyLoadout,
+  inferEchoSetForEcho,
+  loadoutFromTemplate,
+} from "#/lib/template"
 
 function updateSlot(
   prev: [SlotLoadout, SlotLoadout, SlotLoadout],
@@ -73,9 +52,11 @@ export function useTeam() {
       const newSlots: Slots = [slots[0], slots[1], slots[2]]
       newSlots[nullSlot] = characterId
       setSlots(newSlots)
-      setLoadouts((prev) =>
-        updateSlot(prev, nullSlot, () => loadoutFromTemplate(characterId)),
-      )
+      const character = getCharacterById(characterId)
+      const newLoadout = character
+        ? loadoutFromTemplate(character.template)
+        : emptyLoadout()
+      setLoadouts((prev) => updateSlot(prev, nullSlot, () => newLoadout))
       setFocusedId(characterId)
     }
   }
@@ -91,8 +72,7 @@ export function useTeam() {
   }
 
   function setEcho(slotIndex: number, echoId: number) {
-    const echo = getEchoById(echoId)
-    const matchingSet = echo ? getEchoSetForEcho(echo) : null
+    const matchingSet = inferEchoSetForEcho(echoId)
     setLoadouts((prev) =>
       updateSlot(prev, slotIndex, (slot) => ({
         ...slot,
