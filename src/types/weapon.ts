@@ -25,6 +25,7 @@ export interface Weapon {
 }
 
 export interface EnrichedWeaponStat {
+  name: string
   base: number
   max: number
 }

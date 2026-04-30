@@ -5,8 +5,8 @@ export const emeraldOfGenesis = {
   name: "Emerald of Genesis",
   weaponType: "Sword",
   stats: {
-    main: { base: 47, max: 587.5 },
-    sub: { base: 0.054, max: 0.243 },
+    main: { name: "ATK", base: 47, max: 587.5 },
+    sub: { name: "Crit. Rate", base: 0.054, max: 0.243 },
   },
   passive: { name: "Stormy Resolution" },
 } satisfies EnrichedWeapon

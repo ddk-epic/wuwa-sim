@@ -44,14 +44,16 @@ describe("formatWeapon", () => {
     expect(out).toContain('weaponType: "Sword"')
   })
 
-  it("emits main stats with base and max only", () => {
+  it("emits main stats with name, base and max", () => {
     const out = formatWeapon(sampleWeapon, "emeraldOfGenesis")
-    expect(out).toContain("main: { base: 47, max: 587.5 }")
+    expect(out).toContain('main: { name: "ATK", base: 47, max: 587.5 }')
   })
 
-  it("emits sub stats with base and max only", () => {
+  it("emits sub stats with name, base and max", () => {
     const out = formatWeapon(sampleWeapon, "emeraldOfGenesis")
-    expect(out).toContain("sub: { base: 0.054, max: 0.243 }")
+    expect(out).toContain(
+      'sub: { name: "Crit. Rate", base: 0.054, max: 0.243 }',
+    )
   })
 
   it("emits passive name only", () => {
