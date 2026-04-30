@@ -1,13 +1,13 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import type { Weapon, WeaponStat, WeaponStats } from '../src/types/weapon.js'
+import fs from "node:fs/promises"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import type { Weapon, WeaponStat, WeaponStats } from "../src/types/weapon.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  "..",
 )
-const BASE_URL = 'https://api-v2.encore.moe/api/en'
+const BASE_URL = "https://api-v2.encore.moe/api/en"
 
 // --- API shape ---
 
@@ -40,13 +40,13 @@ interface ApiWeapon {
 // --- Mapping ---
 
 function parsePct(str: string): number {
-  const pct = str.replace('%', '')
-  const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+  const pct = str.replace("%", "")
+  const decimals = (pct.split(".")[1]?.length ?? 0) + 2
   return Number((parseFloat(pct) / 100).toFixed(decimals))
 }
 
 function mapStat(prop: ApiProperty): WeaponStat {
-  const isPercentage = prop.GrowthValues[0]?.Value.endsWith('%') ?? false
+  const isPercentage = prop.GrowthValues[0]?.Value.endsWith("%") ?? false
   const lastGrowth = prop.GrowthValues[prop.GrowthValues.length - 1]
   const maxRaw = lastGrowth?.Value ?? String(prop.BaseValue)
 
@@ -65,7 +65,7 @@ function mapStats(properties: ApiProperty[]): WeaponStats {
 }
 
 function parseParamValue(v: string): number {
-  return v.endsWith('%') ? parsePct(v) : parseFloat(v)
+  return v.endsWith("%") ? parsePct(v) : parseFloat(v)
 }
 
 function mapParams(descParams: ApiDescParam[]): number[][] {
@@ -77,7 +77,7 @@ function mapParams(descParams: ApiDescParam[]): number[][] {
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '')
+  return html.replace(/<[^>]*>/g, "")
 }
 
 // --- Main ---
@@ -92,12 +92,12 @@ export async function extractWeapon(id: string): Promise<void> {
   const data: ApiWeapon = await res.json()
 
   const missing: string[] = []
-  if (!data.ItemId) missing.push('ItemId')
-  if (!data.WeaponName) missing.push('WeaponName')
-  if (!data.Properties?.length) missing.push('Properties')
+  if (!data.ItemId) missing.push("ItemId")
+  if (!data.WeaponName) missing.push("WeaponName")
+  if (!data.Properties?.length) missing.push("Properties")
   if (missing.length > 0) {
     console.warn(
-      `Warning: missing or empty fields in API response: ${missing.join(', ')}`,
+      `Warning: missing or empty fields in API response: ${missing.join(", ")}`,
     )
   }
 
@@ -114,8 +114,8 @@ export async function extractWeapon(id: string): Promise<void> {
     },
   }
 
-  const slug = data.WeaponName.toLowerCase().replace(/\s+/g, '-')
-  const outputDir = path.join(PROJECT_ROOT, 'src/data/weapons')
+  const slug = data.WeaponName.toLowerCase().replace(/\s+/g, "-")
+  const outputDir = path.join(PROJECT_ROOT, "src/data/weapons/raw")
   const outputPath = path.join(outputDir, `${slug}.json`)
 
   try {
@@ -127,13 +127,13 @@ export async function extractWeapon(id: string): Promise<void> {
 
   await fs.mkdir(outputDir, { recursive: true })
   await fs.writeFile(outputPath, JSON.stringify(weapon, null, 2))
-  console.log(`Written to src/data/weapons/${slug}.json`)
+  console.log(`Written to src/data/weapons/raw/${slug}.json`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const id = process.argv[2]
   if (!id) {
-    console.error('Usage: pnpm extract-weapon <weapon-id>')
+    console.error("Usage: pnpm extract-weapon <weapon-id>")
     process.exit(1)
   }
   extractWeapon(id).catch((err) => {

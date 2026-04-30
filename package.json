@@ -16,7 +16,8 @@
     "prepare": "husky",
     "ralph": "bash scripts/ralph/ralph-once.sh",
     "extract": "tsx scripts/extract.ts",
-    "gen:character": "tsx scripts/generate-character.ts"
+    "gen:character": "tsx scripts/generate-character.ts",
+    "gen:weapon": "tsx scripts/generate-weapon.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

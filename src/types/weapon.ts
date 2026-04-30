@@ -23,3 +23,20 @@ export interface Weapon {
   stats: WeaponStats
   passive: WeaponPassive
 }
+
+export interface EnrichedWeaponStat {
+  base: number
+  max: number
+}
+
+export interface EnrichedWeaponStats {
+  main: EnrichedWeaponStat
+  sub: EnrichedWeaponStat
+}
+
+export interface EnrichedWeapon {
+  name: string
+  weaponType: string
+  stats: EnrichedWeaponStats
+  passive: { name: string }
+}
