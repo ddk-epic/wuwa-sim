@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent, cleanup } from "@testing-library/react"
-import { SkillSidebar } from "./SkillSidebar"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -114,20 +113,36 @@ const noLoadouts: SlotLoadout[] = [
   { weaponId: null, echoId: null, echoSetId: null },
 ]
 
-const characters = [char1, char2]
-const echoes = [testEcho]
+let testCharacters: EnrichedCharacter[] = []
+let testEchoes: EnrichedEcho[] = []
 
-afterEach(cleanup)
+vi.mock("#/lib/catalog", () => ({
+  getCharacterById: (id: number) =>
+    testCharacters.find((c) => c.id === id) ?? null,
+  getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,
+}))
+
+import { SkillSidebar } from "./SkillSidebar"
+
+afterEach(() => {
+  cleanup()
+  testCharacters = []
+  testEchoes = []
+})
+
+function setCatalog(characters: EnrichedCharacter[], echoes: EnrichedEcho[]) {
+  testCharacters = characters
+  testEchoes = echoes
+}
 
 describe("SkillSidebar — tab strip", () => {
   it("renders one tab per filled slot", () => {
+    setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
     render(
       <SkillSidebar
         slots={slots}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -138,13 +153,12 @@ describe("SkillSidebar — tab strip", () => {
   })
 
   it("shows skills for the focused character", () => {
+    setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
     render(
       <SkillSidebar
         slots={slots}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={characters}
         focusedId={2}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -154,14 +168,13 @@ describe("SkillSidebar — tab strip", () => {
   })
 
   it("clicking an unfocused tab calls onFocus with that character id", () => {
+    setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
     const onFocus = vi.fn()
     render(
       <SkillSidebar
         slots={slots}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={characters}
         focusedId={1}
         onFocus={onFocus}
         onStageClick={vi.fn()}
@@ -172,13 +185,12 @@ describe("SkillSidebar — tab strip", () => {
   })
 
   it("does not display rarity anywhere", () => {
+    setCatalog([char1], [])
     const slots: Slots = [1, null, null]
     const { container } = render(
       <SkillSidebar
         slots={slots}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -198,12 +210,11 @@ describe("SkillSidebar — tab strip", () => {
         },
       ],
     }
+    setCatalog([charWithEmptyNewName], [])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charWithEmptyNewName]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -222,12 +233,11 @@ describe("SkillSidebar — tab strip", () => {
         },
       ],
     }
+    setCatalog([charWithNewName], [])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charWithNewName]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -238,13 +248,12 @@ describe("SkillSidebar — tab strip", () => {
   })
 
   it("hides skills with hidden: true", () => {
+    setCatalog([char1], [])
     const slots: Slots = [1, null, null]
     render(
       <SkillSidebar
         slots={slots}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={characters}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -257,12 +266,11 @@ describe("SkillSidebar — tab strip", () => {
 
 describe("SkillSidebar — attack type labels", () => {
   it("shows BASIC label for a stage with Basic Attack damage type", () => {
+    setCatalog([char1], [])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -282,12 +290,11 @@ describe("SkillSidebar — attack type labels", () => {
         },
       ],
     }
+    setCatalog([charUnknown], [])
     const { container } = render(
       <SkillSidebar
         slots={[2, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charUnknown]}
         focusedId={2}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -317,12 +324,11 @@ describe("SkillSidebar — attack type labels", () => {
         },
       ],
     }
+    setCatalog([charSkill], [])
     render(
       <SkillSidebar
         slots={[2, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charSkill]}
         focusedId={2}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -357,12 +363,11 @@ describe("SkillSidebar — outro stages", () => {
   }
 
   it("renders the outro stage row with OUTRO label", () => {
+    setCatalog([charWithOutro], [])
     render(
       <SkillSidebar
         slots={[3, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charWithOutro]}
         focusedId={3}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -373,13 +378,12 @@ describe("SkillSidebar — outro stages", () => {
   })
 
   it("clicking outro stage calls onStageClick with attackType Outro Skill", () => {
+    setCatalog([charWithOutro], [])
     const onStageClick = vi.fn()
     render(
       <SkillSidebar
         slots={[3, null, null]}
         loadouts={noLoadouts}
-        echoes={[]}
-        characters={[charWithOutro]}
         focusedId={3}
         onFocus={vi.fn()}
         onStageClick={onStageClick}
@@ -405,12 +409,11 @@ describe("SkillSidebar — echo stages", () => {
   ]
 
   it("renders visible echo stages above character stages", () => {
+    setCatalog([char1], [testEcho])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={loadoutsWithEcho}
-        echoes={echoes}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -420,12 +423,11 @@ describe("SkillSidebar — echo stages", () => {
   })
 
   it("does not render echo stages with hidden: true", () => {
+    setCatalog([char1], [testEcho])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={loadoutsWithEcho}
-        echoes={echoes}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -435,12 +437,11 @@ describe("SkillSidebar — echo stages", () => {
   })
 
   it("renders no echo stages when slot has no echo", () => {
+    setCatalog([char1], [testEcho])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={noLoadouts}
-        echoes={echoes}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -450,13 +451,12 @@ describe("SkillSidebar — echo stages", () => {
   })
 
   it("clicking echo stage calls onStageClick with Echo Skill attackType", () => {
+    setCatalog([char1], [testEcho])
     const onStageClick = vi.fn()
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={loadoutsWithEcho}
-        echoes={echoes}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={onStageClick}
@@ -487,12 +487,11 @@ describe("SkillSidebar — echo stages", () => {
       { weaponId: null, echoId: null, echoSetId: null },
       { weaponId: null, echoId: null, echoSetId: null },
     ]
+    setCatalog([char1], [echoParenName])
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={loadoutsWithParen}
-        echoes={[echoParenName]}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
@@ -516,13 +515,12 @@ describe("SkillSidebar — echo stages", () => {
       { weaponId: null, echoId: null, echoSetId: null },
       { weaponId: null, echoId: null, echoSetId: null },
     ]
+    setCatalog([char1], [echoParenName])
     const onStageClick = vi.fn()
     render(
       <SkillSidebar
         slots={[1, null, null]}
         loadouts={loadoutsWithParen}
-        echoes={[echoParenName]}
-        characters={[char1]}
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={onStageClick}

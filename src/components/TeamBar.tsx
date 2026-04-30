@@ -1,11 +1,10 @@
 import { useState } from "react"
-import type { Character } from "#/types/character"
 import type { Slots } from "#/types/loadout"
+import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
 
 interface TeamBarProps {
   slots: Slots
-  characters: Character[]
   onEditTeam: () => void
   onResetTimeline: () => void
   timelineEmpty: boolean
@@ -16,7 +15,6 @@ interface TeamBarProps {
 
 export function TeamBar({
   slots,
-  characters,
   onEditTeam,
   onResetTimeline,
   timelineEmpty,
@@ -29,7 +27,7 @@ export function TeamBar({
   const label = slots
     .map((charId) => {
       if (charId === null) return "—"
-      return characters.find((c) => c.id === charId)?.name ?? "—"
+      return getCharacterById(charId)?.name ?? "—"
     })
     .join(" / ")
 

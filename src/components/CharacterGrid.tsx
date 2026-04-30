@@ -1,20 +1,20 @@
-import type { Character } from '#/types/character'
-import type { Slots } from '#/types/loadout'
-import { ELEMENT_CLASSES } from '#/data/elements'
+import type { Character } from "#/types/character"
+import type { Slots } from "#/types/loadout"
+import { ELEMENT_CLASSES } from "#/data/elements"
+import { listCharacters } from "#/lib/catalog"
 
 interface CharacterGridProps {
-  characters: Character[]
   slots: Slots
   focusedId: number | null
   onToggle: (characterId: number) => void
 }
 
 export function CharacterGrid({
-  characters,
   slots,
   focusedId,
   onToggle,
 }: CharacterGridProps) {
+  const characters = listCharacters()
   const selectedCount = slots.filter((s) => s !== null).length
 
   return (
@@ -52,18 +52,18 @@ function CharacterCard({
   onClick,
 }: CharacterCardProps) {
   const elementBorder =
-    ELEMENT_CLASSES[character.element] ?? 'border-gray-600 bg-gray-700/10'
+    ELEMENT_CLASSES[character.element] ?? "border-gray-600 bg-gray-700/10"
 
   return (
     <div
       className={[
-        'relative rounded border-2 px-2 py-1.5 transition-all select-none',
+        "relative rounded border-2 px-2 py-1.5 transition-all select-none",
         elementBorder,
-        isFocused ? 'ring-2 ring-white/60' : '',
+        isFocused ? "ring-2 ring-white/60" : "",
         isBlocked
-          ? 'opacity-40 cursor-not-allowed'
-          : 'cursor-pointer hover:brightness-110',
-      ].join(' ')}
+          ? "opacity-40 cursor-not-allowed"
+          : "cursor-pointer hover:brightness-110",
+      ].join(" ")}
       onClick={isBlocked ? undefined : onClick}
     >
       {slotNumber !== null && (

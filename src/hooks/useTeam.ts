@@ -1,9 +1,13 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
-import { ALL_CHARACTERS } from "#/data/characters/index"
-import { ALL_WEAPONS } from "#/data/weapons/index"
-import { ALL_ECHOES } from "#/data/echoes/index"
-import { ALL_ECHO_SETS } from "#/data/echo-sets/index"
+import {
+  getCharacterById,
+  getEchoById,
+  findWeaponByName,
+  findEchoByName,
+  findEchoSetByName,
+  getEchoSetForEcho,
+} from "#/lib/catalog"
 
 const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
@@ -12,11 +16,11 @@ const emptyLoadout = (): SlotLoadout => ({
 })
 
 function loadoutFromTemplate(characterId: number): SlotLoadout {
-  const char = ALL_CHARACTERS.find((c) => c.id === characterId)
+  const char = getCharacterById(characterId)
   if (!char) return emptyLoadout()
-  const weapon = ALL_WEAPONS.find((w) => w.name === char.template.weapon)
-  const echo = ALL_ECHOES.find((e) => e.name === char.template.echo)
-  const echoSet = ALL_ECHO_SETS.find((s) => s.name === char.template.echoSet)
+  const weapon = findWeaponByName(char.template.weapon)
+  const echo = findEchoByName(char.template.echo)
+  const echoSet = findEchoSetByName(char.template.echoSet)
   return {
     weaponId: weapon?.id ?? null,
     echoId: echo?.id ?? null,
@@ -87,10 +91,8 @@ export function useTeam() {
   }
 
   function setEcho(slotIndex: number, echoId: number) {
-    const echo = ALL_ECHOES.find((e) => e.id === echoId)
-    const matchingSet = echo
-      ? ALL_ECHO_SETS.find((s) => s.name === echo.set)
-      : null
+    const echo = getEchoById(echoId)
+    const matchingSet = echo ? getEchoSetForEcho(echo) : null
     setLoadouts((prev) =>
       updateSlot(prev, slotIndex, (slot) => ({
         ...slot,

@@ -1,10 +1,7 @@
 import { useState } from "react"
 import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
-import { ALL_CHARACTERS } from "#/data/characters/index"
-import { ALL_WEAPONS } from "#/data/weapons/index"
-import { ALL_ECHOES } from "#/data/echoes/index"
-import { ALL_ECHO_SETS } from "#/data/echo-sets/index"
+import { getCharacterById } from "#/lib/catalog"
 import { SkillSidebar } from "#/components/SkillSidebar"
 import { TeamBar } from "#/components/TeamBar"
 import { TeamModal } from "#/components/TeamModal"
@@ -29,7 +26,7 @@ export function CharacterSelector() {
 
   const totalDmg = entries.reduce((sum, entry) => {
     if (entry.multiplier <= 0) return sum
-    const char = ALL_CHARACTERS.find((c) => c.id === entry.characterId)
+    const char = getCharacterById(entry.characterId)
     const maxAtk = char?.stats.max.atk ?? 0
     return sum + computeDamage(entry.multiplier, maxAtk)
   }, 0)
@@ -41,7 +38,6 @@ export function CharacterSelector() {
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <TeamBar
         slots={slots}
-        characters={ALL_CHARACTERS}
         onEditTeam={() => setModalOpen(true)}
         onResetTimeline={clearTimeline}
         timelineEmpty={entries.length === 0}
@@ -51,19 +47,13 @@ export function CharacterSelector() {
       />
       <div className="flex flex-1 min-h-0">
         <div className="flex-[70] flex flex-col min-h-0">
-          <TimelineView
-            entries={entries}
-            characters={ALL_CHARACTERS}
-            onRemove={removeEntry}
-          />
+          <TimelineView entries={entries} onRemove={removeEntry} />
         </div>
         <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">
           {slots.some((id) => id !== null) ? (
             <SkillSidebar
               slots={slots}
               loadouts={loadouts}
-              echoes={ALL_ECHOES}
-              characters={ALL_CHARACTERS}
               focusedId={focusedId}
               onFocus={focusCharacter}
               onStageClick={addEntry}
@@ -81,10 +71,6 @@ export function CharacterSelector() {
           loadouts={loadouts}
           focusedId={focusedId}
           selectedCount={selectedCount}
-          characters={ALL_CHARACTERS}
-          weapons={ALL_WEAPONS}
-          echoes={ALL_ECHOES}
-          echoSets={ALL_ECHO_SETS}
           onToggle={toggleCharacter}
           onWeaponChange={setWeapon}
           onEchoChange={setEcho}

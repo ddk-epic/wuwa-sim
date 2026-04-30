@@ -1,15 +1,15 @@
-import type { Character } from '#/types/character'
-import type { Weapon } from '#/types/weapon'
-import type { EnrichedEcho, EchoSet } from '#/types/echo'
-import type { Slots, SlotLoadout } from '#/types/loadout'
+import type { Character } from "#/types/character"
+import type { Slots, SlotLoadout } from "#/types/loadout"
+import {
+  getCharacterById,
+  listEchoes,
+  listEchoSets,
+  listWeaponsByType,
+} from "#/lib/catalog"
 
 interface TeamPanelProps {
   slots: Slots
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
-  characters: Character[]
-  weapons: Weapon[]
-  echoes: EnrichedEcho[]
-  echoSets: EchoSet[]
   onWeaponChange: (slotIndex: number, weaponId: number) => void
   onEchoChange: (slotIndex: number, echoId: number) => void
   onEchoSetChange: (slotIndex: number, echoSetId: number) => void
@@ -18,10 +18,6 @@ interface TeamPanelProps {
 export function TeamPanel({
   slots,
   loadouts,
-  characters,
-  weapons,
-  echoes,
-  echoSets,
   onWeaponChange,
   onEchoChange,
   onEchoSetChange,
@@ -33,19 +29,13 @@ export function TeamPanel({
       </p>
       <div className="flex gap-3">
         {slots.map((charId, i) => {
-          const character =
-            charId !== null
-              ? (characters.find((c) => c.id === charId) ?? null)
-              : null
+          const character = charId !== null ? getCharacterById(charId) : null
           return (
             <TeamSlot
               key={i}
               slotNumber={i + 1}
               character={character}
               loadout={loadouts[i]}
-              weapons={weapons}
-              echoes={echoes}
-              echoSets={echoSets}
               onWeaponChange={(weaponId) => onWeaponChange(i, weaponId)}
               onEchoChange={(echoId) => onEchoChange(i, echoId)}
               onEchoSetChange={(echoSetId) => onEchoSetChange(i, echoSetId)}
@@ -61,9 +51,6 @@ interface TeamSlotProps {
   slotNumber: number
   character: Character | null
   loadout: SlotLoadout
-  weapons: Weapon[]
-  echoes: EnrichedEcho[]
-  echoSets: EchoSet[]
   onWeaponChange: (weaponId: number) => void
   onEchoChange: (echoId: number) => void
   onEchoSetChange: (echoSetId: number) => void
@@ -73,9 +60,6 @@ function TeamSlot({
   slotNumber,
   character,
   loadout,
-  weapons,
-  echoes,
-  echoSets,
   onWeaponChange,
   onEchoChange,
   onEchoSetChange,
@@ -88,9 +72,9 @@ function TeamSlot({
     )
   }
 
-  const compatibleWeapons = weapons.filter(
-    (w) => w.weaponType === character.weaponType,
-  )
+  const compatibleWeapons = listWeaponsByType(character.weaponType)
+  const echoes = listEchoes()
+  const echoSets = listEchoSets()
 
   return (
     <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-1.5">
@@ -99,7 +83,7 @@ function TeamSlot({
       </div>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.weaponId ?? ''}
+        value={loadout.weaponId ?? ""}
         onChange={(e) => onWeaponChange(Number(e.target.value))}
       >
         <option value="">— Weapon —</option>
@@ -111,7 +95,7 @@ function TeamSlot({
       </select>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoId ?? ''}
+        value={loadout.echoId ?? ""}
         onChange={(e) => onEchoChange(Number(e.target.value))}
       >
         <option value="">— Echo —</option>
@@ -123,7 +107,7 @@ function TeamSlot({
       </select>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoSetId ?? ''}
+        value={loadout.echoSetId ?? ""}
         onChange={(e) => onEchoSetChange(Number(e.target.value))}
       >
         <option value="">— Echo Set —</option>

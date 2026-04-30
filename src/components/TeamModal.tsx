@@ -1,19 +1,12 @@
-import type { Character } from '#/types/character'
-import type { Weapon } from '#/types/weapon'
-import type { EnrichedEcho, EchoSet } from '#/types/echo'
-import type { Slots, SlotLoadout } from '#/types/loadout'
-import { CharacterGrid } from '#/components/CharacterGrid'
-import { TeamPanel } from '#/components/TeamPanel'
+import type { Slots, SlotLoadout } from "#/types/loadout"
+import { CharacterGrid } from "#/components/CharacterGrid"
+import { TeamPanel } from "#/components/TeamPanel"
 
 interface TeamModalProps {
   slots: Slots
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
   focusedId: number | null
   selectedCount: number
-  characters: Character[]
-  weapons: Weapon[]
-  echoes: EnrichedEcho[]
-  echoSets: EchoSet[]
   onToggle: (characterId: number) => void
   onWeaponChange: (slotIndex: number, weaponId: number) => void
   onEchoChange: (slotIndex: number, echoId: number) => void
@@ -26,10 +19,6 @@ export function TeamModal({
   loadouts,
   focusedId,
   selectedCount,
-  characters,
-  weapons,
-  echoes,
-  echoSets,
   onToggle,
   onWeaponChange,
   onEchoChange,
@@ -62,7 +51,6 @@ export function TeamModal({
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           <CharacterGrid
-            characters={characters}
             slots={slots}
             focusedId={focusedId}
             onToggle={onToggle}
@@ -72,10 +60,6 @@ export function TeamModal({
           <TeamPanel
             slots={slots}
             loadouts={loadouts}
-            characters={characters}
-            weapons={weapons}
-            echoes={echoes}
-            echoSets={echoSets}
             onWeaponChange={onWeaponChange}
             onEchoChange={onEchoChange}
             onEchoSetChange={onEchoSetChange}

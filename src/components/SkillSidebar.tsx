@@ -2,14 +2,14 @@ import type {
   EnrichedCharacter,
   EnrichedSkill,
   DamageEntry,
-} from '#/types/character'
-import type { SlotLoadout, Slots } from '#/types/loadout'
-import type { EnrichedEcho } from '#/types/echo'
-import type { TimelineEntry } from '#/types/timeline'
-import { ELEMENT_BORDER_CLASSES } from '#/data/elements'
-import { STAGE_TYPE_LABELS } from '#/data/skill-types'
+} from "#/types/character"
+import type { SlotLoadout, Slots } from "#/types/loadout"
+import type { TimelineEntry } from "#/types/timeline"
+import { ELEMENT_BORDER_CLASSES } from "#/data/elements"
+import { STAGE_TYPE_LABELS } from "#/data/skill-types"
+import { getCharacterById, getEchoById } from "#/lib/catalog"
 
-type NewEntry = Omit<TimelineEntry, 'id'>
+type NewEntry = Omit<TimelineEntry, "id">
 
 interface SkillInfo {
   name: string
@@ -25,8 +25,6 @@ interface StageInfo {
 interface SkillSidebarProps {
   slots: Slots
   loadouts: SlotLoadout[]
-  echoes: EnrichedEcho[]
-  characters: EnrichedCharacter[]
   focusedId: number | null
   onFocus: (id: number) => void
   onStageClick: (entry: NewEntry) => void
@@ -35,25 +33,24 @@ interface SkillSidebarProps {
 export function SkillSidebar({
   slots,
   loadouts,
-  echoes,
-  characters,
   focusedId,
   onFocus,
   onStageClick,
 }: SkillSidebarProps) {
   const filledCharacters = slots
     .filter((id): id is number => id !== null)
-    .map((id) => characters.find((c) => c.id === id))
-    .filter((c): c is EnrichedCharacter => c !== undefined)
+    .map((id) => getCharacterById(id))
+    .filter((c): c is EnrichedCharacter => c !== null)
 
   const focusedCharacter =
-    filledCharacters.find((c) => c.id === focusedId) ?? null
+    focusedId !== null && slots.includes(focusedId)
+      ? getCharacterById(focusedId)
+      : null
 
   const focusedSlotIndex = slots.findIndex((id) => id === focusedId)
   const echoId =
     focusedSlotIndex >= 0 ? (loadouts[focusedSlotIndex]?.echoId ?? null) : null
-  const focusedEcho =
-    echoId !== null ? (echoes.find((e) => e.id === echoId) ?? null) : null
+  const focusedEcho = echoId !== null ? getEchoById(echoId) : null
 
   const echoStages = focusedEcho?.skill.stages.filter((s) => !s.hidden) ?? []
 
@@ -62,7 +59,7 @@ export function SkillSidebar({
 
   const hasEchoStages = echoStages.length > 0
   const hasCharacterStages = skills.some(
-    (s) => s.stages.filter((st) => st.name !== '' && !st.hidden).length > 0,
+    (s) => s.stages.filter((st) => st.name !== "" && !st.hidden).length > 0,
   )
 
   return (
@@ -71,16 +68,16 @@ export function SkillSidebar({
         {filledCharacters.map((character) => {
           const isFocused = character.id === focusedId
           const borderClass =
-            ELEMENT_BORDER_CLASSES[character.element] ?? 'border-gray-500'
+            ELEMENT_BORDER_CLASSES[character.element] ?? "border-gray-500"
           return (
             <button
               key={character.id}
               className={[
-                'flex-1 px-3 py-2 text-center border-b-2 transition-colors',
+                "flex-1 px-3 py-2 text-center border-b-2 transition-colors",
                 isFocused
                   ? `${borderClass} text-white`
-                  : 'border-gray-700 text-gray-400 hover:text-gray-200',
-              ].join(' ')}
+                  : "border-gray-700 text-gray-400 hover:text-gray-200",
+              ].join(" ")}
               onClick={() => onFocus(character.id)}
             >
               <div className="font-bold text-lg truncate">{character.name}</div>
@@ -95,7 +92,7 @@ export function SkillSidebar({
           echoStages.map((stage, i) => (
             <StageRow
               key={`echo-${i}`}
-              skill={{ name: focusedEcho.name, type: 'Echo Skill' }}
+              skill={{ name: focusedEcho.name, type: "Echo Skill" }}
               stage={stage}
               characterId={focusedCharacter?.id ?? 0}
               onStageClick={onStageClick}
@@ -106,7 +103,7 @@ export function SkillSidebar({
         )}
         {skills.flatMap((skill) =>
           skill.stages
-            .filter((stage) => stage.name !== '' && !stage.hidden)
+            .filter((stage) => stage.name !== "" && !stage.hidden)
             .map((stage, i) => (
               <StageRow
                 key={`${skill.id}-${i}`}
@@ -131,13 +128,13 @@ interface StageRowProps {
 
 function skillLabel(skillName: string, newName?: string): string {
   if (!newName) return skillName
-  if (newName.startsWith('(')) return `${skillName} ${newName}`
+  if (newName.startsWith("(")) return `${skillName} ${newName}`
   return `${skillName} · ${newName}`
 }
 
 function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
   const attackType = stage.damage?.[0]?.type ?? skill.type
-  const typeLabel = STAGE_TYPE_LABELS[attackType] ?? ''
+  const typeLabel = STAGE_TYPE_LABELS[attackType] ?? ""
   const label = skillLabel(skill.name, stage.newName)
 
   function handleClick() {

@@ -1,18 +1,13 @@
-import type { TimelineEntry } from '#/types/timeline'
-import type { Character } from '#/types/character'
-import { accumulateTime, computeDamage } from '#/lib/timeline'
+import type { TimelineEntry } from "#/types/timeline"
+import { accumulateTime, computeDamage } from "#/lib/timeline"
+import { getCharacterById } from "#/lib/catalog"
 
 interface TimelineViewProps {
   entries: TimelineEntry[]
-  characters: Character[]
   onRemove: (id: string) => void
 }
 
-export function TimelineView({
-  entries,
-  characters,
-  onRemove,
-}: TimelineViewProps) {
+export function TimelineView({ entries, onRemove }: TimelineViewProps) {
   if (entries.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -39,7 +34,7 @@ export function TimelineView({
         </thead>
         <tbody>
           {entries.map((entry, i) => {
-            const char = characters.find((c) => c.id === entry.characterId)
+            const char = getCharacterById(entry.characterId)
             const maxAtk = char?.stats.max.atk ?? 0
             const damage =
               entry.multiplier > 0
@@ -51,14 +46,14 @@ export function TimelineView({
                 className="border-t border-gray-700 hover:bg-gray-800/50"
               >
                 <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                <td className="px-3 py-2 text-white">{char?.name ?? '—'}</td>
+                <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
                 <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
                 <td className="px-3 py-2 text-gray-200">{entry.skillName}</td>
                 <td className="px-3 py-2 text-gray-300">
                   {(times[i] / 60).toFixed(2)}s
                 </td>
                 <td className="px-3 py-2 text-yellow-400">
-                  {damage !== null ? damage.toLocaleString() : '—'}
+                  {damage !== null ? damage.toLocaleString() : "—"}
                 </td>
                 <td className="px-3 py-2">
                   <button
