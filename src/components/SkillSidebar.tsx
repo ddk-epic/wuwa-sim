@@ -1,26 +1,14 @@
-import type {
-  EnrichedCharacter,
-  EnrichedSkill,
-  DamageEntry,
-} from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { ELEMENT_BORDER_CLASSES } from "#/data/elements"
-import { STAGE_TYPE_LABELS } from "#/data/skill-types"
-import { getCharacterById, getEchoById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/catalog"
+import {
+  getFocusedStageCatalog,
+  type FocusedStage,
+} from "#/lib/focused-stage-catalog"
 
 type NewEntry = Omit<TimelineEntry, "id">
-
-interface SkillInfo {
-  name: string
-  type: string
-}
-
-interface StageInfo {
-  newName?: string
-  actionTime: number
-  damage?: DamageEntry[]
-}
 
 interface SkillSidebarProps {
   slots: Slots
@@ -42,25 +30,13 @@ export function SkillSidebar({
     .map((id) => getCharacterById(id))
     .filter((c): c is EnrichedCharacter => c !== null)
 
-  const focusedCharacter =
-    focusedId !== null && slots.includes(focusedId)
-      ? getCharacterById(focusedId)
-      : null
-
-  const focusedSlotIndex = slots.findIndex((id) => id === focusedId)
-  const echoId =
-    focusedSlotIndex >= 0 ? (loadouts[focusedSlotIndex]?.echoId ?? null) : null
-  const focusedEcho = echoId !== null ? getEchoById(echoId) : null
-
-  const echoStages = focusedEcho?.skill.stages.filter((s) => !s.hidden) ?? []
-
-  const skills: EnrichedSkill[] =
-    focusedCharacter?.skills.filter((s) => !s.hidden) ?? []
-
-  const hasEchoStages = echoStages.length > 0
-  const hasCharacterStages = skills.some(
-    (s) => s.stages.filter((st) => st.name !== "" && !st.hidden).length > 0,
+  const { echoStages, characterStages } = getFocusedStageCatalog(
+    slots,
+    loadouts,
+    focusedId,
   )
+
+  const showDivider = echoStages.length > 0 && characterStages.length > 0
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -87,77 +63,38 @@ export function SkillSidebar({
         })}
       </div>
       <div className="flex-1 overflow-y-auto">
-        {hasEchoStages &&
-          focusedEcho !== null &&
-          echoStages.map((stage, i) => (
-            <StageRow
-              key={`echo-${i}`}
-              skill={{ name: focusedEcho.name, type: "Echo Skill" }}
-              stage={stage}
-              characterId={focusedCharacter?.id ?? 0}
-              onStageClick={onStageClick}
-            />
-          ))}
-        {hasEchoStages && hasCharacterStages && (
-          <div className="border-b border-gray-600 my-1 mx-2" />
+        {echoStages.map((stage) => (
+          <StageRow key={stage.key} stage={stage} onStageClick={onStageClick} />
+        ))}
+        {showDivider && (
+          <div
+            data-testid="echo-character-divider"
+            className="border-b border-gray-600 my-1 mx-2"
+          />
         )}
-        {skills.flatMap((skill) =>
-          skill.stages
-            .filter((stage) => stage.name !== "" && !stage.hidden)
-            .map((stage, i) => (
-              <StageRow
-                key={`${skill.id}-${i}`}
-                skill={skill}
-                stage={stage}
-                characterId={focusedCharacter?.id ?? 0}
-                onStageClick={onStageClick}
-              />
-            )),
-        )}
+        {characterStages.map((stage) => (
+          <StageRow key={stage.key} stage={stage} onStageClick={onStageClick} />
+        ))}
       </div>
     </div>
   )
 }
 
 interface StageRowProps {
-  skill: SkillInfo
-  stage: StageInfo
-  characterId: number
+  stage: FocusedStage
   onStageClick: (entry: NewEntry) => void
 }
 
-function skillLabel(skillName: string, newName?: string): string {
-  if (!newName) return skillName
-  if (newName.startsWith("(")) return `${skillName} ${newName}`
-  return `${skillName} · ${newName}`
-}
-
-function StageRow({ skill, stage, characterId, onStageClick }: StageRowProps) {
-  const attackType = stage.damage?.[0]?.type ?? skill.type
-  const typeLabel = STAGE_TYPE_LABELS[attackType] ?? ""
-  const label = skillLabel(skill.name, stage.newName)
-
-  function handleClick() {
-    const multiplier = (stage.damage ?? []).reduce((sum, d) => sum + d.value, 0)
-    onStageClick({
-      characterId,
-      skillType: skill.type,
-      skillName: label,
-      attackType,
-      actionTime: stage.actionTime,
-      multiplier,
-    })
-  }
-
+function StageRow({ stage, onStageClick }: StageRowProps) {
   return (
     <button
       className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-gray-700/50 transition-colors"
-      onClick={handleClick}
+      onClick={() => onStageClick(stage.clickPayload)}
     >
       <span className="w-12 pr-2 text-right font-mono text-xs text-gray-500">
-        {typeLabel}
+        {stage.typeLabel}
       </span>
-      <span className="flex-1 text-sm text-gray-200">{label}</span>
+      <span className="flex-1 text-sm text-gray-200">{stage.label}</span>
     </button>
   )
 }

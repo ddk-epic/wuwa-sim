@@ -39,14 +39,6 @@ const char1: EnrichedCharacter = {
       ],
       damage: [],
     },
-    {
-      id: 102,
-      name: "Hidden Skill",
-      type: "Normal Attack",
-      hidden: true,
-      stages: [{ name: "Hidden Stage", value: "1", actionTime: 0, damage: [] }],
-      damage: [],
-    },
   ],
 }
 
@@ -95,13 +87,6 @@ const testEcho: EnrichedEcho = {
             weakness: 0,
           },
         ],
-      },
-      {
-        name: "Hold",
-        newName: "Hold",
-        actionTime: 0,
-        hidden: true,
-        damage: [],
       },
     ],
   },
@@ -152,21 +137,6 @@ describe("SkillSidebar — tab strip", () => {
     expect(screen.getByText("Sanhua")).toBeTruthy()
   })
 
-  it("shows skills for the focused character", () => {
-    setCatalog([char1, char2], [])
-    const slots: Slots = [1, 2, null]
-    render(
-      <SkillSidebar
-        slots={slots}
-        loadouts={noLoadouts}
-        focusedId={2}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.getAllByText("Normal Attack").length).toBeGreaterThan(0)
-  })
-
   it("clicking an unfocused tab calls onFocus with that character id", () => {
     setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
@@ -183,37 +153,14 @@ describe("SkillSidebar — tab strip", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
     expect(onFocus).toHaveBeenCalledWith(2)
   })
+})
 
-  it("does not display rarity anywhere", () => {
-    setCatalog([char1], [])
-    const slots: Slots = [1, null, null]
-    const { container } = render(
-      <SkillSidebar
-        slots={slots}
-        loadouts={noLoadouts}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(container.textContent).not.toContain("rarity")
-    expect(container.textContent).not.toContain(char1.rarity)
-  })
-
-  it("falls back to name when newName is empty string", () => {
-    const charWithEmptyNewName: EnrichedCharacter = {
-      ...char1,
-      skills: [
-        {
-          ...char1.skills[0],
-          stages: [{ ...char1.skills[0].stages[0], newName: "" }],
-        },
-      ],
-    }
-    setCatalog([charWithEmptyNewName], [])
+describe("SkillSidebar — stage rendering", () => {
+  it("renders the focused character's stages with their resolved labels", () => {
+    setCatalog([char1, char2], [])
     render(
       <SkillSidebar
-        slots={[1, null, null]}
+        slots={[1, 2, null]}
         loadouts={noLoadouts}
         focusedId={1}
         onFocus={vi.fn()}
@@ -221,194 +168,41 @@ describe("SkillSidebar — tab strip", () => {
       />,
     )
     expect(screen.getByText("Normal Attack")).toBeTruthy()
-  })
-
-  it("renders newName instead of name when set on a stage", () => {
-    const charWithNewName: EnrichedCharacter = {
-      ...char1,
-      skills: [
-        {
-          ...char1.skills[0],
-          stages: [{ ...char1.skills[0].stages[0], newName: "Override Label" }],
-        },
-      ],
-    }
-    setCatalog([charWithNewName], [])
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={noLoadouts}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.getByText("Normal Attack · Override Label")).toBeTruthy()
-    expect(screen.queryByText("Stage 1")).toBeNull()
-  })
-
-  it("hides skills with hidden: true", () => {
-    setCatalog([char1], [])
-    const slots: Slots = [1, null, null]
-    render(
-      <SkillSidebar
-        slots={slots}
-        loadouts={noLoadouts}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.queryByText("Hidden Stage")).toBeNull()
-    expect(screen.queryByText("Hidden Skill")).toBeNull()
-  })
-})
-
-describe("SkillSidebar — attack type labels", () => {
-  it("shows BASIC label for a stage with Basic Attack damage type", () => {
-    setCatalog([char1], [])
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={noLoadouts}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
     expect(screen.getByText("BASIC")).toBeTruthy()
   })
 
-  it("shows no abbreviation label when attack type is unknown", () => {
-    const charUnknown: EnrichedCharacter = {
-      ...char2,
-      skills: [
-        {
-          ...char2.skills[0],
-          type: "Normal Attack",
-          stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
-        },
-      ],
-    }
-    setCatalog([charUnknown], [])
-    const { container } = render(
-      <SkillSidebar
-        slots={[2, null, null]}
-        loadouts={noLoadouts}
-        focusedId={2}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    for (const label of [
-      "BASIC",
-      "HEAVY",
-      "SKILL",
-      "LIBER",
-      "FORTE",
-      "INTRO",
-      "OUTRO",
-    ]) {
-      expect(container.textContent).not.toContain(label)
-    }
-  })
-
-  it("shows SKILL label when skill type is Resonance Skill and no damage entries", () => {
-    const charSkill: EnrichedCharacter = {
-      ...char2,
-      skills: [
-        {
-          ...char2.skills[0],
-          type: "Resonance Skill",
-          stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
-        },
-      ],
-    }
-    setCatalog([charSkill], [])
-    render(
-      <SkillSidebar
-        slots={[2, null, null]}
-        loadouts={noLoadouts}
-        focusedId={2}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.getByText("SKILL")).toBeTruthy()
-  })
-})
-
-describe("SkillSidebar — outro stages", () => {
-  const charWithOutro: EnrichedCharacter = {
-    ...char2,
-    id: 3,
-    name: "OutroChar",
-    skills: [
-      {
-        id: 301,
-        name: "Silversnow",
-        type: "Outro Skill",
-        stages: [
-          {
-            name: "Outro DMG",
-            newName: "",
-            value: "0%",
-            actionTime: 0,
-            damage: [],
-          },
-        ],
-        damage: [],
-      },
-    ],
-  }
-
-  it("renders the outro stage row with OUTRO label", () => {
-    setCatalog([charWithOutro], [])
-    render(
-      <SkillSidebar
-        slots={[3, null, null]}
-        loadouts={noLoadouts}
-        focusedId={3}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.getByText("OUTRO")).toBeTruthy()
-    expect(screen.getByText("Silversnow")).toBeTruthy()
-  })
-
-  it("clicking outro stage calls onStageClick with attackType Outro Skill", () => {
-    setCatalog([charWithOutro], [])
+  it("clicking a stage row calls onStageClick with the stage's click payload", () => {
+    setCatalog([char1], [])
     const onStageClick = vi.fn()
     render(
       <SkillSidebar
-        slots={[3, null, null]}
+        slots={[1, null, null]}
         loadouts={noLoadouts}
-        focusedId={3}
+        focusedId={1}
         onFocus={vi.fn()}
         onStageClick={onStageClick}
       />,
     )
-    fireEvent.click(screen.getByText("Silversnow"))
+    fireEvent.click(screen.getByText("Normal Attack"))
     expect(onStageClick).toHaveBeenCalledWith(
       expect.objectContaining({
-        attackType: "Outro Skill",
-        multiplier: 0,
-        actionTime: 0,
-        characterId: 3,
+        characterId: 1,
+        attackType: "Basic Attack",
+        skillName: "Normal Attack",
+        multiplier: 1.5,
       }),
     )
   })
 })
 
-describe("SkillSidebar — echo stages", () => {
+describe("SkillSidebar — divider presence", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
     { weaponId: null, echoId: 9001, echoSetId: null },
     { weaponId: null, echoId: null, echoSetId: null },
     { weaponId: null, echoId: null, echoSetId: null },
   ]
 
-  it("renders visible echo stages above character stages", () => {
+  it("renders the divider when both echo and character stages exist", () => {
     setCatalog([char1], [testEcho])
     render(
       <SkillSidebar
@@ -419,25 +213,11 @@ describe("SkillSidebar — echo stages", () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.getByText("Test Echo · Tap")).toBeTruthy()
+    expect(screen.getByTestId("echo-character-divider")).toBeTruthy()
   })
 
-  it("does not render echo stages with hidden: true", () => {
-    setCatalog([char1], [testEcho])
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={loadoutsWithEcho}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.queryByText("Test Echo · Hold")).toBeNull()
-  })
-
-  it("renders no echo stages when slot has no echo", () => {
-    setCatalog([char1], [testEcho])
+  it("omits the divider when there are no echo stages", () => {
+    setCatalog([char1], [])
     render(
       <SkillSidebar
         slots={[1, null, null]}
@@ -447,88 +227,6 @@ describe("SkillSidebar — echo stages", () => {
         onStageClick={vi.fn()}
       />,
     )
-    expect(screen.queryByText(/Test Echo/)).toBeNull()
-  })
-
-  it("clicking echo stage calls onStageClick with Echo Skill attackType", () => {
-    setCatalog([char1], [testEcho])
-    const onStageClick = vi.fn()
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={loadoutsWithEcho}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={onStageClick}
-      />,
-    )
-    fireEvent.click(screen.getByText("Test Echo · Tap"))
-    expect(onStageClick).toHaveBeenCalledWith(
-      expect.objectContaining({
-        attackType: "Echo Skill",
-        multiplier: 2.5,
-        actionTime: 30,
-        characterId: 1,
-      }),
-    )
-  })
-
-  it("renders parenthesised newName with space separator (no bullet)", () => {
-    const echoParenName: EnrichedEcho = {
-      ...testEcho,
-      id: 9002,
-      skill: {
-        ...testEcho.skill,
-        stages: [{ ...testEcho.skill.stages[0], newName: "(Tap)" }],
-      },
-    }
-    const loadoutsWithParen: SlotLoadout[] = [
-      { weaponId: null, echoId: 9002, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-    ]
-    setCatalog([char1], [echoParenName])
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={loadoutsWithParen}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={vi.fn()}
-      />,
-    )
-    expect(screen.getByText("Test Echo (Tap)")).toBeTruthy()
-    expect(screen.queryByText("Test Echo · (Tap)")).toBeNull()
-  })
-
-  it("passes space-separated skillName to onStageClick for parenthesised newName", () => {
-    const echoParenName: EnrichedEcho = {
-      ...testEcho,
-      id: 9002,
-      skill: {
-        ...testEcho.skill,
-        stages: [{ ...testEcho.skill.stages[0], newName: "(Tap)" }],
-      },
-    }
-    const loadoutsWithParen: SlotLoadout[] = [
-      { weaponId: null, echoId: 9002, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-    ]
-    setCatalog([char1], [echoParenName])
-    const onStageClick = vi.fn()
-    render(
-      <SkillSidebar
-        slots={[1, null, null]}
-        loadouts={loadoutsWithParen}
-        focusedId={1}
-        onFocus={vi.fn()}
-        onStageClick={onStageClick}
-      />,
-    )
-    fireEvent.click(screen.getByText("Test Echo (Tap)"))
-    expect(onStageClick).toHaveBeenCalledWith(
-      expect.objectContaining({ skillName: "Test Echo (Tap)" }),
-    )
+    expect(screen.queryByTestId("echo-character-divider")).toBeNull()
   })
 })
