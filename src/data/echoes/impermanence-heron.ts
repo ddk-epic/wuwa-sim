@@ -1,4 +1,4 @@
-import type { EnrichedEcho } from "#/types/echo"
+﻿import type { EnrichedEcho } from "#/types/echo"
 
 export const impermanenceHeron = {
   id: 6000052,
@@ -20,6 +20,7 @@ export const impermanenceHeron = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 3.1056,
             energy: 4.85,
             concerto: 0,
@@ -38,6 +39,7 @@ export const impermanenceHeron = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 0.5572,
             energy: 0.87,
             concerto: 0,

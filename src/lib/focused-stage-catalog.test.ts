@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+﻿import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -26,6 +26,7 @@ const char1: EnrichedCharacter = {
               type: "Basic Attack",
               dmgType: "Physical",
               scalingStat: "ATK",
+              actionFrame: 0,
               value: 1.5,
               energy: 0,
               concerto: 0,
@@ -43,6 +44,7 @@ const char1: EnrichedCharacter = {
               type: "Basic Attack",
               dmgType: "Physical",
               scalingStat: "ATK",
+              actionFrame: 0,
               value: 0.5,
               energy: 0,
               concerto: 0,
@@ -53,6 +55,7 @@ const char1: EnrichedCharacter = {
               type: "Basic Attack",
               dmgType: "Physical",
               scalingStat: "ATK",
+              actionFrame: 0,
               value: 0.25,
               energy: 0,
               concerto: 0,
@@ -117,6 +120,7 @@ const echo1: EnrichedEcho = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.5,
             energy: 0,
             concerto: 0,

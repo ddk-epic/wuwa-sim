@@ -1,15 +1,15 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import type { Echo, EchoSkill } from '../src/types/echo.js'
-import type { DamageEntry } from '../src/types/character.js'
-import type { EchoSet } from '../src/types/echo-set.js'
+﻿import fs from "node:fs/promises"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import type { Echo, EchoSkill } from "../src/types/echo.js"
+import type { DamageEntry } from "../src/types/character.js"
+import type { EchoSet } from "../src/types/echo-set.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  "..",
 )
-const BASE_URL = 'https://api-v2.encore.moe/api/en'
+const BASE_URL = "https://api-v2.encore.moe/api/en"
 
 // --- API shape ---
 
@@ -68,20 +68,21 @@ const ECHO_COST_MAP: Record<number, number> = {
 }
 
 function parseRateLv(rateStr: string): number {
-  const pct = rateStr.replace('%', '')
-  const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+  const pct = rateStr.replace("%", "")
+  const decimals = (pct.split(".")[1]?.length ?? 0) + 2
   return Number((parseFloat(pct) / 100).toFixed(decimals))
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '')
+  return html.replace(/<[^>]*>/g, "")
 }
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   return (damageList ?? []).map((entry) => ({
     type: entry.Type,
-    dmgType: entry.DmgType ?? 'damage',
+    dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
+    actionFrame: 0,
     value: parseRateLv(entry.RateLv[4]),
     energy: entry.Energy[0],
     concerto: entry.ElementPower[0],
@@ -127,13 +128,13 @@ export async function extractEcho(id: string): Promise<void> {
   const data: ApiEcho = await res.json()
 
   const missing: string[] = []
-  if (!data.MonsterId) missing.push('MonsterId')
-  if (!data.MonsterName) missing.push('MonsterName')
-  if (!data.Skill) missing.push('Skill')
-  if (!data.FetterGroupDetails?.length) missing.push('FetterGroupDetails')
+  if (!data.MonsterId) missing.push("MonsterId")
+  if (!data.MonsterName) missing.push("MonsterName")
+  if (!data.Skill) missing.push("Skill")
+  if (!data.FetterGroupDetails?.length) missing.push("FetterGroupDetails")
   if (missing.length > 0) {
     console.warn(
-      `Warning: missing or empty fields in API response: ${missing.join(', ')}`,
+      `Warning: missing or empty fields in API response: ${missing.join(", ")}`,
     )
   }
 
@@ -153,11 +154,11 @@ export async function extractEcho(id: string): Promise<void> {
     set: echoSet.name,
   }
 
-  const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, '-')
-  const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, '-')
+  const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, "-")
+  const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, "-")
 
-  const echoDir = path.join(PROJECT_ROOT, 'src/data/echoes/raw')
-  const setDir = path.join(PROJECT_ROOT, 'src/data/echo-sets')
+  const echoDir = path.join(PROJECT_ROOT, "src/data/echoes/raw")
+  const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets")
 
   await fs.mkdir(echoDir, { recursive: true })
   await fs.mkdir(setDir, { recursive: true })
@@ -185,7 +186,7 @@ export async function extractEcho(id: string): Promise<void> {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const id = process.argv[2]
   if (!id) {
-    console.error('Usage: pnpm extract-echo <echo-id>')
+    console.error("Usage: pnpm extract-echo <echo-id>")
     process.exit(1)
   }
   extractEcho(id).catch((err) => {

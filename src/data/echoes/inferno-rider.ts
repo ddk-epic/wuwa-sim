@@ -1,4 +1,4 @@
-import type { EnrichedEcho } from "#/types/echo"
+﻿import type { EnrichedEcho } from "#/types/echo"
 
 export const infernoRider = {
   id: 390080007,
@@ -20,6 +20,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.424,
             energy: 3.78,
             concerto: 0,
@@ -30,6 +31,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.828,
             energy: 4.41,
             concerto: 0,
@@ -40,6 +42,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.828,
             energy: 4.41,
             concerto: 0,
@@ -58,6 +61,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.828,
             energy: 4.41,
             concerto: 0,

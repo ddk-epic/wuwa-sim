@@ -22,6 +22,7 @@ export interface DamageEntry {
   type: string
   dmgType: string
   scalingStat: string
+  actionFrame: number
   value: number
   energy: number
   concerto: number

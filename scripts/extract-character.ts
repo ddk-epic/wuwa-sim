@@ -1,6 +1,6 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+﻿import fs from "node:fs/promises"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import type {
   Character,
   CharacterStats,
@@ -8,13 +8,13 @@ import type {
   Skill,
   SkillAttribute,
   StatGroup,
-} from '../src/types/character.js'
+} from "../src/types/character.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  "..",
 )
-const BASE_URL = 'https://api-v2.encore.moe/api/en'
+const BASE_URL = "https://api-v2.encore.moe/api/en"
 
 // --- API shape ---
 
@@ -72,17 +72,17 @@ interface ApiCharacter {
 // --- Mapping ---
 
 const WEAPON_TYPE_MAP: Record<number, string> = {
-  1: 'Broadblade',
-  2: 'Sword',
-  3: 'Pistols',
-  4: 'Gauntlets',
-  5: 'Rectifier',
+  1: "Broadblade",
+  2: "Sword",
+  3: "Pistols",
+  4: "Gauntlets",
+  5: "Rectifier",
 }
 
 const STAT_KEY_MAP: Record<string, keyof StatGroup> = {
-  HP: 'hp',
-  ATK: 'atk',
-  DEF: 'def',
+  HP: "hp",
+  ATK: "atk",
+  DEF: "def",
 }
 
 function mapStats(properties: ApiProperty[]): CharacterStats {
@@ -102,16 +102,17 @@ function mapStats(properties: ApiProperty[]): CharacterStats {
 }
 
 function parseValue(rateStr: string): number {
-  const pct = rateStr.replace('%', '')
-  const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+  const pct = rateStr.replace("%", "")
+  const decimals = (pct.split(".")[1]?.length ?? 0) + 2
   return Number((parseFloat(pct) / 100).toFixed(decimals))
 }
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   return (damageList ?? []).map((entry) => ({
     type: entry.Type,
-    dmgType: entry.DmgType ?? 'damage',
+    dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
+    actionFrame: 0,
     value: parseValue(entry.RateLv[9]),
     energy: entry.Energy[0],
     concerto: entry.ElementPower[0],
@@ -132,7 +133,7 @@ function parseValuesFromValue(value: string): ParsedRate[] {
   while ((match = regex.exec(value)) !== null) {
     const pct = match[1]
     const count = match[2] ? parseInt(match[2], 10) : 1
-    const decimals = (pct.split('.')[1]?.length ?? 0) + 2
+    const decimals = (pct.split(".")[1]?.length ?? 0) + 2
     results.push({
       value: Number((parseFloat(pct) / 100).toFixed(decimals)),
       count,
@@ -156,7 +157,7 @@ function enrichSkill(
 
   const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
     (attr) => {
-      const value = attr.values[9] ?? ''
+      const value = attr.values[9] ?? ""
       const parsedRates = parseValuesFromValue(value)
 
       if (parsedRates.length === 0) {
@@ -192,29 +193,29 @@ function enrichSkill(
     },
   )
 
-  const STA_COST_SUFFIX = ' STA Cost'
-  const COOLDOWN_SUFFIX = ' Cooldown'
-  const CONCERTO_SUFFIX = ' Concerto Regen'
-  const CONCERTO_ENERGY_SUFFIX = ' Concerto Energy'
+  const STA_COST_SUFFIX = " STA Cost"
+  const COOLDOWN_SUFFIX = " Cooldown"
+  const CONCERTO_SUFFIX = " Concerto Regen"
+  const CONCERTO_ENERGY_SUFFIX = " Concerto Energy"
   let skillCooldown: number | undefined
   let skillDuration: number | undefined
   let skillConcerto: number | undefined
   let skillResonanceCost: number | undefined
 
   const finalAttributes = enrichedAttributes.filter((attr) => {
-    if (attr.name === 'Cooldown') {
+    if (attr.name === "Cooldown") {
       skillCooldown = parseFloat(attr.value)
       return false
     }
-    if (attr.name === 'Concerto Regen') {
+    if (attr.name === "Concerto Regen") {
       skillConcerto = parseFloat(attr.value)
       return false
     }
-    if (attr.name === 'Resonance Cost') {
+    if (attr.name === "Resonance Cost") {
       skillResonanceCost = parseFloat(attr.value)
       return false
     }
-    if (attr.name.endsWith('Duration')) {
+    if (attr.name.endsWith("Duration")) {
       skillDuration = parseFloat(attr.value)
       return false
     }
@@ -304,13 +305,13 @@ export async function extractCharacter(id: string): Promise<void> {
   const data: ApiCharacter = await res.json()
 
   const missing: string[] = []
-  if (!data.Id) missing.push('Id')
-  if (!data.Name?.Content) missing.push('Name.Content')
-  if (!data.Skills?.length) missing.push('Skills')
-  if (!data.Properties?.length) missing.push('Properties')
+  if (!data.Id) missing.push("Id")
+  if (!data.Name?.Content) missing.push("Name.Content")
+  if (!data.Skills?.length) missing.push("Skills")
+  if (!data.Properties?.length) missing.push("Properties")
   if (missing.length > 0) {
     console.warn(
-      `Warning: missing or empty fields in API response: ${missing.join(', ')}`,
+      `Warning: missing or empty fields in API response: ${missing.join(", ")}`,
     )
   }
 
@@ -331,8 +332,8 @@ export async function extractCharacter(id: string): Promise<void> {
     skills: mapSkills(data.Skills),
   }
 
-  const slug = data.Name.Content.toLowerCase().replace(/\s+/g, '-')
-  const outputDir = path.join(PROJECT_ROOT, 'src/data/characters/raw')
+  const slug = data.Name.Content.toLowerCase().replace(/\s+/g, "-")
+  const outputDir = path.join(PROJECT_ROOT, "src/data/characters/raw")
   const outputPath = path.join(outputDir, `${slug}.json`)
 
   try {
@@ -350,7 +351,7 @@ export async function extractCharacter(id: string): Promise<void> {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const id = process.argv[2]
   if (!id) {
-    console.error('Usage: pnpm extract-character <character-id>')
+    console.error("Usage: pnpm extract-character <character-id>")
     process.exit(1)
   }
   extractCharacter(id).catch((err) => {

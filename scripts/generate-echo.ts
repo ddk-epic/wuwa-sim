@@ -1,11 +1,11 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import type { Echo, DamageEntry } from '../src/types/echo.js'
+import fs from "node:fs/promises"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import type { Echo, DamageEntry } from "../src/types/echo.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  "..",
 )
 
 function s(v: string): string {
@@ -13,7 +13,7 @@ function s(v: string): string {
 }
 
 function ind(level: number): string {
-  return '  '.repeat(level)
+  return "  ".repeat(level)
 }
 
 function formatDamageEntry(d: DamageEntry, level: number): string {
@@ -24,20 +24,21 @@ function formatDamageEntry(d: DamageEntry, level: number): string {
     `${l1}type: ${s(d.type)},`,
     `${l1}dmgType: ${s(d.dmgType)},`,
     `${l1}scalingStat: ${s(d.scalingStat)},`,
+    `${l1}actionFrame: 0,`,
     `${l1}value: ${d.value},`,
     `${l1}energy: ${d.energy},`,
     `${l1}concerto: ${d.concerto},`,
     `${l1}toughness: ${d.toughness},`,
     `${l1}weakness: ${d.weakness},`,
     `${l}}`,
-  ].join('\n')
+  ].join("\n")
 }
 
 export function formatStage(
   stageName: string,
   hits: DamageEntry[],
   level: number,
-  newName = '',
+  newName = "",
   hidden = false,
 ): string {
   const l = ind(level)
@@ -51,16 +52,16 @@ export function formatStage(
   lines.push(`${l1}actionTime: 0,`)
   lines.push(`${l1}damage: [`)
   for (const d of hits) {
-    lines.push(formatDamageEntry(d, level + 2) + ',')
+    lines.push(formatDamageEntry(d, level + 2) + ",")
   }
   lines.push(`${l1}],`)
   lines.push(`${l}}`)
-  return lines.join('\n')
+  return lines.join("\n")
 }
 
 async function generateEcho(name: string): Promise<void> {
-  const rawPath = path.join(PROJECT_ROOT, 'src/data/echoes/raw', `${name}.json`)
-  const outputPath = path.join(PROJECT_ROOT, 'src/data/echoes', `${name}.ts`)
+  const rawPath = path.join(PROJECT_ROOT, "src/data/echoes/raw", `${name}.json`)
+  const outputPath = path.join(PROJECT_ROOT, "src/data/echoes", `${name}.ts`)
 
   try {
     await fs.access(outputPath)
@@ -74,7 +75,7 @@ async function generateEcho(name: string): Promise<void> {
 
   let raw: string
   try {
-    raw = await fs.readFile(rawPath, 'utf-8')
+    raw = await fs.readFile(rawPath, "utf-8")
   } catch {
     console.error(`Error: src/data/echoes/raw/${name}.json not found`)
     process.exit(1)
@@ -98,22 +99,22 @@ async function generateEcho(name: string): Promise<void> {
     `    stages: [`,
   ]
 
-  lines.push(formatStage('Tap', echo.skill.hits, 3) + ',')
-  lines.push(formatStage('Hold', echo.skill.hits, 3, '(Hold)', true) + ',')
+  lines.push(formatStage("Tap", echo.skill.hits, 3) + ",")
+  lines.push(formatStage("Hold", echo.skill.hits, 3, "(Hold)", true) + ",")
 
   lines.push(`    ],`)
   lines.push(`  },`)
   lines.push(`} satisfies EnrichedEcho`)
   lines.push(``)
 
-  await fs.writeFile(outputPath, lines.join('\n'))
+  await fs.writeFile(outputPath, lines.join("\n"))
   console.log(`Written to src/data/echoes/${name}.ts`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const name = process.argv[2]
   if (!name) {
-    console.error('Usage: tsx scripts/generate-echo.ts <name>')
+    console.error("Usage: tsx scripts/generate-echo.ts <name>")
     process.exit(1)
   }
   generateEcho(name).catch((err: Error) => {

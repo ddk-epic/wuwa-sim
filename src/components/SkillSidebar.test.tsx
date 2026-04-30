@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent, cleanup } from "@testing-library/react"
 import type { EnrichedCharacter } from "#/types/character"
@@ -28,6 +28,7 @@ const char1: EnrichedCharacter = {
               type: "Basic Attack",
               dmgType: "Physical",
               scalingStat: "ATK",
+              actionFrame: 0,
               value: 1.5,
               energy: 0,
               concerto: 0,
@@ -80,6 +81,7 @@ const testEcho: EnrichedEcho = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
+            actionFrame: 0,
             value: 2.5,
             energy: 0,
             concerto: 0,

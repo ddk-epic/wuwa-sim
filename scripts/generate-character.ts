@@ -1,15 +1,15 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import fs from "node:fs/promises"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import type {
   Character,
   DamageEntry,
   SkillAttribute,
-} from '../src/types/character.js'
+} from "../src/types/character.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  "..",
 )
 
 function s(v: string): string {
@@ -17,7 +17,7 @@ function s(v: string): string {
 }
 
 function ind(level: number): string {
-  return '  '.repeat(level)
+  return "  ".repeat(level)
 }
 
 function formatDamageEntry(d: DamageEntry, level: number): string {
@@ -28,13 +28,14 @@ function formatDamageEntry(d: DamageEntry, level: number): string {
     `${l1}type: ${s(d.type)},`,
     `${l1}dmgType: ${s(d.dmgType)},`,
     `${l1}scalingStat: ${s(d.scalingStat)},`,
+    `${l1}actionFrame: 0,`,
     `${l1}value: ${d.value},`,
     `${l1}energy: ${d.energy},`,
     `${l1}concerto: ${d.concerto},`,
     `${l1}toughness: ${d.toughness},`,
     `${l1}weakness: ${d.weakness},`,
     `${l}}`,
-  ].join('\n')
+  ].join("\n")
 }
 
 function formatStage(stage: SkillAttribute, level: number): string {
@@ -54,17 +55,17 @@ function formatStage(stage: SkillAttribute, level: number): string {
   if (stage.damage && stage.damage.length > 0) {
     lines.push(`${l1}damage: [`)
     for (const d of stage.damage)
-      lines.push(formatDamageEntry(d, level + 2) + ',')
+      lines.push(formatDamageEntry(d, level + 2) + ",")
     lines.push(`${l1}],`)
   } else {
     lines.push(`${l1}damage: [],`)
   }
   lines.push(`${l}}`)
-  return lines.join('\n')
+  return lines.join("\n")
 }
 
 function formatSkill(
-  skill: Character['skills'][number],
+  skill: Character["skills"][number],
   level: number,
 ): string {
   const l = ind(level)
@@ -88,7 +89,7 @@ function formatSkill(
   if (skill.stages.length > 0) {
     lines.push(`${l1}stages: [`)
     for (const stage of skill.stages)
-      lines.push(formatStage(stage, level + 2) + ',')
+      lines.push(formatStage(stage, level + 2) + ",")
     lines.push(`${l1}],`)
   } else {
     lines.push(`${l1}stages: [],`)
@@ -96,24 +97,24 @@ function formatSkill(
   if (skill.damage.length > 0) {
     lines.push(`${l1}damage: [`)
     for (const d of skill.damage)
-      lines.push(formatDamageEntry(d, level + 2) + ',')
+      lines.push(formatDamageEntry(d, level + 2) + ",")
     lines.push(`${l1}],`)
   } else {
     lines.push(`${l1}damage: [],`)
   }
   lines.push(`${l}}`)
-  return lines.join('\n')
+  return lines.join("\n")
 }
 
 async function generateCharacter(name: string): Promise<void> {
   const rawPath = path.join(
     PROJECT_ROOT,
-    'src/data/characters/raw',
+    "src/data/characters/raw",
     `${name}.json`,
   )
   const outputPath = path.join(
     PROJECT_ROOT,
-    'src/data/characters',
+    "src/data/characters",
     `${name}.ts`,
   )
 
@@ -129,7 +130,7 @@ async function generateCharacter(name: string): Promise<void> {
 
   let raw: string
   try {
-    raw = await fs.readFile(rawPath, 'utf-8')
+    raw = await fs.readFile(rawPath, "utf-8")
   } catch {
     console.error(`Error: src/data/characters/raw/${name}.json not found`)
     process.exit(1)
@@ -155,21 +156,21 @@ async function generateCharacter(name: string): Promise<void> {
   ]
 
   for (const skill of char.skills) {
-    lines.push(formatSkill(skill, 2) + ',')
+    lines.push(formatSkill(skill, 2) + ",")
   }
 
   lines.push(`  ],`)
   lines.push(`} satisfies EnrichedCharacter`)
   lines.push(``)
 
-  await fs.writeFile(outputPath, lines.join('\n'))
+  await fs.writeFile(outputPath, lines.join("\n"))
   console.log(`Written to src/data/characters/${name}.ts`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const name = process.argv[2]
   if (!name) {
-    console.error('Usage: tsx scripts/generate-character.ts <name>')
+    console.error("Usage: tsx scripts/generate-character.ts <name>")
     process.exit(1)
   }
   generateCharacter(name).catch((err: Error) => {
