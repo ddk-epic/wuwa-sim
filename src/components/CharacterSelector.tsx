@@ -1,12 +1,11 @@
 import { useState } from "react"
 import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
-import { getCharacterById } from "#/lib/catalog"
 import { SkillSidebar } from "#/components/SkillSidebar"
 import { TeamBar } from "#/components/TeamBar"
 import { TeamModal } from "#/components/TeamModal"
 import { TimelineView } from "#/components/TimelineView"
-import { computeDamage } from "#/lib/timeline"
+import { getTimelineSummary } from "#/lib/timeline-summary"
 
 export function CharacterSelector() {
   const {
@@ -24,15 +23,7 @@ export function CharacterSelector() {
   const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
   const [modalOpen, setModalOpen] = useState(false)
 
-  const totalDmg = entries.reduce((sum, entry) => {
-    if (entry.multiplier <= 0) return sum
-    const char = getCharacterById(entry.characterId)
-    const maxAtk = char?.stats.max.atk ?? 0
-    return sum + computeDamage(entry.multiplier, maxAtk)
-  }, 0)
-  const totalFrames = entries.reduce((sum, entry) => sum + entry.actionTime, 0)
-  const totalTimeSec = totalFrames / 60
-  const dps = totalTimeSec > 0 ? Math.round(totalDmg / totalTimeSec) : 0
+  const summary = getTimelineSummary(entries)
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -41,13 +32,17 @@ export function CharacterSelector() {
         onEditTeam={() => setModalOpen(true)}
         onResetTimeline={clearTimeline}
         timelineEmpty={entries.length === 0}
-        totalDmg={totalDmg}
-        dps={dps}
-        totalTimeSec={totalTimeSec}
+        totalDmg={summary.totalDamage}
+        dps={summary.dps}
+        totalTimeSec={summary.totalTimeSec}
       />
       <div className="flex flex-1 min-h-0">
         <div className="flex-[70] flex flex-col min-h-0">
-          <TimelineView entries={entries} onRemove={removeEntry} />
+          <TimelineView
+            entries={entries}
+            summary={summary}
+            onRemove={removeEntry}
+          />
         </div>
         <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">
           {slots.some((id) => id !== null) ? (

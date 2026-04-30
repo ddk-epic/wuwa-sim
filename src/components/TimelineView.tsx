@@ -1,13 +1,18 @@
 import type { TimelineEntry } from "#/types/timeline"
-import { accumulateTime, computeDamage } from "#/lib/timeline"
+import type { TimelineSummary } from "#/lib/timeline-summary"
 import { getCharacterById } from "#/lib/catalog"
 
 interface TimelineViewProps {
   entries: TimelineEntry[]
+  summary: TimelineSummary
   onRemove: (id: string) => void
 }
 
-export function TimelineView({ entries, onRemove }: TimelineViewProps) {
+export function TimelineView({
+  entries,
+  summary,
+  onRemove,
+}: TimelineViewProps) {
   if (entries.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -15,8 +20,6 @@ export function TimelineView({ entries, onRemove }: TimelineViewProps) {
       </div>
     )
   }
-
-  const times = accumulateTime(entries)
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
@@ -35,11 +38,7 @@ export function TimelineView({ entries, onRemove }: TimelineViewProps) {
         <tbody>
           {entries.map((entry, i) => {
             const char = getCharacterById(entry.characterId)
-            const maxAtk = char?.stats.max.atk ?? 0
-            const damage =
-              entry.multiplier > 0
-                ? computeDamage(entry.multiplier, maxAtk)
-                : null
+            const row = summary.rows[i]
             return (
               <tr
                 key={entry.id}
@@ -50,10 +49,10 @@ export function TimelineView({ entries, onRemove }: TimelineViewProps) {
                 <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
                 <td className="px-3 py-2 text-gray-200">{entry.skillName}</td>
                 <td className="px-3 py-2 text-gray-300">
-                  {(times[i] / 60).toFixed(2)}s
+                  {row.time.toFixed(2)}s
                 </td>
                 <td className="px-3 py-2 text-yellow-400">
-                  {damage !== null ? damage.toLocaleString() : "—"}
+                  {row.damage !== null ? row.damage.toLocaleString() : "—"}
                 </td>
                 <td className="px-3 py-2">
                   <button
