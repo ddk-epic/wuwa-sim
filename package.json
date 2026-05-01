@@ -17,7 +17,8 @@
     "ralph": "bash scripts/ralph/ralph-once.sh",
     "extract": "tsx scripts/extract.ts",
     "gen:character": "tsx scripts/generate-character.ts",
-    "gen:weapon": "tsx scripts/generate-weapon.ts"
+    "gen:weapon": "tsx scripts/generate-weapon.ts",
+    "gen:echo": "tsx scripts/generate-echo.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

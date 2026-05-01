@@ -100,7 +100,7 @@ async function generateEcho(name: string): Promise<void> {
   ]
 
   lines.push(formatStage("Tap", echo.skill.hits, 3) + ",")
-  lines.push(formatStage("Hold", echo.skill.hits, 3, "(Hold)", true) + ",")
+  lines.push(formatStage("Hold", [], 3, "(Hold)", true) + ",")
 
   lines.push(`    ],`)
   lines.push(`  },`)
