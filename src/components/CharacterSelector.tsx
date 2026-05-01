@@ -1,11 +1,14 @@
 import { useState } from "react"
 import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
+import { useSimulationLog } from "#/hooks/useSimulationLog"
 import { SkillSidebar } from "#/components/SkillSidebar"
 import { TeamBar } from "#/components/TeamBar"
 import { TeamModal } from "#/components/TeamModal"
+import { SimulationLogModal } from "#/components/SimulationLogModal"
 import { TimelineView } from "#/components/TimelineView"
 import { getTimelineSummary } from "#/lib/timeline-summary"
+import { generateSimulationLog } from "#/lib/simulation-log"
 
 export function CharacterSelector() {
   const {
@@ -21,16 +24,29 @@ export function CharacterSelector() {
   } = useTeam()
 
   const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
+  const { log, setLog, clearLog } = useSimulationLog()
   const [modalOpen, setModalOpen] = useState(false)
+  const [simulationLogOpen, setSimulationLogOpen] = useState(false)
 
   const summary = getTimelineSummary(entries)
+
+  function handleResetTimeline() {
+    clearTimeline()
+    clearLog()
+  }
+
+  function handleSimulate() {
+    setLog(generateSimulationLog(entries, slots, loadouts))
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <TeamBar
         slots={slots}
         onEditTeam={() => setModalOpen(true)}
-        onResetTimeline={clearTimeline}
+        onResetTimeline={handleResetTimeline}
+        onSimulate={handleSimulate}
+        onOpenSimulationLog={() => setSimulationLogOpen(true)}
         timelineEmpty={entries.length === 0}
         totalDmg={summary.totalDamage}
         dps={summary.dps}
@@ -71,6 +87,12 @@ export function CharacterSelector() {
           onEchoChange={setEcho}
           onEchoSetChange={setEchoSet}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+      {simulationLogOpen && (
+        <SimulationLogModal
+          log={log}
+          onClose={() => setSimulationLogOpen(false)}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { CalendarSearch } from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
@@ -7,6 +8,8 @@ interface TeamBarProps {
   slots: Slots
   onEditTeam: () => void
   onResetTimeline: () => void
+  onSimulate: () => void
+  onOpenSimulationLog: () => void
   timelineEmpty: boolean
   totalDmg: number
   dps: number
@@ -17,6 +20,8 @@ export function TeamBar({
   slots,
   onEditTeam,
   onResetTimeline,
+  onSimulate,
+  onOpenSimulationLog,
   timelineEmpty,
   totalDmg,
   dps,
@@ -58,6 +63,20 @@ export function TeamBar({
             </span>
           </div>
         </div>
+        <button
+          className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-blue-600"
+          disabled={timelineEmpty}
+          onClick={onSimulate}
+        >
+          Simulate
+        </button>
+        <button
+          className="p-1 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
+          onClick={onOpenSimulationLog}
+          aria-label="Open simulation log"
+        >
+          <CalendarSearch size={16} />
+        </button>
         <button
           className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-red-600"
           disabled={timelineEmpty}
