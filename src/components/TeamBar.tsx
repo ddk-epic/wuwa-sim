@@ -45,38 +45,44 @@ export function TeamBar({
         {label}
       </button>
       <div className="ml-auto flex items-center gap-4">
-        <div className="flex gap-6">
+        <div className="flex gap-7">
           <div className="flex flex-col items-center">
-            <span className="text-xs text-gray-400 uppercase">Total DMG</span>
+            <span className="text-[14px] text-gray-400 uppercase">
+              Total DMG
+            </span>
             <span className="text-base text-yellow-400">
               {totalDmg.toLocaleString()}
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-xs text-gray-400 uppercase">DPS</span>
+            <span className="text-[14px] text-gray-400 uppercase">DPS</span>
             <span className="text-sm text-white">{dps.toLocaleString()}</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-xs text-gray-400 uppercase">Time</span>
+            <span className="text-[14px] text-gray-400 uppercase">Time</span>
             <span className="text-sm text-white">
               {totalTimeSec.toFixed(2)}s
             </span>
           </div>
         </div>
-        <button
-          className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-blue-600"
-          disabled={timelineEmpty}
-          onClick={onSimulate}
-        >
-          Simulate
-        </button>
-        <button
-          className="p-1 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
-          onClick={onOpenSimulationLog}
-          aria-label="Open simulation log"
-        >
-          <CalendarSearch size={16} />
-        </button>
+        <div className="w-px h-6 bg-gray-700 mx-1" />
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-blue-600"
+            disabled={timelineEmpty}
+            onClick={onSimulate}
+          >
+            Simulate
+          </button>
+          <button
+            className="p-1.5 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
+            onClick={onOpenSimulationLog}
+            aria-label="Open simulation log"
+          >
+            <CalendarSearch size={20} />
+          </button>
+        </div>
+        <div className="w-px h-6 bg-gray-700 mx-1" />
         <button
           className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-red-600"
           disabled={timelineEmpty}
