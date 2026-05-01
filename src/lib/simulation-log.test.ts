@@ -58,6 +58,29 @@ const charB: EnrichedCharacter = {
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 500, def: 0 } },
 }
 
+const charD: EnrichedCharacter = {
+  ...charA,
+  id: 4,
+  name: "Char D",
+  skills: [
+    {
+      id: 3,
+      name: "Heavy Attack",
+      type: "Heavy Attack",
+      stages: [
+        {
+          name: "Heavy Attack",
+          value: "200%",
+          actionTime: 30,
+          concerto: 15,
+          damage: [dmgHit(2.0, 5, 0)],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
+
 const echoA: EnrichedEcho = {
   id: 10,
   name: "Echo One",
@@ -125,19 +148,29 @@ describe("generateSimulationLog — empty", () => {
 })
 
 describe("generateSimulationLog — single hit", () => {
-  it("produces one log entry with correct fields", () => {
+  it("produces one action event and one hit event per timeline entry", () => {
     testCharacters = [charA]
     const entry = tlEntry(1, "Normal Attack", "Normal Attack")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(2)
     expect(result[0]).toEqual({
+      kind: "action",
       characterId: 1,
       skillType: "Normal Attack",
       skillName: "Normal Attack",
-      hit: 1,
-      damage: 1500,
+      frame: 0,
+      cumulativeEnergy: 0,
+      cumulativeConcerto: 0,
+    })
+    expect(result[1]).toEqual({
+      kind: "hit",
+      characterId: 1,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack [hit 1]",
+      frame: 0,
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
+      damage: 1500,
     })
   })
 
@@ -147,30 +180,41 @@ describe("generateSimulationLog — single hit", () => {
     ]
     const entry = tlEntry(1, "Normal Attack", "Normal Attack")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
-    expect(result[0].damage).toBe(5)
+    expect(result).toHaveLength(2)
+    expect(result[1]).toMatchObject({ kind: "hit", damage: 5 })
   })
 })
 
 describe("generateSimulationLog — multi-hit stage", () => {
-  it("expands to one entry per DamageEntry hit with 1-based hit index", () => {
+  it("emits one action event then one hit event per DamageEntry with [hit N] suffix", () => {
     testCharacters = [charA]
     const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
-    expect(result).toHaveLength(2)
-    expect(result[0].hit).toBe(1)
-    expect(result[0].damage).toBe(800)
-    expect(result[1].hit).toBe(2)
-    expect(result[1].damage).toBe(600)
+    expect(result).toHaveLength(3)
+    expect(result[0]).toMatchObject({
+      kind: "action",
+      skillName: "Normal Attack (Stage 2)",
+    })
+    expect(result[1]).toMatchObject({
+      kind: "hit",
+      skillName: "Normal Attack (Stage 2) [hit 1]",
+      damage: 800,
+    })
+    expect(result[2]).toMatchObject({
+      kind: "hit",
+      skillName: "Normal Attack (Stage 2) [hit 2]",
+      damage: 600,
+    })
   })
 
   it("accumulates energy and concerto across hits of the same stage", () => {
     testCharacters = [charA]
     const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
-    expect(result[0].cumulativeEnergy).toBe(3)
-    expect(result[0].cumulativeConcerto).toBe(1)
-    expect(result[1].cumulativeEnergy).toBe(6)
-    expect(result[1].cumulativeConcerto).toBe(2)
+    expect(result[1].cumulativeEnergy).toBe(3)
+    expect(result[1].cumulativeConcerto).toBe(1)
+    expect(result[2].cumulativeEnergy).toBe(6)
+    expect(result[2].cumulativeConcerto).toBe(2)
   })
 })
 
@@ -183,18 +227,21 @@ describe("generateSimulationLog — multi-character accumulation", () => {
       tlEntry(1, "Normal Attack", "Normal Attack", "1-na-2"),
     ]
     const result = generateSimulationLog(entries, emptySlots, emptyLoadouts)
-    expect(result).toHaveLength(3)
-    expect(result[0]).toMatchObject({
+    expect(result).toHaveLength(6)
+    expect(result[1]).toMatchObject({
+      kind: "hit",
       characterId: 1,
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
     })
-    expect(result[1]).toMatchObject({
+    expect(result[3]).toMatchObject({
+      kind: "hit",
       characterId: 2,
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
     })
-    expect(result[2]).toMatchObject({
+    expect(result[5]).toMatchObject({
+      kind: "hit",
       characterId: 1,
       cumulativeEnergy: 10,
       cumulativeConcerto: 4,
@@ -208,8 +255,9 @@ describe("generateSimulationLog — multi-character accumulation", () => {
       tlEntry(2, "Normal Attack", "Normal Attack"),
     ]
     const result = generateSimulationLog(entries, emptySlots, emptyLoadouts)
-    expect(result[0].damage).toBe(1500)
-    expect(result[1].damage).toBe(750)
+    expect(result).toHaveLength(4)
+    expect(result[1]).toMatchObject({ kind: "hit", damage: 1500 })
+    expect(result[3]).toMatchObject({ kind: "hit", damage: 750 })
   })
 })
 
@@ -225,16 +273,24 @@ describe("generateSimulationLog — echo skill entries", () => {
     ]
     const entry = tlEntry(1, "Echo Skill", "Echo One · Hit")
     const result = generateSimulationLog([entry], slots, loadouts)
-    expect(result).toHaveLength(2)
+    expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
-      hit: 1,
-      damage: 2000,
-      cumulativeEnergy: 10,
+      kind: "action",
+      characterId: 1,
+      cumulativeConcerto: 0,
+      cumulativeEnergy: 0,
     })
     expect(result[1]).toMatchObject({
-      hit: 2,
+      kind: "hit",
+      damage: 2000,
+      cumulativeEnergy: 10,
+      cumulativeConcerto: 5,
+    })
+    expect(result[2]).toMatchObject({
+      kind: "hit",
       damage: 1000,
       cumulativeEnergy: 20,
+      cumulativeConcerto: 10,
     })
   })
 })
@@ -254,5 +310,76 @@ describe("generateSimulationLog — unmatched stage", () => {
     const entry = tlEntry(1, "Normal Attack", "Nonexistent Stage")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
+  })
+})
+
+describe("generateSimulationLog — frame tracking", () => {
+  it("assigns stageStartFrame to action events and stageStartFrame + actionFrame to hit events", () => {
+    testCharacters = [charA]
+    const entry1: TimelineEntry = {
+      id: "e1",
+      characterId: 1,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack",
+      attackType: "Normal Attack",
+      actionTime: 60,
+      multiplier: 1,
+    }
+    const entry2: TimelineEntry = {
+      id: "e2",
+      characterId: 1,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack",
+      attackType: "Normal Attack",
+      actionTime: 30,
+      multiplier: 1,
+    }
+    const result = generateSimulationLog(
+      [entry1, entry2],
+      emptySlots,
+      emptyLoadouts,
+    )
+    expect(result).toHaveLength(4)
+    expect(result[0].frame).toBe(0)
+    expect(result[1].frame).toBe(0)
+    expect(result[2].frame).toBe(60)
+    expect(result[3].frame).toBe(60)
+  })
+})
+
+describe("generateSimulationLog — action event concerto", () => {
+  it("accumulates stage.concerto on action event without advancing energy", () => {
+    testCharacters = [charD]
+    const entry: TimelineEntry = {
+      id: "d1",
+      characterId: 4,
+      skillType: "Heavy Attack",
+      skillName: "Heavy Attack",
+      attackType: "Heavy Attack",
+      actionTime: 30,
+      multiplier: 1,
+    }
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toMatchObject({
+      kind: "action",
+      cumulativeConcerto: 15,
+      cumulativeEnergy: 0,
+    })
+    expect(result[1]).toMatchObject({
+      kind: "hit",
+      cumulativeConcerto: 15,
+      cumulativeEnergy: 5,
+    })
+  })
+})
+
+describe("generateSimulationLog — discriminated union", () => {
+  it("action events do not have a damage property", () => {
+    testCharacters = [charA]
+    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
+    expect(result[0].kind).toBe("action")
+    expect("damage" in result[0]).toBe(false)
   })
 })

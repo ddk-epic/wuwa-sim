@@ -7,6 +7,8 @@ interface SimulationLogModalProps {
 }
 
 export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
+  const hitCount = log.filter((e) => e.kind === "hit").length
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center overflow-y-auto p-6"
@@ -19,7 +21,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
         <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
           <div>
             <h2 className="text-xl font-bold">Simulation Log</h2>
-            <p className="text-gray-400 text-sm mt-0.5">{log.length} hits</p>
+            <p className="text-gray-400 text-sm mt-0.5">{hitCount} hits</p>
           </div>
           <button
             className="text-gray-400 hover:text-white transition-colors text-xl leading-none"
@@ -42,32 +44,40 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                   <th className="py-2 pr-3">Character</th>
                   <th className="py-2 pr-3">Skill Type</th>
                   <th className="py-2 pr-3">Skill</th>
-                  <th className="py-2 pr-3">Hit</th>
-                  <th className="py-2 pr-3 text-right">Damage</th>
+                  <th className="py-2 pr-3">Time</th>
                   <th className="py-2 pr-3 text-right">Concerto</th>
-                  <th className="py-2 text-right">Energy</th>
+                  <th className="py-2 pr-3 text-right">Energy</th>
+                  <th className="py-2 text-right">Damage</th>
                 </tr>
               </thead>
               <tbody>
                 {log.map((entry, i) => {
                   const character = getCharacterById(entry.characterId)
+                  const isAction = entry.kind === "action"
                   return (
-                    <tr key={i} className="border-b border-gray-800">
+                    <tr
+                      key={i}
+                      className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"}`}
+                    >
                       <td className="py-1 pr-3 text-gray-500">{i + 1}</td>
                       <td className="py-1 pr-3">{character?.name ?? "?"}</td>
                       <td className="py-1 pr-3 text-gray-400">
-                        {entry.skillType}
+                        {isAction ? entry.skillType : ""}
                       </td>
                       <td className="py-1 pr-3">{entry.skillName}</td>
-                      <td className="py-1 pr-3 text-gray-400">{entry.hit}</td>
-                      <td className="py-1 pr-3 text-right text-yellow-400">
-                        {entry.damage.toLocaleString()}
+                      <td className="py-1 pr-3">
+                        {(entry.frame / 60).toFixed(2)}s
                       </td>
                       <td className="py-1 pr-3 text-right">
                         {entry.cumulativeConcerto.toFixed(1)}
                       </td>
-                      <td className="py-1 text-right">
+                      <td className="py-1 pr-3 text-right">
                         {entry.cumulativeEnergy.toFixed(1)}
+                      </td>
+                      <td className="py-1 text-right text-yellow-400">
+                        {entry.kind === "hit"
+                          ? entry.damage.toLocaleString()
+                          : ""}
                       </td>
                     </tr>
                   )
