@@ -1,4 +1,4 @@
-﻿import type { EnrichedCharacter } from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 
 export const sanhua = {
   id: 1102,
@@ -6,30 +6,39 @@ export const sanhua = {
   element: "Glacio",
   weaponType: "Sword",
   rarity: "SR",
-  stats: {
-    base: { hp: 805, atk: 22, def: 77 },
-    max: { hp: 10062.5, atk: 275, def: 941.1094 },
-  },
   template: {
     weapon: "Emerald of Genesis",
     echo: "Impermanence Heron",
     echoSet: "Moonlit Clouds",
   },
-  skillTreeBonuses: [],
-  buffs: { inherent: [], resonanceChain: [] },
+  stats: {
+    base: { hp: 805, atk: 22, def: 77 },
+    max: { hp: 10062.5, atk: 275, def: 941.1094 },
+  },
+  skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
+  buffs: {
+    inherent: ["Condensation", "Avalanche", ""],
+    resonanceChain: [
+      "Solitude's Embrace",
+      "Snowy Clarity",
+      "Anomalous Vision",
+      "Blade Mastery",
+      "Unraveling Fate",
+      "Daybreak Radiance",
+    ],
+  },
   skills: [
     {
       id: 1000501,
       name: "Frigid Light",
       type: "Normal Attack",
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
           name: "Stage 1 DMG",
-          newName: "Basic 1",
+          newName: "Stage 1",
           value: "48.71%",
-          actionTime: 30,
+          actionTime: 0,
           damage: [
             {
               type: "Basic Attack",
@@ -46,7 +55,7 @@ export const sanhua = {
         },
         {
           name: "Stage 2 DMG",
-          newName: "Basic 2",
+          newName: "Stage 2",
           value: "73.76%",
           actionTime: 0,
           damage: [
@@ -65,7 +74,7 @@ export const sanhua = {
         },
         {
           name: "Stage 3 DMG",
-          newName: "Basic 3",
+          newName: "Stage 3",
           value: "21.58%*4",
           actionTime: 0,
           damage: [
@@ -117,7 +126,7 @@ export const sanhua = {
         },
         {
           name: "Stage 4 DMG",
-          newName: "Basic 4",
+          newName: "Stage 4",
           value: "39.67%*2",
           actionTime: 0,
           damage: [
@@ -147,7 +156,7 @@ export const sanhua = {
         },
         {
           name: "Stage 5 DMG",
-          newName: "Basic 5",
+          newName: "Stage 5",
           value: "233.81%",
           actionTime: 0,
           damage: [
@@ -166,7 +175,7 @@ export const sanhua = {
         },
         {
           name: "Heavy Attack DMG",
-          newName: "Heavy",
+          newName: "Heavy Attack",
           value: "22.27%*5",
           actionTime: 0,
           damage: [
@@ -229,7 +238,7 @@ export const sanhua = {
         },
         {
           name: "Mid-air Attack DMG",
-          newName: "Mid-air",
+          newName: "Mid-air Attack",
           value: "86.29%",
           actionTime: 0,
           damage: [
@@ -250,8 +259,8 @@ export const sanhua = {
           name: "Dodge Counter DMG",
           newName: "Dodge Counter",
           value: "167.01%",
-          actionTime: 0,
           hidden: true,
+          actionTime: 0,
           damage: [
             {
               type: "Heavy Attack",
@@ -275,7 +284,6 @@ export const sanhua = {
       type: "Resonance Skill",
       cooldown: 10,
       concerto: 15,
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -307,7 +315,6 @@ export const sanhua = {
       cooldown: 16,
       concerto: 20,
       resonanceCost: 100,
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -355,7 +362,6 @@ export const sanhua = {
       name: "Freezing Thorns",
       type: "Intro Skill",
       concerto: 10,
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -385,7 +391,6 @@ export const sanhua = {
       name: "Clarity of Mind",
       type: "Forte Circuit",
       duration: 8,
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -423,9 +428,9 @@ export const sanhua = {
           name: "Glacier Burst Damage",
           newName: "Glacier Burst",
           value: "139.17%",
+          hidden: true,
           concerto: 15,
           actionTime: 0,
-          hidden: true,
           damage: [
             {
               type: "Resonance Skill",
@@ -444,9 +449,9 @@ export const sanhua = {
           name: "Ice Prism Burst Damage",
           newName: "Ice Prism Burst",
           value: "79.53%",
+          hidden: true,
           concerto: 15,
           actionTime: 0,
-          hidden: true,
           damage: [
             {
               type: "Resonance Skill",
@@ -465,8 +470,8 @@ export const sanhua = {
           name: "Ice Thorn Burst Damage",
           newName: "Ice Thorn Burst",
           value: "59.65%",
-          actionTime: 0,
           hidden: true,
+          actionTime: 0,
           damage: [
             {
               type: "Resonance Skill",
@@ -497,7 +502,6 @@ export const sanhua = {
       id: 1000509,
       name: "Silversnow",
       type: "Outro Skill",
-      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -514,7 +518,6 @@ export const sanhua = {
       id: 1000510,
       name: "",
       type: "Tune Break",
-      // hidden: true,
       // animationLock: 0,
       stages: [],
       damage: [],

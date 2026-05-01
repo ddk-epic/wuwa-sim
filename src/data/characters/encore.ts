@@ -156,7 +156,7 @@ export const encore = {
         },
         {
           name: "Woolies Damage",
-          newName: "Woolies",
+          newName: "Stage 5",
           value: "238.57%",
           actionTime: 0,
           damage: [
@@ -507,7 +507,7 @@ export const encore = {
         },
         {
           name: "Stage 4 DMG",
-          newName: "Stage 4",
+          newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
           actionTime: 0,
           damage: [
