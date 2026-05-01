@@ -3,6 +3,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type {
   Character,
+  CharacterBuffs,
   CharacterStats,
   DamageEntry,
   Skill,
@@ -59,6 +60,15 @@ interface ApiSkill {
   DamageList: ApiDamageEntry[]
 }
 
+interface ApiSkillTreeNode {
+  PropertyNodeTitle?: string
+}
+
+interface ApiResonantChainNode {
+  NodeName: string
+  GroupIndex: number
+}
+
 interface ApiCharacter {
   Id: number
   Name: { Title: string; Content: string }
@@ -67,6 +77,8 @@ interface ApiCharacter {
   QualityName: string
   Properties: ApiProperty[]
   Skills: ApiSkill[]
+  SkillTree: ApiSkillTreeNode[]
+  ResonantChain: ApiResonantChainNode[]
 }
 
 // --- Mapping ---
@@ -293,6 +305,35 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
   })
 }
 
+// --- SkillTree / ResonantChain ---
+
+export function mapSkillTreeBonuses(skillTree: ApiSkillTreeNode[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const node of skillTree) {
+    if (!node.PropertyNodeTitle) continue
+    const name = node.PropertyNodeTitle.replace(/\+$/, "")
+    if (!seen.has(name)) {
+      seen.add(name)
+      result.push(name)
+    }
+  }
+  return result
+}
+
+export function mapBuffs(
+  skills: ApiSkill[],
+  resonantChain: ApiResonantChainNode[],
+): CharacterBuffs {
+  const inherent = skills
+    .filter((s) => s.SkillType === "Inherent Skill")
+    .map((s) => s.SkillName)
+  const resonanceChain = [...resonantChain]
+    .sort((a, b) => a.GroupIndex - b.GroupIndex)
+    .map((n) => n.NodeName)
+  return { inherent, resonanceChain }
+}
+
 // --- Main ---
 
 export async function extractCharacter(id: string): Promise<void> {
@@ -330,6 +371,8 @@ export async function extractCharacter(id: string): Promise<void> {
     rarity: data.QualityName,
     stats: mapStats(data.Properties),
     skills: mapSkills(data.Skills),
+    skillTreeBonuses: mapSkillTreeBonuses(data.SkillTree ?? []),
+    buffs: mapBuffs(data.Skills ?? [], data.ResonantChain ?? []),
   }
 
   const slug = data.Name.Content.toLowerCase().replace(/\s+/g, "-")

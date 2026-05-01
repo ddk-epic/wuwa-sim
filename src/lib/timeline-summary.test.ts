@@ -13,6 +13,8 @@ const charA: EnrichedCharacter = {
     max: { hp: 0, atk: 1000, def: 0 },
   },
   template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: { inherent: [], resonanceChain: [] },
   skills: [],
 }
 

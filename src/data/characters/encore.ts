@@ -15,6 +15,8 @@ export const encore = {
     echo: "Inferno Rider",
     echoSet: "Molten Rift",
   },
+  skillTreeBonuses: [],
+  buffs: { inherent: [], resonanceChain: [] },
   skills: [
     {
       id: 1000701,

@@ -42,6 +42,11 @@ export interface Skill {
   damage: DamageEntry[]
 }
 
+export interface CharacterBuffs {
+  inherent: string[]
+  resonanceChain: string[]
+}
+
 export interface Character {
   id: number
   name: string
@@ -50,6 +55,8 @@ export interface Character {
   rarity: string
   stats: CharacterStats
   skills: Skill[]
+  skillTreeBonuses: string[]
+  buffs: CharacterBuffs
 }
 
 export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {

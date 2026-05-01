@@ -15,6 +15,8 @@ export const sanhua = {
     echo: "Impermanence Heron",
     echoSet: "Moonlit Clouds",
   },
+  skillTreeBonuses: [],
+  buffs: { inherent: [], resonanceChain: [] },
   skills: [
     {
       id: 1000501,

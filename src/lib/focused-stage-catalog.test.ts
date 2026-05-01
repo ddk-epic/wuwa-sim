@@ -11,6 +11,8 @@ const char1: EnrichedCharacter = {
   rarity: "5",
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
   template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: { inherent: [], resonanceChain: [] },
   skills: [
     {
       id: 101,
