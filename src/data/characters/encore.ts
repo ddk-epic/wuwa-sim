@@ -1,4 +1,4 @@
-﻿import type { EnrichedCharacter } from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 
 export const encore = {
   id: 1203,
@@ -6,27 +6,38 @@ export const encore = {
   element: "Fusion",
   weaponType: "Rectifier",
   rarity: "SSR",
-  stats: {
-    base: { hp: 841, atk: 34, def: 102 },
-    max: { hp: 10512.5, atk: 425, def: 1246.6644 },
-  },
   template: {
     weapon: "Stringmaster",
     echo: "Inferno Rider",
     echoSet: "Molten Rift",
   },
-  skillTreeBonuses: [],
-  buffs: { inherent: [], resonanceChain: [] },
+  stats: {
+    base: { hp: 841, atk: 34, def: 102 },
+    max: { hp: 10512.5, atk: 425, def: 1246.6644 },
+  },
+  skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
+  buffs: {
+    inherent: ["Angry Cosmos", "Woolies Cheer Dance", "Skillful Cooking"],
+    resonanceChain: [
+      "Wooly's Fairy Tale",
+      "Sheep-counting Lullaby",
+      "Fog? The Black Shores!",
+      "Adventure? Let's go!",
+      "Hero Takes the Stage!",
+      "Woolies Save the World!",
+    ],
+  },
   skills: [
     {
       id: 1000701,
       name: "Wooly Attack",
       type: "Normal Attack",
+      // hidden: true,
       // animationLock: 0,
       stages: [
         {
           name: "Stage 1 DMG",
-          newName: "Basic 1",
+          newName: "",
           value: "55.66%",
           actionTime: 0,
           damage: [
@@ -45,7 +56,7 @@ export const encore = {
         },
         {
           name: "Stage 2 DMG",
-          newName: "Basic 2",
+          newName: "",
           value: "66.20%",
           actionTime: 0,
           damage: [
@@ -64,7 +75,7 @@ export const encore = {
         },
         {
           name: "Stage 3 DMG",
-          newName: "Basic 3",
+          newName: "",
           value: "66.30%*2",
           actionTime: 0,
           damage: [
@@ -94,7 +105,7 @@ export const encore = {
         },
         {
           name: "Stage 4 DMG",
-          newName: "Basic 4",
+          newName: "",
           value: "38.27%*4",
           actionTime: 0,
           damage: [
@@ -146,7 +157,7 @@ export const encore = {
         },
         {
           name: "Woolies Damage",
-          newName: "Basic 5",
+          newName: "",
           value: "238.57%",
           actionTime: 0,
           damage: [
@@ -165,7 +176,7 @@ export const encore = {
         },
         {
           name: "Heavy Attack DMG",
-          newName: "Heavy",
+          newName: "",
           value: "187.08%",
           actionTime: 0,
           damage: [
@@ -184,7 +195,7 @@ export const encore = {
         },
         {
           name: "Mid-air Attack",
-          newName: "Mid-air",
+          newName: "",
           value: "123.26%",
           actionTime: 0,
           damage: [
@@ -203,10 +214,9 @@ export const encore = {
         },
         {
           name: "Dodge Counter DMG",
-          newName: "Dodge Counter",
+          newName: "",
           value: "125.94%*2",
           actionTime: 0,
-          hidden: true,
           damage: [
             {
               type: "Basic Attack",
@@ -240,11 +250,12 @@ export const encore = {
       name: "Flaming Woolies",
       type: "Resonance Skill",
       cooldown: 10,
+      // hidden: true,
       // animationLock: 0,
       stages: [
         {
           name: "Flaming Woolies Damage",
-          newName: "Flaming Woolies",
+          newName: "",
           value: "76.61%*8",
           concerto: 15,
           actionTime: 0,
@@ -341,7 +352,7 @@ export const encore = {
         },
         {
           name: "Energetic Welcome Damage",
-          newName: "Energetic Welcome",
+          newName: "",
           value: "339.16%",
           concerto: 5,
           actionTime: 0,
@@ -375,7 +386,7 @@ export const encore = {
       stages: [
         {
           name: "Cosmos: Frolicking Stage 1 DMG",
-          newName: "Frolicking 1",
+          newName: "",
           value: "90.18%*2",
           actionTime: 0,
           damage: [
@@ -405,7 +416,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Frolicking Stage 2 DMG",
-          newName: "Frolicking 2",
+          newName: "",
           value: "56.40%*3",
           actionTime: 0,
           damage: [
@@ -446,7 +457,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Frolicking Stage 3 DMG",
-          newName: "Frolicking 3",
+          newName: "",
           value: "65.99%*4",
           actionTime: 0,
           damage: [
@@ -498,7 +509,7 @@ export const encore = {
         },
         {
           name: "Stage 4 DMG",
-          newName: "Frolicking 4",
+          newName: "",
           value: "194.01%*3",
           actionTime: 0,
           damage: [
@@ -539,7 +550,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Heavy Attack DMG",
-          newName: "Cosmos: Heavy",
+          newName: "",
           value: "217.58%",
           actionTime: 0,
           damage: [
@@ -558,7 +569,7 @@ export const encore = {
         },
         {
           name: "Cosmos Rampage Damage",
-          newName: "Cosmos Rampage",
+          newName: "",
           value: "63.32%*4",
           cooldown: 4,
           actionTime: 0,
@@ -611,10 +622,9 @@ export const encore = {
         },
         {
           name: "Cosmos: Dodge Counter DMG",
-          newName: "Cosmos: Dodge Counter",
+          newName: "",
           value: "65.99%*4",
           actionTime: 0,
-          hidden: true,
           damage: [
             {
               type: "Basic Attack",
@@ -669,7 +679,7 @@ export const encore = {
       id: 1000704,
       name: "Angry Cosmos",
       type: "Inherent Skill",
-      hidden: true,
+      // hidden: true,
       // animationLock: 0,
       stages: [],
       damage: [],
@@ -678,7 +688,7 @@ export const encore = {
       id: 1000705,
       name: "Woolies Cheer Dance",
       type: "Inherent Skill",
-      hidden: true,
+      // hidden: true,
       // animationLock: 0,
       stages: [],
       damage: [],
@@ -688,6 +698,7 @@ export const encore = {
       name: "Woolies Helpers",
       type: "Intro Skill",
       concerto: 10,
+      // hidden: true,
       // animationLock: 0,
       stages: [
         {
@@ -721,7 +732,7 @@ export const encore = {
       stages: [
         {
           name: "Cloudy Frenzy Damage",
-          newName: "Cloudy Frenzy",
+          newName: "",
           value: "334.00%",
           concerto: 10,
           actionTime: 0,
@@ -741,7 +752,7 @@ export const encore = {
         },
         {
           name: "Cosmos Rupture Damage",
-          newName: "Cosmos Rupture",
+          newName: "",
           value: "46.42%*6+495.21%",
           concerto: 10,
           actionTime: 0,
@@ -866,7 +877,7 @@ export const encore = {
       id: 1000708,
       name: "Skillful Cooking",
       type: "Inherent Skill",
-      hidden: true,
+      // hidden: true,
       // animationLock: 0,
       stages: [],
       damage: [],

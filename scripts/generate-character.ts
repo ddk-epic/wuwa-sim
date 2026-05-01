@@ -106,6 +106,50 @@ function formatSkill(
   return lines.join("\n")
 }
 
+export function formatCharacter(char: Character, varName: string): string {
+  const lines: string[] = [
+    `import type { EnrichedCharacter } from '#/types/character'`,
+    ``,
+    `export const ${varName} = {`,
+    `  id: ${char.id},`,
+    `  name: ${s(char.name)},`,
+    `  element: ${s(char.element)},`,
+    `  weaponType: ${s(char.weaponType)},`,
+    `  rarity: ${s(char.rarity)},`,
+    `  template: {`,
+    `    weapon: '',`,
+    `    echo: '',`,
+    `    echoSet: '',`,
+    `  },`,
+    `  stats: {`,
+    `    base: { hp: ${char.stats.base.hp}, atk: ${char.stats.base.atk}, def: ${char.stats.base.def} },`,
+    `    max: { hp: ${char.stats.max.hp}, atk: ${char.stats.max.atk}, def: ${char.stats.max.def} },`,
+    `  },`,
+    `  skillTreeBonuses: [`,
+    ...char.skillTreeBonuses.map((b) => `    ${s(b)},`),
+    `  ],`,
+    `  buffs: {`,
+    `    inherent: [`,
+    ...char.buffs.inherent.map((b) => `      ${s(b)},`),
+    `    ],`,
+    `    resonanceChain: [`,
+    ...char.buffs.resonanceChain.map((b) => `      ${s(b)},`),
+    `    ],`,
+    `  },`,
+    `  skills: [`,
+  ]
+
+  for (const skill of char.skills) {
+    lines.push(formatSkill(skill, 2) + ",")
+  }
+
+  lines.push(`  ],`)
+  lines.push(`} satisfies EnrichedCharacter`)
+  lines.push(``)
+
+  return lines.join("\n")
+}
+
 async function generateCharacter(name: string): Promise<void> {
   const rawPath = path.join(
     PROJECT_ROOT,
@@ -139,31 +183,7 @@ async function generateCharacter(name: string): Promise<void> {
   const char: Character = JSON.parse(raw)
   const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 
-  const lines: string[] = [
-    `import type { EnrichedCharacter } from '#/types/character'`,
-    ``,
-    `export const ${varName} = {`,
-    `  id: ${char.id},`,
-    `  name: ${s(char.name)},`,
-    `  element: ${s(char.element)},`,
-    `  weaponType: ${s(char.weaponType)},`,
-    `  rarity: ${s(char.rarity)},`,
-    `  stats: {`,
-    `    base: { hp: ${char.stats.base.hp}, atk: ${char.stats.base.atk}, def: ${char.stats.base.def} },`,
-    `    max: { hp: ${char.stats.max.hp}, atk: ${char.stats.max.atk}, def: ${char.stats.max.def} },`,
-    `  },`,
-    `  skills: [`,
-  ]
-
-  for (const skill of char.skills) {
-    lines.push(formatSkill(skill, 2) + ",")
-  }
-
-  lines.push(`  ],`)
-  lines.push(`} satisfies EnrichedCharacter`)
-  lines.push(``)
-
-  await fs.writeFile(outputPath, lines.join("\n"))
+  await fs.writeFile(outputPath, formatCharacter(char, varName))
   console.log(`Written to src/data/characters/${name}.ts`)
 }
 
