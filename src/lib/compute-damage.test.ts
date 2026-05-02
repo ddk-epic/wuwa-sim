@@ -69,17 +69,17 @@ describe("computeDamage", () => {
     )
   })
 
-  it("crit at sub-cap applies expected-value", () => {
+  it("crit at sub-cap applies expected-value (totalCritDamage used directly per reference)", () => {
     const s = stats({ critRate: 0.5, critDmg: 1.5 })
     expect(computeDamage(ctx(), s)).toBe(
-      Math.round(1 * 1000 * (1 + 0.5 * 1.5) * DEFRES),
+      Math.round(1 * 1000 * (1 - 0.5 + 0.5 * 1.5) * DEFRES),
     )
   })
 
   it("crit rate is capped at 1.0 (overcap)", () => {
-    const s = stats({ critRate: 1.5, critDmg: 1.0 })
+    const s = stats({ critRate: 1.5, critDmg: 2.0 })
     expect(computeDamage(ctx(), s)).toBe(
-      Math.round(1 * 1000 * (1 + 1 * 1) * DEFRES),
+      Math.round(1 * 1000 * (1 - 1 + 1 * 2.0) * DEFRES),
     )
   })
 

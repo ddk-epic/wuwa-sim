@@ -89,6 +89,10 @@ The 0–100 swap-out resource. Hits add Concerto; reaching 100 enables Outro Ski
 **Intro Skill / Outro Skill**:
 The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free.
 
+## External references
+
+- [`damage-calculation.md`](./damage-calculation.md) — authoritative damage formula reference (mirrors the Wuthering Waves Wiki). Use this as the source of truth for the formula in `computeDamage`, including ATK scaling, MV, Deepen, Damage Bonus, Crit (`totalCritDamage` used directly — do **not** add 1), defense, and resist multipliers.
+
 ## Relationships
 
 - A **Timeline Entry** resolves to one **Stage**, which contains zero or more **Damage Entries**
