@@ -2,6 +2,7 @@ import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
+  BuffEvent,
   HitEvent,
   SimulationLogEntry,
 } from "#/types/simulation-log"
@@ -42,7 +43,16 @@ export function generateSimulationLog(
       continue
     }
 
-    const stats = engine.resolveStats(character.id)
+    pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
+    pushBuffEvents(
+      log,
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: entry.characterId,
+        skillType: entry.skillType,
+        frame: stageStartFrame,
+      }).lifecycleEvents,
+    )
 
     const prevEnergy = energyByChar.get(entry.characterId) ?? 0
     const prevConcerto = concertoByChar.get(entry.characterId) ?? 0
@@ -62,6 +72,9 @@ export function generateSimulationLog(
 
     for (let i = 0; i < stage.damage.length; i++) {
       const hit = stage.damage[i]
+      const hitFrame = stageStartFrame + hit.actionFrame
+      pushBuffEvents(log, engine.tickToFrame(hitFrame).lifecycleEvents)
+      const hitStats = engine.resolveStats(character.id)
       const cumEnergy = (energyByChar.get(entry.characterId) ?? 0) + hit.energy
       const cumConcerto =
         (concertoByChar.get(entry.characterId) ?? 0) + hit.concerto
@@ -75,7 +88,7 @@ export function generateSimulationLog(
           skillType: entry.skillType,
           dmgType: hit.dmgType,
         },
-        stats,
+        hitStats,
       )
 
       const hitEvent: HitEvent = {
@@ -83,20 +96,35 @@ export function generateSimulationLog(
         characterId: entry.characterId,
         skillType: entry.skillType,
         skillName: `${entry.skillName} [hit ${i + 1}]`,
-        frame: stageStartFrame + hit.actionFrame,
+        frame: hitFrame,
         cumulativeEnergy: cumEnergy,
         cumulativeConcerto: cumConcerto,
         damage,
-        statsSnapshot: { ...stats },
-        activeBuffIds: [],
+        statsSnapshot: { ...hitStats },
+        activeBuffIds: engine.activeBuffIds(character.id),
       }
       log.push(hitEvent)
+
+      pushBuffEvents(
+        log,
+        engine.onEvent({
+          kind: "hitLanded",
+          characterId: entry.characterId,
+          skillType: entry.skillType,
+          dmgType: hit.dmgType,
+          frame: hitFrame,
+        }).lifecycleEvents,
+      )
     }
 
     stageStartFrame += entry.actionTime
   }
 
   return log
+}
+
+function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
+  for (const e of events) log.push(e)
 }
 
 function resolveStage(

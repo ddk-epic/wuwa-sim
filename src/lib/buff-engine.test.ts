@@ -6,6 +6,8 @@ import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
+import { BuffEngine } from "./buff-engine"
+
 let testCharacters: EnrichedCharacter[] = []
 let testWeapons: EnrichedWeapon[] = []
 let testEchoes: EnrichedEcho[] = []
@@ -18,8 +20,6 @@ vi.mock("./catalog", () => ({
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,
   getEchoSetById: (id: number) => testEchoSets.find((s) => s.id === id) ?? null,
 }))
-
-import { BuffEngine } from "./buff-engine"
 
 afterEach(() => {
   testCharacters = []
@@ -381,6 +381,208 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
       ],
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + 0.07 + 0.03 + 0.04)
+  })
+})
+
+describe("BuffEngine.onEvent — triggered buffs", () => {
+  const skillCastBuff: BuffDef = {
+    id: "char.intro",
+    name: "Intro Buff",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillType: "Intro Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 14 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "skillTypeBonus", key: "Resonance Skill" },
+        value: { kind: "const", v: 0.38 },
+      },
+    ],
+  }
+
+  it("applies a buff when its skillCast trigger matches", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"] ?? 0).toBe(
+      0,
+    )
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Intro Skill",
+      frame: 0,
+    })
+    expect(lifecycleEvents).toHaveLength(1)
+    expect(lifecycleEvents[0]).toMatchObject({
+      kind: "buffApplied",
+      buffId: "char.intro",
+      stacks: 1,
+      targetCharacterId: 1,
+    })
+    expect(
+      engine.resolveStats(1).skillTypeBonus["Resonance Skill"],
+    ).toBeCloseTo(0.38)
+  })
+
+  it("does not apply when skillType does not match the trigger filter", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(lifecycleEvents).toEqual([])
+  })
+
+  it("emits buffRefreshed and bumps endTime when the same buff retriggers", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Intro Skill",
+      frame: 0,
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Intro Skill",
+      frame: 60,
+    })
+    expect(lifecycleEvents).toHaveLength(1)
+    expect(lifecycleEvents[0]).toMatchObject({
+      kind: "buffRefreshed",
+      buffId: "char.intro",
+    })
+    // 14s = 840 frames. Original endTime would be 840 (apply at 0).
+    // After refresh at frame 60, new endTime = 60 + 840 = 900.
+    const expired = engine.tickToFrame(841)
+    expect(expired.lifecycleEvents).toEqual([])
+  })
+
+  it("expires buffs at endTime via tickToFrame and emits buffExpired", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Intro Skill",
+      frame: 0,
+    })
+    const beforeExpiry = engine.tickToFrame(839)
+    expect(beforeExpiry.lifecycleEvents).toEqual([])
+    expect(
+      engine.resolveStats(1).skillTypeBonus["Resonance Skill"],
+    ).toBeCloseTo(0.38)
+    const atExpiry = engine.tickToFrame(840)
+    expect(atExpiry.lifecycleEvents).toHaveLength(1)
+    expect(atExpiry.lifecycleEvents[0]).toMatchObject({
+      kind: "buffExpired",
+      buffId: "char.intro",
+    })
+    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"] ?? 0).toBe(
+      0,
+    )
+  })
+
+  it("dedupes by (id, target): re-application from any source refreshes the same instance", () => {
+    const teamBuff: BuffDef = {
+      id: "ally.shared",
+      name: "Shared",
+      trigger: {
+        event: "skillCast",
+        actor: "any",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 100 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [teamBuff] }),
+      baseChar({ id: 2, buffs: [teamBuff] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Both source 1 and source 2 self-apply on a generic skillCast — one instance per target.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    const second = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 10,
+    })
+    // Second event re-triggers both buffs (one for each source) — both target=1, same id, so refresh.
+    expect(
+      second.lifecycleEvents.every((e) => e.kind === "buffRefreshed"),
+    ).toBe(true)
+  })
+
+  it("hitLanded with no synthetic flag fires self-source triggers", () => {
+    const onHit: BuffDef = {
+      id: "char.onhit",
+      name: "OnHit",
+      trigger: { event: "hitLanded", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.05 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [onHit] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 5,
+    })
+    expect(lifecycleEvents).toHaveLength(1)
+    expect(lifecycleEvents[0].kind).toBe("buffApplied")
   })
 })
 

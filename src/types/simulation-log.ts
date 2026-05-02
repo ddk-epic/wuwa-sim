@@ -20,4 +20,14 @@ export interface HitEvent extends SimulationLogBase {
   activeBuffIds: string[]
 }
 
-export type SimulationLogEntry = ActionEvent | HitEvent
+export interface BuffEvent {
+  kind: "buffApplied" | "buffRefreshed" | "buffExpired"
+  buffId: string
+  buffName: string
+  sourceCharacterId: number
+  targetCharacterId: number
+  frame: number
+  stacks: number
+}
+
+export type SimulationLogEntry = ActionEvent | HitEvent | BuffEvent

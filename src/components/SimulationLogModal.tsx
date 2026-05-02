@@ -8,9 +8,15 @@ interface SimulationLogModalProps {
   onClose: () => void
 }
 
+const BUFF_KINDS = new Set(["buffApplied", "buffRefreshed", "buffExpired"])
+
 export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
   const hitCount = log.filter((e) => e.kind === "hit").length
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
+  const [showBuffs, setShowBuffs] = useState(true)
+  const filteredLog = showBuffs
+    ? log
+    : log.filter((e) => !BUFF_KINDS.has(e.kind))
 
   const toggleRow = (i: number) => {
     setExpanded((prev) => {
@@ -35,13 +41,23 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
             <h2 className="text-xl font-bold">Simulation Log</h2>
             <p className="text-gray-400 text-sm mt-0.5">{hitCount} hits</p>
           </div>
-          <button
-            className="text-gray-400 hover:text-white transition-colors text-xl leading-none"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-gray-400 select-none">
+              <input
+                type="checkbox"
+                checked={showBuffs}
+                onChange={(e) => setShowBuffs(e.target.checked)}
+              />
+              Show buff events
+            </label>
+            <button
+              className="text-gray-400 hover:text-white transition-colors text-xl leading-none"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           {log.length === 0 ? (
@@ -63,49 +79,91 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                 </tr>
               </thead>
               <tbody>
-                {log.map((entry, i) => {
-                  const character = getCharacterById(entry.characterId)
-                  const isAction = entry.kind === "action"
+                {filteredLog.map((entry, i) => {
+                  const isBuff = BUFF_KINDS.has(entry.kind)
+                  if (isBuff) {
+                    const buff = entry as Extract<
+                      SimulationLogEntry,
+                      { kind: "buffApplied" | "buffRefreshed" | "buffExpired" }
+                    >
+                    const target = getCharacterById(buff.targetCharacterId)
+                    const verb =
+                      buff.kind === "buffApplied"
+                        ? "applied"
+                        : buff.kind === "buffRefreshed"
+                          ? "refreshed"
+                          : "expired"
+                    const color =
+                      buff.kind === "buffExpired"
+                        ? "text-rose-400/70"
+                        : "text-emerald-400/80"
+                    return (
+                      <tr
+                        key={i}
+                        className="border-b border-gray-800 bg-gray-950/40"
+                      >
+                        <td className="py-1 pr-3 text-gray-500">{i + 1}</td>
+                        <td className="py-1 pr-3">{target?.name ?? "?"}</td>
+                        <td className={`py-1 pr-3 italic ${color}`}>
+                          buff {verb}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {buff.buffName}
+                          {buff.stacks > 1 ? ` × ${buff.stacks}` : ""}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {(buff.frame / 60).toFixed(2)}s
+                        </td>
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 text-right" />
+                      </tr>
+                    )
+                  }
+                  const ev = entry as Extract<
+                    SimulationLogEntry,
+                    { kind: "action" | "hit" }
+                  >
+                  const character = getCharacterById(ev.characterId)
+                  const isAction = ev.kind === "action"
                   const isExpanded = expanded.has(i)
                   return (
                     <Fragment key={i}>
                       <tr
-                        className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"} ${entry.kind === "hit" ? "cursor-pointer hover:bg-gray-800/40" : ""}`}
+                        className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"} ${ev.kind === "hit" ? "cursor-pointer hover:bg-gray-800/40" : ""}`}
                         onClick={
-                          entry.kind === "hit" ? () => toggleRow(i) : undefined
+                          ev.kind === "hit" ? () => toggleRow(i) : undefined
                         }
                       >
                         <td className="py-1 pr-3 text-gray-500">
-                          {entry.kind === "hit"
+                          {ev.kind === "hit"
                             ? `${isExpanded ? "▾" : "▸"} ${i + 1}`
                             : i + 1}
                         </td>
                         <td className="py-1 pr-3">{character?.name ?? "?"}</td>
                         <td className="py-1 pr-3 text-gray-400">
-                          {isAction ? entry.skillType : ""}
+                          {isAction ? ev.skillType : ""}
                         </td>
-                        <td className="py-1 pr-3">{entry.skillName}</td>
+                        <td className="py-1 pr-3">{ev.skillName}</td>
                         <td className="py-1 pr-3">
-                          {(entry.frame / 60).toFixed(2)}s
+                          {(ev.frame / 60).toFixed(2)}s
                         </td>
                         <td className="py-1 pr-3 text-right">
-                          {entry.cumulativeConcerto.toFixed(1)}
+                          {ev.cumulativeConcerto.toFixed(1)}
                         </td>
                         <td className="py-1 pr-3 text-right">
-                          {entry.cumulativeEnergy.toFixed(1)}
+                          {ev.cumulativeEnergy.toFixed(1)}
                         </td>
                         <td className="py-1 text-right text-yellow-400">
-                          {entry.kind === "hit"
-                            ? entry.damage.toLocaleString()
-                            : ""}
+                          {ev.kind === "hit" ? ev.damage.toLocaleString() : ""}
                         </td>
                       </tr>
-                      {entry.kind === "hit" && isExpanded && (
+                      {ev.kind === "hit" && isExpanded && (
                         <tr className="border-b border-gray-800 bg-gray-950/60">
                           <td colSpan={8} className="py-2 px-3">
                             <StatsSnapshotTable
-                              snapshot={entry.statsSnapshot}
-                              activeBuffIds={entry.activeBuffIds}
+                              snapshot={ev.statsSnapshot}
+                              activeBuffIds={ev.activeBuffIds}
                             />
                           </td>
                         </tr>

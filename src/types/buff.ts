@@ -23,7 +23,24 @@ export type StatEffect = {
 
 export type Effect = StatEffect
 
-export type Trigger = { event: "simStart" }
+export type TriggerSource = "self" | "synthetic" | "any"
+
+export type Trigger =
+  | { event: "simStart" }
+  | {
+      event: "skillCast"
+      actor?: "self" | "any"
+      characterId?: number
+      skillType?: string
+    }
+  | {
+      event: "hitLanded"
+      actor?: "self" | "any"
+      characterId?: number
+      skillType?: string
+      dmgType?: string
+      source?: TriggerSource
+    }
 
 export type BuffTarget = { kind: "self" } | { kind: "team" }
 
@@ -31,6 +48,16 @@ export type Duration =
   | { kind: "permanent" }
   | { kind: "frames"; v: number }
   | { kind: "seconds"; v: number }
+
+export type StackingPolicy = {
+  max: number
+  onRetrigger:
+    | "refresh"
+    | "addStack"
+    | "addStackKeepTimer"
+    | "ignore"
+    | "replace"
+}
 
 export interface BuffDef {
   id: string
@@ -40,6 +67,8 @@ export interface BuffDef {
   target: BuffTarget
   effects: Effect[]
   duration: Duration
+  /** Default `{ max: 1, onRetrigger: "refresh" }` when omitted. */
+  stacking?: StackingPolicy
   /** Resonance chain sequence required (1..6). v1 only filters at bootstrap. */
   requiresSequence?: number
   /** Echo set piece count required (2 or 5). v1 only filters at bootstrap. */

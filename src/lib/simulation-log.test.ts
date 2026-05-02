@@ -3,6 +3,9 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
+import type { HitEvent } from "#/types/simulation-log"
+
+import { generateSimulationLog } from "./simulation-log"
 
 const dmgHit = (value: number, energy = 0, concerto = 0) => ({
   type: "ATK",
@@ -111,8 +114,6 @@ vi.mock("./catalog", () => ({
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,
 }))
 
-import { generateSimulationLog } from "./simulation-log"
-
 afterEach(() => {
   testCharacters = []
   testEchoes = []
@@ -216,10 +217,14 @@ describe("generateSimulationLog — multi-hit stage", () => {
     testCharacters = [charA]
     const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
-    expect(result[1].cumulativeEnergy).toBe(3)
-    expect(result[1].cumulativeConcerto).toBe(1)
-    expect(result[2].cumulativeEnergy).toBe(6)
-    expect(result[2].cumulativeConcerto).toBe(2)
+    expect(result[1]).toMatchObject({
+      cumulativeEnergy: 3,
+      cumulativeConcerto: 1,
+    })
+    expect(result[2]).toMatchObject({
+      cumulativeEnergy: 6,
+      cumulativeConcerto: 2,
+    })
   })
 })
 
@@ -396,6 +401,87 @@ describe("generateSimulationLog — stats snapshot", () => {
         critDmg: 0,
       })
     }
+  })
+})
+
+describe("generateSimulationLog — buff lifecycle interleaving", () => {
+  it("interleaves buffApplied with action/hit events when an Intro Skill grants a Resonance Skill bonus", () => {
+    const introBuff = {
+      id: "char.intro.buff",
+      name: "Intro",
+      trigger: {
+        event: "skillCast" as const,
+        characterId: 1,
+        skillType: "Intro Skill",
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 14 },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "skillTypeBonus" as const, key: "Resonance Skill" },
+          value: { kind: "const" as const, v: 0.5 },
+        },
+      ],
+    }
+    const charWithIntro: EnrichedCharacter = {
+      ...charA,
+      buffs: [introBuff],
+      skills: [
+        {
+          id: 100,
+          name: "Intro",
+          type: "Intro Skill",
+          stages: [
+            {
+              name: "Skill",
+              value: "100%",
+              actionTime: 30,
+              damage: [dmgHit(1.0, 0, 0)],
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 101,
+          name: "Resonance",
+          type: "Resonance Skill",
+          stages: [
+            {
+              name: "Skill",
+              value: "100%",
+              actionTime: 30,
+              damage: [dmgHit(1.0, 0, 0)],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charWithIntro]
+    const entries: TimelineEntry[] = [
+      tlEntry(1, "Intro Skill", "Intro"),
+      tlEntry(1, "Resonance Skill", "Resonance"),
+    ]
+    const result = generateSimulationLog(
+      entries,
+      [1, null, null],
+      emptyLoadouts,
+    )
+    const kinds = result.map((e) => e.kind)
+    // Expected: buffApplied (from skillCast pre-hit), action, hit (intro hit, no bonus),
+    //           action (resonance), hit (with bonus).
+    expect(kinds[0]).toBe("buffApplied")
+    expect(kinds).toContain("action")
+    expect(kinds).toContain("hit")
+    const resHit = result.find(
+      (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
+    ) as HitEvent | undefined
+    expect(resHit).toBeDefined()
+    expect(resHit?.activeBuffIds).toContain("char.intro.buff")
+    expect(resHit?.statsSnapshot.skillTypeBonus["Resonance Skill"]).toBeCloseTo(
+      0.5,
+    )
   })
 })
 

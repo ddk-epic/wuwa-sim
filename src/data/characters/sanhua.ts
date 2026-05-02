@@ -16,7 +16,28 @@ export const sanhua = {
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
-  buffs: [],
+  buffs: [
+    {
+      id: "char.sanhua.intro.freezing-thorns",
+      name: "Freezing Thorns",
+      description:
+        "After casting Sanhua's Intro Skill, the next character's Resonance Skill DMG is increased by 38% for 14s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1102,
+        skillType: "Intro Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 14 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Resonance Skill" },
+          value: { kind: "const", v: 0.38 },
+        },
+      ],
+    },
+  ],
   skills: [
     {
       id: 1000501,
