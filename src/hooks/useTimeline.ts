@@ -1,11 +1,11 @@
-import type { TimelineEntry } from '#/types/timeline'
-import { useLocalStorage } from './useLocalStorage'
+import type { TimelineEntry } from "#/types/timeline"
+import { useLocalStorage } from "./useLocalStorage"
 
-type NewEntry = Omit<TimelineEntry, 'id'>
+type NewEntry = Omit<TimelineEntry, "id">
 
 export function useTimeline() {
   const [entries, setEntries] = useLocalStorage<TimelineEntry[]>(
-    'wuwa.timeline.entries',
+    "wuwa.timeline.entries",
     [],
   )
 

@@ -156,14 +156,7 @@ export function formatCharacter(char: Character, varName: string): string {
     `  skillTreeBonuses: [`,
     ...char.skillTreeBonuses.map((b) => `    ${s(b)},`),
     `  ],`,
-    `  buffs: {`,
-    `    inherent: [`,
-    ...char.buffs.inherent.map((b) => `      ${s(b)},`),
-    `    ],`,
-    `    resonanceChain: [`,
-    ...char.buffs.resonanceChain.map((b) => `      ${s(b)},`),
-    `    ],`,
-    `  },`,
+    `  buffs: [],`,
     `  skills: [`,
   ]
 

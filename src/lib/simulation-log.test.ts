@@ -25,7 +25,7 @@ const charA: EnrichedCharacter = {
   stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 1000, def: 0 } },
   template: { weapon: "", echo: "", echoSet: "" },
   skillTreeBonuses: [],
-  buffs: { inherent: [], resonanceChain: [] },
+  buffs: [],
   skills: [
     {
       id: 1,
@@ -87,6 +87,7 @@ const echoA: EnrichedEcho = {
   cost: 4,
   element: "Fusion",
   set: "Test Set",
+  buffs: [],
   skill: {
     cooldown: 20,
     description: "Test echo",

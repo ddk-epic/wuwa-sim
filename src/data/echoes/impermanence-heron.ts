@@ -6,6 +6,7 @@ export const impermanenceHeron = {
   cost: 4,
   element: "Havoc",
   set: "Moonlit Clouds",
+  buffs: [],
   skill: {
     cooldown: 20,
     description:

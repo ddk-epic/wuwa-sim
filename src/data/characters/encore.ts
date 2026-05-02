@@ -16,17 +16,7 @@ export const encore = {
     max: { hp: 10512.5, atk: 425, def: 1246.6644 },
   },
   skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
-  buffs: {
-    inherent: ["Angry Cosmos", "Woolies Cheer Dance", "Skillful Cooking"],
-    resonanceChain: [
-      "Wooly's Fairy Tale",
-      "Sheep-counting Lullaby",
-      "Fog? The Black Shores!",
-      "Adventure? Let's go!",
-      "Hero Takes the Stage!",
-      "Woolies Save the World!",
-    ],
-  },
+  buffs: [],
   skills: [
     {
       id: 1000701,

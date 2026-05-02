@@ -22,6 +22,7 @@ export function formatWeapon(weapon: Weapon, varName: string): string {
     `    sub: { name: ${s(weapon.stats.sub.name)}, base: ${weapon.stats.sub.base}, max: ${weapon.stats.sub.max} },`,
     `  },`,
     `  passive: { name: ${s(weapon.passive.name)} },`,
+    `  buffs: [],`,
     `} satisfies EnrichedWeapon`,
     ``,
   ].join("\n")

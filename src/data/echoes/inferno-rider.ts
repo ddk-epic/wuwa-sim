@@ -6,6 +6,7 @@ export const infernoRider = {
   cost: 4,
   element: "Fusion",
   set: "Molten Rift",
+  buffs: [],
   skill: {
     cooldown: 20,
     description:

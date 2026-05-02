@@ -14,16 +14,12 @@ const minimalChar: Character = {
   },
   skills: [],
   skillTreeBonuses: [],
-  buffs: { inherent: [], resonanceChain: [] },
+  buffs: [],
 }
 
 const charWithBonuses: Character = {
   ...minimalChar,
   skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
-  buffs: {
-    inherent: ["Passive A", "Passive B"],
-    resonanceChain: ["Chain 1", "Chain 2"],
-  },
 }
 
 const charWithSkills: Character = {
@@ -138,23 +134,9 @@ describe("formatCharacter", () => {
     expect(out).toContain('"ATK",')
   })
 
-  it("emits empty buffs when none present", () => {
+  it("emits empty buffs array", () => {
     const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("buffs: {")
-    expect(out).toContain("inherent: [")
-    expect(out).toContain("resonanceChain: [")
-  })
-
-  it("emits buffs.inherent values from the character", () => {
-    const out = formatCharacter(charWithBonuses, "testHero")
-    expect(out).toContain('"Passive A",')
-    expect(out).toContain('"Passive B",')
-  })
-
-  it("emits buffs.resonanceChain values from the character", () => {
-    const out = formatCharacter(charWithBonuses, "testHero")
-    expect(out).toContain('"Chain 1",')
-    expect(out).toContain('"Chain 2",')
+    expect(out).toContain("buffs: [],")
   })
 
   it("emits stats base and max", () => {

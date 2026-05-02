@@ -1,4 +1,5 @@
-import type { DamageEntry } from './character.js'
+import type { DamageEntry } from "./character.js"
+import type { BuffDef } from "./buff"
 
 export type { DamageEntry }
 
@@ -15,6 +16,7 @@ export interface Echo {
   element: string
   skill: EchoSkill
   set: string
+  buffs: BuffDef[]
 }
 
 export interface EchoSetEffect {
@@ -26,6 +28,7 @@ export interface EchoSet {
   id: number
   name: string
   effects: EchoSetEffect[]
+  buffs: BuffDef[]
 }
 
 export interface EnrichedEchoStage {
@@ -42,6 +45,6 @@ export interface EnrichedEchoSkill {
   stages: EnrichedEchoStage[]
 }
 
-export interface EnrichedEcho extends Omit<Echo, 'skill'> {
+export interface EnrichedEcho extends Omit<Echo, "skill"> {
   skill: EnrichedEchoSkill
 }

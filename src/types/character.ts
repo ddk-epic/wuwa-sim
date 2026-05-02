@@ -1,3 +1,5 @@
+import type { BuffDef } from "./buff"
+
 export interface StatGroup {
   hp: number
   atk: number
@@ -42,11 +44,6 @@ export interface Skill {
   damage: DamageEntry[]
 }
 
-export interface CharacterBuffs {
-  inherent: string[]
-  resonanceChain: string[]
-}
-
 export interface Character {
   id: number
   name: string
@@ -56,7 +53,7 @@ export interface Character {
   stats: CharacterStats
   skills: Skill[]
   skillTreeBonuses: string[]
-  buffs: CharacterBuffs
+  buffs: BuffDef[]
 }
 
 export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {

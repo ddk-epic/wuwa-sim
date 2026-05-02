@@ -3,7 +3,6 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type {
   Character,
-  CharacterBuffs,
   CharacterStats,
   DamageEntry,
   Skill,
@@ -321,19 +320,6 @@ export function mapSkillTreeBonuses(skillTree: ApiSkillTreeNode[]): string[] {
   return result
 }
 
-export function mapBuffs(
-  skills: ApiSkill[],
-  resonantChain: ApiResonantChainNode[],
-): CharacterBuffs {
-  const inherent = skills
-    .filter((s) => s.SkillType === "Inherent Skill")
-    .map((s) => s.SkillName)
-  const resonanceChain = [...resonantChain]
-    .sort((a, b) => a.GroupIndex - b.GroupIndex)
-    .map((n) => n.NodeName)
-  return { inherent, resonanceChain }
-}
-
 // --- Main ---
 
 export async function extractCharacter(id: string): Promise<void> {
@@ -372,7 +358,7 @@ export async function extractCharacter(id: string): Promise<void> {
     stats: mapStats(data.Properties),
     skills: mapSkills(data.Skills),
     skillTreeBonuses: mapSkillTreeBonuses(data.SkillTree ?? []),
-    buffs: mapBuffs(data.Skills ?? [], data.ResonantChain ?? []),
+    buffs: [],
   }
 
   const slug = data.Name.Content.toLowerCase().replace(/\s+/g, "-")

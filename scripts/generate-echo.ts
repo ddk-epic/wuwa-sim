@@ -93,6 +93,7 @@ async function generateEcho(name: string): Promise<void> {
     `  cost: ${echo.cost},`,
     `  element: ${s(echo.element)},`,
     `  set: ${s(echo.set)},`,
+    `  buffs: [],`,
     `  skill: {`,
     `    cooldown: ${echo.skill.cooldown},`,
     `    description: ${s(echo.skill.description)},`,

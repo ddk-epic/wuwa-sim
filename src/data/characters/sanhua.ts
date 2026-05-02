@@ -16,17 +16,7 @@ export const sanhua = {
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
-  buffs: {
-    inherent: ["Condensation", "Avalanche", ""],
-    resonanceChain: [
-      "Solitude's Embrace",
-      "Snowy Clarity",
-      "Anomalous Vision",
-      "Blade Mastery",
-      "Unraveling Fate",
-      "Daybreak Radiance",
-    ],
-  },
+  buffs: [],
   skills: [
     {
       id: 1000501,

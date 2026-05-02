@@ -10,5 +10,17 @@
       "pieces": 5,
       "description": "Upon using Outro Skill, increases the ATK of the next Resonator by 22.5% for 15s."
     }
+  ],
+  "buffs": [
+    {
+      "id": "echo-set.moonlit-clouds.2pc.energy-regen",
+      "name": "Moonlit Clouds 2pc — Energy Regen",
+      "description": "Permanent +10% Energy Regen. Not modeled in v1 (energy regen lands with resource state in slice 6).",
+      "trigger": { "event": "simStart" },
+      "target": { "kind": "self" },
+      "duration": { "kind": "permanent" },
+      "requiresPieces": 2,
+      "effects": []
+    }
   ]
 }

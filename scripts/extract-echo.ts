@@ -113,6 +113,7 @@ function mapEchoSet(
       pieces: entry.Key,
       description: stripHtml(effects.EffectDescriptions[i]),
     })),
+    buffs: [],
   }
 }
 
@@ -152,6 +153,7 @@ export async function extractEcho(id: string): Promise<void> {
     element: data.Element.Name,
     skill: mapSkill(data.Skill),
     set: echoSet.name,
+    buffs: [],
   }
 
   const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, "-")

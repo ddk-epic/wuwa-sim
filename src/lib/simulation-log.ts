@@ -5,11 +5,10 @@ import type {
   HitEvent,
   SimulationLogEntry,
 } from "#/types/simulation-log"
-import type { StatTable } from "#/types/stat-table"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
 import { computeDamage } from "./compute-damage"
-import { emptyStatTable } from "#/types/stat-table"
+import { BuffEngine } from "./buff-engine"
 
 interface ResolvedStage {
   concerto: number
@@ -25,7 +24,8 @@ export function generateSimulationLog(
   const log: SimulationLogEntry[] = []
   const energyByChar = new Map<number, number>()
   const concertoByChar = new Map<number, number>()
-  const statsByChar = new Map<number, StatTable>()
+  const engine = new BuffEngine()
+  engine.bootstrap({ slots, loadouts })
   let stageStartFrame = 0
 
   for (const entry of entries) {
@@ -42,7 +42,7 @@ export function generateSimulationLog(
       continue
     }
 
-    const stats = getOrBuildStats(character, statsByChar)
+    const stats = engine.resolveStats(character.id)
 
     const prevEnergy = energyByChar.get(entry.characterId) ?? 0
     const prevConcerto = concertoByChar.get(entry.characterId) ?? 0
@@ -97,20 +97,6 @@ export function generateSimulationLog(
   }
 
   return log
-}
-
-function getOrBuildStats(
-  character: EnrichedCharacter,
-  cache: Map<number, StatTable>,
-): StatTable {
-  const cached = cache.get(character.id)
-  if (cached) return cached
-  const stats: StatTable = {
-    ...emptyStatTable(),
-    atkBase: character.stats.max.atk,
-  }
-  cache.set(character.id, stats)
-  return stats
 }
 
 function resolveStage(

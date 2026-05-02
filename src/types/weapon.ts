@@ -1,3 +1,5 @@
+import type { BuffDef } from "./buff"
+
 export interface WeaponStat {
   name: string
   base: number
@@ -41,4 +43,5 @@ export interface EnrichedWeapon {
   weaponType: string
   stats: EnrichedWeaponStats
   passive: { name: string }
+  buffs: BuffDef[]
 }
