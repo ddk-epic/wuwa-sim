@@ -2,11 +2,15 @@ import type {
   BuffDef,
   BuffInstance,
   Condition,
+  ResourceEffect,
+  ResourceKind,
+  ResourceState,
   StackingPolicy,
   StatEffect,
   StatPath,
   Trigger,
 } from "#/types/buff"
+import { emptyResourceState } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
@@ -34,6 +38,8 @@ export type EngineEvent =
       characterId: number
       skillType: string
       frame: number
+      /** Stage-level concerto attached to this cast (action-level). */
+      concerto?: number
     }
   | {
       kind: "hitLanded"
@@ -42,9 +48,21 @@ export type EngineEvent =
       dmgType: string
       synthetic?: boolean
       frame: number
+      /** Per-hit energy gained by the actor. Implicit `resource` effect. */
+      energy?: number
+      /** Per-hit concerto gained by the actor. Implicit `resource` effect. */
+      concerto?: number
     }
   | { kind: "swapIn"; characterId: number; frame: number }
   | { kind: "swapOut"; characterId: number; frame: number }
+  | {
+      kind: "resourceCrossed"
+      characterId: number
+      resource: ResourceKind
+      threshold: number
+      direction: "up" | "down"
+      frame: number
+    }
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 
@@ -54,6 +72,7 @@ export class BuffEngine {
   /** Per-character pool of triggerable BuffDefs (pre-filtered by sequence/pieces). */
   private triggerableBySource = new Map<number, BuffDef[]>()
   private active: BuffInstance[] = []
+  private resources = new Map<number, ResourceState>()
   private onFieldCharacterId: number | null = null
   private pendingNextOnField: {
     def: BuffDef
@@ -65,6 +84,7 @@ export class BuffEngine {
     this.baseStats.clear()
     this.triggerableBySource.clear()
     this.active = []
+    this.resources.clear()
     this.slotsBySlotIndex = []
     this.onFieldCharacterId = null
     this.pendingNextOnField = []
@@ -161,8 +181,18 @@ export class BuffEngine {
 
       this.baseStats.set(charId, stats)
       this.triggerableBySource.set(charId, triggerable)
+      this.resources.set(charId, emptyResourceState())
     }
     return { lifecycleEvents: [] }
+  }
+
+  getResource(characterId: number): ResourceState {
+    let state = this.resources.get(characterId)
+    if (!state) {
+      state = emptyResourceState()
+      this.resources.set(characterId, state)
+    }
+    return state
   }
 
   /** Process a triggering event; returns lifecycle events from any apply/refresh. */
@@ -194,6 +224,42 @@ export class BuffEngine {
   }
 
   private dispatchEvent(event: EngineEvent, out: BuffEvent[]): void {
+    // Resource phase (implicit): hit-driven and skill-cast-driven accumulation
+    // happens before trigger matching so resourceCrossed triggers can chain.
+    if (event.kind === "hitLanded") {
+      if (event.energy) {
+        this.applyResourceDelta(event.characterId, "energy", event.energy, out)
+      }
+      if (event.concerto) {
+        this.applyResourceDelta(
+          event.characterId,
+          "concerto",
+          event.concerto,
+          out,
+        )
+      }
+    }
+    if (event.kind === "skillCast") {
+      if (event.concerto) {
+        this.applyResourceDelta(
+          event.characterId,
+          "concerto",
+          event.concerto,
+          out,
+        )
+      }
+      if (event.skillType === "Resonance Liberation") {
+        const energy = this.getResource(event.characterId).energy
+        if (energy < 100) {
+          const character = getCharacterById(event.characterId)
+          const name = character ? character.name : `id ${event.characterId}`
+          console.warn(
+            `[BuffEngine] Resonance Liberation cast by ${name} with insufficient energy (${energy} < 100)`,
+          )
+        }
+      }
+    }
+
     // swapOut: cleanup expiresOnSourceSwapOut instances
     if (event.kind === "swapOut") {
       const remaining: BuffInstance[] = []
@@ -249,6 +315,29 @@ export class BuffEngine {
       a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0,
     )
 
+    // Phase: resource — fire explicit resource effects from triggered buffs
+    // before stat-effect application (which is deferred to resolveStats).
+    for (const { def, sourceCharacterId } of candidates) {
+      for (const effect of def.effects) {
+        if (effect.kind !== "resource") continue
+        const targets = resolveTargetIds(
+          def,
+          sourceCharacterId,
+          this.slotsBySlotIndex,
+        )
+        for (const targetId of targets) {
+          this.applyResourceEffect(
+            effect,
+            sourceCharacterId,
+            targetId,
+            event.frame,
+            out,
+          )
+        }
+      }
+    }
+
+    // Phase: stat — apply buffs (instances accumulate stat effects via resolveStats).
     for (const { def, sourceCharacterId } of candidates) {
       if (def.target.kind === "nextOnField") {
         this.pendingNextOnField.push({
@@ -266,6 +355,101 @@ export class BuffEngine {
       for (const targetId of targetIds) {
         this.applyBuff(def, sourceCharacterId, targetId, event.frame, out)
       }
+    }
+  }
+
+  private applyResourceDelta(
+    characterId: number,
+    resource: ResourceKind,
+    delta: number,
+    out: BuffEvent[],
+  ): void {
+    const state = this.getResource(characterId)
+    const before = state[resource]
+    const after = before + delta
+    state[resource] = after
+    this.fireResourceCrossed(characterId, resource, before, after, out)
+  }
+
+  private setResource(
+    characterId: number,
+    resource: ResourceKind,
+    value: number,
+    out: BuffEvent[],
+  ): void {
+    const state = this.getResource(characterId)
+    const before = state[resource]
+    state[resource] = value
+    this.fireResourceCrossed(characterId, resource, before, value, out)
+  }
+
+  private fireResourceCrossed(
+    characterId: number,
+    resource: ResourceKind,
+    before: number,
+    after: number,
+    out: BuffEvent[],
+  ): void {
+    if (before === after) return
+    const direction: "up" | "down" = after > before ? "up" : "down"
+    const synthetic: EngineEvent = {
+      kind: "resourceCrossed",
+      characterId,
+      resource,
+      threshold: 0,
+      direction,
+      frame: 0,
+    }
+    // Match each resourceCrossed trigger that this delta crosses.
+    for (const [sourceId, defs] of this.triggerableBySource) {
+      for (const def of defs) {
+        if (def.trigger.event !== "resourceCrossed") continue
+        const t = def.trigger
+        if (t.resource !== resource) continue
+        if (t.direction !== direction) continue
+        const crossed =
+          direction === "up"
+            ? before < t.threshold && after >= t.threshold
+            : before > t.threshold && after <= t.threshold
+        if (!crossed) continue
+        if (t.actor !== "any" && sourceId !== characterId) continue
+        if (t.characterId !== undefined && t.characterId !== characterId) {
+          continue
+        }
+        // Fire as if a real event occurred. Re-route to apply path.
+        const targetIds = resolveTargetIds(def, sourceId, this.slotsBySlotIndex)
+        for (const targetId of targetIds) {
+          this.applyBuff(def, sourceId, targetId, synthetic.frame, out)
+        }
+      }
+    }
+  }
+
+  private applyResourceEffect(
+    effect: ResourceEffect,
+    sourceCharacterId: number,
+    targetCharacterId: number,
+    _frame: number,
+    out: BuffEvent[],
+  ): void {
+    if (effect.value.kind !== "const") return
+    const v = effect.value.v
+    const subjectId =
+      effect.target === "source"
+        ? sourceCharacterId
+        : effect.target === "self"
+          ? sourceCharacterId
+          : targetCharacterId
+    const state = this.getResource(subjectId)
+    const before = state[effect.resource]
+    let after = before
+    if (effect.op === "add") after = before + v
+    else if (effect.op === "sub") after = before - v
+    else after = v
+    if (effect.op === "set") {
+      this.setResource(subjectId, effect.resource, after, out)
+    } else {
+      this.applyResourceDelta(subjectId, effect.resource, after - before, out)
     }
   }
 
@@ -336,6 +520,11 @@ export class BuffEngine {
         return this.onFieldCharacterId === inst.targetCharacterId
       case "actorIsOnField":
         return this.onFieldCharacterId === inst.sourceCharacterId
+      case "resourceAtLeast": {
+        const subjectId =
+          cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId
+        return this.getResource(subjectId)[cond.resource] >= cond.n
+      }
     }
   }
 

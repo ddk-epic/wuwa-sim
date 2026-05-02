@@ -15,13 +15,24 @@ export type StatPath =
 
 export type ValueExpr = { kind: "const"; v: number; snapshot?: boolean }
 
+export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
+
 export type StatEffect = {
   kind: "stat"
   path: StatPath
   value: ValueExpr
 }
 
-export type Effect = StatEffect
+export type ResourceEffect = {
+  kind: "resource"
+  resource: ResourceKind
+  op: "add" | "sub" | "set"
+  value: ValueExpr
+  /** Defaults to the buff's target. */
+  target?: "self" | "target" | "source"
+}
+
+export type Effect = StatEffect | ResourceEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 
@@ -51,6 +62,14 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
     }
+  | {
+      event: "resourceCrossed"
+      resource: ResourceKind
+      threshold: number
+      direction: "up" | "down"
+      actor?: "self" | "any"
+      characterId?: number
+    }
 
 export type BuffTarget =
   | { kind: "self" }
@@ -61,6 +80,23 @@ export type Condition =
   | { kind: "buffActive"; buffId: string; on: "target" | "source" }
   | { kind: "onField" }
   | { kind: "actorIsOnField" }
+  | {
+      kind: "resourceAtLeast"
+      resource: ResourceKind
+      n: number
+      on: "target" | "source"
+    }
+
+export interface ResourceState {
+  energy: number
+  concerto: number
+  forte: number
+  resonance: number
+}
+
+export function emptyResourceState(): ResourceState {
+  return { energy: 0, concerto: 0, forte: 0, resonance: 0 }
+}
 
 export type Duration =
   | { kind: "permanent" }

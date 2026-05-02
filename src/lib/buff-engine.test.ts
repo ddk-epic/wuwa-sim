@@ -807,6 +807,179 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
   })
 })
 
+describe("BuffEngine — resource state (#58)", () => {
+  it("accumulates energy and concerto from hitLanded events on the actor", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 5,
+      concerto: 2,
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 10,
+      energy: 3,
+      concerto: 1,
+    })
+    expect(engine.getResource(1).energy).toBe(8)
+    expect(engine.getResource(1).concerto).toBe(3)
+  })
+
+  it("accumulates skillCast concerto into the actor's resource state", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Heavy Attack",
+      frame: 0,
+      concerto: 15,
+    })
+    expect(engine.getResource(1).concerto).toBe(15)
+  })
+
+  it("resourceAtLeast condition gates contribution", () => {
+    const buff: BuffDef = {
+      id: "char.high-energy",
+      name: "High Energy",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "energy",
+        n: 100,
+        on: "target",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.25 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 100,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.25)
+  })
+
+  it("resourceCrossed trigger fires once when the threshold is crossed upward", () => {
+    const onConcerto100: BuffDef = {
+      id: "char.concerto-ready",
+      name: "Concerto Ready",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "concerto",
+        threshold: 100,
+        direction: "up",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1000 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [onConcerto100] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Below threshold — no fire.
+    const a = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 50,
+    })
+    expect(
+      a.lifecycleEvents.find((e) => e.buffId === "char.concerto-ready"),
+    ).toBeUndefined()
+    // Crosses 100 — fires once.
+    const b = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 10,
+      concerto: 60,
+    })
+    const applied = b.lifecycleEvents.filter(
+      (e) => e.buffId === "char.concerto-ready" && e.kind === "buffApplied",
+    )
+    expect(applied).toHaveLength(1)
+    // Further upward gain does not fire again (would need to cross again).
+    const c = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 20,
+      concerto: 10,
+    })
+    const fired = c.lifecycleEvents.filter(
+      (e) => e.buffId === "char.concerto-ready" && e.kind === "buffApplied",
+    )
+    expect(fired).toHaveLength(0)
+  })
+
+  it("warns when Resonance Liberation casts with insufficient energy but still dispatches", () => {
+    testCharacters = [baseChar({ id: 1, name: "Test Character" })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Liberation",
+      frame: 0,
+    })
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0][0]).toContain("Test Character")
+    expect(warn.mock.calls[0][0]).toContain("0")
+    warn.mockRestore()
+  })
+})
+
 describe("BuffEngine.resolveStats — fallback", () => {
   it("returns base atk for known character not in any slot", () => {
     testCharacters = [baseChar()]

@@ -23,8 +23,6 @@ export function generateSimulationLog(
   loadouts: SlotLoadout[],
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
-  const energyByChar = new Map<number, number>()
-  const concertoByChar = new Map<number, number>()
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
   let stageStartFrame = 0
@@ -51,22 +49,19 @@ export function generateSimulationLog(
         characterId: entry.characterId,
         skillType: entry.skillType,
         frame: stageStartFrame,
+        concerto: stage.concerto,
       }).lifecycleEvents,
     )
 
-    const prevEnergy = energyByChar.get(entry.characterId) ?? 0
-    const prevConcerto = concertoByChar.get(entry.characterId) ?? 0
-    const actionCumConcerto = prevConcerto + stage.concerto
-    concertoByChar.set(entry.characterId, actionCumConcerto)
-
+    const actorState = engine.getResource(entry.characterId)
     const actionEvent: ActionEvent = {
       kind: "action",
       characterId: entry.characterId,
       skillType: entry.skillType,
       skillName: entry.skillName,
       frame: stageStartFrame,
-      cumulativeEnergy: prevEnergy,
-      cumulativeConcerto: actionCumConcerto,
+      cumulativeEnergy: actorState.energy,
+      cumulativeConcerto: actorState.concerto,
     }
     log.push(actionEvent)
 
@@ -75,11 +70,6 @@ export function generateSimulationLog(
       const hitFrame = stageStartFrame + hit.actionFrame
       pushBuffEvents(log, engine.tickToFrame(hitFrame).lifecycleEvents)
       const hitStats = engine.resolveStats(character.id)
-      const cumEnergy = (energyByChar.get(entry.characterId) ?? 0) + hit.energy
-      const cumConcerto =
-        (concertoByChar.get(entry.characterId) ?? 0) + hit.concerto
-      energyByChar.set(entry.characterId, cumEnergy)
-      concertoByChar.set(entry.characterId, cumConcerto)
 
       const damage = computeDamage(
         {
@@ -91,30 +81,32 @@ export function generateSimulationLog(
         hitStats,
       )
 
+      const lifecycle = engine.onEvent({
+        kind: "hitLanded",
+        characterId: entry.characterId,
+        skillType: entry.skillType,
+        dmgType: hit.dmgType,
+        frame: hitFrame,
+        energy: hit.energy,
+        concerto: hit.concerto,
+      }).lifecycleEvents
+
+      const postHitState = engine.getResource(entry.characterId)
       const hitEvent: HitEvent = {
         kind: "hit",
         characterId: entry.characterId,
         skillType: entry.skillType,
         skillName: `${entry.skillName} [hit ${i + 1}]`,
         frame: hitFrame,
-        cumulativeEnergy: cumEnergy,
-        cumulativeConcerto: cumConcerto,
+        cumulativeEnergy: postHitState.energy,
+        cumulativeConcerto: postHitState.concerto,
         damage,
         statsSnapshot: { ...hitStats },
         activeBuffIds: engine.activeBuffIds(character.id),
       }
       log.push(hitEvent)
 
-      pushBuffEvents(
-        log,
-        engine.onEvent({
-          kind: "hitLanded",
-          characterId: entry.characterId,
-          skillType: entry.skillType,
-          dmgType: hit.dmgType,
-          frame: hitFrame,
-        }).lifecycleEvents,
-      )
+      pushBuffEvents(log, lifecycle)
     }
 
     stageStartFrame += entry.actionTime
