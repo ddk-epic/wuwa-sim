@@ -13,7 +13,9 @@ export type StatPath =
   | { stat: "deepen"; key: string }
   | { stat: "resShred"; key: string }
 
-export type ValueExpr = { kind: "const"; v: number; snapshot?: boolean }
+export type ValueExpr =
+  | { kind: "const"; v: number; snapshot?: boolean }
+  | { kind: "perStack"; v: number; snapshot?: boolean }
 
 export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
 
@@ -142,4 +144,6 @@ export interface BuffInstance {
   endTime: number
   stacks: number
   appliedFrame: number
+  /** Frozen values per effect index, populated when a ValueExpr has `snapshot: true`. */
+  snapshots?: Record<number, number>
 }

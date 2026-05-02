@@ -980,6 +980,312 @@ describe("BuffEngine — resource state (#58)", () => {
   })
 })
 
+describe("BuffEngine — stacking policies (#59)", () => {
+  const makeStackingBuff = (
+    onRetrigger:
+      | "refresh"
+      | "addStack"
+      | "addStackKeepTimer"
+      | "ignore"
+      | "replace",
+    max = 3,
+  ): BuffDef => ({
+    id: "char.stacker",
+    name: "Stacker",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Normal Attack" },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 100 },
+    stacking: { max, onRetrigger },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.1 },
+      },
+    ],
+  })
+
+  const fire = (engine: BuffEngine, frame: number) =>
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame,
+    })
+
+  it("addStack: increments stacks up to max, resets endTime", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [makeStackingBuff("addStack", 3)] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    fire(engine, 10)
+    const third = fire(engine, 20)
+    expect(third.lifecycleEvents[0]).toMatchObject({
+      kind: "buffRefreshed",
+      stacks: 3,
+    })
+    // 4th application is capped at max=3
+    const fourth = fire(engine, 30)
+    expect(fourth.lifecycleEvents[0]).toMatchObject({ stacks: 3 })
+    // endTime resets to 30 + 100 = 130; before that, no expire
+    expect(engine.tickToFrame(129).lifecycleEvents).toEqual([])
+    expect(engine.tickToFrame(130).lifecycleEvents).toHaveLength(1)
+  })
+
+  it("addStackKeepTimer: increments stacks but preserves original endTime", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [makeStackingBuff("addStackKeepTimer", 3)] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0) // endTime = 100
+    fire(engine, 50) // stacks = 2, endTime stays 100
+    expect(engine.tickToFrame(99).lifecycleEvents).toEqual([])
+    const expired = engine.tickToFrame(100)
+    expect(expired.lifecycleEvents).toHaveLength(1)
+    expect(expired.lifecycleEvents[0]).toMatchObject({
+      kind: "buffExpired",
+      stacks: 2,
+    })
+  })
+
+  it("ignore: re-application is a no-op while active", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [makeStackingBuff("ignore")] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const first = fire(engine, 0)
+    expect(first.lifecycleEvents[0]).toMatchObject({ kind: "buffApplied" })
+    const second = fire(engine, 50)
+    expect(second.lifecycleEvents).toEqual([])
+    // endTime unchanged at 100
+    const expired = engine.tickToFrame(100)
+    expect(expired.lifecycleEvents).toHaveLength(1)
+  })
+
+  it("replace: removes existing (buffExpired) and applies fresh (stacks=1)", () => {
+    const buff = makeStackingBuff("replace")
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    const second = fire(engine, 50)
+    expect(second.lifecycleEvents.map((e) => e.kind)).toEqual([
+      "buffExpired",
+      "buffApplied",
+    ])
+    expect(second.lifecycleEvents[1]).toMatchObject({ stacks: 1 })
+    // endTime should be 50 + 100 = 150
+    expect(engine.tickToFrame(149).lifecycleEvents).toEqual([])
+    expect(engine.tickToFrame(150).lifecycleEvents).toHaveLength(1)
+  })
+
+  it("default stacking is { max: 1, onRetrigger: 'refresh' } when omitted", () => {
+    const buff: BuffDef = {
+      id: "char.default",
+      name: "Default",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 100 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    const second = fire(engine, 30)
+    expect(second.lifecycleEvents[0]).toMatchObject({
+      kind: "buffRefreshed",
+      stacks: 1,
+    })
+  })
+})
+
+describe("BuffEngine — perStack ValueExpr (#59)", () => {
+  const perStackBuff: BuffDef = {
+    id: "char.frost-marks",
+    name: "Frost Marks",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Normal Attack" },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 600 },
+    stacking: { max: 4, onRetrigger: "addStack" },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "perStack", v: 0.05 },
+      },
+    ],
+  }
+
+  it("contribution scales with current stack count, recomputed on read", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [perStackBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 10,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 20,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15)
+  })
+
+  it("snapshot:true freezes value at apply time even as stacks later change", () => {
+    const snap: BuffDef = {
+      ...perStackBuff,
+      id: "char.snap-perstack",
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.05, snapshot: true },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [snap] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // First application: stacks=1 at apply, snapshot freezes at 0.05.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+    // Stack growth via addStack — frozen snapshot ignores new stacks.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 10,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 20,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+  })
+
+  it("const snapshot is symmetrical (value frozen identically to non-snapshot)", () => {
+    const buff: BuffDef = {
+      id: "char.const-snap",
+      name: "Const Snap",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 100 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2, snapshot: true },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+  })
+
+  it("replace re-snapshots at the new apply time", () => {
+    const buff: BuffDef = {
+      id: "char.replace-snap",
+      name: "Replace Snap",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Normal Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 100 },
+      stacking: { max: 1, onRetrigger: "replace" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.07, snapshot: true },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 50,
+    })
+    // Replace creates a fresh instance with stacks=1 → snapshot stays at 0.07.
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+  })
+})
+
 describe("BuffEngine.resolveStats — fallback", () => {
   it("returns base atk for known character not in any slot", () => {
     testCharacters = [baseChar()]

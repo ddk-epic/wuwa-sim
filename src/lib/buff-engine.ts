@@ -9,6 +9,7 @@ import type {
   StatEffect,
   StatPath,
   Trigger,
+  ValueExpr,
 } from "#/types/buff"
 import { emptyResourceState } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -161,9 +162,10 @@ export class BuffEngine {
           buff.trigger.event === "simStart" &&
           buff.duration.kind === "permanent"
         if (isPermanentSimStart && !buff.condition) {
-          for (const effect of buff.effects) {
+          for (let i = 0; i < buff.effects.length; i++) {
+            const effect = buff.effects[i]
             if (effect.kind !== "stat") continue
-            applyStatEffect(stats, effect)
+            applyStatEffect(stats, effect, 1)
           }
         } else if (isPermanentSimStart && buff.condition) {
           this.active.push({
@@ -173,6 +175,7 @@ export class BuffEngine {
             endTime: Number.POSITIVE_INFINITY,
             stacks: 1,
             appliedFrame: 0,
+            snapshots: freezeSnapshots(buff, 1),
           })
         } else {
           triggerable.push(buff)
@@ -499,9 +502,10 @@ export class BuffEngine {
       ) {
         continue
       }
-      for (const effect of inst.def.effects) {
+      for (let i = 0; i < inst.def.effects.length; i++) {
+        const effect = inst.def.effects[i]
         if (effect.kind !== "stat") continue
-        applyStatEffect(base, effect)
+        applyStatEffect(base, effect, inst.stacks, inst.snapshots, i)
       }
     }
     return base
@@ -567,6 +571,7 @@ export class BuffEngine {
         endTime: newEndTime,
         stacks: 1,
         appliedFrame: frame,
+        snapshots: freezeSnapshots(def, 1),
       })
       out.push({
         kind: "buffApplied",
@@ -640,6 +645,7 @@ export class BuffEngine {
           endTime: newEndTime,
           stacks: 1,
           appliedFrame: frame,
+          snapshots: freezeSnapshots(def, 1),
         })
         out.push({
           kind: "buffApplied",
@@ -780,10 +786,51 @@ function applyWeaponIntrinsic(
   }
 }
 
-function applyStatEffect(stats: StatTable, effect: StatEffect): void {
-  if (effect.value.kind !== "const") return
-  const v = effect.value.v
+function resolveValue(
+  value: ValueExpr,
+  stacks: number,
+  snapshots: Record<number, number> | undefined,
+  effectIndex: number,
+): number {
+  if (value.snapshot && snapshots && snapshots[effectIndex] !== undefined) {
+    return snapshots[effectIndex]
+  }
+  switch (value.kind) {
+    case "const":
+      return value.v
+    case "perStack":
+      return value.v * stacks
+  }
+}
+
+function applyStatEffect(
+  stats: StatTable,
+  effect: StatEffect,
+  stacks: number,
+  snapshots?: Record<number, number>,
+  effectIndex: number = 0,
+): void {
+  const v = resolveValue(effect.value, stacks, snapshots, effectIndex)
   applyToPath(stats, effect.path, v)
+}
+
+function freezeSnapshots(
+  def: BuffDef,
+  stacks: number,
+): Record<number, number> | undefined {
+  let out: Record<number, number> | undefined
+  for (let i = 0; i < def.effects.length; i++) {
+    const effect = def.effects[i]
+    if (effect.kind !== "stat") continue
+    if (!effect.value.snapshot) continue
+    const frozen =
+      effect.value.kind === "perStack"
+        ? effect.value.v * stacks
+        : effect.value.v
+    if (!out) out = {}
+    out[i] = frozen
+  }
+  return out
 }
 
 function applyToPath(stats: StatTable, path: StatPath, v: number): void {
