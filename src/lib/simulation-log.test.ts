@@ -162,7 +162,7 @@ describe("generateSimulationLog — single hit", () => {
       cumulativeEnergy: 0,
       cumulativeConcerto: 0,
     })
-    expect(result[1]).toEqual({
+    expect(result[1]).toMatchObject({
       kind: "hit",
       characterId: 1,
       skillType: "Normal Attack",
@@ -171,7 +171,11 @@ describe("generateSimulationLog — single hit", () => {
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
       damage: 675,
+      activeBuffIds: [],
     })
+    expect(
+      (result[1] as { statsSnapshot: { atkBase: number } }).statsSnapshot,
+    ).toMatchObject({ atkBase: 1000 })
   })
 
   it("rounds damage to whole number", () => {
@@ -371,6 +375,26 @@ describe("generateSimulationLog — action event concerto", () => {
       cumulativeConcerto: 15,
       cumulativeEnergy: 5,
     })
+  })
+})
+
+describe("generateSimulationLog — stats snapshot", () => {
+  it("populates statsSnapshot and empty activeBuffIds on every HitEvent", () => {
+    testCharacters = [charA]
+    const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(2)
+    for (const hit of hits) {
+      expect(hit.activeBuffIds).toEqual([])
+      expect(hit.statsSnapshot).toMatchObject({
+        atkBase: 1000,
+        atkPct: 0,
+        atkFlat: 0,
+        critRate: 0,
+        critDmg: 0,
+      })
+    }
   })
 })
 

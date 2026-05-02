@@ -1,3 +1,5 @@
+import type { StatTable } from "./stat-table"
+
 interface SimulationLogBase {
   characterId: number
   skillType: string
@@ -14,6 +16,8 @@ export interface ActionEvent extends SimulationLogBase {
 export interface HitEvent extends SimulationLogBase {
   kind: "hit"
   damage: number
+  statsSnapshot: StatTable
+  activeBuffIds: string[]
 }
 
 export type SimulationLogEntry = ActionEvent | HitEvent

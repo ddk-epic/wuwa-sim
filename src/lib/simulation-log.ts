@@ -87,6 +87,8 @@ export function generateSimulationLog(
         cumulativeEnergy: cumEnergy,
         cumulativeConcerto: cumConcerto,
         damage,
+        statsSnapshot: { ...stats },
+        activeBuffIds: [],
       }
       log.push(hitEvent)
     }
