@@ -18,6 +18,26 @@ export const sanhua = {
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
   buffs: [
     {
+      id: "char.sanhua.outro.silversnow",
+      name: "Silversnow",
+      description:
+        "After Sanhua uses Outro, the next on-field Resonator's Glacio DMG is increased by 22.5% for 14s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1102,
+        skillType: "Outro Skill",
+      },
+      target: { kind: "nextOnField" },
+      duration: { kind: "seconds", v: 14 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Glacio" },
+          value: { kind: "const", v: 0.225 },
+        },
+      ],
+    },
+    {
       id: "char.sanhua.intro.freezing-thorns",
       name: "Freezing Thorns",
       description:

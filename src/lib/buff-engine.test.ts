@@ -586,6 +586,227 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
   })
 })
 
+describe("BuffEngine — implicit swap inference (#57)", () => {
+  it("infers swapOut(prev) → swapIn(next) when skillCast actor changes", () => {
+    const onSwapIn: BuffDef = {
+      id: "char.b.onSwapIn",
+      name: "On SwapIn",
+      trigger: { event: "swapIn" },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    const onSwapOut: BuffDef = {
+      id: "char.a.onSwapOut",
+      name: "On SwapOut",
+      trigger: { event: "swapOut" },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [onSwapOut] }),
+      baseChar({ id: 2, buffs: [onSwapIn] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // First skillCast establishes on-field; should fire swapIn(1) only.
+    const first = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(first.lifecycleEvents).toEqual([])
+    expect(engine.getOnFieldCharacterId()).toBe(1)
+
+    // Switch to character 2 — should fire swapOut(1) (applies onSwapOut buff to 1)
+    // and swapIn(2) (applies onSwapIn buff to 2).
+    const second = engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 100,
+    })
+    expect(engine.getOnFieldCharacterId()).toBe(2)
+    expect(second.lifecycleEvents.map((e) => e.buffId).sort()).toEqual([
+      "char.a.onSwapOut",
+      "char.b.onSwapIn",
+    ])
+  })
+})
+
+describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
+  it("materializes a nextOnField buff at the next swapIn", () => {
+    const outro: BuffDef = {
+      id: "char.a.outro",
+      name: "Outro",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Outro Skill",
+      },
+      target: { kind: "nextOnField" },
+      duration: { kind: "seconds", v: 14 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [outro] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Establish on-field as 1
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    // Cast outro: trigger fires but nothing materializes yet.
+    const outroFire = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 50,
+    })
+    expect(outroFire.lifecycleEvents).toEqual([])
+    expect(engine.pendingNextOnFieldCount()).toBe(1)
+    expect(engine.resolveStats(2).atkPct).toBe(0)
+
+    // Swap to character 2 — materialize on 2.
+    const swap = engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 60,
+    })
+    const applied = swap.lifecycleEvents.find(
+      (e) => e.kind === "buffApplied" && e.buffId === "char.a.outro",
+    )
+    expect(applied).toBeDefined()
+    expect(applied?.targetCharacterId).toBe(2)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.3)
+  })
+})
+
+describe("BuffEngine — condition gating (#57)", () => {
+  it("onField condition: instance present but does not contribute when target is off-field", () => {
+    const buff: BuffDef = {
+      id: "char.a.onfield-only",
+      name: "OnField Only",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "onField" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.4 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Permanent + conditional -> stays live, doesn't bake in. Before any swap, on-field is null.
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+
+    // Bring 1 on-field
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4)
+
+    // Swap to 2; 1 is off-field — buff still in active list but does not contribute.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 50,
+    })
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+  })
+})
+
+describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
+  it("removes instances whose source character swaps out", () => {
+    const buff: BuffDef = {
+      id: "char.a.tied-to-source",
+      name: "Tied",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "team" },
+      duration: { kind: "frames", v: 1000 },
+      expiresOnSourceSwapOut: true,
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // 1 swaps in and casts (applies team buff)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.15)
+
+    // Swap to 2 — source 1 swaps out, instances expire.
+    const swap = engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 100,
+    })
+    const expired = swap.lifecycleEvents.filter(
+      (e) => e.kind === "buffExpired" && e.buffId === "char.a.tied-to-source",
+    )
+    expect(expired.length).toBe(2)
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(2).atkPct).toBe(0)
+  })
+})
+
 describe("BuffEngine.resolveStats — fallback", () => {
   it("returns base atk for known character not in any slot", () => {
     testCharacters = [baseChar()]

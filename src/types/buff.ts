@@ -41,8 +41,26 @@ export type Trigger =
       dmgType?: string
       source?: TriggerSource
     }
+  | {
+      event: "swapIn"
+      actor?: "self" | "any"
+      characterId?: number
+    }
+  | {
+      event: "swapOut"
+      actor?: "self" | "any"
+      characterId?: number
+    }
 
-export type BuffTarget = { kind: "self" } | { kind: "team" }
+export type BuffTarget =
+  | { kind: "self" }
+  | { kind: "team" }
+  | { kind: "nextOnField" }
+
+export type Condition =
+  | { kind: "buffActive"; buffId: string; on: "target" | "source" }
+  | { kind: "onField" }
+  | { kind: "actorIsOnField" }
 
 export type Duration =
   | { kind: "permanent" }
@@ -75,6 +93,10 @@ export interface BuffDef {
   requiresPieces?: 2 | 5
   /** v1 placeholder — typed but not enforced (#61). */
   nonStackingGroup?: string
+  /** Continuously evaluated; gates whether instance contributes effects. */
+  condition?: Condition
+  /** When true, instance is removed when its source character swaps out. */
+  expiresOnSourceSwapOut?: boolean
 }
 
 export interface BuffInstance {

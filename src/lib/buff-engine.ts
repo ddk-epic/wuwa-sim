@@ -1,6 +1,7 @@
 import type {
   BuffDef,
   BuffInstance,
+  Condition,
   StackingPolicy,
   StatEffect,
   StatPath,
@@ -42,6 +43,8 @@ export type EngineEvent =
       synthetic?: boolean
       frame: number
     }
+  | { kind: "swapIn"; characterId: number; frame: number }
+  | { kind: "swapOut"; characterId: number; frame: number }
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 
@@ -51,12 +54,20 @@ export class BuffEngine {
   /** Per-character pool of triggerable BuffDefs (pre-filtered by sequence/pieces). */
   private triggerableBySource = new Map<number, BuffDef[]>()
   private active: BuffInstance[] = []
+  private onFieldCharacterId: number | null = null
+  private pendingNextOnField: {
+    def: BuffDef
+    sourceCharacterId: number
+    appliedFrame: number
+  }[] = []
 
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.baseStats.clear()
     this.triggerableBySource.clear()
     this.active = []
     this.slotsBySlotIndex = []
+    this.onFieldCharacterId = null
+    this.pendingNextOnField = []
 
     for (let i = 0; i < input.slots.length; i++) {
       const charId = input.slots[i]
@@ -126,14 +137,23 @@ export class BuffEngine {
 
       const triggerable: BuffDef[] = []
       for (const buff of buffs) {
-        if (
+        const isPermanentSimStart =
           buff.trigger.event === "simStart" &&
           buff.duration.kind === "permanent"
-        ) {
+        if (isPermanentSimStart && !buff.condition) {
           for (const effect of buff.effects) {
             if (effect.kind !== "stat") continue
             applyStatEffect(stats, effect)
           }
+        } else if (isPermanentSimStart && buff.condition) {
+          this.active.push({
+            def: buff,
+            sourceCharacterId: charId,
+            targetCharacterId: charId,
+            endTime: Number.POSITIVE_INFINITY,
+            stacks: 1,
+            appliedFrame: 0,
+          })
         } else {
           triggerable.push(buff)
         }
@@ -149,6 +169,74 @@ export class BuffEngine {
   onEvent(event: EngineEvent): { lifecycleEvents: BuffEvent[] } {
     const lifecycleEvents: BuffEvent[] = []
 
+    // Implicit swap inference: an authored skillCast by a different character
+    // than the current on-field implies swapOut(prev) → swapIn(next).
+    if (event.kind === "skillCast") {
+      const next = event.characterId
+      if (this.onFieldCharacterId !== next) {
+        const prev = this.onFieldCharacterId
+        if (prev !== null) {
+          this.dispatchEvent(
+            { kind: "swapOut", characterId: prev, frame: event.frame },
+            lifecycleEvents,
+          )
+        }
+        this.onFieldCharacterId = next
+        this.dispatchEvent(
+          { kind: "swapIn", characterId: next, frame: event.frame },
+          lifecycleEvents,
+        )
+      }
+    }
+
+    this.dispatchEvent(event, lifecycleEvents)
+    return { lifecycleEvents }
+  }
+
+  private dispatchEvent(event: EngineEvent, out: BuffEvent[]): void {
+    // swapOut: cleanup expiresOnSourceSwapOut instances
+    if (event.kind === "swapOut") {
+      const remaining: BuffInstance[] = []
+      for (const inst of this.active) {
+        if (
+          inst.def.expiresOnSourceSwapOut &&
+          inst.sourceCharacterId === event.characterId
+        ) {
+          out.push({
+            kind: "buffExpired",
+            buffId: inst.def.id,
+            buffName: inst.def.name,
+            sourceCharacterId: inst.sourceCharacterId,
+            targetCharacterId: inst.targetCharacterId,
+            frame: event.frame,
+            stacks: inst.stacks,
+          })
+        } else {
+          remaining.push(inst)
+        }
+      }
+      this.active = remaining
+    }
+
+    // swapIn: materialize pending nextOnField buffs onto the new on-field char
+    if (event.kind === "swapIn" && this.pendingNextOnField.length > 0) {
+      const pending = this.pendingNextOnField
+      this.pendingNextOnField = []
+      pending.sort((a, b) =>
+        a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0,
+      )
+      for (const p of pending) {
+        this.applyBuff(
+          p.def,
+          p.sourceCharacterId,
+          event.characterId,
+          event.frame,
+          out,
+        )
+      }
+    }
+
+    // Run trigger matching
     const candidates: { def: BuffDef; sourceCharacterId: number }[] = []
     for (const [sourceId, defs] of this.triggerableBySource) {
       for (const def of defs) {
@@ -162,22 +250,23 @@ export class BuffEngine {
     )
 
     for (const { def, sourceCharacterId } of candidates) {
+      if (def.target.kind === "nextOnField") {
+        this.pendingNextOnField.push({
+          def,
+          sourceCharacterId,
+          appliedFrame: event.frame,
+        })
+        continue
+      }
       const targetIds = resolveTargetIds(
         def,
         sourceCharacterId,
         this.slotsBySlotIndex,
       )
       for (const targetId of targetIds) {
-        this.applyBuff(
-          def,
-          sourceCharacterId,
-          targetId,
-          event.frame,
-          lifecycleEvents,
-        )
+        this.applyBuff(def, sourceCharacterId, targetId, event.frame, out)
       }
     }
-    return { lifecycleEvents }
   }
 
   /** Advance internal clock to `frame`; expire instances whose endTime <= frame. */
@@ -220,12 +309,44 @@ export class BuffEngine {
       .sort((a, b) => (a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0))
 
     for (const inst of contributions) {
+      if (
+        inst.def.condition &&
+        !this.evaluateCondition(inst.def.condition, inst)
+      ) {
+        continue
+      }
       for (const effect of inst.def.effects) {
         if (effect.kind !== "stat") continue
         applyStatEffect(base, effect)
       }
     }
     return base
+  }
+
+  private evaluateCondition(cond: Condition, inst: BuffInstance): boolean {
+    switch (cond.kind) {
+      case "buffActive": {
+        const subjectId =
+          cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId
+        return this.active.some(
+          (i) => i.def.id === cond.buffId && i.targetCharacterId === subjectId,
+        )
+      }
+      case "onField":
+        return this.onFieldCharacterId === inst.targetCharacterId
+      case "actorIsOnField":
+        return this.onFieldCharacterId === inst.sourceCharacterId
+    }
+  }
+
+  /** Test/inspection helper. */
+  getOnFieldCharacterId(): number | null {
+    return this.onFieldCharacterId
+  }
+
+  /** Test/inspection helper for pending nextOnField count. */
+  pendingNextOnFieldCount(): number {
+    return this.pendingNextOnField.length
   }
 
   /** Sorted ids of buff instances currently active on `characterId`. */
@@ -370,6 +491,22 @@ function matchesTrigger(
     return true
   }
 
+  if (
+    (trigger.event === "swapIn" && event.kind === "swapIn") ||
+    (trigger.event === "swapOut" && event.kind === "swapOut")
+  ) {
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
+      return false
+    }
+    return true
+  }
+
   if (trigger.event === "hitLanded" && event.kind === "hitLanded") {
     const isSynthetic = event.synthetic === true
     const source = trigger.source ?? "self"
@@ -405,6 +542,8 @@ function resolveTargetIds(
       return [sourceCharacterId]
     case "team":
       return slots.filter((id) => id !== -1)
+    case "nextOnField":
+      return []
   }
 }
 
