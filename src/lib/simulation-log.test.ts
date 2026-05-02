@@ -170,7 +170,7 @@ describe("generateSimulationLog — single hit", () => {
       frame: 0,
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
-      damage: 1500,
+      damage: 675,
     })
   })
 
@@ -181,7 +181,7 @@ describe("generateSimulationLog — single hit", () => {
     const entry = tlEntry(1, "Normal Attack", "Normal Attack")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
-    expect(result[1]).toMatchObject({ kind: "hit", damage: 5 })
+    expect(result[1]).toMatchObject({ kind: "hit", damage: 2 })
   })
 })
 
@@ -198,12 +198,12 @@ describe("generateSimulationLog — multi-hit stage", () => {
     expect(result[1]).toMatchObject({
       kind: "hit",
       skillName: "Normal Attack (Stage 2) [hit 1]",
-      damage: 800,
+      damage: 360,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
       skillName: "Normal Attack (Stage 2) [hit 2]",
-      damage: 600,
+      damage: 270,
     })
   })
 
@@ -256,8 +256,8 @@ describe("generateSimulationLog — multi-character accumulation", () => {
     ]
     const result = generateSimulationLog(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
-    expect(result[1]).toMatchObject({ kind: "hit", damage: 1500 })
-    expect(result[3]).toMatchObject({ kind: "hit", damage: 750 })
+    expect(result[1]).toMatchObject({ kind: "hit", damage: 675 })
+    expect(result[3]).toMatchObject({ kind: "hit", damage: 338 })
   })
 })
 
@@ -282,13 +282,13 @@ describe("generateSimulationLog — echo skill entries", () => {
     })
     expect(result[1]).toMatchObject({
       kind: "hit",
-      damage: 2000,
+      damage: 900,
       cumulativeEnergy: 10,
       cumulativeConcerto: 5,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
-      damage: 1000,
+      damage: 450,
       cumulativeEnergy: 20,
       cumulativeConcerto: 10,
     })

@@ -1,16 +1,20 @@
-import type { DamageEntry } from "#/types/character"
+import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
   HitEvent,
   SimulationLogEntry,
 } from "#/types/simulation-log"
+import type { StatTable } from "#/types/stat-table"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
+import { computeDamage } from "./compute-damage"
+import { emptyStatTable } from "#/types/stat-table"
 
 interface ResolvedStage {
   concerto: number
   damage: DamageEntry[]
+  element: string
 }
 
 export function generateSimulationLog(
@@ -21,6 +25,7 @@ export function generateSimulationLog(
   const log: SimulationLogEntry[] = []
   const energyByChar = new Map<number, number>()
   const concertoByChar = new Map<number, number>()
+  const statsByChar = new Map<number, StatTable>()
   let stageStartFrame = 0
 
   for (const entry of entries) {
@@ -30,13 +35,14 @@ export function generateSimulationLog(
       continue
     }
 
-    const maxAtk = character.stats.max.atk
-    const stage = resolveStage(entry, slots, loadouts)
+    const stage = resolveStage(entry, character, slots, loadouts)
 
     if (!stage) {
       stageStartFrame += entry.actionTime
       continue
     }
+
+    const stats = getOrBuildStats(character, statsByChar)
 
     const prevEnergy = energyByChar.get(entry.characterId) ?? 0
     const prevConcerto = concertoByChar.get(entry.characterId) ?? 0
@@ -62,6 +68,16 @@ export function generateSimulationLog(
       energyByChar.set(entry.characterId, cumEnergy)
       concertoByChar.set(entry.characterId, cumConcerto)
 
+      const damage = computeDamage(
+        {
+          multiplier: hit.value,
+          element: stage.element,
+          skillType: entry.skillType,
+          dmgType: hit.dmgType,
+        },
+        stats,
+      )
+
       const hitEvent: HitEvent = {
         kind: "hit",
         characterId: entry.characterId,
@@ -70,7 +86,7 @@ export function generateSimulationLog(
         frame: stageStartFrame + hit.actionFrame,
         cumulativeEnergy: cumEnergy,
         cumulativeConcerto: cumConcerto,
-        damage: Math.round(hit.value * maxAtk),
+        damage,
       }
       log.push(hitEvent)
     }
@@ -81,8 +97,23 @@ export function generateSimulationLog(
   return log
 }
 
+function getOrBuildStats(
+  character: EnrichedCharacter,
+  cache: Map<number, StatTable>,
+): StatTable {
+  const cached = cache.get(character.id)
+  if (cached) return cached
+  const stats: StatTable = {
+    ...emptyStatTable(),
+    atkBase: character.stats.max.atk,
+  }
+  cache.set(character.id, stats)
+  return stats
+}
+
 function resolveStage(
   entry: TimelineEntry,
+  character: EnrichedCharacter,
   slots: Slots,
   loadouts: SlotLoadout[],
 ): ResolvedStage | null {
@@ -95,11 +126,8 @@ function resolveStage(
       (s) => stageLabel(echo.name, s.newName) === entry.skillName,
     )
     if (!stage) return null
-    return { concerto: 0, damage: stage.damage }
+    return { concerto: 0, damage: stage.damage, element: echo.element }
   }
-
-  const character = getCharacterById(entry.characterId)
-  if (!character) return null
 
   for (const skill of character.skills) {
     if (skill.type !== entry.skillType) continue
@@ -107,7 +135,11 @@ function resolveStage(
       (s) => stageLabel(skill.name, s.newName) === entry.skillName,
     )
     if (stage && stage.damage) {
-      return { concerto: stage.concerto ?? 0, damage: stage.damage }
+      return {
+        concerto: stage.concerto ?? 0,
+        damage: stage.damage,
+        element: character.element,
+      }
     }
   }
   return null
