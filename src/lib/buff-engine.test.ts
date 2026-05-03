@@ -978,6 +978,173 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(warn.mock.calls[0][0]).toContain("0")
     warn.mockRestore()
   })
+
+  it("resourceCrossed dispatched through main pipeline: own resource Effect crossing a threshold fires another buff with emitHit (#62)", () => {
+    // Buff A: on skillCast, adds 100 concerto to self via a resource Effect.
+    // Buff B: on concerto crossing 100 upward, emits a synthetic hit.
+    const giveConcerto: BuffDef = {
+      id: "char.give-concerto",
+      name: "Give Concerto",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 100 },
+        },
+      ],
+    }
+    const onConcerto100Emit: BuffDef = {
+      id: "char.emit-on-concerto",
+      name: "Emit on Concerto",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "concerto",
+        threshold: 100,
+        direction: "up",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "ATK",
+            dmgType: "Fusion",
+            scalingStat: "atk",
+            actionFrame: 0,
+            value: 0.5,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [giveConcerto, onConcerto100Emit] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(result.syntheticHits).toHaveLength(1)
+    expect(result.syntheticHits[0]).toMatchObject({
+      kind: "hit",
+      synthetic: true,
+      sourceBuffId: "char.emit-on-concerto",
+      characterId: 1,
+    })
+  })
+
+  it("resourceCrossed-triggered emitHit chains into hitLanded triggers respecting ICD and depth cap (#62)", () => {
+    // Each chained hit grants 1 concerto, crossing the threshold each iteration.
+    // This walks both the resourceCrossed and hitLanded(synthetic) trigger paths.
+    const giveConcerto: BuffDef = {
+      id: "char.give-concerto",
+      name: "Give Concerto",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 100 },
+        },
+      ],
+    }
+    // Triggers on synthetic hits too. Re-emits, which itself produces a synthetic
+    // hitLanded that this same trigger catches → chain. Capped by depth.
+    const chainer: BuffDef = {
+      id: "char.chainer",
+      name: "Chainer",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "concerto",
+        threshold: 100,
+        direction: "up",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "ATK",
+            dmgType: "Fusion",
+            scalingStat: "atk",
+            actionFrame: 0,
+            value: 0.1,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+          icdFrames: 0,
+        },
+      ],
+    }
+    const synthChain: BuffDef = {
+      id: "char.synth-chain",
+      name: "Synth Chain",
+      trigger: { event: "hitLanded", characterId: 1, source: "synthetic" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "ATK",
+            dmgType: "Fusion",
+            scalingStat: "atk",
+            actionFrame: 0,
+            value: 0.1,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [giveConcerto, chainer, synthChain] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    // resourceCrossed fires chainer (synthetic #1, depth 1). That synthetic
+    // hitLanded fires synthChain (synthetic #2, depth 2). And so on, capped
+    // at depth 8.
+    expect(result.syntheticHits.length).toBeGreaterThan(1)
+    expect(warn).toHaveBeenCalled()
+    expect(warn.mock.calls[0][0]).toContain("emitHit chain depth exceeded")
+    warn.mockRestore()
+  })
 })
 
 describe("BuffEngine — stacking policies (#59)", () => {

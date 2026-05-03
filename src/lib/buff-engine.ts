@@ -250,14 +250,25 @@ export class BuffEngine {
     // happens before trigger matching so resourceCrossed triggers can chain.
     if (event.kind === "hitLanded") {
       if (event.energy) {
-        this.applyResourceDelta(event.characterId, "energy", event.energy, out)
+        this.applyResourceDelta(
+          event.characterId,
+          "energy",
+          event.energy,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
       }
       if (event.concerto) {
         this.applyResourceDelta(
           event.characterId,
           "concerto",
           event.concerto,
+          event.frame,
           out,
+          hitsOut,
+          depth,
         )
       }
     }
@@ -267,7 +278,10 @@ export class BuffEngine {
           event.characterId,
           "concerto",
           event.concerto,
+          event.frame,
           out,
+          hitsOut,
+          depth,
         )
       }
       if (event.skillType === "Resonance Liberation") {
@@ -354,6 +368,8 @@ export class BuffEngine {
             targetId,
             event.frame,
             out,
+            hitsOut,
+            depth,
           )
         }
       }
@@ -472,7 +488,10 @@ export class BuffEngine {
         sourceCharacterId,
         "energy",
         effect.damage.energy,
+        frame,
         out,
+        hitsOut,
+        depth,
       )
     }
     if (effect.damage.concerto) {
@@ -480,7 +499,10 @@ export class BuffEngine {
         sourceCharacterId,
         "concerto",
         effect.damage.concerto,
+        frame,
         out,
+        hitsOut,
+        depth,
       )
     }
     const post = this.getResource(sourceCharacterId)
@@ -522,25 +544,49 @@ export class BuffEngine {
     characterId: number,
     resource: ResourceKind,
     delta: number,
+    frame: number,
     out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
   ): void {
     const state = this.getResource(characterId)
     const before = state[resource]
     const after = before + delta
     state[resource] = after
-    this.fireResourceCrossed(characterId, resource, before, after, out)
+    this.fireResourceCrossed(
+      characterId,
+      resource,
+      before,
+      after,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
   }
 
   private setResource(
     characterId: number,
     resource: ResourceKind,
     value: number,
+    frame: number,
     out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
   ): void {
     const state = this.getResource(characterId)
     const before = state[resource]
     state[resource] = value
-    this.fireResourceCrossed(characterId, resource, before, value, out)
+    this.fireResourceCrossed(
+      characterId,
+      resource,
+      before,
+      value,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
   }
 
   private fireResourceCrossed(
@@ -548,40 +594,49 @@ export class BuffEngine {
     resource: ResourceKind,
     before: number,
     after: number,
+    frame: number,
     out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
   ): void {
     if (before === after) return
     const direction: "up" | "down" = after > before ? "up" : "down"
-    const synthetic: EngineEvent = {
-      kind: "resourceCrossed",
-      characterId,
-      resource,
-      threshold: 0,
-      direction,
-      frame: 0,
-    }
-    // Match each resourceCrossed trigger that this delta crosses.
-    for (const [sourceId, defs] of this.triggerableBySource) {
+    // Discover the set of unique thresholds crossed by this delta from
+    // registered triggers, then dispatch one synthetic resourceCrossed event
+    // per crossing through the main pipeline. This is the single home for
+    // resourceCrossed matching: matchesTrigger + dispatchEvent take it from here.
+    const crossedThresholds = new Set<number>()
+    for (const defs of this.triggerableBySource.values()) {
       for (const def of defs) {
-        if (def.trigger.event !== "resourceCrossed") continue
         const t = def.trigger
+        if (t.event !== "resourceCrossed") continue
         if (t.resource !== resource) continue
         if (t.direction !== direction) continue
         const crossed =
           direction === "up"
             ? before < t.threshold && after >= t.threshold
             : before > t.threshold && after <= t.threshold
-        if (!crossed) continue
-        if (t.actor !== "any" && sourceId !== characterId) continue
-        if (t.characterId !== undefined && t.characterId !== characterId) {
-          continue
-        }
-        // Fire as if a real event occurred. Re-route to apply path.
-        const targetIds = resolveTargetIds(def, sourceId, this.slotsBySlotIndex)
-        for (const targetId of targetIds) {
-          this.applyBuff(def, sourceId, targetId, synthetic.frame, out)
-        }
+        if (crossed) crossedThresholds.add(t.threshold)
       }
+    }
+    if (crossedThresholds.size === 0) return
+    const sortedThresholds = Array.from(crossedThresholds).sort((a, b) =>
+      direction === "up" ? a - b : b - a,
+    )
+    for (const threshold of sortedThresholds) {
+      this.dispatchEvent(
+        {
+          kind: "resourceCrossed",
+          characterId,
+          resource,
+          threshold,
+          direction,
+          frame,
+        },
+        out,
+        hitsOut,
+        depth,
+      )
     }
   }
 
@@ -589,8 +644,10 @@ export class BuffEngine {
     effect: ResourceEffect,
     sourceCharacterId: number,
     targetCharacterId: number,
-    _frame: number,
+    frame: number,
     out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
   ): void {
     if (effect.value.kind !== "const") return
     const v = effect.value.v
@@ -607,9 +664,25 @@ export class BuffEngine {
     else if (effect.op === "sub") after = before - v
     else after = v
     if (effect.op === "set") {
-      this.setResource(subjectId, effect.resource, after, out)
+      this.setResource(
+        subjectId,
+        effect.resource,
+        after,
+        frame,
+        out,
+        hitsOut,
+        depth,
+      )
     } else {
-      this.applyResourceDelta(subjectId, effect.resource, after - before, out)
+      this.applyResourceDelta(
+        subjectId,
+        effect.resource,
+        after - before,
+        frame,
+        out,
+        hitsOut,
+        depth,
+      )
     }
   }
 
@@ -898,6 +971,22 @@ function matchesTrigger(
       return false
     }
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
+      return false
+    }
+    return true
+  }
+
+  if (trigger.event === "resourceCrossed" && event.kind === "resourceCrossed") {
+    if (trigger.resource !== event.resource) return false
+    if (trigger.direction !== event.direction) return false
+    if (trigger.threshold !== event.threshold) return false
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
       return false
     }
     return true
