@@ -67,8 +67,8 @@ export function generateSimulationLog(
     for (let i = 0; i < stage.damage.length; i++) {
       const hit = stage.damage[i]
       const hitFrame = stageStartFrame + hit.actionFrame
-      pushBuffEvents(log, engine.tickToFrame(hitFrame).lifecycleEvents)
-      const hitStats = engine.resolveStats(character.id)
+      const resolved = engine.resolveHit(character.id, hitFrame)
+      pushBuffEvents(log, resolved.lifecycleEvents)
 
       const damage = computeDamage(
         {
@@ -77,10 +77,10 @@ export function generateSimulationLog(
           skillType: entry.skillType,
           dmgType: hit.dmgType,
         },
-        hitStats,
+        resolved.stats,
       )
 
-      const hitResult = engine.onEvent({
+      const dispatch = engine.recordHit({
         kind: "hitLanded",
         characterId: entry.characterId,
         skillType: entry.skillType,
@@ -90,23 +90,22 @@ export function generateSimulationLog(
         concerto: hit.concerto,
       })
 
-      const postHitState = engine.getResource(entry.characterId)
       const hitEvent: HitEvent = {
         kind: "hit",
         characterId: entry.characterId,
         skillType: entry.skillType,
         skillName: `${entry.skillName} [hit ${i + 1}]`,
         frame: hitFrame,
-        cumulativeEnergy: postHitState.energy,
-        cumulativeConcerto: postHitState.concerto,
+        cumulativeEnergy: dispatch.postState.energy,
+        cumulativeConcerto: dispatch.postState.concerto,
         damage,
-        statsSnapshot: { ...hitStats },
-        activeBuffIds: engine.activeBuffIds(character.id),
+        statsSnapshot: { ...resolved.stats },
+        activeBuffIds: resolved.activeBuffIds,
       }
       log.push(hitEvent)
 
-      pushBuffEvents(log, hitResult.lifecycleEvents)
-      for (const synth of hitResult.syntheticHits) log.push(synth)
+      pushBuffEvents(log, dispatch.lifecycleEvents)
+      for (const synth of dispatch.syntheticHits) log.push(synth)
     }
 
     stageStartFrame += entry.actionTime

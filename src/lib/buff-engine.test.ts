@@ -7,6 +7,7 @@ import type { BuffDef } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
 import { BuffEngine } from "./buff-engine"
+import { pendingNextOnFieldCount } from "./buff-engine.test-utils"
 
 let testCharacters: EnrichedCharacter[] = []
 let testWeapons: EnrichedWeapon[] = []
@@ -743,7 +744,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
       frame: 50,
     })
     expect(outroFire.lifecycleEvents).toEqual([])
-    expect(engine.pendingNextOnFieldCount()).toBe(1)
+    expect(pendingNextOnFieldCount(engine)).toBe(1)
     expect(engine.resolveStats(2).atkPct).toBe(0)
 
     // Swap to character 2 — materialize on 2.
@@ -2304,5 +2305,67 @@ describe("BuffEngine — phase pipeline as data", () => {
 
     expect(engine.getResource(1).concerto).toBe(50)
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5)
+  })
+})
+
+describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
+  it("resolveHit then recordHit is equivalent to tickToFrame + resolveStats + onEvent + getResource", () => {
+    const trigger: BuffDef = {
+      id: "char.hit.bonus",
+      name: "Hit Bonus",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 5 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [trigger] })]
+
+    const oldEngine = new BuffEngine()
+    oldEngine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const oldTick = oldEngine.tickToFrame(30)
+    const oldStats = oldEngine.resolveStats(1)
+    const oldActiveBuffIds = oldEngine.activeBuffIds(1)
+    const oldDispatch = oldEngine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 30,
+      energy: 5,
+      concerto: 2,
+    })
+    const oldPostState = oldEngine.getResource(1)
+
+    const newEngine = new BuffEngine()
+    newEngine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const resolved = newEngine.resolveHit(1, 30)
+    const dispatch = newEngine.recordHit({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 30,
+      energy: 5,
+      concerto: 2,
+    })
+
+    expect(resolved.lifecycleEvents).toEqual(oldTick.lifecycleEvents)
+    expect(resolved.stats).toEqual(oldStats)
+    expect(resolved.activeBuffIds).toEqual(oldActiveBuffIds)
+    expect(dispatch.lifecycleEvents).toEqual(oldDispatch.lifecycleEvents)
+    expect(dispatch.syntheticHits).toEqual(oldDispatch.syntheticHits)
+    expect(dispatch.postState).toEqual(oldPostState)
   })
 })

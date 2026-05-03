@@ -28,6 +28,20 @@ import { accumulateStatEffects } from "./stat-table-builder"
 
 export type { EngineEvent } from "./instance-store"
 
+export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
+
+export interface ResolvedHit {
+  stats: StatTable
+  activeBuffIds: string[]
+  lifecycleEvents: BuffEvent[]
+}
+
+export interface HitDispatch {
+  lifecycleEvents: BuffEvent[]
+  syntheticHits: HitEvent[]
+  postState: ResourceState
+}
+
 interface PhaseContext {
   event: EngineEvent
   candidates: readonly Candidate[]
@@ -513,13 +527,34 @@ export class BuffEngine {
     return this.onField.current()
   }
 
-  /** Test/inspection helper for pending nextOnField count. */
-  pendingNextOnFieldCount(): number {
-    return this.store.pendingNextOnFieldCount()
-  }
-
   /** Sorted ids of buff instances currently active on `characterId`. */
   activeBuffIds(characterId: number): string[] {
     return this.store.activeBuffIds(characterId)
   }
+
+  /**
+   * Deep seam: advance to `frame`, resolve the actor's stat table, and snapshot
+   * the active buff ids — the inputs every per-hit damage computation needs.
+   */
+  resolveHit(actingCharacterId: number, frame: number): ResolvedHit {
+    const { lifecycleEvents } = this.tickToFrame(frame)
+    const stats = this.resolveStats(actingCharacterId)
+    const activeBuffIds = this.activeBuffIds(actingCharacterId)
+    return { stats, activeBuffIds, lifecycleEvents }
+  }
+
+  /**
+   * Deep seam: dispatch a hitLanded event and bundle the round-trip — lifecycle
+   * events, synthetic hits, and the post-hit Resource State for the actor.
+   */
+  recordHit(event: HitLandedEvent): HitDispatch {
+    const { lifecycleEvents, syntheticHits } = this.onEvent(event)
+    const postState = this.getResource(event.characterId)
+    return { lifecycleEvents, syntheticHits, postState }
+  }
+}
+
+/** @internal Bridge for test-only inspection — not part of the public API. */
+export interface BuffEngineInternals {
+  store: { pendingNextOnFieldCount(): number }
 }
