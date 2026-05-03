@@ -28,7 +28,7 @@ export const encore = {
           name: "Stage 1 DMG",
           newName: "Stage 1",
           value: "55.66%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -47,7 +47,7 @@ export const encore = {
           name: "Stage 2 DMG",
           newName: "Stage 2",
           value: "66.20%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -66,7 +66,7 @@ export const encore = {
           name: "Stage 3 DMG",
           newName: "Stage 3",
           value: "66.30%*2",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -95,8 +95,8 @@ export const encore = {
         {
           name: "Stage 4 DMG",
           newName: "Stage 4",
-          value: "38.27%*4",
-          actionTime: 0,
+          value: "38.27%*4+238.57%",
+          actionTime: 60,
           damage: [
             {
               type: "Basic Attack",
@@ -142,14 +142,6 @@ export const encore = {
               toughness: 0.154,
               weakness: 0.231,
             },
-          ],
-        },
-        {
-          name: "Woolies Damage",
-          newName: "Stage 5",
-          value: "238.57%",
-          actionTime: 0,
-          damage: [
             {
               type: "Basic Attack",
               dmgType: "Damage",
@@ -167,6 +159,7 @@ export const encore = {
           name: "Heavy Attack DMG",
           newName: "Heavy Attack",
           value: "187.08%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -186,7 +179,7 @@ export const encore = {
           name: "Mid-air Attack",
           newName: "Mid-air Attack",
           value: "123.26%",
-          actionTime: 0,
+          actionTime: 60,
           damage: [
             {
               type: "Basic Attack",
@@ -247,7 +240,7 @@ export const encore = {
           newName: "Flaming Woolies",
           value: "76.61%*8",
           concerto: 15,
-          actionTime: 0,
+          actionTime: 90,
           damage: [
             {
               type: "Resonance Skill",
@@ -344,7 +337,7 @@ export const encore = {
           newName: "Energetic Welcome",
           value: "339.16%",
           concerto: 5,
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Resonance Skill",
@@ -376,7 +369,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 1 DMG",
           newName: "Cosmos: Frolicking Stage 1",
           value: "90.18%*2",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -406,7 +399,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 2 DMG",
           newName: "Cosmos: Frolicking Stage 2",
           value: "56.40%*3",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -447,7 +440,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 3 DMG",
           newName: "Cosmos: Frolicking Stage 3",
           value: "65.99%*4",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -499,7 +492,7 @@ export const encore = {
           name: "Stage 4 DMG",
           newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
-          actionTime: 0,
+          actionTime: 90,
           damage: [
             {
               type: "Basic Attack",
@@ -540,6 +533,7 @@ export const encore = {
           name: "Cosmos: Heavy Attack DMG",
           newName: "Cosmos: Heavy Attack",
           value: "217.58%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -560,7 +554,7 @@ export const encore = {
           newName: "Cosmos Rampage",
           value: "63.32%*4",
           cooldown: 4,
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Resonance Skill",
@@ -693,7 +687,7 @@ export const encore = {
           name: "Skill DMG",
           newName: "",
           value: "198.81%",
-          actionTime: 0,
+          actionTime: 60,
           damage: [
             {
               type: "Intro Skill",
@@ -742,7 +736,7 @@ export const encore = {
           newName: "Cosmos Rupture",
           value: "46.42%*6+495.21%",
           concerto: 10,
-          actionTime: 0,
+          actionTime: 180,
           damage: [
             {
               type: "Resonance Liberation",
