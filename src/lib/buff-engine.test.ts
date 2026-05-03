@@ -85,6 +85,56 @@ describe("BuffEngine.bootstrap — character-only", () => {
     })
     expect(engine.resolveStats(1).atkPct).toBe(0.2)
   })
+
+  it("folds a permanent perStack stat buff into the base table at stacks=1", () => {
+    const buff: BuffDef = {
+      id: "char.test.perStack",
+      name: "Test perStack",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.07 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+  })
+
+  it("treats a permanent buff with a Condition as temporary (not folded into base)", () => {
+    const buff: BuffDef = {
+      id: "char.test.conditional",
+      name: "Conditional",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "onField" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Condition (onField) is false (no swap-in occurred), so contribution skipped.
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+  })
 })
 
 describe("BuffEngine.bootstrap — skill tree", () => {

@@ -7,10 +7,7 @@ import type {
   ResourceKind,
   ResourceState,
   StackingPolicy,
-  StatEffect,
-  StatPath,
   Trigger,
-  ValueExpr,
 } from "#/types/buff"
 import { emptyResourceState } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -25,6 +22,7 @@ import {
 } from "./catalog"
 import { computeDamage } from "./compute-damage"
 import { compileSkillTreeNode } from "./skill-tree-registry"
+import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
 
 export interface BootstrapInput {
   slots: Slots
@@ -168,11 +166,7 @@ export class BuffEngine {
           buff.trigger.event === "simStart" &&
           buff.duration.kind === "permanent"
         if (isPermanentSimStart && !buff.condition) {
-          for (let i = 0; i < buff.effects.length; i++) {
-            const effect = buff.effects[i]
-            if (effect.kind !== "stat") continue
-            applyStatEffect(stats, effect, 1)
-          }
+          accumulateStatEffects(stats, { def: buff, stacks: 1 })
         } else if (isPermanentSimStart && buff.condition) {
           this.active.push({
             def: buff,
@@ -732,11 +726,11 @@ export class BuffEngine {
       ) {
         continue
       }
-      for (let i = 0; i < inst.def.effects.length; i++) {
-        const effect = inst.def.effects[i]
-        if (effect.kind !== "stat") continue
-        applyStatEffect(base, effect, inst.stacks, inst.snapshots, i)
-      }
+      accumulateStatEffects(base, {
+        def: inst.def,
+        stacks: inst.stacks,
+        snapshots: inst.snapshots,
+      })
     }
     return base
   }
@@ -1049,78 +1043,6 @@ function applyWeaponIntrinsic(
       return
     case "Crit. DMG":
       stats.critDmg += value
-      return
-  }
-}
-
-function resolveValue(
-  value: ValueExpr,
-  stacks: number,
-  snapshots: Record<number, number> | undefined,
-  effectIndex: number,
-): number {
-  if (value.snapshot && snapshots && snapshots[effectIndex] !== undefined) {
-    return snapshots[effectIndex]
-  }
-  switch (value.kind) {
-    case "const":
-      return value.v
-    case "perStack":
-      return value.v * stacks
-  }
-}
-
-function applyStatEffect(
-  stats: StatTable,
-  effect: StatEffect,
-  stacks: number,
-  snapshots?: Record<number, number>,
-  effectIndex: number = 0,
-): void {
-  const v = resolveValue(effect.value, stacks, snapshots, effectIndex)
-  applyToPath(stats, effect.path, v)
-}
-
-function freezeSnapshots(
-  def: BuffDef,
-  stacks: number,
-): Record<number, number> | undefined {
-  let out: Record<number, number> | undefined
-  for (let i = 0; i < def.effects.length; i++) {
-    const effect = def.effects[i]
-    if (effect.kind !== "stat") continue
-    if (!effect.value.snapshot) continue
-    const frozen =
-      effect.value.kind === "perStack"
-        ? effect.value.v * stacks
-        : effect.value.v
-    if (!out) out = {}
-    out[i] = frozen
-  }
-  return out
-}
-
-function applyToPath(stats: StatTable, path: StatPath, v: number): void {
-  switch (path.stat) {
-    case "atkBase":
-    case "atkPct":
-    case "atkFlat":
-    case "critRate":
-    case "critDmg":
-    case "defShred":
-      stats[path.stat] += v
-      return
-    case "elementBonus":
-      stats.elementBonus[path.key] = (stats.elementBonus[path.key] ?? 0) + v
-      return
-    case "skillTypeBonus":
-      stats.skillTypeBonus[path.key] = (stats.skillTypeBonus[path.key] ?? 0) + v
-      return
-    case "deepen":
-      stats.deepen[path.key] = (stats.deepen[path.key] ?? 0) + v
-      return
-    case "resShred":
-      stats.resShred[path.key] = (stats.resShred[path.key] ?? 0) + v
       return
   }
 }
