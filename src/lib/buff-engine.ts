@@ -20,7 +20,11 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
-import { computeDamage } from "./compute-damage"
+import {
+  buffInstanceKey,
+  EmitHitDispatcher,
+  type EmitHitHost,
+} from "./emit-hit-dispatcher"
 import { compileSkillTreeNode } from "./skill-tree-registry"
 import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
 
@@ -81,8 +85,16 @@ export class BuffEngine {
     sourceCharacterId: number
     appliedFrame: number
   }[] = []
-  /** Per-emitHit ICD timer keyed by `${buffDefId}|${effectIndex}|${sourceId}`. */
-  private icdLastFired = new Map<string, number>()
+  private emitHitDispatcher = new EmitHitDispatcher({
+    chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
+  })
+  private emitHitHost: EmitHitHost = {
+    resolveStats: (id) => this.resolveStats(id),
+    applyResourceDelta: (id, resource, delta, frame, out, hitsOut, depth) =>
+      this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
+    getResource: (id) => this.getResource(id),
+    activeBuffIds: (id) => this.activeBuffIds(id),
+  }
 
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.baseStats.clear()
@@ -92,7 +104,7 @@ export class BuffEngine {
     this.slotsBySlotIndex = []
     this.onFieldCharacterId = null
     this.pendingNextOnField = []
-    this.icdLastFired.clear()
+    this.emitHitDispatcher.reset()
 
     for (let i = 0; i < input.slots.length; i++) {
       const charId = input.slots[i]
@@ -451,70 +463,21 @@ export class BuffEngine {
     hitsOut: HitEvent[],
     depth: number,
   ): void {
-    const icdKey = `${def.id}|${effectIndex}|${sourceCharacterId}`
-    const last = this.icdLastFired.get(icdKey)
-    if (last !== undefined && frame - last < effect.icdFrames) return
-
-    if (depth + 1 > EMIT_HIT_CHAIN_DEPTH_CAP) {
-      console.warn(
-        `[BuffEngine] emitHit chain depth exceeded ${EMIT_HIT_CHAIN_DEPTH_CAP} (buff: ${def.id}, source: ${sourceCharacterId}); stopping chain`,
-      )
-      return
-    }
-    this.icdLastFired.set(icdKey, frame)
-
-    const stats = this.resolveStats(sourceCharacterId)
-    const character = getCharacterById(sourceCharacterId)
-    const element = effect.element ?? character?.element ?? ""
-    const skillType = effect.skillType ?? "Coordinated Attack"
-    const damage = computeDamage(
+    const hit = this.emitHitDispatcher.dispatch(
       {
-        multiplier: effect.damage.value,
-        element,
-        skillType,
-        dmgType: effect.damage.dmgType,
+        buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
+        def,
+        effect,
+        effectIndex,
+        sourceCharacterId,
       },
-      stats,
+      { frame, depth },
+      this.emitHitHost,
+      out,
+      hitsOut,
     )
-
-    if (effect.damage.energy) {
-      this.applyResourceDelta(
-        sourceCharacterId,
-        "energy",
-        effect.damage.energy,
-        frame,
-        out,
-        hitsOut,
-        depth,
-      )
-    }
-    if (effect.damage.concerto) {
-      this.applyResourceDelta(
-        sourceCharacterId,
-        "concerto",
-        effect.damage.concerto,
-        frame,
-        out,
-        hitsOut,
-        depth,
-      )
-    }
-    const post = this.getResource(sourceCharacterId)
-
-    hitsOut.push({
-      kind: "hit",
-      synthetic: true,
-      sourceBuffId: def.id,
-      characterId: sourceCharacterId,
-      skillType,
-      skillName: def.name,
-      frame,
-      cumulativeEnergy: post.energy,
-      cumulativeConcerto: post.concerto,
-      damage,
-      statsSnapshot: cloneStats(stats),
-      activeBuffIds: this.activeBuffIds(sourceCharacterId),
-    })
+    if (!hit) return
+    hitsOut.push(hit)
 
     // Chain: each synthetic hit fires its own hitLanded event subject to
     // per-instance ICDs. Energy/concerto already applied above; pass 0 so
@@ -523,7 +486,7 @@ export class BuffEngine {
       {
         kind: "hitLanded",
         characterId: sourceCharacterId,
-        skillType,
+        skillType: effect.skillType ?? "Coordinated Attack",
         dmgType: effect.damage.dmgType,
         synthetic: true,
         frame,
