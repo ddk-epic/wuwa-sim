@@ -17,12 +17,29 @@ import {
   type EmitHitHost,
 } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "./engine-bootstrap"
-import { InstanceStore, type EngineEvent } from "./instance-store"
+import {
+  InstanceStore,
+  type Candidate,
+  type EngineEvent,
+} from "./instance-store"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects } from "./stat-table-builder"
 
 export type { EngineEvent } from "./instance-store"
+
+interface PhaseContext {
+  event: EngineEvent
+  candidates: readonly Candidate[]
+  out: BuffEvent[]
+  hitsOut: HitEvent[]
+  depth: number
+}
+
+interface PhaseHandler {
+  readonly name: string
+  run(ctx: PhaseContext): void
+}
 
 export interface BootstrapInput {
   slots: Slots
@@ -48,6 +65,26 @@ export class BuffEngine {
       this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
     getResource: (id) => this.getResource(id),
     activeBuffIds: (id) => this.activeBuffIds(id),
+  }
+
+  /**
+   * Trigger-driven phase pipeline (ADR-0006). Phase ordering is a value, not
+   * inline control flow: changing order means editing this list. Within each
+   * phase, candidates are already lex-sorted by `buffDef.id` upstream.
+   */
+  private readonly phases: ReadonlyArray<PhaseHandler> = [
+    { name: "resource", run: (ctx) => this.runResourcePhase(ctx) },
+    { name: "stat", run: (ctx) => this.runStatPhase(ctx) },
+    { name: "emitHit", run: (ctx) => this.runEmitHitPhase(ctx) },
+    {
+      name: "consume",
+      run: (ctx) => this.store.runConsumePhase(ctx.event, ctx.out),
+    },
+  ]
+
+  /** Test/inspection helper exposing the dispatch phase order as a value. */
+  phaseOrder(): readonly string[] {
+    return this.phases.map((p) => p.name)
   }
 
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
@@ -183,10 +220,12 @@ export class BuffEngine {
     }
 
     const candidates = this.store.findCandidates(event)
+    const ctx: PhaseContext = { event, candidates, out, hitsOut, depth }
+    for (const phase of this.phases) phase.run(ctx)
+  }
 
-    // Phase: resource — fire explicit resource effects from triggered buffs
-    // before stat-effect application (which is deferred to resolveStats).
-    for (const { def, sourceCharacterId } of candidates) {
+  private runResourcePhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
       for (const effect of def.effects) {
         if (effect.kind !== "resource") continue
         const targets = this.store.resolveTargetIds(def, sourceCharacterId)
@@ -195,30 +234,41 @@ export class BuffEngine {
             effect,
             sourceCharacterId,
             targetId,
-            event.frame,
-            out,
-            hitsOut,
-            depth,
+            ctx.event.frame,
+            ctx.out,
+            ctx.hitsOut,
+            ctx.depth,
           )
         }
       }
     }
+  }
 
-    // Phase: stat — apply buffs (instances accumulate stat effects via resolveStats).
-    for (const { def, sourceCharacterId } of candidates) {
+  private runStatPhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
       if (def.target.kind === "nextOnField") {
-        this.store.pushPendingNextOnField(def, sourceCharacterId, event.frame)
+        this.store.pushPendingNextOnField(
+          def,
+          sourceCharacterId,
+          ctx.event.frame,
+        )
         continue
       }
       const targetIds = this.store.resolveTargetIds(def, sourceCharacterId)
       for (const targetId of targetIds) {
-        this.store.applyBuff(def, sourceCharacterId, targetId, event.frame, out)
+        this.store.applyBuff(
+          def,
+          sourceCharacterId,
+          targetId,
+          ctx.event.frame,
+          ctx.out,
+        )
       }
     }
+  }
 
-    // Phase: emitHit — fire synthetic hits subject to per-instance ICDs.
-    // Lex tiebreak by buffDef.id is preserved (candidates already sorted).
-    for (const { def, sourceCharacterId } of candidates) {
+  private runEmitHitPhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
       for (let i = 0; i < def.effects.length; i++) {
         const effect = def.effects[i]
         if (effect.kind !== "emitHit") continue
@@ -227,18 +277,13 @@ export class BuffEngine {
           effect,
           i,
           sourceCharacterId,
-          event.frame,
-          out,
-          hitsOut,
-          depth,
+          ctx.event.frame,
+          ctx.out,
+          ctx.hitsOut,
+          ctx.depth,
         )
       }
     }
-
-    // Phase: consume — implicit fifth phase. Walk active instances and
-    // decrement stacks for any whose consumedBy filter matches the just-fired
-    // event. Removed (stacks==0) instances emit buffConsumed.
-    this.store.runConsumePhase(event, out)
   }
 
   private fireEmitHit(

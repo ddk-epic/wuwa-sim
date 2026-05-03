@@ -2228,3 +2228,81 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
     }
   })
 })
+
+describe("BuffEngine — phase pipeline as data", () => {
+  it("dispatches phases in fixed order: resource → stat → emitHit → consume", () => {
+    const engine = new BuffEngine()
+    expect(engine.phaseOrder()).toEqual([
+      "resource",
+      "stat",
+      "emitHit",
+      "consume",
+    ])
+  })
+
+  it("a stat Effect in a later phase sees Resource State mutated by an earlier phase", () => {
+    // Two buffs trigger off the same skillCast event.
+    //   - resourceBuff fires in the resource phase, adding 50 concerto.
+    //   - statBuff fires in the stat phase (applyBuff). It carries a stat
+    //     effect (+0.5 atkPct) gated by a Condition resourceAtLeast(concerto, 50).
+    // Because the resource phase runs first, statBuff's Condition is satisfied
+    // when resolveStats later reads concerto, and the +0.5 contribution lands.
+    // Buff ids ensure resourceBuff's id sorts BEFORE statBuff's id so that,
+    // even within a single phase, candidates are processed in the lex order
+    // pinned by ADR-0006.
+    const resourceBuff: BuffDef = {
+      id: "char.test.aResource",
+      name: "Adds Concerto",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Basic" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 50 },
+          target: "self",
+        },
+      ],
+    }
+    const statBuff: BuffDef = {
+      id: "char.test.bStat",
+      name: "Conditional ATK%",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Basic" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "concerto",
+        n: 50,
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [resourceBuff, statBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.getResource(1).concerto).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic",
+      frame: 0,
+    })
+
+    expect(engine.getResource(1).concerto).toBe(50)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5)
+  })
+})
