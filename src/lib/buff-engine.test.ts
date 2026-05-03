@@ -1625,3 +1625,389 @@ describe("BuffEngine.resolveStats — fallback", () => {
     expect(engine.resolveStats(1).atkBase).toBe(1000)
   })
 })
+
+describe("BuffEngine — consumedBy (#61)", () => {
+  const guaranteedCrit: BuffDef = {
+    id: "char.next-basic-crit",
+    name: "Next Basic Guaranteed Crit",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 600 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "critRate" },
+        value: { kind: "const", v: 1 },
+      },
+    ],
+    consumedBy: {
+      event: "hitLanded",
+      skillType: "Basic Attack",
+      source: "self",
+    },
+  }
+
+  it("removes the instance and emits buffConsumed when consumedBy matches", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [guaranteedCrit] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).critRate).toBe(1)
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 30,
+    })
+    const consumed = result.lifecycleEvents.find(
+      (e) => e.kind === "buffConsumed",
+    )
+    expect(consumed).toMatchObject({
+      kind: "buffConsumed",
+      buffId: "char.next-basic-crit",
+      targetCharacterId: 1,
+      stacks: 0,
+      frame: 30,
+    })
+    expect(engine.resolveStats(1).critRate).toBe(0)
+  })
+
+  it("does not consume when the event does not match the filter", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [guaranteedCrit] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Heavy Attack",
+      dmgType: "Fusion",
+      frame: 30,
+    })
+    expect(result.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(
+      false,
+    )
+    expect(engine.resolveStats(1).critRate).toBe(1)
+  })
+
+  it("decrements stacks without removing while stacks remain >0", () => {
+    const stackedConsumable: BuffDef = {
+      id: "char.three-shot",
+      name: "Three Shot",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      stacking: { max: 3, onRetrigger: "addStack" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.1 },
+        },
+      ],
+      consumedBy: {
+        event: "hitLanded",
+        skillType: "Basic Attack",
+        source: "self",
+      },
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [stackedConsumable] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 1,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 2,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.3)
+
+    const r1 = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 10,
+    })
+    expect(r1.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(
+      false,
+    )
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 20,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1)
+
+    const r3 = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 30,
+    })
+    expect(r3.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(true)
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+  })
+
+  it("runs after emitHit so the buff contributes to the triggering hit", () => {
+    // A guaranteed-crit buff plus an emitHit synthetic. The synthetic hit
+    // should resolve with the buff still active (consume runs after emitHit).
+    const buff: BuffDef = {
+      id: "char.crit-and-emit",
+      name: "Crit + Emit",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: { kind: "const", v: 1 },
+        },
+        {
+          kind: "emitHit",
+          damage: {
+            type: "ATK",
+            dmgType: "Fusion",
+            scalingStat: "atk",
+            actionFrame: 0,
+            value: 0.5,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+          icdFrames: 0,
+        },
+      ],
+      consumedBy: { event: "hitLanded", source: "self", actor: "any" },
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const r = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(r.syntheticHits).toHaveLength(1)
+    expect(r.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(true)
+  })
+})
+
+describe("BuffEngine — perSource (#61)", () => {
+  const sharedBuff = (perSource: boolean): BuffDef => ({
+    id: "team.shared",
+    name: "Shared",
+    trigger: { event: "skillCast", actor: "any", skillType: "Resonance Skill" },
+    target: { kind: "team" },
+    duration: { kind: "frames", v: 300 },
+    perSource,
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.2 },
+      },
+    ],
+  })
+
+  it("default (perSource=false) refreshes a single instance from any source", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [sharedBuff(false)] }),
+      baseChar({ id: 2, name: "B", buffs: [sharedBuff(false)] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Resonance Skill",
+      frame: 1,
+    })
+    // Single instance, only +0.2 contribution.
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.activeBuffIds(1)).toEqual(["team.shared"])
+  })
+
+  it("perSource=true produces parallel instances summing contributions", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [sharedBuff(true)] }),
+      baseChar({ id: 2, name: "B", buffs: [sharedBuff(true)] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Resonance Skill",
+      frame: 1,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4)
+    expect(engine.activeBuffIds(1)).toEqual(["team.shared", "team.shared"])
+  })
+})
+
+describe("BuffEngine — nonStackingGroup (#61)", () => {
+  it("logs console.info when multiple buffs in the same group are co-active", () => {
+    const a: BuffDef = {
+      id: "buff.a",
+      name: "A",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "onField" },
+      nonStackingGroup: "atk-up",
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    const b: BuffDef = {
+      ...a,
+      id: "buff.b",
+      name: "B",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Normal Attack",
+      },
+      duration: { kind: "frames", v: 600 },
+      condition: undefined,
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [a, b] })]
+    const engine = new BuffEngine()
+    const info = vi.spyOn(console, "info").mockImplementation(() => {})
+    try {
+      engine.bootstrap({
+        slots: slotsOf(1),
+        loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+      })
+      // Trigger b — a is already active from sim start, so this should warn.
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 1,
+        skillType: "Normal Attack",
+        frame: 0,
+      })
+      expect(info).toHaveBeenCalled()
+      const msg = String(info.mock.calls[0][0])
+      expect(msg).toContain("atk-up")
+      expect(msg).toContain("buff.a")
+      expect(msg).toContain("buff.b")
+    } finally {
+      info.mockRestore()
+    }
+  })
+
+  it("does not log when only one buff in the group is active", () => {
+    const a: BuffDef = {
+      id: "buff.a",
+      name: "A",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Normal Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 600 },
+      nonStackingGroup: "atk-up",
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [a] })]
+    const engine = new BuffEngine()
+    const info = vi.spyOn(console, "info").mockImplementation(() => {})
+    try {
+      engine.bootstrap({
+        slots: slotsOf(1),
+        loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+      })
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 1,
+        skillType: "Normal Attack",
+        frame: 0,
+      })
+      expect(info).not.toHaveBeenCalled()
+    } finally {
+      info.mockRestore()
+    }
+  })
+})

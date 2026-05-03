@@ -25,7 +25,7 @@ export interface HitEvent extends SimulationLogBase {
 }
 
 export interface BuffEvent {
-  kind: "buffApplied" | "buffRefreshed" | "buffExpired"
+  kind: "buffApplied" | "buffRefreshed" | "buffExpired" | "buffConsumed"
   buffId: string
   buffName: string
   sourceCharacterId: number

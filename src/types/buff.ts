@@ -146,12 +146,29 @@ export interface BuffDef {
   requiresSequence?: number
   /** Echo set piece count required (2 or 5). v1 only filters at bootstrap. */
   requiresPieces?: 2 | 5
-  /** v1 placeholder — typed but not enforced (#61). */
+  /**
+   * Typed and parsed by the engine but no enforcement: when multiple buffs
+   * sharing the same group are simultaneously active, the engine emits a
+   * console.info but applies all of them.
+   */
   nonStackingGroup?: string
   /** Continuously evaluated; gates whether instance contributes effects. */
   condition?: Condition
   /** When true, instance is removed when its source character swaps out. */
   expiresOnSourceSwapOut?: boolean
+  /**
+   * When set, after each event is dispatched the engine walks active instances
+   * and decrements stacks for those whose `consumedBy` filter matches the just-
+   * fired event. When stacks reach 0 the instance is removed and a
+   * `buffConsumed` lifecycle event is emitted.
+   */
+  consumedBy?: Trigger
+  /**
+   * When true, the dedupe key includes `sourceCharacterId` so two distinct
+   * sources produce parallel instances on the same target. Default false:
+   * re-application from any source refreshes the existing instance in place.
+   */
+  perSource?: boolean
 }
 
 export interface BuffInstance {

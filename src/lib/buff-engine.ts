@@ -397,6 +397,38 @@ export class BuffEngine {
         )
       }
     }
+
+    // Phase: consume — implicit fifth phase. Walk active instances and
+    // decrement stacks for any whose consumedBy filter matches the just-fired
+    // event. Removed (stacks==0) instances emit buffConsumed.
+    this.runConsumePhase(event, out)
+  }
+
+  private runConsumePhase(event: EngineEvent, out: BuffEvent[]): void {
+    const remaining: BuffInstance[] = []
+    for (const inst of this.active) {
+      const filter = inst.def.consumedBy
+      if (!filter || !matchesTrigger(filter, event, inst.sourceCharacterId)) {
+        remaining.push(inst)
+        continue
+      }
+      const next = inst.stacks - 1
+      if (next <= 0) {
+        out.push({
+          kind: "buffConsumed",
+          buffId: inst.def.id,
+          buffName: inst.def.name,
+          sourceCharacterId: inst.sourceCharacterId,
+          targetCharacterId: inst.targetCharacterId,
+          frame: event.frame,
+          stacks: 0,
+        })
+      } else {
+        inst.stacks = next
+        remaining.push(inst)
+      }
+    }
+    this.active = remaining
   }
 
   private fireEmitHit(
@@ -684,7 +716,10 @@ export class BuffEngine {
   ): void {
     const stacking = def.stacking ?? DEFAULT_STACKING
     const existing = this.active.find(
-      (i) => i.def.id === def.id && i.targetCharacterId === targetCharacterId,
+      (i) =>
+        i.def.id === def.id &&
+        i.targetCharacterId === targetCharacterId &&
+        (!def.perSource || i.sourceCharacterId === sourceCharacterId),
     )
     const newEndTime = computeEndTime(def, frame)
 
@@ -707,6 +742,7 @@ export class BuffEngine {
         frame,
         stacks: 1,
       })
+      this.checkNonStackingGroup(def, targetCharacterId)
       return
     }
 
@@ -781,9 +817,26 @@ export class BuffEngine {
           frame,
           stacks: 1,
         })
+        this.checkNonStackingGroup(def, targetCharacterId)
         return
       }
     }
+  }
+
+  private checkNonStackingGroup(def: BuffDef, targetCharacterId: number): void {
+    const group = def.nonStackingGroup
+    if (!group) return
+    const conflicts = this.active.filter(
+      (i) =>
+        i.targetCharacterId === targetCharacterId &&
+        i.def.id !== def.id &&
+        i.def.nonStackingGroup === group,
+    )
+    if (conflicts.length === 0) return
+    const ids = [def.id, ...conflicts.map((i) => i.def.id)].sort()
+    console.info(
+      `[BuffEngine] nonStackingGroup "${group}" has multiple co-active buffs on character ${targetCharacterId}: ${ids.join(", ")} (informational; v1 does not enforce caps)`,
+    )
   }
 }
 

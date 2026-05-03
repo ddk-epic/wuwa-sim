@@ -8,7 +8,12 @@ interface SimulationLogModalProps {
   onClose: () => void
 }
 
-const BUFF_KINDS = new Set(["buffApplied", "buffRefreshed", "buffExpired"])
+const BUFF_KINDS = new Set([
+  "buffApplied",
+  "buffRefreshed",
+  "buffExpired",
+  "buffConsumed",
+])
 
 export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
   const hitCount = log.filter((e) => e.kind === "hit").length
@@ -84,7 +89,13 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                   if (isBuff) {
                     const buff = entry as Extract<
                       SimulationLogEntry,
-                      { kind: "buffApplied" | "buffRefreshed" | "buffExpired" }
+                      {
+                        kind:
+                          | "buffApplied"
+                          | "buffRefreshed"
+                          | "buffExpired"
+                          | "buffConsumed"
+                      }
                     >
                     const target = getCharacterById(buff.targetCharacterId)
                     const verb =
@@ -92,11 +103,15 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         ? "applied"
                         : buff.kind === "buffRefreshed"
                           ? "refreshed"
-                          : "expired"
+                          : buff.kind === "buffConsumed"
+                            ? "consumed"
+                            : "expired"
                     const color =
                       buff.kind === "buffExpired"
                         ? "text-rose-400/70"
-                        : "text-emerald-400/80"
+                        : buff.kind === "buffConsumed"
+                          ? "text-amber-400/80"
+                          : "text-emerald-400/80"
                     return (
                       <tr
                         key={i}
