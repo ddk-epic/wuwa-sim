@@ -2369,3 +2369,220 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
     expect(dispatch.postState).toEqual(oldPostState)
   })
 })
+
+describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
+  it("memoizes condition results across resolveStats calls within a frame", () => {
+    const buff: BuffDef = {
+      id: "char.a.onfield-only",
+      name: "OnField Only",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "onField" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.4 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+
+    const before = engine.conditionEvalCountForTest()
+    const a = engine.resolveStats(1)
+    const afterFirst = engine.conditionEvalCountForTest()
+    const b = engine.resolveStats(1)
+    const afterSecond = engine.conditionEvalCountForTest()
+
+    expect(a).toEqual(b)
+    expect(afterFirst - before).toBe(1)
+    expect(afterSecond - afterFirst).toBe(0)
+  })
+
+  it("invalidates the condition cache when an instance is added or refreshed", () => {
+    const gate: BuffDef = {
+      id: "char.a.gate",
+      name: "Gate",
+      trigger: { event: "skillCast", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1000 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    const gated: BuffDef = {
+      id: "char.a.gated",
+      name: "Gated",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "buffActive", buffId: "char.a.gate", on: "target" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [gate, gated] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.6)
+  })
+
+  it("invalidates the condition cache when a resource crosses a threshold", () => {
+    const onConcerto100: BuffDef = {
+      id: "char.concerto-bonus",
+      name: "Concerto Bonus",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "concerto",
+        threshold: 100,
+        direction: "up",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1000 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    }
+    const gated: BuffDef = {
+      id: "char.requires-energy",
+      name: "Energy Gated",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "energy",
+        n: 50,
+        on: "target",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [onConcerto100, gated] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    expect(engine.resolveStats(1).atkPct).toBe(0)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 60,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+  })
+
+  it("nested buffActive conditions resolve correctly", () => {
+    const c: BuffDef = {
+      id: "char.c",
+      name: "C",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Heavy Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1000 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.05 },
+        },
+      ],
+    }
+    const b: BuffDef = {
+      id: "char.b",
+      name: "B",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "buffActive", buffId: "char.c", on: "target" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    const a: BuffDef = {
+      id: "char.a",
+      name: "A",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "buffActive", buffId: "char.b", on: "target" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [a, b, c] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // C absent: B's condition fails (B doesn't contribute), but B is still
+    // in the active list, so A's condition (buffActive: B) passes.
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Heavy Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.35)
+  })
+})

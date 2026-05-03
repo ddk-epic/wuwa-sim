@@ -68,6 +68,7 @@ export class InstanceStore {
   private pendingNextOnField: PendingNextOnField[] = []
   private baseStats = new Map<number, StatTable>()
   private slotsBySlotIndex: number[] = []
+  private version_ = 0
 
   clear(): void {
     this.active = []
@@ -75,6 +76,12 @@ export class InstanceStore {
     this.pendingNextOnField = []
     this.baseStats.clear()
     this.slotsBySlotIndex = []
+    this.version_++
+  }
+
+  /** Monotonic counter that bumps on every mutation to the active instance set. */
+  mutationVersion(): number {
+    return this.version_
   }
 
   setSlots(slots: number[]): void {
@@ -91,6 +98,7 @@ export class InstanceStore {
 
   pushPermanentInstance(inst: BuffInstance): void {
     this.active.push(inst)
+    this.version_++
   }
 
   cloneBaseStats(characterId: number): StatTable {
@@ -205,12 +213,14 @@ export class InstanceStore {
         remaining.push(inst)
       }
     }
+    if (remaining.length !== this.active.length) this.version_++
     this.active = remaining
   }
 
   /** Decrement stacks for instances whose consumedBy filter matches `event`. */
   runConsumePhase(event: EngineEvent, out: BuffEvent[]): void {
     const remaining: BuffInstance[] = []
+    let mutated = false
     for (const inst of this.active) {
       const filter = inst.def.consumedBy
       if (!filter || !matchesTrigger(filter, event, inst.sourceCharacterId)) {
@@ -228,11 +238,14 @@ export class InstanceStore {
           frame: event.frame,
           stacks: 0,
         })
+        mutated = true
       } else {
         inst.stacks = next
         remaining.push(inst)
+        mutated = true
       }
     }
+    if (mutated) this.version_++
     this.active = remaining
   }
 
@@ -254,6 +267,7 @@ export class InstanceStore {
         remaining.push(inst)
       }
     }
+    if (remaining.length !== this.active.length) this.version_++
     this.active = remaining
     return { lifecycleEvents }
   }
@@ -312,6 +326,7 @@ export class InstanceStore {
         appliedFrame: frame,
         snapshots: freezeSnapshots(def, 1),
       })
+      this.version_++
       out.push({
         kind: "buffApplied",
         buffId: def.id,
@@ -331,6 +346,7 @@ export class InstanceStore {
       case "refresh":
         existing.endTime = newEndTime
         existing.sourceCharacterId = sourceCharacterId
+        this.version_++
         out.push({
           kind: "buffRefreshed",
           buffId: def.id,
@@ -345,6 +361,7 @@ export class InstanceStore {
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
         existing.endTime = newEndTime
         existing.sourceCharacterId = sourceCharacterId
+        this.version_++
         out.push({
           kind: "buffRefreshed",
           buffId: def.id,
@@ -357,6 +374,7 @@ export class InstanceStore {
         return
       case "addStackKeepTimer":
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
+        this.version_++
         out.push({
           kind: "buffRefreshed",
           buffId: def.id,
@@ -387,6 +405,7 @@ export class InstanceStore {
           appliedFrame: frame,
           snapshots: freezeSnapshots(def, 1),
         })
+        this.version_++
         out.push({
           kind: "buffApplied",
           buffId: def.id,

@@ -490,7 +490,7 @@ export class BuffEngine {
     for (const inst of contributions) {
       if (
         inst.def.condition &&
-        !this.evaluateCondition(inst.def.condition, inst)
+        !this.cachedEvaluateCondition(inst.def.condition, inst, characterId)
       ) {
         continue
       }
@@ -501,6 +501,44 @@ export class BuffEngine {
       })
     }
     return base
+  }
+
+  private conditionCache = new Map<string, boolean>()
+  private conditionCacheVersions: [number, number, number] | null = null
+  private conditionEvalCount_ = 0
+
+  private cachedEvaluateCondition(
+    cond: Condition,
+    inst: BuffInstance,
+    actingCharacterId: number,
+  ): boolean {
+    const versions: [number, number, number] = [
+      this.store.mutationVersion(),
+      this.resources.mutationVersion(),
+      this.onField.mutationVersion(),
+    ]
+    const prev = this.conditionCacheVersions
+    if (
+      prev === null ||
+      prev[0] !== versions[0] ||
+      prev[1] !== versions[1] ||
+      prev[2] !== versions[2]
+    ) {
+      this.conditionCache.clear()
+      this.conditionCacheVersions = versions
+    }
+    const key = `${inst.def.id}|${inst.sourceCharacterId}|${inst.targetCharacterId}|${actingCharacterId}`
+    const cached = this.conditionCache.get(key)
+    if (cached !== undefined) return cached
+    const result = this.evaluateCondition(cond, inst)
+    this.conditionEvalCount_++
+    this.conditionCache.set(key, result)
+    return result
+  }
+
+  /** @internal Test-only: counts evaluateCondition calls that bypassed the cache. */
+  conditionEvalCountForTest(): number {
+    return this.conditionEvalCount_
   }
 
   private evaluateCondition(cond: Condition, inst: BuffInstance): boolean {

@@ -5,9 +5,11 @@ export interface InferredSwap {
 
 export class OnFieldTracker {
   private current_: number | null = null
+  private version_ = 0
 
   clear(): void {
     this.current_ = null
+    this.version_++
   }
 
   current(): number | null {
@@ -15,7 +17,13 @@ export class OnFieldTracker {
   }
 
   setCurrent(characterId: number | null): void {
+    if (this.current_ === characterId) return
     this.current_ = characterId
+    this.version_++
+  }
+
+  mutationVersion(): number {
+    return this.version_
   }
 
   isOnField(characterId: number): boolean {

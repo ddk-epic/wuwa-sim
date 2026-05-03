@@ -8,9 +8,15 @@ export interface ResourceCrossingInfo {
 
 export class ResourceLedger {
   private resources = new Map<number, ResourceState>()
+  private version_ = 0
 
   clear(): void {
     this.resources.clear()
+    this.version_++
+  }
+
+  mutationVersion(): number {
+    return this.version_
   }
 
   ensureState(characterId: number): void {
@@ -37,6 +43,7 @@ export class ResourceLedger {
     const before = state[resource]
     const after = before + delta
     state[resource] = after
+    if (before !== after) this.version_++
     return { before, after }
   }
 
@@ -48,6 +55,7 @@ export class ResourceLedger {
     const state = this.getResource(characterId)
     const before = state[resource]
     state[resource] = value
+    if (before !== value) this.version_++
     return { before, after: value }
   }
 }
