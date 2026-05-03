@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 
+import { getTimelineSummary } from "./timeline-summary"
+
 const charA: EnrichedCharacter = {
   id: 1,
   name: "Test A",
@@ -34,8 +36,6 @@ vi.mock("./catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
 }))
-
-import { getTimelineSummary } from "./timeline-summary"
 
 afterEach(() => {
   testCharacters = []

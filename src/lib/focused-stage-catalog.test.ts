@@ -3,6 +3,8 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
+import { getFocusedStageCatalog } from "./focused-stage-catalog"
+
 const char1: EnrichedCharacter = {
   id: 1,
   name: "Encore",
@@ -160,8 +162,6 @@ vi.mock("./catalog", () => ({
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,
 }))
-
-import { getFocusedStageCatalog } from "./focused-stage-catalog"
 
 afterEach(() => {
   testCharacters = []

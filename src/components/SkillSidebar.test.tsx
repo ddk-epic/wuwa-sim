@@ -5,6 +5,8 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
+import { SkillSidebar } from "./SkillSidebar"
+
 const char1: EnrichedCharacter = {
   id: 1,
   name: "Encore",
@@ -113,8 +115,6 @@ vi.mock("#/lib/catalog", () => ({
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,
 }))
-
-import { SkillSidebar } from "./SkillSidebar"
 
 afterEach(() => {
   cleanup()
