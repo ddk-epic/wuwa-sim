@@ -144,7 +144,14 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         <td className="py-1 pr-3 text-gray-400">
                           {isAction ? ev.skillType : ""}
                         </td>
-                        <td className="py-1 pr-3">{ev.skillName}</td>
+                        <td className="py-1 pr-3">
+                          {ev.skillName}
+                          {ev.kind === "hit" && ev.synthetic ? (
+                            <span className="ml-2 text-xs text-cyan-400/80 italic">
+                              (coord)
+                            </span>
+                          ) : null}
+                        </td>
                         <td className="py-1 pr-3">
                           {(ev.frame / 60).toFixed(2)}s
                         </td>

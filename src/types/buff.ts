@@ -1,3 +1,5 @@
+import type { DamageEntry } from "./character"
+
 export type StatPath =
   | {
       stat:
@@ -25,6 +27,21 @@ export type StatEffect = {
   value: ValueExpr
 }
 
+/**
+ * Inject a synthetic hit attributed to the BuffInstance's source character.
+ * `damage` carries multiplier (`value`), dmgType, energy, concerto. `icdFrames`
+ * is the per-instance internal cooldown in frames (no default).
+ */
+export type EmitHitEffect = {
+  kind: "emitHit"
+  damage: DamageEntry
+  icdFrames: number
+  /** Skill type label used for triggers and log rendering. */
+  skillType?: string
+  /** Element override; defaults to source character's element. */
+  element?: string
+}
+
 export type ResourceEffect = {
   kind: "resource"
   resource: ResourceKind
@@ -34,7 +51,7 @@ export type ResourceEffect = {
   target?: "self" | "target" | "source"
 }
 
-export type Effect = StatEffect | ResourceEffect
+export type Effect = StatEffect | ResourceEffect | EmitHitEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 

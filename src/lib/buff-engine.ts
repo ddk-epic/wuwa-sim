@@ -2,6 +2,7 @@ import type {
   BuffDef,
   BuffInstance,
   Condition,
+  EmitHitEffect,
   ResourceEffect,
   ResourceKind,
   ResourceState,
@@ -13,7 +14,7 @@ import type {
 } from "#/types/buff"
 import { emptyResourceState } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import type { BuffEvent } from "#/types/simulation-log"
+import type { BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import {
@@ -22,6 +23,7 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
+import { computeDamage } from "./compute-damage"
 import { compileSkillTreeNode } from "./skill-tree-registry"
 
 export interface BootstrapInput {
@@ -66,6 +68,7 @@ export type EngineEvent =
     }
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
+const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
 export class BuffEngine {
   private baseStats = new Map<number, StatTable>()
@@ -80,6 +83,8 @@ export class BuffEngine {
     sourceCharacterId: number
     appliedFrame: number
   }[] = []
+  /** Per-emitHit ICD timer keyed by `${buffDefId}|${effectIndex}|${sourceId}`. */
+  private icdLastFired = new Map<string, number>()
 
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.baseStats.clear()
@@ -89,6 +94,7 @@ export class BuffEngine {
     this.slotsBySlotIndex = []
     this.onFieldCharacterId = null
     this.pendingNextOnField = []
+    this.icdLastFired.clear()
 
     for (let i = 0; i < input.slots.length; i++) {
       const charId = input.slots[i]
@@ -199,8 +205,12 @@ export class BuffEngine {
   }
 
   /** Process a triggering event; returns lifecycle events from any apply/refresh. */
-  onEvent(event: EngineEvent): { lifecycleEvents: BuffEvent[] } {
+  onEvent(event: EngineEvent): {
+    lifecycleEvents: BuffEvent[]
+    syntheticHits: HitEvent[]
+  } {
     const lifecycleEvents: BuffEvent[] = []
+    const syntheticHits: HitEvent[] = []
 
     // Implicit swap inference: an authored skillCast by a different character
     // than the current on-field implies swapOut(prev) → swapIn(next).
@@ -212,21 +222,30 @@ export class BuffEngine {
           this.dispatchEvent(
             { kind: "swapOut", characterId: prev, frame: event.frame },
             lifecycleEvents,
+            syntheticHits,
+            0,
           )
         }
         this.onFieldCharacterId = next
         this.dispatchEvent(
           { kind: "swapIn", characterId: next, frame: event.frame },
           lifecycleEvents,
+          syntheticHits,
+          0,
         )
       }
     }
 
-    this.dispatchEvent(event, lifecycleEvents)
-    return { lifecycleEvents }
+    this.dispatchEvent(event, lifecycleEvents, syntheticHits, 0)
+    return { lifecycleEvents, syntheticHits }
   }
 
-  private dispatchEvent(event: EngineEvent, out: BuffEvent[]): void {
+  private dispatchEvent(
+    event: EngineEvent,
+    out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
+  ): void {
     // Resource phase (implicit): hit-driven and skill-cast-driven accumulation
     // happens before trigger matching so resourceCrossed triggers can chain.
     if (event.kind === "hitLanded") {
@@ -359,6 +378,112 @@ export class BuffEngine {
         this.applyBuff(def, sourceCharacterId, targetId, event.frame, out)
       }
     }
+
+    // Phase: emitHit — fire synthetic hits subject to per-instance ICDs.
+    // Lex tiebreak by buffDef.id is preserved (candidates already sorted).
+    for (const { def, sourceCharacterId } of candidates) {
+      for (let i = 0; i < def.effects.length; i++) {
+        const effect = def.effects[i]
+        if (effect.kind !== "emitHit") continue
+        this.fireEmitHit(
+          def,
+          effect,
+          i,
+          sourceCharacterId,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
+      }
+    }
+  }
+
+  private fireEmitHit(
+    def: BuffDef,
+    effect: EmitHitEffect,
+    effectIndex: number,
+    sourceCharacterId: number,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: HitEvent[],
+    depth: number,
+  ): void {
+    const icdKey = `${def.id}|${effectIndex}|${sourceCharacterId}`
+    const last = this.icdLastFired.get(icdKey)
+    if (last !== undefined && frame - last < effect.icdFrames) return
+
+    if (depth + 1 > EMIT_HIT_CHAIN_DEPTH_CAP) {
+      console.warn(
+        `[BuffEngine] emitHit chain depth exceeded ${EMIT_HIT_CHAIN_DEPTH_CAP} (buff: ${def.id}, source: ${sourceCharacterId}); stopping chain`,
+      )
+      return
+    }
+    this.icdLastFired.set(icdKey, frame)
+
+    const stats = this.resolveStats(sourceCharacterId)
+    const character = getCharacterById(sourceCharacterId)
+    const element = effect.element ?? character?.element ?? ""
+    const skillType = effect.skillType ?? "Coordinated Attack"
+    const damage = computeDamage(
+      {
+        multiplier: effect.damage.value,
+        element,
+        skillType,
+        dmgType: effect.damage.dmgType,
+      },
+      stats,
+    )
+
+    if (effect.damage.energy) {
+      this.applyResourceDelta(
+        sourceCharacterId,
+        "energy",
+        effect.damage.energy,
+        out,
+      )
+    }
+    if (effect.damage.concerto) {
+      this.applyResourceDelta(
+        sourceCharacterId,
+        "concerto",
+        effect.damage.concerto,
+        out,
+      )
+    }
+    const post = this.getResource(sourceCharacterId)
+
+    hitsOut.push({
+      kind: "hit",
+      synthetic: true,
+      sourceBuffId: def.id,
+      characterId: sourceCharacterId,
+      skillType,
+      skillName: def.name,
+      frame,
+      cumulativeEnergy: post.energy,
+      cumulativeConcerto: post.concerto,
+      damage,
+      statsSnapshot: cloneStats(stats),
+      activeBuffIds: this.activeBuffIds(sourceCharacterId),
+    })
+
+    // Chain: each synthetic hit fires its own hitLanded event subject to
+    // per-instance ICDs. Energy/concerto already applied above; pass 0 so
+    // the recursive dispatch's resource phase does not double-count.
+    this.dispatchEvent(
+      {
+        kind: "hitLanded",
+        characterId: sourceCharacterId,
+        skillType,
+        dmgType: effect.damage.dmgType,
+        synthetic: true,
+        frame,
+      },
+      out,
+      hitsOut,
+      depth + 1,
+    )
   }
 
   private applyResourceDelta(

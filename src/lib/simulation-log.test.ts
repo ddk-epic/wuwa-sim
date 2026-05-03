@@ -485,6 +485,50 @@ describe("generateSimulationLog — buff lifecycle interleaving", () => {
   })
 })
 
+describe("generateSimulationLog — emitHit pilot (#60)", () => {
+  it("synthetic hits appear in the log attributed to the acting character", () => {
+    // Char 1 has a coord-attack buff that emits a synthetic Fusion hit each
+    // time it lands a Normal Attack (ICD 0).
+    const coord = {
+      id: "char.coord",
+      name: "Coord",
+      trigger: {
+        event: "hitLanded" as const,
+        characterId: 1,
+        source: "self" as const,
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "permanent" as const },
+      effects: [
+        {
+          kind: "emitHit" as const,
+          damage: dmgHit(0.5),
+          icdFrames: 0,
+          skillType: "Coordinated Attack",
+        },
+      ],
+    }
+    const charWithCoord: EnrichedCharacter = { ...charA, buffs: [coord] }
+    testCharacters = [charWithCoord]
+    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const result = generateSimulationLog(
+      [entry],
+      [1, null, null],
+      emptyLoadouts,
+    )
+    const hits = result.filter((e) => e.kind === "hit")
+    // Authored hit + 1 synthetic hit
+    expect(hits).toHaveLength(2)
+    const synth = hits.find((h) => h.kind === "hit" && h.synthetic === true)
+    expect(synth).toBeDefined()
+    if (synth && synth.kind === "hit") {
+      expect(synth.characterId).toBe(1)
+      expect(synth.sourceBuffId).toBe("char.coord")
+      expect(synth.skillType).toBe("Coordinated Attack")
+    }
+  })
+})
+
 describe("generateSimulationLog — discriminated union", () => {
   it("action events do not have a damage property", () => {
     testCharacters = [charA]

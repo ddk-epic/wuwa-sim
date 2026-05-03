@@ -42,16 +42,15 @@ export function generateSimulationLog(
     }
 
     pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
-    pushBuffEvents(
-      log,
-      engine.onEvent({
-        kind: "skillCast",
-        characterId: entry.characterId,
-        skillType: entry.skillType,
-        frame: stageStartFrame,
-        concerto: stage.concerto,
-      }).lifecycleEvents,
-    )
+    const skillCastResult = engine.onEvent({
+      kind: "skillCast",
+      characterId: entry.characterId,
+      skillType: entry.skillType,
+      frame: stageStartFrame,
+      concerto: stage.concerto,
+    })
+    pushBuffEvents(log, skillCastResult.lifecycleEvents)
+    for (const synth of skillCastResult.syntheticHits) log.push(synth)
 
     const actorState = engine.getResource(entry.characterId)
     const actionEvent: ActionEvent = {
@@ -81,7 +80,7 @@ export function generateSimulationLog(
         hitStats,
       )
 
-      const lifecycle = engine.onEvent({
+      const hitResult = engine.onEvent({
         kind: "hitLanded",
         characterId: entry.characterId,
         skillType: entry.skillType,
@@ -89,7 +88,7 @@ export function generateSimulationLog(
         frame: hitFrame,
         energy: hit.energy,
         concerto: hit.concerto,
-      }).lifecycleEvents
+      })
 
       const postHitState = engine.getResource(entry.characterId)
       const hitEvent: HitEvent = {
@@ -106,7 +105,8 @@ export function generateSimulationLog(
       }
       log.push(hitEvent)
 
-      pushBuffEvents(log, lifecycle)
+      pushBuffEvents(log, hitResult.lifecycleEvents)
+      for (const synth of hitResult.syntheticHits) log.push(synth)
     }
 
     stageStartFrame += entry.actionTime

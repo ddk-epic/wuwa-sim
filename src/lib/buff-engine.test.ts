@@ -1286,6 +1286,334 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
   })
 })
 
+describe("BuffEngine — emitHit (#60)", () => {
+  const dmg = (
+    overrides: Partial<{
+      value: number
+      dmgType: string
+      energy: number
+      concerto: number
+    }> = {},
+  ) => ({
+    type: "ATK",
+    dmgType: "Fusion",
+    scalingStat: "atk",
+    actionFrame: 0,
+    value: 1.0,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+    ...overrides,
+  })
+
+  const coordOnHit = (
+    overrides: Partial<BuffDef> = {},
+    icdFrames = 60,
+  ): BuffDef => ({
+    id: "char.coord",
+    name: "Coord",
+    trigger: { event: "hitLanded", characterId: 1, source: "self" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [
+      {
+        kind: "emitHit",
+        damage: dmg({ value: 0.5, dmgType: "Fusion" }),
+        icdFrames,
+      },
+    ],
+    ...overrides,
+  })
+
+  it("emits a synthetic hit when an emitHit-bearing buff is triggered", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [coordOnHit()] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticHits).toHaveLength(1)
+    expect(result.syntheticHits[0]).toMatchObject({
+      kind: "hit",
+      synthetic: true,
+      sourceBuffId: "char.coord",
+      characterId: 1,
+      frame: 0,
+    })
+    // damage = 0.5 * 1000 * DEF_MULT(0.5) * RES_MULT(0.9) = 225
+    expect(result.syntheticHits[0].damage).toBe(225)
+  })
+
+  it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [coordOnHit({}, 60)] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const a = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(a.syntheticHits).toHaveLength(1)
+    const b = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 30,
+    })
+    expect(b.syntheticHits).toHaveLength(0)
+    const c = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 60,
+    })
+    expect(c.syntheticHits).toHaveLength(1)
+  })
+
+  it("default hitLanded triggers ignore synthetic hits (no chain reaction)", () => {
+    // Two buffs: A is the coord-attack source (emits on Normal Attack).
+    // B is a default `hitLanded` trigger that would chain emitHits if it caught synthetics.
+    const a = coordOnHit({ id: "a.coord" }, 1)
+    const b: BuffDef = {
+      id: "b.chained",
+      name: "Chained",
+      trigger: { event: "hitLanded", characterId: 1 },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg({ value: 1.0 }), icdFrames: 1 }],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [a, b] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    // Both a and b fire on the original hit (depth 0). Their synthetics fire
+    // hitLanded(synthetic=true). Default `source: "self"` means neither matches
+    // the synthetic hitLanded — so no chain.
+    expect(result.syntheticHits).toHaveLength(2)
+  })
+
+  it("synthetic-opt-in triggers chain off synthetic hits up to depth cap of 8", () => {
+    const chainer: BuffDef = {
+      id: "char.chainer",
+      name: "Chainer",
+      trigger: { event: "hitLanded", characterId: 1, source: "any" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg({ value: 0.1 }), icdFrames: 0 }],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [chainer] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    // Original event triggers the buff once (depth 0 → emit synthetic at depth 1).
+    // That synthetic fires a hitLanded(synthetic) which the buff also matches
+    // (source: "any"), emitting again at depth 2, ... up to depth 8. Depth 9
+    // is rejected with a warning. Total synthetics emitted = 8.
+    expect(result.syntheticHits).toHaveLength(8)
+    expect(warn).toHaveBeenCalled()
+    expect(warn.mock.calls[0][0]).toContain("emitHit chain depth exceeded")
+    warn.mockRestore()
+  })
+
+  it("synthetic hit does not change on-field state", () => {
+    const buff: BuffDef = {
+      id: "char.field-flip",
+      name: "Field flip",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg({ value: 1.0 }), icdFrames: 0 }],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.getOnFieldCharacterId()).toBe(1)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 5,
+    })
+    // Synthetic hit attributed to 1 (acting). On-field stays 1 (not flipped).
+    expect(engine.getOnFieldCharacterId()).toBe(1)
+  })
+
+  it("synthetic damage uses the acting character's stats (source-side element bonus)", () => {
+    // Source 1 has +50% Fusion bonus; the on-field character (2) does not.
+    // Coord attack should reflect 1's bonus in the synthetic hit's damage.
+    const elemBuff: BuffDef = {
+      id: "char.fusion-bonus",
+      name: "Fusion +50%",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    }
+    const coord: BuffDef = {
+      id: "char.coord",
+      name: "Coord",
+      trigger: { event: "hitLanded", characterId: 2, actor: "any" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: dmg({ value: 1.0, dmgType: "Fusion" }),
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({
+        id: 1,
+        element: "Fusion",
+        buffs: [elemBuff, coord],
+      }),
+      baseChar({ id: 2 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // 2 lands a hit; 1 (off-field) emits a synthetic.
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 2,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticHits).toHaveLength(1)
+    // Without the +50% Fusion: 1.0 * 1000 * 0.5 * 0.9 = 450.
+    // With the +50%: 450 * 1.5 = 675.
+    expect(result.syntheticHits[0].damage).toBe(675)
+    expect(result.syntheticHits[0].characterId).toBe(1)
+  })
+
+  it("phase pipeline: lex tiebreak by buffDef.id is deterministic", () => {
+    const z: BuffDef = {
+      id: "z.coord",
+      name: "Z",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg({ value: 0.1 }), icdFrames: 0 }],
+    }
+    const a: BuffDef = {
+      id: "a.coord",
+      name: "A",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg({ value: 0.1 }), icdFrames: 0 }],
+    }
+    // Insertion order: z first, a second — output should still be a, then z.
+    testCharacters = [baseChar({ id: 1, buffs: [z, a] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticHits.map((h) => h.sourceBuffId)).toEqual([
+      "a.coord",
+      "z.coord",
+    ])
+  })
+
+  it("synthetic hits accumulate energy/concerto on the source character", () => {
+    const buff: BuffDef = {
+      id: "char.coord",
+      name: "Coord",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: dmg({ value: 1.0, energy: 4, concerto: 3 }),
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Fusion",
+      frame: 0,
+      energy: 5,
+      concerto: 2,
+    })
+    // Authored: +5 energy / +2 concerto. Synthetic: +4 energy / +3 concerto.
+    expect(engine.getResource(1).energy).toBe(9)
+    expect(engine.getResource(1).concerto).toBe(5)
+  })
+})
+
 describe("BuffEngine.resolveStats — fallback", () => {
   it("returns base atk for known character not in any slot", () => {
     testCharacters = [baseChar()]

@@ -18,6 +18,10 @@ export interface HitEvent extends SimulationLogBase {
   damage: number
   statsSnapshot: StatTable
   activeBuffIds: string[]
+  /** True when the hit was injected by an `emitHit` effect rather than authored. */
+  synthetic?: boolean
+  /** When `synthetic` is true, the BuffDef.id that emitted the hit. */
+  sourceBuffId?: string
 }
 
 export interface BuffEvent {
