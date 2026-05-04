@@ -9,8 +9,8 @@ interface CompileContext {
 
 const FLAT_VALUE_BY_NAME: Record<string, { path: StatPath; v: number }> = {
   ATK: { path: { stat: "atkPct" }, v: 0.12 },
-  HP: { path: { stat: "atkPct" }, v: 0.12 },
-  DEF: { path: { stat: "defShred" }, v: 0 },
+  HP: { path: { stat: "hpPct" }, v: 0.12 },
+  DEF: { path: { stat: "defPct" }, v: 0.12 },
   "Crit. Rate": { path: { stat: "critRate" }, v: 0.08 },
   "Crit. DMG": { path: { stat: "critDmg" }, v: 0.16 },
 }

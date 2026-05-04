@@ -34,6 +34,8 @@ export function bootstrapSlot(
   const stats: StatTable = {
     ...emptyStatTable(),
     atkBase: character.stats.max.atk,
+    hpBase: character.stats.max.hp,
+    defBase: character.stats.max.def,
   }
 
   const buffs: BuffDef[] = []

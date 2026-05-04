@@ -63,6 +63,65 @@ describe("BuffEngine.bootstrap — character-only", () => {
     expect(engine.resolveStats(1).atkBase).toBe(1000)
   })
 
+  it("seeds hpBase and defBase from character.stats.max.hp/.def", () => {
+    testCharacters = [
+      baseChar({
+        stats: {
+          base: { hp: 0, atk: 0, def: 0 },
+          max: { hp: 12000, atk: 1000, def: 800 },
+        },
+      }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const stats = engine.resolveStats(1)
+    expect(stats.hpBase).toBe(12000)
+    expect(stats.defBase).toBe(800)
+  })
+
+  it("accumulates hpPct and defFlat buffs through applyToPath", () => {
+    const hpBuff: BuffDef = {
+      id: "char.test.hpPct",
+      name: "Test HP%",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "hpPct" },
+          value: { kind: "const", v: 0.4 },
+        },
+      ],
+    }
+    const defBuff: BuffDef = {
+      id: "char.test.defFlat",
+      name: "Test DEF Flat",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "defFlat" },
+          value: { kind: "const", v: 50 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ buffs: [hpBuff, defBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const stats = engine.resolveStats(1)
+    expect(stats.hpPct).toBeCloseTo(0.4)
+    expect(stats.defFlat).toBe(50)
+  })
+
   it("applies a permanent stat buff from character.buffs", () => {
     const buff: BuffDef = {
       id: "char.test.atkPct",

@@ -3,9 +3,12 @@ import type { DamageEntry } from "./character"
 export type StatPath =
   | {
       stat:
-        | "atkBase"
         | "atkPct"
         | "atkFlat"
+        | "hpPct"
+        | "hpFlat"
+        | "defPct"
+        | "defFlat"
         | "critRate"
         | "critDmg"
         | "defShred"

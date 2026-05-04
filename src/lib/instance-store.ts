@@ -108,6 +108,8 @@ export class InstanceStore {
     return {
       ...emptyStatTable(),
       atkBase: character ? character.stats.max.atk : 0,
+      hpBase: character ? character.stats.max.hp : 0,
+      defBase: character ? character.stats.max.def : 0,
     }
   }
 
@@ -535,6 +537,12 @@ function cloneStats(s: StatTable): StatTable {
     atkBase: s.atkBase,
     atkPct: s.atkPct,
     atkFlat: s.atkFlat,
+    hpBase: s.hpBase,
+    hpPct: s.hpPct,
+    hpFlat: s.hpFlat,
+    defBase: s.defBase,
+    defPct: s.defPct,
+    defFlat: s.defFlat,
     critRate: s.critRate,
     critDmg: s.critDmg,
     defShred: s.defShred,

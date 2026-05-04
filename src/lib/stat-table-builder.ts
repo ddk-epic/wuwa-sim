@@ -67,9 +67,12 @@ function resolveValue(
 
 function applyToPath(stats: StatTable, path: StatPath, v: number): void {
   switch (path.stat) {
-    case "atkBase":
     case "atkPct":
     case "atkFlat":
+    case "hpPct":
+    case "hpFlat":
+    case "defPct":
+    case "defFlat":
     case "critRate":
     case "critDmg":
     case "defShred":
