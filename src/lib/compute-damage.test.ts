@@ -88,4 +88,50 @@ describe("computeDamage", () => {
       Math.round(1 * DEFRES),
     )
   })
+
+  it("scalingStat=HP scales by hpBase × (1+hpPct) + hpFlat", () => {
+    const s = stats({
+      atkBase: 1000,
+      hpBase: 5000,
+      hpPct: 0.4,
+      hpFlat: 300,
+    })
+    expect(computeDamage(ctx({ multiplier: 1, scalingStat: "HP" }), s)).toBe(
+      Math.round(1 * (5000 * 1.4 + 300) * DEFRES),
+    )
+  })
+
+  it("scalingStat=DEF scales by defBase × (1+defPct) + defFlat", () => {
+    const s = stats({
+      atkBase: 1000,
+      defBase: 800,
+      defPct: 0.25,
+      defFlat: 50,
+    })
+    expect(computeDamage(ctx({ multiplier: 1, scalingStat: "DEF" }), s)).toBe(
+      Math.round(1 * (800 * 1.25 + 50) * DEFRES),
+    )
+  })
+
+  it("missing scalingStat falls back to ATK", () => {
+    expect(computeDamage(ctx({ multiplier: 1 }), stats({ atkPct: 0.5 }))).toBe(
+      Math.round(1 * 1500 * DEFRES),
+    )
+  })
+
+  it("unknown scalingStat falls back to ATK", () => {
+    expect(
+      computeDamage(
+        ctx({ multiplier: 1, scalingStat: "WEIRD" }),
+        stats({ atkPct: 0.5, hpBase: 9999 }),
+      ),
+    ).toBe(Math.round(1 * 1500 * DEFRES))
+  })
+
+  it("lowercase scalingStat is normalized", () => {
+    const s = stats({ atkBase: 1000, hpBase: 5000 })
+    expect(computeDamage(ctx({ multiplier: 1, scalingStat: "hp" }), s)).toBe(
+      Math.round(1 * 5000 * DEFRES),
+    )
+  })
 })

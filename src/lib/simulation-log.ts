@@ -76,6 +76,7 @@ export function generateSimulationLog(
           element: stage.element,
           skillType: entry.skillType,
           dmgType: hit.dmgType,
+          scalingStat: hit.scalingStat,
         },
         resolved.stats,
       )

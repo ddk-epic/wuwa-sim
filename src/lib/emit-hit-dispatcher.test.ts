@@ -170,6 +170,62 @@ describe("EmitHitDispatcher", () => {
     warn.mockRestore()
   })
 
+  it("uses HP scaling when effect.damage.scalingStat is HP", () => {
+    const dispatcher = new EmitHitDispatcher({ chainDepthCap: 8 })
+    const host: EmitHitHost = {
+      resolveStats: () => ({
+        ...emptyStatTable(),
+        atkBase: 1000,
+        hpBase: 5000,
+        hpPct: 0.4,
+        hpFlat: 300,
+      }),
+      applyResourceDelta: () => {},
+      getResource: () => emptyResourceState(),
+      activeBuffIds: () => [],
+    }
+    const hpEffect: EmitHitEffect = {
+      ...effect,
+      damage: { ...effect.damage, scalingStat: "HP" },
+    }
+    const atkEffect: EmitHitEffect = {
+      ...effect,
+      damage: { ...effect.damage, scalingStat: "ATK" },
+    }
+    const hpHit = dispatcher.dispatch(
+      {
+        buffInstanceKey: buffInstanceKey(def.id, 1),
+        def,
+        effect: hpEffect,
+        effectIndex: 0,
+        sourceCharacterId: 1,
+      },
+      { frame: 0, depth: 0 },
+      host,
+      [],
+      [],
+    )
+    const atkHit = dispatcher.dispatch(
+      {
+        buffInstanceKey: buffInstanceKey(def.id, 2),
+        def,
+        effect: atkEffect,
+        effectIndex: 0,
+        sourceCharacterId: 2,
+      },
+      { frame: 0, depth: 0 },
+      host,
+      [],
+      [],
+    )
+    expect(hpHit).not.toBeNull()
+    expect(atkHit).not.toBeNull()
+    // HP base 5000 * 1.4 + 300 = 7300; ATK base 1000.
+    const DEFRES = 0.5 * 0.9
+    expect(hpHit!.damage).toBe(Math.round(7300 * DEFRES))
+    expect(atkHit!.damage).toBe(Math.round(1000 * DEFRES))
+  })
+
   it("reset clears ICD state", () => {
     const dispatcher = new EmitHitDispatcher({ chainDepthCap: 8 })
     const host = makeHost()

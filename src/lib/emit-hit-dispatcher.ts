@@ -103,6 +103,7 @@ export class EmitHitDispatcher {
         element,
         skillType,
         dmgType: input.effect.damage.dmgType,
+        scalingStat: input.effect.damage.scalingStat,
       },
       stats,
     )
