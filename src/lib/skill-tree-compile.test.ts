@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { compileSkillTreeNode } from "./skill-tree-registry"
+import { compileSkillTreeNode } from "./engine-bootstrap"
 
 const ctx = { characterId: 1, characterElement: "Fusion" }
 
