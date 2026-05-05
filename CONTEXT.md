@@ -55,7 +55,10 @@ The flat typed struct of all damage-formula inputs for one character at one mome
 Per-character mutable counters owned by the engine, separate from the Stat Table: Energy, Concerto, Forte, Resonance. Have caps and consumption semantics that don't fit the Stat Table model.
 
 **Buff Engine**:
-The extracted module that owns the active Buff Instance list, Resource States, and on-field tracking. Exposes `onEvent`, `resolveStats`, `tickToFrame`. The Simulation loop calls into it; the engine owns no globals.
+The extracted module that coordinates buff state for the simulator. State is split across collaborators it composes — **Instance Store** (active Buff Instances, base stats, target resolution, expiry), **Resource Ledger** (per-character Resource States), **On-Field Tracker** (current on-field character + swap inference), **EmitHit Dispatcher** (ICD bookkeeping for synthetic-hit emission), and **Stat Table Builder** (bootstrap base table + per-hit stat accumulation). The simulation loop calls the deep seams `resolveHit(actor, frame)` and `recordHit(hitLandedEvent)`; lower-level entry points (`onEvent`, `resolveStats`, `tickToFrame`) remain for tests. The engine owns no globals.
+
+**Phase Pipeline**:
+The ordered list of phases — `resource` → `stat` → `emitHit` → `consume` — that each triggering event runs through after candidate Buff Defs are matched. Ordering is data, not inline control flow: changing it means editing the phase list. Within a phase, candidates are processed in `buffDef.id` lex order.
 
 **Acting Character**:
 The character whose ability produced a given action or hit. For authored Timeline Entries this is the entry's `characterId`; for Synthetic Hits this is the buff owner.
