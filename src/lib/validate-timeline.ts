@@ -25,8 +25,18 @@ export function validateTimeline(
   const rowErrors = new Map<string, ValidationError[]>()
   const invalidRowIds = new Set<string>()
 
-  for (const entry of entries) {
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]
     const errors: ValidationError[] = []
+
+    if (entry.skillType === "Intro Skill") {
+      const prev = i > 0 ? entries[i - 1] : null
+      if (prev?.skillType !== "Outro Skill") {
+        errors.push({
+          message: "Intro Skill must immediately follow an Outro Skill",
+        })
+      }
+    }
 
     const slotIndex = slots.indexOf(entry.characterId)
     if (slotIndex === -1) {

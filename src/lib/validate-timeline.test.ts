@@ -214,3 +214,113 @@ describe("validateTimeline — multiple entries", () => {
     expect(result.invalidRowIds.has("invalid")).toBe(true)
   })
 })
+
+describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
+  const introStage = {
+    name: "Intro Skill",
+    value: "1",
+    actionTime: 30,
+    damage: [],
+  }
+  const outroStage = {
+    name: "Outro Skill",
+    value: "1",
+    actionTime: 30,
+    damage: [],
+  }
+  const normalStage = {
+    name: "Stage 1",
+    value: "1",
+    actionTime: 30,
+    damage: [],
+  }
+
+  const charWithAll = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      name: `Char${id}`,
+      skills: [
+        {
+          id: 10 * id + 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [normalStage],
+          damage: [],
+        },
+        {
+          id: 10 * id + 2,
+          name: "Intro Skill",
+          type: "Intro Skill",
+          stages: [introStage],
+          damage: [],
+        },
+        {
+          id: 10 * id + 3,
+          name: "Outro Skill",
+          type: "Outro Skill",
+          stages: [outroStage],
+          damage: [],
+        },
+      ],
+    })
+
+  const twoCharSlots: Slots = [1, 2, null]
+  const twoCharLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
+    emptyLoadout,
+    emptyLoadout,
+    emptyLoadout,
+  ]
+
+  it("flags Intro that opens the timeline (no preceding Outro)", () => {
+    testCharacters = [charWithAll(1), charWithAll(2)]
+    const intro = entry(1, "Intro Skill", "Intro Skill", "intro")
+    const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
+    expect(result.invalidRowIds.has("intro")).toBe(true)
+    expect(result.rowErrors.get("intro")?.length).toBeGreaterThan(0)
+  })
+
+  it("flags Intro not immediately preceded by an Outro", () => {
+    testCharacters = [charWithAll(1), charWithAll(2)]
+    const normal = entry(1, "Normal Attack", "Normal Attack", "normal")
+    const intro = entry(2, "Intro Skill", "Intro Skill", "intro")
+    const result = validateTimeline(
+      [normal, intro],
+      twoCharSlots,
+      twoCharLoadouts,
+    )
+    expect(result.invalidRowIds.has("intro")).toBe(true)
+    expect(result.invalidRowIds.has("normal")).toBe(false)
+  })
+
+  it("accepts Intro immediately preceded by an Outro", () => {
+    testCharacters = [charWithAll(1), charWithAll(2)]
+    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
+    const intro = entry(2, "Intro Skill", "Intro Skill", "intro")
+    const result = validateTimeline(
+      [outro, intro],
+      twoCharSlots,
+      twoCharLoadouts,
+    )
+    expect(result.invalidRowIds.has("intro")).toBe(false)
+    expect(result.invalidRowIds.has("outro")).toBe(false)
+  })
+
+  it("does not flag Outro entries", () => {
+    testCharacters = [charWithAll(1)]
+    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
+    const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
+    expect(result.invalidRowIds.has("outro")).toBe(false)
+  })
+
+  it("accepts Intro preceded by Outro from the same character", () => {
+    testCharacters = [charWithAll(1)]
+    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
+    const intro = entry(1, "Intro Skill", "Intro Skill", "intro")
+    const result = validateTimeline(
+      [outro, intro],
+      [1, null, null],
+      twoCharLoadouts,
+    )
+    expect(result.invalidRowIds.has("intro")).toBe(false)
+  })
+})
