@@ -21,8 +21,14 @@ export function CharacterSelector() {
     setSlotPatch,
   } = useTeam()
 
-  const { entries, addEntry, removeEntry, reorderEntries, clearTimeline } =
-    useTimeline()
+  const {
+    entries,
+    addEntry,
+    removeEntry,
+    reorderEntries,
+    updateEntry,
+    clearTimeline,
+  } = useTimeline()
   const { log, setLog, clearLog } = useSimulationLog()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
@@ -60,6 +66,7 @@ export function CharacterSelector() {
             loadouts={loadouts}
             onRemove={removeEntry}
             onReorder={reorderEntries}
+            onUpdateEntry={updateEntry}
           />
         </div>
         <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">

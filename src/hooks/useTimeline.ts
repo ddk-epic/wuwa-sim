@@ -30,9 +30,22 @@ export function useTimeline() {
     })
   }
 
+  function updateEntry(id: string, patch: Partial<Omit<TimelineEntry, "id">>) {
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    )
+  }
+
   function clearTimeline() {
     setEntries([])
   }
 
-  return { entries, addEntry, removeEntry, reorderEntries, clearTimeline }
+  return {
+    entries,
+    addEntry,
+    removeEntry,
+    reorderEntries,
+    updateEntry,
+    clearTimeline,
+  }
 }

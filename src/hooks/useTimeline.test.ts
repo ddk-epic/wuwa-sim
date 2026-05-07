@@ -75,4 +75,42 @@ describe("useTimeline", () => {
     })
     expect(result.current.entries).toHaveLength(0)
   })
+
+  it("updateEntry patches actionTime on the target entry", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    const id = result.current.entries[0].id
+    act(() => {
+      result.current.updateEntry(id, { actionTime: 60 })
+    })
+    expect(result.current.entries[0].actionTime).toBe(60)
+    expect(result.current.entries[0].skillName).toBe(sample.skillName)
+  })
+
+  it("updateEntry does not mutate other entries", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+      result.current.addEntry({ ...sample, actionTime: 45 })
+    })
+    const id = result.current.entries[0].id
+    act(() => {
+      result.current.updateEntry(id, { actionTime: 99 })
+    })
+    expect(result.current.entries[0].actionTime).toBe(99)
+    expect(result.current.entries[1].actionTime).toBe(45)
+  })
+
+  it("updateEntry is a no-op for unknown ids", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    act(() => {
+      result.current.updateEntry("nonexistent-id", { actionTime: 99 })
+    })
+    expect(result.current.entries[0].actionTime).toBe(sample.actionTime)
+  })
 })

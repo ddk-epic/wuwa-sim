@@ -12,6 +12,7 @@ interface TimelineViewProps {
   loadouts: SlotLoadout[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
+  onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
 }
 
 function reorderPreview(
@@ -36,6 +37,7 @@ export function TimelineView({
   loadouts,
   onRemove,
   onReorder,
+  onUpdateEntry,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -133,7 +135,21 @@ export function TimelineView({
                   )}
                 </td>
                 <td className="px-3 py-2 text-gray-300">
-                  {row.time.toFixed(2)}s
+                  <input
+                    type="number"
+                    min={0}
+                    value={entry.actionTime}
+                    onChange={(ev) =>
+                      onUpdateEntry(entry.id, {
+                        actionTime: Math.max(0, Number(ev.target.value)),
+                      })
+                    }
+                    className="w-16 bg-transparent border border-gray-600 rounded px-1 text-right text-sm focus:outline-none focus:border-gray-400"
+                    aria-label="Action time in frames"
+                  />
+                  <span className="ml-1 text-xs text-gray-500">
+                    {row.time.toFixed(2)}s
+                  </span>
                 </td>
                 <td className="px-3 py-2 text-yellow-400">
                   {row.damage !== null ? row.damage.toLocaleString() : "—"}
