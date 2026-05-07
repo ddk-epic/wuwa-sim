@@ -144,6 +144,7 @@ export function TimelineView({
                         actionTime: Math.max(0, Number(ev.target.value)),
                       })
                     }
+                    onDragStart={(ev) => ev.preventDefault()}
                     className="w-16 bg-transparent border border-gray-600 rounded px-1 text-right text-sm focus:outline-none focus:border-gray-400"
                     aria-label="Action time in frames"
                   />
