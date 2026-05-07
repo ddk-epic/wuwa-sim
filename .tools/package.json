@@ -1,0 +1,18 @@
+{
+  "name": "claude-coworker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-local CLI tools for delegating bulk reads/writes to a cheap worker model.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openai": "^4.77.0",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.0"
+  }
+}
