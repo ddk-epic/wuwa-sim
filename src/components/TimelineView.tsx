@@ -55,11 +55,11 @@ export function TimelineView({
 
   const validation = validateTimeline(displayEntries, slots, loadouts)
 
-  const invalidByIndex = displayEntries.reduce<number[]>((acc, e, i) => {
-    if (validation.invalidRowIds.has(e.id)) acc.push(i)
+  const rowsWithMessages = displayEntries.reduce<number[]>((acc, e, i) => {
+    if ((validation.rowErrors.get(e.id)?.length ?? 0) > 0) acc.push(i)
     return acc
   }, [])
-  const messageIndexes = new Set(invalidByIndex.slice(0, 2))
+  const messageIndexes = new Set(rowsWithMessages.slice(0, 2))
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">

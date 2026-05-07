@@ -402,3 +402,100 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
     expect(result.invalidRowIds.has("s1")).toBe(false)
   })
 })
+
+describe("validateTimeline — cascade suppression", () => {
+  // Chain: Stage 0 → Stage 1 (req Stage 0) → Stage 2 (req Stage 1) → Stage 3 (req Stage 2)
+  const chainChar = (): EnrichedCharacter =>
+    baseChar({
+      id: 1,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "S0",
+              newName: "Stage 0",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "S1",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack · Stage 0",
+            },
+            {
+              name: "S2",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack · Stage 1",
+            },
+            {
+              name: "S3",
+              newName: "Stage 3",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack · Stage 2",
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowErrors", () => {
+    // Stage 0 absent; Stage 1 → direct error; Stage 2, Stage 3 → cascade
+    testCharacters = [chainChar()]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const s3 = entry(1, "Normal Attack", "Normal Attack · Stage 3", "s3")
+    const result = validateTimeline([s1, s2, s3], [1, null, null], loadouts)
+
+    // Stage 1 has a direct error
+    expect(result.invalidRowIds.has("s1")).toBe(true)
+    expect(result.rowErrors.get("s1")?.length).toBeGreaterThan(0)
+
+    // Stage 2 is red but message-less
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+    expect(result.rowErrors.has("s2")).toBe(false)
+
+    // Stage 3 is red but message-less
+    expect(result.invalidRowIds.has("s3")).toBe(true)
+    expect(result.rowErrors.has("s3")).toBe(false)
+  })
+
+  it("an independent error on a later row is not suppressed", () => {
+    testCharacters = [chainChar(), baseChar({ id: 2 })]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    // char 99 not in team → independent error
+    const independent = entry(99, "Normal Attack", "Normal Attack", "ind")
+    const result = validateTimeline(
+      [s1, independent],
+      [1, null, null],
+      loadouts,
+    )
+
+    // s1 has direct error (no Stage 0 before it)
+    expect(result.rowErrors.has("s1")).toBe(true)
+    // independent error is not suppressed
+    expect(result.rowErrors.has("ind")).toBe(true)
+  })
+
+  it("accepts Stage 2 when Stage 1 is valid (no cascade)", () => {
+    testCharacters = [chainChar()]
+    const s0 = entry(1, "Normal Attack", "Normal Attack · Stage 0", "s0")
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const result = validateTimeline([s0, s1, s2], [1, null, null], loadouts)
+    expect(result.invalidRowIds.size).toBe(0)
+    expect(result.rowErrors.size).toBe(0)
+  })
+})
