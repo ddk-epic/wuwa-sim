@@ -63,17 +63,29 @@ export function validateTimeline(
           errors.push({ message: "Unknown character" })
         } else {
           let found = false
+          let requiredStageId: string | undefined
           outer: for (const skill of character.skills) {
             if (skill.type !== entry.skillType) continue
             for (const stage of skill.stages) {
               if (stageLabel(skill.name, stage.newName) === entry.skillName) {
                 found = true
+                requiredStageId = stage.requiresStageId
                 break outer
               }
             }
           }
           if (!found) {
             errors.push({ message: `Skill "${entry.skillName}" not found` })
+          } else if (requiredStageId !== undefined) {
+            const prevSameChar = entries
+              .slice(0, i)
+              .reverse()
+              .find((e) => e.characterId === entry.characterId)
+            if (prevSameChar?.skillName !== requiredStageId) {
+              errors.push({
+                message: `Stage "${entry.skillName}" requires "${requiredStageId}" to immediately precede it`,
+              })
+            }
           }
         }
       }

@@ -60,6 +60,7 @@ export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
   actionTime: number
   hidden?: boolean
   newName?: string
+  requiresStageId?: string
 }
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {

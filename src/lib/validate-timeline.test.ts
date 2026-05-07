@@ -325,3 +325,80 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
     expect(result.invalidRowIds.has("intro")).toBe(false)
   })
 })
+
+describe("validateTimeline — stage-reachability (requiresStageId)", () => {
+  const charWithPrereq = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1 DMG",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2 DMG",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack · Stage 1",
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("flags Stage 2 when no prior entry exists for the character", () => {
+    testCharacters = [charWithPrereq(1)]
+    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const result = validateTimeline([s2], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+    expect(
+      result.rowErrors.get("s2")?.some((e) => e.message.includes("requires")),
+    ).toBe(true)
+  })
+
+  it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {
+    testCharacters = [charWithPrereq(1)]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s2a = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2a")
+    const s2b = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2b")
+    const result = validateTimeline([s1, s2a, s2b], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s2b")).toBe(true)
+  })
+
+  it("accepts Stage 2 immediately after Stage 1", () => {
+    testCharacters = [charWithPrereq(1)]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const result = validateTimeline([s1, s2], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("accepts Stage 2 when Stage 1 is separated by a different character's entry", () => {
+    testCharacters = [charWithPrereq(1), baseChar({ id: 2 })]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const other = entry(2, "Normal Attack", "Normal Attack", "other")
+    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const result = validateTimeline([s1, other, s2], [1, 2, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+    expect(result.invalidRowIds.has("other")).toBe(false)
+    expect(result.invalidRowIds.has("s1")).toBe(false)
+  })
+
+  it("does not flag stages with no requiresStageId", () => {
+    testCharacters = [charWithPrereq(1)]
+    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const result = validateTimeline([s1], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s1")).toBe(false)
+  })
+})
