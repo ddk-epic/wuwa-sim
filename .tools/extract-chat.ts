@@ -32,7 +32,17 @@ const jsonlPath = positionals[0]
 const decoder = new TextDecoder("utf-8", { fatal: false })
 
 function extract(path: string): string {
-  const raw = decoder.decode(readFileSync(path))
+  let buf: Buffer
+  try {
+    buf = readFileSync(path)
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      process.stderr.write(`transcript not found: ${path}\n`)
+      process.exit(2)
+    }
+    throw err
+  }
+  const raw = decoder.decode(buf)
   const messages: string[] = []
   for (const line of raw.split("\n")) {
     if (!line) continue
@@ -84,7 +94,17 @@ function extract(path: string): string {
 const result = extract(jsonlPath)
 
 if (values.output) {
-  writeFileSync(values.output, result)
+  try {
+    writeFileSync(values.output, result)
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      process.stderr.write(
+        `output directory does not exist: ${values.output}\n`,
+      )
+      process.exit(2)
+    }
+    throw err
+  }
   const chars = result.length
   const lines = (result.match(/\n/g)?.length ?? 0) + 1
   process.stderr.write(

@@ -32,6 +32,14 @@ if (!values.question) {
   process.exit(2)
 }
 
+const maxTokens = Number(values["max-tokens"])
+if (!Number.isInteger(maxTokens) || maxTokens <= 0) {
+  process.stderr.write(
+    `--max-tokens must be a positive integer (got ${JSON.stringify(values["max-tokens"])})\n`,
+  )
+  process.exit(2)
+}
+
 const apiKey = process.env.WORKER_API_KEY
 const baseURL = process.env.WORKER_BASE_URL
 const defaultModel = process.env.WORKER_MODEL
@@ -45,9 +53,22 @@ if (!apiKey || !baseURL || !defaultModel) {
 const client = new OpenAI({ apiKey, baseURL })
 
 const docs: string[] = []
+const missing: string[] = []
 for (const path of paths) {
-  const content = readFileSync(path, "utf-8")
-  docs.push(`<file path='${path}'>\n${content}\n</file>`)
+  try {
+    const content = readFileSync(path, "utf-8")
+    docs.push(`<file path='${path}'>\n${content}\n</file>`)
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      missing.push(path)
+    } else {
+      throw err
+    }
+  }
+}
+if (missing.length > 0) {
+  process.stderr.write(`file(s) not found: ${missing.join(", ")}\n`)
+  process.exit(2)
 }
 const corpus = docs.join("\n\n")
 
@@ -65,7 +86,7 @@ const resp = await client.chat.completions.create({
     { role: "user", content: `<corpus>\n${corpus}\n</corpus>` },
     { role: "user", content: values.question },
   ],
-  max_tokens: Number(values["max-tokens"]),
+  max_tokens: maxTokens,
 })
 
 const choice = resp.choices[0]

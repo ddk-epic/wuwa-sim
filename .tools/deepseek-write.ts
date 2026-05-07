@@ -30,6 +30,14 @@ if (!values.target) {
   process.exit(2)
 }
 
+const maxTokens = Number(values["max-tokens"])
+if (!Number.isInteger(maxTokens) || maxTokens <= 0) {
+  process.stderr.write(
+    `--max-tokens must be a positive integer (got ${JSON.stringify(values["max-tokens"])})\n`,
+  )
+  process.exit(2)
+}
+
 const apiKey = process.env.WORKER_API_KEY
 const baseURL = process.env.WORKER_BASE_URL
 const defaultModel = process.env.WORKER_MODEL
@@ -45,7 +53,17 @@ const decoder = new TextDecoder("utf-8", { fatal: false })
 
 let ctx = ""
 if (values.context) {
-  ctx = `<reference>\n${decoder.decode(readFileSync(values.context))}\n</reference>\n`
+  let buf: Buffer
+  try {
+    buf = readFileSync(values.context)
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      process.stderr.write(`--context file not found: ${values.context}\n`)
+      process.exit(2)
+    }
+    throw err
+  }
+  ctx = `<reference>\n${decoder.decode(buf)}\n</reference>\n`
 }
 
 const resp = await client.chat.completions.create({
@@ -60,7 +78,7 @@ const resp = await client.chat.completions.create({
     },
     { role: "user", content: `${ctx}Write: ${values.spec}` },
   ],
-  max_tokens: Number(values["max-tokens"]),
+  max_tokens: maxTokens,
 })
 
 const choice = resp.choices[0]
@@ -81,7 +99,17 @@ if (content.startsWith("```")) {
   if (lastFence !== -1) content = content.slice(0, lastFence)
 }
 
-writeFileSync(values.target, content)
+try {
+  writeFileSync(values.target, content)
+} catch (err) {
+  if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+    process.stderr.write(
+      `--target directory does not exist: ${values.target}\n`,
+    )
+    process.exit(2)
+  }
+  throw err
+}
 
 process.stdout.write(`Wrote ${values.target} (${content.length} chars)\n`)
 const u = resp.usage!
