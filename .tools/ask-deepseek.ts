@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs"
 import { parseArgs } from "node:util"
 import OpenAI from "openai"
 
-const { values } = parseArgs({
+const { values, positionals } = parseArgs({
   options: {
     paths: { type: "string", multiple: true },
     question: { type: "string" },
@@ -19,10 +19,11 @@ const { values } = parseArgs({
     model: { type: "string" },
   },
   strict: true,
-  allowPositionals: false,
+  allowPositionals: true,
 })
 
-if (!values.paths || values.paths.length === 0) {
+const paths = [...(values.paths ?? []), ...positionals]
+if (paths.length === 0) {
   process.stderr.write("--paths is required\n")
   process.exit(2)
 }
@@ -42,11 +43,10 @@ if (!apiKey || !baseURL || !defaultModel) {
 }
 
 const client = new OpenAI({ apiKey, baseURL })
-const decoder = new TextDecoder("utf-8", { fatal: false })
 
 const docs: string[] = []
-for (const path of values.paths) {
-  const content = decoder.decode(readFileSync(path))
+for (const path of paths) {
+  const content = readFileSync(path, "utf-8")
   docs.push(`<file path='${path}'>\n${content}\n</file>`)
 }
 const corpus = docs.join("\n\n")
@@ -72,10 +72,15 @@ const choice = resp.choices[0]
 const answer = choice.message.content
 if (answer) {
   process.stdout.write(answer + "\n")
-} else {
+} else if (choice.finish_reason === "length") {
   process.stderr.write(
     "[ERROR: Deepseek ran out of tokens during reasoning. " +
       "Try --max-tokens 16384]\n",
+  )
+  process.exit(1)
+} else {
+  process.stderr.write(
+    `[ERROR: empty response (finish_reason=${choice.finish_reason})]\n`,
   )
   process.exit(1)
 }
