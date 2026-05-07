@@ -7,7 +7,7 @@ Three CLI tools delegate bulk I/O to a cheap worker model. Use them to save toke
 For reading files >400 lines, or when you'd otherwise read 3+ files:
 
 ```bash
-ask-deepseek --paths <file1> <file2>... --question "<specific question>"
+.tools/ask-deepseek --paths <file1> <file2>... --question "<specific question>"
 ```
 
 Returns a structured summary. Use that instead of reading files yourself.
@@ -18,7 +18,7 @@ Only read files directly when you need to make edits to specific lines.
 For generating tests, config files, docstrings, or repetitive code patterns:
 
 ```bash
-deepseek-write --spec "<what to write>" --context <existing-similar-file> --target <output-path>
+.tools/deepseek-write --spec "<what to write>" --context <existing-similar-file> --target <output-path>
 ```
 
 Then review the output and edit only what needs fixing.
@@ -28,16 +28,16 @@ Then review the output and edit only what needs fixing.
 Extracts human-readable text from Claude Code JSONL transcripts:
 
 ```bash
-extract-chat <session.jsonl> -o /tmp/chat.txt
+.tools/extract-chat <session.jsonl> -o /tmp/chat.txt
 ```
 
 ### Documentation workflow (MANDATORY)
 
 **NEVER write documentation directly. Always delegate:**
 
-1. Extract chat: `extract-chat <latest-session.jsonl> -o /tmp/chat.txt`
+1. Extract chat: `.tools/extract-chat <latest-session.jsonl> -o /tmp/chat.txt`
 2. Ask worker to read chat + existing docs and suggest updates:
-   `ask-deepseek --paths /tmp/chat.txt <doc-files> --question "read chat, give exact changes for docs"`
+   `.tools/ask-deepseek --paths /tmp/chat.txt <doc-files> --question "read chat, give exact changes for docs"`
 3. Apply the worker's changes via Edit tool
 
 ### When NOT to delegate
