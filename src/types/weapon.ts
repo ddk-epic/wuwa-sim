@@ -43,5 +43,5 @@ export interface EnrichedWeapon {
   weaponType: string
   stats: EnrichedWeaponStats
   passive: { name: string }
-  buffs: BuffDef[]
+  buffsForRank: (rank: number) => BuffDef[]
 }

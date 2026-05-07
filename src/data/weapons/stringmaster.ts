@@ -1,5 +1,7 @@
 import type { EnrichedWeapon } from "#/types/weapon"
 
+const ATK_PCT_BY_RANK = [0.12, 0.15, 0.18, 0.21, 0.24]
+
 export const stringmaster = {
   id: 21050016,
   name: "Stringmaster",
@@ -9,19 +11,19 @@ export const stringmaster = {
     sub: { name: "Crit. Rate", base: 0.08, max: 0.36 },
   },
   passive: { name: "Electric Amplification" },
-  buffs: [
+  buffsForRank: (rank: number) => [
     {
       id: "weapon.stringmaster.passive.atk",
       name: "Electric Amplification — ATK",
-      description: "Permanent +12% ATK from Stringmaster passive.",
-      trigger: { event: "simStart" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
+      description: `Permanent +${Math.round(ATK_PCT_BY_RANK[rank - 1] * 100)}% ATK from Stringmaster passive.`,
+      trigger: { event: "simStart" as const },
+      target: { kind: "self" as const },
+      duration: { kind: "permanent" as const },
       effects: [
         {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.12 },
+          kind: "stat" as const,
+          path: { stat: "atkPct" as const },
+          value: { kind: "const" as const, v: ATK_PCT_BY_RANK[rank - 1] },
         },
       ],
     },

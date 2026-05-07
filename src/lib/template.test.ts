@@ -10,6 +10,7 @@ describe("template — emptyLoadout", () => {
   it("returns a Loadout with all ids null and sequence 0", () => {
     expect(emptyLoadout()).toEqual({
       weaponId: null,
+      weaponRank: 1,
       echoId: null,
       echoSetId: null,
       sequence: 0,
@@ -24,6 +25,7 @@ describe("template — loadoutFromTemplate", () => {
     if (!encore) return
     expect(loadoutFromTemplate(encore.template)).toEqual({
       weaponId: 21050016,
+      weaponRank: 1,
       echoId: 390080007,
       echoSetId: 2,
       sequence: 0,
@@ -36,6 +38,7 @@ describe("template — loadoutFromTemplate", () => {
     if (!sanhua) return
     expect(loadoutFromTemplate(sanhua.template)).toEqual({
       weaponId: 21020015,
+      weaponRank: 1,
       echoId: 6000052,
       echoSetId: 8,
       sequence: 0,
@@ -51,6 +54,7 @@ describe("template — loadoutFromTemplate", () => {
       }),
     ).toEqual({
       weaponId: null,
+      weaponRank: 1,
       echoId: 390080007,
       echoSetId: 2,
       sequence: 0,
@@ -66,6 +70,7 @@ describe("template — loadoutFromTemplate", () => {
       }),
     ).toEqual({
       weaponId: 21050016,
+      weaponRank: 1,
       echoId: null,
       echoSetId: 2,
       sequence: 0,
@@ -81,6 +86,7 @@ describe("template — loadoutFromTemplate", () => {
       }),
     ).toEqual({
       weaponId: 21050016,
+      weaponRank: 1,
       echoId: 390080007,
       echoSetId: null,
       sequence: 0,
@@ -96,6 +102,7 @@ describe("template — loadoutFromTemplate", () => {
       }),
     ).toEqual({
       weaponId: null,
+      weaponRank: 1,
       echoId: null,
       echoSetId: null,
       sequence: 0,

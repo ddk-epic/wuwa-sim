@@ -60,6 +60,7 @@ const entry = (
 
 const emptyLoadout: SlotLoadout = {
   weaponId: null,
+  weaponRank: 1,
   echoId: null,
   echoSetId: null,
   sequence: 0,

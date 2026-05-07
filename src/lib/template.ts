@@ -11,6 +11,7 @@ import {
 
 export const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
+  weaponRank: 1,
   echoId: null,
   echoSetId: null,
   sequence: 0,
@@ -22,6 +23,7 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
   const echoSet = findEchoSetByName(template.echoSet)
   return {
     weaponId: weapon?.id ?? null,
+    weaponRank: 1,
     echoId: echo?.id ?? null,
     echoSetId: echoSet?.id ?? null,
     sequence: 0,

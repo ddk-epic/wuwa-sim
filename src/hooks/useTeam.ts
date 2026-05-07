@@ -75,6 +75,14 @@ export function useTeam() {
           echoSetId: matchingSet?.id ?? slot.echoSetId,
         })),
       )
+    } else if ("weaponId" in patch) {
+      setLoadouts((prev) =>
+        updateSlot(prev, slotIndex, (slot) => ({
+          ...slot,
+          ...patch,
+          weaponRank: 1,
+        })),
+      )
     } else {
       setLoadouts((prev) =>
         updateSlot(prev, slotIndex, (slot) => ({ ...slot, ...patch })),

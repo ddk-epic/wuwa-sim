@@ -48,6 +48,7 @@ const baseChar = (
 const slotsOf = (id: number): Slots => [id, null, null]
 const emptyLoadout: SlotLoadout = {
   weaponId: null,
+  weaponRank: 1,
   echoId: null,
   echoSetId: null,
   sequence: 0,
@@ -252,14 +253,20 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0.36 },
         },
         passive: { name: "" },
-        buffs: [],
+        buffsForRank: () => [],
       },
     ]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: null, echoSetId: null, sequence: 0 },
+        {
+          weaponId: 100,
+          weaponRank: 1,
+          echoId: null,
+          echoSetId: null,
+          sequence: 0,
+        },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -281,7 +288,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0 },
         },
         passive: { name: "" },
-        buffs: [
+        buffsForRank: () => [
           {
             id: "weapon.test.passive",
             name: "Passive",
@@ -303,12 +310,85 @@ describe("BuffEngine.bootstrap — weapon", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: null, echoSetId: null, sequence: 0 },
+        {
+          weaponId: 100,
+          weaponRank: 1,
+          echoId: null,
+          echoSetId: null,
+          sequence: 0,
+        },
         emptyLoadout,
         emptyLoadout,
       ],
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.12)
+  })
+
+  it("uses rank-specific atkPct for Stringmaster at R1 and R5", () => {
+    const ATK_PCT_BY_RANK = [0.12, 0.15, 0.18, 0.21, 0.24]
+    testCharacters = [baseChar()]
+    testWeapons = [
+      {
+        id: 100,
+        name: "Stringmaster",
+        weaponType: "Rectifier",
+        stats: {
+          main: { name: "ATK", base: 0, max: 0 },
+          sub: { name: "Crit. Rate", base: 0, max: 0 },
+        },
+        passive: { name: "" },
+        buffsForRank: (rank: number) => [
+          {
+            id: "weapon.stringmaster.passive.atk",
+            name: "ATK",
+            trigger: { event: "simStart" },
+            target: { kind: "self" },
+            duration: { kind: "permanent" },
+            effects: [
+              {
+                kind: "stat",
+                path: { stat: "atkPct" },
+                value: { kind: "const", v: ATK_PCT_BY_RANK[rank - 1] },
+              },
+            ],
+          },
+        ],
+      },
+    ]
+
+    const engineR1 = new BuffEngine()
+    engineR1.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [
+        {
+          weaponId: 100,
+          weaponRank: 1,
+          echoId: null,
+          echoSetId: null,
+          sequence: 0,
+        },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    expect(engineR1.resolveStats(1).atkPct).toBeCloseTo(0.12)
+
+    const engineR5 = new BuffEngine()
+    engineR5.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [
+        {
+          weaponId: 100,
+          weaponRank: 5,
+          echoId: null,
+          echoSetId: null,
+          sequence: 0,
+        },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    expect(engineR5.resolveStats(1).atkPct).toBeCloseTo(0.24)
   })
 })
 
@@ -358,7 +438,13 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: null, echoId: null, echoSetId: 7, sequence: 0 },
+        {
+          weaponId: null,
+          weaponRank: 1,
+          echoId: null,
+          echoSetId: 7,
+          sequence: 0,
+        },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -376,7 +462,13 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: null, echoId: null, echoSetId: 7, sequence: 0 },
+        {
+          weaponId: null,
+          weaponRank: 1,
+          echoId: null,
+          echoSetId: 7,
+          sequence: 0,
+        },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -463,7 +555,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0 },
         },
         passive: { name: "" },
-        buffs: [stat(0.07, "weapon")],
+        buffsForRank: () => [stat(0.07, "weapon")],
       },
     ]
     testEchoes = [
@@ -484,7 +576,13 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: 200, echoSetId: 7, sequence: 0 },
+        {
+          weaponId: 100,
+          weaponRank: 1,
+          echoId: 200,
+          echoSetId: 7,
+          sequence: 0,
+        },
         emptyLoadout,
         emptyLoadout,
       ],

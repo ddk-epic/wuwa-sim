@@ -111,7 +111,7 @@ export function bootstrapSlot(
     if (weapon) {
       applyWeaponIntrinsic(stats, weapon.stats.main.max, weapon.stats.main.name)
       applyWeaponIntrinsic(stats, weapon.stats.sub.max, weapon.stats.sub.name)
-      buffs.push(...weapon.buffs)
+      buffs.push(...weapon.buffsForRank(loadout?.weaponRank ?? 1))
     }
   }
 

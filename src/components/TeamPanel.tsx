@@ -9,6 +9,7 @@ import {
 import { SegmentedToggle } from "#/components/SegmentedToggle"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
+const RANKS: number[] = [1, 2, 3, 4, 5]
 
 interface TeamPanelProps {
   slots: Slots
@@ -88,6 +89,13 @@ function TeamSlot({
           </option>
         ))}
       </select>
+      <SegmentedToggle
+        options={RANKS}
+        value={loadout.weaponRank}
+        onChange={(weaponRank) => onSlotChange({ weaponRank })}
+        label={(v) => `R${v}`}
+        disabled={loadout.weaponId === null}
+      />
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.echoId ?? ""}
