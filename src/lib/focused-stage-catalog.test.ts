@@ -174,9 +174,9 @@ function setCatalog(characters: EnrichedCharacter[], echoes: EnrichedEcho[]) {
 }
 
 const noLoadouts: SlotLoadout[] = [
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
 ]
 
 describe("focused-stage-catalog — empty cases", () => {
@@ -305,9 +305,9 @@ describe("focused-stage-catalog — labels", () => {
   it("joins skill name and newName with a space when newName starts with parenthesis", () => {
     setCatalog([char1], [echoParen])
     const loadouts: SlotLoadout[] = [
-      { weaponId: null, echoId: 9002, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
+      { weaponId: null, echoId: 9002, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
     ]
     const result = getFocusedStageCatalog([1, null, null], loadouts, 1)
     expect(result.echoStages[0].label).toBe("Test Echo (Tap)")
@@ -317,9 +317,9 @@ describe("focused-stage-catalog — labels", () => {
 
 describe("focused-stage-catalog — echo stages", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
-    { weaponId: null, echoId: 9001, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
+    { weaponId: null, echoId: 9001, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
   ]
 
   it("includes visible echo stages from the focused slot's echo", () => {
@@ -359,9 +359,9 @@ describe("focused-stage-catalog — echo stages", () => {
     setCatalog([char1], [echo1])
     const slots: Slots = [null, 1, null]
     const loadouts: SlotLoadout[] = [
-      { weaponId: null, echoId: null, echoSetId: null },
-      { weaponId: null, echoId: 9001, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: 9001, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
     ]
     const result = getFocusedStageCatalog(slots, loadouts, 1)
     expect(result.echoStages.length).toBe(1)
@@ -370,9 +370,9 @@ describe("focused-stage-catalog — echo stages", () => {
 
 describe("focused-stage-catalog — divider rule", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
-    { weaponId: null, echoId: 9001, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
+    { weaponId: null, echoId: 9001, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
   ]
 
   it("returns both echo and character stages when both exist (consumer renders divider)", () => {

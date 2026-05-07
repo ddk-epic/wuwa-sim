@@ -6,22 +6,17 @@ import {
   listEchoSets,
   listWeaponsByType,
 } from "#/lib/catalog"
+import { SegmentedToggle } from "#/components/SegmentedToggle"
+
+const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 
 interface TeamPanelProps {
   slots: Slots
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
-  onWeaponChange: (slotIndex: number, weaponId: number) => void
-  onEchoChange: (slotIndex: number, echoId: number) => void
-  onEchoSetChange: (slotIndex: number, echoSetId: number) => void
+  onSlotChange: (slotIndex: number, patch: Partial<SlotLoadout>) => void
 }
 
-export function TeamPanel({
-  slots,
-  loadouts,
-  onWeaponChange,
-  onEchoChange,
-  onEchoSetChange,
-}: TeamPanelProps) {
+export function TeamPanel({ slots, loadouts, onSlotChange }: TeamPanelProps) {
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
@@ -36,9 +31,7 @@ export function TeamPanel({
               slotNumber={i + 1}
               character={character}
               loadout={loadouts[i]}
-              onWeaponChange={(weaponId) => onWeaponChange(i, weaponId)}
-              onEchoChange={(echoId) => onEchoChange(i, echoId)}
-              onEchoSetChange={(echoSetId) => onEchoSetChange(i, echoSetId)}
+              onSlotChange={(patch) => onSlotChange(i, patch)}
             />
           )
         })}
@@ -51,18 +44,14 @@ interface TeamSlotProps {
   slotNumber: number
   character: Character | null
   loadout: SlotLoadout
-  onWeaponChange: (weaponId: number) => void
-  onEchoChange: (echoId: number) => void
-  onEchoSetChange: (echoSetId: number) => void
+  onSlotChange: (patch: Partial<SlotLoadout>) => void
 }
 
 function TeamSlot({
   slotNumber,
   character,
   loadout,
-  onWeaponChange,
-  onEchoChange,
-  onEchoSetChange,
+  onSlotChange,
 }: TeamSlotProps) {
   if (character === null) {
     return (
@@ -81,10 +70,16 @@ function TeamSlot({
       <div className="text-xs font-semibold text-white mb-2">
         {character.name}
       </div>
+      <SegmentedToggle
+        options={SEQUENCES}
+        value={loadout.sequence}
+        onChange={(sequence) => onSlotChange({ sequence })}
+        label={(v) => `S${v}`}
+      />
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.weaponId ?? ""}
-        onChange={(e) => onWeaponChange(Number(e.target.value))}
+        onChange={(e) => onSlotChange({ weaponId: Number(e.target.value) })}
       >
         <option value="">— Weapon —</option>
         {compatibleWeapons.map((w) => (
@@ -96,7 +91,7 @@ function TeamSlot({
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.echoId ?? ""}
-        onChange={(e) => onEchoChange(Number(e.target.value))}
+        onChange={(e) => onSlotChange({ echoId: Number(e.target.value) })}
       >
         <option value="">— Echo —</option>
         {echoes.map((e) => (
@@ -108,7 +103,7 @@ function TeamSlot({
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.echoSetId ?? ""}
-        onChange={(e) => onEchoSetChange(Number(e.target.value))}
+        onChange={(e) => onSlotChange({ echoSetId: Number(e.target.value) })}
       >
         <option value="">— Echo Set —</option>
         {echoSets.map((s) => (

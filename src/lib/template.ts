@@ -13,6 +13,7 @@ export const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
   echoId: null,
   echoSetId: null,
+  sequence: 0,
 })
 
 export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
@@ -23,6 +24,7 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
     weaponId: weapon?.id ?? null,
     echoId: echo?.id ?? null,
     echoSetId: echoSet?.id ?? null,
+    sequence: 0,
   }
 }
 

@@ -7,11 +7,12 @@ import {
 import { getCharacterById } from "./catalog"
 
 describe("template — emptyLoadout", () => {
-  it("returns a Loadout with all ids null", () => {
+  it("returns a Loadout with all ids null and sequence 0", () => {
     expect(emptyLoadout()).toEqual({
       weaponId: null,
       echoId: null,
       echoSetId: null,
+      sequence: 0,
     })
   })
 })
@@ -25,6 +26,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       echoId: 390080007,
       echoSetId: 2,
+      sequence: 0,
     })
   })
 
@@ -36,6 +38,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21020015,
       echoId: 6000052,
       echoSetId: 8,
+      sequence: 0,
     })
   })
 
@@ -50,6 +53,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: null,
       echoId: 390080007,
       echoSetId: 2,
+      sequence: 0,
     })
   })
 
@@ -64,6 +68,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       echoId: null,
       echoSetId: 2,
+      sequence: 0,
     })
   })
 
@@ -78,6 +83,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       echoId: 390080007,
       echoSetId: null,
+      sequence: 0,
     })
   })
 
@@ -92,6 +98,7 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: null,
       echoId: null,
       echoSetId: null,
+      sequence: 0,
     })
   })
 })

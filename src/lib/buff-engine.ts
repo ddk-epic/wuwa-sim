@@ -11,17 +11,11 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
-import {
-  buffInstanceKey,
-  EmitHitDispatcher,
-  type EmitHitHost,
-} from "./emit-hit-dispatcher"
+import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
+import type { EmitHitHost } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "./engine-bootstrap"
-import {
-  InstanceStore,
-  type Candidate,
-  type EngineEvent,
-} from "./instance-store"
+import { InstanceStore } from "./instance-store"
+import type { Candidate, EngineEvent } from "./instance-store"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects } from "./stat-table-builder"
@@ -52,14 +46,12 @@ interface PhaseContext {
 
 interface PhaseHandler {
   readonly name: string
-  run(ctx: PhaseContext): void
+  run: (ctx: PhaseContext) => void
 }
 
 export interface BootstrapInput {
   slots: Slots
   loadouts: SlotLoadout[]
-  /** Per-slot resonance chain sequence (0..6). Defaults to 6 for each slot. */
-  sequences?: (number | undefined)[]
   /** Per-slot equipped echo set piece count (0, 2, or 5). Defaults to 5. */
   echoSetPieces?: (number | undefined)[]
 }
@@ -115,7 +107,6 @@ export class BuffEngine {
       const slot = bootstrapSlot(
         charId,
         input.loadouts[i] ?? null,
-        input.sequences?.[i] ?? 6,
         input.echoSetPieces?.[i] ?? 5,
       )
       if (!slot) continue
@@ -594,5 +585,5 @@ export class BuffEngine {
 
 /** @internal Bridge for test-only inspection — not part of the public API. */
 export interface BuffEngineInternals {
-  store: { pendingNextOnFieldCount(): number }
+  store: { pendingNextOnFieldCount: () => number }
 }

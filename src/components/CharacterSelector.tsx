@@ -18,9 +18,7 @@ export function CharacterSelector() {
     selectedCount,
     toggleCharacter,
     focusCharacter,
-    setWeapon,
-    setEcho,
-    setEchoSet,
+    setSlotPatch,
   } = useTeam()
 
   const { entries, addEntry, removeEntry, clearTimeline } = useTimeline()
@@ -83,9 +81,7 @@ export function CharacterSelector() {
           focusedId={focusedId}
           selectedCount={selectedCount}
           onToggle={toggleCharacter}
-          onWeaponChange={setWeapon}
-          onEchoChange={setEcho}
-          onEchoSetChange={setEchoSet}
+          onSlotChange={setSlotPatch}
           onClose={() => setModalOpen(false)}
         />
       )}

@@ -8,9 +8,7 @@ interface TeamModalProps {
   focusedId: number | null
   selectedCount: number
   onToggle: (characterId: number) => void
-  onWeaponChange: (slotIndex: number, weaponId: number) => void
-  onEchoChange: (slotIndex: number, echoId: number) => void
-  onEchoSetChange: (slotIndex: number, echoSetId: number) => void
+  onSlotChange: (slotIndex: number, patch: Partial<SlotLoadout>) => void
   onClose: () => void
 }
 
@@ -20,9 +18,7 @@ export function TeamModal({
   focusedId,
   selectedCount,
   onToggle,
-  onWeaponChange,
-  onEchoChange,
-  onEchoSetChange,
+  onSlotChange,
   onClose,
 }: TeamModalProps) {
   return (
@@ -60,9 +56,7 @@ export function TeamModal({
           <TeamPanel
             slots={slots}
             loadouts={loadouts}
-            onWeaponChange={onWeaponChange}
-            onEchoChange={onEchoChange}
-            onEchoSetChange={onEchoSetChange}
+            onSlotChange={onSlotChange}
           />
         </div>
       </div>

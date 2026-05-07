@@ -29,6 +29,32 @@ describe("useTeam — template loadout resolution", () => {
   })
 })
 
+describe("useTeam — setSlotPatch sequence", () => {
+  it("setSlotPatch updates sequence on the targeted slot", () => {
+    const { result } = renderHook(() => useTeam())
+    act(() => {
+      result.current.toggleCharacter(1203)
+    })
+    act(() => {
+      result.current.setSlotPatch(0, { sequence: 4 })
+    })
+    expect(result.current.loadouts[0].sequence).toBe(4)
+  })
+
+  it("setSlotPatch does not affect other slots", () => {
+    const { result } = renderHook(() => useTeam())
+    act(() => {
+      result.current.toggleCharacter(1203)
+      result.current.toggleCharacter(1102)
+    })
+    act(() => {
+      result.current.setSlotPatch(0, { sequence: 2 })
+    })
+    expect(result.current.loadouts[0].sequence).toBe(2)
+    expect(result.current.loadouts[1].sequence).toBe(0)
+  })
+})
+
 describe("useTeam — focusCharacter", () => {
   it("focusCharacter updates focusedId to the given id", () => {
     const { result } = renderHook(() => useTeam())

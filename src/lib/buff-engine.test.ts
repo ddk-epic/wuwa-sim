@@ -50,6 +50,7 @@ const emptyLoadout: SlotLoadout = {
   weaponId: null,
   echoId: null,
   echoSetId: null,
+  sequence: 0,
 }
 
 describe("BuffEngine.bootstrap — character-only", () => {
@@ -258,7 +259,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: null, echoSetId: null },
+        { weaponId: 100, echoId: null, echoSetId: null, sequence: 0 },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -302,7 +303,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: null, echoSetId: null },
+        { weaponId: 100, echoId: null, echoSetId: null, sequence: 0 },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -357,7 +358,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: null, echoId: null, echoSetId: 7 },
+        { weaponId: null, echoId: null, echoSetId: 7, sequence: 0 },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -375,7 +376,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: null, echoId: null, echoSetId: 7 },
+        { weaponId: null, echoId: null, echoSetId: 7, sequence: 0 },
         emptyLoadout,
         emptyLoadout,
       ],
@@ -408,8 +409,7 @@ describe("BuffEngine.bootstrap — sequence filtering", () => {
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-      sequences: [1],
+      loadouts: [{ ...emptyLoadout, sequence: 1 }, emptyLoadout, emptyLoadout],
     })
     expect(engine.resolveStats(1).atkPct).toBe(0)
   })
@@ -434,8 +434,7 @@ describe("BuffEngine.bootstrap — sequence filtering", () => {
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-      sequences: [2],
+      loadouts: [{ ...emptyLoadout, sequence: 2 }, emptyLoadout, emptyLoadout],
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5)
   })
@@ -485,7 +484,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [
-        { weaponId: 100, echoId: 200, echoSetId: 7 },
+        { weaponId: 100, echoId: 200, echoSetId: 7, sequence: 0 },
         emptyLoadout,
         emptyLoadout,
       ],

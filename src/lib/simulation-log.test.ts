@@ -121,9 +121,9 @@ afterEach(() => {
 
 const emptySlots: Slots = [null, null, null]
 const emptyLoadouts: SlotLoadout[] = [
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
 ]
 
 function tlEntry(
@@ -277,9 +277,9 @@ describe("generateSimulationLog — echo skill entries", () => {
     testEchoes = [echoA]
     const slots: Slots = [1, null, null]
     const loadouts: SlotLoadout[] = [
-      { weaponId: null, echoId: 10, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
-      { weaponId: null, echoId: null, echoSetId: null },
+      { weaponId: null, echoId: 10, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+      { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
     ]
     const entry = tlEntry(1, "Echo Skill", "Echo One · Hit")
     const result = generateSimulationLog([entry], slots, loadouts)

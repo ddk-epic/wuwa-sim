@@ -102,9 +102,9 @@ const testEcho: EnrichedEcho = {
 }
 
 const noLoadouts: SlotLoadout[] = [
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
-  { weaponId: null, echoId: null, echoSetId: null },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+  { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
 ]
 
 let testCharacters: EnrichedCharacter[] = []
@@ -204,9 +204,9 @@ describe("SkillSidebar — stage rendering", () => {
 
 describe("SkillSidebar — divider presence", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
-    { weaponId: null, echoId: 9001, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
-    { weaponId: null, echoId: null, echoSetId: null },
+    { weaponId: null, echoId: 9001, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
+    { weaponId: null, echoId: null, echoSetId: null, sequence: 0 },
   ]
 
   it("renders the divider when both echo and character stages exist", () => {

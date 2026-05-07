@@ -65,27 +65,21 @@ export function useTeam() {
     setFocusedId(id)
   }
 
-  function setWeapon(slotIndex: number, weaponId: number) {
-    setLoadouts((prev) =>
-      updateSlot(prev, slotIndex, (slot) => ({ ...slot, weaponId })),
-    )
-  }
-
-  function setEcho(slotIndex: number, echoId: number) {
-    const matchingSet = inferEchoSetForEcho(echoId)
-    setLoadouts((prev) =>
-      updateSlot(prev, slotIndex, (slot) => ({
-        ...slot,
-        echoId,
-        echoSetId: matchingSet?.id ?? slot.echoSetId,
-      })),
-    )
-  }
-
-  function setEchoSet(slotIndex: number, echoSetId: number) {
-    setLoadouts((prev) =>
-      updateSlot(prev, slotIndex, (slot) => ({ ...slot, echoSetId })),
-    )
+  function setSlotPatch(slotIndex: number, patch: Partial<SlotLoadout>) {
+    if ("echoId" in patch && patch.echoId != null) {
+      const matchingSet = inferEchoSetForEcho(patch.echoId)
+      setLoadouts((prev) =>
+        updateSlot(prev, slotIndex, (slot) => ({
+          ...slot,
+          ...patch,
+          echoSetId: matchingSet?.id ?? slot.echoSetId,
+        })),
+      )
+    } else {
+      setLoadouts((prev) =>
+        updateSlot(prev, slotIndex, (slot) => ({ ...slot, ...patch })),
+      )
+    }
   }
 
   return {
@@ -95,8 +89,6 @@ export function useTeam() {
     selectedCount: slots.filter((s) => s !== null).length,
     toggleCharacter,
     focusCharacter,
-    setWeapon,
-    setEcho,
-    setEchoSet,
+    setSlotPatch,
   }
 }

@@ -77,11 +77,12 @@ export interface SlotBootstrap {
 export function bootstrapSlot(
   charId: number,
   loadout: SlotLoadout | null,
-  sequence: number,
   pieces: number,
 ): SlotBootstrap | null {
   const character = getCharacterById(charId)
   if (!character) return null
+
+  const sequence = loadout?.sequence ?? 0
 
   const stats: StatTable = {
     ...emptyStatTable(),
