@@ -17,9 +17,22 @@ export function useTimeline() {
     setEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
+  function reorderEntries(fromId: string, toId: string) {
+    setEntries((prev) => {
+      const fromIndex = prev.findIndex((e) => e.id === fromId)
+      const toIndex = prev.findIndex((e) => e.id === toId)
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+        return prev
+      const next = [...prev]
+      const [item] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, item)
+      return next
+    })
+  }
+
   function clearTimeline() {
     setEntries([])
   }
 
-  return { entries, addEntry, removeEntry, clearTimeline }
+  return { entries, addEntry, removeEntry, reorderEntries, clearTimeline }
 }

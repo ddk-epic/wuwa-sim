@@ -1,18 +1,45 @@
+import { useState } from "react"
 import type { TimelineEntry } from "#/types/timeline"
+import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import { getCharacterById } from "#/lib/catalog"
+import { validateTimeline } from "#/lib/validate-timeline"
 
 interface TimelineViewProps {
   entries: TimelineEntry[]
   summary: TimelineSummary
+  slots: Slots
+  loadouts: SlotLoadout[]
   onRemove: (id: string) => void
+  onReorder: (fromId: string, toId: string) => void
+}
+
+function reorderPreview(
+  entries: TimelineEntry[],
+  draggedId: string,
+  dropTargetId: string,
+): TimelineEntry[] {
+  const fromIndex = entries.findIndex((e) => e.id === draggedId)
+  const toIndex = entries.findIndex((e) => e.id === dropTargetId)
+  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+    return entries
+  const next = [...entries]
+  const [item] = next.splice(fromIndex, 1)
+  next.splice(toIndex, 0, item)
+  return next
 }
 
 export function TimelineView({
   entries,
   summary,
+  slots,
+  loadouts,
   onRemove,
+  onReorder,
 }: TimelineViewProps) {
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+
   if (entries.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -20,6 +47,19 @@ export function TimelineView({
       </div>
     )
   }
+
+  const displayEntries =
+    draggedId !== null && dropTargetId !== null
+      ? reorderPreview(entries, draggedId, dropTargetId)
+      : entries
+
+  const validation = validateTimeline(displayEntries, slots, loadouts)
+
+  const invalidByIndex = displayEntries.reduce<number[]>((acc, e, i) => {
+    if (validation.invalidRowIds.has(e.id)) acc.push(i)
+    return acc
+  }, [])
+  const messageIndexes = new Set(invalidByIndex.slice(0, 2))
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
@@ -36,18 +76,62 @@ export function TimelineView({
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry, i) => {
+          {displayEntries.map((entry, i) => {
             const char = getCharacterById(entry.characterId)
-            const row = summary.rows[i]
+            const origIndex = entries.findIndex((e) => e.id === entry.id)
+            const row = summary.rows[origIndex] ?? { time: 0, damage: null }
+            const isInvalid = validation.invalidRowIds.has(entry.id)
+            const showMessage = isInvalid && messageIndexes.has(i)
+            const errors = validation.rowErrors.get(entry.id) ?? []
+            const isDragging = draggedId === entry.id
+
             return (
               <tr
                 key={entry.id}
-                className="border-t border-gray-700 hover:bg-gray-800/50"
+                draggable
+                onDragStart={(ev) => {
+                  ev.dataTransfer.effectAllowed = "move"
+                  setDraggedId(entry.id)
+                }}
+                onDragOver={(ev) => {
+                  ev.preventDefault()
+                  ev.dataTransfer.dropEffect = "move"
+                  if (entry.id !== draggedId) setDropTargetId(entry.id)
+                }}
+                onDrop={(ev) => {
+                  ev.preventDefault()
+                  if (draggedId !== null && draggedId !== entry.id) {
+                    onReorder(draggedId, entry.id)
+                  }
+                  setDraggedId(null)
+                  setDropTargetId(null)
+                }}
+                onDragEnd={() => {
+                  setDraggedId(null)
+                  setDropTargetId(null)
+                }}
+                className={[
+                  "border-t border-gray-700 cursor-grab",
+                  isDragging ? "opacity-40" : "hover:bg-gray-800/50",
+                  isInvalid ? "bg-red-950/30" : "",
+                ].join(" ")}
               >
                 <td className="px-3 py-2 text-gray-400">{i + 1}</td>
                 <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
                 <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
-                <td className="px-3 py-2 text-gray-200">{entry.skillName}</td>
+                <td className="px-3 py-2 text-gray-200">
+                  <span
+                    className={isInvalid ? "text-red-400" : ""}
+                    title={isInvalid ? "red-marker" : undefined}
+                  >
+                    {entry.skillName}
+                  </span>
+                  {showMessage && errors.length > 0 && (
+                    <span className="ml-2 text-xs text-red-400">
+                      {errors[0].message}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-gray-300">
                   {row.time.toFixed(2)}s
                 </td>
