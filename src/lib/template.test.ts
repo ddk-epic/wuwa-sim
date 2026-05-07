@@ -12,14 +12,15 @@ describe("template — emptyLoadout", () => {
       weaponId: null,
       weaponRank: 1,
       echoId: null,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     })
   })
 })
 
 describe("template — loadoutFromTemplate", () => {
-  it("resolves Encore's Template to Stringmaster + Inferno Rider + Molten Rift", () => {
+  it("resolves Encore's Template to Stringmaster + Inferno Rider + Molten Rift (5pc)", () => {
     const encore = getCharacterById(1203)
     expect(encore).not.toBeNull()
     if (!encore) return
@@ -27,12 +28,13 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       weaponRank: 1,
       echoId: 390080007,
-      echoSetId: 2,
+      echoSetSlot1Id: 2,
+      echoSetSlot2Id: 2,
       sequence: 0,
     })
   })
 
-  it("resolves Sanhua's Template to Emerald of Genesis + Impermanence Heron + Moonlit Clouds", () => {
+  it("resolves Sanhua's Template to Emerald of Genesis + Impermanence Heron + Moonlit Clouds (5pc)", () => {
     const sanhua = getCharacterById(1102)
     expect(sanhua).not.toBeNull()
     if (!sanhua) return
@@ -40,7 +42,8 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21020015,
       weaponRank: 1,
       echoId: 6000052,
-      echoSetId: 8,
+      echoSetSlot1Id: 8,
+      echoSetSlot2Id: 8,
       sequence: 0,
     })
   })
@@ -56,7 +59,8 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: null,
       weaponRank: 1,
       echoId: 390080007,
-      echoSetId: 2,
+      echoSetSlot1Id: 2,
+      echoSetSlot2Id: 2,
       sequence: 0,
     })
   })
@@ -72,12 +76,13 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       weaponRank: 1,
       echoId: null,
-      echoSetId: 2,
+      echoSetSlot1Id: 2,
+      echoSetSlot2Id: 2,
       sequence: 0,
     })
   })
 
-  it("returns null echoSetId when the Template's echoSet name is unknown", () => {
+  it("returns null echoSetSlot ids when the Template's echoSet name is unknown", () => {
     expect(
       loadoutFromTemplate({
         weapon: "Stringmaster",
@@ -88,7 +93,8 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: 21050016,
       weaponRank: 1,
       echoId: 390080007,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     })
   })
@@ -104,7 +110,8 @@ describe("template — loadoutFromTemplate", () => {
       weaponId: null,
       weaponRank: 1,
       echoId: null,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     })
   })

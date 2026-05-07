@@ -121,9 +121,30 @@ afterEach(() => {
 
 const emptySlots: Slots = [null, null, null]
 const emptyLoadouts: SlotLoadout[] = [
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
 ]
 
 function tlEntry(
@@ -281,21 +302,24 @@ describe("generateSimulationLog — echo skill entries", () => {
         weaponId: null,
         weaponRank: 1,
         echoId: 10,
-        echoSetId: null,
+        echoSetSlot1Id: null,
+        echoSetSlot2Id: null,
         sequence: 0,
       },
       {
         weaponId: null,
         weaponRank: 1,
         echoId: null,
-        echoSetId: null,
+        echoSetSlot1Id: null,
+        echoSetSlot2Id: null,
         sequence: 0,
       },
       {
         weaponId: null,
         weaponRank: 1,
         echoId: null,
-        echoSetId: null,
+        echoSetSlot1Id: null,
+        echoSetSlot2Id: null,
         sequence: 0,
       },
     ]

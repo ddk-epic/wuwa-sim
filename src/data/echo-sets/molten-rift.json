@@ -1,6 +1,7 @@
 {
   "id": 2,
   "name": "Molten Rift",
+  "type": "two-five",
   "effects": [
     {
       "pieces": 2,

@@ -3,10 +3,8 @@ import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { ELEMENT_BORDER_CLASSES } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
-import {
-  getFocusedStageCatalog,
-  type FocusedStage,
-} from "#/lib/focused-stage-catalog"
+import { getFocusedStageCatalog } from "#/lib/focused-stage-catalog"
+import type { FocusedStage } from "#/lib/focused-stage-catalog"
 
 type NewEntry = Omit<TimelineEntry, "id">
 

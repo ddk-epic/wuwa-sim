@@ -52,8 +52,6 @@ interface PhaseHandler {
 export interface BootstrapInput {
   slots: Slots
   loadouts: SlotLoadout[]
-  /** Per-slot equipped echo set piece count (0, 2, or 5). Defaults to 5. */
-  echoSetPieces?: (number | undefined)[]
 }
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
@@ -104,11 +102,7 @@ export class BuffEngine {
       const charId = input.slots[i]
       slots.push(charId ?? -1)
       if (charId === null) continue
-      const slot = bootstrapSlot(
-        charId,
-        input.loadouts[i] ?? null,
-        input.echoSetPieces?.[i] ?? 5,
-      )
+      const slot = bootstrapSlot(charId, input.loadouts[i] ?? null)
       if (!slot) continue
       this.store.setBaseStats(slot.charId, slot.baseStats)
       this.store.setTriggerable(slot.charId, slot.triggerable)

@@ -109,6 +109,7 @@ function mapEchoSet(
   return {
     id: group.Id,
     name: group.FetterGroupName,
+    type: "two-five" as const,
     effects: group.FetterMap.map((entry, i) => ({
       pieces: entry.Key,
       description: stripHtml(effects.EffectDescriptions[i]),

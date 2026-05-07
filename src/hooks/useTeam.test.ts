@@ -15,7 +15,8 @@ describe("useTeam — template loadout resolution", () => {
     })
     expect(result.current.loadouts[0].weaponId).toBe(21050016) // Stringmaster
     expect(result.current.loadouts[0].echoId).toBe(390080007) // Inferno Rider
-    expect(result.current.loadouts[0].echoSetId).toBe(2) // Molten Rift
+    expect(result.current.loadouts[0].echoSetSlot1Id).toBe(2) // Molten Rift
+    expect(result.current.loadouts[0].echoSetSlot2Id).toBe(2) // Molten Rift (5pc)
   })
 
   it("adding Sanhua populates loadout with Emerald of Genesis + Impermanence Heron + Moonlit Clouds", () => {
@@ -25,7 +26,8 @@ describe("useTeam — template loadout resolution", () => {
     })
     expect(result.current.loadouts[0].weaponId).toBe(21020015) // Emerald of Genesis
     expect(result.current.loadouts[0].echoId).toBe(6000052) // Impermanence Heron
-    expect(result.current.loadouts[0].echoSetId).toBe(8) // Moonlit Clouds
+    expect(result.current.loadouts[0].echoSetSlot1Id).toBe(8) // Moonlit Clouds
+    expect(result.current.loadouts[0].echoSetSlot2Id).toBe(8) // Moonlit Clouds (5pc)
   })
 })
 

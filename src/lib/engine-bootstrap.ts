@@ -8,6 +8,7 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
+import { resolveEchoSets } from "./resolve-echo-sets"
 import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
 
 const ELEMENTS = ["Fusion", "Glacio", "Electro", "Aero", "Havoc", "Spectro"]
@@ -77,7 +78,6 @@ export interface SlotBootstrap {
 export function bootstrapSlot(
   charId: number,
   loadout: SlotLoadout | null,
-  pieces: number,
 ): SlotBootstrap | null {
   const character = getCharacterById(charId)
   if (!character) return null
@@ -121,12 +121,15 @@ export function bootstrapSlot(
     if (echo) buffs.push(...echo.buffs)
   }
 
-  const echoSetId = loadout?.echoSetId ?? null
-  if (echoSetId !== null) {
-    const echoSet = getEchoSetById(echoSetId)
+  const resolvedSets = resolveEchoSets(
+    loadout?.echoSetSlot1Id ?? null,
+    loadout?.echoSetSlot2Id ?? null,
+  )
+  for (const { setId, effectivePieces } of resolvedSets) {
+    const echoSet = getEchoSetById(setId)
     if (echoSet) {
       for (const def of echoSet.buffs) {
-        if ((def.requiresPieces ?? 2) <= pieces) buffs.push(def)
+        if ((def.requiresPieces ?? 2) <= effectivePieces) buffs.push(def)
       }
     }
   }

@@ -8,6 +8,7 @@ export interface EchoSetEffect {
 export interface EchoSet {
   id: number
   name: string
+  type: "two-five" | "three-only"
   effects: EchoSetEffect[]
   buffs: BuffDef[]
 }

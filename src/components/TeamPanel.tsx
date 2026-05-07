@@ -110,10 +110,32 @@ function TeamSlot({
       </select>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoSetId ?? ""}
-        onChange={(e) => onSlotChange({ echoSetId: Number(e.target.value) })}
+        value={loadout.echoSetSlot1Id ?? ""}
+        onChange={(e) =>
+          onSlotChange({
+            echoSetSlot1Id:
+              e.target.value === "" ? null : Number(e.target.value),
+          })
+        }
       >
-        <option value="">— Echo Set —</option>
+        <option value="">— Echo Set 1 —</option>
+        {echoSets.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+      <select
+        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+        value={loadout.echoSetSlot2Id ?? ""}
+        onChange={(e) =>
+          onSlotChange({
+            echoSetSlot2Id:
+              e.target.value === "" ? null : Number(e.target.value),
+          })
+        }
+      >
+        <option value="">— Echo Set 2 —</option>
         {echoSets.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}

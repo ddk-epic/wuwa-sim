@@ -50,7 +50,8 @@ const emptyLoadout: SlotLoadout = {
   weaponId: null,
   weaponRank: 1,
   echoId: null,
-  echoSetId: null,
+  echoSetSlot1Id: null,
+  echoSetSlot2Id: null,
   sequence: 0,
 }
 
@@ -264,7 +265,8 @@ describe("BuffEngine.bootstrap — weapon", () => {
           weaponId: 100,
           weaponRank: 1,
           echoId: null,
-          echoSetId: null,
+          echoSetSlot1Id: null,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,
@@ -314,7 +316,8 @@ describe("BuffEngine.bootstrap — weapon", () => {
           weaponId: 100,
           weaponRank: 1,
           echoId: null,
-          echoSetId: null,
+          echoSetSlot1Id: null,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,
@@ -364,7 +367,8 @@ describe("BuffEngine.bootstrap — weapon", () => {
           weaponId: 100,
           weaponRank: 1,
           echoId: null,
-          echoSetId: null,
+          echoSetSlot1Id: null,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,
@@ -381,7 +385,8 @@ describe("BuffEngine.bootstrap — weapon", () => {
           weaponId: 100,
           weaponRank: 5,
           echoId: null,
-          echoSetId: null,
+          echoSetSlot1Id: null,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,
@@ -396,6 +401,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
   const setWithBoth: EchoSet = {
     id: 7,
     name: "Test Set",
+    type: "two-five",
     effects: [],
     buffs: [
       {
@@ -431,7 +437,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
     ],
   }
 
-  it("includes only 2pc when echoSetPieces=2", () => {
+  it("includes only 2pc when only slot 1 is filled (2pc effective)", () => {
     testCharacters = [baseChar()]
     testEchoSets = [setWithBoth]
     const engine = new BuffEngine()
@@ -442,20 +448,20 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           weaponId: null,
           weaponRank: 1,
           echoId: null,
-          echoSetId: 7,
+          echoSetSlot1Id: 7,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,
         emptyLoadout,
       ],
-      echoSetPieces: [2],
     })
     const stats = engine.resolveStats(1)
     expect(stats.atkPct).toBeCloseTo(0.1)
     expect(stats.critRate).toBe(0)
   })
 
-  it("includes both 2pc and 5pc when echoSetPieces=5", () => {
+  it("includes both 2pc and 5pc when both slots are the same id (5pc effective)", () => {
     testCharacters = [baseChar()]
     testEchoSets = [setWithBoth]
     const engine = new BuffEngine()
@@ -466,17 +472,100 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           weaponId: null,
           weaponRank: 1,
           echoId: null,
-          echoSetId: 7,
+          echoSetSlot1Id: 7,
+          echoSetSlot2Id: 7,
           sequence: 0,
         },
         emptyLoadout,
         emptyLoadout,
       ],
-      echoSetPieces: [5],
     })
     const stats = engine.resolveStats(1)
     expect(stats.atkPct).toBeCloseTo(0.1)
     expect(stats.critRate).toBeCloseTo(0.1)
+  })
+})
+
+describe("BuffEngine.bootstrap — resolveEchoSets integration", () => {
+  const stat = (v: number, id: string): BuffDef => ({
+    id,
+    name: id,
+    trigger: { event: "simStart" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [
+      { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v } },
+    ],
+  })
+
+  const moonlit: EchoSet = {
+    id: 8,
+    name: "Moonlit Clouds",
+    type: "two-five",
+    effects: [],
+    buffs: [
+      { ...stat(0.1, "moonlit.2pc"), requiresPieces: 2 },
+      { ...stat(0.05, "moonlit.5pc"), requiresPieces: 5 },
+    ],
+  }
+  const molten: EchoSet = {
+    id: 2,
+    name: "Molten Rift",
+    type: "two-five",
+    effects: [],
+    buffs: [{ ...stat(0.2, "molten.2pc"), requiresPieces: 2 }],
+  }
+  const threeOnlySet: EchoSet = {
+    id: 99,
+    name: "Three Only",
+    type: "three-only",
+    effects: [],
+    buffs: [{ ...stat(0.15, "three.3pc"), requiresPieces: 3 }],
+  }
+
+  it("5pc case: same set in both slots activates both 2pc and 5pc buffs", () => {
+    testCharacters = [baseChar()]
+    testEchoSets = [moonlit]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [
+        { ...emptyLoadout, echoSetSlot1Id: 8, echoSetSlot2Id: 8 },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.05)
+  })
+
+  it("2pc + 2pc case: different sets in both slots activates each at 2pc", () => {
+    testCharacters = [baseChar()]
+    testEchoSets = [moonlit, molten]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [
+        { ...emptyLoadout, echoSetSlot1Id: 8, echoSetSlot2Id: 2 },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.2)
+  })
+
+  it("2pc + 3pc case: two-five in slot 1 and three-only in slot 2", () => {
+    testCharacters = [baseChar()]
+    testEchoSets = [moonlit, threeOnlySet]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [
+        { ...emptyLoadout, echoSetSlot1Id: 8, echoSetSlot2Id: 99 },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.15)
   })
 })
 
@@ -570,7 +659,13 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
       },
     ]
     testEchoSets = [
-      { id: 7, name: "S", effects: [], buffs: [stat(0.04, "set")] },
+      {
+        id: 7,
+        name: "S",
+        type: "two-five" as const,
+        effects: [],
+        buffs: [stat(0.04, "set")],
+      },
     ]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -580,7 +675,8 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           weaponId: 100,
           weaponRank: 1,
           echoId: 200,
-          echoSetId: 7,
+          echoSetSlot1Id: 7,
+          echoSetSlot2Id: null,
           sequence: 0,
         },
         emptyLoadout,

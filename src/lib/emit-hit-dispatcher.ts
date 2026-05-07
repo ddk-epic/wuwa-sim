@@ -33,8 +33,8 @@ export interface EmitHitInput {
 }
 
 export interface EmitHitHost {
-  resolveStats(characterId: number): StatTable
-  applyResourceDelta(
+  resolveStats: (characterId: number) => StatTable
+  applyResourceDelta: (
     characterId: number,
     resource: ResourceKind,
     delta: number,
@@ -42,9 +42,9 @@ export interface EmitHitHost {
     out: BuffEvent[],
     hitsOut: HitEvent[],
     depth: number,
-  ): void
-  getResource(characterId: number): ResourceState
-  activeBuffIds(characterId: number): string[]
+  ) => void
+  getResource: (characterId: number) => ResourceState
+  activeBuffIds: (characterId: number) => string[]
 }
 
 export interface EmitHitDispatcherOptions {

@@ -1,6 +1,6 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById, getEchoSetById } from "#/lib/catalog"
 import {
   emptyLoadout,
   inferEchoSetForEcho,
@@ -68,13 +68,50 @@ export function useTeam() {
   function setSlotPatch(slotIndex: number, patch: Partial<SlotLoadout>) {
     if ("echoId" in patch && patch.echoId != null) {
       const matchingSet = inferEchoSetForEcho(patch.echoId)
-      setLoadouts((prev) =>
-        updateSlot(prev, slotIndex, (slot) => ({
-          ...slot,
+      const setId = matchingSet?.id ?? null
+      setLoadouts((prev) => {
+        const slot = prev[slotIndex]
+        const autoFillSlot2 =
+          setId !== null &&
+          matchingSet?.type === "two-five" &&
+          slot.echoSetSlot2Id === null
+        return updateSlot(prev, slotIndex, (s) => ({
+          ...s,
           ...patch,
-          echoSetId: matchingSet?.id ?? slot.echoSetId,
-        })),
-      )
+          echoSetSlot1Id: setId ?? s.echoSetSlot1Id,
+          echoSetSlot2Id: autoFillSlot2 ? setId : s.echoSetSlot2Id,
+        }))
+      })
+    } else if ("echoSetSlot1Id" in patch) {
+      const newId = patch.echoSetSlot1Id ?? null
+      setLoadouts((prev) => {
+        const slot = prev[slotIndex]
+        const set = newId !== null ? getEchoSetById(newId) : null
+        const autoFill =
+          newId !== null &&
+          set?.type === "two-five" &&
+          slot.echoSetSlot2Id === null
+        return updateSlot(prev, slotIndex, (s) => ({
+          ...s,
+          ...patch,
+          echoSetSlot2Id: autoFill ? newId : s.echoSetSlot2Id,
+        }))
+      })
+    } else if ("echoSetSlot2Id" in patch) {
+      const newId = patch.echoSetSlot2Id ?? null
+      setLoadouts((prev) => {
+        const slot = prev[slotIndex]
+        const set = newId !== null ? getEchoSetById(newId) : null
+        const autoFill =
+          newId !== null &&
+          set?.type === "two-five" &&
+          slot.echoSetSlot1Id === null
+        return updateSlot(prev, slotIndex, (s) => ({
+          ...s,
+          ...patch,
+          echoSetSlot1Id: autoFill ? newId : s.echoSetSlot1Id,
+        }))
+      })
     } else if ("weaponId" in patch) {
       setLoadouts((prev) =>
         updateSlot(prev, slotIndex, (slot) => ({

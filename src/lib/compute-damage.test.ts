@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { emptyStatTable, type StatTable } from "#/types/stat-table"
-import {
-  computeDamage,
-  DEF_MULT_CONST,
-  RES_MULT_CONST,
-  type DamageContext,
-} from "./compute-damage"
+import { emptyStatTable } from "#/types/stat-table"
+import type { StatTable } from "#/types/stat-table"
+import { computeDamage, DEF_MULT_CONST, RES_MULT_CONST } from "./compute-damage"
+import type { DamageContext } from "./compute-damage"
 
 const DEFRES = DEF_MULT_CONST * RES_MULT_CONST
 

@@ -13,7 +13,8 @@ export const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
   weaponRank: 1,
   echoId: null,
-  echoSetId: null,
+  echoSetSlot1Id: null,
+  echoSetSlot2Id: null,
   sequence: 0,
 })
 
@@ -21,11 +22,13 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
   const weapon = findWeaponByName(template.weapon)
   const echo = findEchoByName(template.echo)
   const echoSet = findEchoSetByName(template.echoSet)
+  const setId = echoSet?.id ?? null
   return {
     weaponId: weapon?.id ?? null,
     weaponRank: 1,
     echoId: echo?.id ?? null,
-    echoSetId: echoSet?.id ?? null,
+    echoSetSlot1Id: setId,
+    echoSetSlot2Id: echoSet?.type === "two-five" ? setId : null,
     sequence: 0,
   }
 }

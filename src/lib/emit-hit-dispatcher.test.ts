@@ -3,11 +3,8 @@ import type { BuffDef, EmitHitEffect, ResourceState } from "#/types/buff"
 import { emptyResourceState } from "#/types/buff"
 import type { BuffEvent, HitEvent } from "#/types/simulation-log"
 import { emptyStatTable } from "#/types/stat-table"
-import {
-  buffInstanceKey,
-  EmitHitDispatcher,
-  type EmitHitHost,
-} from "./emit-hit-dispatcher"
+import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
+import type { EmitHitHost } from "./emit-hit-dispatcher"
 
 function makeHost(): EmitHitHost & { resources: Map<number, ResourceState> } {
   const resources = new Map<number, ResourceState>()

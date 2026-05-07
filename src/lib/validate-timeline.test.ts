@@ -62,7 +62,8 @@ const emptyLoadout: SlotLoadout = {
   weaponId: null,
   weaponRank: 1,
   echoId: null,
-  echoSetId: null,
+  echoSetSlot1Id: null,
+  echoSetSlot2Id: null,
   sequence: 0,
 }
 

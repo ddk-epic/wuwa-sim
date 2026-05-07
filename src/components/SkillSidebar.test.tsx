@@ -102,9 +102,30 @@ const testEcho: EnrichedEcho = {
 }
 
 const noLoadouts: SlotLoadout[] = [
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
-  { weaponId: null, weaponRank: 1, echoId: null, echoSetId: null, sequence: 0 },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+  },
 ]
 
 let testCharacters: EnrichedCharacter[] = []
@@ -208,21 +229,24 @@ describe("SkillSidebar — divider presence", () => {
       weaponId: null,
       weaponRank: 1,
       echoId: 9001,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     },
     {
       weaponId: null,
       weaponRank: 1,
       echoId: null,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     },
     {
       weaponId: null,
       weaponRank: 1,
       echoId: null,
-      echoSetId: null,
+      echoSetSlot1Id: null,
+      echoSetSlot2Id: null,
       sequence: 0,
     },
   ]
