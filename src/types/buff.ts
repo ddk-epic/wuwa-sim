@@ -147,8 +147,8 @@ export interface BuffDef {
   stacking?: StackingPolicy
   /** Resonance chain sequence required (1..6). v1 only filters at bootstrap. */
   requiresSequence?: number
-  /** Echo set piece count required (2 or 5). v1 only filters at bootstrap. */
-  requiresPieces?: 2 | 5
+  /** Echo set piece count required (2, 3, or 5). v1 only filters at bootstrap. */
+  requiresPieces?: 2 | 3 | 5
   /**
    * Typed and parsed by the engine but no enforcement: when multiple buffs
    * sharing the same group are simultaneously active, the engine emits a
