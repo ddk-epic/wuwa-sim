@@ -1450,6 +1450,89 @@ describe("BuffEngine — resource state (#58)", () => {
   })
 })
 
+describe("BuffEngine — per-hit energy sharing (#86)", () => {
+  it("actor keeps 100% of energy; each teammate gets 50% independently", () => {
+    testCharacters = [
+      baseChar({ id: 1 }),
+      baseChar({ id: 2 }),
+      baseChar({ id: 3 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, 3],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 10,
+    })
+    expect(engine.getResource(1).energy).toBe(10)
+    expect(engine.getResource(2).energy).toBe(5)
+    expect(engine.getResource(3).energy).toBe(5)
+  })
+
+  it("synthetic hits do not trigger energy sharing", () => {
+    testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 10,
+      synthetic: true,
+    })
+    expect(engine.getResource(1).energy).toBe(10)
+    expect(engine.getResource(2).energy).toBe(0)
+  })
+
+  it("concerto is not shared with teammates", () => {
+    testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 8,
+    })
+    expect(engine.getResource(1).concerto).toBe(8)
+    expect(engine.getResource(2).concerto).toBe(0)
+  })
+
+  it("single-member party has no teammates to share with", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 10,
+    })
+    expect(engine.getResource(1).energy).toBe(10)
+  })
+})
+
 describe("BuffEngine — stacking policies (#59)", () => {
   const makeStackingBuff = (
     onRetrigger:

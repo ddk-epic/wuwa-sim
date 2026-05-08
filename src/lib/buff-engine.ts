@@ -173,6 +173,22 @@ export class BuffEngine {
           hitsOut,
           depth,
         )
+        if (!event.synthetic) {
+          const sharedEnergy = event.energy * 0.5
+          for (const teammateId of this.store.getPartyCharacterIds()) {
+            if (teammateId !== event.characterId) {
+              this.applyResourceDelta(
+                teammateId,
+                "energy",
+                sharedEnergy,
+                event.frame,
+                out,
+                hitsOut,
+                depth,
+              )
+            }
+          }
+        }
       }
       if (event.concerto) {
         this.applyResourceDelta(

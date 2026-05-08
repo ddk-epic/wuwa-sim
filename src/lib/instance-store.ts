@@ -88,6 +88,10 @@ export class InstanceStore {
     this.slotsBySlotIndex = slots
   }
 
+  getPartyCharacterIds(): number[] {
+    return this.slotsBySlotIndex.filter((id) => id !== -1)
+  }
+
   setBaseStats(characterId: number, stats: StatTable): void {
     this.baseStats.set(characterId, stats)
   }
