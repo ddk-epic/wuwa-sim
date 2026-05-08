@@ -3,8 +3,8 @@ import type { TimelineEntry } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
-import { getCharacterById, getEchoById } from "#/lib/catalog"
-import { resolveActionTime } from "#/lib/stage"
+import { getCharacterById } from "#/lib/catalog"
+import { resolveStage, resolveStageExecution } from "#/lib/stage"
 import type { ActionTimeStage } from "#/lib/stage"
 import { validateTimeline } from "#/lib/validate-timeline"
 
@@ -39,46 +39,6 @@ interface TimelineViewProps {
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
-}
-
-function findStageForRow(
-  entry: TimelineEntry,
-  slots: Slots,
-  loadouts: SlotLoadout[],
-): ActionTimeStage | null {
-  if (entry.skillType === "Echo Skill") {
-    const slotIndex = slots.findIndex((id) => id === entry.characterId)
-    const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
-    const echo = echoId !== null ? getEchoById(echoId) : null
-    if (!echo) return null
-    const label = (name: string, newName?: string) =>
-      !newName
-        ? name
-        : newName.startsWith("(")
-          ? `${name} ${newName}`
-          : `${name} · ${newName}`
-    return (
-      echo.skill.stages.find(
-        (s) => label(echo.name, s.newName) === entry.skillName,
-      ) ?? null
-    )
-  }
-  const character = getCharacterById(entry.characterId)
-  if (!character) return null
-  const label = (name: string, newName?: string) =>
-    !newName
-      ? name
-      : newName.startsWith("(")
-        ? `${name} ${newName}`
-        : `${name} · ${newName}`
-  for (const skill of character.skills) {
-    if (skill.type !== entry.skillType) continue
-    const stage = skill.stages.find(
-      (s) => label(skill.name, s.newName) === entry.skillName,
-    )
-    if (stage) return stage
-  }
-  return null
 }
 
 export function TimelineView({
@@ -133,12 +93,12 @@ export function TimelineView({
             const errors = validation.rowErrors.get(entry.id) ?? []
             const isDragging = draggedId === entry.id
             const isDropTarget = dropTargetId === entry.id
-            const stage = findStageForRow(entry, slots, loadouts)
+            const resolved = resolveStage(entry, slots, loadouts)
             const stageWithVariants =
-              stage !== null &&
-              stage.variants !== undefined &&
-              Object.keys(stage.variants).length > 0
-                ? stage
+              resolved !== null &&
+              resolved.stage.variants !== undefined &&
+              Object.keys(resolved.stage.variants).length > 0
+                ? resolved.stage
                 : null
 
             return (
@@ -220,12 +180,12 @@ export function TimelineView({
                 </td>
                 <td className="px-3 py-2 text-gray-300">
                   {(() => {
-                    const frames = stage
-                      ? resolveActionTime(
-                          stage,
+                    const frames = resolved
+                      ? resolveStageExecution(
+                          resolved.stage,
                           entry.variantKind,
                           reactionDelay,
-                        )
+                        ).duration
                       : 0
                     return (
                       <>
