@@ -189,13 +189,17 @@ export const sanhua = {
           name: "Stage 5 DMG",
           newName: "Stage 5",
           value: "233.81%",
-          actionTime: 0,
+          actionTime: 50,
+          variants: {
+            cancel: { actionTime: 33 },
+            instantCancel: { actionTime: 7 },
+          },
           damage: [
             {
               type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
-              actionFrame: 0,
+              actionFrame: 23,
               value: 2.3381,
               energy: 4.2,
               concerto: 10,

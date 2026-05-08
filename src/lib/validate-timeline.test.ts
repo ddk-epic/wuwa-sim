@@ -54,7 +54,6 @@ const entry = (
   skillType,
   skillName,
   attackType: skillType,
-  actionTime: 30,
   multiplier: 1,
 })
 

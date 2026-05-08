@@ -286,12 +286,12 @@ describe("focused-stage-catalog — character stages", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
     const stage2 = result.characterStages.find(
-      (s) => s.clickPayload.actionTime === 8,
+      (s) => Math.abs(s.clickPayload.multiplier - 0.75) < 0.01,
     )
     expect(stage2?.clickPayload.multiplier).toBeCloseTo(0.75)
   })
 
-  it("click payload carries characterId, skillType, skillName, actionTime", () => {
+  it("click payload carries characterId, skillType, skillName, multiplier", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
     const stage1 = result.characterStages[0]
@@ -300,7 +300,6 @@ describe("focused-stage-catalog — character stages", () => {
       skillType: "Normal Attack",
       skillName: "Normal Attack",
       attackType: "Basic Attack",
-      actionTime: 12,
       multiplier: 1.5,
     })
   })
@@ -413,7 +412,6 @@ describe("focused-stage-catalog — echo stages", () => {
       skillType: "Echo Skill",
       skillName: "Test Echo · Tap",
       attackType: "Echo Skill",
-      actionTime: 30,
       multiplier: 2.5,
     })
   })

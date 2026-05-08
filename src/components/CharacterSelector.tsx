@@ -35,7 +35,12 @@ export function CharacterSelector() {
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
 
-  const summary = getTimelineSummary(entries)
+  const summary = getTimelineSummary(
+    entries,
+    slots,
+    loadouts,
+    settings.reactionDelay,
+  )
 
   function handleResetTimeline() {
     clearTimeline()
@@ -70,6 +75,7 @@ export function CharacterSelector() {
             summary={summary}
             slots={slots}
             loadouts={loadouts}
+            reactionDelay={settings.reactionDelay}
             onRemove={removeEntry}
             onReorder={reorderEntries}
             onUpdateEntry={updateEntry}

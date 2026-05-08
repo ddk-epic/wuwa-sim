@@ -73,7 +73,6 @@ function buildEchoStage(
       skillType: "Echo Skill",
       skillName: label,
       attackType,
-      actionTime: stage.actionTime,
       multiplier,
     },
   }
@@ -97,7 +96,6 @@ function buildCharacterStage(
       skillType: skill.type,
       skillName: label,
       attackType,
-      actionTime: stage.actionTime,
       multiplier,
     },
   }

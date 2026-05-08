@@ -10,8 +10,10 @@ import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
 import { computeDamage } from "./compute-damage"
 import { BuffEngine } from "./buff-engine"
+import { resolveActionTime, type ActionTimeStage } from "./resolve-action-time"
 
 interface ResolvedStage {
+  stage: ActionTimeStage
   concerto: number
   damage: DamageEntry[]
   element: string
@@ -21,8 +23,7 @@ export function generateSimulationLog(
   entries: TimelineEntry[],
   slots: Slots,
   loadouts: SlotLoadout[],
-  // stage-variant filter seam (ADR 0008) — will be consumed when variants land
-  _reactionDelay: number = 9,
+  reactionDelay: number = 9,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
@@ -31,17 +32,27 @@ export function generateSimulationLog(
 
   for (const entry of entries) {
     const character = getCharacterById(entry.characterId)
-    if (!character) {
-      stageStartFrame += entry.actionTime
-      continue
-    }
+    if (!character) continue
 
-    const stage = resolveStage(entry, character, slots, loadouts)
+    const resolved = resolveStage(entry, character, slots, loadouts)
+    if (!resolved) continue
 
-    if (!stage) {
-      stageStartFrame += entry.actionTime
-      continue
-    }
+    const stageDuration = resolveActionTime(
+      resolved.stage,
+      entry.variantKind,
+      reactionDelay,
+    )
+
+    const variantCutoff =
+      entry.variantKind !== undefined &&
+      resolved.stage.variants?.[entry.variantKind]
+        ? resolved.stage.variants[entry.variantKind]!.actionTime + reactionDelay
+        : undefined
+
+    const damage =
+      variantCutoff !== undefined
+        ? resolved.damage.filter((hit) => hit.actionFrame <= variantCutoff)
+        : resolved.damage
 
     pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
     const skillCastResult = engine.onEvent({
@@ -49,7 +60,7 @@ export function generateSimulationLog(
       characterId: entry.characterId,
       skillType: entry.skillType,
       frame: stageStartFrame,
-      concerto: stage.concerto,
+      concerto: resolved.concerto,
     })
     pushBuffEvents(log, skillCastResult.lifecycleEvents)
     for (const synth of skillCastResult.syntheticHits) log.push(synth)
@@ -66,21 +77,21 @@ export function generateSimulationLog(
     }
     log.push(actionEvent)
 
-    for (let i = 0; i < stage.damage.length; i++) {
-      const hit = stage.damage[i]
+    for (let i = 0; i < damage.length; i++) {
+      const hit = damage[i]
       const hitFrame = stageStartFrame + hit.actionFrame
-      const resolved = engine.resolveHit(character.id, hitFrame)
-      pushBuffEvents(log, resolved.lifecycleEvents)
+      const hitResolved = engine.resolveHit(character.id, hitFrame)
+      pushBuffEvents(log, hitResolved.lifecycleEvents)
 
-      const damage = computeDamage(
+      const dmg = computeDamage(
         {
           multiplier: hit.value,
-          element: stage.element,
+          element: resolved.element,
           skillType: entry.skillType,
           dmgType: hit.dmgType,
           scalingStat: hit.scalingStat,
         },
-        resolved.stats,
+        hitResolved.stats,
       )
 
       const dispatch = engine.recordHit({
@@ -101,9 +112,9 @@ export function generateSimulationLog(
         frame: hitFrame,
         cumulativeEnergy: dispatch.postState.energy,
         cumulativeConcerto: dispatch.postState.concerto,
-        damage,
-        statsSnapshot: { ...resolved.stats },
-        activeBuffIds: resolved.activeBuffIds,
+        damage: dmg,
+        statsSnapshot: { ...hitResolved.stats },
+        activeBuffIds: hitResolved.activeBuffIds,
       }
       log.push(hitEvent)
 
@@ -111,7 +122,7 @@ export function generateSimulationLog(
       for (const synth of dispatch.syntheticHits) log.push(synth)
     }
 
-    stageStartFrame += entry.actionTime
+    stageStartFrame += stageDuration
   }
 
   return log
@@ -136,7 +147,7 @@ function resolveStage(
       (s) => stageLabel(echo.name, s.newName) === entry.skillName,
     )
     if (!stage) return null
-    return { concerto: 0, damage: stage.damage, element: echo.element }
+    return { stage, concerto: 0, damage: stage.damage, element: echo.element }
   }
 
   for (const skill of character.skills) {
@@ -144,8 +155,9 @@ function resolveStage(
     const stage = skill.stages.find(
       (s) => stageLabel(skill.name, s.newName) === entry.skillName,
     )
-    if (stage && stage.damage) {
+    if (stage?.damage) {
       return {
+        stage,
         concerto: stage.concerto ?? 0,
         damage: stage.damage,
         element: character.element,

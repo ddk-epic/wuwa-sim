@@ -38,7 +38,7 @@ const charA: EnrichedCharacter = {
         {
           name: "Stage 1",
           value: "100%",
-          actionTime: 30,
+          actionTime: 60,
           damage: [dmgHit(1.5, 5, 2)],
         },
         {
@@ -159,7 +159,6 @@ function tlEntry(
     skillType,
     skillName,
     attackType: skillType,
-    actionTime: 30,
     multiplier: 1,
   }
 }
@@ -374,7 +373,6 @@ describe("generateSimulationLog — frame tracking", () => {
       skillType: "Normal Attack",
       skillName: "Normal Attack",
       attackType: "Normal Attack",
-      actionTime: 60,
       multiplier: 1,
     }
     const entry2: TimelineEntry = {
@@ -383,7 +381,6 @@ describe("generateSimulationLog — frame tracking", () => {
       skillType: "Normal Attack",
       skillName: "Normal Attack",
       attackType: "Normal Attack",
-      actionTime: 30,
       multiplier: 1,
     }
     const result = generateSimulationLog(
@@ -408,7 +405,6 @@ describe("generateSimulationLog — action event concerto", () => {
       skillType: "Heavy Attack",
       skillName: "Heavy Attack",
       attackType: "Heavy Attack",
-      actionTime: 30,
       multiplier: 1,
     }
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
@@ -578,5 +574,108 @@ describe("generateSimulationLog — discriminated union", () => {
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result[0].kind).toBe("action")
     expect("damage" in result[0]).toBe(false)
+  })
+})
+
+// Tracer fixture: Stage 5 with actionFrame=23, cancel.actionTime=33, instantCancel.actionTime=7
+// reactionDelay=9: cancel cutoff=42, instantCancel cutoff=16
+const charVariant: EnrichedCharacter = {
+  id: 10,
+  name: "Variant Char",
+  element: "Glacio",
+  weaponType: "Sword",
+  rarity: "5",
+  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 1000, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: [],
+  skills: [
+    {
+      id: 5,
+      name: "Normal Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Stage 5",
+          value: "233.81%",
+          actionTime: 50,
+          variants: {
+            cancel: { actionTime: 33 },
+            instantCancel: { actionTime: 7 },
+          },
+          damage: [
+            {
+              type: "Basic Attack",
+              dmgType: "Glacio",
+              scalingStat: "ATK",
+              actionFrame: 23,
+              value: 2.3381,
+              energy: 4.2,
+              concerto: 10,
+              toughness: 1.68,
+              weakness: 1.344,
+            },
+          ],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
+
+describe("generateSimulationLog — stage variants (ADR 0008)", () => {
+  it("full stage (no variantKind): damage entry lands", () => {
+    testCharacters = [charVariant]
+    const entry = tlEntry(10, "Normal Attack", "Normal Attack")
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(1)
+  })
+
+  it("cancel variant: actionFrame 23 ≤ cutoff 42, damage lands", () => {
+    testCharacters = [charVariant]
+    const entry: TimelineEntry = {
+      id: "v1",
+      characterId: 10,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack",
+      attackType: "Normal Attack",
+      multiplier: 1,
+      variantKind: "cancel",
+    }
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(1)
+  })
+
+  it("instantCancel: actionFrame 23 > cutoff 16, no damage but skillCast fires", () => {
+    testCharacters = [charVariant]
+    const entry: TimelineEntry = {
+      id: "v2",
+      characterId: 10,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack",
+      attackType: "Normal Attack",
+      multiplier: 1,
+      variantKind: "instantCancel",
+    }
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    const hits = result.filter((e) => e.kind === "hit")
+    const actions = result.filter((e) => e.kind === "action")
+    expect(hits).toHaveLength(0)
+    expect(actions).toHaveLength(1)
+  })
+
+  it("all existing rotations (no variantKind) simulate to identical numbers as before", () => {
+    testCharacters = [charA]
+    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const baseline = generateSimulationLog(
+      [entry],
+      emptySlots,
+      emptyLoadouts,
+      9,
+    )
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    expect(result).toEqual(baseline)
   })
 })

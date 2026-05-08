@@ -1,10 +1,11 @@
+import type { VariantKind } from "./character"
+
 export interface TimelineEntry {
   id: string
   characterId: number
   skillType: string
   skillName: string
   attackType: string
-  /** Duration of this action in frames (60 fps). Integer. */
-  actionTime: number
+  variantKind?: VariantKind
   multiplier: number
 }

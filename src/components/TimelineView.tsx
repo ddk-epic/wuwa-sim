@@ -2,7 +2,11 @@ import { useState } from "react"
 import type { TimelineEntry } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById, getEchoById } from "#/lib/catalog"
+import {
+  resolveActionTime,
+  type ActionTimeStage,
+} from "#/lib/resolve-action-time"
 import { validateTimeline } from "#/lib/validate-timeline"
 
 interface TimelineViewProps {
@@ -10,6 +14,7 @@ interface TimelineViewProps {
   summary: TimelineSummary
   slots: Slots
   loadouts: SlotLoadout[]
+  reactionDelay: number
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
@@ -30,14 +35,55 @@ function reorderPreview(
   return next
 }
 
+function findStageForRow(
+  entry: TimelineEntry,
+  slots: Slots,
+  loadouts: SlotLoadout[],
+): ActionTimeStage | null {
+  if (entry.skillType === "Echo Skill") {
+    const slotIndex = slots.findIndex((id) => id === entry.characterId)
+    const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
+    const echo = echoId !== null ? getEchoById(echoId) : null
+    if (!echo) return null
+    const label = (name: string, newName?: string) =>
+      !newName
+        ? name
+        : newName.startsWith("(")
+          ? `${name} ${newName}`
+          : `${name} · ${newName}`
+    return (
+      echo.skill.stages.find(
+        (s) => label(echo.name, s.newName) === entry.skillName,
+      ) ?? null
+    )
+  }
+  const character = getCharacterById(entry.characterId)
+  if (!character) return null
+  const label = (name: string, newName?: string) =>
+    !newName
+      ? name
+      : newName.startsWith("(")
+        ? `${name} ${newName}`
+        : `${name} · ${newName}`
+  for (const skill of character.skills) {
+    if (skill.type !== entry.skillType) continue
+    const stage = skill.stages.find(
+      (s) => label(skill.name, s.newName) === entry.skillName,
+    )
+    if (stage) return stage
+  }
+  return null
+}
+
 export function TimelineView({
   entries,
   summary,
   slots,
   loadouts,
+  reactionDelay,
   onRemove,
   onReorder,
-  onUpdateEntry,
+  onUpdateEntry: _onUpdateEntry,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -135,22 +181,24 @@ export function TimelineView({
                   )}
                 </td>
                 <td className="px-3 py-2 text-gray-300">
-                  <input
-                    type="number"
-                    min={0}
-                    value={entry.actionTime}
-                    onChange={(ev) =>
-                      onUpdateEntry(entry.id, {
-                        actionTime: Math.max(0, Number(ev.target.value)),
-                      })
-                    }
-                    onDragStart={(ev) => ev.preventDefault()}
-                    className="w-16 bg-transparent border border-gray-600 rounded px-1 text-right text-sm focus:outline-none focus:border-gray-400"
-                    aria-label="Action time in frames"
-                  />
-                  <span className="ml-1 text-xs text-gray-500">
-                    {row.time.toFixed(2)}s
-                  </span>
+                  {(() => {
+                    const stage = findStageForRow(entry, slots, loadouts)
+                    const frames = stage
+                      ? resolveActionTime(
+                          stage,
+                          entry.variantKind,
+                          reactionDelay,
+                        )
+                      : 0
+                    return (
+                      <>
+                        <span className="text-sm">{frames}</span>
+                        <span className="ml-1 text-xs text-gray-500">
+                          {row.time.toFixed(2)}s
+                        </span>
+                      </>
+                    )
+                  })()}
                 </td>
                 <td className="px-3 py-2 text-yellow-400">
                   {row.damage !== null ? row.damage.toLocaleString() : "—"}

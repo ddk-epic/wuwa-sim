@@ -56,11 +56,18 @@ export interface Character {
   buffs: BuffDef[]
 }
 
+export type VariantKind = "cancel" | "instantCancel"
+
+export interface StageVariant {
+  actionTime: number
+}
+
 export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
   actionTime: number
   hidden?: boolean
   newName?: string
   requiresStageId?: string
+  variants?: Partial<Record<VariantKind, StageVariant>>
 }
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {

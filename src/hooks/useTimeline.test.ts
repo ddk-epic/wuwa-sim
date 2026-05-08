@@ -12,7 +12,6 @@ const sample = {
   skillType: "Normal Attack",
   skillName: "Normal Attack · Stage 1",
   attackType: "Basic Attack",
-  actionTime: 3,
   multiplier: 1.5,
 }
 
@@ -76,16 +75,16 @@ describe("useTimeline", () => {
     expect(result.current.entries).toHaveLength(0)
   })
 
-  it("updateEntry patches actionTime on the target entry", () => {
+  it("updateEntry patches variantKind on the target entry", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
       result.current.addEntry(sample)
     })
     const id = result.current.entries[0].id
     act(() => {
-      result.current.updateEntry(id, { actionTime: 60 })
+      result.current.updateEntry(id, { variantKind: "cancel" })
     })
-    expect(result.current.entries[0].actionTime).toBe(60)
+    expect(result.current.entries[0].variantKind).toBe("cancel")
     expect(result.current.entries[0].skillName).toBe(sample.skillName)
   })
 
@@ -93,14 +92,17 @@ describe("useTimeline", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
       result.current.addEntry(sample)
-      result.current.addEntry({ ...sample, actionTime: 45 })
+      result.current.addEntry({
+        ...sample,
+        variantKind: "instantCancel" as const,
+      })
     })
     const id = result.current.entries[0].id
     act(() => {
-      result.current.updateEntry(id, { actionTime: 99 })
+      result.current.updateEntry(id, { variantKind: "cancel" })
     })
-    expect(result.current.entries[0].actionTime).toBe(99)
-    expect(result.current.entries[1].actionTime).toBe(45)
+    expect(result.current.entries[0].variantKind).toBe("cancel")
+    expect(result.current.entries[1].variantKind).toBe("instantCancel")
   })
 
   it("updateEntry is a no-op for unknown ids", () => {
@@ -109,8 +111,8 @@ describe("useTimeline", () => {
       result.current.addEntry(sample)
     })
     act(() => {
-      result.current.updateEntry("nonexistent-id", { actionTime: 99 })
+      result.current.updateEntry("nonexistent-id", { variantKind: "cancel" })
     })
-    expect(result.current.entries[0].actionTime).toBe(sample.actionTime)
+    expect(result.current.entries[0].variantKind).toBeUndefined()
   })
 })
