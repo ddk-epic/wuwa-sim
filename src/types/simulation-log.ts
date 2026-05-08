@@ -1,4 +1,5 @@
 import type { StatTable } from "./stat-table"
+import type { VariantKind } from "./character"
 
 interface SimulationLogBase {
   characterId: number
@@ -11,6 +12,7 @@ interface SimulationLogBase {
 
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
+  variantKind?: VariantKind
 }
 
 export interface HitEvent extends SimulationLogBase {

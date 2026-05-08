@@ -10,7 +10,8 @@ import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
 import { computeDamage } from "./compute-damage"
 import { BuffEngine } from "./buff-engine"
-import { resolveActionTime, type ActionTimeStage } from "./resolve-action-time"
+import { resolveActionTime } from "./resolve-action-time"
+import type { ActionTimeStage } from "./resolve-action-time"
 
 interface ResolvedStage {
   stage: ActionTimeStage
@@ -74,6 +75,7 @@ export function generateSimulationLog(
       frame: stageStartFrame,
       cumulativeEnergy: actorState.energy,
       cumulativeConcerto: actorState.concerto,
+      variantKind: entry.variantKind,
     }
     log.push(actionEvent)
 

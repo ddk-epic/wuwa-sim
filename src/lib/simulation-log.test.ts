@@ -3,7 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import type { HitEvent } from "#/types/simulation-log"
+import type { ActionEvent, HitEvent } from "#/types/simulation-log"
 
 import { generateSimulationLog } from "./simulation-log"
 
@@ -664,6 +664,30 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     const actions = result.filter((e) => e.kind === "action")
     expect(hits).toHaveLength(0)
     expect(actions).toHaveLength(1)
+  })
+
+  it("ActionEvent records variantKind when set", () => {
+    testCharacters = [charVariant]
+    const entry: TimelineEntry = {
+      id: "v3",
+      characterId: 10,
+      skillType: "Normal Attack",
+      skillName: "Normal Attack",
+      attackType: "Normal Attack",
+      multiplier: 1,
+      variantKind: "cancel",
+    }
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.variantKind).toBe("cancel")
+  })
+
+  it("ActionEvent has no variantKind for full stage", () => {
+    testCharacters = [charVariant]
+    const entry = tlEntry(10, "Normal Attack", "Normal Attack")
+    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.variantKind).toBeUndefined()
   })
 
   it("all existing rotations (no variantKind) simulate to identical numbers as before", () => {

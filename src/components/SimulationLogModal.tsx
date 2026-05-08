@@ -161,6 +161,13 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         </td>
                         <td className="py-1 pr-3">
                           {ev.skillName}
+                          {ev.kind === "action" && ev.variantKind ? (
+                            <span className="ml-2 text-xs text-blue-400/80">
+                              {ev.variantKind === "cancel"
+                                ? "(Cancel)"
+                                : "(Instant Cancel)"}
+                            </span>
+                          ) : null}
                           {ev.kind === "hit" && ev.synthetic ? (
                             <span className="ml-2 text-xs text-cyan-400/80 italic">
                               (coord)

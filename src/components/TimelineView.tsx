@@ -1,13 +1,34 @@
 import { useState } from "react"
 import type { TimelineEntry } from "#/types/timeline"
+import type { VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import { getCharacterById, getEchoById } from "#/lib/catalog"
-import {
-  resolveActionTime,
-  type ActionTimeStage,
-} from "#/lib/resolve-action-time"
+import { resolveActionTime } from "#/lib/resolve-action-time"
+import type { ActionTimeStage } from "#/lib/resolve-action-time"
 import { validateTimeline } from "#/lib/validate-timeline"
+
+const VARIANT_ORDER: (VariantKind | undefined)[] = [
+  undefined,
+  "cancel",
+  "instantCancel",
+]
+
+const VARIANT_LABEL: Record<VariantKind, string> = {
+  cancel: "(Cancel)",
+  instantCancel: "(Instant Cancel)",
+}
+
+function nextVariant(
+  current: VariantKind | undefined,
+  stage: ActionTimeStage,
+): VariantKind | undefined {
+  const defined = VARIANT_ORDER.filter(
+    (v) => v === undefined || stage.variants?.[v] !== undefined,
+  )
+  const idx = defined.indexOf(current)
+  return defined[(idx + 1) % defined.length]
+}
 
 interface TimelineViewProps {
   entries: TimelineEntry[]
@@ -83,7 +104,7 @@ export function TimelineView({
   reactionDelay,
   onRemove,
   onReorder,
-  onUpdateEntry: _onUpdateEntry,
+  onUpdateEntry,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -132,6 +153,13 @@ export function TimelineView({
             const showMessage = isInvalid && messageIndexes.has(i)
             const errors = validation.rowErrors.get(entry.id) ?? []
             const isDragging = draggedId === entry.id
+            const stage = findStageForRow(entry, slots, loadouts)
+            const stageWithVariants =
+              stage !== null &&
+              stage.variants !== undefined &&
+              Object.keys(stage.variants).length > 0
+                ? stage
+                : null
 
             return (
               <tr
@@ -168,21 +196,49 @@ export function TimelineView({
                 <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
                 <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
                 <td className="px-3 py-2 text-gray-200">
-                  <span
-                    className={isInvalid ? "text-red-400" : ""}
-                    title={isInvalid ? "red-marker" : undefined}
-                  >
-                    {entry.skillName}
-                  </span>
-                  {showMessage && errors.length > 0 && (
-                    <span className="ml-2 text-xs text-red-400">
-                      {errors[0].message}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={isInvalid ? "text-red-400" : ""}
+                      title={isInvalid ? "red-marker" : undefined}
+                    >
+                      {entry.skillName}
+                      {entry.variantKind && (
+                        <span className="ml-1 text-xs text-blue-400">
+                          {VARIANT_LABEL[entry.variantKind]}
+                        </span>
+                      )}
                     </span>
-                  )}
+                    {stageWithVariants && (
+                      <button
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateEntry(entry.id, {
+                            variantKind: nextVariant(
+                              entry.variantKind,
+                              stageWithVariants,
+                            ),
+                          })
+                        }}
+                        className="text-xs px-1.5 py-0.5 rounded border border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors shrink-0"
+                        title="Cycle variant: Full → Cancel → Instant Cancel"
+                      >
+                        {entry.variantKind === undefined
+                          ? "Full"
+                          : entry.variantKind === "cancel"
+                            ? "Cancel"
+                            : "IC"}
+                      </button>
+                    )}
+                    {showMessage && errors.length > 0 && (
+                      <span className="text-xs text-red-400">
+                        {errors[0].message}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 py-2 text-gray-300">
                   {(() => {
-                    const stage = findStageForRow(entry, slots, loadouts)
                     const frames = stage
                       ? resolveActionTime(
                           stage,
