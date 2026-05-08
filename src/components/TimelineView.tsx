@@ -41,21 +41,6 @@ interface TimelineViewProps {
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
 }
 
-function reorderPreview(
-  entries: TimelineEntry[],
-  draggedId: string,
-  dropTargetId: string,
-): TimelineEntry[] {
-  const fromIndex = entries.findIndex((e) => e.id === draggedId)
-  const toIndex = entries.findIndex((e) => e.id === dropTargetId)
-  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
-    return entries
-  const next = [...entries]
-  const [item] = next.splice(fromIndex, 1)
-  next.splice(toIndex, 0, item)
-  return next
-}
-
 function findStageForRow(
   entry: TimelineEntry,
   slots: Slots,
@@ -117,14 +102,9 @@ export function TimelineView({
     )
   }
 
-  const displayEntries =
-    draggedId !== null && dropTargetId !== null
-      ? reorderPreview(entries, draggedId, dropTargetId)
-      : entries
+  const validation = validateTimeline(entries, slots, loadouts)
 
-  const validation = validateTimeline(displayEntries, slots, loadouts)
-
-  const rowsWithMessages = displayEntries.reduce<number[]>((acc, e, i) => {
+  const rowsWithMessages = entries.reduce<number[]>((acc, e, i) => {
     if ((validation.rowErrors.get(e.id)?.length ?? 0) > 0) acc.push(i)
     return acc
   }, [])
@@ -145,14 +125,14 @@ export function TimelineView({
           </tr>
         </thead>
         <tbody>
-          {displayEntries.map((entry, i) => {
+          {entries.map((entry, i) => {
             const char = getCharacterById(entry.characterId)
-            const origIndex = entries.findIndex((e) => e.id === entry.id)
-            const row = summary.rows[origIndex] ?? { time: 0, damage: null }
+            const row = summary.rows[i] ?? { time: 0, damage: null }
             const isInvalid = validation.invalidRowIds.has(entry.id)
             const showMessage = isInvalid && messageIndexes.has(i)
             const errors = validation.rowErrors.get(entry.id) ?? []
             const isDragging = draggedId === entry.id
+            const isDropTarget = dropTargetId === entry.id
             const stage = findStageForRow(entry, slots, loadouts)
             const stageWithVariants =
               stage !== null &&
@@ -189,6 +169,7 @@ export function TimelineView({
                 className={[
                   "border-t border-gray-700 cursor-grab",
                   isDragging ? "opacity-40" : "hover:bg-gray-800/50",
+                  isDropTarget ? "border-t-blue-500 border-t-2" : "",
                   isInvalid ? "bg-red-950/30" : "",
                 ].join(" ")}
               >
