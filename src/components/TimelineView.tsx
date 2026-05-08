@@ -4,8 +4,8 @@ import type { VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import { getCharacterById, getEchoById } from "#/lib/catalog"
-import { resolveActionTime } from "#/lib/resolve-action-time"
-import type { ActionTimeStage } from "#/lib/resolve-action-time"
+import { resolveActionTime } from "#/lib/stage"
+import type { ActionTimeStage } from "#/lib/stage"
 import { validateTimeline } from "#/lib/validate-timeline"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [

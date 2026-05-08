@@ -1,6 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
+import { stageLabel } from "./stage"
 
 export interface ValidationError {
   message: string
@@ -14,12 +15,6 @@ export interface ValidationResult {
 interface InternalError {
   message: string
   isConsequence: boolean
-}
-
-function stageLabel(skillName: string, newName?: string): string {
-  if (!newName) return skillName
-  if (newName.startsWith("(")) return `${skillName} ${newName}`
-  return `${skillName} · ${newName}`
 }
 
 export function validateTimeline(

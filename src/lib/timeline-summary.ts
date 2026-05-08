@@ -1,7 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "#/lib/catalog"
-import { resolveActionTime, type ActionTimeStage } from "./resolve-action-time"
+import { getCharacterById } from "#/lib/catalog"
+import { resolveStage, resolveStageExecution } from "./stage"
 
 const FRAMES_PER_SECOND = 60
 
@@ -40,9 +40,10 @@ export function getTimelineSummary(
     }
     rows.push({ time, damage })
 
-    const stage = findStageForEntry(entry, slots, loadouts)
-    cumulativeFrames += stage
-      ? resolveActionTime(stage, entry.variantKind, reactionDelay)
+    const resolved = resolveStage(entry, slots, loadouts)
+    cumulativeFrames += resolved
+      ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
+          .duration
       : 0
   }
 
@@ -50,38 +51,4 @@ export function getTimelineSummary(
   const dps = totalTimeSec > 0 ? Math.round(totalDamage / totalTimeSec) : 0
 
   return { rows, totalDamage, totalTimeSec, dps }
-}
-
-function stageLabel(skillName: string, newName?: string): string {
-  if (!newName) return skillName
-  if (newName.startsWith("(")) return `${skillName} ${newName}`
-  return `${skillName} · ${newName}`
-}
-
-function findStageForEntry(
-  entry: TimelineEntry,
-  slots: Slots,
-  loadouts: SlotLoadout[],
-): ActionTimeStage | null {
-  if (entry.skillType === "Echo Skill") {
-    const slotIndex = slots.findIndex((id) => id === entry.characterId)
-    const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
-    const echo = echoId !== null ? getEchoById(echoId) : null
-    if (!echo) return null
-    return (
-      echo.skill.stages.find(
-        (s) => stageLabel(echo.name, s.newName) === entry.skillName,
-      ) ?? null
-    )
-  }
-  const character = getCharacterById(entry.characterId)
-  if (!character) return null
-  for (const skill of character.skills) {
-    if (skill.type !== entry.skillType) continue
-    const stage = skill.stages.find(
-      (s) => stageLabel(skill.name, s.newName) === entry.skillName,
-    )
-    if (stage) return stage
-  }
-  return null
 }

@@ -63,6 +63,7 @@ export interface StageVariant {
 }
 
 export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
+  id?: string
   actionTime: number
   hidden?: boolean
   newName?: string

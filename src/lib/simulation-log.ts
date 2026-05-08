@@ -1,4 +1,3 @@
-import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
@@ -7,18 +6,10 @@ import type {
   SimulationLogEntry,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "./catalog"
+import { getCharacterById } from "./catalog"
 import { computeDamage } from "./compute-damage"
 import { BuffEngine } from "./buff-engine"
-import { resolveActionTime } from "./resolve-action-time"
-import type { ActionTimeStage } from "./resolve-action-time"
-
-interface ResolvedStage {
-  stage: ActionTimeStage
-  concerto: number
-  damage: DamageEntry[]
-  element: string
-}
+import { resolveStage, resolveStageExecution } from "./stage"
 
 export function generateSimulationLog(
   entries: TimelineEntry[],
@@ -35,25 +26,14 @@ export function generateSimulationLog(
     const character = getCharacterById(entry.characterId)
     if (!character) continue
 
-    const resolved = resolveStage(entry, character, slots, loadouts)
+    const resolved = resolveStage(entry, slots, loadouts)
     if (!resolved) continue
 
-    const stageDuration = resolveActionTime(
+    const { duration: stageDuration, damage } = resolveStageExecution(
       resolved.stage,
       entry.variantKind,
       reactionDelay,
     )
-
-    const variantCutoff =
-      entry.variantKind !== undefined &&
-      resolved.stage.variants?.[entry.variantKind]
-        ? resolved.stage.variants[entry.variantKind]!.actionTime + reactionDelay
-        : undefined
-
-    const damage =
-      variantCutoff !== undefined
-        ? resolved.damage.filter((hit) => hit.actionFrame <= variantCutoff)
-        : resolved.damage
 
     pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
     const skillCastResult = engine.onEvent({
@@ -132,45 +112,4 @@ export function generateSimulationLog(
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
   for (const e of events) log.push(e)
-}
-
-function resolveStage(
-  entry: TimelineEntry,
-  character: EnrichedCharacter,
-  slots: Slots,
-  loadouts: SlotLoadout[],
-): ResolvedStage | null {
-  if (entry.skillType === "Echo Skill") {
-    const slotIndex = slots.findIndex((id) => id === entry.characterId)
-    const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
-    const echo = echoId !== null ? getEchoById(echoId) : null
-    if (!echo) return null
-    const stage = echo.skill.stages.find(
-      (s) => stageLabel(echo.name, s.newName) === entry.skillName,
-    )
-    if (!stage) return null
-    return { stage, concerto: 0, damage: stage.damage, element: echo.element }
-  }
-
-  for (const skill of character.skills) {
-    if (skill.type !== entry.skillType) continue
-    const stage = skill.stages.find(
-      (s) => stageLabel(skill.name, s.newName) === entry.skillName,
-    )
-    if (stage?.damage) {
-      return {
-        stage,
-        concerto: stage.concerto ?? 0,
-        damage: stage.damage,
-        element: character.element,
-      }
-    }
-  }
-  return null
-}
-
-function stageLabel(skillName: string, newName?: string): string {
-  if (!newName) return skillName
-  if (newName.startsWith("(")) return `${skillName} ${newName}`
-  return `${skillName} · ${newName}`
 }
