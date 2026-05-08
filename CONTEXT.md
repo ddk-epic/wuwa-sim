@@ -28,6 +28,15 @@ The named sub-phase of a skill that contains the actual Damage Entries (e.g. "St
 **Damage Entry**:
 The pure-data description of a single hit within a Stage — its multiplier value, scaling stat, action frame offset, and resource-gain values.
 
+**Stage Variant**:
+An optional alternate execution of a Stage that ends the animation early. Authored per-stage as a `{ actionTime }` override under one of the closed Variant Kinds. The engine derives `effective = variant.actionTime + Reaction Delay` and uses that as both the action duration and the damage-filter cutoff: only Damage Entries with `actionFrame ≤ effective` resolve. Surviving Damage Entries are not scaled — energy, concerto, multiplier, toughness, and weakness pass through unchanged. Variants exist on a stage only when the character data declares them; they are not implicitly available.
+
+**Variant Kind**:
+The closed taxonomy of supported variants: `cancel` (animation cut after damage lands) and `instantCancel` (animation cut before damage lands; the cast still counts for cooldown, resource gates, and `skillCast` triggers). `swap` and `fastCancel` are reserved enum slots not yet implemented — `swap` requires the unimplemented Trailing Window because it does not truncate.
+
+**Reaction Delay**:
+A global player-level simulator setting (frames; default 9 at 60fps) that pads every variant's action time and extends the damage-filter cutoff by the same amount. Models human reaction time as real play frames, not dead padding — hits authored within the reaction window land. Stored in localStorage, not on the Loadout.
+
 ### The buff system
 
 **Buff Def**:
