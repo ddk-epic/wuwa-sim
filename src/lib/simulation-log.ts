@@ -6,7 +6,6 @@ import type {
   SimulationLogEntry,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById } from "./catalog"
 import { computeDamage } from "./compute-damage"
 import { BuffEngine } from "./buff-engine"
 import { resolveStage, resolveStageExecution } from "./stage"
@@ -23,9 +22,6 @@ export function generateSimulationLog(
   let stageStartFrame = 0
 
   for (const entry of entries) {
-    const character = getCharacterById(entry.characterId)
-    if (!character) continue
-
     const resolved = resolveStage(entry, slots, loadouts)
     if (!resolved) continue
 
@@ -39,7 +35,7 @@ export function generateSimulationLog(
     const skillCastResult = engine.onEvent({
       kind: "skillCast",
       characterId: entry.characterId,
-      skillType: entry.skillType,
+      skillType: resolved.skillType,
       frame: stageStartFrame,
       concerto: resolved.concerto,
     })
@@ -50,8 +46,8 @@ export function generateSimulationLog(
     const actionEvent: ActionEvent = {
       kind: "action",
       characterId: entry.characterId,
-      skillType: entry.skillType,
-      skillName: entry.skillName,
+      skillType: resolved.skillType,
+      skillName: resolved.skillName,
       frame: stageStartFrame,
       cumulativeEnergy: actorState.energy,
       cumulativeConcerto: actorState.concerto,
@@ -62,14 +58,14 @@ export function generateSimulationLog(
     for (let i = 0; i < damage.length; i++) {
       const hit = damage[i]
       const hitFrame = stageStartFrame + hit.actionFrame
-      const hitResolved = engine.resolveHit(character.id, hitFrame)
+      const hitResolved = engine.resolveHit(entry.characterId, hitFrame)
       pushBuffEvents(log, hitResolved.lifecycleEvents)
 
       const dmg = computeDamage(
         {
           multiplier: hit.value,
           element: resolved.element,
-          skillType: entry.skillType,
+          skillType: resolved.skillType,
           dmgType: hit.dmgType,
           scalingStat: hit.scalingStat,
         },
@@ -79,7 +75,7 @@ export function generateSimulationLog(
       const dispatch = engine.recordHit({
         kind: "hitLanded",
         characterId: entry.characterId,
-        skillType: entry.skillType,
+        skillType: resolved.skillType,
         dmgType: hit.dmgType,
         frame: hitFrame,
         energy: hit.energy,
@@ -89,8 +85,8 @@ export function generateSimulationLog(
       const hitEvent: HitEvent = {
         kind: "hit",
         characterId: entry.characterId,
-        skillType: entry.skillType,
-        skillName: `${entry.skillName} [hit ${i + 1}]`,
+        skillType: resolved.skillType,
+        skillName: `${resolved.skillName} [hit ${i + 1}]`,
         frame: hitFrame,
         cumulativeEnergy: dispatch.postState.energy,
         cumulativeConcerto: dispatch.postState.concerto,

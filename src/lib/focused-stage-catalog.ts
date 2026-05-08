@@ -61,19 +61,15 @@ function buildEchoStage(
   stage: EnrichedEchoStage,
   key: string,
 ): FocusedStage {
-  const attackType = deriveAttackType(stage.damage, "Echo Skill")
+  const attackType = stage.damage[0]?.type ?? "Echo Skill"
   const label = skillLabel(echoName, stage.newName)
-  const multiplier = sumMultiplier(stage.damage)
   return {
     key,
     label,
     typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
     clickPayload: {
       characterId,
-      skillType: "Echo Skill",
-      skillName: label,
-      attackType,
-      multiplier,
+      stageId: `${echoName}::${stage.newName}`,
     },
   }
 }
@@ -84,32 +80,17 @@ function buildCharacterStage(
   stage: EnrichedSkillAttribute,
   key: string,
 ): FocusedStage {
-  const attackType = deriveAttackType(stage.damage, skill.type)
+  const attackType = stage.damage?.[0]?.type ?? skill.type
   const label = skillLabel(skill.name, stage.newName)
-  const multiplier = sumMultiplier(stage.damage)
   return {
     key,
     label,
     typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
     clickPayload: {
       characterId,
-      skillType: skill.type,
-      skillName: label,
-      attackType,
-      multiplier,
+      stageId: `${skill.name}::${stage.newName ?? "_"}`,
     },
   }
-}
-
-function deriveAttackType(
-  damage: { type: string }[] | undefined,
-  fallback: string,
-): string {
-  return damage?.[0]?.type ?? fallback
-}
-
-function sumMultiplier(damage: { value: number }[] | undefined): number {
-  return (damage ?? []).reduce((sum, d) => sum + d.value, 0)
 }
 
 function skillLabel(skillName: string, newName?: string): string {

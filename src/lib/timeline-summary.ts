@@ -32,19 +32,25 @@ export function getTimelineSummary(
 
   for (const entry of entries) {
     const time = cumulativeFrames / FRAMES_PER_SECOND
-    let damage: number | null = null
-    if (entry.multiplier > 0) {
-      const maxAtk = getCharacterById(entry.characterId)?.stats.max.atk ?? 0
-      damage = Math.round(entry.multiplier * maxAtk)
-      totalDamage += damage
-    }
-    rows.push({ time, damage })
+    let rowDamage: number | null = null
 
     const resolved = resolveStage(entry, slots, loadouts)
-    cumulativeFrames += resolved
+    const execution = resolved
       ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
-          .duration
-      : 0
+      : null
+
+    cumulativeFrames += execution?.duration ?? 0
+
+    if (execution && execution.damage.length > 0) {
+      const multiplier = execution.damage.reduce((sum, d) => sum + d.value, 0)
+      if (multiplier > 0) {
+        const maxAtk = getCharacterById(entry.characterId)?.stats.max.atk ?? 0
+        rowDamage = Math.round(multiplier * maxAtk)
+        totalDamage += rowDamage
+      }
+    }
+
+    rows.push({ time, damage: rowDamage })
   }
 
   const totalTimeSec = cumulativeFrames / FRAMES_PER_SECOND

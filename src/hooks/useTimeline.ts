@@ -1,12 +1,18 @@
 import type { TimelineEntry } from "#/types/timeline"
+import { migrateEntries } from "#/lib/migrate-timeline"
 import { useLocalStorage } from "./useLocalStorage"
 
 type NewEntry = Omit<TimelineEntry, "id">
+
+function transformEntries(raw: unknown): TimelineEntry[] {
+  return migrateEntries(Array.isArray(raw) ? raw : [])
+}
 
 export function useTimeline() {
   const [entries, setEntries] = useLocalStorage<TimelineEntry[]>(
     "wuwa.timeline.entries",
     [],
+    transformEntries,
   )
 
   function addEntry(entry: NewEntry) {

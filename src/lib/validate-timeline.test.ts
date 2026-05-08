@@ -45,17 +45,9 @@ const baseChar = (
 
 const entry = (
   characterId: number,
-  skillType: string,
-  skillName: string,
-  id = `${characterId}-${skillType}`,
-): TimelineEntry => ({
-  id,
-  characterId,
-  skillType,
-  skillName,
-  attackType: skillType,
-  multiplier: 1,
-})
+  stageId: string,
+  id = `${characterId}-${stageId}`,
+): TimelineEntry => ({ id, characterId, stageId })
 
 const emptyLoadout: SlotLoadout = {
   weaponId: null,
@@ -84,7 +76,7 @@ describe("validateTimeline — empty", () => {
 describe("validateTimeline — character in team", () => {
   it("marks entry invalid when characterId is not in any slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(99, "Normal Attack", "Normal Attack")
+    const e = entry(99, "Normal Attack::_")
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
     expect(result.rowErrors.get(e.id)?.length).toBeGreaterThan(0)
@@ -92,7 +84,7 @@ describe("validateTimeline — character in team", () => {
 
   it("does not mark entry invalid when characterId is in a slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "Normal Attack", "Normal Attack")
+    const e = entry(1, "Normal Attack::_")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
     expect(result.rowErrors.get(e.id)).toBeUndefined()
@@ -100,16 +92,16 @@ describe("validateTimeline — character in team", () => {
 
   it("accepts character in second or third slot", () => {
     testCharacters = [baseChar({ id: 2 })]
-    const e = entry(2, "Normal Attack", "Normal Attack")
+    const e = entry(2, "Normal Attack::_")
     const result = validateTimeline([e], [null, 2, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
 })
 
 describe("validateTimeline — skill existence", () => {
-  it("marks entry invalid when skill name does not match any stage", () => {
+  it("marks entry invalid when stageId does not match any stage", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "Normal Attack", "Nonexistent Skill")
+    const e = entry(1, "Normal Attack::Nonexistent")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
   })
@@ -136,7 +128,7 @@ describe("validateTimeline — skill existence", () => {
         ],
       }),
     ]
-    const e = entry(1, "Heavy Attack", "Heavy Attack · Charged")
+    const e = entry(1, "Heavy Attack::Charged")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
@@ -163,7 +155,7 @@ describe("validateTimeline — skill existence", () => {
         ],
       }),
     ]
-    const e = entry(1, "Normal Attack", "Normal Attack (Stage 2)")
+    const e = entry(1, "Normal Attack::(Stage 2)")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
@@ -187,7 +179,7 @@ describe("validateTimeline — echo skill", () => {
         },
       },
     ]
-    const e = entry(1, "Echo Skill", "Test Echo · Tap")
+    const e = entry(1, "Test Echo::Tap")
     const loadoutsWithEcho: [SlotLoadout, SlotLoadout, SlotLoadout] = [
       { ...emptyLoadout, echoId: 10 },
       emptyLoadout,
@@ -199,7 +191,7 @@ describe("validateTimeline — echo skill", () => {
 
   it("marks Echo Skill invalid when no echo is equipped", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "Echo Skill", "Test Echo · Tap")
+    const e = entry(1, "Test Echo::Tap")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
   })
@@ -208,8 +200,8 @@ describe("validateTimeline — echo skill", () => {
 describe("validateTimeline — multiple entries", () => {
   it("validates each entry independently", () => {
     testCharacters = [baseChar()]
-    const valid = entry(1, "Normal Attack", "Normal Attack", "valid")
-    const invalid = entry(99, "Normal Attack", "Normal Attack", "invalid")
+    const valid = entry(1, "Normal Attack::_", "valid")
+    const invalid = entry(99, "Normal Attack::_", "invalid")
     const result = validateTimeline([valid, invalid], slots, loadouts)
     expect(result.invalidRowIds.has("valid")).toBe(false)
     expect(result.invalidRowIds.has("invalid")).toBe(true)
@@ -217,25 +209,6 @@ describe("validateTimeline — multiple entries", () => {
 })
 
 describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
-  const introStage = {
-    name: "Intro Skill",
-    value: "1",
-    actionTime: 30,
-    damage: [],
-  }
-  const outroStage = {
-    name: "Outro Skill",
-    value: "1",
-    actionTime: 30,
-    damage: [],
-  }
-  const normalStage = {
-    name: "Stage 1",
-    value: "1",
-    actionTime: 30,
-    damage: [],
-  }
-
   const charWithAll = (id: number): EnrichedCharacter =>
     baseChar({
       id,
@@ -245,21 +218,25 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
           id: 10 * id + 1,
           name: "Normal Attack",
           type: "Normal Attack",
-          stages: [normalStage],
+          stages: [{ name: "Stage 1", value: "1", actionTime: 30, damage: [] }],
           damage: [],
         },
         {
           id: 10 * id + 2,
           name: "Intro Skill",
           type: "Intro Skill",
-          stages: [introStage],
+          stages: [
+            { name: "Intro Skill", value: "1", actionTime: 30, damage: [] },
+          ],
           damage: [],
         },
         {
           id: 10 * id + 3,
           name: "Outro Skill",
           type: "Outro Skill",
-          stages: [outroStage],
+          stages: [
+            { name: "Outro Skill", value: "1", actionTime: 30, damage: [] },
+          ],
           damage: [],
         },
       ],
@@ -274,7 +251,7 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("flags Intro that opens the timeline (no preceding Outro)", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const intro = entry(1, "Intro Skill", "Intro Skill", "intro")
+    const intro = entry(1, "Intro Skill::_", "intro")
     const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
     expect(result.invalidRowIds.has("intro")).toBe(true)
     expect(result.rowErrors.get("intro")?.length).toBeGreaterThan(0)
@@ -282,8 +259,8 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("flags Intro not immediately preceded by an Outro", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const normal = entry(1, "Normal Attack", "Normal Attack", "normal")
-    const intro = entry(2, "Intro Skill", "Intro Skill", "intro")
+    const normal = entry(1, "Normal Attack::_", "normal")
+    const intro = entry(2, "Intro Skill::_", "intro")
     const result = validateTimeline(
       [normal, intro],
       twoCharSlots,
@@ -295,8 +272,8 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("accepts Intro immediately preceded by an Outro", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
-    const intro = entry(2, "Intro Skill", "Intro Skill", "intro")
+    const outro = entry(1, "Outro Skill::_", "outro")
+    const intro = entry(2, "Intro Skill::_", "intro")
     const result = validateTimeline(
       [outro, intro],
       twoCharSlots,
@@ -308,15 +285,15 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("does not flag Outro entries", () => {
     testCharacters = [charWithAll(1)]
-    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
+    const outro = entry(1, "Outro Skill::_", "outro")
     const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
     expect(result.invalidRowIds.has("outro")).toBe(false)
   })
 
   it("accepts Intro preceded by Outro from the same character", () => {
     testCharacters = [charWithAll(1)]
-    const outro = entry(1, "Outro Skill", "Outro Skill", "outro")
-    const intro = entry(1, "Intro Skill", "Intro Skill", "intro")
+    const outro = entry(1, "Outro Skill::_", "outro")
+    const intro = entry(1, "Intro Skill::_", "intro")
     const result = validateTimeline(
       [outro, intro],
       [1, null, null],
@@ -349,7 +326,7 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "Normal Attack · Stage 1",
+              requiresStageId: "Normal Attack::Stage 1",
             },
           ],
           damage: [],
@@ -359,7 +336,7 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("flags Stage 2 when no prior entry exists for the character", () => {
     testCharacters = [charWithPrereq(1)]
-    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const s2 = entry(1, "Normal Attack::Stage 2", "s2")
     const result = validateTimeline([s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(true)
     expect(
@@ -369,26 +346,26 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
-    const s2a = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2a")
-    const s2b = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2b")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
+    const s2a = entry(1, "Normal Attack::Stage 2", "s2a")
+    const s2b = entry(1, "Normal Attack::Stage 2", "s2b")
     const result = validateTimeline([s1, s2a, s2b], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2b")).toBe(true)
   })
 
   it("accepts Stage 2 immediately after Stage 1", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
-    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack::Stage 2", "s2")
     const result = validateTimeline([s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(false)
   })
 
   it("accepts Stage 2 when Stage 1 is separated by a different character's entry", () => {
     testCharacters = [charWithPrereq(1), baseChar({ id: 2 })]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
-    const other = entry(2, "Normal Attack", "Normal Attack", "other")
-    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
+    const other = entry(2, "Normal Attack::_", "other")
+    const s2 = entry(1, "Normal Attack::Stage 2", "s2")
     const result = validateTimeline([s1, other, s2], [1, 2, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(false)
     expect(result.invalidRowIds.has("other")).toBe(false)
@@ -397,7 +374,7 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("does not flag stages with no requiresStageId", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
     const result = validateTimeline([s1], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s1")).toBe(false)
   })
@@ -427,7 +404,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "Normal Attack · Stage 0",
+              requiresStageId: "Normal Attack::Stage 0",
             },
             {
               name: "S2",
@@ -435,7 +412,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "Normal Attack · Stage 1",
+              requiresStageId: "Normal Attack::Stage 1",
             },
             {
               name: "S3",
@@ -443,7 +420,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "Normal Attack · Stage 2",
+              requiresStageId: "Normal Attack::Stage 2",
             },
           ],
           damage: [],
@@ -454,9 +431,9 @@ describe("validateTimeline — cascade suppression", () => {
   it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowErrors", () => {
     // Stage 0 absent; Stage 1 → direct error; Stage 2, Stage 3 → cascade
     testCharacters = [chainChar()]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
-    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
-    const s3 = entry(1, "Normal Attack", "Normal Attack · Stage 3", "s3")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack::Stage 2", "s2")
+    const s3 = entry(1, "Normal Attack::Stage 3", "s3")
     const result = validateTimeline([s1, s2, s3], [1, null, null], loadouts)
 
     // Stage 1 has a direct error
@@ -474,9 +451,9 @@ describe("validateTimeline — cascade suppression", () => {
 
   it("an independent error on a later row is not suppressed", () => {
     testCharacters = [chainChar(), baseChar({ id: 2 })]
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
     // char 99 not in team → independent error
-    const independent = entry(99, "Normal Attack", "Normal Attack", "ind")
+    const independent = entry(99, "Normal Attack::_", "ind")
     const result = validateTimeline(
       [s1, independent],
       [1, null, null],
@@ -491,9 +468,9 @@ describe("validateTimeline — cascade suppression", () => {
 
   it("accepts Stage 2 when Stage 1 is valid (no cascade)", () => {
     testCharacters = [chainChar()]
-    const s0 = entry(1, "Normal Attack", "Normal Attack · Stage 0", "s0")
-    const s1 = entry(1, "Normal Attack", "Normal Attack · Stage 1", "s1")
-    const s2 = entry(1, "Normal Attack", "Normal Attack · Stage 2", "s2")
+    const s0 = entry(1, "Normal Attack::Stage 0", "s0")
+    const s1 = entry(1, "Normal Attack::Stage 1", "s1")
+    const s2 = entry(1, "Normal Attack::Stage 2", "s2")
     const result = validateTimeline([s0, s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.size).toBe(0)
     expect(result.rowErrors.size).toBe(0)

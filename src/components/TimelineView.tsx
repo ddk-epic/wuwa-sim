@@ -135,14 +135,16 @@ export function TimelineView({
               >
                 <td className="px-3 py-2 text-gray-400">{i + 1}</td>
                 <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
-                <td className="px-3 py-2 text-gray-300">{entry.attackType}</td>
+                <td className="px-3 py-2 text-gray-300">
+                  {resolved?.attackType ?? "—"}
+                </td>
                 <td className="px-3 py-2 text-gray-200">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span
                       className={isInvalid ? "text-red-400" : ""}
                       title={isInvalid ? "red-marker" : undefined}
                     >
-                      {entry.skillName}
+                      {resolved?.skillName ?? "—"}
                       {entry.variantKind && (
                         <span className="ml-1 text-xs text-blue-400">
                           {VARIANT_LABEL[entry.variantKind]}

@@ -14,6 +14,9 @@ export interface ResolvedStage {
   element: string
   concerto: number
   damage: DamageEntry[]
+  skillType: string
+  skillName: string
+  attackType: string
 }
 
 export function stageLabel(skillName: string, newName?: string): string {
@@ -27,43 +30,47 @@ export function resolveStage(
   slots: Slots,
   loadouts: SlotLoadout[],
 ): ResolvedStage | null {
-  if (entry.skillType === "Echo Skill") {
-    const slotIndex = slots.findIndex((id) => id === entry.characterId)
-    const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
-    const echo = echoId !== null ? getEchoById(echoId) : null
-    if (!echo) return null
-    const stage = echo.skill.stages.find(
-      (s) => stageLabel(echo.name, s.newName) === entry.skillName,
-    )
-    if (!stage) return null
-    const id = `${echo.name}::${stage.newName}`
-    return {
-      stage,
-      stageId: id,
-      concerto: 0,
-      damage: stage.damage,
-      element: echo.element,
-    }
-  }
-
   const character = getCharacterById(entry.characterId)
-  if (!character) return null
-  for (const skill of character.skills) {
-    if (skill.type !== entry.skillType) continue
-    const stage = skill.stages.find(
-      (s) => stageLabel(skill.name, s.newName) === entry.skillName,
-    )
-    if (stage?.damage) {
-      const id = `${skill.name}::${stage.newName ?? "_"}`
-      return {
-        stage,
-        stageId: id,
-        concerto: stage.concerto ?? 0,
-        damage: stage.damage,
-        element: character.element,
+
+  if (character) {
+    for (const skill of character.skills) {
+      for (const s of skill.stages) {
+        if (`${skill.name}::${s.newName ?? "_"}` === entry.stageId) {
+          return {
+            stage: s,
+            stageId: entry.stageId,
+            element: character.element,
+            concerto: s.concerto ?? 0,
+            damage: s.damage ?? [],
+            skillType: skill.type,
+            skillName: stageLabel(skill.name, s.newName),
+            attackType: s.damage?.[0]?.type ?? skill.type,
+          }
+        }
       }
     }
   }
+
+  const slotIndex = slots.findIndex((id) => id === entry.characterId)
+  const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
+  const echo = echoId !== null ? getEchoById(echoId) : null
+  if (echo) {
+    for (const s of echo.skill.stages) {
+      if (`${echo.name}::${s.newName}` === entry.stageId) {
+        return {
+          stage: s,
+          stageId: entry.stageId,
+          element: echo.element,
+          concerto: 0,
+          damage: s.damage,
+          skillType: "Echo Skill",
+          skillName: stageLabel(echo.name, s.newName),
+          attackType: s.damage[0]?.type ?? "Echo Skill",
+        }
+      }
+    }
+  }
+
   return null
 }
 

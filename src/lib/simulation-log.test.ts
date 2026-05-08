@@ -149,18 +149,10 @@ const emptyLoadouts: SlotLoadout[] = [
 
 function tlEntry(
   characterId: number,
-  skillType: string,
-  skillName: string,
-  id = `${characterId}-${skillType}-${skillName}`,
+  stageId: string,
+  id = `${characterId}-${stageId}`,
 ): TimelineEntry {
-  return {
-    id,
-    characterId,
-    skillType,
-    skillName,
-    attackType: skillType,
-    multiplier: 1,
-  }
+  return { id, characterId, stageId }
 }
 
 describe("generateSimulationLog — empty", () => {
@@ -172,7 +164,7 @@ describe("generateSimulationLog — empty", () => {
 describe("generateSimulationLog — single hit", () => {
   it("produces one action event and one hit event per timeline entry", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(1, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
     expect(result[0]).toEqual({
@@ -204,7 +196,7 @@ describe("generateSimulationLog — single hit", () => {
     testCharacters = [
       { ...charA, stats: { ...charA.stats, max: { hp: 0, atk: 3, def: 0 } } },
     ]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(1, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
     expect(result[1]).toMatchObject({ kind: "hit", damage: 2 })
@@ -214,7 +206,7 @@ describe("generateSimulationLog — single hit", () => {
 describe("generateSimulationLog — multi-hit stage", () => {
   it("emits one action event then one hit event per DamageEntry with [hit N] suffix", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
+    const entry = tlEntry(1, "Normal Attack::(Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
@@ -235,7 +227,7 @@ describe("generateSimulationLog — multi-hit stage", () => {
 
   it("accumulates energy and concerto across hits of the same stage", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
+    const entry = tlEntry(1, "Normal Attack::(Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result[1]).toMatchObject({
       cumulativeEnergy: 3,
@@ -252,9 +244,9 @@ describe("generateSimulationLog — multi-character accumulation", () => {
   it("accumulates energy and concerto separately per character", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "Normal Attack", "Normal Attack"),
-      tlEntry(2, "Normal Attack", "Normal Attack"),
-      tlEntry(1, "Normal Attack", "Normal Attack", "1-na-2"),
+      tlEntry(1, "Normal Attack::_"),
+      tlEntry(2, "Normal Attack::_"),
+      tlEntry(1, "Normal Attack::_", "1-na-2"),
     ]
     const result = generateSimulationLog(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(6)
@@ -281,8 +273,8 @@ describe("generateSimulationLog — multi-character accumulation", () => {
   it("computes damage using each character's own maxAtk", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "Normal Attack", "Normal Attack"),
-      tlEntry(2, "Normal Attack", "Normal Attack"),
+      tlEntry(1, "Normal Attack::_"),
+      tlEntry(2, "Normal Attack::_"),
     ]
     const result = generateSimulationLog(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
@@ -322,7 +314,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         sequence: 0,
       },
     ]
-    const entry = tlEntry(1, "Echo Skill", "Echo One · Hit")
+    const entry = tlEntry(1, "Echo One::Hit")
     const result = generateSimulationLog([entry], slots, loadouts)
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
@@ -349,7 +341,7 @@ describe("generateSimulationLog — echo skill entries", () => {
 describe("generateSimulationLog — missing character", () => {
   it("skips entries with unknown characterId", () => {
     testCharacters = []
-    const entry = tlEntry(99, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(99, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
   })
@@ -358,7 +350,7 @@ describe("generateSimulationLog — missing character", () => {
 describe("generateSimulationLog — unmatched stage", () => {
   it("skips timeline entries whose stage cannot be found", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Nonexistent Stage")
+    const entry = tlEntry(1, "Normal Attack::Nonexistent")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
   })
@@ -370,18 +362,12 @@ describe("generateSimulationLog — frame tracking", () => {
     const entry1: TimelineEntry = {
       id: "e1",
       characterId: 1,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Normal Attack",
-      multiplier: 1,
+      stageId: "Normal Attack::_",
     }
     const entry2: TimelineEntry = {
       id: "e2",
       characterId: 1,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Normal Attack",
-      multiplier: 1,
+      stageId: "Normal Attack::_",
     }
     const result = generateSimulationLog(
       [entry1, entry2],
@@ -402,10 +388,7 @@ describe("generateSimulationLog — action event concerto", () => {
     const entry: TimelineEntry = {
       id: "d1",
       characterId: 4,
-      skillType: "Heavy Attack",
-      skillName: "Heavy Attack",
-      attackType: "Heavy Attack",
-      multiplier: 1,
+      stageId: "Heavy Attack::_",
     }
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -425,7 +408,7 @@ describe("generateSimulationLog — action event concerto", () => {
 describe("generateSimulationLog — stats snapshot", () => {
   it("populates statsSnapshot and empty activeBuffIds on every HitEvent", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack (Stage 2)")
+    const entry = tlEntry(1, "Normal Attack::(Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
@@ -498,8 +481,8 @@ describe("generateSimulationLog — buff lifecycle interleaving", () => {
     }
     testCharacters = [charWithIntro]
     const entries: TimelineEntry[] = [
-      tlEntry(1, "Intro Skill", "Intro"),
-      tlEntry(1, "Resonance Skill", "Resonance"),
+      tlEntry(1, "Intro::_"),
+      tlEntry(1, "Resonance::_"),
     ]
     const result = generateSimulationLog(
       entries,
@@ -548,7 +531,7 @@ describe("generateSimulationLog — emitHit pilot (#60)", () => {
     }
     const charWithCoord: EnrichedCharacter = { ...charA, buffs: [coord] }
     testCharacters = [charWithCoord]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(1, "Normal Attack::_")
     const result = generateSimulationLog(
       [entry],
       [1, null, null],
@@ -570,7 +553,7 @@ describe("generateSimulationLog — emitHit pilot (#60)", () => {
 describe("generateSimulationLog — discriminated union", () => {
   it("action events do not have a damage property", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(1, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     expect(result[0].kind).toBe("action")
     expect("damage" in result[0]).toBe(false)
@@ -626,7 +609,7 @@ const charVariant: EnrichedCharacter = {
 describe("generateSimulationLog — stage variants (ADR 0008)", () => {
   it("full stage (no variantKind): damage entry lands", () => {
     testCharacters = [charVariant]
-    const entry = tlEntry(10, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(10, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(1)
@@ -637,10 +620,7 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v1",
       characterId: 10,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Normal Attack",
-      multiplier: 1,
+      stageId: "Normal Attack::_",
       variantKind: "cancel",
     }
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
@@ -653,10 +633,7 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v2",
       characterId: 10,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Normal Attack",
-      multiplier: 1,
+      stageId: "Normal Attack::_",
       variantKind: "instantCancel",
     }
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
@@ -671,10 +648,7 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v3",
       characterId: 10,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Normal Attack",
-      multiplier: 1,
+      stageId: "Normal Attack::_",
       variantKind: "cancel",
     }
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
@@ -684,7 +658,7 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
 
   it("ActionEvent has no variantKind for full stage", () => {
     testCharacters = [charVariant]
-    const entry = tlEntry(10, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(10, "Normal Attack::_")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
     const action = result.find((e) => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
@@ -692,7 +666,7 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
 
   it("all existing rotations (no variantKind) simulate to identical numbers as before", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack", "Normal Attack")
+    const entry = tlEntry(1, "Normal Attack::_")
     const baseline = generateSimulationLog(
       [entry],
       emptySlots,

@@ -262,45 +262,31 @@ describe("focused-stage-catalog — character stages", () => {
     ).toBeDefined()
   })
 
-  it("derives attack type from the first damage entry when present", () => {
+  it("derives attack type from the first damage entry when present (reflected in typeLabel)", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
     const stage1 = result.characterStages.find(
       (s) => s.label === "Normal Attack",
     )
-    expect(stage1?.clickPayload.attackType).toBe("Basic Attack")
     expect(stage1?.typeLabel).toBe("BASIC")
   })
 
-  it("falls back to skill type when stage has no damage entries", () => {
+  it("falls back to skill type when stage has no damage entries (reflected in typeLabel)", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
     const stage = result.characterStages.find(
       (s) => s.label === "Resonance Skill · Override",
     )
-    expect(stage?.clickPayload.attackType).toBe("Resonance Skill")
     expect(stage?.typeLabel).toBe("SKILL")
   })
 
-  it("sums multipliers across damage entries", () => {
-    setCatalog([char1], [])
-    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    const stage2 = result.characterStages.find(
-      (s) => Math.abs(s.clickPayload.multiplier - 0.75) < 0.01,
-    )
-    expect(stage2?.clickPayload.multiplier).toBeCloseTo(0.75)
-  })
-
-  it("click payload carries characterId, skillType, skillName, multiplier", () => {
+  it("click payload carries characterId and stageId", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
     const stage1 = result.characterStages[0]
     expect(stage1.clickPayload).toEqual({
       characterId: 1,
-      skillType: "Normal Attack",
-      skillName: "Normal Attack",
-      attackType: "Basic Attack",
-      multiplier: 1.5,
+      stageId: "Normal Attack::_",
     })
   })
 })
@@ -352,7 +338,7 @@ describe("focused-stage-catalog — labels", () => {
     ]
     const result = getFocusedStageCatalog([1, null, null], loadouts, 1)
     expect(result.echoStages[0].label).toBe("Test Echo (Tap)")
-    expect(result.echoStages[0].clickPayload.skillName).toBe("Test Echo (Tap)")
+    expect(result.echoStages[0].clickPayload.stageId).toBe("Test Echo::(Tap)")
   })
 })
 
@@ -404,15 +390,12 @@ describe("focused-stage-catalog — echo stages", () => {
     expect(result.echoStages).toEqual([])
   })
 
-  it("echo stage click payload has skillType Echo Skill and attackType from damage", () => {
+  it("echo stage click payload carries characterId and stageId", () => {
     setCatalog([char1], [echo1])
     const result = getFocusedStageCatalog([1, null, null], loadoutsWithEcho, 1)
     expect(result.echoStages[0].clickPayload).toEqual({
       characterId: 1,
-      skillType: "Echo Skill",
-      skillName: "Test Echo · Tap",
-      attackType: "Echo Skill",
-      multiplier: 2.5,
+      stageId: "Test Echo::Tap",
     })
   })
 

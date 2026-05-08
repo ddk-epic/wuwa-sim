@@ -5,13 +5,17 @@ type SetValue<T> = T | ((prev: T) => T)
 export function useLocalStorage<T>(
   key: string,
   defaultValue: T,
+  transform?: (stored: unknown) => T,
 ): [T, (value: SetValue<T>) => void] {
   const [storedValue, setStoredValue] = useState<T>(defaultValue)
 
   useEffect(() => {
     try {
       const item = window.localStorage.getItem(key)
-      if (item !== null) setStoredValue(JSON.parse(item) as T)
+      if (item !== null) {
+        const parsed: unknown = JSON.parse(item)
+        setStoredValue(transform ? transform(parsed) : (parsed as T))
+      }
     } catch {
       // silently ignore read errors
     }

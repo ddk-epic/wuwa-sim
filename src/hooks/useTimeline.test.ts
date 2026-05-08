@@ -9,10 +9,7 @@ beforeEach(() => {
 
 const sample = {
   characterId: 1,
-  skillType: "Normal Attack",
-  skillName: "Normal Attack · Stage 1",
-  attackType: "Basic Attack",
-  multiplier: 1.5,
+  stageId: "Normal Attack::Stage 1",
 }
 
 describe("useTimeline", () => {
@@ -30,25 +27,25 @@ describe("useTimeline", () => {
   it("two addEntry calls preserve insertion order", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
-      result.current.addEntry({ ...sample, skillName: "Skill A" })
-      result.current.addEntry({ ...sample, skillName: "Skill B" })
+      result.current.addEntry({ ...sample, stageId: "Normal Attack::Stage A" })
+      result.current.addEntry({ ...sample, stageId: "Normal Attack::Stage B" })
     })
-    expect(result.current.entries[0].skillName).toBe("Skill A")
-    expect(result.current.entries[1].skillName).toBe("Skill B")
+    expect(result.current.entries[0].stageId).toBe("Normal Attack::Stage A")
+    expect(result.current.entries[1].stageId).toBe("Normal Attack::Stage B")
   })
 
   it("removeEntry removes only the targeted entry", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
       result.current.addEntry(sample)
-      result.current.addEntry({ ...sample, skillName: "Other" })
+      result.current.addEntry({ ...sample, stageId: "Other::_" })
     })
     const idToRemove = result.current.entries[0].id
     act(() => {
       result.current.removeEntry(idToRemove)
     })
     expect(result.current.entries).toHaveLength(1)
-    expect(result.current.entries[0].skillName).toBe("Other")
+    expect(result.current.entries[0].stageId).toBe("Other::_")
   })
 
   it("each addEntry produces a distinct id", () => {
@@ -85,7 +82,7 @@ describe("useTimeline", () => {
       result.current.updateEntry(id, { variantKind: "cancel" })
     })
     expect(result.current.entries[0].variantKind).toBe("cancel")
-    expect(result.current.entries[0].skillName).toBe(sample.skillName)
+    expect(result.current.entries[0].stageId).toBe(sample.stageId)
   })
 
   it("updateEntry does not mutate other entries", () => {
