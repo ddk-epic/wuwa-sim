@@ -3,7 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import type { ActionEvent, HitEvent } from "#/types/simulation-log"
+import type { HitEvent } from "#/types/simulation-log"
 
 import { generateSimulationLog } from "./simulation-log"
 
