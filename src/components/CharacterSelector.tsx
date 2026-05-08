@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog } from "#/hooks/useSimulationLog"
+import { useSettings } from "#/hooks/useSettings"
 import { SkillSidebar } from "#/components/SkillSidebar"
 import { TeamBar } from "#/components/TeamBar"
 import { TeamModal } from "#/components/TeamModal"
@@ -30,6 +31,7 @@ export function CharacterSelector() {
     clearTimeline,
   } = useTimeline()
   const { log, setLog, clearLog } = useSimulationLog()
+  const [settings, setReactionDelay] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
 
@@ -41,7 +43,9 @@ export function CharacterSelector() {
   }
 
   function handleSimulate() {
-    setLog(generateSimulationLog(entries, slots, loadouts))
+    setLog(
+      generateSimulationLog(entries, slots, loadouts, settings.reactionDelay),
+    )
   }
 
   return (
@@ -56,6 +60,8 @@ export function CharacterSelector() {
         totalDmg={summary.totalDamage}
         dps={summary.dps}
         totalTimeSec={summary.totalTimeSec}
+        reactionDelay={settings.reactionDelay}
+        onReactionDelayChange={setReactionDelay}
       />
       <div className="flex flex-1 min-h-0">
         <div className="flex-[70] flex flex-col min-h-0">

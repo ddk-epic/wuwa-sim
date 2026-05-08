@@ -21,6 +21,8 @@ export function generateSimulationLog(
   entries: TimelineEntry[],
   slots: Slots,
   loadouts: SlotLoadout[],
+  // stage-variant filter seam (ADR 0008) — will be consumed when variants land
+  _reactionDelay: number = 9,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()

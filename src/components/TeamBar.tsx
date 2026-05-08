@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { CalendarSearch } from "lucide-react"
+import { CalendarSearch, Settings } from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
+import { SettingsModal } from "./SettingsModal"
 
 interface TeamBarProps {
   slots: Slots
@@ -14,6 +15,8 @@ interface TeamBarProps {
   totalDmg: number
   dps: number
   totalTimeSec: number
+  reactionDelay: number
+  onReactionDelayChange: (value: number) => void
 }
 
 export function TeamBar({
@@ -26,8 +29,11 @@ export function TeamBar({
   totalDmg,
   dps,
   totalTimeSec,
+  reactionDelay,
+  onReactionDelayChange,
 }: TeamBarProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const label = slots
     .map((charId) => {
@@ -90,6 +96,13 @@ export function TeamBar({
         >
           Reset Timeline
         </button>
+        <button
+          className="p-1.5 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Open settings"
+        >
+          <Settings size={20} />
+        </button>
       </div>
       {confirmOpen && (
         <ConfirmModal
@@ -99,6 +112,13 @@ export function TeamBar({
             setConfirmOpen(false)
           }}
           onCancel={() => setConfirmOpen(false)}
+        />
+      )}
+      {settingsOpen && (
+        <SettingsModal
+          reactionDelay={reactionDelay}
+          onReactionDelayChange={onReactionDelayChange}
+          onClose={() => setSettingsOpen(false)}
         />
       )}
     </div>
