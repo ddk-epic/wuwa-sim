@@ -14,11 +14,6 @@ const VARIANT_ORDER: (VariantKind | undefined)[] = [
   "instantCancel",
 ]
 
-const VARIANT_LABEL: Record<VariantKind, string> = {
-  cancel: "(Cancel)",
-  instantCancel: "(Instant Cancel)",
-}
-
 function nextVariant(
   current: VariantKind | undefined,
   stage: ActionTimeStage,
@@ -145,11 +140,6 @@ export function TimelineView({
                       title={isInvalid ? "red-marker" : undefined}
                     >
                       {resolved?.skillName ?? "—"}
-                      {entry.variantKind && (
-                        <span className="ml-1 text-xs text-blue-400">
-                          {VARIANT_LABEL[entry.variantKind]}
-                        </span>
-                      )}
                     </span>
                     {stageWithVariants && (
                       <button
@@ -163,8 +153,8 @@ export function TimelineView({
                             ),
                           })
                         }}
-                        className="text-xs px-1.5 py-0.5 rounded border border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors shrink-0"
-                        title="Cycle variant: Full → Cancel → Instant Cancel"
+                        className="w-12 text-xs px-1.5 py-0.5 rounded border border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors shrink-0"
+                        title="Full / Cancel / Instant Cancel"
                       >
                         {entry.variantKind === undefined
                           ? "Full"
