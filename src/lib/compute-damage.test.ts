@@ -131,4 +131,11 @@ describe("computeDamage", () => {
       Math.round(1 * 5000 * DEFRES),
     )
   })
+
+  it("allDmgBonus adds to dmgBonus regardless of element or skillType", () => {
+    const s = stats({ allDmgBonus: 0.2 })
+    expect(
+      computeDamage(ctx({ element: "Glacio", skillType: "Heavy Attack" }), s),
+    ).toBe(Math.round(1 * 1000 * 1.2 * DEFRES))
+  })
 })

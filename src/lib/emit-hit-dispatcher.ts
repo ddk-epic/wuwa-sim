@@ -167,5 +167,6 @@ function cloneStats(s: StatTable): StatTable {
     skillTypeBonus: { ...s.skillTypeBonus },
     deepen: { ...s.deepen },
     resShred: { ...s.resShred },
+    allDmgBonus: s.allDmgBonus,
   }
 }

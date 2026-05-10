@@ -12,6 +12,7 @@ export type StatPath =
         | "critRate"
         | "critDmg"
         | "defShred"
+        | "allDmgBonus"
     }
   | { stat: "elementBonus"; key: string }
   | { stat: "skillTypeBonus"; key: string }

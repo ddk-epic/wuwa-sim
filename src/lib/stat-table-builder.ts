@@ -76,6 +76,7 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "critRate":
     case "critDmg":
     case "defShred":
+    case "allDmgBonus":
       stats[path.stat] += v
       return
     case "elementBonus":

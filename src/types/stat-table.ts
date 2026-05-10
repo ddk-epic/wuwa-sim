@@ -15,6 +15,7 @@ export interface StatTable {
   deepen: Record<string, number>
   defShred: number
   resShred: Record<string, number>
+  allDmgBonus: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -35,5 +36,6 @@ export function emptyStatTable(): StatTable {
     deepen: {},
     defShred: 0,
     resShred: {},
+    allDmgBonus: 0,
   }
 }
