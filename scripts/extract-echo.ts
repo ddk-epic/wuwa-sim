@@ -161,7 +161,7 @@ export async function extractEcho(id: string): Promise<void> {
   const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, "-")
 
   const echoDir = path.join(PROJECT_ROOT, "src/data/echoes/raw")
-  const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets")
+  const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets/raw")
 
   await fs.mkdir(echoDir, { recursive: true })
   await fs.mkdir(setDir, { recursive: true })
@@ -176,13 +176,17 @@ export async function extractEcho(id: string): Promise<void> {
   await fs.writeFile(echoPath, JSON.stringify(echo, null, 2))
   console.log(`Written to src/data/echoes/raw/${echoSlug}.json`)
 
+  const { buffs: _omitBuffs, ...rawSet } = echoSet
   const setPath = path.join(setDir, `${setSlug}.json`)
   try {
     await fs.access(setPath)
     console.log(`Echo set "${echoSet.name}" already exists, skipping.`)
   } catch {
-    await fs.writeFile(setPath, JSON.stringify(echoSet, null, 2))
-    console.log(`Written to src/data/echo-sets/${setSlug}.json`)
+    await fs.writeFile(setPath, JSON.stringify(rawSet, null, 2))
+    console.log(`Written to src/data/echo-sets/raw/${setSlug}.json`)
+    console.log(
+      `Remember to add an entry for "${echoSet.name}" in src/data/echo-sets/index.ts.`,
+    )
   }
 }
 
