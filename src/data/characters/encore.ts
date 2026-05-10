@@ -1085,7 +1085,7 @@ export const encore = {
           actionTime: 0,
           damage: [
             {
-              type: "Outro",
+              type: "Outro Skill",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 90,
@@ -1096,7 +1096,7 @@ export const encore = {
               weakness: 0,
             },
             {
-              type: "Outro",
+              type: "Outro Skill",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 180,
@@ -1107,7 +1107,7 @@ export const encore = {
               weakness: 0,
             },
             {
-              type: "Outro",
+              type: "Outro Skill",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 270,
@@ -1118,7 +1118,7 @@ export const encore = {
               weakness: 0,
             },
             {
-              type: "Outro",
+              type: "Outro Skill",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 360,
