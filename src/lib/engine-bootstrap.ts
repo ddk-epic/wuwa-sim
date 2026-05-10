@@ -10,6 +10,7 @@ import {
 } from "./catalog"
 import { resolveEchoSets } from "./resolve-echo-sets"
 import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
+import { resolveWeaponBuffs } from "./weapon-resolve"
 
 const ELEMENTS = ["Fusion", "Glacio", "Electro", "Aero", "Havoc", "Spectro"]
 
@@ -111,7 +112,7 @@ export function bootstrapSlot(
     if (weapon) {
       applyWeaponIntrinsic(stats, weapon.stats.main.max, weapon.stats.main.name)
       applyWeaponIntrinsic(stats, weapon.stats.sub.max, weapon.stats.sub.name)
-      buffs.push(...weapon.buffsForRank(loadout?.weaponRank ?? 1))
+      buffs.push(...resolveWeaponBuffs(weapon, loadout?.weaponRank ?? 1))
     }
   }
 

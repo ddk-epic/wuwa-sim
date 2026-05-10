@@ -11,7 +11,7 @@ const PROJECT_ROOT = path.resolve(
 export function formatWeapon(weapon: Weapon, varName: string): string {
   const s = (v: string) => JSON.stringify(v)
   return [
-    `import type { EnrichedWeapon } from '#/types/weapon'`,
+    `import type { WeaponData } from '#/types/weapon'`,
     ``,
     `export const ${varName} = {`,
     `  id: ${weapon.id},`,
@@ -23,7 +23,7 @@ export function formatWeapon(weapon: Weapon, varName: string): string {
     `  },`,
     `  passive: { name: ${s(weapon.passive.name)} },`,
     `  buffs: [],`,
-    `} satisfies EnrichedWeapon`,
+    `} satisfies WeaponData`,
     ``,
   ].join("\n")
 }

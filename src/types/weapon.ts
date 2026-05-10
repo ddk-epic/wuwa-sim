@@ -37,11 +37,14 @@ export interface EnrichedWeaponStats {
   sub: EnrichedWeaponStat
 }
 
-export interface EnrichedWeapon {
+export interface WeaponData {
   id: number
   name: string
   weaponType: string
   stats: EnrichedWeaponStats
   passive: { name: string }
-  buffsForRank: (rank: number) => BuffDef[]
+  buffs: BuffDef[]
 }
+
+/** @deprecated Use WeaponData */
+export type EnrichedWeapon = WeaponData

@@ -254,7 +254,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0.36 },
         },
         passive: { name: "" },
-        buffsForRank: () => [],
+        buffs: [],
       },
     ]
     const engine = new BuffEngine()
@@ -278,7 +278,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
     expect(stats.critRate).toBeCloseTo(0.36)
   })
 
-  it("applies weapon passive buffs", () => {
+  it("applies weapon passive buffs (byRank resolver → engine integration)", () => {
     testCharacters = [baseChar()]
     testWeapons = [
       {
@@ -290,7 +290,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0 },
         },
         passive: { name: "" },
-        buffsForRank: () => [
+        buffs: [
           {
             id: "weapon.test.passive",
             name: "Passive",
@@ -301,57 +301,10 @@ describe("BuffEngine.bootstrap — weapon", () => {
               {
                 kind: "stat",
                 path: { stat: "atkPct" },
-                value: { kind: "const", v: 0.12 },
-              },
-            ],
-          },
-        ],
-      },
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [
-        {
-          weaponId: 100,
-          weaponRank: 1,
-          echoId: null,
-          echoSetSlot1Id: null,
-          echoSetSlot2Id: null,
-          sequence: 0,
-        },
-        emptyLoadout,
-        emptyLoadout,
-      ],
-    })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.12)
-  })
-
-  it("uses rank-specific atkPct for Stringmaster at R1 and R5", () => {
-    const ATK_PCT_BY_RANK = [0.12, 0.15, 0.18, 0.21, 0.24]
-    testCharacters = [baseChar()]
-    testWeapons = [
-      {
-        id: 100,
-        name: "Stringmaster",
-        weaponType: "Rectifier",
-        stats: {
-          main: { name: "ATK", base: 0, max: 0 },
-          sub: { name: "Crit. Rate", base: 0, max: 0 },
-        },
-        passive: { name: "" },
-        buffsForRank: (rank: number) => [
-          {
-            id: "weapon.stringmaster.passive.atk",
-            name: "ATK",
-            trigger: { event: "simStart" },
-            target: { kind: "self" },
-            duration: { kind: "permanent" },
-            effects: [
-              {
-                kind: "stat",
-                path: { stat: "atkPct" },
-                value: { kind: "const", v: ATK_PCT_BY_RANK[rank - 1] },
+                value: {
+                  kind: "byRank",
+                  values: [0.12, 0.15, 0.18, 0.21, 0.24],
+                },
               },
             ],
           },
@@ -644,7 +597,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           sub: { name: "Crit. Rate", base: 0, max: 0 },
         },
         passive: { name: "" },
-        buffsForRank: () => [stat(0.07, "weapon")],
+        buffs: [stat(0.07, "weapon")],
       },
     ]
     testEchoes = [

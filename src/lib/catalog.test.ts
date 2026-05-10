@@ -131,3 +131,17 @@ describe("catalog — getEchoSetForEcho", () => {
     expect(getEchoSetForEcho(echo)).toBeNull()
   })
 })
+
+describe("catalog — ALL_WEAPONS data shape invariants (#93)", () => {
+  it("every weapon buff effect using byRank has exactly 5 values", () => {
+    for (const weapon of ALL_WEAPONS) {
+      for (const buff of weapon.buffs) {
+        for (const effect of buff.effects) {
+          if (effect.kind !== "stat") continue
+          if (effect.value.kind !== "byRank") continue
+          expect(effect.value.values).toHaveLength(5)
+        }
+      }
+    }
+  })
+})

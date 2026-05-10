@@ -1,6 +1,4 @@
-import type { EnrichedWeapon } from "#/types/weapon"
-
-const ATK_PCT_BY_RANK = [0.12, 0.15, 0.18, 0.21, 0.24]
+import type { WeaponData } from "#/types/weapon"
 
 export const stringmaster = {
   id: 21050016,
@@ -11,11 +9,11 @@ export const stringmaster = {
     sub: { name: "Crit. Rate", base: 0.08, max: 0.36 },
   },
   passive: { name: "Electric Amplification" },
-  buffsForRank: (rank: number) => [
+  buffs: [
     {
       id: "weapon.stringmaster.passive.atk",
       name: "Electric Amplification — ATK",
-      description: `Permanent +${Math.round(ATK_PCT_BY_RANK[rank - 1] * 100)}% ATK from Stringmaster passive.`,
+      description: "Permanent ATK% boost from Stringmaster passive.",
       trigger: { event: "simStart" as const },
       target: { kind: "self" as const },
       duration: { kind: "permanent" as const },
@@ -23,9 +21,12 @@ export const stringmaster = {
         {
           kind: "stat" as const,
           path: { stat: "atkPct" as const },
-          value: { kind: "const" as const, v: ATK_PCT_BY_RANK[rank - 1] },
+          value: {
+            kind: "byRank" as const,
+            values: [0.12, 0.15, 0.18, 0.21, 0.24],
+          },
         },
       ],
     },
   ],
-} satisfies EnrichedWeapon
+} satisfies WeaponData
