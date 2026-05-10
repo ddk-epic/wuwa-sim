@@ -111,6 +111,50 @@ export const encore = {
       ],
     },
     {
+      id: "char.encore.passive.angry-cosmos",
+      name: "Angry Cosmos",
+      description:
+        "During Cosmos Rave, Encore's All DMG Bonus increases by 10%. (HP > 70% condition omitted — HP tracking not yet implemented.)",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.encore.liberation.cosmos-rave",
+        on: "target",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
+      id: "char.encore.s6.woolies-save-the-world",
+      name: "Woolies Save the World!",
+      description:
+        "During Cosmos Rave, each hit Encore lands grants 1 stack (up to 5), each increasing ATK by 5% for 10s.",
+      requiresSequence: 6,
+      trigger: { event: "hitLanded", actor: "self" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      stacking: { max: 5, onRetrigger: "addStack" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.encore.liberation.cosmos-rave",
+        on: "target",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.05 },
+        },
+      ],
+    },
+    {
       id: "char.encore.s1.woolys-fairy-tale",
       name: "Wooly's Fairy Tale",
       description:
