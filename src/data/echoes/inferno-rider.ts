@@ -15,13 +15,13 @@ export const infernoRider = {
       {
         name: "Tap",
         newName: "",
-        actionTime: 0,
+        actionTime: 175,
         damage: [
           {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 15,
             value: 2.424,
             energy: 3.78,
             concerto: 0,
@@ -32,7 +32,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 44,
             value: 2.828,
             energy: 4.41,
             concerto: 0,
@@ -43,7 +43,7 @@ export const infernoRider = {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 121,
             value: 2.828,
             energy: 4.41,
             concerto: 0,
