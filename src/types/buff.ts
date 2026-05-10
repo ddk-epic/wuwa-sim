@@ -177,6 +177,8 @@ export interface BuffDef {
    * re-application from any source refreshes the existing instance in place.
    */
   perSource?: boolean
+  /** Minimum seconds between successive fires from the same source. Re-triggers within the window are suppressed. */
+  cooldown?: number
 }
 
 export interface BuffInstance {

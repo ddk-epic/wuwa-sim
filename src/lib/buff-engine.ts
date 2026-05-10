@@ -60,6 +60,7 @@ export class BuffEngine {
   private store = new InstanceStore()
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
+  private cooldownLastFired = new Map<string, number>()
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -95,6 +96,7 @@ export class BuffEngine {
     this.store.clear()
     this.resources.clear()
     this.onField.clear()
+    this.cooldownLastFired.clear()
     this.emitHitDispatcher.reset()
 
     const slots: number[] = []
@@ -234,7 +236,21 @@ export class BuffEngine {
       this.store.drainPendingNextOnField(event.characterId, event.frame, out)
     }
 
-    const candidates = this.store.findCandidates(event)
+    const rawCandidates = this.store.findCandidates(event)
+    const candidates = rawCandidates.filter(({ def, sourceCharacterId }) => {
+      if (!def.cooldown) return true
+      const key = `${def.id}|${sourceCharacterId}`
+      const last = this.cooldownLastFired.get(key)
+      return last === undefined || event.frame - last >= def.cooldown * 60
+    })
+    for (const { def, sourceCharacterId } of candidates) {
+      if (def.cooldown) {
+        this.cooldownLastFired.set(
+          `${def.id}|${sourceCharacterId}`,
+          event.frame,
+        )
+      }
+    }
     const ctx: PhaseContext = { event, candidates, out, hitsOut, depth }
     for (const phase of this.phases) phase.run(ctx)
   }

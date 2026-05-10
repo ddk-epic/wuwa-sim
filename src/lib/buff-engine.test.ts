@@ -2921,3 +2921,86 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.35)
   })
 })
+
+describe("BuffEngine — cooldown (#90)", () => {
+  const cooldownBuff: BuffDef = {
+    id: "test.cooldown",
+    name: "Cooldown Buff",
+    trigger: { event: "skillCast", actor: "self" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    cooldown: 10,
+    effects: [
+      {
+        kind: "resource",
+        resource: "energy",
+        op: "add",
+        value: { kind: "const", v: 10 },
+      },
+    ],
+  }
+
+  const fire = (engine: BuffEngine, frame: number) =>
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame,
+    })
+
+  it("fires on first trigger and grants energy", () => {
+    testCharacters = [baseChar({ buffs: [cooldownBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const before = engine.getResource(1).energy
+    fire(engine, 0)
+    expect(engine.getResource(1).energy).toBe(before + 10)
+  })
+
+  it("suppresses re-trigger within cooldown window (9 seconds = 540 frames)", () => {
+    testCharacters = [baseChar({ buffs: [cooldownBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    const afterFirst = engine.getResource(1).energy
+    fire(engine, 539)
+    expect(engine.getResource(1).energy).toBe(afterFirst)
+  })
+
+  it("allows re-trigger exactly at cooldown boundary (10 seconds = 600 frames)", () => {
+    testCharacters = [baseChar({ buffs: [cooldownBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    const afterFirst = engine.getResource(1).energy
+    fire(engine, 600)
+    expect(engine.getResource(1).energy).toBe(afterFirst + 10)
+  })
+
+  it("does not suppress buffs without cooldown", () => {
+    const noCooldown: BuffDef = {
+      ...cooldownBuff,
+      id: "test.no-cooldown",
+      cooldown: undefined,
+    }
+    testCharacters = [baseChar({ buffs: [noCooldown] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    fire(engine, 0)
+    const afterFirst = engine.getResource(1).energy
+    fire(engine, 1)
+    expect(engine.getResource(1).energy).toBe(afterFirst + 10)
+  })
+})

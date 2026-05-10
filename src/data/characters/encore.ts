@@ -84,6 +84,33 @@ export const encore = {
       ],
     },
     {
+      id: "char.encore.s2.sheep-counting-lullaby",
+      name: "Sheep-counting Lullaby",
+      description:
+        "When Encore uses Wooly Strike or Energetic Welcome, she gains +10 Resonance Energy. This effect can trigger once every 10s.",
+      requiresSequence: 2,
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        stageId: [
+          "Wooly Attack::Stage 5 - Wooly Strike",
+          "Flaming Woolies::Energetic Welcome",
+        ],
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      stacking: { max: 1, onRetrigger: "refresh" },
+      cooldown: 10,
+      effects: [
+        {
+          kind: "resource",
+          resource: "energy",
+          op: "add",
+          value: { kind: "const", v: 10 },
+        },
+      ],
+    },
+    {
       id: "char.encore.s1.woolys-fairy-tale",
       name: "Wooly's Fairy Tale",
       description:
