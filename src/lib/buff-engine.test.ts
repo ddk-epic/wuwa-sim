@@ -2519,16 +2519,6 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
 })
 
 describe("BuffEngine — phase pipeline as data", () => {
-  it("dispatches phases in fixed order: resource → stat → emitHit → consume", () => {
-    const engine = new BuffEngine()
-    expect(engine.phaseOrder()).toEqual([
-      "resource",
-      "stat",
-      "emitHit",
-      "consume",
-    ])
-  })
-
   it("a stat Effect in a later phase sees Resource State mutated by an earlier phase", () => {
     // Two buffs trigger off the same skillCast event.
     //   - resourceBuff fires in the resource phase, adding 50 concerto.

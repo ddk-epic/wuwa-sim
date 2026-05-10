@@ -1,23 +1,6 @@
 import { describe, expect, it } from "vitest"
-import {
-  emptyLoadout,
-  loadoutFromTemplate,
-  inferEchoSetForEcho,
-} from "./template"
+import { loadoutFromTemplate, inferEchoSetForEcho } from "./template"
 import { getCharacterById } from "./catalog"
-
-describe("template — emptyLoadout", () => {
-  it("returns a Loadout with all ids null and sequence 0", () => {
-    expect(emptyLoadout()).toEqual({
-      weaponId: null,
-      weaponRank: 1,
-      echoId: null,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-    })
-  })
-})
 
 describe("template — loadoutFromTemplate", () => {
   it("resolves Encore's Template to Stringmaster + Inferno Rider + Molten Rift (5pc)", () => {

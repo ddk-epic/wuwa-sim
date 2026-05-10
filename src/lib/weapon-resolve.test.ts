@@ -26,26 +26,6 @@ const buff = (id: string, ...effects: BuffDef["effects"]): BuffDef => ({
 const weapon = (...buffs: BuffDef[]) => ({ buffs })
 
 describe("resolveWeaponBuffs", () => {
-  it("resolves byRank rank 1 to values[0]", () => {
-    const result = resolveWeaponBuffs(
-      weapon(buff("b", byRankEffect([0.1, 0.15, 0.18, 0.21, 0.24]))),
-      1,
-    )
-    expect(result[0].effects[0]).toMatchObject({
-      value: { kind: "const", v: 0.1 },
-    })
-  })
-
-  it("resolves byRank rank 5 to values[4]", () => {
-    const result = resolveWeaponBuffs(
-      weapon(buff("b", byRankEffect([0.1, 0.15, 0.18, 0.21, 0.24]))),
-      5,
-    )
-    expect(result[0].effects[0]).toMatchObject({
-      value: { kind: "const", v: 0.24 },
-    })
-  })
-
   it("resolves all 5 ranks correctly", () => {
     const values = [0.1, 0.15, 0.18, 0.21, 0.24]
     for (let rank = 1; rank <= 5; rank++) {

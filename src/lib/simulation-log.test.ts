@@ -663,19 +663,6 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     const action = result.find((e) => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
   })
-
-  it("all existing rotations (no variantKind) simulate to identical numbers as before", () => {
-    testCharacters = [charA]
-    const entry = tlEntry(1, "Normal Attack::_")
-    const baseline = generateSimulationLog(
-      [entry],
-      emptySlots,
-      emptyLoadouts,
-      9,
-    )
-    const result = generateSimulationLog([entry], emptySlots, emptyLoadouts, 9)
-    expect(result).toEqual(baseline)
-  })
 })
 
 describe("generateSimulationLog — replacesSkillType (#87)", () => {

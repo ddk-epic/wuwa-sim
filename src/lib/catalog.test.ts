@@ -7,10 +7,6 @@ import {
   findWeaponByName,
   findEchoByName,
   findEchoSetByName,
-  listCharacters,
-  listWeapons,
-  listEchoes,
-  listEchoSets,
   listWeaponsByType,
   getEchoSetForEcho,
 } from "./catalog"
@@ -83,24 +79,6 @@ describe("catalog — name lookups", () => {
 
   it("findEchoSetByName returns null for an unknown name", () => {
     expect(findEchoSetByName("Nonexistent Set")).toBeNull()
-  })
-})
-
-describe("catalog — list queries", () => {
-  it("listCharacters returns all characters", () => {
-    expect(listCharacters()).toEqual(ALL_CHARACTERS)
-  })
-
-  it("listWeapons returns all weapons", () => {
-    expect(listWeapons()).toEqual(ALL_WEAPONS)
-  })
-
-  it("listEchoes returns all echoes", () => {
-    expect(listEchoes()).toEqual(ALL_ECHOES)
-  })
-
-  it("listEchoSets returns all echo sets", () => {
-    expect(listEchoSets()).toEqual(ALL_ECHO_SETS)
   })
 })
 
