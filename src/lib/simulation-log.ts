@@ -36,6 +36,7 @@ export function generateSimulationLog(
       kind: "skillCast",
       characterId: entry.characterId,
       skillType: resolved.skillType,
+      stageId: resolved.stageId,
       frame: stageStartFrame,
       concerto: resolved.concerto,
     })

@@ -39,6 +39,51 @@ export const encore = {
       ],
     },
     {
+      id: "char.encore.liberation.cosmos-rave",
+      name: "Cosmos Rave",
+      description:
+        "Presence flag: active while Encore's Cosmos Rave liberation window is open (10s). Used as a condition by other buffs.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        stageId: [
+          "Cosmos Rave::Cosmos: Frolicking Stage 1",
+          "Cosmos Rave::Cosmos: Frolicking Stage 2",
+          "Cosmos Rave::Cosmos: Frolicking Stage 3",
+          "Cosmos Rave::Cosmos: Frolicking Stage 4",
+          "Cosmos Rave::Cosmos: Heavy Attack",
+          "Cosmos Rave::Cosmos Rampage",
+          "Cosmos Rave::Cosmos: Dodge Counter",
+        ],
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      stacking: { max: 1, onRetrigger: "refresh" },
+      effects: [],
+    },
+    {
+      id: "char.encore.s4.adventure-lets-go",
+      name: "Adventure? Let's go!",
+      description:
+        "When Encore uses Cosmos Rupture, all team members gain +20% Fusion DMG Bonus for 30s.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        stageId: "Black & White Woolies::Cosmos Rupture",
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 30 },
+      stacking: { max: 1, onRetrigger: "refresh" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    },
+    {
       id: "char.encore.s1.woolys-fairy-tale",
       name: "Wooly's Fairy Tale",
       description:

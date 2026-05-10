@@ -873,3 +873,158 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     expect(heavyHit?.activeBuffIds).not.toContain("test.s1")
   })
 })
+
+describe("generateSimulationLog — stageId trigger filter (#89)", () => {
+  const hit = () => ({
+    type: "Basic Attack",
+    dmgType: "Damage",
+    scalingStat: "ATK",
+    actionFrame: 10,
+    value: 1.0,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+  })
+
+  const charWithTwoStages: EnrichedCharacter = {
+    id: 60,
+    name: "Stage Char",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 600,
+        name: "Skill A",
+        type: "Resonance Liberation",
+        stages: [
+          {
+            name: "Stage Alpha",
+            newName: "Stage Alpha",
+            value: "100%",
+            actionTime: 20,
+            damage: [hit()],
+          },
+          {
+            name: "Stage Beta",
+            newName: "Stage Beta",
+            value: "100%",
+            actionTime: 20,
+            damage: [hit()],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("single stageId — buff fires only on matching stage", () => {
+    const buff = {
+      id: "test.stage-alpha-only",
+      name: "Alpha Only",
+      trigger: {
+        event: "skillCast" as const,
+        characterId: 60,
+        stageId: "Skill A::Stage Alpha",
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 10 },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "elementBonus" as const, key: "Fusion" },
+          value: { kind: "const" as const, v: 0.15 },
+        },
+      ],
+    }
+    testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
+
+    const alphaResult = generateSimulationLog(
+      [tlEntry(60, "Skill A::Stage Alpha")],
+      [60, null, null],
+      emptyLoadouts,
+    )
+    const alphaHit = alphaResult.find((e) => e.kind === "hit") as
+      | HitEvent
+      | undefined
+    expect(alphaHit?.activeBuffIds).toContain("test.stage-alpha-only")
+
+    const betaResult = generateSimulationLog(
+      [tlEntry(60, "Skill A::Stage Beta")],
+      [60, null, null],
+      emptyLoadouts,
+    )
+    const betaHit = betaResult.find((e) => e.kind === "hit") as
+      | HitEvent
+      | undefined
+    expect(betaHit?.activeBuffIds).not.toContain("test.stage-alpha-only")
+  })
+
+  it("array stageId — buff fires on any of the listed stages", () => {
+    const buff = {
+      id: "test.both-stages",
+      name: "Both Stages",
+      trigger: {
+        event: "skillCast" as const,
+        characterId: 60,
+        stageId: ["Skill A::Stage Alpha", "Skill A::Stage Beta"],
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 10 },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "elementBonus" as const, key: "Fusion" },
+          value: { kind: "const" as const, v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
+
+    for (const stageId of ["Skill A::Stage Alpha", "Skill A::Stage Beta"]) {
+      const result = generateSimulationLog(
+        [tlEntry(60, stageId)],
+        [60, null, null],
+        emptyLoadouts,
+      )
+      const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
+      expect(h?.activeBuffIds).toContain("test.both-stages")
+    }
+  })
+
+  it("no stageId filter — buff fires on all stages as before", () => {
+    const buff = {
+      id: "test.any-stage",
+      name: "Any Stage",
+      trigger: { event: "skillCast" as const, characterId: 60 },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 10 },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "elementBonus" as const, key: "Fusion" },
+          value: { kind: "const" as const, v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
+
+    for (const stageId of ["Skill A::Stage Alpha", "Skill A::Stage Beta"]) {
+      const result = generateSimulationLog(
+        [tlEntry(60, stageId)],
+        [60, null, null],
+        emptyLoadouts,
+      )
+      const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
+      expect(h?.activeBuffIds).toContain("test.any-stage")
+    }
+  })
+})

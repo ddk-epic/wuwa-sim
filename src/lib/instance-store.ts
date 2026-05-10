@@ -24,6 +24,7 @@ export type EngineEvent =
       kind: "skillCast"
       characterId: number
       skillType: string
+      stageId?: string
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
       concerto?: number
@@ -464,6 +465,14 @@ export function matchesTrigger(
     }
     if (trigger.skillType && trigger.skillType !== event.skillType) {
       return false
+    }
+    if (trigger.stageId !== undefined) {
+      const sid = event.stageId
+      if (!sid) return false
+      const ids = Array.isArray(trigger.stageId)
+        ? trigger.stageId
+        : [trigger.stageId]
+      if (!ids.includes(sid)) return false
     }
     return true
   }

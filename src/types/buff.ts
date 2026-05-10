@@ -66,6 +66,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillType?: string
+      stageId?: string | string[]
     }
   | {
       event: "hitLanded"
