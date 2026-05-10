@@ -6,7 +6,30 @@ export const infernoRider = {
   cost: 4,
   element: "Fusion",
   set: "Molten Rift",
-  buffs: [],
+  buffs: [
+    {
+      id: "echo.inferno-rider.tap.fusion-basic-bonus",
+      name: "Inferno Rider — Fusion & Basic Attack",
+      description:
+        "After the 3rd Tap hit, the current Resonator gains +12% Fusion DMG and +12% Basic Attack DMG for 15s.",
+      trigger: { event: "hitLanded", stage: "Tap", hitIndex: 3 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 15 },
+      stacking: { max: 1, onRetrigger: "refresh" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.12 },
+        },
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Basic Attack" },
+          value: { kind: "const", v: 0.12 },
+        },
+      ],
+    },
+  ],
   skill: {
     cooldown: 20,
     description:
