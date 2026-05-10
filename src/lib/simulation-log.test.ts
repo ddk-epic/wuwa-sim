@@ -677,3 +677,199 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
     expect(result).toEqual(baseline)
   })
 })
+
+describe("generateSimulationLog — replacesSkillType (#87)", () => {
+  const liberationHit = (type: string) => ({
+    type,
+    dmgType: "Damage",
+    scalingStat: "ATK",
+    actionFrame: 10,
+    value: 1.0,
+    energy: 1,
+    concerto: 1,
+    toughness: 0,
+    weakness: 0,
+  })
+
+  const charWithLiberation: EnrichedCharacter = {
+    id: 50,
+    name: "Liberation Char",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 500,
+        name: "Liberation",
+        type: "Resonance Liberation",
+        stages: [
+          {
+            name: "Frolicking Stage",
+            newName: "Frolicking Stage",
+            value: "100%",
+            replacesSkillType: "Normal Attack",
+            actionTime: 30,
+            damage: [liberationHit("Basic Attack")],
+          },
+          {
+            name: "Rampage Stage",
+            newName: "Rampage Stage",
+            value: "100%",
+            replacesSkillType: "Resonance Skill",
+            actionTime: 30,
+            damage: [liberationHit("Resonance Skill")],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("resolveStage uses replacesSkillType for the action event skillType", () => {
+    testCharacters = [charWithLiberation]
+    const result = generateSimulationLog(
+      [tlEntry(50, "Liberation::Frolicking Stage")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.skillType).toBe("Normal Attack")
+  })
+
+  it("skillCast trigger with replacesSkillType fires on correct skill type", () => {
+    const buff = {
+      id: "test.cheer-dance",
+      name: "Cheer Dance",
+      trigger: {
+        event: "skillCast" as const,
+        characterId: 50,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 10 },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "elementBonus" as const, key: "Fusion" },
+          value: { kind: "const" as const, v: 0.1 },
+        },
+      ],
+    }
+    const charWithBuff: EnrichedCharacter = {
+      ...charWithLiberation,
+      buffs: [buff],
+    }
+    testCharacters = [charWithBuff]
+    const result = generateSimulationLog(
+      [
+        tlEntry(50, "Liberation::Frolicking Stage"),
+        tlEntry(50, "Liberation::Rampage Stage"),
+      ],
+      [50, null, null],
+      emptyLoadouts,
+    )
+    const buffApplied = result.find(
+      (e) => e.kind === "buffApplied" && e.buffId === "test.cheer-dance",
+    )
+    expect(buffApplied).toBeDefined()
+    const frolickingHit = result.find(
+      (e) => e.kind === "hit" && e.skillType === "Normal Attack",
+    ) as HitEvent | undefined
+    expect(
+      frolickingHit?.statsSnapshot.elementBonus?.["Fusion"],
+    ).toBeUndefined()
+    const rampageHit = result.find(
+      (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
+    ) as HitEvent | undefined
+    expect(rampageHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(0.1)
+  })
+
+  it("hitLanded trigger uses per-hit type — Basic Attack trigger fires on Basic Attack hits only", () => {
+    const s1 = {
+      id: "test.s1",
+      name: "S1",
+      trigger: {
+        event: "hitLanded" as const,
+        actor: "self" as const,
+        skillType: "Basic Attack",
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "seconds" as const, v: 6 },
+      stacking: { max: 4, onRetrigger: "addStack" as const },
+      effects: [
+        {
+          kind: "stat" as const,
+          path: { stat: "elementBonus" as const, key: "Fusion" },
+          value: { kind: "perStack" as const, v: 0.03 },
+        },
+      ],
+    }
+    const charWithHeavy: EnrichedCharacter = {
+      id: 51,
+      name: "Heavy Char",
+      element: "Fusion",
+      weaponType: "Sword",
+      rarity: "5",
+      stats: {
+        base: { hp: 0, atk: 0, def: 0 },
+        max: { hp: 0, atk: 1000, def: 0 },
+      },
+      template: { weapon: "", echo: "", echoSet: "" },
+      skillTreeBonuses: [],
+      buffs: [s1],
+      skills: [
+        {
+          id: 510,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1",
+              value: "100%",
+              actionTime: 30,
+              damage: [liberationHit("Basic Attack")],
+            },
+            {
+              name: "Heavy Attack",
+              newName: "Heavy Attack",
+              value: "200%",
+              actionTime: 30,
+              damage: [liberationHit("Heavy Attack")],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charWithHeavy]
+
+    // After a Basic Attack hit, S1 is applied. The NEXT hit sees S1 active.
+    const basicThenBasicResult = generateSimulationLog(
+      [tlEntry(51, "Normal Attack::_"), tlEntry(51, "Normal Attack::_", "2")],
+      [51, null, null],
+      emptyLoadouts,
+    )
+    const secondBasicHit = basicThenBasicResult
+      .filter((e) => e.kind === "hit")
+      .at(1) as HitEvent | undefined
+    expect(secondBasicHit?.activeBuffIds).toContain("test.s1")
+
+    // Heavy Attack hits do NOT trigger S1 — the buff remains absent.
+    const heavyResult = generateSimulationLog(
+      [tlEntry(51, "Normal Attack::Heavy Attack")],
+      [51, null, null],
+      emptyLoadouts,
+    )
+    const heavyHit = heavyResult.find((e) => e.kind === "hit") as
+      | HitEvent
+      | undefined
+    expect(heavyHit?.activeBuffIds).not.toContain("test.s1")
+  })
+})

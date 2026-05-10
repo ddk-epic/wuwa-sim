@@ -68,6 +68,7 @@ export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
   hidden?: boolean
   newName?: string
   requiresStageId?: string
+  replacesSkillType?: string
   variants?: Partial<Record<VariantKind, StageVariant>>
 }
 

@@ -75,7 +75,7 @@ export function generateSimulationLog(
       const dispatch = engine.recordHit({
         kind: "hitLanded",
         characterId: entry.characterId,
-        skillType: resolved.skillType,
+        skillType: hit.type,
         dmgType: hit.dmgType,
         frame: hitFrame,
         energy: hit.energy,

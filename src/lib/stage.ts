@@ -42,7 +42,7 @@ export function resolveStage(
             element: character.element,
             concerto: s.concerto ?? 0,
             damage: s.damage ?? [],
-            skillType: skill.type,
+            skillType: s.replacesSkillType ?? skill.type,
             skillName: stageLabel(skill.name, s.newName),
             attackType: s.damage?.[0]?.type ?? skill.type,
           }

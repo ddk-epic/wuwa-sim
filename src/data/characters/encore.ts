@@ -16,7 +16,47 @@ export const encore = {
     max: { hp: 10512.5, atk: 425, def: 1246.6644 },
   },
   skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
-  buffs: [],
+  buffs: [
+    {
+      id: "char.encore.passive.woolies-cheer-dance",
+      name: "Woolies Cheer Dance",
+      description:
+        "After Encore uses a Resonance Skill (including Cosmos Rampage during Cosmos Rave), she gains +10% Fusion DMG Bonus for 10s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      stacking: { max: 1, onRetrigger: "refresh" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
+      id: "char.encore.s1.woolys-fairy-tale",
+      name: "Wooly's Fairy Tale",
+      description:
+        "When Encore uses a Basic Attack, she gains 1 stack of Wooly's Fairy Tale, up to 4 stacks. Each stack increases Fusion DMG Bonus by 3% for 6s.",
+      requiresSequence: 1,
+      trigger: { event: "hitLanded", actor: "self", skillType: "Basic Attack" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 6 },
+      stacking: { max: 4, onRetrigger: "addStack" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "perStack", v: 0.03 },
+        },
+      ],
+    },
+  ],
   skills: [
     {
       id: 1000701,
@@ -400,6 +440,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 1 DMG",
           newName: "Cosmos: Frolicking Stage 1",
           value: "90.18%*2",
+          replacesSkillType: "Normal Attack",
           actionTime: 22,
           damage: [
             {
@@ -433,6 +474,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 2 DMG",
           newName: "Cosmos: Frolicking Stage 2",
           value: "56.40%*3",
+          replacesSkillType: "Normal Attack",
           actionTime: 54,
           damage: [
             {
@@ -477,6 +519,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 3 DMG",
           newName: "Cosmos: Frolicking Stage 3",
           value: "65.99%*4",
+          replacesSkillType: "Normal Attack",
           actionTime: 48,
           damage: [
             {
@@ -532,6 +575,7 @@ export const encore = {
           name: "Stage 4 DMG",
           newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
+          replacesSkillType: "Normal Attack",
           actionTime: 107,
           damage: [
             {
@@ -576,6 +620,7 @@ export const encore = {
           name: "Cosmos: Heavy Attack DMG",
           newName: "Cosmos: Heavy Attack",
           value: "217.58%",
+          replacesSkillType: "Normal Attack",
           hidden: true,
           actionTime: 0,
           damage: [
@@ -596,6 +641,7 @@ export const encore = {
           name: "Cosmos Rampage Damage",
           newName: "Cosmos Rampage",
           value: "63.32%*4",
+          replacesSkillType: "Resonance Skill",
           cooldown: 4,
           actionTime: 47,
           damage: [
@@ -652,6 +698,7 @@ export const encore = {
           name: "Cosmos: Dodge Counter DMG",
           newName: "Cosmos: Dodge Counter",
           value: "65.99%*4",
+          replacesSkillType: "Normal Attack",
           hidden: true,
           actionTime: 0,
           damage: [
