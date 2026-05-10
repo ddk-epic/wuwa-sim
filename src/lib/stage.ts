@@ -11,6 +11,7 @@ export interface ActionTimeStage {
 export interface ResolvedStage {
   stage: ActionTimeStage & { damage?: DamageEntry[] }
   stageId: string
+  stageName: string
   element: string
   concerto: number
   damage: DamageEntry[]
@@ -39,6 +40,7 @@ export function resolveStage(
           return {
             stage: s,
             stageId: entry.stageId,
+            stageName: s.name,
             element: character.element,
             concerto: s.concerto ?? 0,
             damage: s.damage ?? [],
@@ -60,6 +62,7 @@ export function resolveStage(
         return {
           stage: s,
           stageId: entry.stageId,
+          stageName: s.name,
           element: echo.element,
           concerto: 0,
           damage: s.damage,

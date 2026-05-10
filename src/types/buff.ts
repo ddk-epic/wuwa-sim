@@ -76,6 +76,8 @@ export type Trigger =
       skillType?: string
       dmgType?: string
       source?: TriggerSource
+      stage?: string
+      hitIndex?: number
     }
   | {
       event: "swapIn"
