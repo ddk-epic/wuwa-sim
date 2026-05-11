@@ -197,11 +197,11 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center overflow-y-auto p-6"
+      className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center p-6"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-7xl bg-gray-900 rounded-lg border border-gray-700 flex flex-col"
+        className="w-full max-w-7xl max-h-[95vh] bg-gray-900 rounded-lg border border-gray-700 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
@@ -227,196 +227,190 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-auto p-4">
           {log.length === 0 ? (
             <p className="py-8 text-center text-gray-500 text-sm">
               No simulation data. Click Simulate to generate.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-700 text-left text-gray-400">
-                    <th className="py-2 pr-3">#</th>
-                    <th className="py-2 pr-3">Character</th>
-                    <th className="py-2 pr-3">Skill Type</th>
-                    <th className="py-2 pr-3">Skill</th>
-                    <th className="py-2 pr-3">Time</th>
-                    <th className="py-2 pr-3 text-right">Concerto</th>
-                    <th className="py-2 pr-3 text-right">Energy</th>
-                    <th className="py-2 pr-3 text-right">Damage</th>
-                    <th className="py-2 pr-3 text-right text-xs">Scaling</th>
-                    <th className="py-2 pr-3 text-right text-xs">ER</th>
-                    <th className="py-2 pr-3 text-right text-xs">CR</th>
-                    <th className="py-2 pr-3 text-right text-xs">CD</th>
-                    <th className="py-2 pr-3 text-right text-xs">DMG%</th>
-                    <th className="py-2 text-right text-xs">Deepen</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLog.map((entry, i) => {
-                    const isBuff = BUFF_KINDS.has(entry.kind)
-                    if (isBuff) {
-                      const buff = entry as Extract<
-                        SimulationLogEntry,
-                        {
-                          kind:
-                            | "buffApplied"
-                            | "buffRefreshed"
-                            | "buffExpired"
-                            | "buffConsumed"
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 text-left text-gray-400">
+                  <th className="py-2 pr-3">#</th>
+                  <th className="py-2 pr-3">Character</th>
+                  <th className="py-2 pr-3">Skill Type</th>
+                  <th className="py-2 pr-3">Skill</th>
+                  <th className="py-2 pr-3">Time</th>
+                  <th className="py-2 pr-3 text-right">Concerto</th>
+                  <th className="py-2 pr-3 text-right">Energy</th>
+                  <th className="py-2 pr-3 text-right">Damage</th>
+                  <th className="py-2 pr-3 text-right text-xs">Scaling</th>
+                  <th className="py-2 pr-3 text-right text-xs">ER</th>
+                  <th className="py-2 pr-3 text-right text-xs">CR</th>
+                  <th className="py-2 pr-3 text-right text-xs">CD</th>
+                  <th className="py-2 pr-3 text-right text-xs">DMG%</th>
+                  <th className="py-2 text-right text-xs">Deepen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLog.map((entry, i) => {
+                  const isBuff = BUFF_KINDS.has(entry.kind)
+                  if (isBuff) {
+                    const buff = entry as Extract<
+                      SimulationLogEntry,
+                      {
+                        kind:
+                          | "buffApplied"
+                          | "buffRefreshed"
+                          | "buffExpired"
+                          | "buffConsumed"
+                      }
+                    >
+                    const target = getCharacterById(buff.targetCharacterId)
+                    const verb =
+                      buff.kind === "buffApplied"
+                        ? "applied"
+                        : buff.kind === "buffRefreshed"
+                          ? "refreshed"
+                          : buff.kind === "buffConsumed"
+                            ? "consumed"
+                            : "expired"
+                    const color =
+                      buff.kind === "buffExpired"
+                        ? "text-rose-400/70"
+                        : buff.kind === "buffConsumed"
+                          ? "text-amber-400/80"
+                          : "text-emerald-400/80"
+                    return (
+                      <tr
+                        key={i}
+                        className="border-b border-gray-800 bg-gray-950/40"
+                      >
+                        <td className="py-1 pr-3 text-gray-500">{i + 1}</td>
+                        <td className="py-1 pr-3">{target?.name ?? "?"}</td>
+                        <td className={`py-1 pr-3 italic ${color}`}>
+                          buff {verb}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {buff.buffName}
+                          {buff.stacks > 1 ? ` × ${buff.stacks}` : ""}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {(buff.frame / 60).toFixed(2)}s
+                        </td>
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 pr-3 text-right" />
+                        <td className="py-1 text-right" />
+                      </tr>
+                    )
+                  }
+                  const ev = entry as Extract<
+                    SimulationLogEntry,
+                    { kind: "action" | "hit" }
+                  >
+                  const character = getCharacterById(ev.characterId)
+                  const isAction = ev.kind === "action"
+                  const isExpanded = expanded.has(i)
+                  return (
+                    <Fragment key={i}>
+                      <tr
+                        className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"} ${ev.kind === "hit" ? "cursor-pointer hover:bg-gray-800/40" : ""}`}
+                        onClick={
+                          ev.kind === "hit" ? () => toggleRow(i) : undefined
                         }
                       >
-                      const target = getCharacterById(buff.targetCharacterId)
-                      const verb =
-                        buff.kind === "buffApplied"
-                          ? "applied"
-                          : buff.kind === "buffRefreshed"
-                            ? "refreshed"
-                            : buff.kind === "buffConsumed"
-                              ? "consumed"
-                              : "expired"
-                      const color =
-                        buff.kind === "buffExpired"
-                          ? "text-rose-400/70"
-                          : buff.kind === "buffConsumed"
-                            ? "text-amber-400/80"
-                            : "text-emerald-400/80"
-                      return (
-                        <tr
-                          key={i}
-                          className="border-b border-gray-800 bg-gray-950/40"
-                        >
-                          <td className="py-1 pr-3 text-gray-500">{i + 1}</td>
-                          <td className="py-1 pr-3">{target?.name ?? "?"}</td>
-                          <td className={`py-1 pr-3 italic ${color}`}>
-                            buff {verb}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {buff.buffName}
-                            {buff.stacks > 1 ? ` × ${buff.stacks}` : ""}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {(buff.frame / 60).toFixed(2)}s
-                          </td>
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 pr-3 text-right" />
-                          <td className="py-1 text-right" />
-                        </tr>
-                      )
-                    }
-                    const ev = entry as Extract<
-                      SimulationLogEntry,
-                      { kind: "action" | "hit" }
-                    >
-                    const character = getCharacterById(ev.characterId)
-                    const isAction = ev.kind === "action"
-                    const isExpanded = expanded.has(i)
-                    return (
-                      <Fragment key={i}>
-                        <tr
-                          className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"} ${ev.kind === "hit" ? "cursor-pointer hover:bg-gray-800/40" : ""}`}
-                          onClick={
-                            ev.kind === "hit" ? () => toggleRow(i) : undefined
-                          }
-                        >
-                          <td className="py-1 pr-3 text-gray-500">
-                            {ev.kind === "hit"
-                              ? `${isExpanded ? "▾" : "▸"} ${i + 1}`
-                              : i + 1}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {character?.name ?? "?"}
-                          </td>
-                          <td className="py-1 pr-3 text-gray-400">
-                            {isAction ? formatSkillType(ev.skillType) : ""}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {ev.skillName}
-                            {ev.kind === "action" && ev.variantKind ? (
-                              <span className="ml-2 text-xs text-blue-400/80">
-                                {ev.variantKind === "cancel"
-                                  ? "(Cancel)"
-                                  : "(Instant Cancel)"}
-                              </span>
-                            ) : null}
-                            {ev.kind === "hit" && ev.synthetic ? (
-                              <span className="ml-2 text-xs text-cyan-400/80 italic">
-                                (coord)
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {(ev.frame / 60).toFixed(2)}s
-                          </td>
-                          <td className="py-1 pr-3 text-right">
-                            {ev.cumulativeConcerto.toFixed(1)}
-                          </td>
-                          <td className="py-1 pr-3 text-right">
-                            {ev.cumulativeEnergy.toFixed(1)}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-yellow-400">
-                            {ev.kind === "hit"
-                              ? ev.damage.toLocaleString()
-                              : ""}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatScalingCell(
-                                  ev.statsSnapshot,
-                                  ev.scalingStat,
-                                )
-                              : ""}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatERCell(ev.statsSnapshot.energyRechargePct)
-                              : ""}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatCRCell(ev.statsSnapshot.critRate)
-                              : ""}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatCDCell(ev.statsSnapshot.critDmg)
-                              : ""}
-                          </td>
-                          <td className="py-1 pr-3 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatDMGPctCell(
-                                  ev.statsSnapshot,
-                                  ev.element,
-                                  ev.skillType,
-                                )
-                              : ""}
-                          </td>
-                          <td className="py-1 text-right text-xs">
-                            {ev.kind === "hit"
-                              ? formatDeepenCell(ev.statsSnapshot, ev.dmgType)
-                              : ""}
+                        <td className="py-1 pr-3 text-gray-500">
+                          {ev.kind === "hit"
+                            ? `${isExpanded ? "▾" : "▸"} ${i + 1}`
+                            : i + 1}
+                        </td>
+                        <td className="py-1 pr-3">{character?.name ?? "?"}</td>
+                        <td className="py-1 pr-3 text-gray-400">
+                          {isAction ? formatSkillType(ev.skillType) : ""}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {ev.skillName}
+                          {ev.kind === "action" && ev.variantKind ? (
+                            <span className="ml-2 text-xs text-blue-400/80">
+                              {ev.variantKind === "cancel"
+                                ? "(Cancel)"
+                                : "(Instant Cancel)"}
+                            </span>
+                          ) : null}
+                          {ev.kind === "hit" && ev.synthetic ? (
+                            <span className="ml-2 text-xs text-cyan-400/80 italic">
+                              (coord)
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="py-1 pr-3">
+                          {(ev.frame / 60).toFixed(2)}s
+                        </td>
+                        <td className="py-1 pr-3 text-right">
+                          {ev.cumulativeConcerto.toFixed(1)}
+                        </td>
+                        <td className="py-1 pr-3 text-right">
+                          {ev.cumulativeEnergy.toFixed(1)}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-yellow-400">
+                          {ev.kind === "hit" ? ev.damage.toLocaleString() : ""}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatScalingCell(
+                                ev.statsSnapshot,
+                                ev.scalingStat,
+                              )
+                            : ""}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatERCell(ev.statsSnapshot.energyRechargePct)
+                            : ""}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatCRCell(ev.statsSnapshot.critRate)
+                            : ""}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatCDCell(ev.statsSnapshot.critDmg)
+                            : ""}
+                        </td>
+                        <td className="py-1 pr-3 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatDMGPctCell(
+                                ev.statsSnapshot,
+                                ev.element,
+                                ev.skillType,
+                              )
+                            : ""}
+                        </td>
+                        <td className="py-1 text-right text-xs">
+                          {ev.kind === "hit"
+                            ? formatDeepenCell(ev.statsSnapshot, ev.dmgType)
+                            : ""}
+                        </td>
+                      </tr>
+                      {ev.kind === "hit" && isExpanded && (
+                        <tr className="border-b border-gray-800 bg-gray-950/60">
+                          <td colSpan={14} className="py-2 px-3">
+                            <HitDrawer ev={ev} />
                           </td>
                         </tr>
-                        {ev.kind === "hit" && isExpanded && (
-                          <tr className="border-b border-gray-800 bg-gray-950/60">
-                            <td colSpan={14} className="py-2 px-3">
-                              <HitDrawer ev={ev} />
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
@@ -453,7 +447,7 @@ function HitDrawer({ ev }: { ev: HitEvent }) {
           </span>
         </div>
       )}
-      <div className="font-mono text-gray-400 text-[11px]">
+      <div className="font-mono text-gray-400">
         {Math.round(bd.scalingValue)} × {bd.multiplier.toFixed(2)} × (1 +{" "}
         {(bd.dmgBonus * 100).toFixed(1)}%) × (1 + {(bd.deepen * 100).toFixed(1)}
         %) × {bd.critFactor.toFixed(4)} × {bd.defMult.toFixed(4)} ×{" "}
