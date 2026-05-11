@@ -4,7 +4,7 @@ import type { VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import { getCharacterById } from "#/lib/catalog"
-import { resolveStage, resolveStageExecution } from "#/lib/stage"
+import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { ActionTimeStage } from "#/lib/stage"
 import { validateTimeline } from "#/lib/validate-timeline"
 
@@ -88,7 +88,7 @@ export function TimelineView({
             const errors = validation.rowErrors.get(entry.id) ?? []
             const isDragging = draggedId === entry.id
             const isDropTarget = dropTargetId === entry.id
-            const resolved = resolveStage(entry, slots, loadouts)
+            const resolved = findStageByEntry(entry, slots, loadouts)
             const stageWithVariants =
               resolved !== null &&
               resolved.stage.variants !== undefined &&

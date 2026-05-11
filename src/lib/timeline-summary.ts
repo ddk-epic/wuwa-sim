@@ -1,7 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "#/lib/catalog"
-import { resolveStage, resolveStageExecution } from "./stage"
+import { findStageByEntry, resolveStageExecution } from "./stage"
 
 const FRAMES_PER_SECOND = 60
 
@@ -34,7 +34,7 @@ export function getTimelineSummary(
     const time = cumulativeFrames / FRAMES_PER_SECOND
     let rowDamage: number | null = null
 
-    const resolved = resolveStage(entry, slots, loadouts)
+    const resolved = findStageByEntry(entry, slots, loadouts)
     const execution = resolved
       ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
       : null

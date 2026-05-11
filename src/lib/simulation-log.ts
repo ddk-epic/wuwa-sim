@@ -8,7 +8,7 @@ import type {
 import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./compute-damage"
 import { BuffEngine } from "./buff-engine"
-import { resolveStage, resolveStageExecution } from "./stage"
+import { findStageByEntry, resolveStageExecution } from "./stage"
 
 export function generateSimulationLog(
   entries: TimelineEntry[],
@@ -22,7 +22,7 @@ export function generateSimulationLog(
   let stageStartFrame = 0
 
   for (const entry of entries) {
-    const resolved = resolveStage(entry, slots, loadouts)
+    const resolved = findStageByEntry(entry, slots, loadouts)
     if (!resolved) continue
 
     const { duration: stageDuration, damage } = resolveStageExecution(

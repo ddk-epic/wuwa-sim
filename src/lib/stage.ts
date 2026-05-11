@@ -18,6 +18,11 @@ export interface ResolvedStage {
   skillType: string
   skillName: string
   attackType: string
+  requiresStageId?: string
+}
+
+export function makeStageId(baseName: string, newName?: string): string {
+  return `${baseName}::${newName ?? "_"}`
 }
 
 export function stageLabel(skillName: string, newName?: string): string {
@@ -26,7 +31,7 @@ export function stageLabel(skillName: string, newName?: string): string {
   return `${skillName} · ${newName}`
 }
 
-export function resolveStage(
+export function findStageByEntry(
   entry: TimelineEntry,
   slots: Slots,
   loadouts: SlotLoadout[],
@@ -36,7 +41,7 @@ export function resolveStage(
   if (character) {
     for (const skill of character.skills) {
       for (const s of skill.stages) {
-        if (`${skill.name}::${s.newName ?? "_"}` === entry.stageId) {
+        if (makeStageId(skill.name, s.newName) === entry.stageId) {
           return {
             stage: s,
             stageId: entry.stageId,
@@ -47,6 +52,7 @@ export function resolveStage(
             skillType: s.replacesSkillType ?? skill.type,
             skillName: stageLabel(skill.name, s.newName),
             attackType: s.damage?.[0]?.type ?? skill.type,
+            requiresStageId: s.requiresStageId,
           }
         }
       }
@@ -58,7 +64,7 @@ export function resolveStage(
   const echo = echoId !== null ? getEchoById(echoId) : null
   if (echo) {
     for (const s of echo.skill.stages) {
-      if (`${echo.name}::${s.newName}` === entry.stageId) {
+      if (makeStageId(echo.name, s.newName) === entry.stageId) {
         return {
           stage: s,
           stageId: entry.stageId,

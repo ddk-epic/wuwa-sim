@@ -4,6 +4,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "./catalog"
+import { makeStageId } from "./stage"
 
 export interface FocusedStage {
   key: string
@@ -69,7 +70,7 @@ function buildEchoStage(
     typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
     clickPayload: {
       characterId,
-      stageId: `${echoName}::${stage.newName}`,
+      stageId: makeStageId(echoName, stage.newName),
     },
   }
 }
@@ -88,7 +89,7 @@ function buildCharacterStage(
     typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
     clickPayload: {
       characterId,
-      stageId: `${skill.name}::${stage.newName ?? "_"}`,
+      stageId: makeStageId(skill.name, stage.newName),
     },
   }
 }

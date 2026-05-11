@@ -1,7 +1,7 @@
 import type { TimelineEntry } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import { getCharacterById } from "./catalog"
-import { stageLabel } from "./stage"
+import { makeStageId, stageLabel } from "./stage"
 
 type LegacyEntry = {
   id?: string
@@ -45,7 +45,7 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
           return {
             id,
             characterId,
-            stageId: `${skill.name}::${stage.newName ?? "_"}`,
+            stageId: makeStageId(skill.name, stage.newName),
             variantKind,
           }
         }

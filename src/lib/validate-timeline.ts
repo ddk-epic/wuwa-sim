@@ -1,6 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "./catalog"
+import { getCharacterById } from "./catalog"
+import { findStageByEntry } from "./stage"
 
 export interface ValidationError {
   message: string
@@ -16,34 +17,6 @@ interface InternalError {
   isConsequence: boolean
 }
 
-function resolveSkillType(
-  entry: TimelineEntry,
-  slots: Slots,
-  loadouts: SlotLoadout[],
-): string | null {
-  const character = getCharacterById(entry.characterId)
-  if (character) {
-    for (const skill of character.skills) {
-      for (const stage of skill.stages) {
-        if (`${skill.name}::${stage.newName ?? "_"}` === entry.stageId) {
-          return skill.type
-        }
-      }
-    }
-  }
-  const slotIndex = slots.indexOf(entry.characterId)
-  if (slotIndex >= 0) {
-    const echoId = loadouts[slotIndex]?.echoId ?? null
-    const echo = echoId !== null ? getEchoById(echoId) : null
-    if (echo) {
-      for (const s of echo.skill.stages) {
-        if (`${echo.name}::${s.newName}` === entry.stageId) return "Echo Skill"
-      }
-    }
-  }
-  return null
-}
-
 export function validateTimeline(
   entries: TimelineEntry[],
   slots: Slots,
@@ -56,43 +29,15 @@ export function validateTimeline(
     const entry = entries[i]
     const errors: InternalError[] = []
 
-    // Resolve skillType and requiredStageId by walking character skills
-    let skillType: string | null = null
-    let requiredStageId: string | undefined
-    const character = getCharacterById(entry.characterId)
-    if (character) {
-      charSearch: for (const skill of character.skills) {
-        for (const stage of skill.stages) {
-          if (`${skill.name}::${stage.newName ?? "_"}` === entry.stageId) {
-            skillType = skill.type
-            requiredStageId = stage.requiresStageId
-            break charSearch
-          }
-        }
-      }
-    }
-    // Try echo skill if not found in character skills
-    if (skillType === null) {
-      const slotIdx = slots.indexOf(entry.characterId)
-      if (slotIdx >= 0) {
-        const echoId = loadouts[slotIdx]?.echoId ?? null
-        const echo = echoId !== null ? getEchoById(echoId) : null
-        if (echo) {
-          for (const s of echo.skill.stages) {
-            if (`${echo.name}::${s.newName}` === entry.stageId) {
-              skillType = "Echo Skill"
-              break
-            }
-          }
-        }
-      }
-    }
+    const resolved = findStageByEntry(entry, slots, loadouts)
+    const skillType = resolved?.skillType ?? null
+    const requiredStageId = resolved?.requiresStageId
 
     // Intro Skill must follow Outro Skill
     if (skillType === "Intro Skill") {
       const prev = i > 0 ? entries[i - 1] : null
       const prevSkillType = prev
-        ? resolveSkillType(prev, slots, loadouts)
+        ? (findStageByEntry(prev, slots, loadouts)?.skillType ?? null)
         : null
       if (prevSkillType !== "Outro Skill") {
         errors.push({
@@ -109,6 +54,7 @@ export function validateTimeline(
         isConsequence: false,
       })
     } else if (skillType === null) {
+      const character = getCharacterById(entry.characterId)
       if (!character) {
         errors.push({ message: "Unknown character", isConsequence: false })
       } else {
