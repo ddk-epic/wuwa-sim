@@ -72,6 +72,15 @@ const charWithSkills: Character = {
       stages: [],
       damage: [],
     },
+    {
+      id: 4,
+      name: "Cosmos Rave",
+      type: "Resonance Liberation",
+      stages: [
+        { name: "Cosmos: Frolicking Stage 1 DMG", value: "90%", damage: [] },
+      ],
+      damage: [],
+    },
   ],
 }
 
@@ -197,6 +206,46 @@ describe("formatCharacter", () => {
   it("never emits '// hidden: true' comments", () => {
     const out = formatCharacter(charWithSkills, "testHero")
     expect(out).not.toContain("// hidden: true")
+  })
+
+  it("prepends a cast activation stage for Resonance Liberation skills", () => {
+    const out = formatCharacter(charWithSkills, "testHero")
+    const libIdx = out.indexOf('"Resonance Liberation"')
+    const libSection = out.slice(libIdx)
+    const castStageIdx = libSection.indexOf('name: "Cosmos Rave",')
+    const firstRawStageIdx = libSection.indexOf(
+      'name: "Cosmos: Frolicking Stage 1 DMG",',
+    )
+    expect(castStageIdx).toBeGreaterThan(-1)
+    expect(castStageIdx).toBeLessThan(firstRawStageIdx)
+    expect(libSection.slice(castStageIdx)).toContain('newName: "Cosmos Rave",')
+  })
+
+  it("does not prepend a cast stage for Resonance Liberation when 'Skill DMG' stage exists", () => {
+    const charWithCastStage: Character = {
+      ...minimalChar,
+      skills: [
+        {
+          id: 4,
+          name: "Cosmos Rave",
+          type: "Resonance Liberation",
+          stages: [
+            { name: "Skill DMG", value: "100%", damage: [] },
+            {
+              name: "Cosmos: Frolicking Stage 1 DMG",
+              value: "90%",
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    const out = formatCharacter(charWithCastStage, "testHero")
+    const libIdx = out.indexOf('"Resonance Liberation"')
+    const libSection = out.slice(libIdx)
+    // "Cosmos Rave" as a synthetic cast stage should not appear
+    expect(libSection).not.toContain('name: "Cosmos Rave",')
   })
 
   it("emits exactly one placeholder stage for Outro Skill", () => {

@@ -45,6 +45,20 @@ function formatDamageEntry(d: DamageEntry, level: number): string {
   ].join("\n")
 }
 
+function formatLiberationCastStage(skillName: string, level: number): string {
+  const l = ind(level)
+  const l1 = ind(level + 1)
+  return [
+    `${l}{`,
+    `${l1}name: ${s(skillName)},`,
+    `${l1}newName: ${s(skillName)},`,
+    `${l1}value: "",`,
+    `${l1}actionTime: 0,`,
+    `${l1}damage: [],`,
+    `${l}}`,
+  ].join("\n")
+}
+
 function formatOutroStage(level: number): string {
   const l = ind(level)
   const l1 = ind(level + 1)
@@ -113,6 +127,14 @@ function formatSkill(
   if (skill.type === "Outro Skill") {
     lines.push(`${l1}stages: [`)
     lines.push(formatOutroStage(level + 2) + ",")
+    lines.push(`${l1}],`)
+  } else if (skill.type === "Resonance Liberation") {
+    lines.push(`${l1}stages: [`)
+    const hasCastStage = skill.stages.some((s) => s.name === "Skill DMG")
+    if (!hasCastStage)
+      lines.push(formatLiberationCastStage(skill.name, level + 2) + ",")
+    for (const stage of skill.stages)
+      lines.push(formatStage(stage, level + 2) + ",")
     lines.push(`${l1}],`)
   } else if (skill.stages.length > 0) {
     lines.push(`${l1}stages: [`)
