@@ -25,6 +25,9 @@ export interface ActiveBuff {
 export interface HitEvent extends SimulationLogBase {
   kind: "hit"
   damage: number
+  element: string
+  dmgType: string
+  scalingStat?: string
   statsSnapshot: StatTable
   activeBuffs: ActiveBuff[]
   /** True when the hit was injected by an `emitHit` effect rather than authored. */

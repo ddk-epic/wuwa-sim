@@ -94,6 +94,9 @@ export function generateSimulationLog(
         cumulativeEnergy: dispatch.postState.energy,
         cumulativeConcerto: dispatch.postState.concerto,
         damage: dmg,
+        element: resolved.element,
+        dmgType: hit.dmgType,
+        scalingStat: hit.scalingStat,
         statsSnapshot: { ...hitResolved.stats },
         activeBuffs: hitResolved.activeBuffs,
       }

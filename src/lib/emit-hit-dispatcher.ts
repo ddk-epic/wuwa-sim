@@ -143,6 +143,9 @@ export class EmitHitDispatcher {
       cumulativeEnergy: post.energy,
       cumulativeConcerto: post.concerto,
       damage,
+      element,
+      dmgType: input.effect.damage.dmgType,
+      scalingStat: input.effect.damage.scalingStat,
       statsSnapshot: cloneStats(stats),
       activeBuffs: host.activeBuffs(input.sourceCharacterId),
     }

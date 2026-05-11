@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest"
 import type { ActiveBuff } from "#/types/simulation-log"
-import { formatActiveBuffLabel } from "./SimulationLogModal"
+import { emptyStatTable } from "#/types/stat-table"
+import type { StatTable } from "#/types/stat-table"
+import {
+  formatActiveBuffLabel,
+  formatCDCell,
+  formatCRCell,
+  formatDeepenCell,
+  formatDMGPctCell,
+  formatERCell,
+  formatScalingCell,
+} from "./SimulationLogModal"
+
+const snap = (over: Partial<StatTable> = {}): StatTable => ({
+  ...emptyStatTable(),
+  atkBase: 1500,
+  atkPct: 0.3,
+  atkFlat: 154,
+  ...over,
+})
 
 const resolveName = (id: number) => `Char${id}`
 
@@ -71,5 +89,75 @@ describe("formatActiveBuffLabel", () => {
     const b2: ActiveBuff = { id: "b.buff", name: "Power Up", stacks: 1 }
     const all = [b1, b2]
     expect(formatActiveBuffLabel(b1, all, resolveName)).toBe("Power Up")
+  })
+})
+
+describe("formatScalingCell", () => {
+  it("ATK (default) shows resolved ATK value", () => {
+    // 1500 * 1.3 + 154 = 2104
+    expect(formatScalingCell(snap())).toBe("ATK 2104")
+  })
+
+  it("missing scalingStat falls back to ATK", () => {
+    expect(formatScalingCell(snap(), undefined)).toBe("ATK 2104")
+  })
+
+  it("HP scaling uses hpBase * (1+hpPct) + hpFlat", () => {
+    const s = snap({ hpBase: 5000, hpPct: 0.4, hpFlat: 300 })
+    expect(formatScalingCell(s, "HP")).toBe("HP 7300")
+  })
+
+  it("DEF scaling uses defBase * (1+defPct) + defFlat", () => {
+    const s = snap({ defBase: 800, defPct: 0.25, defFlat: 50 })
+    expect(formatScalingCell(s, "DEF")).toBe("DEF 1050")
+  })
+})
+
+describe("formatERCell", () => {
+  it("0% ER shows 100%", () => expect(formatERCell(0)).toBe("100%"))
+  it("0.2 ER shows 120%", () => expect(formatERCell(0.2)).toBe("120%"))
+})
+
+describe("formatCRCell", () => {
+  it("50% crit rate shows 50%", () => expect(formatCRCell(0.5)).toBe("50%"))
+  it("100% crit rate shows 100%", () => expect(formatCRCell(1.0)).toBe("100%"))
+  it("over-cap crit rate shows capped suffix", () =>
+    expect(formatCRCell(1.5)).toBe("150% (capped 100%)"))
+})
+
+describe("formatCDCell", () => {
+  it("150% crit dmg shows 150%", () => expect(formatCDCell(1.5)).toBe("150%"))
+})
+
+describe("formatDMGPctCell", () => {
+  it("sums elementBonus + skillTypeBonus + allDmgBonus", () => {
+    const s = snap({
+      elementBonus: { Fusion: 0.3 },
+      skillTypeBonus: { "Basic Attack": 0.2 },
+      allDmgBonus: 0.15,
+    })
+    expect(formatDMGPctCell(s, "Fusion", "Basic Attack")).toBe("+65%")
+  })
+
+  it("0 bonus shows +0%", () => {
+    expect(formatDMGPctCell(snap(), "Fusion", "Basic Attack")).toBe("+0%")
+  })
+
+  it("only matching element contributes", () => {
+    const s = snap({ elementBonus: { Glacio: 0.5, Fusion: 0.1 } })
+    expect(formatDMGPctCell(s, "Fusion", "Basic Attack")).toBe("+10%")
+  })
+})
+
+describe("formatDeepenCell", () => {
+  it("0 deepen shows +0%", () =>
+    expect(formatDeepenCell(snap(), "Damage")).toBe("+0%"))
+  it("matching deepen shown", () => {
+    const s = snap({ deepen: { Damage: 0.2 } })
+    expect(formatDeepenCell(s, "Damage")).toBe("+20%")
+  })
+  it("non-matching deepen shows +0%", () => {
+    const s = snap({ deepen: { Fusion: 0.3 } })
+    expect(formatDeepenCell(s, "Damage")).toBe("+0%")
   })
 })
