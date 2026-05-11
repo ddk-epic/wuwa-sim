@@ -2,6 +2,7 @@ import { Fragment, useState } from "react"
 import type { ActiveBuff, SimulationLogEntry } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "#/lib/catalog"
+import { formatSkillType } from "#/data/skill-types"
 
 export function formatActiveBuffLabel(
   b: ActiveBuff,
@@ -171,7 +172,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         </td>
                         <td className="py-1 pr-3">{character?.name ?? "?"}</td>
                         <td className="py-1 pr-3 text-gray-400">
-                          {isAction ? ev.skillType : ""}
+                          {isAction ? formatSkillType(ev.skillType) : ""}
                         </td>
                         <td className="py-1 pr-3">
                           {ev.skillName}

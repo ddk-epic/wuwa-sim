@@ -8,3 +8,7 @@ export const STAGE_TYPE_LABELS: Record<string, string> = {
   "Outro Skill": "OUTRO",
   "Echo Skill": "ECHO",
 }
+
+export function formatSkillType(raw: string): string {
+  return STAGE_TYPE_LABELS[raw] ?? raw
+}
