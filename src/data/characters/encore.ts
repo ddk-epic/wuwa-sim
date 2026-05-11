@@ -46,15 +46,7 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId: [
-          "Cosmos Rave::Cosmos: Frolicking Stage 1",
-          "Cosmos Rave::Cosmos: Frolicking Stage 2",
-          "Cosmos Rave::Cosmos: Frolicking Stage 3",
-          "Cosmos Rave::Cosmos: Frolicking Stage 4",
-          "Cosmos Rave::Cosmos: Heavy Attack",
-          "Cosmos Rave::Cosmos Rampage",
-          "Cosmos Rave::Cosmos: Dodge Counter",
-        ],
+        stageId: "Cosmos Rave::Cosmos Rave",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -552,6 +544,13 @@ export const encore = {
       resonanceCost: 125,
       // animationLock: 0,
       stages: [
+        {
+          name: "Cosmos Rave",
+          newName: "Cosmos Rave",
+          value: "",
+          actionTime: 0,
+          damage: [],
+        },
         {
           name: "Cosmos: Frolicking Stage 1 DMG",
           newName: "Cosmos: Frolicking Stage 1",

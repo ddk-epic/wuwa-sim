@@ -8,7 +8,7 @@ const moltenRift = {
   buffs: [
     {
       id: "echo-set.molten-rift.2pc.fusion-bonus",
-      name: "Molten Rift 2pc — Fusion DMG",
+      name: "Molten Rift 2pc",
       description: "Fusion DMG +10%.",
       trigger: { event: "simStart" },
       target: { kind: "self" },
@@ -24,7 +24,7 @@ const moltenRift = {
     },
     {
       id: "echo-set.molten-rift.5pc.fusion-bonus",
-      name: "Molten Rift 5pc — Fusion DMG",
+      name: "Molten Rift 5pc",
       description: "Fusion DMG +30% for 15s after releasing Resonance Skill.",
       trigger: { event: "skillCast", skillType: "Resonance Skill" },
       target: { kind: "self" },
@@ -48,7 +48,7 @@ const moonlitClouds = {
   buffs: [
     {
       id: "echo-set.moonlit-clouds.2pc.energy-regen",
-      name: "Moonlit Clouds 2pc — Energy Regen",
+      name: "Moonlit Clouds 2pc",
       description:
         "Permanent +10% Energy Regen. Not modeled in v1 (energy regen lands with resource state in slice 6).",
       trigger: { event: "simStart" },
@@ -59,7 +59,7 @@ const moonlitClouds = {
     },
     {
       id: "echo-set.moonlit-clouds.5pc.next-atk",
-      name: "Moonlit Clouds 5pc — Next Resonator ATK",
+      name: "Moonlit Clouds 5pc",
       description:
         "Upon using Outro Skill, the next Resonator gains +22.5% ATK for 15s.",
       trigger: { event: "skillCast", skillType: "Outro Skill" },
