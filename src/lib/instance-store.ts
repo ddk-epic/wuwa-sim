@@ -584,5 +584,6 @@ function cloneStats(s: StatTable): StatTable {
     deepen: { ...s.deepen },
     resShred: { ...s.resShred },
     allDmgBonus: s.allDmgBonus,
+    energyRechargePct: s.energyRechargePct,
   }
 }

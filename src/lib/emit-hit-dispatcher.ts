@@ -112,7 +112,7 @@ export class EmitHitDispatcher {
       host.applyResourceDelta(
         input.sourceCharacterId,
         "energy",
-        input.effect.damage.energy,
+        input.effect.damage.energy * (1 + stats.energyRechargePct),
         ctx.frame,
         out,
         hitsOut,
@@ -168,5 +168,6 @@ function cloneStats(s: StatTable): StatTable {
     deepen: { ...s.deepen },
     resShred: { ...s.resShred },
     allDmgBonus: s.allDmgBonus,
+    energyRechargePct: s.energyRechargePct,
   }
 }

@@ -1023,3 +1023,101 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
     }
   })
 })
+
+describe("generateSimulationLog — Energy Recharge (#98)", () => {
+  const erBuff = (id: number, erPct: number) => ({
+    id: `char${id}.er`,
+    name: "ER Buff",
+    trigger: { event: "simStart" as const },
+    target: { kind: "self" as const },
+    duration: { kind: "permanent" as const },
+    effects: [
+      {
+        kind: "stat" as const,
+        path: { stat: "energyRechargePct" as const },
+        value: { kind: "const" as const, v: erPct },
+      },
+    ],
+  })
+
+  it("authored hit energy scaled by (1 + actor.energyRechargePct)", () => {
+    // charA has base energy=5 per hit; with 50% ER should credit 7.5
+    const charWithER: EnrichedCharacter = { ...charA, buffs: [erBuff(1, 0.5)] }
+    testCharacters = [charWithER]
+    const result = generateSimulationLog(
+      [tlEntry(1, "Normal Attack::_")],
+      [1, null, null],
+      emptyLoadouts,
+    )
+    const hit = result.find((e) => e.kind === "hit") as HitEvent | undefined
+    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * 1.5)
+  })
+
+  it("default ER=0 gives no scaling (backwards compatible)", () => {
+    testCharacters = [charA]
+    const result = generateSimulationLog(
+      [tlEntry(1, "Normal Attack::_")],
+      [1, null, null],
+      emptyLoadouts,
+    )
+    const hit = result.find((e) => e.kind === "hit") as HitEvent | undefined
+    expect(hit?.cumulativeEnergy).toBe(5)
+  })
+
+  it("synthetic hit uses buff-owner ER, not on-field character ER", () => {
+    // Char 1: on-field, no ER
+    // Char 2: off-field, 50% ER; has an emitHit buff that fires on char1 hits
+    //         with energy=10. Char 2 should credit 15, not 10.
+    const coordBuff = {
+      id: "char2.coord",
+      name: "Coord",
+      trigger: {
+        event: "hitLanded" as const,
+        characterId: 1,
+        actor: "any" as const,
+      },
+      target: { kind: "self" as const },
+      duration: { kind: "permanent" as const },
+      effects: [
+        {
+          kind: "emitHit" as const,
+          damage: { ...dmgHit(0.5, 10), dmgType: "Fusion" },
+          icdFrames: 0,
+          skillType: "Coordinated Attack",
+        },
+      ],
+    }
+    // Char 1's authored hit has energy=0 so no shared energy flows to char 2;
+    // only the synthetic hit contributes energy to char 2 (10 * 1.5 = 15).
+    const charOnField: EnrichedCharacter = {
+      ...charA,
+      id: 1,
+      buffs: [],
+      skills: [
+        {
+          ...charA.skills[0],
+          stages: [
+            { ...charA.skills[0].stages[0], damage: [dmgHit(1.5, 0, 0)] },
+          ],
+        },
+      ],
+    }
+    const charOffField: EnrichedCharacter = {
+      ...charA,
+      id: 2,
+      buffs: [coordBuff, erBuff(2, 0.5)],
+    }
+    testCharacters = [charOnField, charOffField]
+    const result = generateSimulationLog(
+      [tlEntry(1, "Normal Attack::_")],
+      [1, 2, null],
+      emptyLoadouts,
+    )
+    const synth = result.find((e) => e.kind === "hit" && e.synthetic) as
+      | HitEvent
+      | undefined
+    expect(synth).toBeDefined()
+    // Char 2 credited energy: 10 * 1.5 = 15 (buff owner ER, not on-field char ER)
+    expect(synth?.cumulativeEnergy).toBeCloseTo(10 * 1.5)
+  })
+})

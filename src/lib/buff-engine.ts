@@ -166,10 +166,11 @@ export class BuffEngine {
     // happens before trigger matching so resourceCrossed triggers can chain.
     if (event.kind === "hitLanded") {
       if (event.energy) {
+        const actorER = this.resolveStats(event.characterId).energyRechargePct
         this.applyResourceDelta(
           event.characterId,
           "energy",
-          event.energy,
+          event.energy * (1 + actorER),
           event.frame,
           out,
           hitsOut,

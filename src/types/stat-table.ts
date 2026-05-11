@@ -16,6 +16,7 @@ export interface StatTable {
   defShred: number
   resShred: Record<string, number>
   allDmgBonus: number
+  energyRechargePct: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -37,5 +38,6 @@ export function emptyStatTable(): StatTable {
     defShred: 0,
     resShred: {},
     allDmgBonus: 0,
+    energyRechargePct: 0,
   }
 }
