@@ -4,7 +4,7 @@ import type {
   ResourceKind,
   ResourceState,
 } from "#/types/buff"
-import type { BuffEvent, HitEvent } from "#/types/simulation-log"
+import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
 import { computeDamage } from "./compute-damage"
@@ -44,7 +44,7 @@ export interface EmitHitHost {
     depth: number,
   ) => void
   getResource: (characterId: number) => ResourceState
-  activeBuffIds: (characterId: number) => string[]
+  activeBuffs: (characterId: number) => ActiveBuff[]
 }
 
 export interface EmitHitDispatcherOptions {
@@ -144,7 +144,7 @@ export class EmitHitDispatcher {
       cumulativeConcerto: post.concerto,
       damage,
       statsSnapshot: cloneStats(stats),
-      activeBuffIds: host.activeBuffIds(input.sourceCharacterId),
+      activeBuffs: host.activeBuffs(input.sourceCharacterId),
     }
   }
 }

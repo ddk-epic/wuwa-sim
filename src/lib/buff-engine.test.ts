@@ -2641,7 +2641,9 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
 
     expect(resolved.lifecycleEvents).toEqual(oldTick.lifecycleEvents)
     expect(resolved.stats).toEqual(oldStats)
-    expect(resolved.activeBuffIds).toEqual(oldActiveBuffIds)
+    expect(resolved.activeBuffs.map((b) => b.id).sort()).toEqual(
+      oldActiveBuffIds,
+    )
     expect(dispatch.lifecycleEvents).toEqual(oldDispatch.lifecycleEvents)
     expect(dispatch.syntheticHits).toEqual(oldDispatch.syntheticHits)
     expect(dispatch.postState).toEqual(oldPostState)

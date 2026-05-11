@@ -8,7 +8,7 @@ import type {
   ResourceState,
 } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import type { BuffEvent, HitEvent } from "#/types/simulation-log"
+import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
@@ -26,7 +26,7 @@ export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
 
 export interface ResolvedHit {
   stats: StatTable
-  activeBuffIds: string[]
+  activeBuffs: ActiveBuff[]
   lifecycleEvents: BuffEvent[]
 }
 
@@ -69,7 +69,7 @@ export class BuffEngine {
     applyResourceDelta: (id, resource, delta, frame, out, hitsOut, depth) =>
       this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
     getResource: (id) => this.getResource(id),
-    activeBuffIds: (id) => this.activeBuffIds(id),
+    activeBuffs: (id) => this.activeBuffs(id),
   }
 
   /**
@@ -587,15 +587,20 @@ export class BuffEngine {
     return this.store.activeBuffIds(characterId)
   }
 
+  /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. */
+  activeBuffs(characterId: number): ActiveBuff[] {
+    return this.store.activeBuffs(characterId)
+  }
+
   /**
    * Deep seam: advance to `frame`, resolve the actor's stat table, and snapshot
-   * the active buff ids — the inputs every per-hit damage computation needs.
+   * the active buffs — the inputs every per-hit damage computation needs.
    */
   resolveHit(actingCharacterId: number, frame: number): ResolvedHit {
     const { lifecycleEvents } = this.tickToFrame(frame)
     const stats = this.resolveStats(actingCharacterId)
-    const activeBuffIds = this.activeBuffIds(actingCharacterId)
-    return { stats, activeBuffIds, lifecycleEvents }
+    const activeBuffs = this.activeBuffs(actingCharacterId)
+    return { stats, activeBuffs, lifecycleEvents }
   }
 
   /**

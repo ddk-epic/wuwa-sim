@@ -95,7 +95,7 @@ export function generateSimulationLog(
         cumulativeConcerto: dispatch.postState.concerto,
         damage: dmg,
         statsSnapshot: { ...hitResolved.stats },
-        activeBuffIds: hitResolved.activeBuffIds,
+        activeBuffs: hitResolved.activeBuffs,
       }
       log.push(hitEvent)
 

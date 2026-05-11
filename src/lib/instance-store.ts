@@ -5,7 +5,7 @@ import type {
   StackingPolicy,
   Trigger,
 } from "#/types/buff"
-import type { BuffEvent } from "#/types/simulation-log"
+import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
@@ -132,6 +132,18 @@ export class InstanceStore {
       .filter((inst) => inst.targetCharacterId === characterId)
       .map((inst) => inst.def.id)
       .sort()
+  }
+
+  activeBuffs(characterId: number): ActiveBuff[] {
+    return this.active
+      .filter((inst) => inst.targetCharacterId === characterId)
+      .map((inst) => ({
+        id: inst.def.id,
+        name: inst.def.name,
+        stacks: inst.stacks,
+        sourceCharacterId: inst.sourceCharacterId,
+      }))
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   }
 
   /** Returns true when any active instance with the given def.id targets `characterId`. */

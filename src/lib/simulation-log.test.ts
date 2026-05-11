@@ -185,7 +185,7 @@ describe("generateSimulationLog — single hit", () => {
       cumulativeEnergy: 5,
       cumulativeConcerto: 2,
       damage: 675,
-      activeBuffIds: [],
+      activeBuffs: [],
     })
     expect(
       (result[1] as { statsSnapshot: { atkBase: number } }).statsSnapshot,
@@ -406,14 +406,14 @@ describe("generateSimulationLog — action event concerto", () => {
 })
 
 describe("generateSimulationLog — stats snapshot", () => {
-  it("populates statsSnapshot and empty activeBuffIds on every HitEvent", () => {
+  it("populates statsSnapshot and empty activeBuffs on every HitEvent", () => {
     testCharacters = [charA]
     const entry = tlEntry(1, "Normal Attack::(Stage 2)")
     const result = generateSimulationLog([entry], emptySlots, emptyLoadouts)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
     for (const hit of hits) {
-      expect(hit.activeBuffIds).toEqual([])
+      expect(hit.activeBuffs).toEqual([])
       expect(hit.statsSnapshot).toMatchObject({
         atkBase: 1000,
         atkPct: 0,
@@ -499,7 +499,9 @@ describe("generateSimulationLog — buff lifecycle interleaving", () => {
       (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
     ) as HitEvent | undefined
     expect(resHit).toBeDefined()
-    expect(resHit?.activeBuffIds).toContain("char.intro.buff")
+    expect(resHit?.activeBuffs.some((b) => b.id === "char.intro.buff")).toBe(
+      true,
+    )
     expect(resHit?.statsSnapshot.skillTypeBonus["Resonance Skill"]).toBeCloseTo(
       0.5,
     )
@@ -846,7 +848,9 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     const secondBasicHit = basicThenBasicResult
       .filter((e) => e.kind === "hit")
       .at(1) as HitEvent | undefined
-    expect(secondBasicHit?.activeBuffIds).toContain("test.s1")
+    expect(secondBasicHit?.activeBuffs.some((b) => b.id === "test.s1")).toBe(
+      true,
+    )
 
     // Heavy Attack hits do NOT trigger S1 — the buff remains absent.
     const heavyResult = generateSimulationLog(
@@ -857,7 +861,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     const heavyHit = heavyResult.find((e) => e.kind === "hit") as
       | HitEvent
       | undefined
-    expect(heavyHit?.activeBuffIds).not.toContain("test.s1")
+    expect(heavyHit?.activeBuffs.some((b) => b.id === "test.s1")).toBe(false)
   })
 })
 
@@ -942,7 +946,9 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
     const alphaHit = alphaResult.find((e) => e.kind === "hit") as
       | HitEvent
       | undefined
-    expect(alphaHit?.activeBuffIds).toContain("test.stage-alpha-only")
+    expect(
+      alphaHit?.activeBuffs.some((b) => b.id === "test.stage-alpha-only"),
+    ).toBe(true)
 
     const betaResult = generateSimulationLog(
       [tlEntry(60, "Skill A::Stage Beta")],
@@ -952,7 +958,9 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
     const betaHit = betaResult.find((e) => e.kind === "hit") as
       | HitEvent
       | undefined
-    expect(betaHit?.activeBuffIds).not.toContain("test.stage-alpha-only")
+    expect(
+      betaHit?.activeBuffs.some((b) => b.id === "test.stage-alpha-only"),
+    ).toBe(false)
   })
 
   it("array stageId — buff fires on any of the listed stages", () => {
@@ -983,7 +991,7 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
         emptyLoadouts,
       )
       const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
-      expect(h?.activeBuffIds).toContain("test.both-stages")
+      expect(h?.activeBuffs.some((b) => b.id === "test.both-stages")).toBe(true)
     }
   })
 
@@ -1011,7 +1019,7 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
         emptyLoadouts,
       )
       const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
-      expect(h?.activeBuffIds).toContain("test.any-stage")
+      expect(h?.activeBuffs.some((b) => b.id === "test.any-stage")).toBe(true)
     }
   })
 })

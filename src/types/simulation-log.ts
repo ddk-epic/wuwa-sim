@@ -15,11 +15,18 @@ export interface ActionEvent extends SimulationLogBase {
   variantKind?: VariantKind
 }
 
+export interface ActiveBuff {
+  id: string
+  name: string
+  stacks: number
+  sourceCharacterId?: number
+}
+
 export interface HitEvent extends SimulationLogBase {
   kind: "hit"
   damage: number
   statsSnapshot: StatTable
-  activeBuffIds: string[]
+  activeBuffs: ActiveBuff[]
   /** True when the hit was injected by an `emitHit` effect rather than authored. */
   synthetic?: boolean
   /** When `synthetic` is true, the BuffDef.id that emitted the hit. */

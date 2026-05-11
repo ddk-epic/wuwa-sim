@@ -24,7 +24,7 @@ function makeHost(): EmitHitHost & { resources: Map<number, ResourceState> } {
       }
       return state
     },
-    activeBuffIds: () => [],
+    activeBuffs: () => [],
   }
 }
 
@@ -179,7 +179,7 @@ describe("EmitHitDispatcher", () => {
       }),
       applyResourceDelta: () => {},
       getResource: () => emptyResourceState(),
-      activeBuffIds: () => [],
+      activeBuffs: () => [],
     }
     const hpEffect: EmitHitEffect = {
       ...effect,

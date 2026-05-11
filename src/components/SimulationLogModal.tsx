@@ -1,7 +1,21 @@
 import { Fragment, useState } from "react"
-import type { SimulationLogEntry } from "#/types/simulation-log"
+import type { ActiveBuff, SimulationLogEntry } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "#/lib/catalog"
+
+export function formatActiveBuffLabel(
+  b: ActiveBuff,
+  allBuffs: ActiveBuff[],
+  resolveCharacterName: (id: number) => string,
+): string {
+  const nameCollision = allBuffs.filter((x) => x.name === b.name).length > 1
+  const src =
+    nameCollision && b.sourceCharacterId !== undefined
+      ? ` (from ${resolveCharacterName(b.sourceCharacterId)})`
+      : ""
+  const stacks = b.stacks > 1 ? ` ×${b.stacks}` : ""
+  return `${b.name}${stacks}${src}`
+}
 
 interface SimulationLogModalProps {
   log: SimulationLogEntry[]
@@ -192,7 +206,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                           <td colSpan={8} className="py-2 px-3">
                             <StatsSnapshotTable
                               snapshot={ev.statsSnapshot}
-                              activeBuffIds={ev.activeBuffIds}
+                              activeBuffs={ev.activeBuffs}
                             />
                           </td>
                         </tr>
@@ -211,10 +225,10 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
 
 function StatsSnapshotTable({
   snapshot,
-  activeBuffIds,
+  activeBuffs,
 }: {
   snapshot: StatTable
-  activeBuffIds: string[]
+  activeBuffs: ActiveBuff[]
 }) {
   const scalarRows: [string, number][] = [
     ["ATK Base", snapshot.atkBase],
@@ -263,7 +277,17 @@ function StatsSnapshotTable({
       </div>
       <div className="mt-1 text-gray-500">
         Active buffs:{" "}
-        {activeBuffIds.length === 0 ? "—" : activeBuffIds.join(", ")}
+        {activeBuffs.length === 0
+          ? "—"
+          : activeBuffs
+              .map((b) =>
+                formatActiveBuffLabel(
+                  b,
+                  activeBuffs,
+                  (id) => getCharacterById(id)?.name ?? `#${id}`,
+                ),
+              )
+              .join(", ")}
       </div>
     </div>
   )
