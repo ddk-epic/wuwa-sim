@@ -138,4 +138,63 @@ describe("computeDamage", () => {
       computeDamage(ctx({ element: "Glacio", skillType: "Heavy Attack" }), s),
     ).toBe(Math.round(1 * 1000 * 1.2 * DEFRES))
   })
+
+  it("defShred=0 matches DEF_MULT_CONST baseline", () => {
+    expect(computeDamage(ctx(), stats({ defShred: 0 }))).toBe(
+      Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST),
+    )
+  })
+
+  it("positive defShred increases damage (reduces enemy DEF contribution)", () => {
+    const defMult =
+      DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - 0.2))
+    expect(computeDamage(ctx(), stats({ defShred: 0.2 }))).toBe(
+      Math.round(1000 * defMult * RES_MULT_CONST),
+    )
+  })
+
+  it("multiple defShred sources stack additively (via combined scalar)", () => {
+    const combined = 0.1 + 0.15
+    const defMult =
+      DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - combined))
+    expect(computeDamage(ctx(), stats({ defShred: combined }))).toBe(
+      Math.round(1000 * defMult * RES_MULT_CONST),
+    )
+  })
+
+  it("resShred=0 matches RES_MULT_CONST baseline", () => {
+    expect(
+      computeDamage(ctx({ element: "Fusion" }), stats({ resShred: {} })),
+    ).toBe(Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST))
+  })
+
+  it("positive resShred reduces resistance, increasing damage", () => {
+    const resMult = RES_MULT_CONST + 0.05
+    expect(
+      computeDamage(
+        ctx({ element: "Fusion" }),
+        stats({ resShred: { Fusion: 0.05 } }),
+      ),
+    ).toBe(Math.round(1000 * DEF_MULT_CONST * resMult))
+  })
+
+  it("resShred only applies to matching element", () => {
+    expect(
+      computeDamage(
+        ctx({ element: "Fusion" }),
+        stats({ resShred: { Glacio: 0.5 } }),
+      ),
+    ).toBe(Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST))
+  })
+
+  it("resShred pushing resistance below 0 halves the negative portion", () => {
+    // base resist = 1 - RES_MULT_CONST = 0.1; resShred = 0.2 → effectiveResist = -0.1
+    // resMult = 1 - (-0.1 / 2) = 1.05
+    expect(
+      computeDamage(
+        ctx({ element: "Fusion" }),
+        stats({ resShred: { Fusion: 0.2 } }),
+      ),
+    ).toBe(Math.round(1000 * DEF_MULT_CONST * 1.05))
+  })
 })

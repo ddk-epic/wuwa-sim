@@ -42,14 +42,27 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = 1 - critRate + critRate * stats.critDmg
 
+  // DEF_MULT_CONST = charDef / (charDef + enemyDef); defShred reduces enemy DEF portion
+  const defMult =
+    DEF_MULT_CONST /
+    (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - stats.defShred))
+
+  // RES_MULT_CONST = 1 - baseResistance; resShred lowers effective resistance
+  // When effective resistance goes negative the negative portion is halved
+  const baseResist = 1 - RES_MULT_CONST
+  const elementResShred = stats.resShred[ctx.element] ?? 0
+  const effectiveResist = baseResist - elementResShred
+  const resMult =
+    effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
+
   const raw =
     ctx.multiplier *
     base *
     (1 + dmgBonus) *
     (1 + deepen) *
     critFactor *
-    DEF_MULT_CONST *
-    RES_MULT_CONST
+    defMult *
+    resMult
 
   return Math.round(raw)
 }
