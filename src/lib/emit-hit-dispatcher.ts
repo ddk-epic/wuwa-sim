@@ -146,6 +146,7 @@ export class EmitHitDispatcher {
       element,
       dmgType: input.effect.damage.dmgType,
       scalingStat: input.effect.damage.scalingStat,
+      multiplier: input.effect.damage.value,
       statsSnapshot: cloneStats(stats),
       activeBuffs: host.activeBuffs(input.sourceCharacterId),
     }

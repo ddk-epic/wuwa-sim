@@ -1,8 +1,13 @@
 import { Fragment, useState } from "react"
-import type { ActiveBuff, SimulationLogEntry } from "#/types/simulation-log"
+import type {
+  ActiveBuff,
+  HitEvent,
+  SimulationLogEntry,
+} from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "#/lib/catalog"
 import { formatSkillType } from "#/data/skill-types"
+import { DEF_MULT_CONST, RES_MULT_CONST } from "#/lib/compute-damage"
 
 function resolvedScalingValue(snap: StatTable, rawStat?: string): number {
   const stat = (rawStat ?? "ATK").toUpperCase()
@@ -48,6 +53,103 @@ export function formatDMGPctCell(
 export function formatDeepenCell(snap: StatTable, dmgType: string): string {
   const v = snap.deepen[dmgType] ?? 0
   return `+${Math.round(v * 100)}%`
+}
+
+type StatKind = "ATK" | "HP" | "DEF"
+
+function normalizeStatKind(raw?: string): StatKind {
+  const u = (raw ?? "ATK").toUpperCase()
+  if (u === "HP") return "HP"
+  if (u === "DEF") return "DEF"
+  return "ATK"
+}
+
+function statComponents(
+  snap: StatTable,
+  kind: StatKind,
+): { base: number; pct: number; flat: number } {
+  if (kind === "HP")
+    return { base: snap.hpBase, pct: snap.hpPct, flat: snap.hpFlat }
+  if (kind === "DEF")
+    return { base: snap.defBase, pct: snap.defPct, flat: snap.defFlat }
+  return { base: snap.atkBase, pct: snap.atkPct, flat: snap.atkFlat }
+}
+
+export function formatStatComponents(
+  snap: StatTable,
+  rawStat?: string,
+): string {
+  const kind = normalizeStatKind(rawStat)
+  const { base, pct, flat } = statComponents(snap, kind)
+  const resolved = Math.round(base * (1 + pct) + flat)
+  return `${kind} ${resolved} (${base} × ${(1 + pct).toFixed(2)} + ${flat})`
+}
+
+export interface FormulaBreakdown {
+  scalingValue: number
+  multiplier: number
+  dmgBonus: number
+  deepen: number
+  critFactor: number
+  defMult: number
+  resMult: number
+  result: number
+}
+
+export function computeFormulaBreakdown(
+  ev: Pick<
+    HitEvent,
+    | "element"
+    | "dmgType"
+    | "skillType"
+    | "scalingStat"
+    | "multiplier"
+    | "statsSnapshot"
+  >,
+): FormulaBreakdown {
+  const snap = ev.statsSnapshot
+  const kind = normalizeStatKind(ev.scalingStat)
+  const { base, pct, flat } = statComponents(snap, kind)
+  const scalingValue = base * (1 + pct) + flat
+
+  const dmgBonus =
+    (snap.elementBonus[ev.element] ?? 0) +
+    (snap.skillTypeBonus[ev.skillType] ?? 0) +
+    snap.allDmgBonus
+
+  const deepen = snap.deepen[ev.dmgType] ?? 0
+  const cr = Math.min(snap.critRate, 1)
+  const critFactor = 1 - cr + cr * snap.critDmg
+
+  const defMult =
+    DEF_MULT_CONST /
+    (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - snap.defShred))
+  const baseResist = 1 - RES_MULT_CONST
+  const elementResShred = snap.resShred[ev.element] ?? 0
+  const effectiveResist = baseResist - elementResShred
+  const resMult =
+    effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
+
+  const result = Math.round(
+    scalingValue *
+      ev.multiplier *
+      (1 + dmgBonus) *
+      (1 + deepen) *
+      critFactor *
+      defMult *
+      resMult,
+  )
+
+  return {
+    scalingValue,
+    multiplier: ev.multiplier,
+    dmgBonus,
+    deepen,
+    critFactor,
+    defMult,
+    resMult,
+    result,
+  }
 }
 
 export function formatActiveBuffLabel(
@@ -305,10 +407,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         {ev.kind === "hit" && isExpanded && (
                           <tr className="border-b border-gray-800 bg-gray-950/60">
                             <td colSpan={14} className="py-2 px-3">
-                              <StatsSnapshotTable
-                                snapshot={ev.statsSnapshot}
-                                activeBuffs={ev.activeBuffs}
-                              />
+                              <HitDrawer ev={ev} />
                             </td>
                           </tr>
                         )}
@@ -325,67 +424,51 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
   )
 }
 
-function StatsSnapshotTable({
-  snapshot,
-  activeBuffs,
-}: {
-  snapshot: StatTable
-  activeBuffs: ActiveBuff[]
-}) {
-  const scalarRows: [string, number][] = [
-    ["ATK Base", snapshot.atkBase],
-    ["ATK %", snapshot.atkPct],
-    ["ATK Flat", snapshot.atkFlat],
-    ["HP Base", snapshot.hpBase],
-    ["HP %", snapshot.hpPct],
-    ["HP Flat", snapshot.hpFlat],
-    ["DEF Base", snapshot.defBase],
-    ["DEF %", snapshot.defPct],
-    ["DEF Flat", snapshot.defFlat],
-    ["Crit Rate", snapshot.critRate],
-    ["Crit DMG", snapshot.critDmg],
-    ["Def Shred", snapshot.defShred],
-  ]
-  const recordRows: [string, Record<string, number>][] = [
-    ["Element Bonus", snapshot.elementBonus],
-    ["Skill Type Bonus", snapshot.skillTypeBonus],
-    ["Deepen", snapshot.deepen],
-    ["Res Shred", snapshot.resShred],
-  ]
+function HitDrawer({ ev }: { ev: HitEvent }) {
+  const snap = ev.statsSnapshot
+  const bd = computeFormulaBreakdown(ev)
+  const cr = Math.min(snap.critRate, 1)
+  const critFactor = 1 - cr + cr * snap.critDmg
 
   return (
-    <div className="text-xs text-gray-300">
-      <div className="font-semibold text-gray-400 mb-1">Stats snapshot</div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-0.5">
-        {scalarRows.map(([label, value]) => (
-          <div key={label} className="flex justify-between">
-            <span className="text-gray-500">{label}</span>
-            <span>{value}</span>
-          </div>
-        ))}
-        {recordRows.map(([label, rec]) => {
-          const entries = Object.entries(rec)
-          return (
-            <div key={label} className="flex justify-between">
-              <span className="text-gray-500">{label}</span>
-              <span>
-                {entries.length === 0
-                  ? "—"
-                  : entries.map(([k, v]) => `${k}: ${v}`).join(", ")}
-              </span>
-            </div>
-          )
-        })}
+    <div className="text-xs text-gray-300 space-y-1.5">
+      <div className="flex flex-wrap gap-x-6 gap-y-0.5">
+        <span>{formatStatComponents(snap, "ATK")}</span>
+        <span>{formatStatComponents(snap, "HP")}</span>
+        <span>{formatStatComponents(snap, "DEF")}</span>
       </div>
-      <div className="mt-1 text-gray-500">
+      <div className="text-gray-400">
+        Crit Factor:{" "}
+        <span className="text-gray-200">{critFactor.toFixed(4)}</span>
+        <span className="text-gray-500 ml-1">
+          (1 − {(cr * 100).toFixed(0)}% + {(cr * 100).toFixed(0)}% ×{" "}
+          {(snap.critDmg * 100).toFixed(0)}%)
+        </span>
+      </div>
+      {snap.defShred !== 0 && (
+        <div className="text-gray-400">
+          DEF Shred:{" "}
+          <span className="text-gray-200">
+            {(snap.defShred * 100).toFixed(1)}%
+          </span>
+        </div>
+      )}
+      <div className="font-mono text-gray-400 text-[11px]">
+        {Math.round(bd.scalingValue)} × {bd.multiplier.toFixed(2)} × (1 +{" "}
+        {(bd.dmgBonus * 100).toFixed(1)}%) × (1 + {(bd.deepen * 100).toFixed(1)}
+        %) × {bd.critFactor.toFixed(4)} × {bd.defMult.toFixed(4)} ×{" "}
+        {bd.resMult.toFixed(4)} ={" "}
+        <span className="text-yellow-400">{bd.result.toLocaleString()}</span>
+      </div>
+      <div className="text-gray-500">
         Active buffs:{" "}
-        {activeBuffs.length === 0
+        {ev.activeBuffs.length === 0
           ? "—"
-          : activeBuffs
+          : ev.activeBuffs
               .map((b) =>
                 formatActiveBuffLabel(
                   b,
-                  activeBuffs,
+                  ev.activeBuffs,
                   (id) => getCharacterById(id)?.name ?? `#${id}`,
                 ),
               )

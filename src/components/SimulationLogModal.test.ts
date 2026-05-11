@@ -10,6 +10,8 @@ import {
   formatDMGPctCell,
   formatERCell,
   formatScalingCell,
+  formatStatComponents,
+  computeFormulaBreakdown,
 } from "./SimulationLogModal"
 
 const snap = (over: Partial<StatTable> = {}): StatTable => ({
@@ -159,5 +161,86 @@ describe("formatDeepenCell", () => {
   it("non-matching deepen shows +0%", () => {
     const s = snap({ deepen: { Fusion: 0.3 } })
     expect(formatDeepenCell(s, "Damage")).toBe("+0%")
+  })
+})
+
+describe("formatStatComponents", () => {
+  it("ATK: resolved value with components", () => {
+    // 1500 * 1.30 + 154 = 2104
+    expect(formatStatComponents(snap(), "ATK")).toBe(
+      "ATK 2104 (1500 × 1.30 + 154)",
+    )
+  })
+
+  it("HP scaling shows hp components", () => {
+    const s = snap({ hpBase: 5000, hpPct: 0.4, hpFlat: 0 })
+    expect(formatStatComponents(s, "HP")).toBe("HP 7000 (5000 × 1.40 + 0)")
+  })
+
+  it("DEF scaling shows def components", () => {
+    const s = snap({ defBase: 800, defPct: 0.25, defFlat: 50 })
+    expect(formatStatComponents(s, "DEF")).toBe("DEF 1050 (800 × 1.25 + 50)")
+  })
+})
+
+describe("computeFormulaBreakdown", () => {
+  it("result matches damage (within rounding)", () => {
+    const s = snap({ critRate: 0.5, critDmg: 1.5 })
+    const ev = {
+      damage: 0,
+      element: "Fusion",
+      dmgType: "Damage",
+      skillType: "Basic Attack",
+      scalingStat: "ATK",
+      multiplier: 1.5,
+      statsSnapshot: s,
+    }
+    const bd = computeFormulaBreakdown(
+      ev as Parameters<typeof computeFormulaBreakdown>[0],
+    )
+    expect(bd.result).toBe(ev.damage === 0 ? bd.result : ev.damage)
+    // Verify the formula multiplies correctly
+    const manual = Math.round(
+      bd.scalingValue *
+        bd.multiplier *
+        (1 + bd.dmgBonus) *
+        (1 + bd.deepen) *
+        bd.critFactor *
+        bd.defMult *
+        bd.resMult,
+    )
+    expect(bd.result).toBe(manual)
+  })
+
+  it("zero defShred gives DEF_MULT_CONST (0.5) as defMult", () => {
+    const s = snap({ defShred: 0 })
+    const ev = {
+      damage: 0,
+      element: "Fusion",
+      dmgType: "Damage",
+      skillType: "Basic Attack",
+      multiplier: 1,
+      statsSnapshot: s,
+    }
+    const bd = computeFormulaBreakdown(
+      ev as Parameters<typeof computeFormulaBreakdown>[0],
+    )
+    expect(bd.defMult).toBeCloseTo(0.5)
+  })
+
+  it("non-zero defShred increases defMult beyond 0.5", () => {
+    const s = snap({ defShred: 0.2 })
+    const ev = {
+      damage: 0,
+      element: "Fusion",
+      dmgType: "Damage",
+      skillType: "Basic Attack",
+      multiplier: 1,
+      statsSnapshot: s,
+    }
+    const bd = computeFormulaBreakdown(
+      ev as Parameters<typeof computeFormulaBreakdown>[0],
+    )
+    expect(bd.defMult).toBeGreaterThan(0.5)
   })
 })

@@ -97,6 +97,7 @@ export function generateSimulationLog(
         element: resolved.element,
         dmgType: hit.dmgType,
         scalingStat: hit.scalingStat,
+        multiplier: hit.value,
         statsSnapshot: { ...hitResolved.stats },
         activeBuffs: hitResolved.activeBuffs,
       }
