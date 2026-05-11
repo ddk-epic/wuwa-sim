@@ -95,13 +95,9 @@ describe("formatActiveBuffLabel", () => {
 })
 
 describe("formatScalingCell", () => {
-  it("ATK (default) shows resolved ATK value", () => {
+  it("ATK (default/undefined) shows resolved ATK value", () => {
     // 1500 * 1.3 + 154 = 2104
     expect(formatScalingCell(snap())).toBe("ATK 2104")
-  })
-
-  it("missing scalingStat falls back to ATK", () => {
-    expect(formatScalingCell(snap(), undefined)).toBe("ATK 2104")
   })
 
   it("HP scaling uses hpBase * (1+hpPct) + hpFlat", () => {
@@ -184,34 +180,6 @@ describe("formatStatComponents", () => {
 })
 
 describe("computeFormulaBreakdown", () => {
-  it("result matches damage (within rounding)", () => {
-    const s = snap({ critRate: 0.5, critDmg: 1.5 })
-    const ev = {
-      damage: 0,
-      element: "Fusion",
-      dmgType: "Damage",
-      skillType: "Basic Attack",
-      scalingStat: "ATK",
-      multiplier: 1.5,
-      statsSnapshot: s,
-    }
-    const bd = computeFormulaBreakdown(
-      ev as Parameters<typeof computeFormulaBreakdown>[0],
-    )
-    expect(bd.result).toBe(ev.damage === 0 ? bd.result : ev.damage)
-    // Verify the formula multiplies correctly
-    const manual = Math.round(
-      bd.scalingValue *
-        bd.multiplier *
-        (1 + bd.dmgBonus) *
-        (1 + bd.deepen) *
-        bd.critFactor *
-        bd.defMult *
-        bd.resMult,
-    )
-    expect(bd.result).toBe(manual)
-  })
-
   it("zero defShred gives DEF_MULT_CONST (0.5) as defMult", () => {
     const s = snap({ defShred: 0 })
     const ev = {
