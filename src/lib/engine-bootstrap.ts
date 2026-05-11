@@ -1,7 +1,10 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
+import type { EnrichedCharacter } from "#/types/character"
+import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout } from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
+import type { WeaponData } from "#/types/weapon"
 import {
   getCharacterById,
   getEchoById,
@@ -65,6 +68,52 @@ export function compileSkillTreeNode(
   return null
 }
 
+export function buildCharacterBuffDefs(
+  char: EnrichedCharacter,
+  sequence: number,
+): BuffDef[] {
+  const buffs: BuffDef[] = []
+  for (const def of char.buffs) {
+    if ((def.requiresSequence ?? 0) <= sequence) buffs.push(def)
+  }
+  for (const nodeName of char.skillTreeBonuses) {
+    const def = compileSkillTreeNode(nodeName, {
+      characterId: char.id,
+      characterElement: char.element,
+    })
+    if (def) buffs.push(def)
+  }
+  return buffs
+}
+
+export function buildWeaponBuffDefs(
+  weapon: WeaponData,
+  rank: number,
+): BuffDef[] {
+  return resolveWeaponBuffs(weapon, rank)
+}
+
+export function buildEchoBuffDefs(echo: EnrichedEcho): BuffDef[] {
+  return echo.buffs
+}
+
+export function buildEchoSetBuffDefs(
+  slot1Id: number | null,
+  slot2Id: number | null,
+): BuffDef[] {
+  const buffs: BuffDef[] = []
+  const resolvedSets = resolveEchoSets(slot1Id, slot2Id)
+  for (const { setId, effectivePieces } of resolvedSets) {
+    const echoSet = getEchoSetById(setId)
+    if (echoSet) {
+      for (const def of echoSet.buffs) {
+        if ((def.requiresPieces ?? 2) <= effectivePieces) buffs.push(def)
+      }
+    }
+  }
+  return buffs
+}
+
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -92,19 +141,7 @@ export function bootstrapSlot(
     defBase: character.stats.max.def,
   }
 
-  const buffs: BuffDef[] = []
-
-  for (const def of character.buffs) {
-    if ((def.requiresSequence ?? 0) <= sequence) buffs.push(def)
-  }
-
-  for (const nodeName of character.skillTreeBonuses) {
-    const def = compileSkillTreeNode(nodeName, {
-      characterId: character.id,
-      characterElement: character.element,
-    })
-    if (def) buffs.push(def)
-  }
+  const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]
 
   const weaponId = loadout?.weaponId ?? null
   if (weaponId !== null) {
@@ -112,28 +149,22 @@ export function bootstrapSlot(
     if (weapon) {
       applyWeaponIntrinsic(stats, weapon.stats.main.max, weapon.stats.main.name)
       applyWeaponIntrinsic(stats, weapon.stats.sub.max, weapon.stats.sub.name)
-      buffs.push(...resolveWeaponBuffs(weapon, loadout?.weaponRank ?? 1))
+      buffs.push(...buildWeaponBuffDefs(weapon, loadout?.weaponRank ?? 1))
     }
   }
 
   const echoId = loadout?.echoId ?? null
   if (echoId !== null) {
     const echo = getEchoById(echoId)
-    if (echo) buffs.push(...echo.buffs)
+    if (echo) buffs.push(...buildEchoBuffDefs(echo))
   }
 
-  const resolvedSets = resolveEchoSets(
-    loadout?.echoSetSlot1Id ?? null,
-    loadout?.echoSetSlot2Id ?? null,
+  buffs.push(
+    ...buildEchoSetBuffDefs(
+      loadout?.echoSetSlot1Id ?? null,
+      loadout?.echoSetSlot2Id ?? null,
+    ),
   )
-  for (const { setId, effectivePieces } of resolvedSets) {
-    const echoSet = getEchoSetById(setId)
-    if (echoSet) {
-      for (const def of echoSet.buffs) {
-        if ((def.requiresPieces ?? 2) <= effectivePieces) buffs.push(def)
-      }
-    }
-  }
 
   buffs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 
