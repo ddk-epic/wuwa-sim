@@ -9,7 +9,7 @@ import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
-import { freezeSnapshots } from "./stat-table-builder"
+import { cloneStats, freezeSnapshots } from "./stat-table-builder"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 
@@ -562,28 +562,5 @@ function computeEndTime(def: BuffDef, frame: number): number {
       return frame + def.duration.v
     case "seconds":
       return frame + def.duration.v * 60
-  }
-}
-
-function cloneStats(s: StatTable): StatTable {
-  return {
-    atkBase: s.atkBase,
-    atkPct: s.atkPct,
-    atkFlat: s.atkFlat,
-    hpBase: s.hpBase,
-    hpPct: s.hpPct,
-    hpFlat: s.hpFlat,
-    defBase: s.defBase,
-    defPct: s.defPct,
-    defFlat: s.defFlat,
-    critRate: s.critRate,
-    critDmg: s.critDmg,
-    defShred: s.defShred,
-    elementBonus: { ...s.elementBonus },
-    skillTypeBonus: { ...s.skillTypeBonus },
-    deepen: { ...s.deepen },
-    resShred: { ...s.resShred },
-    allDmgBonus: s.allDmgBonus,
-    energyRechargePct: s.energyRechargePct,
   }
 }

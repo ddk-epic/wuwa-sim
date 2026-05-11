@@ -75,6 +75,29 @@ function resolveValue(
   }
 }
 
+export function cloneStats(s: StatTable): StatTable {
+  return {
+    atkBase: s.atkBase,
+    atkPct: s.atkPct,
+    atkFlat: s.atkFlat,
+    hpBase: s.hpBase,
+    hpPct: s.hpPct,
+    hpFlat: s.hpFlat,
+    defBase: s.defBase,
+    defPct: s.defPct,
+    defFlat: s.defFlat,
+    critRate: s.critRate,
+    critDmg: s.critDmg,
+    defShred: s.defShred,
+    elementBonus: { ...s.elementBonus },
+    skillTypeBonus: { ...s.skillTypeBonus },
+    deepen: { ...s.deepen },
+    resShred: { ...s.resShred },
+    allDmgBonus: s.allDmgBonus,
+    energyRechargePct: s.energyRechargePct,
+  }
+}
+
 function applyToPath(stats: StatTable, path: StatPath, v: number): void {
   switch (path.stat) {
     case "atkPct":

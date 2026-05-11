@@ -8,6 +8,7 @@ import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "./catalog"
 import { computeDamage } from "./compute-damage"
+import { cloneStats } from "./stat-table-builder"
 
 declare const buffInstanceKeyBrand: unique symbol
 export type BuffInstanceKey = string & { readonly [buffInstanceKeyBrand]: true }
@@ -150,28 +151,5 @@ export class EmitHitDispatcher {
       statsSnapshot: cloneStats(stats),
       activeBuffs: host.activeBuffs(input.sourceCharacterId),
     }
-  }
-}
-
-function cloneStats(s: StatTable): StatTable {
-  return {
-    atkBase: s.atkBase,
-    atkPct: s.atkPct,
-    atkFlat: s.atkFlat,
-    hpBase: s.hpBase,
-    hpPct: s.hpPct,
-    hpFlat: s.hpFlat,
-    defBase: s.defBase,
-    defPct: s.defPct,
-    defFlat: s.defFlat,
-    critRate: s.critRate,
-    critDmg: s.critDmg,
-    defShred: s.defShred,
-    elementBonus: { ...s.elementBonus },
-    skillTypeBonus: { ...s.skillTypeBonus },
-    deepen: { ...s.deepen },
-    resShred: { ...s.resShred },
-    allDmgBonus: s.allDmgBonus,
-    energyRechargePct: s.energyRechargePct,
   }
 }
