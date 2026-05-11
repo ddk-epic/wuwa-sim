@@ -15,9 +15,9 @@ export const emeraldOfGenesis = {
       name: "Stormy Resolution — Energy Regen",
       description:
         "Energy Regen not modeled in v1 — energy regen lands with resource state in a future slice.",
-      trigger: { event: "simStart" as const },
-      target: { kind: "self" as const },
-      duration: { kind: "permanent" as const },
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
       effects: [],
     },
   ],

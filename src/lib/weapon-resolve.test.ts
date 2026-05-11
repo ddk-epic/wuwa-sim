@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest"
-import type { BuffDef } from "#/types/buff"
+import type { BuffDef, Effect } from "#/types/buff"
 import { resolveWeaponBuffs } from "./weapon-resolve"
 
-const byRankEffect = (values: number[]) => ({
-  kind: "stat" as const,
-  path: { stat: "atkPct" as const },
-  value: { kind: "byRank" as const, values },
+const byRankEffect = (values: number[]): Effect => ({
+  kind: "stat",
+  path: { stat: "atkPct" },
+  value: { kind: "byRank", values },
 })
 
-const constEffect = (v: number) => ({
-  kind: "stat" as const,
-  path: { stat: "atkPct" as const },
-  value: { kind: "const" as const, v },
+const constEffect = (v: number): Effect => ({
+  kind: "stat",
+  path: { stat: "atkPct" },
+  value: { kind: "const", v },
 })
 
 const buff = (id: string, ...effects: BuffDef["effects"]): BuffDef => ({

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import type { BuffDef } from "#/types/buff"
+import type { BuffDef, Trigger } from "#/types/buff"
 import type { BuffEvent } from "#/types/simulation-log"
 import { emptyStatTable } from "#/types/stat-table"
 import { InstanceStore, matchesTrigger } from "./instance-store"
@@ -290,7 +290,7 @@ describe("InstanceStore — resolveTargetIds", () => {
 
 describe("matchesTrigger — synthetic source filtering", () => {
   it("default 'self' source rejects synthetic hits", () => {
-    const trigger = { event: "hitLanded", actor: "self" } as const
+    const trigger: Trigger = { event: "hitLanded", actor: "self" }
     const event: EngineEvent = {
       kind: "hitLanded",
       characterId: 1,
@@ -303,11 +303,11 @@ describe("matchesTrigger — synthetic source filtering", () => {
   })
 
   it("source='synthetic' only matches synthetic hits", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-    } as const
+    }
     const real: EngineEvent = {
       kind: "hitLanded",
       characterId: 1,
@@ -333,40 +333,40 @@ describe("matchesTrigger — stage + hitIndex filters (#94)", () => {
   }
 
   it("positive match: all filters match", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       stage: "Tap",
       hitIndex: 3,
-    } as const
+    }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
   })
 
   it("negative match: wrong stage", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       stage: "Hold",
       hitIndex: 3,
-    } as const
+    }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
 
   it("negative match: wrong hitIndex", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       stage: "Tap",
       hitIndex: 2,
-    } as const
+    }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
 
   it("no-filter passthrough: absent stage and hitIndex match any event", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-    } as const
+    }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
     expect(
       matchesTrigger(trigger, { ...baseEvent, stage: "Hold", hitIndex: 1 }, 1),
@@ -374,13 +374,13 @@ describe("matchesTrigger — stage + hitIndex filters (#94)", () => {
   })
 
   it("combined dmgType + stage + hitIndex all must match", () => {
-    const trigger = {
+    const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       dmgType: "Damage",
       stage: "Tap",
       hitIndex: 3,
-    } as const
+    }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
     expect(matchesTrigger(trigger, { ...baseEvent, dmgType: "Other" }, 1)).toBe(
       false,

@@ -190,9 +190,7 @@ describe("computeFormulaBreakdown", () => {
       multiplier: 1,
       statsSnapshot: s,
     }
-    const bd = computeFormulaBreakdown(
-      ev as Parameters<typeof computeFormulaBreakdown>[0],
-    )
+    const bd = computeFormulaBreakdown(ev)
     expect(bd.defMult).toBeCloseTo(0.5)
   })
 
@@ -206,9 +204,7 @@ describe("computeFormulaBreakdown", () => {
       multiplier: 1,
       statsSnapshot: s,
     }
-    const bd = computeFormulaBreakdown(
-      ev as Parameters<typeof computeFormulaBreakdown>[0],
-    )
+    const bd = computeFormulaBreakdown(ev)
     expect(bd.defMult).toBeGreaterThan(0.5)
   })
 })

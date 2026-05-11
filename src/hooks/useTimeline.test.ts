@@ -91,7 +91,7 @@ describe("useTimeline", () => {
       result.current.addEntry(sample)
       result.current.addEntry({
         ...sample,
-        variantKind: "instantCancel" as const,
+        variantKind: "instantCancel",
       })
     })
     const id = result.current.entries[0].id

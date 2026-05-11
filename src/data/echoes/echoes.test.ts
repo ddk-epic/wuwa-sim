@@ -3,6 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/buff-engine"
+import type { HitLandedEvent } from "#/lib/buff-engine"
 import { infernoRider } from "./inferno-rider"
 
 // Integration tests for the Inferno Rider Tap 3rd-hit buff (#95)
@@ -53,8 +54,8 @@ const emptyLoadout: SlotLoadout = {
   sequence: 0,
 }
 
-const tapHit = (hitIndex: number, frame: number) => ({
-  kind: "hitLanded" as const,
+const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
+  kind: "hitLanded",
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
@@ -63,8 +64,8 @@ const tapHit = (hitIndex: number, frame: number) => ({
   frame,
 })
 
-const holdHit = (frame: number) => ({
-  kind: "hitLanded" as const,
+const holdHit = (frame: number): HitLandedEvent => ({
+  kind: "hitLanded",
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
@@ -77,7 +78,7 @@ const BUFF_ID = "echo.inferno-rider.tap.fusion-basic-bonus"
 
 function makeEngine() {
   testCharacters = [testChar]
-  testEchoes = [infernoRider as EnrichedEcho]
+  testEchoes = [infernoRider]
   const engine = new BuffEngine()
   engine.bootstrap({
     slots: [1, null, null],

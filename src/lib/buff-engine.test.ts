@@ -615,7 +615,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
       {
         id: 7,
         name: "S",
-        type: "two-five" as const,
+        type: "two-five",
         effects: [],
         buffs: [stat(0.04, "set")],
       },

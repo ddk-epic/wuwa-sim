@@ -3,6 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
+import type { BuffDef } from "#/types/buff"
 import type { HitEvent } from "#/types/simulation-log"
 
 import { generateSimulationLog } from "./simulation-log"
@@ -427,21 +428,21 @@ describe("generateSimulationLog — stats snapshot", () => {
 
 describe("generateSimulationLog — buff lifecycle interleaving", () => {
   it("interleaves buffApplied with action/hit events when an Intro Skill grants a Resonance Skill bonus", () => {
-    const introBuff = {
+    const introBuff: BuffDef = {
       id: "char.intro.buff",
       name: "Intro",
       trigger: {
-        event: "skillCast" as const,
+        event: "skillCast",
         characterId: 1,
         skillType: "Intro Skill",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 14 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 14 },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "skillTypeBonus" as const, key: "Resonance Skill" },
-          value: { kind: "const" as const, v: 0.5 },
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Resonance Skill" },
+          value: { kind: "const", v: 0.5 },
         },
       ],
     }
@@ -512,19 +513,19 @@ describe("generateSimulationLog — emitHit pilot (#60)", () => {
   it("synthetic hits appear in the log attributed to the acting character", () => {
     // Char 1 has a coord-attack buff that emits a synthetic Fusion hit each
     // time it lands a Normal Attack (ICD 0).
-    const coord = {
+    const coord: BuffDef = {
       id: "char.coord",
       name: "Coord",
       trigger: {
-        event: "hitLanded" as const,
+        event: "hitLanded",
         characterId: 1,
-        source: "self" as const,
+        source: "self",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "permanent" as const },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
       effects: [
         {
-          kind: "emitHit" as const,
+          kind: "emitHit",
           damage: dmgHit(0.5),
           icdFrames: 0,
           skillType: "Coordinated Attack",
@@ -733,21 +734,21 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
   })
 
   it("skillCast trigger with replacesSkillType fires on correct skill type", () => {
-    const buff = {
+    const buff: BuffDef = {
       id: "test.cheer-dance",
       name: "Cheer Dance",
       trigger: {
-        event: "skillCast" as const,
+        event: "skillCast",
         characterId: 50,
         skillType: "Resonance Skill",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 10 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "elementBonus" as const, key: "Fusion" },
-          value: { kind: "const" as const, v: 0.1 },
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.1 },
         },
       ],
     }
@@ -781,22 +782,22 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
   })
 
   it("hitLanded trigger uses per-hit type — Basic Attack trigger fires on Basic Attack hits only", () => {
-    const s1 = {
+    const s1: BuffDef = {
       id: "test.s1",
       name: "S1",
       trigger: {
-        event: "hitLanded" as const,
-        actor: "self" as const,
+        event: "hitLanded",
+        actor: "self",
         skillType: "Basic Attack",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 6 },
-      stacking: { max: 4, onRetrigger: "addStack" as const },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 6 },
+      stacking: { max: 4, onRetrigger: "addStack" },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "elementBonus" as const, key: "Fusion" },
-          value: { kind: "perStack" as const, v: 0.03 },
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "perStack", v: 0.03 },
         },
       ],
     }
@@ -847,7 +848,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     )
     const secondBasicHit = basicThenBasicResult
       .filter((e) => e.kind === "hit")
-      .at(1) as HitEvent | undefined
+      .at(1)
     expect(secondBasicHit?.activeBuffs.some((b) => b.id === "test.s1")).toBe(
       true,
     )
@@ -858,9 +859,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
       [51, null, null],
       emptyLoadouts,
     )
-    const heavyHit = heavyResult.find((e) => e.kind === "hit") as
-      | HitEvent
-      | undefined
+    const heavyHit = heavyResult.find((e) => e.kind === "hit")
     expect(heavyHit?.activeBuffs.some((b) => b.id === "test.s1")).toBe(false)
   })
 })
@@ -918,21 +917,21 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
   }
 
   it("single stageId — buff fires only on matching stage", () => {
-    const buff = {
+    const buff: BuffDef = {
       id: "test.stage-alpha-only",
       name: "Alpha Only",
       trigger: {
-        event: "skillCast" as const,
+        event: "skillCast",
         characterId: 60,
         stageId: "Skill A::Stage Alpha",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 10 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "elementBonus" as const, key: "Fusion" },
-          value: { kind: "const" as const, v: 0.15 },
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.15 },
         },
       ],
     }
@@ -943,9 +942,7 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
       [60, null, null],
       emptyLoadouts,
     )
-    const alphaHit = alphaResult.find((e) => e.kind === "hit") as
-      | HitEvent
-      | undefined
+    const alphaHit = alphaResult.find((e) => e.kind === "hit")
     expect(
       alphaHit?.activeBuffs.some((b) => b.id === "test.stage-alpha-only"),
     ).toBe(true)
@@ -955,30 +952,28 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
       [60, null, null],
       emptyLoadouts,
     )
-    const betaHit = betaResult.find((e) => e.kind === "hit") as
-      | HitEvent
-      | undefined
+    const betaHit = betaResult.find((e) => e.kind === "hit")
     expect(
       betaHit?.activeBuffs.some((b) => b.id === "test.stage-alpha-only"),
     ).toBe(false)
   })
 
   it("array stageId — buff fires on any of the listed stages", () => {
-    const buff = {
+    const buff: BuffDef = {
       id: "test.both-stages",
       name: "Both Stages",
       trigger: {
-        event: "skillCast" as const,
+        event: "skillCast",
         characterId: 60,
         stageId: ["Skill A::Stage Alpha", "Skill A::Stage Beta"],
       },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 10 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "elementBonus" as const, key: "Fusion" },
-          value: { kind: "const" as const, v: 0.1 },
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.1 },
         },
       ],
     }
@@ -990,23 +985,23 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
         [60, null, null],
         emptyLoadouts,
       )
-      const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
+      const h = result.find((e) => e.kind === "hit")
       expect(h?.activeBuffs.some((b) => b.id === "test.both-stages")).toBe(true)
     }
   })
 
   it("no stageId filter — buff fires on all stages as before", () => {
-    const buff = {
+    const buff: BuffDef = {
       id: "test.any-stage",
       name: "Any Stage",
-      trigger: { event: "skillCast" as const, characterId: 60 },
-      target: { kind: "self" as const },
-      duration: { kind: "seconds" as const, v: 10 },
+      trigger: { event: "skillCast", characterId: 60 },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "elementBonus" as const, key: "Fusion" },
-          value: { kind: "const" as const, v: 0.1 },
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.1 },
         },
       ],
     }
@@ -1018,24 +1013,24 @@ describe("generateSimulationLog — stageId trigger filter (#89)", () => {
         [60, null, null],
         emptyLoadouts,
       )
-      const h = result.find((e) => e.kind === "hit") as HitEvent | undefined
+      const h = result.find((e) => e.kind === "hit")
       expect(h?.activeBuffs.some((b) => b.id === "test.any-stage")).toBe(true)
     }
   })
 })
 
 describe("generateSimulationLog — Energy Recharge (#98)", () => {
-  const erBuff = (id: number, erPct: number) => ({
+  const erBuff = (id: number, erPct: number): BuffDef => ({
     id: `char${id}.er`,
     name: "ER Buff",
-    trigger: { event: "simStart" as const },
-    target: { kind: "self" as const },
-    duration: { kind: "permanent" as const },
+    trigger: { event: "simStart" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
     effects: [
       {
-        kind: "stat" as const,
-        path: { stat: "energyRechargePct" as const },
-        value: { kind: "const" as const, v: erPct },
+        kind: "stat",
+        path: { stat: "energyRechargePct" },
+        value: { kind: "const", v: erPct },
       },
     ],
   })
@@ -1049,7 +1044,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
       [1, null, null],
       emptyLoadouts,
     )
-    const hit = result.find((e) => e.kind === "hit") as HitEvent | undefined
+    const hit = result.find((e) => e.kind === "hit")
     expect(hit?.cumulativeEnergy).toBeCloseTo(5 * 1.5)
   })
 
@@ -1060,7 +1055,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
       [1, null, null],
       emptyLoadouts,
     )
-    const hit = result.find((e) => e.kind === "hit") as HitEvent | undefined
+    const hit = result.find((e) => e.kind === "hit")
     expect(hit?.cumulativeEnergy).toBe(5)
   })
 
@@ -1068,19 +1063,19 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
     // Char 1: on-field, no ER
     // Char 2: off-field, 50% ER; has an emitHit buff that fires on char1 hits
     //         with energy=10. Char 2 should credit 15, not 10.
-    const coordBuff = {
+    const coordBuff: BuffDef = {
       id: "char2.coord",
       name: "Coord",
       trigger: {
-        event: "hitLanded" as const,
+        event: "hitLanded",
         characterId: 1,
-        actor: "any" as const,
+        actor: "any",
       },
-      target: { kind: "self" as const },
-      duration: { kind: "permanent" as const },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
       effects: [
         {
-          kind: "emitHit" as const,
+          kind: "emitHit",
           damage: { ...dmgHit(0.5, 10), dmgType: "Fusion" },
           icdFrames: 0,
           skillType: "Coordinated Attack",

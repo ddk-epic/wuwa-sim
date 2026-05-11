@@ -14,15 +14,15 @@ export const stringmaster = {
       id: "weapon.stringmaster.passive.atk",
       name: "Electric Amplification — ATK",
       description: "Permanent ATK% boost from Stringmaster passive.",
-      trigger: { event: "simStart" as const },
-      target: { kind: "self" as const },
-      duration: { kind: "permanent" as const },
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
       effects: [
         {
-          kind: "stat" as const,
-          path: { stat: "atkPct" as const },
+          kind: "stat",
+          path: { stat: "atkPct" },
           value: {
-            kind: "byRank" as const,
+            kind: "byRank",
             values: [0.12, 0.15, 0.18, 0.21, 0.24],
           },
         },
