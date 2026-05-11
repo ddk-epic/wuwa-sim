@@ -29,6 +29,19 @@ Each Echo always rolls one variable main stat and one fixed main stat, but the t
 
 > Note: 1‑COST Echoes cannot roll offensive main stats like Crit or DMG Bonus.
 
+## Echo Main Stat Values
+
+Echo Main Stat values (in %):
+
+| Stat          | Level 25 |
+| ------------- | -------: |
+| HP            |       33 |
+| DEF           |     41.5 |
+| ATK           |       33 |
+| Crit Rate     |       22 |
+| Crit DMG      |       44 |
+| Healing Bonus |       26 |
+
 ### Sub stats
 
 Each Echo can roll up to 5 sub‑stats. Sub‑stats are drawn from the shared pool:
@@ -37,9 +50,9 @@ Each Echo can roll up to 5 sub‑stats. Sub‑stats are drawn from the shared po
 
 > Scaling(ATK / DEF / HP), Flat ATK, Flat DEF, Flat HP, Crit Rate, Crit DMG, Skill DMG Bonus (Basic, Heavy, Res. Skill, Res. Liberation)
 
-## Echo Stats Values
+## Echo Sub Stat Values
 
-Echo Stat values have a range of values.
+Echo Sub Stat values (in %) have a range of values:
 
 | Stat            |    1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |
 | --------------- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
