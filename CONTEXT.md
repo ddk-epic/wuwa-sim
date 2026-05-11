@@ -58,7 +58,17 @@ A predicate continuously evaluated to determine whether an active Buff Instance 
 A pure-data expression for the magnitude of a `stat` Effect's modifier. Either `const`, `perStack`, or (later) `fromStat`. Recomputes every resolution by default; `snapshot: true` freezes at apply time.
 
 **Stat Table**:
-The flat typed struct of all damage-formula inputs for one character at one moment: ATK, ATK%, crit rate/dmg, element bonuses, skill-type bonuses, deepens, shreds. Permanent buffs are folded into a base table at sim start; temporary buffs are layered on top per hit.
+The flat typed struct of all damage-formula inputs for one character at one moment: ATK, ATK%, crit rate/dmg, element bonuses, skill-type bonuses, deepens, shreds. Base-value contributions (character intrinsics, weapon main/sub stats, echo main stats and substat rolls) are accumulated directly into a base table at sim start; permanent unconditional buffs are folded into that same base table; temporary and conditional buffs are layered on top per hit.
+
+**Echo Stat Roll**:
+A flat stat contribution from an equipped Echo — a main stat (one variable + one fixed per echo, scale by COST tier) or one of up to 5 substats. Modeled as a base-value contribution, not a Buff: accumulated directly into the base Stat Table at bootstrap. Values live in a single constants file. The user controls _which_ variable main each cost-4 and cost-3 echo rolls via per-cost-tier toggles; cost-1 variable mains are forced to the character's `primaryScalingStat` (no choice available in-game) and render as a display-only count badge. Substats default to a fixed 16-roll block (5× Crit Rate, 5× Crit DMG, 2× ATK%, 2× ER, 2× Skill DMG Bonus routed to the character's `recommendedSkillDmgPriority`).
+
+**Primary Scaling Stat**:
+The character-level field (`'atk' | 'hp' | 'def'`) declaring which stat the character's damage primarily scales off. Drives the "Scaling" option label on cost-4 / cost-3 main toggles (`ATK% | CR | CD` for ATK scalers; `HP% | CR | CD` for HP scalers) and the cost-1 forced default. Defaults to `'atk'` when omitted on Character data.
+_Avoid_: "Echo buff" (reserved for `Echo.buffs` and `EchoSet.buffs`, which are pipeline citizens)
+
+**Echo Build Preset**:
+The fixed cost layout of a character's 5 equipped Echoes. Closed set of two: `4-3-3-1-1` (standard, cost 12) and `4-4-1-1-1` (competitive, cost 11). Selected per character on the Loadout; determines how many variable main toggles appear in each cost tier.
 
 **Resource State**:
 Per-character mutable counters owned by the engine, separate from the Stat Table: Energy, Concerto, Forte, Resonance. Have caps and consumption semantics that don't fit the Stat Table model.
@@ -118,7 +128,7 @@ The skills that fire on swap-in / swap-out respectively. Outros consume Concerto
 
 - **"Sequence"** — used in WuWa community for both Resonance Chain count (S0–S6) and a generic ordering. We use **Resonance Chain Sequence** when count is meant; "sequence" alone refers to ordering.
 - **"Active character"** — was used to mean both Acting Character and On-Field Character. Resolved: these are distinct. The buff engine tracks both independently.
-- **"Buff" vs "modifier"** — every damage modifier is a buff in this system, including permanent ones from weapon passives and skill-tree nodes. There is no separate "permanent modifier" concept; permanent is just `duration: { kind: "permanent" }`.
+- **"Buff" vs "modifier"** — every damage modifier with a trigger, condition, duration, or stack count is a Buff in this system, including permanent ones from weapon passives, skill-tree nodes, and echo skill/set bonuses. There is no separate "permanent modifier" concept for those; permanent is just `duration: { kind: "permanent" }`. The narrow exception is pure base-value contributions — character intrinsics, weapon main/sub stats, and **Echo Stat Rolls** — which accumulate directly into the base Stat Table at bootstrap rather than flowing through the buff pipeline (see ADR-0010).
 - **"Amplify"** — an older WuWa term for **Deepen**. We use Deepen exclusively; do not introduce an `amplify` field.
 - **"DMG Bonus"** — at compute time, element bonus and skill-type bonus share one additive bucket. Stored separately on the Stat Table for trigger/condition specificity, but summed into a single `(1 + Σ)` factor in the damage formula.
 
