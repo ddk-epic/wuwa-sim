@@ -22,6 +22,23 @@ import { accumulateStatEffects } from "./stat-table-builder"
 
 export type { EngineEvent } from "./instance-store"
 
+type ConditionCacheVersions = {
+  store: number
+  resources: number
+  onField: number
+}
+
+type ConditionCacheKey = {
+  buffId: string
+  sourceCharacterId: number
+  targetCharacterId: number
+  actingCharacterId: number
+}
+
+function conditionCacheKeyString(k: ConditionCacheKey): string {
+  return `${k.buffId}|${k.sourceCharacterId}|${k.targetCharacterId}|${k.actingCharacterId}`
+}
+
 export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
 
 export interface ResolvedHit {
@@ -522,7 +539,7 @@ export class BuffEngine {
   }
 
   private conditionCache = new Map<string, boolean>()
-  private conditionCacheVersions: [number, number, number] | null = null
+  private conditionCacheVersions: ConditionCacheVersions | null = null
   private conditionEvalCount_ = 0
 
   private cachedEvaluateCondition(
@@ -530,22 +547,28 @@ export class BuffEngine {
     inst: BuffInstance,
     actingCharacterId: number,
   ): boolean {
-    const versions: [number, number, number] = [
-      this.store.mutationVersion(),
-      this.resources.mutationVersion(),
-      this.onField.mutationVersion(),
-    ]
+    const versions: ConditionCacheVersions = {
+      store: this.store.mutationVersion(),
+      resources: this.resources.mutationVersion(),
+      onField: this.onField.mutationVersion(),
+    }
     const prev = this.conditionCacheVersions
     if (
       prev === null ||
-      prev[0] !== versions[0] ||
-      prev[1] !== versions[1] ||
-      prev[2] !== versions[2]
+      prev.store !== versions.store ||
+      prev.resources !== versions.resources ||
+      prev.onField !== versions.onField
     ) {
       this.conditionCache.clear()
       this.conditionCacheVersions = versions
     }
-    const key = `${inst.def.id}|${inst.sourceCharacterId}|${inst.targetCharacterId}|${actingCharacterId}`
+    const cacheKey: ConditionCacheKey = {
+      buffId: inst.def.id,
+      sourceCharacterId: inst.sourceCharacterId,
+      targetCharacterId: inst.targetCharacterId,
+      actingCharacterId,
+    }
+    const key = conditionCacheKeyString(cacheKey)
     const cached = this.conditionCache.get(key)
     if (cached !== undefined) return cached
     const result = this.evaluateCondition(cond, inst)
