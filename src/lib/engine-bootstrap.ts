@@ -227,5 +227,8 @@ function applyWeaponIntrinsic(
     case "Crit. DMG":
       stats.critDmg += value
       return
+    case "Energy Regen":
+      stats.energyRechargePct += value
+      return
   }
 }
