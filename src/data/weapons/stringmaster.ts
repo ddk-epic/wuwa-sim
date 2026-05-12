@@ -12,7 +12,7 @@ export const stringmaster = {
   buffs: [
     {
       id: "weapon.stringmaster.passive.elem-bonus",
-      name: "Electric Amplification — Elemental DMG",
+      name: "Electric Amplification (Ele)",
       description: "Permanent Elemental DMG Bonus from Stringmaster passive.",
       trigger: { event: "simStart" },
       target: { kind: "self" },
@@ -27,7 +27,7 @@ export const stringmaster = {
     },
     {
       id: "weapon.stringmaster.passive.skill-atk",
-      name: "Electric Amplification — Skill ATK",
+      name: "Electric Amplification (ATK)",
       description:
         "On Resonance Skill cast, increases ATK by 12–24% per stack, up to 2 stacks for 5s.",
       trigger: {
@@ -48,7 +48,7 @@ export const stringmaster = {
     },
     {
       id: "weapon.stringmaster.passive.off-field-atk",
-      name: "Electric Amplification — Off-field ATK",
+      name: "Electric Amplification (Off-field ATK)",
       description: "While the wielder is off-field, increases their ATK.",
       trigger: { event: "simStart" },
       target: { kind: "self" },

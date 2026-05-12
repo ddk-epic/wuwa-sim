@@ -9,7 +9,9 @@ export type WeaponStatEffect = Omit<StatEffect, "value"> & {
   value: WeaponValueExpr
 }
 export type WeaponEffect = WeaponStatEffect | Exclude<Effect, StatEffect>
-export type WeaponBuff = Omit<BuffDef, "effects"> & { effects: WeaponEffect[] }
+export type WeaponBuffDef = Omit<BuffDef, "effects"> & {
+  effects: WeaponEffect[]
+}
 
 export interface WeaponStat {
   name: string
@@ -54,7 +56,7 @@ export interface WeaponData {
   weaponType: string
   stats: EnrichedWeaponStats
   passive: { name: string }
-  buffs: WeaponBuff[]
+  buffs: WeaponBuffDef[]
 }
 
 /** @deprecated Use WeaponData */

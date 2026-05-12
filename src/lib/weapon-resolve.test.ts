@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type {
-  WeaponBuff,
+  WeaponBuffDef,
   WeaponData,
   WeaponEffect,
   WeaponValueExpr,
@@ -13,7 +13,7 @@ const weaponEffect = (value: WeaponValueExpr): WeaponEffect => ({
   value,
 })
 
-const weaponBuff = (id: string, value: WeaponValueExpr): WeaponBuff => ({
+const weaponBuff = (id: string, value: WeaponValueExpr): WeaponBuffDef => ({
   id,
   name: id,
   trigger: { event: "simStart" },
@@ -72,7 +72,7 @@ describe("resolveWeaponBuffs", () => {
   })
 
   it("handles multi-effect buffs — resolves each array independently", () => {
-    const multi: WeaponBuff = {
+    const multi: WeaponBuffDef = {
       id: "b",
       name: "b",
       trigger: { event: "simStart" },
