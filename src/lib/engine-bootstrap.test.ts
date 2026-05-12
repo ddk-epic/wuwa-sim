@@ -151,7 +151,7 @@ describe("buildWeaponBuffDefs", () => {
             {
               kind: "stat",
               path: { stat: "critDmg" },
-              value: { kind: "byRank", values: [0.1, 0.2, 0.3, 0.4, 0.5] },
+              value: { kind: "const", v: [0.1, 0.2, 0.3, 0.4, 0.5] },
             },
           ],
         },
@@ -166,7 +166,7 @@ describe("buildWeaponBuffDefs", () => {
     })
   })
 
-  it("resolves byRank value at rank 5", () => {
+  it("resolves array v at rank 5", () => {
     const weapon = baseWeapon({
       buffs: [
         {
@@ -175,7 +175,7 @@ describe("buildWeaponBuffDefs", () => {
             {
               kind: "stat",
               path: { stat: "critDmg" },
-              value: { kind: "byRank", values: [0.1, 0.2, 0.3, 0.4, 0.5] },
+              value: { kind: "const", v: [0.1, 0.2, 0.3, 0.4, 0.5] },
             },
           ],
         },

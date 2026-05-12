@@ -37,8 +37,6 @@ export function freezeSnapshots(
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
-    if (effect.value.kind === "byRank") continue
-    if (effect.value.kind === "byRankPerStack") continue
     if (!effect.value.snapshot) continue
     const frozen =
       effect.value.kind === "perStack"
@@ -56,13 +54,7 @@ function resolveValue(
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
 ): number {
-  if (
-    value.kind !== "byRank" &&
-    value.kind !== "byRankPerStack" &&
-    value.snapshot &&
-    snapshots &&
-    snapshots[effectIndex] !== undefined
-  ) {
+  if (value.snapshot && snapshots && snapshots[effectIndex] !== undefined) {
     return snapshots[effectIndex]
   }
   switch (value.kind) {
@@ -70,11 +62,6 @@ function resolveValue(
       return value.v
     case "perStack":
       return value.v * stacks
-    case "byRank":
-    case "byRankPerStack":
-      throw new Error(
-        "byRank/byRankPerStack values must be resolved by resolveWeaponBuffs before entering the engine",
-      )
   }
 }
 

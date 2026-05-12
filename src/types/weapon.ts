@@ -1,4 +1,13 @@
-import type { BuffDef } from "./buff"
+import type { BuffDef, Effect, StatEffect } from "./buff"
+
+/** Value expression used in weapon buff authoring. `v` may be a rank-indexed array of 5 numbers. */
+export type WeaponValueExpr =
+  | { kind: "const"; v: number | number[]; snapshot?: boolean }
+  | { kind: "perStack"; v: number | number[]; snapshot?: boolean }
+
+type WeaponStatEffect = Omit<StatEffect, "value"> & { value: WeaponValueExpr }
+type WeaponEffect = WeaponStatEffect | Exclude<Effect, StatEffect>
+type WeaponBuff = Omit<BuffDef, "effects"> & { effects: WeaponEffect[] }
 
 export interface WeaponStat {
   name: string
@@ -43,7 +52,7 @@ export interface WeaponData {
   weaponType: string
   stats: EnrichedWeaponStats
   passive: { name: string }
-  buffs: BuffDef[]
+  buffs: WeaponBuff[]
 }
 
 /** @deprecated Use WeaponData */

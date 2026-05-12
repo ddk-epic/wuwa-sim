@@ -21,10 +21,7 @@ export const stringmaster = {
         {
           kind: "stat",
           path: { stat: "elementBonus", key: "all" },
-          value: {
-            kind: "byRank",
-            values: [0.12, 0.15, 0.18, 0.21, 0.24],
-          },
+          value: { kind: "const", v: [0.12, 0.15, 0.18, 0.21, 0.24] },
         },
       ],
     },
@@ -45,10 +42,7 @@ export const stringmaster = {
         {
           kind: "stat",
           path: { stat: "atkPct" },
-          value: {
-            kind: "byRankPerStack",
-            values: [0.12, 0.15, 0.18, 0.21, 0.24],
-          },
+          value: { kind: "perStack", v: [0.12, 0.15, 0.18, 0.21, 0.24] },
         },
       ],
     },
@@ -64,10 +58,7 @@ export const stringmaster = {
         {
           kind: "stat",
           path: { stat: "atkPct" },
-          value: {
-            kind: "byRank",
-            values: [0.12, 0.15, 0.18, 0.21, 0.24],
-          },
+          value: { kind: "const", v: [0.12, 0.15, 0.18, 0.21, 0.24] },
         },
       ],
     },

@@ -1,11 +1,8 @@
-import type { BuffDef, Effect, ValueExpr } from "#/types/buff"
-
-export interface WeaponBuffSpec {
-  buffs: BuffDef[]
-}
+import type { BuffDef, ValueExpr } from "#/types/buff"
+import type { WeaponData, WeaponValueExpr } from "#/types/weapon"
 
 export function resolveWeaponBuffs(
-  weapon: WeaponBuffSpec,
+  weapon: WeaponData,
   rank: number,
 ): BuffDef[] {
   if (rank < 1 || rank > 5) {
@@ -13,24 +10,19 @@ export function resolveWeaponBuffs(
   }
   return weapon.buffs.map((buff) => ({
     ...buff,
-    effects: buff.effects.map((effect) => resolveEffect(effect, rank)),
+    effects: buff.effects.map((effect) => {
+      if (effect.kind !== "stat") return effect
+      return { ...effect, value: resolveValue(effect.value, rank) }
+    }),
   }))
 }
 
-function resolveEffect(effect: Effect, rank: number): Effect {
-  if (effect.kind !== "stat") return effect
-  return { ...effect, value: resolveValue(effect.value, rank) }
-}
-
-function resolveValue(value: ValueExpr, rank: number): ValueExpr {
-  if (value.kind !== "byRank" && value.kind !== "byRankPerStack") return value
-  if (value.values.length !== 5) {
+function resolveValue(value: WeaponValueExpr, rank: number): ValueExpr {
+  if (!Array.isArray(value.v)) return value as ValueExpr
+  if (value.v.length !== 5) {
     throw new Error(
-      `${value.kind} values array must have exactly 5 entries, got ${value.values.length}`,
+      `Weapon value array must have exactly 5 entries, got ${value.v.length}`,
     )
   }
-  if (value.kind === "byRankPerStack") {
-    return { kind: "perStack", v: value.values[rank - 1] }
-  }
-  return { kind: "const", v: value.values[rank - 1] }
+  return { kind: value.kind, v: value.v[rank - 1] }
 }

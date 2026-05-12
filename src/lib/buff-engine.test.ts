@@ -285,7 +285,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
     expect(stats.critRate).toBeCloseTo(0.36 + BASE_CR)
   })
 
-  it("applies weapon passive buffs (byRank resolver → engine integration)", () => {
+  it("applies weapon passive buffs (array v resolver → engine integration)", () => {
     testCharacters = [baseChar()]
     testWeapons = [
       {
@@ -308,10 +308,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
               {
                 kind: "stat",
                 path: { stat: "atkPct" },
-                value: {
-                  kind: "byRank",
-                  values: [0.12, 0.15, 0.18, 0.21, 0.24],
-                },
+                value: { kind: "const", v: [0.12, 0.15, 0.18, 0.21, 0.24] },
               },
             ],
           },
@@ -3028,12 +3025,12 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
   }
 
   it("buff 1: elementBonus[all] is applied at simStart for all ranks", () => {
-    const byRank = [0.12, 0.15, 0.18, 0.21, 0.24]
+    const values = [0.12, 0.15, 0.18, 0.21, 0.24]
     for (let rank = 1; rank <= 5; rank++) {
       testCharacters = [baseChar({ id: 1, element: "Electro" })]
       const engine = bootstrapStringmaster(rank)
       expect(engine.resolveStats(1).elementBonus["all"] ?? 0).toBeCloseTo(
-        byRank[rank - 1],
+        values[rank - 1],
       )
     }
   })
