@@ -613,9 +613,22 @@ export class BuffEngine {
     return this.store.activeBuffIds(characterId)
   }
 
-  /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. */
+  /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. */
   activeBuffs(characterId: number): ActiveBuff[] {
-    return this.store.activeBuffs(characterId)
+    return this.store
+      .getActiveTargeting(characterId)
+      .filter(
+        (inst) =>
+          !inst.def.condition ||
+          this.cachedEvaluateCondition(inst.def.condition, inst, characterId),
+      )
+      .map((inst) => ({
+        id: inst.def.id,
+        name: inst.def.name,
+        stacks: inst.stacks,
+        sourceCharacterId: inst.sourceCharacterId,
+      }))
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   }
 
   /**

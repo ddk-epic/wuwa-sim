@@ -1062,6 +1062,57 @@ describe("BuffEngine — condition gating (#57)", () => {
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.24 + BASE_ATK_PCT)
   })
+
+  it("activeBuffs: filters out instances whose condition is false (#113)", () => {
+    const buff: BuffDef = {
+      id: "char.a.off-field-only",
+      name: "Off-field Only",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "actorIsOffField" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.24 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Before any swap: source (1) not on-field → condition true → buff appears in activeBuffs
+    expect(engine.activeBuffs(1).map((b) => b.id)).toContain(
+      "char.a.off-field-only",
+    )
+
+    // Bring 1 on-field: condition false → buff must NOT appear in activeBuffs
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.activeBuffs(1).map((b) => b.id)).not.toContain(
+      "char.a.off-field-only",
+    )
+
+    // Swap to 2: 1 is off-field again → condition true → buff reappears in activeBuffs
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 50,
+    })
+    expect(engine.activeBuffs(1).map((b) => b.id)).toContain(
+      "char.a.off-field-only",
+    )
+  })
 })
 
 describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
