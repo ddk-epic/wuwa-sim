@@ -38,6 +38,7 @@ export function freezeSnapshots(
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
     if (effect.value.kind === "byRank") continue
+    if (effect.value.kind === "byRankPerStack") continue
     if (!effect.value.snapshot) continue
     const frozen =
       effect.value.kind === "perStack"
