@@ -1,19 +1,24 @@
 import { describe, expect, it } from "vitest"
-import type { WeaponData, WeaponValueExpr } from "#/types/weapon"
+import type {
+  WeaponBuff,
+  WeaponData,
+  WeaponEffect,
+  WeaponValueExpr,
+} from "#/types/weapon"
 import { resolveWeaponBuffs } from "./weapon-resolve"
 
-const weaponEffect = (value: WeaponValueExpr) => ({
-  kind: "stat" as const,
-  path: { stat: "atkPct" as const },
+const weaponEffect = (value: WeaponValueExpr): WeaponEffect => ({
+  kind: "stat",
+  path: { stat: "atkPct" },
   value,
 })
 
-const weaponBuff = (id: string, value: WeaponValueExpr) => ({
+const weaponBuff = (id: string, value: WeaponValueExpr): WeaponBuff => ({
   id,
   name: id,
-  trigger: { event: "simStart" as const },
-  target: { kind: "self" as const },
-  duration: { kind: "permanent" as const },
+  trigger: { event: "simStart" },
+  target: { kind: "self" },
+  duration: { kind: "permanent" },
   effects: [weaponEffect(value)],
 })
 
@@ -67,12 +72,12 @@ describe("resolveWeaponBuffs", () => {
   })
 
   it("handles multi-effect buffs — resolves each array independently", () => {
-    const multi = {
+    const multi: WeaponBuff = {
       id: "b",
       name: "b",
-      trigger: { event: "simStart" as const },
-      target: { kind: "self" as const },
-      duration: { kind: "permanent" as const },
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
       effects: [
         weaponEffect({ kind: "const", v: [0.1, 0.12, 0.14, 0.16, 0.18] }),
         weaponEffect({ kind: "const", v: [0.2, 0.22, 0.24, 0.26, 0.28] }),

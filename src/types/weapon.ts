@@ -5,9 +5,11 @@ export type WeaponValueExpr =
   | { kind: "const"; v: number | number[]; snapshot?: boolean }
   | { kind: "perStack"; v: number | number[]; snapshot?: boolean }
 
-type WeaponStatEffect = Omit<StatEffect, "value"> & { value: WeaponValueExpr }
-type WeaponEffect = WeaponStatEffect | Exclude<Effect, StatEffect>
-type WeaponBuff = Omit<BuffDef, "effects"> & { effects: WeaponEffect[] }
+export type WeaponStatEffect = Omit<StatEffect, "value"> & {
+  value: WeaponValueExpr
+}
+export type WeaponEffect = WeaponStatEffect | Exclude<Effect, StatEffect>
+export type WeaponBuff = Omit<BuffDef, "effects"> & { effects: WeaponEffect[] }
 
 export interface WeaponStat {
   name: string
