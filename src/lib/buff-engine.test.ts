@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { stringmaster } from "#/data/weapons/stringmaster"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedWeapon } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
@@ -1019,6 +1020,50 @@ describe("BuffEngine — condition gating (#57)", () => {
       frame: 50,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+  })
+
+  it("actorIsOffField condition: contributes only while source is off-field", () => {
+    const buff: BuffDef = {
+      id: "char.a.off-field-only",
+      name: "Off-field Only",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "actorIsOffField" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.24 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [buff] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Before any swap-in, on-field is null — source (1) is not on-field, so contributes.
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.24 + BASE_ATK_PCT)
+
+    // Bring 1 on-field — condition false, no contribution.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+
+    // Swap to 2; 1 is off-field again — condition true, contributes.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 50,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.24 + BASE_ATK_PCT)
   })
 })
 
@@ -2955,5 +3000,136 @@ describe("BuffEngine — cooldown (#90)", () => {
     const afterFirst = engine.getResource(1).energy
     fire(engine, 1)
     expect(engine.getResource(1).energy).toBe(afterFirst + 10)
+  })
+})
+
+describe("Stringmaster weapon passive — Electric Amplification", () => {
+  const STRINGMASTER_ID = 21050016
+
+  const bootstrapStringmaster = (rank: number, slots: Slots = slotsOf(1)) => {
+    testWeapons = [stringmaster as EnrichedWeapon]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots,
+      loadouts: [
+        {
+          weaponId: STRINGMASTER_ID,
+          weaponRank: rank,
+          echoId: null,
+          echoSetSlot1Id: null,
+          echoSetSlot2Id: null,
+          sequence: 0,
+        },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    return engine
+  }
+
+  it("buff 1: elementBonus[all] is applied at simStart for all ranks", () => {
+    const byRank = [0.12, 0.15, 0.18, 0.21, 0.24]
+    for (let rank = 1; rank <= 5; rank++) {
+      testCharacters = [baseChar({ id: 1, element: "Electro" })]
+      const engine = bootstrapStringmaster(rank)
+      expect(engine.resolveStats(1).elementBonus["all"] ?? 0).toBeCloseTo(
+        byRank[rank - 1],
+      )
+    }
+  })
+
+  it("buff 2: atkPct stacks up to 2× on Resonance Skill cast, expires after 5s", () => {
+    testCharacters = [baseChar({ id: 1, element: "Electro" })]
+    const engine = bootstrapStringmaster(1)
+
+    // Bring 1 on-field so off-field buff (buff 3) is inactive
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    const baseAtk = engine.resolveStats(1).atkPct
+
+    // First Resonance Skill cast — 1 stack (×0.12 at rank 1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 10,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.12)
+
+    // Second cast — 2 stacks (max)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 20,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.24)
+
+    // Third cast — still capped at 2 stacks
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 30,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.24)
+
+    // After 5s (300 frames) from last cast, stacks expire (last cast at frame 30, expires at frame 330)
+    engine.tickToFrame(331)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk)
+  })
+
+  it("buff 3 rank 1: off-field atkPct active only while wielder is off-field", () => {
+    testCharacters = [
+      baseChar({ id: 1, element: "Electro" }),
+      baseChar({ id: 2 }),
+    ]
+    const engine = bootstrapStringmaster(1, [1, 2, null])
+
+    // Before any swap: source not on-field → off-field buff contributes
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.12)
+
+    // Bring 1 on-field: condition false
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+
+    // Swap to 2: 1 is off-field again → condition true
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 60,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.12)
+  })
+
+  it("buff 3 rank 5: off-field atkPct is 0.24", () => {
+    testCharacters = [
+      baseChar({ id: 1, element: "Electro" }),
+      baseChar({ id: 2 }),
+    ]
+    const engine = bootstrapStringmaster(5, [1, 2, null])
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Normal Attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Normal Attack",
+      frame: 60,
+    })
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.24)
   })
 })

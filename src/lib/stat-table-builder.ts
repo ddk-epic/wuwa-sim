@@ -57,6 +57,7 @@ function resolveValue(
 ): number {
   if (
     value.kind !== "byRank" &&
+    value.kind !== "byRankPerStack" &&
     value.snapshot &&
     snapshots &&
     snapshots[effectIndex] !== undefined
@@ -69,8 +70,9 @@ function resolveValue(
     case "perStack":
       return value.v * stacks
     case "byRank":
+    case "byRankPerStack":
       throw new Error(
-        "byRank values must be resolved by resolveWeaponBuffs before entering the engine",
+        "byRank/byRankPerStack values must be resolved by resolveWeaponBuffs before entering the engine",
       )
   }
 }

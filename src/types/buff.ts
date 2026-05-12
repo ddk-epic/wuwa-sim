@@ -24,6 +24,7 @@ export type ValueExpr =
   | { kind: "const"; v: number; snapshot?: boolean }
   | { kind: "perStack"; v: number; snapshot?: boolean }
   | { kind: "byRank"; values: number[] }
+  | { kind: "byRankPerStack"; values: number[] }
 
 export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
 
@@ -108,6 +109,7 @@ export type Condition =
   | { kind: "buffActive"; buffId: string; on: "target" | "source" }
   | { kind: "onField" }
   | { kind: "actorIsOnField" }
+  | { kind: "actorIsOffField" }
   | {
       kind: "resourceAtLeast"
       resource: ResourceKind

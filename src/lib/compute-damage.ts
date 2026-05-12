@@ -36,6 +36,7 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const base = scalingBase(stat, stats)
   const dmgBonus =
     (stats.elementBonus[ctx.element] ?? 0) +
+    (stats.elementBonus["all"] ?? 0) +
     (stats.skillTypeBonus[ctx.skillType] ?? 0) +
     stats.allDmgBonus
   const deepen = stats.deepen[ctx.dmgType] ?? 0

@@ -593,6 +593,8 @@ export class BuffEngine {
         return this.onField.isOnField(inst.targetCharacterId)
       case "actorIsOnField":
         return this.onField.isOnField(inst.sourceCharacterId)
+      case "actorIsOffField":
+        return !this.onField.isOnField(inst.sourceCharacterId)
       case "resourceAtLeast": {
         const subjectId =
           cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId

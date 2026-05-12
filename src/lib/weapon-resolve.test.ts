@@ -8,6 +8,12 @@ const byRankEffect = (values: number[]): Effect => ({
   value: { kind: "byRank", values },
 })
 
+const byRankPerStackEffect = (values: number[]): Effect => ({
+  kind: "stat",
+  path: { stat: "atkPct" },
+  value: { kind: "byRankPerStack", values },
+})
+
 const constEffect = (v: number): Effect => ({
   kind: "stat",
   path: { stat: "atkPct" },
@@ -105,5 +111,27 @@ describe("resolveWeaponBuffs", () => {
     const w = weapon(original)
     resolveWeaponBuffs(w, 3)
     expect(original.effects[0]).toMatchObject({ value: { kind: "byRank" } })
+  })
+
+  it("byRankPerStack resolves to perStack with per-rank v value", () => {
+    const values = [0.12, 0.15, 0.18, 0.21, 0.24]
+    for (let rank = 1; rank <= 5; rank++) {
+      const result = resolveWeaponBuffs(
+        weapon(buff("b", byRankPerStackEffect(values))),
+        rank,
+      )
+      expect(result[0].effects[0]).toMatchObject({
+        value: { kind: "perStack", v: values[rank - 1] },
+      })
+    }
+  })
+
+  it("byRankPerStack throws on values.length !== 5", () => {
+    expect(() =>
+      resolveWeaponBuffs(
+        weapon(buff("b", byRankPerStackEffect([0.1, 0.2, 0.3]))),
+        1,
+      ),
+    ).toThrow("5")
   })
 })

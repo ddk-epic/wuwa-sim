@@ -59,6 +59,20 @@ describe("computeDamage", () => {
     )
   })
 
+  it('elementBonus["all"] wildcard stacks with element-specific bonus', () => {
+    const s = stats({ elementBonus: { Fusion: 0.1, all: 0.12 } })
+    expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
+      Math.round(1 * 1000 * (1 + 0.1 + 0.12) * DEFRES),
+    )
+  })
+
+  it('elementBonus["all"] applies regardless of element', () => {
+    const s = stats({ elementBonus: { all: 0.24 } })
+    expect(computeDamage(ctx({ element: "Glacio" }), s)).toBe(
+      Math.round(1 * 1000 * 1.24 * DEFRES),
+    )
+  })
+
   it("deepen applies as its own multiplicative factor on matching dmgType", () => {
     const s = stats({ deepen: { Damage: 0.25 } })
     expect(computeDamage(ctx({ dmgType: "Damage" }), s)).toBe(
