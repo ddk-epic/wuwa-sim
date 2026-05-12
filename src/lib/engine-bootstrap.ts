@@ -11,6 +11,7 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
+import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
 import { resolveEchoSets } from "./resolve-echo-sets"
 import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
@@ -114,6 +115,22 @@ export function buildEchoSetBuffDefs(
   return buffs
 }
 
+export function accumulateEchoSubstatBlock(
+  stats: StatTable,
+  character: EnrichedCharacter,
+): void {
+  stats.critRate += DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
+  stats.critDmg += DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
+  stats.atkPct += DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+  stats.energyRechargePct +=
+    DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
+  const skillType =
+    character.recommendedSkillDmgPriority ?? "Resonance Liberation"
+  stats.skillTypeBonus[skillType] =
+    (stats.skillTypeBonus[skillType] ?? 0) +
+    DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
+}
+
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -140,6 +157,8 @@ export function bootstrapSlot(
     hpBase: character.stats.max.hp,
     defBase: character.stats.max.def,
   }
+
+  accumulateEchoSubstatBlock(stats, character)
 
   const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]
 

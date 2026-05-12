@@ -4,11 +4,14 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import type { WeaponData } from "#/types/weapon"
 import {
+  accumulateEchoSubstatBlock,
   buildCharacterBuffDefs,
   buildEchoBuffDefs,
   buildEchoSetBuffDefs,
   buildWeaponBuffDefs,
 } from "./engine-bootstrap"
+import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+import { emptyStatTable } from "#/types/stat-table"
 
 let testEchoSets: EchoSet[] = []
 
@@ -224,5 +227,56 @@ describe("buildEchoSetBuffDefs", () => {
     testEchoSets = [baseEchoSet(1, { buffs: [fivePieceBuff] })]
     const result = buildEchoSetBuffDefs(1, 1)
     expect(result).toHaveLength(0)
+  })
+})
+
+describe("accumulateEchoSubstatBlock", () => {
+  const crExpected = DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
+  const cdExpected = DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
+  const atkPctExpected = DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+  const erExpected =
+    DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
+  const skillExpected =
+    DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
+
+  it("accumulates critRate from 5 rolls", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(stats, baseChar())
+    expect(stats.critRate).toBeCloseTo(crExpected)
+  })
+
+  it("accumulates critDmg from 5 rolls", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(stats, baseChar())
+    expect(stats.critDmg).toBeCloseTo(cdExpected)
+  })
+
+  it("accumulates atkPct from 2 rolls", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(stats, baseChar())
+    expect(stats.atkPct).toBeCloseTo(atkPctExpected)
+  })
+
+  it("accumulates energyRechargePct from 2 rolls", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(stats, baseChar())
+    expect(stats.energyRechargePct).toBeCloseTo(erExpected)
+  })
+
+  it("routes skill dmg bonus to recommendedSkillDmgPriority", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(
+      stats,
+      baseChar({ recommendedSkillDmgPriority: "Resonance Skill" }),
+    )
+    expect(stats.skillTypeBonus["Resonance Skill"]).toBeCloseTo(skillExpected)
+  })
+
+  it("falls back to Resonance Liberation when priority is not set", () => {
+    const stats = emptyStatTable()
+    accumulateEchoSubstatBlock(stats, baseChar())
+    expect(stats.skillTypeBonus["Resonance Liberation"]).toBeCloseTo(
+      skillExpected,
+    )
   })
 })

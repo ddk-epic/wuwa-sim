@@ -5,8 +5,12 @@ import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
 import type { HitEvent } from "#/types/simulation-log"
+import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
 
 import { generateSimulationLog } from "./simulation-log"
+
+const BASE_ER =
+  DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
 
 const dmgHit = (value: number, energy = 0, concerto = 0) => ({
   type: "ATK",
@@ -326,14 +330,14 @@ describe("generateSimulationLog — echo skill entries", () => {
     })
     expect(result[1]).toMatchObject({
       kind: "hit",
-      damage: 900,
-      cumulativeEnergy: 10,
+      damage: 918,
+      cumulativeEnergy: expect.closeTo(10 * (1 + BASE_ER)),
       cumulativeConcerto: 5,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
-      damage: 450,
-      cumulativeEnergy: 20,
+      damage: 459,
+      cumulativeEnergy: expect.closeTo(20 * (1 + BASE_ER)),
       cumulativeConcerto: 10,
     })
   })
@@ -1036,7 +1040,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
   })
 
   it("authored hit energy scaled by (1 + actor.energyRechargePct)", () => {
-    // charA has base energy=5 per hit; with 50% ER should credit 7.5
+    // charA has base energy=5 per hit; with 50% ER buff + substat baseline ER
     const charWithER: EnrichedCharacter = { ...charA, buffs: [erBuff(1, 0.5)] }
     testCharacters = [charWithER]
     const result = generateSimulationLog(
@@ -1045,10 +1049,10 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
       emptyLoadouts,
     )
     const hit = result.find((e) => e.kind === "hit")
-    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * 1.5)
+    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * (1 + 0.5 + BASE_ER))
   })
 
-  it("default ER=0 gives no scaling (backwards compatible)", () => {
+  it("no explicit ER buff: only substat baseline ER scales energy", () => {
     testCharacters = [charA]
     const result = generateSimulationLog(
       [tlEntry(1, "Normal Attack::_")],
@@ -1056,7 +1060,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
       emptyLoadouts,
     )
     const hit = result.find((e) => e.kind === "hit")
-    expect(hit?.cumulativeEnergy).toBe(5)
+    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * (1 + BASE_ER))
   })
 
   it("synthetic hit uses buff-owner ER, not on-field character ER", () => {
@@ -1112,7 +1116,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
       | HitEvent
       | undefined
     expect(synth).toBeDefined()
-    // Char 2 credited energy: 10 * 1.5 = 15 (buff owner ER, not on-field char ER)
-    expect(synth?.cumulativeEnergy).toBeCloseTo(10 * 1.5)
+    // Char 2 credited energy: 10 * (1 + 0.5 + BASE_ER); buff-owner ER, not on-field char ER
+    expect(synth?.cumulativeEnergy).toBeCloseTo(10 * (1 + 0.5 + BASE_ER))
   })
 })

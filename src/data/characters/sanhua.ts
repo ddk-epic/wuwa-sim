@@ -16,6 +16,7 @@ export const sanhua = {
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
+  recommendedSkillDmgPriority: "Resonance Liberation",
   buffs: [
     {
       id: "char.sanhua.outro.silversnow",

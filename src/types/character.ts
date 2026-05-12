@@ -54,6 +54,7 @@ export interface Character {
   skills: Skill[]
   skillTreeBonuses: string[]
   buffs: BuffDef[]
+  recommendedSkillDmgPriority?: string
 }
 
 export type VariantKind = "cancel" | "instantCancel"

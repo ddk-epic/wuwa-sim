@@ -16,6 +16,7 @@ export const encore = {
     max: { hp: 10512.5, atk: 425, def: 1246.6644 },
   },
   skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
+  recommendedSkillDmgPriority: "Resonance Liberation",
   buffs: [
     {
       id: "char.encore.passive.woolies-cheer-dance",

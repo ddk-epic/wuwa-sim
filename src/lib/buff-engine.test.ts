@@ -8,6 +8,12 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 
 import { BuffEngine } from "./buff-engine"
 import { pendingNextOnFieldCount } from "./buff-engine.test-utils"
+import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+
+const BASE_ATK_PCT = DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+const BASE_CR = DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
+const BASE_ER =
+  DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
 
 let testCharacters: EnrichedCharacter[] = []
 let testWeapons: EnrichedWeapon[] = []
@@ -146,7 +152,7 @@ describe("BuffEngine.bootstrap — character-only", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBe(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
   })
 
   it("folds a permanent perStack stat buff into the base table at stacks=1", () => {
@@ -170,7 +176,7 @@ describe("BuffEngine.bootstrap — character-only", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
   })
 
   it("treats a permanent buff with a Condition as temporary (not folded into base)", () => {
@@ -196,7 +202,7 @@ describe("BuffEngine.bootstrap — character-only", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     // Condition (onField) is false (no swap-in occurred), so contribution skipped.
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
 })
 
@@ -220,7 +226,7 @@ describe("BuffEngine.bootstrap — skill tree", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.12)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.12 + BASE_ATK_PCT)
   })
 
   it("stacks multiple skill tree nodes additively", () => {
@@ -237,7 +243,7 @@ describe("BuffEngine.bootstrap — skill tree", () => {
     })
     const stats = engine.resolveStats(1)
     expect(stats.elementBonus.Glacio).toBeCloseTo(0.12)
-    expect(stats.atkPct).toBeCloseTo(0.12)
+    expect(stats.atkPct).toBeCloseTo(0.12 + BASE_ATK_PCT)
   })
 })
 
@@ -275,7 +281,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
     })
     const stats = engine.resolveStats(1)
     expect(stats.atkBase).toBe(1500)
-    expect(stats.critRate).toBeCloseTo(0.36)
+    expect(stats.critRate).toBeCloseTo(0.36 + BASE_CR)
   })
 
   it("applies weapon passive buffs (byRank resolver → engine integration)", () => {
@@ -328,7 +334,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
         emptyLoadout,
       ],
     })
-    expect(engineR1.resolveStats(1).atkPct).toBeCloseTo(0.12)
+    expect(engineR1.resolveStats(1).atkPct).toBeCloseTo(0.12 + BASE_ATK_PCT)
 
     const engineR5 = new BuffEngine()
     engineR5.bootstrap({
@@ -346,7 +352,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
         emptyLoadout,
       ],
     })
-    expect(engineR5.resolveStats(1).atkPct).toBeCloseTo(0.24)
+    expect(engineR5.resolveStats(1).atkPct).toBeCloseTo(0.24 + BASE_ATK_PCT)
   })
 })
 
@@ -410,8 +416,8 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
       ],
     })
     const stats = engine.resolveStats(1)
-    expect(stats.atkPct).toBeCloseTo(0.1)
-    expect(stats.critRate).toBe(0)
+    expect(stats.atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
+    expect(stats.critRate).toBeCloseTo(BASE_CR)
   })
 
   it("includes both 2pc and 5pc when both slots are the same id (5pc effective)", () => {
@@ -434,8 +440,8 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
       ],
     })
     const stats = engine.resolveStats(1)
-    expect(stats.atkPct).toBeCloseTo(0.1)
-    expect(stats.critRate).toBeCloseTo(0.1)
+    expect(stats.atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
+    expect(stats.critRate).toBeCloseTo(0.1 + BASE_CR)
   })
 })
 
@@ -488,7 +494,7 @@ describe("BuffEngine.bootstrap — resolveEchoSets integration", () => {
         emptyLoadout,
       ],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.05)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.05 + BASE_ATK_PCT)
   })
 
   it("2pc + 2pc case: different sets in both slots activates each at 2pc", () => {
@@ -503,7 +509,7 @@ describe("BuffEngine.bootstrap — resolveEchoSets integration", () => {
         emptyLoadout,
       ],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.2 + BASE_ATK_PCT)
   })
 
   it("2pc + 3pc case: two-five in slot 1 and three-only in slot 2", () => {
@@ -518,7 +524,7 @@ describe("BuffEngine.bootstrap — resolveEchoSets integration", () => {
         emptyLoadout,
       ],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.15)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + 0.15 + BASE_ATK_PCT)
   })
 })
 
@@ -545,7 +551,7 @@ describe("BuffEngine.bootstrap — sequence filtering", () => {
       slots: slotsOf(1),
       loadouts: [{ ...emptyLoadout, sequence: 1 }, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
 
   it("includes character buffs whose requiresSequence is met", () => {
@@ -570,7 +576,7 @@ describe("BuffEngine.bootstrap — sequence filtering", () => {
       slots: slotsOf(1),
       loadouts: [{ ...emptyLoadout, sequence: 2 }, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5 + BASE_ATK_PCT)
   })
 })
 
@@ -636,7 +642,9 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
         emptyLoadout,
       ],
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + 0.07 + 0.03 + 0.04)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(
+      0.05 + 0.07 + 0.03 + 0.04 + BASE_ATK_PCT,
+    )
   })
 })
 
@@ -950,7 +958,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     })
     expect(outroFire.lifecycleEvents).toEqual([])
     expect(pendingNextOnFieldCount(engine)).toBe(1)
-    expect(engine.resolveStats(2).atkPct).toBe(0)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(BASE_ATK_PCT)
 
     // Swap to character 2 — materialize on 2.
     const swap = engine.onEvent({
@@ -964,7 +972,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     )
     expect(applied).toBeDefined()
     expect(applied?.targetCharacterId).toBe(2)
-    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.3)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.3 + BASE_ATK_PCT)
   })
 })
 
@@ -992,7 +1000,7 @@ describe("BuffEngine — condition gating (#57)", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     // Permanent + conditional -> stays live, doesn't bake in. Before any swap, on-field is null.
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
 
     // Bring 1 on-field
     engine.onEvent({
@@ -1001,7 +1009,7 @@ describe("BuffEngine — condition gating (#57)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4 + BASE_ATK_PCT)
 
     // Swap to 2; 1 is off-field — buff still in active list but does not contribute.
     engine.onEvent({
@@ -1010,7 +1018,7 @@ describe("BuffEngine — condition gating (#57)", () => {
       skillType: "Normal Attack",
       frame: 50,
     })
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
 })
 
@@ -1044,8 +1052,8 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15)
-    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.15)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
 
     // Swap to 2 — source 1 swaps out, instances expire.
     const swap = engine.onEvent({
@@ -1058,8 +1066,8 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
       (e) => e.kind === "buffExpired" && e.buffId === "char.a.tied-to-source",
     )
     expect(expired.length).toBe(2)
-    expect(engine.resolveStats(1).atkPct).toBe(0)
-    expect(engine.resolveStats(2).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
 })
 
@@ -1089,7 +1097,7 @@ describe("BuffEngine — resource state (#58)", () => {
       energy: 3,
       concerto: 1,
     })
-    expect(engine.getResource(1).energy).toBe(8)
+    expect(engine.getResource(1).energy).toBeCloseTo((5 + 3) * (1 + BASE_ER))
     expect(engine.getResource(1).concerto).toBe(3)
   })
 
@@ -1137,7 +1145,7 @@ describe("BuffEngine — resource state (#58)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
@@ -1146,7 +1154,7 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
       energy: 100,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.25)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.25 + BASE_ATK_PCT)
   })
 
   it("resourceCrossed trigger fires once when the threshold is crossed upward", () => {
@@ -1423,7 +1431,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
       frame: 0,
       energy: 10,
     })
-    expect(engine.getResource(1).energy).toBe(10)
+    expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
     expect(engine.getResource(2).energy).toBe(5)
     expect(engine.getResource(3).energy).toBe(5)
   })
@@ -1444,7 +1452,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
       energy: 10,
       synthetic: true,
     })
-    expect(engine.getResource(1).energy).toBe(10)
+    expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
     expect(engine.getResource(2).energy).toBe(0)
   })
 
@@ -1482,7 +1490,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
       frame: 0,
       energy: 10,
     })
-    expect(engine.getResource(1).energy).toBe(10)
+    expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
   })
 })
 
@@ -1659,21 +1667,21 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillType: "Normal Attack",
       frame: 10,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillType: "Normal Attack",
       frame: 20,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
   })
 
   it("snapshot:true freezes value at apply time even as stacks later change", () => {
@@ -1701,7 +1709,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
     // Stack growth via addStack — frozen snapshot ignores new stacks.
     engine.onEvent({
       kind: "skillCast",
@@ -1715,7 +1723,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       skillType: "Normal Attack",
       frame: 20,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
   })
 
   it("const snapshot is symmetrical (value frozen identically to non-snapshot)", () => {
@@ -1745,7 +1753,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
   })
 
   it("replace re-snapshots at the new apply time", () => {
@@ -1780,7 +1788,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
@@ -1788,7 +1796,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       frame: 50,
     })
     // Replace creates a fresh instance with stacks=1 → snapshot stays at 0.07.
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
   })
 })
 
@@ -1854,8 +1862,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       characterId: 1,
       frame: 0,
     })
-    // damage = 0.5 * 1000 * DEF_MULT(0.5) * RES_MULT(0.9) = 225
-    expect(result.syntheticHits[0].damage).toBe(225)
+    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 229 (substat atkPct/crit applied)
+    expect(result.syntheticHits[0].damage).toBe(229)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2041,9 +2049,9 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     expect(result.syntheticHits).toHaveLength(1)
-    // Without the +50% Fusion: 1.0 * 1000 * 0.5 * 0.9 = 450.
-    // With the +50%: 450 * 1.5 = 675.
-    expect(result.syntheticHits[0].damage).toBe(675)
+    // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 459.
+    // With the +50%: 459 * 1.5 ≈ 688 (substat atkPct/crit applied).
+    expect(result.syntheticHits[0].damage).toBe(688)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
@@ -2114,8 +2122,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       energy: 5,
       concerto: 2,
     })
-    // Authored: +5 energy / +2 concerto. Synthetic: +4 energy / +3 concerto.
-    expect(engine.getResource(1).energy).toBe(9)
+    // Authored: +5 energy / +2 concerto. Synthetic: +4 energy / +3 concerto. Both scaled by ER.
+    expect(engine.getResource(1).energy).toBeCloseTo(9 * (1 + BASE_ER))
     expect(engine.getResource(1).concerto).toBe(5)
   })
 })
@@ -2170,7 +2178,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       skillType: "Resonance Skill",
       frame: 0,
     })
-    expect(engine.resolveStats(1).critRate).toBe(1)
+    expect(engine.resolveStats(1).critRate).toBeCloseTo(1 + BASE_CR)
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
@@ -2188,7 +2196,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       stacks: 0,
       frame: 30,
     })
-    expect(engine.resolveStats(1).critRate).toBe(0)
+    expect(engine.resolveStats(1).critRate).toBeCloseTo(BASE_CR)
   })
 
   it("does not consume when the event does not match the filter", () => {
@@ -2214,7 +2222,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     expect(result.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(
       false,
     )
-    expect(engine.resolveStats(1).critRate).toBe(1)
+    expect(engine.resolveStats(1).critRate).toBeCloseTo(1 + BASE_CR)
   })
 
   it("decrements stacks without removing while stacks remain >0", () => {
@@ -2266,7 +2274,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       skillType: "Resonance Skill",
       frame: 2,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.3)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.3 + BASE_ATK_PCT)
 
     const r1 = engine.onEvent({
       kind: "hitLanded",
@@ -2278,7 +2286,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     expect(r1.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(
       false,
     )
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
 
     engine.onEvent({
       kind: "hitLanded",
@@ -2287,7 +2295,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       dmgType: "Fusion",
       frame: 20,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
 
     const r3 = engine.onEvent({
       kind: "hitLanded",
@@ -2297,7 +2305,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       frame: 30,
     })
     expect(r3.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(true)
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
 
   it("runs after emitHit so the buff contributes to the triggering hit", () => {
@@ -2391,7 +2399,7 @@ describe("BuffEngine — perSource (#61)", () => {
       frame: 1,
     })
     // Single instance, only +0.2 contribution.
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
     expect(engine.activeBuffIds(1)).toEqual(["team.shared"])
   })
 
@@ -2417,7 +2425,7 @@ describe("BuffEngine — perSource (#61)", () => {
       skillType: "Resonance Skill",
       frame: 1,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4 + BASE_ATK_PCT)
     expect(engine.activeBuffIds(1)).toEqual(["team.shared", "team.shared"])
   })
 })
@@ -2572,7 +2580,7 @@ describe("BuffEngine — phase pipeline as data", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     expect(engine.getResource(1).concerto).toBe(0)
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
 
     engine.onEvent({
       kind: "skillCast",
@@ -2582,7 +2590,7 @@ describe("BuffEngine — phase pipeline as data", () => {
     })
 
     expect(engine.getResource(1).concerto).toBe(50)
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.5 + BASE_ATK_PCT)
   })
 })
 
@@ -2728,14 +2736,14 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillType: "Normal Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.6)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.6 + BASE_ATK_PCT)
   })
 
   it("invalidates the condition cache when a resource crosses a threshold", () => {
@@ -2785,7 +2793,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    expect(engine.resolveStats(1).atkPct).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
@@ -2794,7 +2802,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
       frame: 0,
       energy: 60,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
   })
 
   it("nested buffActive conditions resolve correctly", () => {
@@ -2855,7 +2863,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
 
     // C absent: B's condition fails (B doesn't contribute), but B is still
     // in the active list, so A's condition (buffActive: B) passes.
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
 
     engine.onEvent({
       kind: "skillCast",
@@ -2863,7 +2871,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
       skillType: "Heavy Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.35)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.35 + BASE_ATK_PCT)
   })
 })
 
