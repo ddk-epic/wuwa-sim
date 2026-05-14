@@ -3,15 +3,15 @@ import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
-import { SkillSidebar } from "#/components/SkillSidebar"
-import { TeamBar } from "#/components/TeamBar"
+import { SkillCatalog } from "#/components/SkillCatalog"
+import { Header } from "#/components/Header"
 import { TeamModal } from "#/components/TeamModal"
 import { SimulationLogModal } from "#/components/SimulationLogModal"
 import { TimelineView } from "#/components/TimelineView"
 import { getTimelineSummary } from "#/lib/timeline-summary"
 import { generateSimulationLog } from "#/lib/simulation-log"
 
-export function CharacterSelector() {
+export function SimulatorPage() {
   const {
     slots,
     loadouts,
@@ -54,8 +54,8 @@ export function CharacterSelector() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      <TeamBar
+    <main className="flex flex-col h-screen">
+      <Header
         slots={slots}
         onEditTeam={() => setModalOpen(true)}
         onResetTimeline={handleResetTimeline}
@@ -69,7 +69,7 @@ export function CharacterSelector() {
         onReactionDelayChange={setReactionDelay}
       />
       <div className="flex flex-1 min-h-0">
-        <div className="flex-[70] flex flex-col min-h-0">
+        <div className="flex-75 flex flex-col min-h-0">
           <TimelineView
             entries={entries}
             summary={summary}
@@ -81,9 +81,9 @@ export function CharacterSelector() {
             onUpdateEntry={updateEntry}
           />
         </div>
-        <div className="flex-[30] border-l border-gray-700 flex flex-col min-h-0">
+        <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
           {slots.some((id) => id !== null) ? (
-            <SkillSidebar
+            <SkillCatalog
               slots={slots}
               loadouts={loadouts}
               focusedId={focusedId}
@@ -114,6 +114,6 @@ export function CharacterSelector() {
           onClose={() => setSimulationLogOpen(false)}
         />
       )}
-    </div>
+    </main>
   )
 }

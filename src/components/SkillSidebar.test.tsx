@@ -5,7 +5,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
-import { SkillSidebar } from "./SkillSidebar"
+import { SkillCatalog } from "./SkillCatalog"
 
 const char1: EnrichedCharacter = {
   id: 1,
@@ -153,7 +153,7 @@ describe("SkillSidebar — tab strip", () => {
     setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={slots}
         loadouts={noLoadouts}
         focusedId={1}
@@ -170,7 +170,7 @@ describe("SkillSidebar — tab strip", () => {
     const slots: Slots = [1, 2, null]
     const onFocus = vi.fn()
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={slots}
         loadouts={noLoadouts}
         focusedId={1}
@@ -187,7 +187,7 @@ describe("SkillSidebar — stage rendering", () => {
   it("renders the focused character's stages with their resolved labels", () => {
     setCatalog([char1, char2], [])
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={[1, 2, null]}
         loadouts={noLoadouts}
         focusedId={1}
@@ -203,7 +203,7 @@ describe("SkillSidebar — stage rendering", () => {
     setCatalog([char1], [])
     const onStageClick = vi.fn()
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={[1, null, null]}
         loadouts={noLoadouts}
         focusedId={1}
@@ -252,7 +252,7 @@ describe("SkillSidebar — divider presence", () => {
   it("renders the divider when both echo and character stages exist", () => {
     setCatalog([char1], [testEcho])
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={[1, null, null]}
         loadouts={loadoutsWithEcho}
         focusedId={1}
@@ -266,7 +266,7 @@ describe("SkillSidebar — divider presence", () => {
   it("omits the divider when there are no echo stages", () => {
     setCatalog([char1], [])
     render(
-      <SkillSidebar
+      <SkillCatalog
         slots={[1, null, null]}
         loadouts={noLoadouts}
         focusedId={1}

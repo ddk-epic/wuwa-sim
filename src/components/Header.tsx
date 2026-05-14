@@ -5,7 +5,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
 
-interface TeamBarProps {
+interface HeaderProps {
   slots: Slots
   onEditTeam: () => void
   onResetTimeline: () => void
@@ -19,7 +19,7 @@ interface TeamBarProps {
   onReactionDelayChange: (value: number) => void
 }
 
-export function TeamBar({
+export function Header({
   slots,
   onEditTeam,
   onResetTimeline,
@@ -31,7 +31,7 @@ export function TeamBar({
   totalTimeSec,
   reactionDelay,
   onReactionDelayChange,
-}: TeamBarProps) {
+}: HeaderProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -44,6 +44,14 @@ export function TeamBar({
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 shrink-0">
+      <div>
+        <span className="tracking-[0.5px] font-semibold text-2xl text-foreground">
+          WUWA
+        </span>
+        <span className="pr-4 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
+          Sim
+        </span>
+      </div>
       <button
         className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
         onClick={onEditTeam}

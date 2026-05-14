@@ -51,8 +51,8 @@ export function TimelineView({
 
   if (entries.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-        Select a stage from the sidebar to build your rotation
+      <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
+        Select a skill from the sidebar to build your rotation
       </div>
     )
   }

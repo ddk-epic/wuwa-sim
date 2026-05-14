@@ -8,7 +8,7 @@ import type { FocusedStage } from "#/lib/focused-stage-catalog"
 
 type NewEntry = Omit<TimelineEntry, "id">
 
-interface SkillSidebarProps {
+interface SkillCatalogProps {
   slots: Slots
   loadouts: SlotLoadout[]
   focusedId: number | null
@@ -16,13 +16,13 @@ interface SkillSidebarProps {
   onStageClick: (entry: NewEntry) => void
 }
 
-export function SkillSidebar({
+export function SkillCatalog({
   slots,
   loadouts,
   focusedId,
   onFocus,
   onStageClick,
-}: SkillSidebarProps) {
+}: SkillCatalogProps) {
   const filledCharacters = slots
     .filter((id): id is number => id !== null)
     .map((id) => getCharacterById(id))
