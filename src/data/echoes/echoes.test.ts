@@ -4,7 +4,14 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/buff-engine"
 import type { HitLandedEvent } from "#/lib/buff-engine"
+import {
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_3COST_VARIABLE,
+} from "#/lib/echo-stat-constants"
 import { infernoRider } from "./inferno-rider"
+
+const BASE_ELEM_BONUS =
+  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 // Integration tests for the Inferno Rider Tap 3rd-hit buff (#95)
 let testCharacters: EnrichedCharacter[] = []
@@ -45,6 +52,7 @@ const loadoutWithEcho: SlotLoadout = {
   sequence: 0,
   echoBuild: "4-3-3-1-1",
   cost4Mains: ["cd"],
+  cost3Mains: ["elemDmg", "elemDmg"],
 }
 
 const emptyLoadout: SlotLoadout = {
@@ -56,6 +64,7 @@ const emptyLoadout: SlotLoadout = {
   sequence: 0,
   echoBuild: "4-3-3-1-1",
   cost4Mains: ["cd"],
+  cost3Mains: ["elemDmg", "elemDmg"],
 }
 
 const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
@@ -95,14 +104,18 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
   it("hit 1 does not trigger the buff", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(1, 10))
-    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBe(0)
+    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBeCloseTo(
+      BASE_ELEM_BONUS,
+    )
     expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)
   })
 
   it("hit 2 does not trigger the buff", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(2, 44))
-    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBe(0)
+    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBeCloseTo(
+      BASE_ELEM_BONUS,
+    )
     expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)
   })
 
@@ -112,7 +125,9 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
     engine.recordHit(tapHit(2, 44))
     engine.recordHit(tapHit(3, 121))
     expect(engine.activeBuffIds(1)).toContain(BUFF_ID)
-    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(0.12)
+    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
+      0.12 + BASE_ELEM_BONUS,
+    )
     expect(engine.resolveStats(1).skillTypeBonus["Basic Attack"]).toBeCloseTo(
       0.12,
     )
@@ -122,7 +137,7 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(3, 121))
     const stats = engine.resolveStats(1)
-    expect(stats.elementBonus["Fusion"]).toBeCloseTo(0.12)
+    expect(stats.elementBonus["Fusion"]).toBeCloseTo(0.12 + BASE_ELEM_BONUS)
     expect(stats.skillTypeBonus["Basic Attack"]).toBeCloseTo(0.12)
   })
 
@@ -141,7 +156,9 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
     engine.recordHit(tapHit(3, 60))
     expect(engine.activeBuffIds(1)).toContain(BUFF_ID)
     // Still only 1 stack — resolveStats should still show 0.12, not 0.24
-    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(0.12)
+    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
+      0.12 + BASE_ELEM_BONUS,
+    )
   })
 
   it("Hold stage does not trigger the buff", () => {

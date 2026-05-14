@@ -39,6 +39,15 @@ export const ECHO_MAIN_4COST_VARIABLE = {
   cd: 0.44,
 } as const
 
+// Cost-3 variable main stat values (references/echo-stats.md)
+export const ECHO_MAIN_3COST_VARIABLE = {
+  scalingAtk: 0.3,
+  scalingHp: 0.3,
+  scalingDef: 0.38,
+  er: 0.32,
+  elemDmg: 0.3,
+} as const
+
 // Echo cost slot counts per build
 export const ECHO_BUILD_LAYOUT = {
   "4-3-3-1-1": { cost4: 1, cost3: 2, cost1: 2 },

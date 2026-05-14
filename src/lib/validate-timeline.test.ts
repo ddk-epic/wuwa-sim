@@ -58,6 +58,7 @@ const emptyLoadout: SlotLoadout = {
   sequence: 0,
   echoBuild: "4-3-3-1-1",
   cost4Mains: ["cd"],
+  cost3Mains: ["elemDmg", "elemDmg"],
 }
 
 const slots: Slots = [1, null, null]

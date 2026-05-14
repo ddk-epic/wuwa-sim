@@ -5,12 +5,19 @@ import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
 import type { HitEvent } from "#/types/simulation-log"
-import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+import {
+  DEFAULT_SUBSTAT_ROLLS,
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_3COST_VARIABLE,
+  ECHO_SUBSTAT,
+} from "./echo-stat-constants"
 
 import { generateSimulationLog } from "./simulation-log"
 
 const BASE_ER =
   DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
+const BASE_ELEM_BONUS =
+  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 const dmgHit = (value: number, energy = 0, concerto = 0) => ({
   type: "ATK",
@@ -135,6 +142,7 @@ const emptyLoadouts: SlotLoadout[] = [
     sequence: 0,
     echoBuild: "4-3-3-1-1",
     cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
   },
   {
     weaponId: null,
@@ -145,6 +153,7 @@ const emptyLoadouts: SlotLoadout[] = [
     sequence: 0,
     echoBuild: "4-3-3-1-1",
     cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
   },
   {
     weaponId: null,
@@ -155,6 +164,7 @@ const emptyLoadouts: SlotLoadout[] = [
     sequence: 0,
     echoBuild: "4-3-3-1-1",
     cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
   },
 ]
 
@@ -309,6 +319,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         sequence: 0,
         echoBuild: "4-3-3-1-1",
         cost4Mains: ["cd"],
+        cost3Mains: ["elemDmg", "elemDmg"],
       },
       {
         weaponId: null,
@@ -319,6 +330,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         sequence: 0,
         echoBuild: "4-3-3-1-1",
         cost4Mains: ["cd"],
+        cost3Mains: ["elemDmg", "elemDmg"],
       },
       {
         weaponId: null,
@@ -329,6 +341,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         sequence: 0,
         echoBuild: "4-3-3-1-1",
         cost4Mains: ["cd"],
+        cost3Mains: ["elemDmg", "elemDmg"],
       },
     ]
     const entry = tlEntry(1, "Echo One::Hit")
@@ -342,13 +355,13 @@ describe("generateSimulationLog — echo skill entries", () => {
     })
     expect(result[1]).toMatchObject({
       kind: "hit",
-      damage: 1742,
+      damage: 2786,
       cumulativeEnergy: expect.closeTo(10 * (1 + BASE_ER)),
       cumulativeConcerto: 5,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
-      damage: 871,
+      damage: 1393,
       cumulativeEnergy: expect.closeTo(20 * (1 + BASE_ER)),
       cumulativeConcerto: 10,
     })
@@ -788,13 +801,15 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     const frolickingHit = result.find(
       (e) => e.kind === "hit" && e.skillType === "Normal Attack",
     ) as HitEvent | undefined
-    expect(
-      frolickingHit?.statsSnapshot.elementBonus?.["Fusion"],
-    ).toBeUndefined()
+    expect(frolickingHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(
+      BASE_ELEM_BONUS,
+    )
     const rampageHit = result.find(
       (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
     ) as HitEvent | undefined
-    expect(rampageHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(0.1)
+    expect(rampageHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(
+      0.1 + BASE_ELEM_BONUS,
+    )
   })
 
   it("hitLanded trigger uses per-hit type — Basic Attack trigger fires on Basic Attack hits only", () => {

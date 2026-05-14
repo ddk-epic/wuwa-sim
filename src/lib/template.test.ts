@@ -16,6 +16,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 
@@ -32,6 +33,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 
@@ -51,6 +53,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 
@@ -70,6 +73,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 
@@ -89,6 +93,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 
@@ -108,6 +113,7 @@ describe("template — loadoutFromTemplate", () => {
       sequence: 0,
       echoBuild: "4-3-3-1-1",
       cost4Mains: ["cd"],
+      cost3Mains: ["elemDmg", "elemDmg"],
     })
   })
 })

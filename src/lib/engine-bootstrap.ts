@@ -1,7 +1,12 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
-import type { Cost4Main, EchoBuild, SlotLoadout } from "#/types/loadout"
+import type {
+  Cost3Main,
+  Cost4Main,
+  EchoBuild,
+  SlotLoadout,
+} from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
@@ -15,6 +20,7 @@ import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_3COST_VARIABLE,
   ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
@@ -176,6 +182,31 @@ export function accumulateCost4Mains(
   }
 }
 
+export function accumulateCost3Mains(
+  stats: StatTable,
+  cost3Mains: Cost3Main[],
+  primaryScalingStat: "atk" | "hp" | "def",
+  characterElement: string,
+): void {
+  for (const main of cost3Mains) {
+    if (main === "er") {
+      stats.energyRechargePct += ECHO_MAIN_3COST_VARIABLE.er
+    } else if (main === "elemDmg") {
+      stats.elementBonus[characterElement] =
+        (stats.elementBonus[characterElement] ?? 0) +
+        ECHO_MAIN_3COST_VARIABLE.elemDmg
+    } else {
+      if (primaryScalingStat === "atk") {
+        stats.atkPct += ECHO_MAIN_3COST_VARIABLE.scalingAtk
+      } else if (primaryScalingStat === "hp") {
+        stats.hpPct += ECHO_MAIN_3COST_VARIABLE.scalingHp
+      } else {
+        stats.defPct += ECHO_MAIN_3COST_VARIABLE.scalingDef
+      }
+    }
+  }
+}
+
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -213,6 +244,12 @@ export function bootstrapSlot(
     stats,
     loadout?.cost4Mains ?? ["cd"],
     character.primaryScalingStat ?? "atk",
+  )
+  accumulateCost3Mains(
+    stats,
+    loadout?.cost3Mains ?? ["elemDmg", "elemDmg"],
+    character.primaryScalingStat ?? "atk",
+    character.element,
   )
 
   const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]

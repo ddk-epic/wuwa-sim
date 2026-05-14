@@ -1,5 +1,11 @@
 import type { Character } from "#/types/character"
-import type { Cost4Main, EchoBuild, Slots, SlotLoadout } from "#/types/loadout"
+import type {
+  Cost3Main,
+  Cost4Main,
+  EchoBuild,
+  Slots,
+  SlotLoadout,
+} from "#/types/loadout"
 import {
   getCharacterById,
   listEchoes,
@@ -7,6 +13,7 @@ import {
   listWeaponsByType,
 } from "#/lib/catalog"
 import { ECHO_BUILD_LAYOUT } from "#/lib/echo-stat-constants"
+import { COST3_MAINS_DEFAULT, COST4_MAINS_DEFAULT } from "#/lib/template"
 import { SegmentedToggle } from "#/components/SegmentedToggle"
 import { EchoMainsToggle } from "#/components/EchoMainsToggle"
 
@@ -18,11 +25,6 @@ const SCALING_STAT_LABEL: Record<"atk" | "hp" | "def", string> = {
   atk: "ATK%",
   hp: "HP%",
   def: "DEF%",
-}
-
-const COST4_MAINS_DEFAULT: Record<EchoBuild, Cost4Main[]> = {
-  "4-3-3-1-1": ["cd"],
-  "4-4-1-1-1": ["cr", "cd"],
 }
 
 interface TeamPanelProps {
@@ -84,17 +86,27 @@ function TeamSlot({
   const echoes = listEchoes()
   const echoSets = listEchoSets()
   const scalingStat = character.primaryScalingStat ?? "atk"
-  const cost1Count = ECHO_BUILD_LAYOUT[loadout.echoBuild].cost1
-  const cost4Capacity = ECHO_BUILD_LAYOUT[loadout.echoBuild].cost4
+  const layout = ECHO_BUILD_LAYOUT[loadout.echoBuild]
+  const scalingLabel = SCALING_STAT_LABEL[scalingStat]
 
   const cost4Options = [
-    { value: "scaling", label: SCALING_STAT_LABEL[scalingStat] },
+    { value: "scaling", label: scalingLabel },
     { value: "cr", label: "CR" },
     { value: "cd", label: "CD" },
   ]
 
+  const cost3Options = [
+    { value: "scaling", label: scalingLabel },
+    { value: "er", label: "ER" },
+    { value: "elemDmg", label: "Elem DMG" },
+  ]
+
   function handleBuildChange(echoBuild: EchoBuild) {
-    onSlotChange({ echoBuild, cost4Mains: COST4_MAINS_DEFAULT[echoBuild] })
+    onSlotChange({
+      echoBuild,
+      cost4Mains: COST4_MAINS_DEFAULT[echoBuild],
+      cost3Mains: COST3_MAINS_DEFAULT[echoBuild],
+    })
   }
 
   return (
@@ -145,11 +157,21 @@ function TeamSlot({
       <EchoMainsToggle
         options={cost4Options}
         mains={loadout.cost4Mains}
-        capacity={cost4Capacity}
+        capacity={layout.cost4}
         onChange={(mains) => onSlotChange({ cost4Mains: mains as Cost4Main[] })}
       />
+      {layout.cost3 > 0 && (
+        <EchoMainsToggle
+          options={cost3Options}
+          mains={loadout.cost3Mains}
+          capacity={layout.cost3}
+          onChange={(mains) =>
+            onSlotChange({ cost3Mains: mains as Cost3Main[] })
+          }
+        />
+      )}
       <div className="text-xs text-gray-400 text-center">
-        {SCALING_STAT_LABEL[scalingStat]} ×{cost1Count}
+        {scalingLabel} ×{layout.cost1}
       </div>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"

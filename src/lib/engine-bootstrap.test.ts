@@ -4,6 +4,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import type { WeaponData } from "#/types/weapon"
 import {
+  accumulateCost3Mains,
   accumulateCost4Mains,
   accumulateEchoMainBlock,
   accumulateEchoSubstatBlock,
@@ -16,6 +17,7 @@ import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_3COST_VARIABLE,
   ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
@@ -385,6 +387,57 @@ describe("accumulateCost4Mains", () => {
     accumulateCost4Mains(stats, [], "atk")
     expect(stats.critRate).toBe(0)
     expect(stats.critDmg).toBe(0)
+    expect(stats.atkPct).toBe(0)
+  })
+})
+
+describe("accumulateCost3Mains", () => {
+  it("er adds energyRechargePct", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["er"], "atk", "Fusion")
+    expect(stats.energyRechargePct).toBeCloseTo(ECHO_MAIN_3COST_VARIABLE.er)
+    expect(stats.atkPct).toBe(0)
+  })
+
+  it("elemDmg routes to elementBonus[element]", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["elemDmg"], "atk", "Aero")
+    expect(stats.elementBonus["Aero"]).toBeCloseTo(
+      ECHO_MAIN_3COST_VARIABLE.elemDmg,
+    )
+    expect(stats.elementBonus["Fusion"]).toBeUndefined()
+  })
+
+  it("scaling routes to atkPct for atk scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["scaling"], "atk", "Fusion")
+    expect(stats.atkPct).toBeCloseTo(ECHO_MAIN_3COST_VARIABLE.scalingAtk)
+  })
+
+  it("scaling routes to hpPct for hp scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["scaling"], "hp", "Fusion")
+    expect(stats.hpPct).toBeCloseTo(ECHO_MAIN_3COST_VARIABLE.scalingHp)
+  })
+
+  it("scaling routes to defPct for def scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["scaling"], "def", "Fusion")
+    expect(stats.defPct).toBeCloseTo(ECHO_MAIN_3COST_VARIABLE.scalingDef)
+  })
+
+  it("[elemDmg, elemDmg] accumulates twice on the same element", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, ["elemDmg", "elemDmg"], "atk", "Glacio")
+    expect(stats.elementBonus["Glacio"]).toBeCloseTo(
+      2 * ECHO_MAIN_3COST_VARIABLE.elemDmg,
+    )
+  })
+
+  it("empty array does not modify stats", () => {
+    const stats = emptyStatTable()
+    accumulateCost3Mains(stats, [], "atk", "Fusion")
+    expect(stats.energyRechargePct).toBe(0)
     expect(stats.atkPct).toBe(0)
   })
 })

@@ -1,6 +1,11 @@
 import type { CharacterTemplate } from "#/types/character"
 import type { EchoSet } from "#/types/echo"
-import type { Cost4Main, EchoBuild, SlotLoadout } from "#/types/loadout"
+import type {
+  Cost3Main,
+  Cost4Main,
+  EchoBuild,
+  SlotLoadout,
+} from "#/types/loadout"
 import {
   findEchoByName,
   findEchoSetByName,
@@ -14,6 +19,11 @@ export const COST4_MAINS_DEFAULT: Record<EchoBuild, Cost4Main[]> = {
   "4-4-1-1-1": ["cr", "cd"],
 }
 
+export const COST3_MAINS_DEFAULT: Record<EchoBuild, Cost3Main[]> = {
+  "4-3-3-1-1": ["elemDmg", "elemDmg"],
+  "4-4-1-1-1": [],
+}
+
 export const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
   weaponRank: 1,
@@ -23,6 +33,7 @@ export const emptyLoadout = (): SlotLoadout => ({
   sequence: 0,
   echoBuild: "4-3-3-1-1",
   cost4Mains: ["cd"],
+  cost3Mains: ["elemDmg", "elemDmg"],
 })
 
 export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
@@ -39,6 +50,7 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
     sequence: 0,
     echoBuild: "4-3-3-1-1",
     cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
   }
 }
 

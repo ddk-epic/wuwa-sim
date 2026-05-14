@@ -13,6 +13,7 @@ import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_3COST_VARIABLE,
   ECHO_SUBSTAT,
 } from "./echo-stat-constants"
 
@@ -22,6 +23,8 @@ const BASE_ATK_PCT =
 const BASE_CR = DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
 const BASE_ER =
   DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
+const BASE_ELEM_BONUS =
+  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 let testCharacters: EnrichedCharacter[] = []
 let testWeapons: EnrichedWeapon[] = []
@@ -69,6 +72,7 @@ const emptyLoadout: SlotLoadout = {
   sequence: 0,
   echoBuild: "4-3-3-1-1",
   cost4Mains: ["cd"],
+  cost3Mains: ["elemDmg", "elemDmg"],
 }
 
 describe("BuffEngine.bootstrap — character-only", () => {
@@ -226,7 +230,9 @@ describe("BuffEngine.bootstrap — skill tree", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).elementBonus.Glacio).toBeCloseTo(0.12)
+    expect(engine.resolveStats(1).elementBonus.Glacio).toBeCloseTo(
+      0.12 + BASE_ELEM_BONUS,
+    )
   })
 
   it("compiles 'ATK' to atkPct", () => {
@@ -252,7 +258,7 @@ describe("BuffEngine.bootstrap — skill tree", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     const stats = engine.resolveStats(1)
-    expect(stats.elementBonus.Glacio).toBeCloseTo(0.12)
+    expect(stats.elementBonus.Glacio).toBeCloseTo(0.12 + BASE_ELEM_BONUS)
     expect(stats.atkPct).toBeCloseTo(0.12 + BASE_ATK_PCT)
   })
 })
@@ -286,6 +292,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -340,6 +347,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -360,6 +368,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -425,6 +434,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -451,6 +461,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -656,6 +667,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -1977,7 +1989,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 435 (substat + echo main stats applied)
-    expect(result.syntheticHits[0].damage).toBe(435)
+    expect(result.syntheticHits[0].damage).toBe(697)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2165,7 +2177,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     expect(result.syntheticHits).toHaveLength(1)
     // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 744.
     // With the +50%: 1116 * 1.5 → 1306 (substat + echo main stats applied).
-    expect(result.syntheticHits[0].damage).toBe(1306)
+    expect(result.syntheticHits[0].damage).toBe(1829)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
@@ -3090,6 +3102,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
           sequence: 0,
           echoBuild: "4-3-3-1-1",
           cost4Mains: ["cd"],
+          cost3Mains: ["elemDmg", "elemDmg"],
         },
         emptyLoadout,
         emptyLoadout,
