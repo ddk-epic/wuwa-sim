@@ -110,6 +110,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
   {
     weaponId: null,
@@ -119,6 +120,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
   {
     weaponId: null,
@@ -128,6 +130,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
 ]
 
@@ -234,6 +237,7 @@ describe("SkillSidebar — divider presence", () => {
       echoSetSlot2Id: null,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     },
     {
       weaponId: null,
@@ -243,6 +247,7 @@ describe("SkillSidebar — divider presence", () => {
       echoSetSlot2Id: null,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     },
     {
       weaponId: null,
@@ -252,6 +257,7 @@ describe("SkillSidebar — divider presence", () => {
       echoSetSlot2Id: null,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     },
   ]
 

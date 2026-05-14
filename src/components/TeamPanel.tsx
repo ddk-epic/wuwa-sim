@@ -1,26 +1,28 @@
 import type { Character } from "#/types/character"
-import type { EchoBuild, Slots, SlotLoadout } from "#/types/loadout"
+import type { Cost4Main, EchoBuild, Slots, SlotLoadout } from "#/types/loadout"
 import {
   getCharacterById,
   listEchoes,
   listEchoSets,
   listWeaponsByType,
 } from "#/lib/catalog"
+import { ECHO_BUILD_LAYOUT } from "#/lib/echo-stat-constants"
 import { SegmentedToggle } from "#/components/SegmentedToggle"
+import { EchoMainsToggle } from "#/components/EchoMainsToggle"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]
 const ECHO_BUILDS: EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
 
-const COST1_COUNT: Record<EchoBuild, number> = {
-  "4-3-3-1-1": 2,
-  "4-4-1-1-1": 3,
-}
-
 const SCALING_STAT_LABEL: Record<"atk" | "hp" | "def", string> = {
   atk: "ATK%",
   hp: "HP%",
   def: "DEF%",
+}
+
+const COST4_MAINS_DEFAULT: Record<EchoBuild, Cost4Main[]> = {
+  "4-3-3-1-1": ["cd"],
+  "4-4-1-1-1": ["cr", "cd"],
 }
 
 interface TeamPanelProps {
@@ -82,7 +84,18 @@ function TeamSlot({
   const echoes = listEchoes()
   const echoSets = listEchoSets()
   const scalingStat = character.primaryScalingStat ?? "atk"
-  const cost1Count = COST1_COUNT[loadout.echoBuild]
+  const cost1Count = ECHO_BUILD_LAYOUT[loadout.echoBuild].cost1
+  const cost4Capacity = ECHO_BUILD_LAYOUT[loadout.echoBuild].cost4
+
+  const cost4Options = [
+    { value: "scaling", label: SCALING_STAT_LABEL[scalingStat] },
+    { value: "cr", label: "CR" },
+    { value: "cd", label: "CD" },
+  ]
+
+  function handleBuildChange(echoBuild: EchoBuild) {
+    onSlotChange({ echoBuild, cost4Mains: COST4_MAINS_DEFAULT[echoBuild] })
+  }
 
   return (
     <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-1.5">
@@ -127,7 +140,13 @@ function TeamSlot({
       <SegmentedToggle
         options={ECHO_BUILDS}
         value={loadout.echoBuild}
-        onChange={(echoBuild) => onSlotChange({ echoBuild })}
+        onChange={handleBuildChange}
+      />
+      <EchoMainsToggle
+        options={cost4Options}
+        mains={loadout.cost4Mains}
+        capacity={cost4Capacity}
+        onChange={(mains) => onSlotChange({ cost4Mains: mains as Cost4Main[] })}
       />
       <div className="text-xs text-gray-400 text-center">
         {SCALING_STAT_LABEL[scalingStat]} ×{cost1Count}

@@ -2,6 +2,8 @@ export type Slots = [number | null, number | null, number | null]
 
 export type EchoBuild = "4-3-3-1-1" | "4-4-1-1-1"
 
+export type Cost4Main = "scaling" | "cr" | "cd"
+
 export interface SlotLoadout {
   weaponId: number | null
   weaponRank: number
@@ -10,4 +12,5 @@ export interface SlotLoadout {
   echoSetSlot2Id: number | null
   sequence: number
   echoBuild: EchoBuild
+  cost4Mains: Cost4Main[]
 }

@@ -134,6 +134,7 @@ const emptyLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
   {
     weaponId: null,
@@ -143,6 +144,7 @@ const emptyLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
   {
     weaponId: null,
@@ -152,6 +154,7 @@ const emptyLoadouts: SlotLoadout[] = [
     echoSetSlot2Id: null,
     sequence: 0,
     echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
   },
 ]
 
@@ -305,6 +308,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         echoSetSlot2Id: null,
         sequence: 0,
         echoBuild: "4-3-3-1-1",
+        cost4Mains: ["cd"],
       },
       {
         weaponId: null,
@@ -314,6 +318,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         echoSetSlot2Id: null,
         sequence: 0,
         echoBuild: "4-3-3-1-1",
+        cost4Mains: ["cd"],
       },
       {
         weaponId: null,
@@ -323,6 +328,7 @@ describe("generateSimulationLog — echo skill entries", () => {
         echoSetSlot2Id: null,
         sequence: 0,
         echoBuild: "4-3-3-1-1",
+        cost4Mains: ["cd"],
       },
     ]
     const entry = tlEntry(1, "Echo One::Hit")
@@ -336,13 +342,13 @@ describe("generateSimulationLog — echo skill entries", () => {
     })
     expect(result[1]).toMatchObject({
       kind: "hit",
-      damage: 1489,
+      damage: 1742,
       cumulativeEnergy: expect.closeTo(10 * (1 + BASE_ER)),
       cumulativeConcerto: 5,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
-      damage: 744,
+      damage: 871,
       cumulativeEnergy: expect.closeTo(20 * (1 + BASE_ER)),
       cumulativeConcerto: 10,
     })

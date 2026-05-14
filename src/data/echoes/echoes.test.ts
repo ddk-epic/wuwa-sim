@@ -44,6 +44,7 @@ const loadoutWithEcho: SlotLoadout = {
   echoSetSlot2Id: null,
   sequence: 0,
   echoBuild: "4-3-3-1-1",
+  cost4Mains: ["cd"],
 }
 
 const emptyLoadout: SlotLoadout = {
@@ -54,6 +55,7 @@ const emptyLoadout: SlotLoadout = {
   echoSetSlot2Id: null,
   sequence: 0,
   echoBuild: "4-3-3-1-1",
+  cost4Mains: ["cd"],
 }
 
 const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({

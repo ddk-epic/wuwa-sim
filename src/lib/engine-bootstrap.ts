@@ -1,7 +1,7 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
-import type { EchoBuild, SlotLoadout } from "#/types/loadout"
+import type { Cost4Main, EchoBuild, SlotLoadout } from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
@@ -15,6 +15,7 @@ import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
 } from "./echo-stat-constants"
@@ -153,6 +154,28 @@ export function accumulateEchoMainBlock(
   else stats.defPct += layout.cost1 * scalingVal
 }
 
+export function accumulateCost4Mains(
+  stats: StatTable,
+  cost4Mains: Cost4Main[],
+  primaryScalingStat: "atk" | "hp" | "def",
+): void {
+  for (const main of cost4Mains) {
+    if (main === "cr") {
+      stats.critRate += ECHO_MAIN_4COST_VARIABLE.cr
+    } else if (main === "cd") {
+      stats.critDmg += ECHO_MAIN_4COST_VARIABLE.cd
+    } else {
+      if (primaryScalingStat === "atk") {
+        stats.atkPct += ECHO_MAIN_4COST_VARIABLE.scalingAtk
+      } else if (primaryScalingStat === "hp") {
+        stats.hpPct += ECHO_MAIN_4COST_VARIABLE.scalingHp
+      } else {
+        stats.defPct += ECHO_MAIN_4COST_VARIABLE.scalingDef
+      }
+    }
+  }
+}
+
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -184,6 +207,11 @@ export function bootstrapSlot(
   accumulateEchoMainBlock(
     stats,
     loadout?.echoBuild ?? "4-3-3-1-1",
+    character.primaryScalingStat ?? "atk",
+  )
+  accumulateCost4Mains(
+    stats,
+    loadout?.cost4Mains ?? ["cd"],
     character.primaryScalingStat ?? "atk",
   )
 

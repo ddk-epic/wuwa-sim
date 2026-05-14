@@ -30,6 +30,15 @@ export const ECHO_MAIN_1COST_SCALING = {
   def: 0.228,
 } as const
 
+// Cost-4 variable main stat values (references/echo-stats.md)
+export const ECHO_MAIN_4COST_VARIABLE = {
+  scalingAtk: 0.33,
+  scalingHp: 0.33,
+  scalingDef: 0.415,
+  cr: 0.22,
+  cd: 0.44,
+} as const
+
 // Echo cost slot counts per build
 export const ECHO_BUILD_LAYOUT = {
   "4-3-3-1-1": { cost4: 1, cost3: 2, cost1: 2 },

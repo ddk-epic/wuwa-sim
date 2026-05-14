@@ -77,6 +77,7 @@ const emptyLoadout: SlotLoadout = {
   echoSetSlot2Id: null,
   sequence: 0,
   echoBuild: "4-3-3-1-1",
+  cost4Mains: ["cd"],
 }
 
 const slots: Slots = [1, null, null]

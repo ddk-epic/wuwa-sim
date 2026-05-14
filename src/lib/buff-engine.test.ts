@@ -68,6 +68,7 @@ const emptyLoadout: SlotLoadout = {
   echoSetSlot2Id: null,
   sequence: 0,
   echoBuild: "4-3-3-1-1",
+  cost4Mains: ["cd"],
 }
 
 describe("BuffEngine.bootstrap — character-only", () => {
@@ -284,6 +285,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -337,6 +339,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -356,6 +359,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -420,6 +424,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -445,6 +450,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           echoSetSlot2Id: 7,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -649,6 +655,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,
@@ -1969,8 +1976,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       characterId: 1,
       frame: 0,
     })
-    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 372 (substat atkPct/crit + echo main stats applied)
-    expect(result.syntheticHits[0].damage).toBe(372)
+    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 435 (substat + echo main stats applied)
+    expect(result.syntheticHits[0].damage).toBe(435)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2157,8 +2164,8 @@ describe("BuffEngine — emitHit (#60)", () => {
     })
     expect(result.syntheticHits).toHaveLength(1)
     // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 744.
-    // With the +50%: 744 * 1.5 ≈ 1116 (substat atkPct/crit + echo main stats applied).
-    expect(result.syntheticHits[0].damage).toBe(1116)
+    // With the +50%: 1116 * 1.5 → 1306 (substat + echo main stats applied).
+    expect(result.syntheticHits[0].damage).toBe(1306)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
@@ -3082,6 +3089,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
           echoSetSlot2Id: null,
           sequence: 0,
           echoBuild: "4-3-3-1-1",
+          cost4Mains: ["cd"],
         },
         emptyLoadout,
         emptyLoadout,

@@ -4,6 +4,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import type { WeaponData } from "#/types/weapon"
 import {
+  accumulateCost4Mains,
   accumulateEchoMainBlock,
   accumulateEchoSubstatBlock,
   buildCharacterBuffDefs,
@@ -15,6 +16,7 @@ import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
 } from "./echo-stat-constants"
@@ -331,5 +333,58 @@ describe("accumulateEchoMainBlock", () => {
     expect(stats.defPct).toBeCloseTo(cost1 * ECHO_MAIN_1COST_SCALING.def)
     expect(stats.atkPct).toBe(0)
     expect(stats.hpPct).toBe(0)
+  })
+})
+
+describe("accumulateCost4Mains", () => {
+  it("cr adds critRate", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["cr"], "atk")
+    expect(stats.critRate).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.cr)
+    expect(stats.critDmg).toBe(0)
+  })
+
+  it("cd adds critDmg", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["cd"], "atk")
+    expect(stats.critDmg).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.cd)
+    expect(stats.critRate).toBe(0)
+  })
+
+  it("scaling routes to atkPct for atk scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["scaling"], "atk")
+    expect(stats.atkPct).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.scalingAtk)
+    expect(stats.hpPct).toBe(0)
+    expect(stats.defPct).toBe(0)
+  })
+
+  it("scaling routes to hpPct for hp scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["scaling"], "hp")
+    expect(stats.hpPct).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.scalingHp)
+    expect(stats.atkPct).toBe(0)
+  })
+
+  it("scaling routes to defPct for def scaler", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["scaling"], "def")
+    expect(stats.defPct).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.scalingDef)
+    expect(stats.atkPct).toBe(0)
+  })
+
+  it("[cr, cd] accumulates both", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, ["cr", "cd"], "atk")
+    expect(stats.critRate).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.cr)
+    expect(stats.critDmg).toBeCloseTo(ECHO_MAIN_4COST_VARIABLE.cd)
+  })
+
+  it("empty array does not modify stats", () => {
+    const stats = emptyStatTable()
+    accumulateCost4Mains(stats, [], "atk")
+    expect(stats.critRate).toBe(0)
+    expect(stats.critDmg).toBe(0)
+    expect(stats.atkPct).toBe(0)
   })
 })

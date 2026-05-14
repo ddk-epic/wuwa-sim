@@ -15,6 +15,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: 2,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 
@@ -30,6 +31,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: 8,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 
@@ -48,6 +50,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: 2,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 
@@ -66,6 +69,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: 2,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 
@@ -84,6 +88,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: null,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 
@@ -102,6 +107,7 @@ describe("template — loadoutFromTemplate", () => {
       echoSetSlot2Id: null,
       sequence: 0,
       echoBuild: "4-3-3-1-1",
+      cost4Mains: ["cd"],
     })
   })
 })
