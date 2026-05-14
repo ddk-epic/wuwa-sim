@@ -16,6 +16,7 @@ export const emptyLoadout = (): SlotLoadout => ({
   echoSetSlot1Id: null,
   echoSetSlot2Id: null,
   sequence: 0,
+  echoBuild: "4-3-3-1-1",
 })
 
 export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
@@ -30,6 +31,7 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
     echoSetSlot1Id: setId,
     echoSetSlot2Id: echoSet?.type === "two-five" ? setId : null,
     sequence: 0,
+    echoBuild: "4-3-3-1-1",
   }
 }
 

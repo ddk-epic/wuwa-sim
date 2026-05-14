@@ -1,5 +1,5 @@
 import type { Character } from "#/types/character"
-import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { EchoBuild, Slots, SlotLoadout } from "#/types/loadout"
 import {
   getCharacterById,
   listEchoes,
@@ -10,6 +10,18 @@ import { SegmentedToggle } from "#/components/SegmentedToggle"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]
+const ECHO_BUILDS: EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
+
+const COST1_COUNT: Record<EchoBuild, number> = {
+  "4-3-3-1-1": 2,
+  "4-4-1-1-1": 3,
+}
+
+const SCALING_STAT_LABEL: Record<"atk" | "hp" | "def", string> = {
+  atk: "ATK%",
+  hp: "HP%",
+  def: "DEF%",
+}
 
 interface TeamPanelProps {
   slots: Slots
@@ -48,6 +60,10 @@ interface TeamSlotProps {
   onSlotChange: (patch: Partial<SlotLoadout>) => void
 }
 
+function SectionDivider() {
+  return <hr className="border-gray-700 my-1" />
+}
+
 function TeamSlot({
   slotNumber,
   character,
@@ -65,18 +81,26 @@ function TeamSlot({
   const compatibleWeapons = listWeaponsByType(character.weaponType)
   const echoes = listEchoes()
   const echoSets = listEchoSets()
+  const scalingStat = character.primaryScalingStat ?? "atk"
+  const cost1Count = COST1_COUNT[loadout.echoBuild]
 
   return (
     <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-1.5">
       <div className="text-xs font-semibold text-white mb-2">
         {character.name}
       </div>
+
+      {/* Sequence domain */}
       <SegmentedToggle
         options={SEQUENCES}
         value={loadout.sequence}
         onChange={(sequence) => onSlotChange({ sequence })}
         label={(v) => `S${v}`}
       />
+
+      <SectionDivider />
+
+      {/* Weapon domain */}
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.weaponId ?? ""}
@@ -96,6 +120,18 @@ function TeamSlot({
         label={(v) => `R${v}`}
         disabled={loadout.weaponId === null}
       />
+
+      <SectionDivider />
+
+      {/* Echo domain */}
+      <SegmentedToggle
+        options={ECHO_BUILDS}
+        value={loadout.echoBuild}
+        onChange={(echoBuild) => onSlotChange({ echoBuild })}
+      />
+      <div className="text-xs text-gray-400 text-center">
+        {SCALING_STAT_LABEL[scalingStat]} ×{cost1Count}
+      </div>
       <select
         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
         value={loadout.echoId ?? ""}

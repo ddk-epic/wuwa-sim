@@ -1,7 +1,7 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
-import type { SlotLoadout } from "#/types/loadout"
+import type { EchoBuild, SlotLoadout } from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
@@ -11,7 +11,13 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
-import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+import {
+  DEFAULT_SUBSTAT_ROLLS,
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_FIXED,
+  ECHO_SUBSTAT,
+} from "./echo-stat-constants"
 import { resolveEchoSets } from "./resolve-echo-sets"
 import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
@@ -131,6 +137,22 @@ export function accumulateEchoSubstatBlock(
     DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
 }
 
+export function accumulateEchoMainBlock(
+  stats: StatTable,
+  echoBuild: EchoBuild,
+  primaryScalingStat: "atk" | "hp" | "def",
+): void {
+  const layout = ECHO_BUILD_LAYOUT[echoBuild]
+  stats.atkFlat +=
+    layout.cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
+    layout.cost3 * ECHO_MAIN_FIXED.cost3FlatAtk
+  stats.hpFlat += layout.cost1 * ECHO_MAIN_FIXED.cost1FlatHp
+  const scalingVal = ECHO_MAIN_1COST_SCALING[primaryScalingStat]
+  if (primaryScalingStat === "atk") stats.atkPct += layout.cost1 * scalingVal
+  else if (primaryScalingStat === "hp") stats.hpPct += layout.cost1 * scalingVal
+  else stats.defPct += layout.cost1 * scalingVal
+}
+
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -159,6 +181,11 @@ export function bootstrapSlot(
   }
 
   accumulateEchoSubstatBlock(stats, character)
+  accumulateEchoMainBlock(
+    stats,
+    loadout?.echoBuild ?? "4-3-3-1-1",
+    character.primaryScalingStat ?? "atk",
+  )
 
   const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]
 

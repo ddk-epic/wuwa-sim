@@ -9,9 +9,16 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 
 import { BuffEngine } from "./buff-engine"
 import { pendingNextOnFieldCount } from "./buff-engine.test-utils"
-import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+import {
+  DEFAULT_SUBSTAT_ROLLS,
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_1COST_SCALING,
+  ECHO_SUBSTAT,
+} from "./echo-stat-constants"
 
-const BASE_ATK_PCT = DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+const BASE_ATK_PCT =
+  DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct +
+  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost1 * ECHO_MAIN_1COST_SCALING.atk
 const BASE_CR = DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
 const BASE_ER =
   DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
@@ -60,6 +67,7 @@ const emptyLoadout: SlotLoadout = {
   echoSetSlot1Id: null,
   echoSetSlot2Id: null,
   sequence: 0,
+  echoBuild: "4-3-3-1-1",
 }
 
 describe("BuffEngine.bootstrap — character-only", () => {
@@ -275,6 +283,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot1Id: null,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -327,6 +336,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot1Id: null,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -345,6 +355,7 @@ describe("BuffEngine.bootstrap — weapon", () => {
           echoSetSlot1Id: null,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -408,6 +419,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           echoSetSlot1Id: 7,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -432,6 +444,7 @@ describe("BuffEngine.bootstrap — echo set piece filtering", () => {
           echoSetSlot1Id: 7,
           echoSetSlot2Id: 7,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -635,6 +648,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
           echoSetSlot1Id: 7,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,
@@ -1955,8 +1969,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       characterId: 1,
       frame: 0,
     })
-    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 229 (substat atkPct/crit applied)
-    expect(result.syntheticHits[0].damage).toBe(229)
+    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 372 (substat atkPct/crit + echo main stats applied)
+    expect(result.syntheticHits[0].damage).toBe(372)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2142,9 +2156,9 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     expect(result.syntheticHits).toHaveLength(1)
-    // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 459.
-    // With the +50%: 459 * 1.5 ≈ 688 (substat atkPct/crit applied).
-    expect(result.syntheticHits[0].damage).toBe(688)
+    // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 744.
+    // With the +50%: 744 * 1.5 ≈ 1116 (substat atkPct/crit + echo main stats applied).
+    expect(result.syntheticHits[0].damage).toBe(1116)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
@@ -3067,6 +3081,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
           echoSetSlot1Id: null,
           echoSetSlot2Id: null,
           sequence: 0,
+          echoBuild: "4-3-3-1-1",
         },
         emptyLoadout,
         emptyLoadout,

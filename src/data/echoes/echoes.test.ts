@@ -43,6 +43,7 @@ const loadoutWithEcho: SlotLoadout = {
   echoSetSlot1Id: null,
   echoSetSlot2Id: null,
   sequence: 0,
+  echoBuild: "4-3-3-1-1",
 }
 
 const emptyLoadout: SlotLoadout = {
@@ -52,6 +53,7 @@ const emptyLoadout: SlotLoadout = {
   echoSetSlot1Id: null,
   echoSetSlot2Id: null,
   sequence: 0,
+  echoBuild: "4-3-3-1-1",
 }
 
 const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({

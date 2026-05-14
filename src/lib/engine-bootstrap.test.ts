@@ -4,13 +4,20 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import type { WeaponData } from "#/types/weapon"
 import {
+  accumulateEchoMainBlock,
   accumulateEchoSubstatBlock,
   buildCharacterBuffDefs,
   buildEchoBuffDefs,
   buildEchoSetBuffDefs,
   buildWeaponBuffDefs,
 } from "./engine-bootstrap"
-import { DEFAULT_SUBSTAT_ROLLS, ECHO_SUBSTAT } from "./echo-stat-constants"
+import {
+  DEFAULT_SUBSTAT_ROLLS,
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_FIXED,
+  ECHO_SUBSTAT,
+} from "./echo-stat-constants"
 import { emptyStatTable } from "#/types/stat-table"
 
 let testEchoSets: EchoSet[] = []
@@ -278,5 +285,51 @@ describe("accumulateEchoSubstatBlock", () => {
     expect(stats.skillTypeBonus["Resonance Liberation"]).toBeCloseTo(
       skillExpected,
     )
+  })
+})
+
+describe("accumulateEchoMainBlock", () => {
+  it("4-3-3-1-1 atk scaler: correct flat ATK, flat HP, atkPct", () => {
+    const stats = emptyStatTable()
+    accumulateEchoMainBlock(stats, "4-3-3-1-1", "atk")
+    const { cost4, cost3, cost1 } = ECHO_BUILD_LAYOUT["4-3-3-1-1"]
+    expect(stats.atkFlat).toBeCloseTo(
+      cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
+        cost3 * ECHO_MAIN_FIXED.cost3FlatAtk,
+    )
+    expect(stats.hpFlat).toBeCloseTo(cost1 * ECHO_MAIN_FIXED.cost1FlatHp)
+    expect(stats.atkPct).toBeCloseTo(cost1 * ECHO_MAIN_1COST_SCALING.atk)
+    expect(stats.hpPct).toBe(0)
+    expect(stats.defPct).toBe(0)
+  })
+
+  it("4-4-1-1-1 atk scaler: correct flat ATK, flat HP, atkPct", () => {
+    const stats = emptyStatTable()
+    accumulateEchoMainBlock(stats, "4-4-1-1-1", "atk")
+    const { cost4, cost3, cost1 } = ECHO_BUILD_LAYOUT["4-4-1-1-1"]
+    expect(stats.atkFlat).toBeCloseTo(
+      cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
+        cost3 * ECHO_MAIN_FIXED.cost3FlatAtk,
+    )
+    expect(stats.hpFlat).toBeCloseTo(cost1 * ECHO_MAIN_FIXED.cost1FlatHp)
+    expect(stats.atkPct).toBeCloseTo(cost1 * ECHO_MAIN_1COST_SCALING.atk)
+  })
+
+  it("routes cost-1 mains to hpPct for hp scaler", () => {
+    const stats = emptyStatTable()
+    accumulateEchoMainBlock(stats, "4-3-3-1-1", "hp")
+    const { cost1 } = ECHO_BUILD_LAYOUT["4-3-3-1-1"]
+    expect(stats.hpPct).toBeCloseTo(cost1 * ECHO_MAIN_1COST_SCALING.hp)
+    expect(stats.atkPct).toBe(0)
+    expect(stats.defPct).toBe(0)
+  })
+
+  it("routes cost-1 mains to defPct for def scaler", () => {
+    const stats = emptyStatTable()
+    accumulateEchoMainBlock(stats, "4-3-3-1-1", "def")
+    const { cost1 } = ECHO_BUILD_LAYOUT["4-3-3-1-1"]
+    expect(stats.defPct).toBeCloseTo(cost1 * ECHO_MAIN_1COST_SCALING.def)
+    expect(stats.atkPct).toBe(0)
+    expect(stats.hpPct).toBe(0)
   })
 })

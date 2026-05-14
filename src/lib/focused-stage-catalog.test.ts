@@ -181,6 +181,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot1Id: null,
     echoSetSlot2Id: null,
     sequence: 0,
+    echoBuild: "4-3-3-1-1",
   },
   {
     weaponId: null,
@@ -189,6 +190,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot1Id: null,
     echoSetSlot2Id: null,
     sequence: 0,
+    echoBuild: "4-3-3-1-1",
   },
   {
     weaponId: null,
@@ -197,6 +199,7 @@ const noLoadouts: SlotLoadout[] = [
     echoSetSlot1Id: null,
     echoSetSlot2Id: null,
     sequence: 0,
+    echoBuild: "4-3-3-1-1",
   },
 ]
 
@@ -318,6 +321,7 @@ describe("focused-stage-catalog — labels", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
       {
         weaponId: null,
@@ -326,6 +330,7 @@ describe("focused-stage-catalog — labels", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
       {
         weaponId: null,
@@ -334,6 +339,7 @@ describe("focused-stage-catalog — labels", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
     ]
     const result = getFocusedStageCatalog([1, null, null], loadouts, 1)
@@ -351,6 +357,7 @@ describe("focused-stage-catalog — echo stages", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
     {
       weaponId: null,
@@ -359,6 +366,7 @@ describe("focused-stage-catalog — echo stages", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
     {
       weaponId: null,
@@ -367,6 +375,7 @@ describe("focused-stage-catalog — echo stages", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
   ]
 
@@ -410,6 +419,7 @@ describe("focused-stage-catalog — echo stages", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
       {
         weaponId: null,
@@ -418,6 +428,7 @@ describe("focused-stage-catalog — echo stages", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
       {
         weaponId: null,
@@ -426,6 +437,7 @@ describe("focused-stage-catalog — echo stages", () => {
         echoSetSlot1Id: null,
         echoSetSlot2Id: null,
         sequence: 0,
+        echoBuild: "4-3-3-1-1",
       },
     ]
     const result = getFocusedStageCatalog(slots, loadouts, 1)
@@ -442,6 +454,7 @@ describe("focused-stage-catalog — divider rule", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
     {
       weaponId: null,
@@ -450,6 +463,7 @@ describe("focused-stage-catalog — divider rule", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
     {
       weaponId: null,
@@ -458,6 +472,7 @@ describe("focused-stage-catalog — divider rule", () => {
       echoSetSlot1Id: null,
       echoSetSlot2Id: null,
       sequence: 0,
+      echoBuild: "4-3-3-1-1",
     },
   ]
 
