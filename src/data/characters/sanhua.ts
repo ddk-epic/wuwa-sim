@@ -83,6 +83,80 @@ export const sanhua = {
         },
       ],
     },
+    {
+      id: "char.sanhua.sequence.s1",
+      name: "Solitude's Embrace",
+      description:
+        "After casting Frigid Light Stage 5, Crit Rate +15% for 10s. Requires Sequence 1.",
+      requiresSequence: 1,
+      trigger: {
+        event: "skillCast",
+        characterId: 1102,
+        stageId: "Frigid Light::Stage 5",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.sequence.s4",
+      name: "Blade Mastery",
+      description:
+        "After casting Resonance Liberation, all DMG +120% for 5s, consumed by Heavy Attack. Requires Sequence 4.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1102,
+        skillType: "Resonance Liberation",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 5 },
+      consumedBy: {
+        event: "hitLanded",
+        actor: "self",
+        skillType: "Heavy Attack",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 1.2 },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.sequence.s5",
+      name: "Unraveling Fate",
+      description:
+        "On Detonate's authored Heavy Attack hit, Crit DMG +100%, active during emitHit phase, consumed in same event. Requires Sequence 5.",
+      requiresSequence: 5,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        skillType: "Heavy Attack",
+        source: "self",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      consumedBy: {
+        event: "hitLanded",
+        actor: "self",
+        skillType: "Heavy Attack",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critDmg" },
+          value: { kind: "const", v: 1.0 },
+        },
+      ],
+    },
   ],
   skills: [
     {
