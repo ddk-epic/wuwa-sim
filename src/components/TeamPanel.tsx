@@ -65,7 +65,7 @@ interface TeamSlotProps {
 }
 
 function SectionDivider() {
-  return <hr className="border-gray-700 my-1" />
+  return <hr className="border-gray-700" />
 }
 
 function TeamSlot({
@@ -76,7 +76,7 @@ function TeamSlot({
 }: TeamSlotProps) {
   if (character === null) {
     return (
-      <div className="flex-1 border border-dashed border-gray-700 rounded p-3 flex items-center justify-center min-h-[88px]">
+      <div className="flex-1 border border-dashed border-gray-700 rounded p-3 flex items-center justify-center min-h-22">
         <span className="text-gray-600 text-xs">Slot {slotNumber}</span>
       </div>
     )
@@ -101,6 +101,12 @@ function TeamSlot({
     { value: "elemDmg", label: "Elem DMG" },
   ]
 
+  const cost1Options = [
+    { value: "scaling", label: scalingLabel },
+    { value: "hp", label: "HP%" },
+    { value: "def", label: "DEF%" },
+  ]
+
   function handleBuildChange(echoBuild: EchoBuild) {
     onSlotChange({
       echoBuild,
@@ -110,7 +116,7 @@ function TeamSlot({
   }
 
   return (
-    <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-1.5">
+    <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-4">
       <div className="text-xs font-semibold text-white mb-2">
         {character.name}
       </div>
@@ -126,99 +132,112 @@ function TeamSlot({
       <SectionDivider />
 
       {/* Weapon domain */}
-      <select
-        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.weaponId ?? ""}
-        onChange={(e) => onSlotChange({ weaponId: Number(e.target.value) })}
-      >
-        <option value="">— Weapon —</option>
-        {compatibleWeapons.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.name}
-          </option>
-        ))}
-      </select>
-      <SegmentedToggle
-        options={RANKS}
-        value={loadout.weaponRank}
-        onChange={(weaponRank) => onSlotChange({ weaponRank })}
-        label={(v) => `R${v}`}
-        disabled={loadout.weaponId === null}
-      />
+      <div className="space-y-1.5">
+        <select
+          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+          value={loadout.weaponId ?? ""}
+          onChange={(e) => onSlotChange({ weaponId: Number(e.target.value) })}
+        >
+          <option value="">— Weapon —</option>
+          {compatibleWeapons.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+        <SegmentedToggle
+          options={RANKS}
+          value={loadout.weaponRank}
+          onChange={(weaponRank) => onSlotChange({ weaponRank })}
+          label={(v) => `R${v}`}
+          disabled={loadout.weaponId === null}
+        />
+      </div>
 
       <SectionDivider />
 
       {/* Echo domain */}
-      <SegmentedToggle
-        options={ECHO_BUILDS}
-        value={loadout.echoBuild}
-        onChange={handleBuildChange}
-      />
-      <EchoMainsToggle
-        options={cost4Options}
-        mains={loadout.cost4Mains}
-        capacity={layout.cost4}
-        onChange={(mains) => onSlotChange({ cost4Mains: mains as Cost4Main[] })}
-      />
-      {layout.cost3 > 0 && (
+      <div className="space-y-1.5">
+        <SegmentedToggle
+          options={ECHO_BUILDS}
+          value={loadout.echoBuild}
+          onChange={handleBuildChange}
+        />
         <EchoMainsToggle
-          options={cost3Options}
-          mains={loadout.cost3Mains}
-          capacity={layout.cost3}
+          options={cost4Options}
+          mains={loadout.cost4Mains}
+          capacity={layout.cost4}
           onChange={(mains) =>
-            onSlotChange({ cost3Mains: mains as Cost3Main[] })
+            onSlotChange({ cost4Mains: mains as Cost4Main[] })
           }
         />
-      )}
-      <div className="text-xs text-gray-400 text-center">
-        {scalingLabel} ×{layout.cost1}
+        {layout.cost3 > 0 && (
+          <EchoMainsToggle
+            options={cost3Options}
+            mains={loadout.cost3Mains}
+            capacity={layout.cost3}
+            onChange={(mains) =>
+              onSlotChange({ cost3Mains: mains as Cost3Main[] })
+            }
+          />
+        )}
+        <EchoMainsToggle
+          options={cost1Options}
+          mains={Array<string>(layout.cost1).fill("scaling")}
+          capacity={layout.cost1}
+          disabled
+          onChange={() => {}}
+        />
+        {/* Echo & Echo Set */}
+        <div>
+          <select
+            className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+            value={loadout.echoId ?? ""}
+            onChange={(e) => onSlotChange({ echoId: Number(e.target.value) })}
+          >
+            <option value="">— Echo —</option>
+            {echoes.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <select
+          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+          value={loadout.echoSetSlot1Id ?? ""}
+          onChange={(e) =>
+            onSlotChange({
+              echoSetSlot1Id:
+                e.target.value === "" ? null : Number(e.target.value),
+            })
+          }
+        >
+          <option value="">— Echo Set 1 —</option>
+          {echoSets.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+          value={loadout.echoSetSlot2Id ?? ""}
+          onChange={(e) =>
+            onSlotChange({
+              echoSetSlot2Id:
+                e.target.value === "" ? null : Number(e.target.value),
+            })
+          }
+        >
+          <option value="">— Echo Set 2 —</option>
+          {echoSets.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
-      <select
-        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoId ?? ""}
-        onChange={(e) => onSlotChange({ echoId: Number(e.target.value) })}
-      >
-        <option value="">— Echo —</option>
-        {echoes.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.name}
-          </option>
-        ))}
-      </select>
-      <select
-        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoSetSlot1Id ?? ""}
-        onChange={(e) =>
-          onSlotChange({
-            echoSetSlot1Id:
-              e.target.value === "" ? null : Number(e.target.value),
-          })
-        }
-      >
-        <option value="">— Echo Set 1 —</option>
-        {echoSets.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-          </option>
-        ))}
-      </select>
-      <select
-        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-        value={loadout.echoSetSlot2Id ?? ""}
-        onChange={(e) =>
-          onSlotChange({
-            echoSetSlot2Id:
-              e.target.value === "" ? null : Number(e.target.value),
-          })
-        }
-      >
-        <option value="">— Echo Set 2 —</option>
-        {echoSets.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-          </option>
-        ))}
-      </select>
     </div>
   )
 }
