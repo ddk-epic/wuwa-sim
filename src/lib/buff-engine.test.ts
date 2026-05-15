@@ -3304,3 +3304,201 @@ describe("BuffEngine.passiveBuffs", () => {
     expect(resolved.passiveBuffs).toEqual(engine.passiveBuffs(1))
   })
 })
+
+describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () => {
+  const dmg = () => ({
+    type: "ATK",
+    dmgType: "Fusion",
+    scalingStat: "atk" as const,
+    actionFrame: 0,
+    value: 1.0,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+  })
+
+  const windowBuff: BuffDef = {
+    id: "test.window",
+    name: "Window",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 15 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0 },
+      },
+    ],
+  }
+
+  const emitHitWithCondition: BuffDef = {
+    id: "test.conditional-emit",
+    name: "Conditional Emit",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    condition: { kind: "buffActive", buffId: "test.window", on: "source" },
+    effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
+  }
+
+  it("does not fire synthetic hit when condition buff is absent", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [windowBuff, emitHitWithCondition] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+    expect(result.syntheticHits).toHaveLength(0)
+  })
+
+  it("fires synthetic hit when condition buff is active", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [windowBuff, emitHitWithCondition] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Activate the window buff
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Echo Skill",
+      frame: 0,
+    })
+
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 1,
+    })
+    expect(result.syntheticHits).toHaveLength(1)
+    expect(result.syntheticHits[0].synthetic).toBe(true)
+  })
+
+  it("does not suppress emitHit defs without a condition", () => {
+    const unconditionalEmit: BuffDef = {
+      id: "test.unconditional-emit",
+      name: "Unconditional Emit",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [unconditionalEmit] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+    expect(result.syntheticHits).toHaveLength(1)
+  })
+})
+
+describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)", () => {
+  const windowBuff: BuffDef = {
+    id: "test.window",
+    name: "Window",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 15 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0 },
+      },
+    ],
+  }
+
+  const nextOnFieldWithCondition: BuffDef = {
+    id: "test.conditional-nof",
+    name: "Conditional NOF",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+    target: { kind: "nextOnField" },
+    duration: { kind: "seconds", v: 15 },
+    condition: { kind: "buffActive", buffId: "test.window", on: "source" },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "allDmgBonus" },
+        value: { kind: "const", v: 0.12 },
+      },
+    ],
+  }
+
+  it("does not enqueue nextOnField buff when condition is false at trigger time", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [windowBuff, nextOnFieldWithCondition] }),
+      baseChar({ id: 2, buffs: [] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Trigger outro without window buff active
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+    // Swap in char 2 — buff should NOT be applied
+    engine.onEvent({ kind: "swapIn", characterId: 2, frame: 1 })
+
+    expect(engine.activeBuffIds(2)).not.toContain("test.conditional-nof")
+  })
+
+  it("enqueues nextOnField buff when condition is true at trigger time", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [windowBuff, nextOnFieldWithCondition] }),
+      baseChar({ id: 2, buffs: [] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Activate window, then trigger outro
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Echo Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 1,
+    })
+    // Swap in char 2 — buff SHOULD be applied
+    engine.onEvent({ kind: "swapIn", characterId: 2, frame: 2 })
+
+    expect(engine.activeBuffIds(2)).toContain("test.conditional-nof")
+  })
+})

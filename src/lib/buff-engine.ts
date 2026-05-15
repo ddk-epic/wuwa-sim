@@ -261,18 +261,29 @@ export class BuffEngine {
 
     const rawCandidates = this.store.findCandidates(event)
     const candidates = rawCandidates.filter(({ def, sourceCharacterId }) => {
-      if (!def.cooldown) return true
-      const key = `${def.id}|${sourceCharacterId}`
-      const last = this.cooldownLastFired.get(key)
-      return last === undefined || event.frame - last >= def.cooldown * 60
+      if (def.cooldown) {
+        const key = `${def.id}|${sourceCharacterId}`
+        const last = this.cooldownLastFired.get(key)
+        if (last !== undefined && event.frame - last < def.cooldown * 60)
+          return false
+      }
+      // emitHit-only defs: condition is evaluated at candidate-selection time
+      // because there is no persistent instance to re-evaluate lazily (ADR-0011).
+      if (
+        def.condition &&
+        def.effects.length > 0 &&
+        def.effects.every((e) => e.kind === "emitHit")
+      ) {
+        return this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
+      }
+      return true
     })
     for (const { def, sourceCharacterId } of candidates) {
-      if (def.cooldown) {
+      if (def.cooldown)
         this.cooldownLastFired.set(
           `${def.id}|${sourceCharacterId}`,
           event.frame,
         )
-      }
     }
     const ctx: PhaseContext = { event, candidates, out, hitsOut, depth }
     for (const phase of this.phases) phase.run(ctx)
@@ -301,6 +312,14 @@ export class BuffEngine {
   private runStatPhase(ctx: PhaseContext): void {
     for (const { def, sourceCharacterId } of ctx.candidates) {
       if (def.target.kind === "nextOnField") {
+        // nextOnField buffs are instantiated once at swap-in; there is no later
+        // re-evaluation, so the condition gate must fire here at trigger time (ADR-0011).
+        if (
+          def.condition &&
+          !this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
+        ) {
+          continue
+        }
         this.store.pushPendingNextOnField(
           def,
           sourceCharacterId,
@@ -605,6 +624,31 @@ export class BuffEngine {
           cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId
         return this.resources.getResource(subjectId)[cond.resource] >= cond.n
       }
+    }
+  }
+
+  /**
+   * Evaluate a condition at trigger time using only the source character's context.
+   * Used for emitHit-only defs and nextOnField defs where no BuffInstance exists yet
+   * and the target character is unknown or irrelevant (ADR-0011).
+   */
+  private evaluateConditionAtTrigger(
+    cond: Condition,
+    sourceCharacterId: number,
+  ): boolean {
+    switch (cond.kind) {
+      case "buffActive":
+        return this.store.hasActiveOnTarget(cond.buffId, sourceCharacterId)
+      case "actorIsOnField":
+        return this.onField.isOnField(sourceCharacterId)
+      case "actorIsOffField":
+        return !this.onField.isOnField(sourceCharacterId)
+      case "onField":
+        return this.onField.isOnField(sourceCharacterId)
+      case "resourceAtLeast":
+        return (
+          this.resources.getResource(sourceCharacterId)[cond.resource] >= cond.n
+        )
     }
   }
 
