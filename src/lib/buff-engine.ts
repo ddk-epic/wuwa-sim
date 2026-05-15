@@ -395,6 +395,7 @@ export class BuffEngine {
         skillType: effect.skillType ?? "Coordinated Attack",
         dmgType: effect.damage.dmgType,
         synthetic: true,
+        sourceBuffId: def.id,
         frame,
       },
       out,

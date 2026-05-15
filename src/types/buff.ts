@@ -78,6 +78,7 @@ export type Trigger =
       source?: TriggerSource
       stage?: string
       hitIndex?: number
+      sourceBuffId?: string | string[]
     }
   | {
       event: "swapIn"

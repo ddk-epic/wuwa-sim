@@ -42,6 +42,8 @@ export type EngineEvent =
       energy?: number
       /** Per-hit concerto gained by the actor. Implicit `resource` effect. */
       concerto?: number
+      /** Buff def id that produced this synthetic hit via emitHit; undefined for authored hits. */
+      sourceBuffId?: string
     }
   | { kind: "swapIn"; characterId: number; frame: number }
   | { kind: "swapOut"; characterId: number; frame: number }
@@ -532,6 +534,12 @@ export function matchesTrigger(
     }
     if (trigger.hitIndex !== undefined && trigger.hitIndex !== event.hitIndex) {
       return false
+    }
+    if (trigger.sourceBuffId !== undefined) {
+      const ids = Array.isArray(trigger.sourceBuffId)
+        ? trigger.sourceBuffId
+        : [trigger.sourceBuffId]
+      if (!ids.includes(event.sourceBuffId ?? "")) return false
     }
     return true
   }

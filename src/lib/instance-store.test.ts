@@ -387,3 +387,110 @@ describe("matchesTrigger — stage + hitIndex filters (#94)", () => {
     )
   })
 })
+
+describe("matchesTrigger — sourceBuffId filter (#117)", () => {
+  const baseEvent: EngineEvent = {
+    kind: "hitLanded",
+    characterId: 1,
+    skillType: "Resonance Skill",
+    dmgType: "Damage",
+    synthetic: true,
+    frame: 0,
+  }
+
+  it("single sourceBuffId: matches when event sourceBuffId equals trigger value", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+      sourceBuffId: "char.sanhua.ice-prism-burst",
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, sourceBuffId: "char.sanhua.ice-prism-burst" },
+        1,
+      ),
+    ).toBe(true)
+  })
+
+  it("single sourceBuffId: does not match when event sourceBuffId differs", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+      sourceBuffId: "char.sanhua.ice-prism-burst",
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, sourceBuffId: "char.sanhua.glacier-burst" },
+        1,
+      ),
+    ).toBe(false)
+  })
+
+  it("single sourceBuffId: does not match when event sourceBuffId is absent", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+      sourceBuffId: "char.sanhua.ice-prism-burst",
+    }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
+  })
+
+  it("array sourceBuffId: matches when event sourceBuffId is one of the listed values", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+      sourceBuffId: [
+        "char.sanhua.ice-prism-burst",
+        "char.sanhua.glacier-burst",
+      ],
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, sourceBuffId: "char.sanhua.glacier-burst" },
+        1,
+      ),
+    ).toBe(true)
+  })
+
+  it("array sourceBuffId: does not match when event sourceBuffId is not listed", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+      sourceBuffId: [
+        "char.sanhua.ice-prism-burst",
+        "char.sanhua.glacier-burst",
+      ],
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, sourceBuffId: "char.sanhua.ice-thorn-burst" },
+        1,
+      ),
+    ).toBe(false)
+  })
+
+  it("no sourceBuffId on trigger: matches regardless of event sourceBuffId", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      source: "synthetic",
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, sourceBuffId: "char.sanhua.ice-prism-burst" },
+        1,
+      ),
+    ).toBe(true)
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
+  })
+})

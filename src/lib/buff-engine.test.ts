@@ -3305,6 +3305,107 @@ describe("BuffEngine.passiveBuffs", () => {
   })
 })
 
+describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#117)", () => {
+  const dmg = () => ({
+    type: "ATK",
+    dmgType: "Fusion",
+    scalingStat: "atk" as const,
+    actionFrame: 0,
+    value: 1.0,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+  })
+
+  it("trigger with sourceBuffId only fires on matching synthetic hit", () => {
+    const emitter: BuffDef = {
+      id: "char.emitter-a",
+      name: "Emitter A",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Heavy Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
+    }
+    const chainBuff: BuffDef = {
+      id: "char.chain",
+      name: "Chain",
+      trigger: {
+        event: "hitLanded",
+        source: "synthetic",
+        characterId: 1,
+        sourceBuffId: "char.emitter-a",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [emitter, chainBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Heavy Attack",
+      frame: 0,
+    })
+
+    expect(engine.activeBuffIds(1)).toContain("char.chain")
+  })
+
+  it("trigger with sourceBuffId does not fire on authored hitLanded (no sourceBuffId)", () => {
+    const chainBuff: BuffDef = {
+      id: "char.chain",
+      name: "Chain",
+      trigger: {
+        event: "hitLanded",
+        source: "any",
+        characterId: 1,
+        sourceBuffId: "char.emitter-a",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [chainBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Heavy Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+
+    expect(engine.activeBuffIds(1)).not.toContain("char.chain")
+  })
+})
+
 describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () => {
   const dmg = () => ({
     type: "ATK",
