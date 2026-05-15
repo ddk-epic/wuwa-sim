@@ -45,6 +45,10 @@ The pure-data template of a buff: its trigger, condition, target, effects, durat
 **Buff Instance**:
 A live, active occurrence of a Buff Def in the engine. Carries `endTime`, current stack count, source character, resolved target, and any snapshotted values.
 
+**Passive Buff**:
+A view-layer term for the subset of Buffs folded directly into `baseStats` at bootstrap — `trigger: simStart` + `duration: permanent` + no condition. Loses Buff Instance identity post-fold; surfaced separately in the Simulation Log Hit Drawer because it does not appear in `activeBuffs(characterId)`. Sources include weapon passives, echo-set bonuses, character intrinsic unconditional permanents, and compiled skill-tree nodes.
+_Avoid_: confusing with the `passive.*` segment in some buff IDs, which is a naming convention not a category — `char.encore.passive.angry-cosmos` is a conditional permanent Buff Instance, not a Passive Buff.
+
 **Effect**:
 What a Buff Instance _does_ while active. One of three kinds: `stat` (patches a Stat Table field), `emitHit` (injects a synthetic hit), or `resource` (produces or consumes Energy/Concerto/Forte/Resonance).
 
