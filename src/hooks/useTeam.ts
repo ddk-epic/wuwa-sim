@@ -29,7 +29,17 @@ export function useTeam() {
   ])
   const [loadouts, setLoadouts] = useLocalStorage<
     [SlotLoadout, SlotLoadout, SlotLoadout]
-  >("wuwa.team.loadouts", [emptyLoadout(), emptyLoadout(), emptyLoadout()])
+  >(
+    "wuwa.team.loadouts",
+    [emptyLoadout(), emptyLoadout(), emptyLoadout()],
+    (stored) => {
+      const arr = stored as [unknown, unknown, unknown]
+      return arr.map((s) => ({
+        ...emptyLoadout(),
+        ...(s as object),
+      })) as [SlotLoadout, SlotLoadout, SlotLoadout]
+    },
+  )
   const [focusedId, setFocusedId] = useLocalStorage<number | null>(
     "wuwa.team.focusedId",
     null,
