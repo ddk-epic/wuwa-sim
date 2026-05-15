@@ -5,6 +5,7 @@ import { useSimulationLog } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
 import { SkillCatalog } from "#/components/SkillCatalog"
 import { Header } from "#/components/Header"
+import { TableTopBar } from "#/components/TableTopBar"
 import { TeamModal } from "#/components/TeamModal"
 import { SimulationLogModal } from "#/components/SimulationLogModal"
 import { TimelineView } from "#/components/TimelineView"
@@ -62,13 +63,18 @@ export function SimulatorPage() {
         onSimulate={handleSimulate}
         onOpenSimulationLog={() => setSimulationLogOpen(true)}
         timelineEmpty={entries.length === 0}
-        totalDmg={summary.totalDamage}
-        dps={summary.dps}
-        totalTimeSec={summary.totalTimeSec}
         reactionDelay={settings.reactionDelay}
         onReactionDelayChange={setReactionDelay}
       />
+      <TableTopBar
+        entriesNumber={entries.length}
+        totalDmg={summary.totalDamage}
+        dps={summary.dps}
+        totalTimeSec={summary.totalTimeSec}
+      />
       <div className="flex flex-1 min-h-0">
+        {/* left rail spacer */}
+        <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
         <div className="flex-75 flex flex-col min-h-0">
           <TimelineView
             entries={entries}

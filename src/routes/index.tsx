@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { CharacterSelector } from "#/components/CharacterSelector"
+import { SimulatorPage } from "#/components/SimulatorPage"
 
-export const Route = createFileRoute("/")({ component: CharacterSelector })
+export const Route = createFileRoute("/")({ component: SimulatorPage })

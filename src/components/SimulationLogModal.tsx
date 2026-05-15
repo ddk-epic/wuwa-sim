@@ -197,11 +197,11 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center p-6"
+      className="fixed inset-0 z-50 flex items-start justify-center p-6"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-7xl max-h-[95vh] bg-gray-900 rounded-lg border border-gray-700 flex flex-col"
+        className="w-full max-w-7xl max-h-[95vh] bg-card rounded-lg border border-gray-700 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">

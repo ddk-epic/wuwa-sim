@@ -3,9 +3,9 @@
 :root {
   --font-sans: -apple-system, "Manrope", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --background: oklch(0.155 0.008 274.28);
+  --foreground: oklch(0.928 0.011 269.54);
+  --card: oklch(0.187 0.015 266.77);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -13,12 +13,12 @@
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.628 0.026 272.61);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(0.244 0.018 266.22);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
@@ -35,10 +35,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --bg-3: #090a0e;
-  --dim: "#42475a";
-  --tag: "#9fb6ff";
-  --tagBg: "#131e35";
+  --darkest: oklch(0.1456 0.008 273.86);
+  --dim: oklch(0.401 0.033 273.33);
+  --tag: oklch(0.787 0.108 270.38);
+  --tag-bg: oklch(0.238 0.047 263.81);
 }
 
 @theme inline {

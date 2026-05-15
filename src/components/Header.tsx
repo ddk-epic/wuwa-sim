@@ -12,9 +12,6 @@ interface HeaderProps {
   onSimulate: () => void
   onOpenSimulationLog: () => void
   timelineEmpty: boolean
-  totalDmg: number
-  dps: number
-  totalTimeSec: number
   reactionDelay: number
   onReactionDelayChange: (value: number) => void
 }
@@ -26,9 +23,6 @@ export function Header({
   onSimulate,
   onOpenSimulationLog,
   timelineEmpty,
-  totalDmg,
-  dps,
-  totalTimeSec,
   reactionDelay,
   onReactionDelayChange,
 }: HeaderProps) {
@@ -43,12 +37,12 @@ export function Header({
     .join(" / ")
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 shrink-0">
+    <div className="h-12 flex items-center shrink-0 gap-4 px-4 py-2 border-b border-border bg-card">
       <div>
         <span className="tracking-[0.5px] font-semibold text-2xl text-foreground">
           WUWA
         </span>
-        <span className="pr-4 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
+        <span className="pr-2 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
           Sim
         </span>
       </div>
@@ -59,53 +53,32 @@ export function Header({
         {label}
       </button>
       <div className="ml-auto flex items-center gap-4">
-        <div className="flex gap-7">
-          <div className="flex flex-col items-center">
-            <span className="text-[14px] text-gray-400 uppercase">
-              Total DMG
-            </span>
-            <span className="text-base text-yellow-400">
-              {totalDmg.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[14px] text-gray-400 uppercase">DPS</span>
-            <span className="text-sm text-white">{dps.toLocaleString()}</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[14px] text-gray-400 uppercase">Time</span>
-            <span className="text-sm text-white">
-              {totalTimeSec.toFixed(2)}s
-            </span>
-          </div>
-        </div>
-        <div className="w-px h-6 bg-gray-700 mx-1" />
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-blue-600"
-            disabled={timelineEmpty}
-            onClick={onSimulate}
-          >
-            Simulate
-          </button>
-          <button
-            className="p-1.5 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
-            onClick={onOpenSimulationLog}
-            aria-label="Open simulation log"
-          >
-            <CalendarSearch size={20} />
-          </button>
-        </div>
-        <div className="w-px h-6 bg-gray-700 mx-1" />
+        {/** Buttons */}
         <button
-          className="px-3 py-1 rounded bg-gray-700 text-sm text-white transition-colors disabled:opacity-40 enabled:hover:bg-red-600"
+          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+          disabled={timelineEmpty}
+          onClick={onSimulate}
+        >
+          Simulate
+        </button>
+        <button
+          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+          onClick={onOpenSimulationLog}
+          aria-label="Open simulation log"
+        >
+          <CalendarSearch size={20} />
+          <span>Log</span>
+        </button>
+        <button
+          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           disabled={timelineEmpty}
           onClick={() => setConfirmOpen(true)}
         >
-          Reset Timeline
+          Reset
         </button>
+        <div className="w-px h-6 bg-gray-700 mx-1" />
         <button
-          className="p-1.5 rounded bg-gray-700 text-white transition-colors hover:bg-gray-600"
+          className="items-center gap-1 p-1.75 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           onClick={() => setSettingsOpen(true)}
           aria-label="Open settings"
         >
