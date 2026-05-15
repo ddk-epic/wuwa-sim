@@ -199,7 +199,7 @@ export class BuffEngine {
           depth,
         )
         if (!event.synthetic) {
-          const sharedEnergy = event.energy * 0.5
+          const sharedEnergy = event.energy * 0.5 * (1 + actorER)
           for (const teammateId of this.store.getPartyCharacterIds()) {
             if (teammateId !== event.characterId) {
               this.applyResourceDelta(
@@ -240,14 +240,24 @@ export class BuffEngine {
         )
       }
       if (event.skillType === "Resonance Liberation") {
+        const cost = event.resonanceCost ?? 100
         const energy = this.getResource(event.characterId).energy
-        if (energy < 100) {
+        if (energy < cost) {
           const character = getCharacterById(event.characterId)
           const name = character ? character.name : `id ${event.characterId}`
           console.warn(
-            `[BuffEngine] Resonance Liberation cast by ${name} with insufficient energy (${energy} < 100)`,
+            `[BuffEngine] Resonance Liberation cast by ${name} with insufficient energy (${energy} < ${cost})`,
           )
         }
+        this.setResource(
+          event.characterId,
+          "energy",
+          0,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
       }
     }
 

@@ -1349,7 +1349,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(fired).toHaveLength(0)
   })
 
-  it("warns when Resonance Liberation casts with insufficient energy but still dispatches", () => {
+  it("warns when Resonance Liberation casts with insufficient energy but still dispatches, and zeroes energy", () => {
     testCharacters = [baseChar({ id: 1, name: "Test Character" })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -1366,6 +1366,92 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(warn).toHaveBeenCalledTimes(1)
     expect(warn.mock.calls[0][0]).toContain("Test Character")
     expect(warn.mock.calls[0][0]).toContain("0")
+    expect(engine.getResource(1).energy).toBe(0)
+    warn.mockRestore()
+  })
+
+  it("Liberation with energy >= cost zeroes energy and logs no warning", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 100,
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Liberation",
+      frame: 1,
+      resonanceCost: 100,
+    })
+    expect(warn).not.toHaveBeenCalled()
+    expect(engine.getResource(1).energy).toBe(0)
+    warn.mockRestore()
+  })
+
+  it("Liberation with energy > resonanceCost zeroes energy (overflow forfeited)", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 200,
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Liberation",
+      frame: 1,
+      resonanceCost: 100,
+    })
+    expect(warn).not.toHaveBeenCalled()
+    expect(engine.getResource(1).energy).toBe(0)
+    warn.mockRestore()
+  })
+
+  it("Encore Liberation at energy=100 warns (cost=125) and zeroes energy", () => {
+    testCharacters = [baseChar({ id: 1, name: "Encore" })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 100,
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Liberation",
+      frame: 1,
+      resonanceCost: 125,
+    })
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0][0]).toContain("125")
+    expect(engine.getResource(1).energy).toBe(0)
     warn.mockRestore()
   })
 
@@ -1538,7 +1624,7 @@ describe("BuffEngine — resource state (#58)", () => {
 })
 
 describe("BuffEngine — per-hit energy sharing (#86)", () => {
-  it("actor keeps 100% of energy; each teammate gets 50% independently", () => {
+  it("actor keeps 100% of energy; each teammate gets 50% of post-ER gain independently", () => {
     testCharacters = [
       baseChar({ id: 1 }),
       baseChar({ id: 2 }),
@@ -1558,8 +1644,32 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
       energy: 10,
     })
     expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
-    expect(engine.getResource(2).energy).toBe(5)
-    expect(engine.getResource(3).energy).toBe(5)
+    expect(engine.getResource(2).energy).toBeCloseTo(10 * 0.5 * (1 + BASE_ER))
+    expect(engine.getResource(3).energy).toBeCloseTo(10 * 0.5 * (1 + BASE_ER))
+  })
+
+  it("teammate receives exactly actor-ER-scaled share (teammate ER does not compound)", () => {
+    // Both actor and teammate have the same BASE_ER from their loadout substats.
+    // If teammate ER were applied on top, teammates would get 10 * 0.5 * (1+ER)^2.
+    // The correct formula is 10 * 0.5 * (1+actorER) applied once.
+    testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Normal Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 10,
+    })
+    const actorScaled = 10 * 0.5 * (1 + BASE_ER)
+    const doubleScaled = 10 * 0.5 * (1 + BASE_ER) * (1 + BASE_ER)
+    expect(engine.getResource(2).energy).toBeCloseTo(actorScaled)
+    expect(engine.getResource(2).energy).not.toBeCloseTo(doubleScaled)
   })
 
   it("synthetic hits do not trigger energy sharing", () => {

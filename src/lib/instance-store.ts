@@ -28,6 +28,8 @@ export type EngineEvent =
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
       concerto?: number
+      /** Energy consumed on cast (Resonance Liberation only). Defaults to 100. */
+      resonanceCost?: number
     }
   | {
       kind: "hitLanded"

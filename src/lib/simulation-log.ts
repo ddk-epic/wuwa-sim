@@ -39,6 +39,7 @@ export function generateSimulationLog(
       stageId: resolved.stageId,
       frame: stageStartFrame,
       concerto: resolved.concerto,
+      resonanceCost: resolved.resonanceCost,
     })
     pushBuffEvents(log, skillCastResult.lifecycleEvents)
     for (const synth of skillCastResult.syntheticHits) log.push(synth)

@@ -14,6 +14,7 @@ export interface ResolvedStage {
   stageName: string
   element: string
   concerto: number
+  resonanceCost?: number
   damage: DamageEntry[]
   skillType: string
   skillName: string
@@ -48,6 +49,7 @@ export function findStageByEntry(
             stageName: s.name,
             element: character.element,
             concerto: s.concerto ?? 0,
+            resonanceCost: skill.resonanceCost,
             damage: s.damage ?? [],
             skillType: s.replacesSkillType ?? skill.type,
             skillName: stageLabel(skill.name, s.newName),
