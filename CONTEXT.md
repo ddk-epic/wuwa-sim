@@ -112,6 +112,20 @@ A character-specific resource and skill bound together. Filled by character-spec
 **Concerto**:
 The 0–100 swap-out resource. Hits add Concerto; reaching 100 enables Outro Skill.
 
+**Resonance Energy** (commonly "Energy"):
+The per-character resource that gates **Resonance Liberation**. Two gain channels with different scaling:
+
+- **Damage Entry `energy`** — per-hit generation tied to in-game actions (Basic, Heavy, Skill, Liberation, Intro, Dodge Counter). Scaled by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`.
+- **Buff `resource` Effect on energy** — flat grants from echoes (e.g. Impermanence Heron), weapons, Resonance Chain nodes, outros. Not ER-scaled.
+  Sim deliberately does not cap energy — overflow is a useful optimization signal indicating the user has spare ER they could redirect to other stats.
+  _Avoid_: confusing with the **Resonance** resource, a separate per-character counter on `ResourceState`.
+
+**Shared Energy**:
+Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain to every teammate: `teammateGain = entryEnergy × 0.5 × (1 + actorER)`. The teammate's own ER does not apply to the shared portion. Synthetic hits do not share energy. Buff-driven (flat) energy grants do not share.
+
+**Resonance Cost**:
+`Stage.resonanceCost` — the energy a Resonance Liberation Stage requires (default 100; Encore is 125). On Liberation cast, the engine sets the actor's energy to 0 (not subtract — overflow above the cost is forfeited on cast); if pre-cast energy was below the cost, a warning is logged but the cast still proceeds and the Stage resolves normally.
+
 **Intro Skill / Outro Skill**:
 The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free.
 
@@ -133,7 +147,7 @@ The skills that fire on swap-in / swap-out respectively. Outros consume Concerto
 - **"Sequence"** — used in WuWa community for both Resonance Chain count (S0–S6) and a generic ordering. We use **Resonance Chain Sequence** when count is meant; "sequence" alone refers to ordering.
 - **"Active character"** — was used to mean both Acting Character and On-Field Character. Resolved: these are distinct. The buff engine tracks both independently.
 - **"Buff" vs "modifier"** — every damage modifier with a trigger, condition, duration, or stack count is a Buff in this system, including permanent ones from weapon passives, skill-tree nodes, and echo skill/set bonuses. There is no separate "permanent modifier" concept for those; permanent is just `duration: { kind: "permanent" }`. The narrow exception is pure base-value contributions — character intrinsics, weapon main/sub stats, and **Echo Stat Rolls** — which accumulate directly into the base Stat Table at bootstrap rather than flowing through the buff pipeline (see ADR-0010).
-- **"Amplify"** — an older WuWa term for **Deepen**. We use Deepen exclusively; do not introduce an `amplify` field.
+- **"Amplify" / "Amplified"** — the in-game UI term for **Deepen**. Deepen is our canonical term; do not introduce an `amplify` field. When game text says a character's DMG is "Amplified by X%", that is a Deepen effect (`stat: "deepen"`), not a DMG Bonus. Example: Sanhua's Outro (Silversnow) says "Basic Attack DMG Amplified by 38%" — modeled as `deepen["Basic Attack"] = 0.38`.
 - **"DMG Bonus"** — at compute time, element bonus and skill-type bonus share one additive bucket. Stored separately on the Stat Table for trigger/condition specificity, but summed into a single `(1 + Σ)` factor in the damage formula.
 
 ## Example dialogue
