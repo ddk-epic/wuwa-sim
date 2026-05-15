@@ -22,7 +22,7 @@ export const sanhua = {
       id: "char.sanhua.outro.silversnow",
       name: "Silversnow",
       description:
-        "After Sanhua uses Outro, the next on-field Resonator's Glacio DMG is increased by 22.5% for 14s.",
+        "After Sanhua uses Outro, the next on-field Resonator's Basic Attack DMG is deepened by 38% for 14s.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
@@ -33,28 +33,53 @@ export const sanhua = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "elementBonus", key: "Glacio" },
-          value: { kind: "const", v: 0.225 },
+          path: { stat: "deepen", key: "Basic Attack" },
+          value: { kind: "const", v: 0.38 },
         },
       ],
     },
     {
-      id: "char.sanhua.intro.freezing-thorns",
-      name: "Freezing Thorns",
+      id: "char.sanhua.passive.condensation",
+      name: "Condensation",
       description:
-        "After casting Sanhua's Intro Skill, the next character's Resonance Skill DMG is increased by 38% for 14s.",
+        "After casting Sanhua's Intro Skill, Resonance Skill and Forte Circuit DMG is increased by 20% for 8s.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
         skillType: "Intro Skill",
       },
       target: { kind: "self" },
-      duration: { kind: "seconds", v: 14 },
+      duration: { kind: "seconds", v: 8 },
       effects: [
         {
           kind: "stat",
           path: { stat: "skillTypeBonus", key: "Resonance Skill" },
-          value: { kind: "const", v: 0.38 },
+          value: { kind: "const", v: 0.2 },
+        },
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Forte Circuit" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.passive.avalanche",
+      name: "Avalanche",
+      description:
+        "After casting Frigid Light Stage 5, Forte Circuit DMG is increased by 20% for 8s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1102,
+        stageId: "Frigid Light::Stage 5",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 8 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Forte Circuit" },
+          value: { kind: "const", v: 0.2 },
         },
       ],
     },
