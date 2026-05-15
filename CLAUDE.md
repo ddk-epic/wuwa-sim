@@ -1,8 +1,24 @@
-## Cheap-Worker Delegation Tools (Token Saving)
+<docs>
+
+# Project docs
+
+`docs/index.md` — concept pages on the engine and codebase. Check it before answering engine questions or re-deriving how a subsystem works.
+
+`docs/adr/` — architectural decisions, referenced by number (e.g. ADR-0007).
+
+At end of turn, propose a docs update when the session produced (i) a new concept not yet covered, (ii) a correction to an existing page, or (iii) a non-obvious invariant or gotcha worth capturing.
+
+Workflow: `docs/conventions.md`.
+
+</docs>
+
+<delegation-tools>
+
+# Cheap-Worker Delegation Tools (Token Saving)
 
 Three CLI tools delegate bulk I/O to a cheap worker model. Use them to save tokens.
 
-### ask-deepseek — bulk reading
+## ask-deepseek — bulk reading
 
 For reading files >400 lines, or when you'd otherwise read 3+ files:
 
@@ -13,7 +29,7 @@ For reading files >400 lines, or when you'd otherwise read 3+ files:
 Returns a structured summary. Use that instead of reading files yourself.
 Only read files directly when you need to make edits to specific lines.
 
-### deepseek-write — boilerplate generation
+## deepseek-write — boilerplate generation
 
 For generating tests, config files, docstrings, or repetitive code patterns:
 
@@ -23,7 +39,7 @@ For generating tests, config files, docstrings, or repetitive code patterns:
 
 Then review the output and edit only what needs fixing.
 
-### extract-chat — chat transcript extraction
+## extract-chat — chat transcript extraction
 
 Extracts human-readable text from Claude Code JSONL transcripts:
 
@@ -31,18 +47,11 @@ Extracts human-readable text from Claude Code JSONL transcripts:
 .tools/extract-chat <session.jsonl> -o /tmp/chat.txt
 ```
 
-### Documentation workflow (MANDATORY)
-
-**NEVER write documentation directly. Always delegate:**
-
-1. Extract chat: `.tools/extract-chat <latest-session.jsonl> -o /tmp/chat.txt`
-2. Ask worker to read chat + existing docs and suggest updates:
-   `.tools/ask-deepseek --paths /tmp/chat.txt <doc-files> --question "read chat, give exact changes for docs"`
-3. Apply the worker's changes via Edit tool
-
-### When NOT to delegate
+## When NOT to delegate
 
 - Tasks under ~2000 tokens of work (delegation overhead isn't worth it)
 - Architectural decisions, debugging, safety-critical code
 - Anything requiring careful reasoning
 - When exact line numbers are needed for editing
+
+</delegation-tools>
