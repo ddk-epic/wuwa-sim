@@ -25,72 +25,72 @@ const snap = (over: Partial<StatTable> = {}): StatTable => ({
 const resolveName = (id: number) => `Char${id}`
 
 describe("formatActiveBuffLabel", () => {
-  it("single-stack buff — no stacks suffix", () => {
+  it("unknown prefix — no tag, no stacks suffix", () => {
     const b: ActiveBuff = { id: "a.buff", name: "Power Up", stacks: 1 }
-    expect(formatActiveBuffLabel(b, [b], resolveName)).toBe("Power Up")
+    expect(formatActiveBuffLabel(b, resolveName)).toBe("Power Up")
   })
 
   it("multi-stack buff — appends ×N suffix", () => {
     const b: ActiveBuff = { id: "a.buff", name: "Power Up", stacks: 3 }
-    expect(formatActiveBuffLabel(b, [b], resolveName)).toBe("Power Up ×3")
+    expect(formatActiveBuffLabel(b, resolveName)).toBe("Power Up ×3")
   })
 
-  it("no name collision — no source suffix even when sourceCharacterId present", () => {
+  it("char prefix — emits character name tag", () => {
     const b: ActiveBuff = {
-      id: "a.buff",
-      name: "Power Up",
+      id: "char.cosmos-rave",
+      name: "Cosmos Rave",
       stacks: 1,
       sourceCharacterId: 1,
     }
-    expect(formatActiveBuffLabel(b, [b], resolveName)).toBe("Power Up")
+    expect(formatActiveBuffLabel(b, resolveName)).toBe("[Char1] Cosmos Rave")
   })
 
-  it("name collision — appends source-character suffix", () => {
-    const b1: ActiveBuff = {
-      id: "a.buff",
-      name: "Power Up",
-      stacks: 1,
-      sourceCharacterId: 1,
-    }
-    const b2: ActiveBuff = {
-      id: "b.buff",
-      name: "Power Up",
-      stacks: 1,
+  it("char prefix with stacks — tag + stacks suffix", () => {
+    const b: ActiveBuff = {
+      id: "char.fairy-tale",
+      name: "Wooly's Fairy Tale",
+      stacks: 3,
       sourceCharacterId: 2,
     }
-    const all = [b1, b2]
-    expect(formatActiveBuffLabel(b1, all, resolveName)).toBe(
-      "Power Up (from Char1)",
-    )
-    expect(formatActiveBuffLabel(b2, all, resolveName)).toBe(
-      "Power Up (from Char2)",
+    expect(formatActiveBuffLabel(b, resolveName)).toBe(
+      "[Char2] Wooly's Fairy Tale ×3",
     )
   })
 
-  it("name collision with stacks — both suffixes applied", () => {
-    const b1: ActiveBuff = {
-      id: "a.buff",
-      name: "Surge",
+  it("weapon prefix — emits [Weapon] tag", () => {
+    const b: ActiveBuff = {
+      id: "weapon.electric-amp",
+      name: "Electric Amplification (ATK)",
       stacks: 2,
-      sourceCharacterId: 1,
     }
-    const b2: ActiveBuff = {
-      id: "b.buff",
-      name: "Surge",
-      stacks: 1,
-      sourceCharacterId: 2,
-    }
-    const all = [b1, b2]
-    expect(formatActiveBuffLabel(b1, all, resolveName)).toBe(
-      "Surge ×2 (from Char1)",
+    expect(formatActiveBuffLabel(b, resolveName)).toBe(
+      "[Weapon] Electric Amplification (ATK) ×2",
     )
   })
 
-  it("name collision but no sourceCharacterId — no source suffix", () => {
-    const b1: ActiveBuff = { id: "a.buff", name: "Power Up", stacks: 1 }
-    const b2: ActiveBuff = { id: "b.buff", name: "Power Up", stacks: 1 }
-    const all = [b1, b2]
-    expect(formatActiveBuffLabel(b1, all, resolveName)).toBe("Power Up")
+  it("echo prefix — emits [Echo] tag", () => {
+    const b: ActiveBuff = { id: "echo.atk-boost", name: "ATK Boost", stacks: 1 }
+    expect(formatActiveBuffLabel(b, resolveName)).toBe("[Echo] ATK Boost")
+  })
+
+  it("echo-set prefix — emits [Set] tag (not [Echo])", () => {
+    const b: ActiveBuff = {
+      id: "echo-set.molten-rift-2pc",
+      name: "Molten Rift (2pc)",
+      stacks: 1,
+    }
+    expect(formatActiveBuffLabel(b, resolveName)).toBe(
+      "[Set] Molten Rift (2pc)",
+    )
+  })
+
+  it("skill-tree prefix — emits [Tree] tag", () => {
+    const b: ActiveBuff = {
+      id: "skill-tree.atk",
+      name: "ATK",
+      stacks: 1,
+    }
+    expect(formatActiveBuffLabel(b, resolveName)).toBe("[Tree] ATK")
   })
 })
 

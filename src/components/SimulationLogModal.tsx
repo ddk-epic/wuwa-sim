@@ -154,16 +154,24 @@ export function computeFormulaBreakdown(
 
 export function formatActiveBuffLabel(
   b: ActiveBuff,
-  allBuffs: ActiveBuff[],
   resolveCharacterName: (id: number) => string,
 ): string {
-  const nameCollision = allBuffs.filter((x) => x.name === b.name).length > 1
-  const src =
-    nameCollision && b.sourceCharacterId !== undefined
-      ? ` (from ${resolveCharacterName(b.sourceCharacterId)})`
-      : ""
+  let tag: string
+  if (b.id.startsWith("char.") && b.sourceCharacterId !== undefined) {
+    tag = `[${resolveCharacterName(b.sourceCharacterId)}]`
+  } else if (b.id.startsWith("echo-set.")) {
+    tag = "[Set]"
+  } else if (b.id.startsWith("echo.")) {
+    tag = "[Echo]"
+  } else if (b.id.startsWith("weapon.")) {
+    tag = "[Weapon]"
+  } else if (b.id.startsWith("skill-tree.")) {
+    tag = "[Tree]"
+  } else {
+    tag = ""
+  }
   const stacks = b.stacks > 1 ? ` ×${b.stacks}` : ""
-  return `${b.name}${stacks}${src}`
+  return tag ? `${tag} ${b.name}${stacks}` : `${b.name}${stacks}`
 }
 
 interface SimulationLogModalProps {
@@ -462,7 +470,6 @@ function HitDrawer({ ev }: { ev: HitEvent }) {
               .map((b) =>
                 formatActiveBuffLabel(
                   b,
-                  ev.activeBuffs,
                   (id) => getCharacterById(id)?.name ?? `#${id}`,
                 ),
               )
