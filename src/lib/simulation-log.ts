@@ -100,6 +100,7 @@ export function generateSimulationLog(
         multiplier: hit.value,
         statsSnapshot: { ...hitResolved.stats },
         activeBuffs: hitResolved.activeBuffs,
+        passiveBuffs: hitResolved.passiveBuffs,
       }
       log.push(hitEvent)
 

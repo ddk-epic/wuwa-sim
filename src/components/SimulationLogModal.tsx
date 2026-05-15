@@ -463,6 +463,19 @@ function HitDrawer({ ev }: { ev: HitEvent }) {
         <span className="text-yellow-400">{bd.result.toLocaleString()}</span>
       </div>
       <div className="text-gray-500">
+        Passive buffs:{" "}
+        {ev.passiveBuffs.length === 0
+          ? "—"
+          : ev.passiveBuffs
+              .map((b) =>
+                formatActiveBuffLabel(
+                  b,
+                  (id) => getCharacterById(id)?.name ?? `#${id}`,
+                ),
+              )
+              .join(", ")}
+      </div>
+      <div className="text-gray-500">
         Active buffs:{" "}
         {ev.activeBuffs.length === 0
           ? "—"

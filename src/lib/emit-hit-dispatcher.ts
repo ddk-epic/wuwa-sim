@@ -46,6 +46,7 @@ export interface EmitHitHost {
   ) => void
   getResource: (characterId: number) => ResourceState
   activeBuffs: (characterId: number) => ActiveBuff[]
+  passiveBuffs: (characterId: number) => ActiveBuff[]
 }
 
 export interface EmitHitDispatcherOptions {
@@ -150,6 +151,7 @@ export class EmitHitDispatcher {
       multiplier: input.effect.damage.value,
       statsSnapshot: cloneStats(stats),
       activeBuffs: host.activeBuffs(input.sourceCharacterId),
+      passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
     }
   }
 }

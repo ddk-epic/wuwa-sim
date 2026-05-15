@@ -212,6 +212,7 @@ export interface SlotBootstrap {
   baseStats: StatTable
   triggerable: BuffDef[]
   permanentInstances: BuffInstance[]
+  foldedBuffs: BuffDef[]
 }
 
 /**
@@ -281,11 +282,13 @@ export function bootstrapSlot(
 
   const triggerable: BuffDef[] = []
   const permanentInstances: BuffInstance[] = []
+  const foldedBuffs: BuffDef[] = []
   for (const buff of buffs) {
     const isPermanentSimStart =
       buff.trigger.event === "simStart" && buff.duration.kind === "permanent"
     if (isPermanentSimStart && !buff.condition) {
       accumulateStatEffects(stats, { def: buff, stacks: 1 })
+      foldedBuffs.push(buff)
     } else if (isPermanentSimStart && buff.condition) {
       permanentInstances.push({
         def: buff,
@@ -301,7 +304,13 @@ export function bootstrapSlot(
     }
   }
 
-  return { charId, baseStats: stats, triggerable, permanentInstances }
+  return {
+    charId,
+    baseStats: stats,
+    triggerable,
+    permanentInstances,
+    foldedBuffs,
+  }
 }
 
 function applyWeaponIntrinsic(

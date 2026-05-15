@@ -3217,3 +3217,90 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.24)
   })
 })
+
+describe("BuffEngine.passiveBuffs", () => {
+  const passiveBuff = (id: string, name: string): BuffDef => ({
+    id,
+    name,
+    trigger: { event: "simStart" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.1 },
+      },
+    ],
+  })
+
+  it("returns empty array when character has no folded buffs", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.passiveBuffs(1)).toEqual([])
+  })
+
+  it("returns folded buffs as ActiveBuff entries with stacks:1", () => {
+    testCharacters = [
+      baseChar({
+        id: 1,
+        buffs: [
+          passiveBuff("skill-tree.atk", "ATK"),
+          passiveBuff("weapon.amp", "Amplification"),
+        ],
+      }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    expect(engine.passiveBuffs(1)).toEqual([
+      { id: "skill-tree.atk", name: "ATK", stacks: 1 },
+      { id: "weapon.amp", name: "Amplification", stacks: 1 },
+    ])
+  })
+
+  it("does not include conditional passives (permanentInstances) in passiveBuffs", () => {
+    testCharacters = [
+      baseChar({
+        id: 1,
+        buffs: [
+          passiveBuff("skill-tree.atk", "ATK"),
+          {
+            ...passiveBuff("weapon.conditional", "Conditional"),
+            condition: { kind: "actorIsOffField" },
+          },
+        ],
+      }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const ids = engine.passiveBuffs(1).map((b) => b.id)
+    expect(ids).toEqual(["skill-tree.atk"])
+  })
+
+  it("resolveHit includes passiveBuffs matching passiveBuffs()", () => {
+    testCharacters = [
+      baseChar({
+        id: 1,
+        buffs: [passiveBuff("echo-set.molten-2pc", "Molten Rift (2pc)")],
+        skills: [],
+      }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const resolved = engine.resolveHit(1, 0)
+    expect(resolved.passiveBuffs).toEqual(engine.passiveBuffs(1))
+  })
+})

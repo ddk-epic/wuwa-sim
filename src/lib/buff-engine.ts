@@ -44,6 +44,7 @@ export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
 export interface ResolvedHit {
   stats: StatTable
   activeBuffs: ActiveBuff[]
+  passiveBuffs: ActiveBuff[]
   lifecycleEvents: BuffEvent[]
 }
 
@@ -78,6 +79,7 @@ export class BuffEngine {
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
   private cooldownLastFired = new Map<string, number>()
+  private foldedBuffsMap = new Map<number, BuffDef[]>()
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -87,6 +89,7 @@ export class BuffEngine {
       this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
     getResource: (id) => this.getResource(id),
     activeBuffs: (id) => this.activeBuffs(id),
+    passiveBuffs: (id) => this.passiveBuffs(id),
   }
 
   /**
@@ -115,6 +118,7 @@ export class BuffEngine {
     this.onField.clear()
     this.cooldownLastFired.clear()
     this.emitHitDispatcher.reset()
+    this.foldedBuffsMap.clear()
 
     const slots: number[] = []
     for (let i = 0; i < input.slots.length; i++) {
@@ -128,6 +132,7 @@ export class BuffEngine {
       for (const inst of slot.permanentInstances) {
         this.store.pushPermanentInstance(inst)
       }
+      this.foldedBuffsMap.set(slot.charId, slot.foldedBuffs)
       this.resources.ensureState(slot.charId)
     }
     this.store.setSlots(slots)
@@ -631,6 +636,15 @@ export class BuffEngine {
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   }
 
+  /** Passive buffs folded into baseStats at bootstrap for `characterId`, as ActiveBuff entries. */
+  passiveBuffs(characterId: number): ActiveBuff[] {
+    return (this.foldedBuffsMap.get(characterId) ?? []).map((def) => ({
+      id: def.id,
+      name: def.name,
+      stacks: 1,
+    }))
+  }
+
   /**
    * Deep seam: advance to `frame`, resolve the actor's stat table, and snapshot
    * the active buffs — the inputs every per-hit damage computation needs.
@@ -639,7 +653,8 @@ export class BuffEngine {
     const { lifecycleEvents } = this.tickToFrame(frame)
     const stats = this.resolveStats(actingCharacterId)
     const activeBuffs = this.activeBuffs(actingCharacterId)
-    return { stats, activeBuffs, lifecycleEvents }
+    const passiveBuffs = this.passiveBuffs(actingCharacterId)
+    return { stats, activeBuffs, passiveBuffs, lifecycleEvents }
   }
 
   /**
