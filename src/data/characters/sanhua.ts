@@ -321,6 +321,32 @@ export const sanhua = {
         },
       ],
     },
+    {
+      id: "char.sanhua.sequence.s6",
+      name: "Daybreak Radiance",
+      description:
+        "Detonating Ice Prism or Glacier grants all team members ATK +10% for 20s, stacking up to 2 times. Requires Sequence 6.",
+      requiresSequence: 6,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        source: "synthetic",
+        sourceBuffId: [
+          "char.sanhua.ice-prism-burst",
+          "char.sanhua.glacier-burst",
+        ],
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 20 },
+      stacking: { max: 2, onRetrigger: "addStack" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "perStack", v: 0.1 },
+        },
+      ],
+    },
   ],
   skills: [
     {
