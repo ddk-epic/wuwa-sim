@@ -19,6 +19,27 @@ export const encore = {
   recommendedSkillDmgPriority: "Resonance Liberation",
   buffs: [
     {
+      id: "char.encore.passive.angry-cosmos",
+      name: "Angry Cosmos",
+      description:
+        "During Cosmos Rave, Encore's All DMG Bonus increases by 10%. (HP > 70% condition omitted — HP tracking not yet implemented.)",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.encore.liberation.cosmos-rave",
+        on: "target",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
       id: "char.encore.passive.woolies-cheer-dance",
       name: "Woolies Cheer Dance",
       description:
@@ -55,24 +76,20 @@ export const encore = {
       effects: [],
     },
     {
-      id: "char.encore.s4.adventure-lets-go",
-      name: "Adventure? Let's go!",
+      id: "char.encore.s1.woolys-fairy-tale",
+      name: "Wooly's Fairy Tale",
       description:
-        "When Encore uses Cosmos Rupture, all team members gain +20% Fusion DMG Bonus for 30s.",
-      requiresSequence: 4,
-      trigger: {
-        event: "skillCast",
-        characterId: 1203,
-        stageId: "Black & White Woolies::Cosmos Rupture",
-      },
-      target: { kind: "team" },
-      duration: { kind: "seconds", v: 30 },
-      stacking: { max: 1, onRetrigger: "refresh" },
+        "When Encore uses a Basic Attack, she gains 1 stack of Wooly's Fairy Tale, up to 4 stacks. Each stack increases Fusion DMG Bonus by 3% for 6s.",
+      requiresSequence: 1,
+      trigger: { event: "hitLanded", actor: "self", skillType: "Basic Attack" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 6 },
+      stacking: { max: 4, onRetrigger: "addStack" },
       effects: [
         {
           kind: "stat",
           path: { stat: "elementBonus", key: "Fusion" },
-          value: { kind: "const", v: 0.2 },
+          value: { kind: "perStack", v: 0.03 },
         },
       ],
     },
@@ -104,23 +121,24 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.passive.angry-cosmos",
-      name: "Angry Cosmos",
+      id: "char.encore.s4.adventure-lets-go",
+      name: "Adventure? Let's go!",
       description:
-        "During Cosmos Rave, Encore's All DMG Bonus increases by 10%. (HP > 70% condition omitted — HP tracking not yet implemented.)",
-      trigger: { event: "simStart" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      condition: {
-        kind: "buffActive",
-        buffId: "char.encore.liberation.cosmos-rave",
-        on: "target",
+        "When Encore uses Cosmos Rupture, all team members gain +20% Fusion DMG Bonus for 30s.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        stageId: "Black & White Woolies::Cosmos Rupture",
       },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 30 },
+      stacking: { max: 1, onRetrigger: "refresh" },
       effects: [
         {
           kind: "stat",
-          path: { stat: "allDmgBonus" },
-          value: { kind: "const", v: 0.1 },
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.2 },
         },
       ],
     },
@@ -144,24 +162,6 @@ export const encore = {
           kind: "stat",
           path: { stat: "atkPct" },
           value: { kind: "perStack", v: 0.05 },
-        },
-      ],
-    },
-    {
-      id: "char.encore.s1.woolys-fairy-tale",
-      name: "Wooly's Fairy Tale",
-      description:
-        "When Encore uses a Basic Attack, she gains 1 stack of Wooly's Fairy Tale, up to 4 stacks. Each stack increases Fusion DMG Bonus by 3% for 6s.",
-      requiresSequence: 1,
-      trigger: { event: "hitLanded", actor: "self", skillType: "Basic Attack" },
-      target: { kind: "self" },
-      duration: { kind: "seconds", v: 6 },
-      stacking: { max: 4, onRetrigger: "addStack" },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "elementBonus", key: "Fusion" },
-          value: { kind: "perStack", v: 0.03 },
         },
       ],
     },
