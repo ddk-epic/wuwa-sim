@@ -556,7 +556,6 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 1 DMG",
           newName: "Cosmos: Frolicking Stage 1",
           value: "90.18%*2",
-          replacesSkillType: "Normal Attack",
           actionTime: 22,
           damage: [
             {
@@ -590,7 +589,6 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 2 DMG",
           newName: "Cosmos: Frolicking Stage 2",
           value: "56.40%*3",
-          replacesSkillType: "Normal Attack",
           actionTime: 54,
           damage: [
             {
@@ -635,7 +633,6 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 3 DMG",
           newName: "Cosmos: Frolicking Stage 3",
           value: "65.99%*4",
-          replacesSkillType: "Normal Attack",
           actionTime: 48,
           damage: [
             {
@@ -691,7 +688,6 @@ export const encore = {
           name: "Stage 4 DMG",
           newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
-          replacesSkillType: "Normal Attack",
           actionTime: 107,
           damage: [
             {
@@ -736,7 +732,6 @@ export const encore = {
           name: "Cosmos: Heavy Attack DMG",
           newName: "Cosmos: Heavy Attack",
           value: "217.58%",
-          replacesSkillType: "Normal Attack",
           hidden: true,
           actionTime: 0,
           damage: [
@@ -757,7 +752,6 @@ export const encore = {
           name: "Cosmos Rampage Damage",
           newName: "Cosmos Rampage",
           value: "63.32%*4",
-          replacesSkillType: "Resonance Skill",
           cooldown: 4,
           actionTime: 47,
           damage: [
@@ -814,7 +808,6 @@ export const encore = {
           name: "Cosmos: Dodge Counter DMG",
           newName: "Cosmos: Dodge Counter",
           value: "65.99%*4",
-          replacesSkillType: "Normal Attack",
           hidden: true,
           actionTime: 0,
           damage: [

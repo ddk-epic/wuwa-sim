@@ -1,4 +1,6 @@
-export const STAGE_TYPE_LABELS: Record<string, string> = {
+import type { SkillType } from "#/types/character"
+
+export const STAGE_TYPE_LABELS: Record<SkillType, string> = {
   "Basic Attack": "BASIC",
   "Heavy Attack": "HEAVY",
   "Resonance Skill": "SKILL",
@@ -10,5 +12,5 @@ export const STAGE_TYPE_LABELS: Record<string, string> = {
 }
 
 export function formatSkillType(raw: string): string {
-  return STAGE_TYPE_LABELS[raw] ?? raw
+  return STAGE_TYPE_LABELS[raw as SkillType] ?? raw
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { SkillType } from "#/types/character"
 import type { ActiveBuff } from "#/types/simulation-log"
 import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"
@@ -186,7 +187,7 @@ describe("computeFormulaBreakdown", () => {
       damage: 0,
       element: "Fusion",
       dmgType: "Damage",
-      skillType: "Basic Attack",
+      skillType: "Basic Attack" as SkillType,
       multiplier: 1,
       statsSnapshot: s,
     }
@@ -200,7 +201,7 @@ describe("computeFormulaBreakdown", () => {
       damage: 0,
       element: "Fusion",
       dmgType: "Damage",
-      skillType: "Basic Attack",
+      skillType: "Basic Attack" as SkillType,
       multiplier: 1,
       statsSnapshot: s,
     }

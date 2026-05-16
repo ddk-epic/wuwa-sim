@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { stringmaster } from "#/data/weapons/stringmaster"
-import type { EnrichedCharacter } from "#/types/character"
+import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { EnrichedWeapon } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
@@ -737,7 +737,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(lifecycleEvents).toEqual([])
@@ -833,13 +833,13 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     const second = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 10,
     })
     // Second event re-triggers both buffs (one for each source) — both target=1, same id, so refresh.
@@ -872,7 +872,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 5,
     })
@@ -924,7 +924,7 @@ describe("BuffEngine — implicit swap inference (#57)", () => {
     const first = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(first.lifecycleEvents).toEqual([])
@@ -935,7 +935,7 @@ describe("BuffEngine — implicit swap inference (#57)", () => {
     const second = engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 100,
     })
     expect(engine.getOnFieldCharacterId()).toBe(2)
@@ -977,7 +977,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     // Cast outro: trigger fires but nothing materializes yet.
@@ -995,7 +995,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     const swap = engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 60,
     })
     const applied = swap.lifecycleEvents.find(
@@ -1037,7 +1037,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4 + BASE_ATK_PCT)
@@ -1046,7 +1046,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 50,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
@@ -1081,7 +1081,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
@@ -1090,7 +1090,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 50,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.24 + BASE_ATK_PCT)
@@ -1128,7 +1128,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.activeBuffs(1).map((b) => b.id)).not.toContain(
@@ -1139,7 +1139,7 @@ describe("BuffEngine — condition gating (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 50,
     })
     expect(engine.activeBuffs(1).map((b) => b.id)).toContain(
@@ -1175,7 +1175,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
@@ -1185,7 +1185,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
     const swap = engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 100,
     })
     const expired = swap.lifecycleEvents.filter(
@@ -1208,7 +1208,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 5,
@@ -1217,7 +1217,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 10,
       energy: 3,
@@ -1275,7 +1275,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -1313,7 +1313,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const a = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       concerto: 50,
@@ -1325,7 +1325,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const b = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 10,
       concerto: 60,
@@ -1338,7 +1338,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const c = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 20,
       concerto: 10,
@@ -1380,7 +1380,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -1408,7 +1408,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 200,
@@ -1436,7 +1436,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -1488,7 +1488,7 @@ describe("BuffEngine — resource state (#58)", () => {
         {
           kind: "emitHit",
           damage: {
-            type: "ATK",
+            type: "Basic Attack",
             dmgType: "Fusion",
             scalingStat: "atk",
             actionFrame: 0,
@@ -1513,7 +1513,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(result.syntheticHits).toHaveLength(1)
@@ -1560,7 +1560,7 @@ describe("BuffEngine — resource state (#58)", () => {
         {
           kind: "emitHit",
           damage: {
-            type: "ATK",
+            type: "Basic Attack",
             dmgType: "Fusion",
             scalingStat: "atk",
             actionFrame: 0,
@@ -1584,7 +1584,7 @@ describe("BuffEngine — resource state (#58)", () => {
         {
           kind: "emitHit",
           damage: {
-            type: "ATK",
+            type: "Basic Attack",
             dmgType: "Fusion",
             scalingStat: "atk",
             actionFrame: 0,
@@ -1610,7 +1610,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     // resourceCrossed fires chainer (synthetic #1, depth 1). That synthetic
@@ -1638,7 +1638,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -1661,7 +1661,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -1682,7 +1682,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -1702,7 +1702,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       concerto: 8,
@@ -1721,7 +1721,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -1742,7 +1742,7 @@ describe("BuffEngine — stacking policies (#59)", () => {
   ): BuffDef => ({
     id: "char.stacker",
     name: "Stacker",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Normal Attack" },
+    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
     target: { kind: "self" },
     duration: { kind: "frames", v: 100 },
     stacking: { max, onRetrigger },
@@ -1759,7 +1759,7 @@ describe("BuffEngine — stacking policies (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame,
     })
 
@@ -1877,7 +1877,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
   const perStackBuff: BuffDef = {
     id: "char.frost-marks",
     name: "Frost Marks",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Normal Attack" },
+    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
     target: { kind: "self" },
     duration: { kind: "frames", v: 600 },
     stacking: { max: 4, onRetrigger: "addStack" },
@@ -1900,21 +1900,21 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 10,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 20,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
@@ -1942,7 +1942,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
@@ -1950,13 +1950,13 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 10,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 20,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
@@ -1986,7 +1986,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
@@ -1999,7 +1999,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Normal Attack",
+        skillType: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 100 },
@@ -2021,14 +2021,14 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 50,
     })
     // Replace creates a fresh instance with stacks=1 → snapshot stays at 0.07.
@@ -2044,8 +2044,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       energy: number
       concerto: number
     }> = {},
-  ) => ({
-    type: "ATK",
+  ): DamageEntry => ({
+    type: "Basic Attack",
     dmgType: "Fusion",
     scalingStat: "atk",
     actionFrame: 0,
@@ -2086,7 +2086,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2112,7 +2112,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const a = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2120,7 +2120,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const b = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
     })
@@ -2128,7 +2128,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const c = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 60,
     })
@@ -2156,7 +2156,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2185,7 +2185,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2217,14 +2217,14 @@ describe("BuffEngine — emitHit (#60)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.getOnFieldCharacterId()).toBe(1)
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 5,
     })
@@ -2280,7 +2280,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2318,7 +2318,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2352,7 +2352,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
       energy: 5,
@@ -2562,7 +2562,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
         {
           kind: "emitHit",
           damage: {
-            type: "ATK",
+            type: "Basic Attack",
             dmgType: "Fusion",
             scalingStat: "atk",
             actionFrame: 0,
@@ -2691,7 +2691,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Normal Attack",
+        skillType: "Basic Attack",
       },
       duration: { kind: "frames", v: 600 },
       condition: undefined,
@@ -2708,7 +2708,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       engine.onEvent({
         kind: "skillCast",
         characterId: 1,
-        skillType: "Normal Attack",
+        skillType: "Basic Attack",
         frame: 0,
       })
       expect(info).toHaveBeenCalled()
@@ -2728,7 +2728,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Normal Attack",
+        skillType: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 600 },
@@ -2752,7 +2752,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       engine.onEvent({
         kind: "skillCast",
         characterId: 1,
-        skillType: "Normal Attack",
+        skillType: "Basic Attack",
         frame: 0,
       })
       expect(info).not.toHaveBeenCalled()
@@ -2776,7 +2776,11 @@ describe("BuffEngine — phase pipeline as data", () => {
     const resourceBuff: BuffDef = {
       id: "char.test.aResource",
       name: "Adds Concerto",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Basic" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [
@@ -2792,7 +2796,11 @@ describe("BuffEngine — phase pipeline as data", () => {
     const statBuff: BuffDef = {
       id: "char.test.bStat",
       name: "Conditional ATK%",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Basic" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
       condition: {
@@ -2821,7 +2829,7 @@ describe("BuffEngine — phase pipeline as data", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic",
+      skillType: "Basic Attack",
       frame: 0,
     })
 
@@ -2859,7 +2867,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
     const oldDispatch = oldEngine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
       energy: 5,
@@ -2876,7 +2884,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
     const dispatch = newEngine.recordHit({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
       energy: 5,
@@ -2920,7 +2928,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
 
@@ -2976,7 +2984,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.6 + BASE_ATK_PCT)
@@ -3033,7 +3041,7 @@ describe("BuffEngine — frame-scoped condition memoization (#68)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 60,
@@ -3240,7 +3248,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     const baseAtk = engine.resolveStats(1).atkPct
@@ -3291,7 +3299,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
@@ -3300,7 +3308,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 60,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.12)
@@ -3315,13 +3323,13 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       frame: 60,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.24)
@@ -3416,10 +3424,10 @@ describe("BuffEngine.passiveBuffs", () => {
 })
 
 describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#117)", () => {
-  const dmg = () => ({
-    type: "ATK",
+  const dmg = (): DamageEntry => ({
+    type: "Basic Attack",
     dmgType: "Fusion",
-    scalingStat: "atk" as const,
+    scalingStat: "atk",
     actionFrame: 0,
     value: 1.0,
     energy: 0,
@@ -3517,10 +3525,10 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
 })
 
 describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () => {
-  const dmg = () => ({
-    type: "ATK",
+  const dmg = (): DamageEntry => ({
+    type: "Basic Attack",
     dmgType: "Fusion",
-    scalingStat: "atk" as const,
+    scalingStat: "atk",
     actionFrame: 0,
     value: 1.0,
     energy: 0,

@@ -98,7 +98,7 @@ export class EmitHitDispatcher {
     const stats = host.resolveStats(input.sourceCharacterId)
     const character = getCharacterById(input.sourceCharacterId)
     const element = input.effect.element ?? character?.element ?? ""
-    const skillType = input.effect.skillType ?? "Coordinated Attack"
+    const skillType = input.effect.skillType ?? "Basic Attack"
     const damage = computeDamage(
       {
         multiplier: input.effect.damage.value,

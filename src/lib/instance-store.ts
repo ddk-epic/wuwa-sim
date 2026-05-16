@@ -5,6 +5,7 @@ import type {
   StackingPolicy,
   Trigger,
 } from "#/types/buff"
+import type { SkillType } from "#/types/character"
 import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
@@ -23,7 +24,7 @@ export type EngineEvent =
   | {
       kind: "skillCast"
       characterId: number
-      skillType: string
+      skillType: SkillType
       stageId?: string
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
@@ -34,7 +35,7 @@ export type EngineEvent =
   | {
       kind: "hitLanded"
       characterId: number
-      skillType: string
+      skillType: SkillType
       dmgType: string
       synthetic?: boolean
       frame: number
@@ -481,8 +482,11 @@ export function matchesTrigger(
     ) {
       return false
     }
-    if (trigger.skillType && trigger.skillType !== event.skillType) {
-      return false
+    if (trigger.skillType !== undefined) {
+      const types = Array.isArray(trigger.skillType)
+        ? trigger.skillType
+        : [trigger.skillType]
+      if (!types.includes(event.skillType)) return false
     }
     if (trigger.stageId !== undefined) {
       const sid = event.stageId
@@ -525,8 +529,11 @@ export function matchesTrigger(
     ) {
       return false
     }
-    if (trigger.skillType && trigger.skillType !== event.skillType) {
-      return false
+    if (trigger.skillType !== undefined) {
+      const types = Array.isArray(trigger.skillType)
+        ? trigger.skillType
+        : [trigger.skillType]
+      if (!types.includes(event.skillType)) return false
     }
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
       return false

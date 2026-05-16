@@ -7,6 +7,8 @@ import type {
   DamageEntry,
   Skill,
   SkillAttribute,
+  SkillCategory,
+  SkillType,
   StatGroup,
 } from "../src/types/character.js"
 
@@ -120,7 +122,7 @@ function parseValue(rateStr: string): number {
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   return (damageList ?? []).map((entry) => ({
-    type: entry.Type,
+    type: entry.Type as SkillType,
     dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
     actionFrame: 0,
@@ -293,7 +295,7 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
     return {
       id: skill.SkillId,
       name: skill.SkillName,
-      type: skill.SkillType,
+      type: skill.SkillType as SkillCategory,
       ...(cooldown !== undefined && { cooldown }),
       ...(duration !== undefined && { duration }),
       ...(concerto !== undefined && { concerto }),

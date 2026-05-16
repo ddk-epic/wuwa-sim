@@ -1,4 +1,10 @@
-import type { DamageEntry, VariantKind, StageVariant } from "#/types/character"
+import type {
+  DamageEntry,
+  SkillCategory,
+  SkillType,
+  VariantKind,
+  StageVariant,
+} from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./catalog"
@@ -16,9 +22,8 @@ export interface ResolvedStage {
   concerto: number
   resonanceCost?: number
   damage: DamageEntry[]
-  skillType: string
+  skillType: SkillType
   skillName: string
-  attackType: string
   requiresStageId?: string
 }
 
@@ -30,6 +35,17 @@ export function stageLabel(skillName: string, newName?: string): string {
   if (!newName) return skillName
   if (newName.startsWith("(")) return `${skillName} ${newName}`
   return `${skillName} · ${newName}`
+}
+
+function categoryToSkillType(cat: SkillCategory): SkillType {
+  if (
+    cat === "Normal Attack" ||
+    cat === "Inherent Skill" ||
+    cat === "Tune Break"
+  ) {
+    return "Basic Attack"
+  }
+  return cat
 }
 
 export function findStageByEntry(
@@ -51,9 +67,8 @@ export function findStageByEntry(
             concerto: s.concerto ?? 0,
             resonanceCost: skill.resonanceCost,
             damage: s.damage ?? [],
-            skillType: s.replacesSkillType ?? skill.type,
+            skillType: s.damage?.[0]?.type ?? categoryToSkillType(skill.type),
             skillName: stageLabel(skill.name, s.newName),
-            attackType: s.damage?.[0]?.type ?? skill.type,
             requiresStageId: s.requiresStageId,
           }
         }
@@ -76,7 +91,6 @@ export function findStageByEntry(
           damage: s.damage,
           skillType: "Echo Skill",
           skillName: stageLabel(echo.name, s.newName),
-          attackType: s.damage[0]?.type ?? "Echo Skill",
         }
       }
     }

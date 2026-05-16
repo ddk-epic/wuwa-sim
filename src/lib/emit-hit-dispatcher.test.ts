@@ -41,7 +41,7 @@ const def: BuffDef = {
 const effect: EmitHitEffect = {
   kind: "emitHit",
   damage: {
-    type: "ATK",
+    type: "Basic Attack",
     dmgType: "Fusion",
     scalingStat: "atk",
     actionFrame: 0,

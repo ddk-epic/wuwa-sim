@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EnrichedCharacter } from "#/types/character"
+import type {
+  DamageEntry,
+  EnrichedCharacter,
+  SkillType,
+} from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
@@ -19,8 +23,13 @@ const BASE_ER =
 const BASE_ELEM_BONUS =
   ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
-const dmgHit = (value: number, energy = 0, concerto = 0) => ({
-  type: "ATK",
+const dmgHit = (
+  value: number,
+  energy = 0,
+  concerto = 0,
+  type: SkillType = "Basic Attack",
+): DamageEntry => ({
+  type,
   dmgType: "Fusion",
   scalingStat: "atk",
   actionFrame: 0,
@@ -191,7 +200,7 @@ describe("generateSimulationLog — single hit", () => {
     expect(result[0]).toEqual({
       kind: "action",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       skillName: "Normal Attack",
       frame: 0,
       cumulativeEnergy: 0,
@@ -200,7 +209,7 @@ describe("generateSimulationLog — single hit", () => {
     expect(result[1]).toMatchObject({
       kind: "hit",
       characterId: 1,
-      skillType: "Normal Attack",
+      skillType: "Basic Attack",
       skillName: "Normal Attack [hit 1]",
       frame: 0,
       cumulativeEnergy: 5,
@@ -488,7 +497,7 @@ describe("generateSimulationLog — buff lifecycle interleaving", () => {
               name: "Skill",
               value: "100%",
               actionTime: 30,
-              damage: [dmgHit(1.0, 0, 0)],
+              damage: [dmgHit(1.0, 0, 0, "Intro Skill")],
             },
           ],
           damage: [],
@@ -502,7 +511,7 @@ describe("generateSimulationLog — buff lifecycle interleaving", () => {
               name: "Skill",
               value: "100%",
               actionTime: 30,
-              damage: [dmgHit(1.0, 0, 0)],
+              damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
             },
           ],
           damage: [],
@@ -557,7 +566,7 @@ describe("generateSimulationLog — emitHit pilot (#60)", () => {
           kind: "emitHit",
           damage: dmgHit(0.5),
           icdFrames: 0,
-          skillType: "Coordinated Attack",
+          skillType: "Basic Attack",
         },
       ],
     }
@@ -577,7 +586,7 @@ describe("generateSimulationLog — emitHit pilot (#60)", () => {
     if (synth && synth.kind === "hit") {
       expect(synth.characterId).toBe(1)
       expect(synth.sourceBuffId).toBe("char.coord")
-      expect(synth.skillType).toBe("Coordinated Attack")
+      expect(synth.skillType).toBe("Basic Attack")
     }
   })
 })
@@ -697,8 +706,8 @@ describe("generateSimulationLog — stage variants (ADR 0008)", () => {
   })
 })
 
-describe("generateSimulationLog — replacesSkillType (#87)", () => {
-  const liberationHit = (type: string) => ({
+describe("generateSimulationLog — skillType derivation from damage[0].type", () => {
+  const libHit = (type: SkillType) => ({
     type,
     dmgType: "Damage",
     scalingStat: "ATK",
@@ -733,17 +742,15 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
             name: "Frolicking Stage",
             newName: "Frolicking Stage",
             value: "100%",
-            replacesSkillType: "Normal Attack",
             actionTime: 30,
-            damage: [liberationHit("Basic Attack")],
+            damage: [libHit("Basic Attack")],
           },
           {
             name: "Rampage Stage",
             newName: "Rampage Stage",
             value: "100%",
-            replacesSkillType: "Resonance Skill",
             actionTime: 30,
-            damage: [liberationHit("Resonance Skill")],
+            damage: [libHit("Resonance Skill")],
           },
         ],
         damage: [],
@@ -751,7 +758,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     ],
   }
 
-  it("resolveStage uses replacesSkillType for the action event skillType", () => {
+  it("skillType on action event is damage[0].type — Frolicking Stage reports Basic Attack", () => {
     testCharacters = [charWithLiberation]
     const result = generateSimulationLog(
       [tlEntry(50, "Liberation::Frolicking Stage")],
@@ -759,10 +766,21 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
       emptyLoadouts,
     )
     const action = result.find((e) => e.kind === "action")
-    expect(action?.skillType).toBe("Normal Attack")
+    expect(action?.skillType).toBe("Basic Attack")
   })
 
-  it("skillCast trigger with replacesSkillType fires on correct skill type", () => {
+  it("skillType on action event is damage[0].type — Rampage Stage reports Resonance Skill", () => {
+    testCharacters = [charWithLiberation]
+    const result = generateSimulationLog(
+      [tlEntry(50, "Liberation::Rampage Stage")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.skillType).toBe("Resonance Skill")
+  })
+
+  it("skillCast trigger fires on skill type derived from damage[0].type", () => {
     const buff: BuffDef = {
       id: "test.cheer-dance",
       name: "Cheer Dance",
@@ -799,7 +817,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
     )
     expect(buffApplied).toBeDefined()
     const frolickingHit = result.find(
-      (e) => e.kind === "hit" && e.skillType === "Normal Attack",
+      (e) => e.kind === "hit" && e.skillType === "Basic Attack",
     ) as HitEvent | undefined
     expect(frolickingHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(
       BASE_ELEM_BONUS,
@@ -855,14 +873,14 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
               name: "Stage 1",
               value: "100%",
               actionTime: 30,
-              damage: [liberationHit("Basic Attack")],
+              damage: [libHit("Basic Attack")],
             },
             {
               name: "Heavy Attack",
               newName: "Heavy Attack",
               value: "200%",
               actionTime: 30,
-              damage: [liberationHit("Heavy Attack")],
+              damage: [libHit("Heavy Attack")],
             },
           ],
           damage: [],
@@ -896,7 +914,7 @@ describe("generateSimulationLog — replacesSkillType (#87)", () => {
 })
 
 describe("generateSimulationLog — stageId trigger filter (#89)", () => {
-  const hit = () => ({
+  const hit = (): DamageEntry => ({
     type: "Basic Attack",
     dmgType: "Damage",
     scalingStat: "ATK",
@@ -1109,7 +1127,7 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
           kind: "emitHit",
           damage: { ...dmgHit(0.5, 10), dmgType: "Fusion" },
           icdFrames: 0,
-          skillType: "Coordinated Attack",
+          skillType: "Basic Attack",
         },
       ],
     }

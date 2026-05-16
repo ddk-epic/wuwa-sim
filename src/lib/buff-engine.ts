@@ -402,7 +402,7 @@ export class BuffEngine {
       {
         kind: "hitLanded",
         characterId: sourceCharacterId,
-        skillType: effect.skillType ?? "Coordinated Attack",
+        skillType: effect.skillType ?? "Basic Attack",
         dmgType: effect.damage.dmgType,
         synthetic: true,
         sourceBuffId: def.id,

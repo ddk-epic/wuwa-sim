@@ -1,4 +1,8 @@
-import type { EnrichedSkillAttribute } from "#/types/character"
+import type {
+  EnrichedSkillAttribute,
+  SkillCategory,
+  SkillType,
+} from "#/types/character"
 import type { EnrichedEchoStage } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
@@ -19,6 +23,17 @@ export interface FocusedStageCatalog {
 }
 
 const EMPTY: FocusedStageCatalog = { echoStages: [], characterStages: [] }
+
+function categoryToSkillType(cat: SkillCategory): SkillType {
+  if (
+    cat === "Normal Attack" ||
+    cat === "Inherent Skill" ||
+    cat === "Tune Break"
+  ) {
+    return "Basic Attack"
+  }
+  return cat
+}
 
 export function getFocusedStageCatalog(
   slots: Slots,
@@ -62,12 +77,12 @@ function buildEchoStage(
   stage: EnrichedEchoStage,
   key: string,
 ): FocusedStage {
-  const attackType = stage.damage[0]?.type ?? "Echo Skill"
+  const skillType = stage.damage[0]?.type ?? "Echo Skill"
   const label = skillLabel(echoName, stage.newName)
   return {
     key,
     label,
-    typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
+    typeLabel: STAGE_TYPE_LABELS[skillType],
     clickPayload: {
       characterId,
       stageId: makeStageId(echoName, stage.newName),
@@ -76,17 +91,17 @@ function buildEchoStage(
 }
 
 function buildCharacterStage(
-  skill: { name: string; type: string },
+  skill: { name: string; type: SkillCategory },
   characterId: number,
   stage: EnrichedSkillAttribute,
   key: string,
 ): FocusedStage {
-  const attackType = stage.damage?.[0]?.type ?? skill.type
+  const skillType = stage.damage?.[0]?.type ?? categoryToSkillType(skill.type)
   const label = skillLabel(skill.name, stage.newName)
   return {
     key,
     label,
-    typeLabel: STAGE_TYPE_LABELS[attackType] ?? "",
+    typeLabel: STAGE_TYPE_LABELS[skillType],
     clickPayload: {
       characterId,
       stageId: makeStageId(skill.name, stage.newName),

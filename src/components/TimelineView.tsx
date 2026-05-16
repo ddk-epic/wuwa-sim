@@ -131,7 +131,7 @@ export function TimelineView({
                 <td className="px-3 py-2 text-gray-400">{i + 1}</td>
                 <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
                 <td className="px-3 py-2 text-gray-300">
-                  {resolved?.attackType ?? "—"}
+                  {resolved?.skillType ?? "—"}
                 </td>
                 <td className="px-3 py-2 text-gray-200">
                   <div className="flex items-center gap-1.5 flex-wrap">

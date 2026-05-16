@@ -2,7 +2,7 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Echo, EchoSkill } from "../src/types/echo.js"
-import type { DamageEntry } from "../src/types/character.js"
+import type { DamageEntry, SkillType } from "../src/types/character.js"
 import type { EchoSet } from "../src/types/echo-set.js"
 
 const PROJECT_ROOT = path.resolve(
@@ -79,7 +79,7 @@ function stripHtml(html: string): string {
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
   return (damageList ?? []).map((entry) => ({
-    type: entry.Type,
+    type: entry.Type as SkillType,
     dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
     actionFrame: 0,

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EnrichedCharacter } from "#/types/character"
+import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { EnrichedSkillAttribute } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -112,7 +112,7 @@ describe("findStageByEntry — character skill", () => {
     ])
     expect(result).not.toBeNull()
     expect(result?.stageName).toBe("Stage 1")
-    expect(result?.skillType).toBe("Normal Attack")
+    expect(result?.skillType).toBe("Basic Attack")
   })
 
   it("resolves a stage with an explicit newName", () => {
@@ -256,7 +256,7 @@ describe("resolveStageExecution — instantCancel variant", () => {
 
 describe("resolveStageExecution — damage filtering", () => {
   it("returns all damage when no variant", () => {
-    const damage = [
+    const damage: DamageEntry[] = [
       {
         type: "Basic Attack",
         dmgType: "Damage",
@@ -285,7 +285,7 @@ describe("resolveStageExecution — damage filtering", () => {
   })
 
   it("filters hits beyond variant cutoff", () => {
-    const damage = [
+    const damage: DamageEntry[] = [
       {
         type: "Basic Attack",
         dmgType: "Damage",

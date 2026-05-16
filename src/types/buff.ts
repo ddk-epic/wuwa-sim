@@ -1,4 +1,4 @@
-import type { DamageEntry } from "./character"
+import type { DamageEntry, SkillType } from "./character"
 
 export type StatPath =
   | {
@@ -42,7 +42,7 @@ export type EmitHitEffect = {
   damage: DamageEntry
   icdFrames: number
   /** Skill type label used for triggers and log rendering. */
-  skillType?: string
+  skillType?: SkillType
   /** Element override; defaults to source character's element. */
   element?: string
 }
@@ -66,14 +66,14 @@ export type Trigger =
       event: "skillCast"
       actor?: "self" | "any"
       characterId?: number
-      skillType?: string
+      skillType?: SkillType | SkillType[]
       stageId?: string | string[]
     }
   | {
       event: "hitLanded"
       actor?: "self" | "any"
       characterId?: number
-      skillType?: string
+      skillType?: SkillType | SkillType[]
       dmgType?: string
       source?: TriggerSource
       stage?: string

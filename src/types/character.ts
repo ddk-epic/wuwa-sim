@@ -1,5 +1,22 @@
 import type { BuffDef } from "./buff"
 
+export type SkillType =
+  | "Basic Attack"
+  | "Heavy Attack"
+  | "Resonance Skill"
+  | "Resonance Liberation"
+  | "Forte Circuit"
+  | "Intro Skill"
+  | "Outro Skill"
+  | "Echo Skill"
+
+/** UI grouping labels for skills — not engine types. */
+export type SkillCategory =
+  | SkillType
+  | "Normal Attack"
+  | "Inherent Skill"
+  | "Tune Break"
+
 export interface StatGroup {
   hp: number
   atk: number
@@ -21,7 +38,7 @@ export interface SkillAttribute {
 }
 
 export interface DamageEntry {
-  type: string
+  type: SkillType
   dmgType: string
   scalingStat: string
   actionFrame: number
@@ -35,7 +52,7 @@ export interface DamageEntry {
 export interface Skill {
   id: number
   name: string
-  type: string
+  type: SkillCategory
   cooldown?: number
   duration?: number
   concerto?: number
@@ -70,7 +87,6 @@ export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
   hidden?: boolean
   newName?: string
   requiresStageId?: string
-  replacesSkillType?: string
   variants?: Partial<Record<VariantKind, StageVariant>>
 }
 

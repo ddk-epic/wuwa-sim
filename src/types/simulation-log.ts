@@ -1,9 +1,9 @@
 import type { StatTable } from "./stat-table"
-import type { VariantKind } from "./character"
+import type { SkillType, VariantKind } from "./character"
 
 interface SimulationLogBase {
   characterId: number
-  skillType: string
+  skillType: SkillType
   skillName: string
   frame: number
   cumulativeEnergy: number

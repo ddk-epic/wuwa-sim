@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EnrichedCharacter } from "#/types/character"
+import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 
 import { getTimelineSummary } from "./timeline-summary"
 
-const dmgEntry = (value: number) => ({
-  type: "ATK",
+const dmgEntry = (value: number): DamageEntry => ({
+  type: "Basic Attack",
   dmgType: "Fusion",
   scalingStat: "ATK",
   actionFrame: 0,
@@ -60,14 +60,14 @@ const charA: EnrichedCharacter = {
     {
       id: 4,
       name: "No Damage Skill",
-      type: "No Damage Skill",
+      type: "Forte Circuit",
       stages: [{ name: "", value: "0", actionTime: 60, damage: [] }],
       damage: [],
     },
     {
       id: 5,
       name: "Instant Skill",
-      type: "Instant Skill",
+      type: "Resonance Skill",
       stages: [
         { name: "", value: "1", actionTime: 0, damage: [dmgEntry(1.0)] },
       ],
