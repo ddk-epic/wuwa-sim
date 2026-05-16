@@ -33,7 +33,7 @@ export type EngineEvent =
       dmgType: string
       synthetic?: boolean
       frame: number
-      stage?: string
+      stageId?: string
       hitIndex?: number
       /** Per-hit energy gained by the actor. Implicit `resource` effect. */
       energy?: number
@@ -503,8 +503,13 @@ export function matchesTrigger(
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
       return false
     }
-    if (trigger.stage !== undefined && trigger.stage !== event.stage) {
-      return false
+    if (trigger.stageId !== undefined) {
+      const sid = event.stageId
+      if (!sid) return false
+      const ids = Array.isArray(trigger.stageId)
+        ? trigger.stageId
+        : [trigger.stageId]
+      if (!ids.includes(sid)) return false
     }
     if (trigger.hitIndex !== undefined && trigger.hitIndex !== event.hitIndex) {
       return false

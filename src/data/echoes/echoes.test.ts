@@ -72,7 +72,7 @@ const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
-  stage: "Tap",
+  stageId: "Inferno Rider::",
   hitIndex,
   frame,
 })
@@ -82,7 +82,7 @@ const holdHit = (frame: number): HitLandedEvent => ({
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
-  stage: "Hold",
+  stageId: "Inferno Rider::(Hold)",
   hitIndex: 1,
   frame,
 })

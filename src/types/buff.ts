@@ -76,7 +76,7 @@ export type Trigger =
       skillType?: SkillType | SkillType[]
       dmgType?: string
       source?: TriggerSource
-      stage?: string
+      stageId?: string | string[]
       hitIndex?: number
       sourceBuffId?: string | string[]
     }

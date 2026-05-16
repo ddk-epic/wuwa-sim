@@ -9,10 +9,16 @@ export const infernoRider = {
   buffs: [
     {
       id: "echo.inferno-rider.tap.fusion-basic-bonus",
-      name: "Inferno Rider — Fusion & Basic Attack",
+      name: "Inferno Rider (Fusion & Basic)",
       description:
         "After the 3rd Tap hit, the current Resonator gains +12% Fusion DMG and +12% Basic Attack DMG for 15s.",
-      trigger: { event: "hitLanded", stage: "Tap", hitIndex: 3 },
+      trigger: {
+        event: "hitLanded",
+        actor: "self",
+        source: "self",
+        stageId: "Inferno Rider::",
+        hitIndex: 3,
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 1, onRetrigger: "refresh" },

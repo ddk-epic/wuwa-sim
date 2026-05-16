@@ -80,7 +80,7 @@ export function generateSimulationLog(
         skillType: hit.type,
         dmgType: hit.dmgType,
         frame: hitFrame,
-        stage: resolved.stageName,
+        stageId: resolved.stageId,
         hitIndex: i + 1,
         energy: hit.energy,
         concerto: hit.concerto,

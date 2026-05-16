@@ -359,20 +359,24 @@ SkillType short forms:
 
 ### Triggers
 
-| `event`           | When it fires                                                                    |
-| ----------------- | -------------------------------------------------------------------------------- |
-| `simStart`        | Once at sim start. Used for permanent passives.                                  |
-| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillType`.                  |
-| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillType`, `dmgType`, `source`. |
-| `swapIn`          | A character swaps to on-field.                                                   |
-| `swapOut`         | A character swaps off-field.                                                     |
-| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.            |
+| `event`           | When it fires                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `simStart`        | Once at sim start. Used for permanent passives.                                                         |
+| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillType`.                                         |
+| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillType`, `dmgType`, `source`, `stageId`, `hitIndex`. |
+| `swapIn`          | A character swaps to on-field.                                                                          |
+| `swapOut`         | A character swaps off-field.                                                                            |
+| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                   |
 
 `skillType` on `skillCast` and `hitLanded` must be one of the eight engine values — see **SkillType values** below. `"Normal Attack"` is not a valid value (TypeScript will catch it).
 
 `actor`: `"self"` matches the _receiver_ of the buff (`target.kind: "self"`); `"any"` matches any character. Default behavior when omitted is type-defined.
 
 `source` on `hitLanded`: `"self"` = real hits the character performed, `"synthetic"` = injected via `emitHit`, `"any"` = both. Use `"self"` to avoid feedback loops where a buff-triggered synthetic hit re-triggers the same buff.
+
+`stageId` on `hitLanded`: narrows to hits from a specific stage, using the namespaced id `"<SkillOrEchoName>::<newName>"` (same format as `skillCast.stageId`). Accepts a single string or an array. Use this instead of a bare stage name to avoid cross-echo collisions — e.g., `stageId: "Inferno Rider::"` only matches the Inferno Rider Tap stage, not any other echo whose stage happens to share the same display name. Synthetic hits carry no `stageId`; a trigger with `stageId` set never matches synthetics.
+
+`hitIndex` on `hitLanded`: narrows to the Nth hit within the stage (1-based). Combine with `stageId` to target a specific hit in a specific stage (e.g., Inferno Rider 3rd Tap hit: `stageId: "Inferno Rider::", hitIndex: 3`). Mirrors `skillCast.stageId` authoring symmetry.
 
 ### Source-binding convention
 
