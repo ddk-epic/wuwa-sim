@@ -13,12 +13,17 @@ export const emeraldOfGenesis = {
     {
       id: "weapon.emerald-of-genesis.passive.energy-regen",
       name: "Stormy Resolution (ER)",
-      description:
-        "Energy Regen not modeled in v1 — energy regen lands with resource state in a future slice.",
+      description: "Permanent +12.8–25.6% Energy Regen.",
       trigger: { event: "simStart" },
       target: { kind: "self" },
       duration: { kind: "permanent" },
-      effects: [],
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyRechargePct" },
+          value: { kind: "const", v: [0.128, 0.16, 0.192, 0.224, 0.256] },
+        },
+      ],
     },
     {
       id: "weapon.emerald-of-genesis.passive.atk",

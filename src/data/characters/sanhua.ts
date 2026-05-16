@@ -156,7 +156,6 @@ export const sanhua = {
       effects: [
         {
           kind: "emitHit",
-          skillType: "Forte Circuit",
           icdFrames: 0,
           damage: {
             type: "Resonance Skill",
@@ -193,7 +192,6 @@ export const sanhua = {
       effects: [
         {
           kind: "emitHit",
-          skillType: "Forte Circuit",
           icdFrames: 0,
           damage: {
             type: "Resonance Skill",
@@ -230,7 +228,6 @@ export const sanhua = {
       effects: [
         {
           kind: "emitHit",
-          skillType: "Forte Circuit",
           icdFrames: 0,
           damage: {
             type: "Resonance Skill",
@@ -295,10 +292,10 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.sequence.s5",
-      name: "S5: Unraveling Fate",
+      id: "char.sanhua.s5.thorn-crit",
+      name: "S5: Unraveling Fate (Ice Thorn)",
       description:
-        "On Detonate's authored Heavy Attack hit, Crit DMG +100%, active during emitHit phase, consumed in same event. Requires Sequence 5.",
+        "When Ice Thorn detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
       requiresSequence: 5,
       trigger: {
         event: "hitLanded",
@@ -307,12 +304,65 @@ export const sanhua = {
         source: "self",
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
-      consumedBy: {
+      duration: { kind: "frames", v: 1 },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.flag.ice-thorn",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critDmg" },
+          value: { kind: "const", v: 1.0 },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.s5.prism-crit",
+      name: "S5: Unraveling Fate (Ice Prism)",
+      description:
+        "When Ice Prism detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
+      requiresSequence: 5,
+      trigger: {
         event: "hitLanded",
         characterId: 1102,
         skillType: "Heavy Attack",
         source: "self",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.flag.ice-prism",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critDmg" },
+          value: { kind: "const", v: 1.0 },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.s5.glacier-crit",
+      name: "S5: Unraveling Fate (Ice Glacier)",
+      description:
+        "When Ice Glacier detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
+      requiresSequence: 5,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        skillType: "Heavy Attack",
+        source: "self",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.flag.ice-glacier",
+        on: "source",
       },
       effects: [
         {

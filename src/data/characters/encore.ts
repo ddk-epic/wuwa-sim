@@ -113,7 +113,7 @@ export const encore = {
         ],
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
+      duration: { kind: "frames", v: 1 },
       stacking: { max: 1, onRetrigger: "refresh" },
       cooldown: 10,
       effects: [

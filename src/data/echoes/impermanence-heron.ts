@@ -8,7 +8,7 @@ export const impermanenceHeron = {
   set: "Moonlit Clouds",
   buffs: [
     {
-      id: "char.echo.impermanence-heron.window",
+      id: "echo.impermanence-heron.window",
       name: "Impermanence Heron Window",
       description:
         "After using Impermanence Heron echo skill, Outro within 15s is empowered.",
@@ -27,7 +27,7 @@ export const impermanenceHeron = {
       effects: [],
     },
     {
-      id: "char.echo.impermanence-heron.outro-dmg",
+      id: "echo.impermanence-heron.outro-dmg",
       name: "Impermanence Heron (Outro DMG)",
       description:
         "If Outro is cast within 15s of the echo skill, the next on-field Resonator gains +12% all DMG for 15s.",
@@ -40,7 +40,7 @@ export const impermanenceHeron = {
       duration: { kind: "seconds", v: 15 },
       condition: {
         kind: "buffActive",
-        buffId: "char.echo.impermanence-heron.window",
+        buffId: "echo.impermanence-heron.window",
         on: "source",
       },
       effects: [

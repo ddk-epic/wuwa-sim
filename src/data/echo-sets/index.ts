@@ -53,13 +53,18 @@ const moonlitClouds = {
     {
       id: "echo-set.moonlit-clouds.2pc.energy-regen",
       name: "Moonlit Clouds 2pc",
-      description:
-        "Permanent +10% Energy Regen. Not modeled in v1 (energy regen lands with resource state in slice 6).",
+      description: "Permanent +10% Energy Regen.",
       trigger: { event: "simStart" },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       requiresPieces: 2,
-      effects: [],
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyRechargePct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
     },
     {
       id: "echo-set.moonlit-clouds.5pc.next-atk",
