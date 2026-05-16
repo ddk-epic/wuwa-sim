@@ -119,7 +119,7 @@ The 0–100 swap-out resource. Hits add Concerto; reaching 100 enables Outro Ski
 **Resonance Energy** (commonly "Energy"):
 The per-character resource that gates **Resonance Liberation**. Two gain channels with different scaling:
 
-- **Damage Entry `energy`** — per-hit generation tied to in-game actions (Basic, Heavy, Skill, Liberation, Intro, Dodge Counter). Scaled by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`.
+- **Damage Entry `energy`** — per-hit generation read from each `DamageEntry.energy`. Any hit may grant energy (including Forte Circuit, Outro Skill, Echo Skill); data authors set `energy: 0` when the in-game source grants none. Scaled by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`.
 - **Buff `resource` Effect on energy** — flat grants from echoes (e.g. Impermanence Heron), weapons, Resonance Chain nodes, outros. Not ER-scaled.
   Sim deliberately does not cap energy — overflow is a useful optimization signal indicating the user has spare ER they could redirect to other stats.
   _Avoid_: confusing with the **Resonance** resource, a separate per-character counter on `ResourceState`.

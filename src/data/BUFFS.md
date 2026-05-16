@@ -374,6 +374,19 @@ SkillType short forms:
 
 `source` on `hitLanded`: `"self"` = real hits the character performed, `"synthetic"` = injected via `emitHit`, `"any"` = both. Use `"self"` to avoid feedback loops where a buff-triggered synthetic hit re-triggers the same buff.
 
+### Source-binding convention
+
+The trigger needs to know which character's actions should fire it. Two fields can express this — `characterId` (absolute) and `actor: "self"` (relative). They overlap in capability but encode different intent. Pick by where the BuffDef lives, not by what feels shorter:
+
+| BuffDef lives on…                                                         | Use                 | Why                                                                                                                                                                            |
+| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Character** (`src/data/characters/*.ts`)                                | `characterId: <id>` | The owner is known at author time. Hardcoding the ID makes the binding explicit and survives any future `target.kind` refactor that would change how `actor: "self"` resolves. |
+| **Weapon / Echo / Echo-set** (`src/data/{weapons,echoes,echo-sets}/*.ts`) | `actor: "self"`     | The wielder isn't known at author time; `actor: "self"` adapts to whoever equips the item.                                                                                     |
+
+Apply this on the buff's primary `trigger` **and** on any `consumedBy` filter (which is also a Trigger).
+
+For `hitLanded` triggers, **always set `source` explicitly** — `"self"` for real timeline hits, `"synthetic"` for emitHit-injected, `"any"` for both. The engine defaults to `"self"` when omitted, but the default hides intent and a future buff that emits hits can create feedback loops if the source filter wasn't declared deliberately.
+
 ### Targets
 
 | `kind`        | Who receives the buff                                  |
@@ -396,8 +409,8 @@ A buff's `effects` is an array; entries can mix kinds.
 
 **Stat paths** (`StatPath`):
 
-- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`
-- Keyed: `elementBonus` (key = element name), `skillTypeBonus` (key = `SkillType`), `deepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys
+- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`
+- Keyed: `elementBonus` (key = element name, or `"all"` as a wildcard that applies regardless of element), `skillTypeBonus` (key = `SkillType`), `deepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys
 
 **Value expressions** (`ValueExpr`):
 

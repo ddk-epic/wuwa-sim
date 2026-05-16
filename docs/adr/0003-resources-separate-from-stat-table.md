@@ -6,8 +6,8 @@ Energy, Concerto, Forte, and Resonance are stored on the Buff Engine as a per-ch
 
 - Hit-driven energy and concerto generation moves out of `simulation-log.ts` into the engine. A hit's `DamageEntry.energy` / `.concerto` are interpreted as implicit `resource`-kind effects fired on `hitLanded`, with the engine owning the accumulators.
 - A new Effect kind `resource` exists alongside `stat` and `emitHit`. Its phase ordering in dispatch is `resource → stat → emitHit`.
+- Energy gained from a `DamageEntry.energy` is scaled at gain time by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`. Concerto and other resources are not scaled. Flat resource grants from `resource`-kind buff effects are also unscaled (see CONTEXT.md "Resonance Energy" for the two gain channels and shared-energy semantics).
 
 ## Known limitations to revisit
 
-- **Resource gain buffing** (e.g. "+20% Energy Regen") is not modeled in v1. The current path reads `DamageEntry.energy` directly into the resource pool with no scaling step. Revisit when the first such buff is needed.
 - **Resonance Liberation cost gating** is not enforced; v1 computes Liberation damage even when energy < 100 and emits a console warning. Revisit if/when the timeline editor is taught to gate availability.
