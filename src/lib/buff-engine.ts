@@ -74,12 +74,19 @@ export interface BootstrapInput {
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
+type PendingOutroBuff = {
+  def: BuffDef
+  sourceCharacterId: number
+  triggerFrame: number
+}
+
 export class BuffEngine {
   private store = new InstanceStore()
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
   private cooldownLastFired = new Map<string, number>()
   private foldedBuffsMap = new Map<number, BuffDef[]>()
+  private pendingOutroBuffs: PendingOutroBuff[] = []
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -112,6 +119,57 @@ export class BuffEngine {
     return this.phases.map((p) => p.name)
   }
 
+  private deferOutroBuff(
+    def: BuffDef,
+    sourceCharacterId: number,
+    frame: number,
+  ): void {
+    this.pendingOutroBuffs.push({ def, sourceCharacterId, triggerFrame: frame })
+  }
+
+  private materializePending(
+    swapInEvent: Extract<EngineEvent, { kind: "swapIn" }>,
+    out: BuffEvent[],
+  ): void {
+    if (this.pendingOutroBuffs.length === 0) return
+    const pending = this.pendingOutroBuffs
+    this.pendingOutroBuffs = []
+    pending.sort((a, b) =>
+      a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0,
+    )
+    for (const p of pending) {
+      this.store.applyBuff(
+        p.def,
+        p.sourceCharacterId,
+        swapInEvent.characterId,
+        swapInEvent.frame,
+        out,
+      )
+    }
+  }
+
+  private applyOrDefer(
+    def: BuffDef,
+    sourceCharacterId: number,
+    frame: number,
+    out: BuffEvent[],
+  ): void {
+    if (def.target.kind === "nextOnField") {
+      if (
+        def.condition &&
+        !this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
+      ) {
+        return
+      }
+      this.deferOutroBuff(def, sourceCharacterId, frame)
+      return
+    }
+    const targetIds = this.store.resolveTargetIds(def, sourceCharacterId)
+    for (const targetId of targetIds) {
+      this.store.applyBuff(def, sourceCharacterId, targetId, frame, out)
+    }
+  }
+
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.store.clear()
     this.resources.clear()
@@ -119,6 +177,7 @@ export class BuffEngine {
     this.cooldownLastFired.clear()
     this.emitHitDispatcher.reset()
     this.foldedBuffsMap.clear()
+    this.pendingOutroBuffs = []
 
     const slots: number[] = []
     for (let i = 0; i < input.slots.length; i++) {
@@ -266,7 +325,7 @@ export class BuffEngine {
     }
 
     if (event.kind === "swapIn") {
-      this.store.drainPendingNextOnField(event.characterId, event.frame, out)
+      this.materializePending(event, out)
     }
 
     const rawCandidates = this.store.findCandidates(event)
@@ -321,32 +380,7 @@ export class BuffEngine {
 
   private runStatPhase(ctx: PhaseContext): void {
     for (const { def, sourceCharacterId } of ctx.candidates) {
-      if (def.target.kind === "nextOnField") {
-        // nextOnField buffs are instantiated once at swap-in; there is no later
-        // re-evaluation, so the condition gate must fire here at trigger time (ADR-0011).
-        if (
-          def.condition &&
-          !this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
-        ) {
-          continue
-        }
-        this.store.pushPendingNextOnField(
-          def,
-          sourceCharacterId,
-          ctx.event.frame,
-        )
-        continue
-      }
-      const targetIds = this.store.resolveTargetIds(def, sourceCharacterId)
-      for (const targetId of targetIds) {
-        this.store.applyBuff(
-          def,
-          sourceCharacterId,
-          targetId,
-          ctx.event.frame,
-          ctx.out,
-        )
-      }
+      this.applyOrDefer(def, sourceCharacterId, ctx.event.frame, ctx.out)
     }
   }
 
@@ -725,5 +759,5 @@ export class BuffEngine {
 
 /** @internal Bridge for test-only inspection — not part of the public API. */
 export interface BuffEngineInternals {
-  store: { pendingNextOnFieldCount: () => number }
+  pendingOutroBuffs: unknown[]
 }

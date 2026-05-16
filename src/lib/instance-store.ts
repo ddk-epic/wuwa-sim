@@ -14,12 +14,6 @@ import { cloneStats, freezeSnapshots } from "./stat-table-builder"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 
-export interface PendingNextOnField {
-  def: BuffDef
-  sourceCharacterId: number
-  appliedFrame: number
-}
-
 export type EngineEvent =
   | {
       kind: "skillCast"
@@ -73,7 +67,6 @@ export interface Candidate {
 export class InstanceStore {
   private active: BuffInstance[] = []
   private triggerableBySource = new Map<number, BuffDef[]>()
-  private pendingNextOnField: PendingNextOnField[] = []
   private baseStats = new Map<number, StatTable>()
   private slotsBySlotIndex: number[] = []
   private version_ = 0
@@ -81,7 +74,6 @@ export class InstanceStore {
   clear(): void {
     this.active = []
     this.triggerableBySource.clear()
-    this.pendingNextOnField = []
     this.baseStats.clear()
     this.slotsBySlotIndex = []
     this.version_++
@@ -158,10 +150,6 @@ export class InstanceStore {
     )
   }
 
-  pendingNextOnFieldCount(): number {
-    return this.pendingNextOnField.length
-  }
-
   resolveTargetIds(def: BuffDef, sourceCharacterId: number): number[] {
     switch (def.target.kind) {
       case "self":
@@ -169,7 +157,9 @@ export class InstanceStore {
       case "team":
         return this.slotsBySlotIndex.filter((id) => id !== -1)
       case "nextOnField":
-        return []
+        throw new Error(
+          `resolveTargetIds called with nextOnField buff "${def.id}" — use applyOrDefer`,
+        )
     }
   }
 
@@ -187,31 +177,6 @@ export class InstanceStore {
       a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0,
     )
     return candidates
-  }
-
-  pushPendingNextOnField(
-    def: BuffDef,
-    sourceCharacterId: number,
-    appliedFrame: number,
-  ): void {
-    this.pendingNextOnField.push({ def, sourceCharacterId, appliedFrame })
-  }
-
-  /** Materialize pending nextOnField buffs onto `targetCharacterId`. */
-  drainPendingNextOnField(
-    targetCharacterId: number,
-    frame: number,
-    out: BuffEvent[],
-  ): void {
-    if (this.pendingNextOnField.length === 0) return
-    const pending = this.pendingNextOnField
-    this.pendingNextOnField = []
-    pending.sort((a, b) =>
-      a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0,
-    )
-    for (const p of pending) {
-      this.applyBuff(p.def, p.sourceCharacterId, targetCharacterId, frame, out)
-    }
   }
 
   /** Drop instances whose source matches `sourceCharacterId` and that opt into expiry on swapOut. */

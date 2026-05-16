@@ -133,22 +133,6 @@ describe("InstanceStore — tickToFrame", () => {
   })
 })
 
-describe("InstanceStore — pendingNextOnField", () => {
-  it("queues and drains pending nextOnField buffs to the new on-field target", () => {
-    const s = new InstanceStore()
-    const out: BuffEvent[] = []
-    const d = def({
-      target: { kind: "nextOnField" },
-      duration: { kind: "frames", v: 60 },
-    })
-    s.pushPendingNextOnField(d, 1, 0)
-    expect(s.pendingNextOnFieldCount()).toBe(1)
-    s.drainPendingNextOnField(2, 5, out)
-    expect(s.pendingNextOnFieldCount()).toBe(0)
-    expect(s.activeBuffIds(2)).toEqual(["b.test"])
-  })
-})
-
 describe("InstanceStore — expireOnSourceSwapOut", () => {
   it("removes instances flagged expiresOnSourceSwapOut whose source matches", () => {
     const s = new InstanceStore()
@@ -280,11 +264,11 @@ describe("InstanceStore — resolveTargetIds", () => {
     ])
   })
 
-  it("returns empty for nextOnField (deferred to swap-in)", () => {
+  it("throws when called with nextOnField — must go through applyOrDefer", () => {
     const s = new InstanceStore()
-    expect(
+    expect(() =>
       s.resolveTargetIds(def({ target: { kind: "nextOnField" } }), 1),
-    ).toEqual([])
+    ).toThrow("applyOrDefer")
   })
 })
 

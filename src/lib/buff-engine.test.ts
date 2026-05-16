@@ -1005,6 +1005,89 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     expect(applied?.targetCharacterId).toBe(2)
     expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.3 + BASE_ATK_PCT)
   })
+
+  it("queue is drained on swap-in: buff targets the incoming character, not the outro caster", () => {
+    const outro: BuffDef = {
+      id: "char.a.outro",
+      name: "Outro",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      target: { kind: "nextOnField" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [outro] }), baseChar({ id: 2 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 10,
+    })
+    expect(pendingNextOnFieldCount(engine)).toBe(1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillType: "Basic Attack",
+      frame: 20,
+    })
+    expect(pendingNextOnFieldCount(engine)).toBe(0)
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
+  })
+
+  it("end-of-simulation with non-empty pending queue: buffs are silently dropped", () => {
+    const outro: BuffDef = {
+      id: "char.a.outro",
+      name: "Outro",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      target: { kind: "nextOnField" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [outro] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, null, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 10,
+    })
+    expect(pendingNextOnFieldCount(engine)).toBe(1)
+    // No swap-in follows — simulation ends; no error thrown
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+  })
 })
 
 describe("BuffEngine — condition gating (#57)", () => {
