@@ -81,8 +81,8 @@ export function cloneStats(s: StatTable): StatTable {
     defShred: s.defShred,
     elementBonus: { ...s.elementBonus },
     skillTypeBonus: { ...s.skillTypeBonus },
-    deepen: { ...s.deepen },
-    resShred: { ...s.resShred },
+    deepens: { ...s.deepens },
+    shreds: { ...s.shreds },
     allDmgBonus: s.allDmgBonus,
     energyRechargePct: s.energyRechargePct,
   }
@@ -107,13 +107,13 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
       stats.elementBonus[path.key] = (stats.elementBonus[path.key] ?? 0) + v
       return
     case "skillTypeBonus":
-      stats.skillTypeBonus[path.key] = (stats.skillTypeBonus[path.key] ?? 0) + v
+      stats.skillTypeBonus[path.key] += v
       return
     case "deepen":
-      stats.deepen[path.key] = (stats.deepen[path.key] ?? 0) + v
+      stats.deepens[path.key] += v
       return
-    case "resShred":
-      stats.resShred[path.key] = (stats.resShred[path.key] ?? 0) + v
+    case "shred":
+      stats.shreds[path.key] += v
       return
   }
 }

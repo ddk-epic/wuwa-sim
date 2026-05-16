@@ -9,7 +9,7 @@ const DEFRES = DEF_MULT_CONST * RES_MULT_CONST
 const ctx = (over: Partial<DamageContext> = {}): DamageContext => ({
   multiplier: 1,
   element: "Fusion",
-  skillType: "Normal Attack",
+  skillType: "Basic Attack",
   dmgType: "Damage",
   ...over,
 })
@@ -45,7 +45,10 @@ describe("computeDamage", () => {
   it("element bonus and skillType bonus share one additive bucket", () => {
     const s = stats({
       elementBonus: { Fusion: 0.3 },
-      skillTypeBonus: { "Normal Attack": 0.2 },
+      skillTypeBonus: {
+        ...emptyStatTable().skillTypeBonus,
+        "Basic Attack": 0.2,
+      },
     })
     expect(computeDamage(ctx(), s)).toBe(
       Math.round(1 * 1000 * (1 + 0.5) * DEFRES),
@@ -73,9 +76,11 @@ describe("computeDamage", () => {
     )
   })
 
-  it("deepen applies as its own multiplicative factor on matching dmgType", () => {
-    const s = stats({ deepen: { Damage: 0.25 } })
-    expect(computeDamage(ctx({ dmgType: "Damage" }), s)).toBe(
+  it("deepens applies as its own multiplicative factor on matching skillType", () => {
+    const s = stats({
+      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.25 },
+    })
+    expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(
       Math.round(1 * 1000 * 1.25 * DEFRES),
     )
   })
@@ -176,38 +181,38 @@ describe("computeDamage", () => {
     )
   })
 
-  it("resShred=0 matches RES_MULT_CONST baseline", () => {
-    expect(
-      computeDamage(ctx({ element: "Fusion" }), stats({ resShred: {} })),
-    ).toBe(Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST))
+  it("shreds=0 matches RES_MULT_CONST baseline", () => {
+    expect(computeDamage(ctx({ skillType: "Basic Attack" }), stats())).toBe(
+      Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST),
+    )
   })
 
-  it("positive resShred reduces resistance, increasing damage", () => {
+  it("positive shred reduces resistance, increasing damage", () => {
     const resMult = RES_MULT_CONST + 0.05
     expect(
       computeDamage(
-        ctx({ element: "Fusion" }),
-        stats({ resShred: { Fusion: 0.05 } }),
+        ctx({ skillType: "Basic Attack" }),
+        stats({ shreds: { ...emptyStatTable().shreds, "Basic Attack": 0.05 } }),
       ),
     ).toBe(Math.round(1000 * DEF_MULT_CONST * resMult))
   })
 
-  it("resShred only applies to matching element", () => {
+  it("shred only applies to matching skill type", () => {
     expect(
       computeDamage(
-        ctx({ element: "Fusion" }),
-        stats({ resShred: { Glacio: 0.5 } }),
+        ctx({ skillType: "Basic Attack" }),
+        stats({ shreds: { ...emptyStatTable().shreds, "Heavy Attack": 0.5 } }),
       ),
     ).toBe(Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST))
   })
 
-  it("resShred pushing resistance below 0 halves the negative portion", () => {
-    // base resist = 1 - RES_MULT_CONST = 0.1; resShred = 0.2 → effectiveResist = -0.1
+  it("shred pushing resistance below 0 halves the negative portion", () => {
+    // base resist = 1 - RES_MULT_CONST = 0.1; shred = 0.2 → effectiveResist = -0.1
     // resMult = 1 - (-0.1 / 2) = 1.05
     expect(
       computeDamage(
-        ctx({ element: "Fusion" }),
-        stats({ resShred: { Fusion: 0.2 } }),
+        ctx({ skillType: "Basic Attack" }),
+        stats({ shreds: { ...emptyStatTable().shreds, "Basic Attack": 0.2 } }),
       ),
     ).toBe(Math.round(1000 * DEF_MULT_CONST * 1.05))
   })

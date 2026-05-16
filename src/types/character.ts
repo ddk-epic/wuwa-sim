@@ -71,7 +71,7 @@ export interface Character {
   skills: Skill[]
   skillTreeBonuses: string[]
   buffs: BuffDef[]
-  recommendedSkillDmgPriority?: string
+  recommendedSkillDmgPriority?: SkillType
   primaryScalingStat?: "atk" | "hp" | "def"
 }
 

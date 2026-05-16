@@ -1,3 +1,4 @@
+import type { SkillType } from "#/types/character"
 import type { StatTable } from "#/types/stat-table"
 
 export const DEF_MULT_CONST = 0.5
@@ -8,7 +9,7 @@ export type ScalingStat = "ATK" | "HP" | "DEF"
 export interface DamageContext {
   multiplier: number
   element: string
-  skillType: string
+  skillType: SkillType
   dmgType: string
   scalingStat?: string
 }
@@ -37,9 +38,9 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const dmgBonus =
     (stats.elementBonus[ctx.element] ?? 0) +
     (stats.elementBonus["all"] ?? 0) +
-    (stats.skillTypeBonus[ctx.skillType] ?? 0) +
+    stats.skillTypeBonus[ctx.skillType] +
     stats.allDmgBonus
-  const deepen = stats.deepen[ctx.dmgType] ?? 0
+  const deepen = stats.deepens[ctx.skillType]
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = 1 - critRate + critRate * stats.critDmg
 
@@ -48,11 +49,11 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
     DEF_MULT_CONST /
     (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - stats.defShred))
 
-  // RES_MULT_CONST = 1 - baseResistance; resShred lowers effective resistance
+  // RES_MULT_CONST = 1 - baseResistance; shreds lowers effective resistance per skill type
   // When effective resistance goes negative the negative portion is halved
   const baseResist = 1 - RES_MULT_CONST
-  const elementResShred = stats.resShred[ctx.element] ?? 0
-  const effectiveResist = baseResist - elementResShred
+  const skillResShred = stats.shreds[ctx.skillType]
+  const effectiveResist = baseResist - skillResShred
   const resMult =
     effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
 

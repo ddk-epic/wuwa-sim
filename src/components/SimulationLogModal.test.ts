@@ -132,7 +132,10 @@ describe("formatDMGPctCell", () => {
   it("sums elementBonus + skillTypeBonus + allDmgBonus", () => {
     const s = snap({
       elementBonus: { Fusion: 0.3 },
-      skillTypeBonus: { "Basic Attack": 0.2 },
+      skillTypeBonus: {
+        ...emptyStatTable().skillTypeBonus,
+        "Basic Attack": 0.2,
+      },
       allDmgBonus: 0.15,
     })
     expect(formatDMGPctCell(s, "Fusion", "Basic Attack")).toBe("+65%")
@@ -150,14 +153,18 @@ describe("formatDMGPctCell", () => {
 
 describe("formatDeepenCell", () => {
   it("0 deepen shows +0%", () =>
-    expect(formatDeepenCell(snap(), "Damage")).toBe("+0%"))
+    expect(formatDeepenCell(snap(), "Basic Attack")).toBe("+0%"))
   it("matching deepen shown", () => {
-    const s = snap({ deepen: { Damage: 0.2 } })
-    expect(formatDeepenCell(s, "Damage")).toBe("+20%")
+    const s = snap({
+      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.2 },
+    })
+    expect(formatDeepenCell(s, "Basic Attack")).toBe("+20%")
   })
-  it("non-matching deepen shows +0%", () => {
-    const s = snap({ deepen: { Fusion: 0.3 } })
-    expect(formatDeepenCell(s, "Damage")).toBe("+0%")
+  it("non-matching skill type shows +0%", () => {
+    const s = snap({
+      deepens: { ...emptyStatTable().deepens, "Resonance Skill": 0.3 },
+    })
+    expect(formatDeepenCell(s, "Basic Attack")).toBe("+0%")
   })
 })
 

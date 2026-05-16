@@ -1,5 +1,5 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
-import type { EnrichedCharacter } from "#/types/character"
+import type { EnrichedCharacter, SkillType } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type {
   Cost3Main,
@@ -137,10 +137,9 @@ export function accumulateEchoSubstatBlock(
   stats.atkPct += DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
   stats.energyRechargePct +=
     DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
-  const skillType =
+  const skillType: SkillType =
     character.recommendedSkillDmgPriority ?? "Resonance Liberation"
-  stats.skillTypeBonus[skillType] =
-    (stats.skillTypeBonus[skillType] ?? 0) +
+  stats.skillTypeBonus[skillType] +=
     DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
 }
 

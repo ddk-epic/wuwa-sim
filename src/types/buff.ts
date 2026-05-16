@@ -16,9 +16,9 @@ export type StatPath =
         | "energyRechargePct"
     }
   | { stat: "elementBonus"; key: string }
-  | { stat: "skillTypeBonus"; key: string }
-  | { stat: "deepen"; key: string }
-  | { stat: "resShred"; key: string }
+  | { stat: "skillTypeBonus"; key: SkillType }
+  | { stat: "deepen"; key: SkillType }
+  | { stat: "shred"; key: SkillType }
 
 export type ValueExpr =
   | { kind: "const"; v: number; snapshot?: boolean }

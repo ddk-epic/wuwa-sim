@@ -1,4 +1,5 @@
 import { Fragment, useState } from "react"
+import type { SkillType } from "#/types/character"
 import type {
   ActiveBuff,
   HitEvent,
@@ -41,18 +42,20 @@ export function formatCDCell(dmg: number): string {
 export function formatDMGPctCell(
   snap: StatTable,
   element: string,
-  skillType: string,
+  skillType: SkillType,
 ): string {
   const total =
     (snap.elementBonus[element] ?? 0) +
-    (snap.skillTypeBonus[skillType] ?? 0) +
+    snap.skillTypeBonus[skillType] +
     snap.allDmgBonus
   return `+${Math.round(total * 100)}%`
 }
 
-export function formatDeepenCell(snap: StatTable, dmgType: string): string {
-  const v = snap.deepen[dmgType] ?? 0
-  return `+${Math.round(v * 100)}%`
+export function formatDeepenCell(
+  snap: StatTable,
+  skillType: SkillType,
+): string {
+  return `+${Math.round(snap.deepens[skillType] * 100)}%`
 }
 
 type StatKind = "ATK" | "HP" | "DEF"
@@ -114,10 +117,10 @@ export function computeFormulaBreakdown(
 
   const dmgBonus =
     (snap.elementBonus[ev.element] ?? 0) +
-    (snap.skillTypeBonus[ev.skillType] ?? 0) +
+    snap.skillTypeBonus[ev.skillType] +
     snap.allDmgBonus
 
-  const deepen = snap.deepen[ev.dmgType] ?? 0
+  const deepen = snap.deepens[ev.skillType]
   const cr = Math.min(snap.critRate, 1)
   const critFactor = 1 - cr + cr * snap.critDmg
 
@@ -125,8 +128,8 @@ export function computeFormulaBreakdown(
     DEF_MULT_CONST /
     (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - snap.defShred))
   const baseResist = 1 - RES_MULT_CONST
-  const elementResShred = snap.resShred[ev.element] ?? 0
-  const effectiveResist = baseResist - elementResShred
+  const skillResShred = snap.shreds[ev.skillType]
+  const effectiveResist = baseResist - skillResShred
   const resMult =
     effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
 
@@ -403,7 +406,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         </td>
                         <td className="py-1 text-right text-xs">
                           {ev.kind === "hit"
-                            ? formatDeepenCell(ev.statsSnapshot, ev.dmgType)
+                            ? formatDeepenCell(ev.statsSnapshot, ev.skillType)
                             : ""}
                         </td>
                       </tr>
