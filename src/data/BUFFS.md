@@ -70,7 +70,7 @@ Each recipe shows the smallest complete buff for the pattern. Copy, rename, twea
 ```ts
 {
   id: "weapon.emerald-of-genesis.atk-passive",
-  name: "Emerald of Genesis ATK",
+  name: "Emerald of Genesis (ATK)",
   trigger: { event: "simStart" },
   target: { kind: "self" },
   duration: { kind: "permanent" },
@@ -265,7 +265,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 ```ts
 {
   id: "char.example.s2.ascendance",
-  name: "Ascendance (S2)",
+  name: "S2: Ascendance",
   requiresSequence: 2,
   trigger: { event: "simStart" },
   target: { kind: "self" },
@@ -320,6 +320,43 @@ Slot for character buffs is one of: `intro`, `outro`, `passive`, `forte`, `liber
 
 Don't include version numbers, balance patches, or character IDs (in human-authored ids) — they go stale. Don't reuse an id across sources.
 
+### Naming `name`
+
+`name` is the human-readable label shown in logs and UI. Two conventions:
+
+**Sequence buffs** — prefix with the sequence tag: `"S2: Ascendance"`, not `"Ascendance (S2)"`.
+
+**Multi-effect buffs** — append a parenthetical listing short labels for each effect, comma-separated: `"Woolies Cheer Dance (Fusion, Basic)"`. Short labels by stat path:
+
+| Stat path                    | Label                                |
+| ---------------------------- | ------------------------------------ |
+| `elementBonus/<Element>`     | element name (`Fusion`, `Glacio`, …) |
+| `skillTypeBonus/<SkillType>` | short skill name (see table below)   |
+| `deepen/<SkillType>`         | `<short> Deepen`                     |
+| `shred/<SkillType>`          | `<short> Shred`                      |
+| `atkPct`                     | `ATK`                                |
+| `hpPct`                      | `HP`                                 |
+| `defPct`                     | `DEF`                                |
+| `critRate`                   | `CRIT Rate`                          |
+| `critDmg`                    | `CRIT DMG`                           |
+| `defShred`                   | `DEF Shred`                          |
+| `allDmgBonus`                | `All`                                |
+| `energyRechargePct`          | `ER`                                 |
+| flat stats (rare)            | `ATK Flat`, `HP Flat`, `DEF Flat`    |
+
+SkillType short forms:
+
+| SkillType              | Short        |
+| ---------------------- | ------------ |
+| `Basic Attack`         | `Basic`      |
+| `Heavy Attack`         | `Heavy`      |
+| `Resonance Skill`      | `Skill`      |
+| `Resonance Liberation` | `Liberation` |
+| `Forte Circuit`        | `Forte`      |
+| `Intro Skill`          | `Intro`      |
+| `Outro Skill`          | `Outro`      |
+| `Echo Skill`           | `Echo`       |
+
 ### Triggers
 
 | `event`           | When it fires                                                                    |
@@ -330,6 +367,8 @@ Don't include version numbers, balance patches, or character IDs (in human-autho
 | `swapIn`          | A character swaps to on-field.                                                   |
 | `swapOut`         | A character swaps off-field.                                                     |
 | `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.            |
+
+`skillType` on `skillCast` and `hitLanded` must be one of the eight engine values — see **SkillType values** below. `"Normal Attack"` is not a valid value (TypeScript will catch it).
 
 `actor`: `"self"` matches the _receiver_ of the buff (`target.kind: "self"`); `"any"` matches any character. Default behavior when omitted is type-defined.
 
@@ -358,7 +397,7 @@ A buff's `effects` is an array; entries can mix kinds.
 **Stat paths** (`StatPath`):
 
 - Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`
-- Keyed: `elementBonus` (key = element name), `skillTypeBonus` (key = skill type), `deepen` (key = dmgType bucket), `resShred` (key = element name)
+- Keyed: `elementBonus` (key = element name), `skillTypeBonus` (key = `SkillType`), `deepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys
 
 **Value expressions** (`ValueExpr`):
 
@@ -392,6 +431,7 @@ A buff's `effects` is an array; entries can mix kinds.
 | ----------------- | ------------------------------------------------------------- |
 | `onField`         | The buff's _target_ is currently on field.                    |
 | `actorIsOnField`  | The buff's _source_ is currently on field.                    |
+| `actorIsOffField` | The buff's _source_ is currently off field.                   |
 | `buffActive`      | A specific buff (`buffId`) is active on `target` or `source`. |
 | `resourceAtLeast` | A resource is ≥ `n` on `target` or `source`.                  |
 
@@ -406,7 +446,25 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 | `nonStackingGroup`       | Any                  | When multiple active buffs share the group, engine logs `console.info` but applies them all.                                                                                      |
 | `perSource`              | Any                  | When true, dedupe key includes `sourceCharacterId` so distinct sources produce parallel instances. Default false: re-application from any source refreshes the existing instance. |
 | `expiresOnSourceSwapOut` | Any                  | When true, instance is removed when its source character swaps off field.                                                                                                         |
+| `cooldown`               | Any                  | Minimum seconds between successive fires from the same source. Re-triggers within the window are suppressed.                                                                      |
 | `consumedBy`             | Any                  | After each event, instances whose `consumedBy` matches lose a stack; at 0 they're removed and `buffConsumed` fires.                                                               |
+
+### SkillType values
+
+`SkillType` is a closed union. These are the only valid values for `Trigger.skillType`, `DamageEntry.type`, and `skillTypeBonus` / `deepens` / `shreds` keys:
+
+| Value                    |
+| ------------------------ |
+| `"Basic Attack"`         |
+| `"Heavy Attack"`         |
+| `"Resonance Skill"`      |
+| `"Resonance Liberation"` |
+| `"Forte Circuit"`        |
+| `"Intro Skill"`          |
+| `"Outro Skill"`          |
+| `"Echo Skill"`           |
+
+`"Normal Attack"` is **not** a `SkillType`. It is a UI grouping label (covering Basic Attack and Heavy Attack together) used only in the skill sidebar. A trigger with `skillType: "Normal Attack"` will never fire and TypeScript will surface the error at compile time. (ADR-0012)
 
 ### Less common
 
