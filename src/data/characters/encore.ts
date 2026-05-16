@@ -77,11 +77,16 @@ export const encore = {
     },
     {
       id: "char.encore.s1.woolys-fairy-tale",
-      name: "Wooly's Fairy Tale",
+      name: "S1: Wooly's Fairy Tale",
       description:
         "When Encore uses a Basic Attack, she gains 1 stack of Wooly's Fairy Tale, up to 4 stacks. Each stack increases Fusion DMG Bonus by 3% for 6s.",
       requiresSequence: 1,
-      trigger: { event: "hitLanded", actor: "self", skillType: "Basic Attack" },
+      trigger: {
+        event: "hitLanded",
+        characterId: 1203,
+        skillType: "Basic Attack",
+        source: "self",
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 6 },
       stacking: { max: 4, onRetrigger: "addStack" },
@@ -95,7 +100,7 @@ export const encore = {
     },
     {
       id: "char.encore.s2.sheep-counting-lullaby",
-      name: "Sheep-counting Lullaby",
+      name: "S2: Sheep-counting Lullaby",
       description:
         "When Encore uses Wooly Strike or Energetic Welcome, she gains +10 Resonance Energy. This effect can trigger once every 10s.",
       requiresSequence: 2,
@@ -122,7 +127,7 @@ export const encore = {
     },
     {
       id: "char.encore.s4.adventure-lets-go",
-      name: "Adventure? Let's go!",
+      name: "S4: Adventure? Let's go!",
       description:
         "When Encore uses Cosmos Rupture, all team members gain +20% Fusion DMG Bonus for 30s.",
       requiresSequence: 4,
@@ -144,11 +149,11 @@ export const encore = {
     },
     {
       id: "char.encore.s6.woolies-save-the-world",
-      name: "Woolies Save the World!",
+      name: "S6: Woolies Save the World!",
       description:
         "During Cosmos Rave, each hit Encore lands grants 1 stack (up to 5), each increasing ATK by 5% for 10s.",
       requiresSequence: 6,
-      trigger: { event: "hitLanded", actor: "self" },
+      trigger: { event: "hitLanded", characterId: 1203, source: "self" },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
       stacking: { max: 5, onRetrigger: "addStack" },

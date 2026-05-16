@@ -42,7 +42,7 @@ export const sanhua = {
       id: "char.sanhua.passive.condensation",
       name: "Condensation",
       description:
-        "After casting Sanhua's Intro Skill, Resonance Skill and Forte Circuit DMG is increased by 20% for 8s.",
+        "After casting Sanhua's Intro Skill, Resonance Skill DMG is increased by 20% for 8s.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
@@ -54,11 +54,6 @@ export const sanhua = {
         {
           kind: "stat",
           path: { stat: "skillTypeBonus", key: "Resonance Skill" },
-          value: { kind: "const", v: 0.2 },
-        },
-        {
-          kind: "stat",
-          path: { stat: "skillTypeBonus", key: "Forte Circuit" },
           value: { kind: "const", v: 0.2 },
         },
       ],
@@ -85,7 +80,7 @@ export const sanhua = {
     },
     {
       id: "char.sanhua.flag.ice-thorn",
-      name: "Ice Thorn (Flag)",
+      name: "Ice Thorn",
       description: "Presence flag: Ice Thorn is ready to detonate.",
       trigger: {
         event: "skillCast",
@@ -96,14 +91,15 @@ export const sanhua = {
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
-        actor: "self",
+        characterId: 1102,
         skillType: "Heavy Attack",
+        source: "self",
       },
       effects: [],
     },
     {
       id: "char.sanhua.flag.ice-prism",
-      name: "Ice Prism (Flag)",
+      name: "Ice Prism",
       description: "Presence flag: Ice Prism is ready to detonate.",
       trigger: {
         event: "skillCast",
@@ -114,15 +110,16 @@ export const sanhua = {
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
-        actor: "self",
+        characterId: 1102,
         skillType: "Heavy Attack",
+        source: "self",
       },
       effects: [],
     },
     {
-      id: "char.sanhua.flag.glacier",
-      name: "Glacier (Flag)",
-      description: "Presence flag: Glacier is ready to detonate.",
+      id: "char.sanhua.flag.ice-glacier",
+      name: "Ice Glacier",
+      description: "Presence flag: Ice Glacier is ready to detonate.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
@@ -132,8 +129,9 @@ export const sanhua = {
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
-        actor: "self",
+        characterId: 1102,
         skillType: "Heavy Attack",
+        source: "self",
       },
       effects: [],
     },
@@ -212,9 +210,10 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.glacier-burst",
-      name: "Glacier Burst",
-      description: "Detonate fires Glacier Burst when Glacier flag is active.",
+      id: "char.sanhua.ice-glacier-burst",
+      name: "Ice Glacier Burst",
+      description:
+        "Detonate fires Ice Glacier Burst when Ice Glacier flag is active.",
       trigger: {
         event: "hitLanded",
         characterId: 1102,
@@ -225,7 +224,7 @@ export const sanhua = {
       duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
-        buffId: "char.sanhua.flag.glacier",
+        buffId: "char.sanhua.flag.ice-glacier",
         on: "source",
       },
       effects: [
@@ -249,7 +248,7 @@ export const sanhua = {
     },
     {
       id: "char.sanhua.sequence.s1",
-      name: "Solitude's Embrace",
+      name: "S1: Solitude's Embrace",
       description:
         "After casting Frigid Light Stage 5, Crit Rate +15% for 10s. Requires Sequence 1.",
       requiresSequence: 1,
@@ -270,7 +269,7 @@ export const sanhua = {
     },
     {
       id: "char.sanhua.sequence.s4",
-      name: "Blade Mastery",
+      name: "S4: Blade Mastery",
       description:
         "After casting Resonance Liberation, all DMG +120% for 5s, consumed by Heavy Attack. Requires Sequence 4.",
       requiresSequence: 4,
@@ -283,8 +282,9 @@ export const sanhua = {
       duration: { kind: "seconds", v: 5 },
       consumedBy: {
         event: "hitLanded",
-        actor: "self",
+        characterId: 1102,
         skillType: "Heavy Attack",
+        source: "self",
       },
       effects: [
         {
@@ -296,7 +296,7 @@ export const sanhua = {
     },
     {
       id: "char.sanhua.sequence.s5",
-      name: "Unraveling Fate",
+      name: "S5: Unraveling Fate",
       description:
         "On Detonate's authored Heavy Attack hit, Crit DMG +100%, active during emitHit phase, consumed in same event. Requires Sequence 5.",
       requiresSequence: 5,
@@ -310,8 +310,9 @@ export const sanhua = {
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
-        actor: "self",
+        characterId: 1102,
         skillType: "Heavy Attack",
+        source: "self",
       },
       effects: [
         {
@@ -323,9 +324,9 @@ export const sanhua = {
     },
     {
       id: "char.sanhua.sequence.s6",
-      name: "Daybreak Radiance",
+      name: "S6: Daybreak Radiance",
       description:
-        "Detonating Ice Prism or Glacier grants all team members ATK +10% for 20s, stacking up to 2 times. Requires Sequence 6.",
+        "Detonating Ice Prism or Ice Glacier grants all team members ATK +10% for 20s, stacking up to 2 times. Requires Sequence 6.",
       requiresSequence: 6,
       trigger: {
         event: "hitLanded",
@@ -333,7 +334,7 @@ export const sanhua = {
         source: "synthetic",
         sourceBuffId: [
           "char.sanhua.ice-prism-burst",
-          "char.sanhua.glacier-burst",
+          "char.sanhua.ice-glacier-burst",
         ],
       },
       target: { kind: "team" },
