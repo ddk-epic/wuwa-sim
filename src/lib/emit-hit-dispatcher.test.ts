@@ -259,4 +259,79 @@ describe("EmitHitDispatcher", () => {
     )
     expect(after).not.toBeNull()
   })
+
+  describe("skillType fallback chain", () => {
+    it("falls back to damage.type when skillType override is absent", () => {
+      const dispatcher = new EmitHitDispatcher({ chainDepthCap: 8 })
+      const host = makeHost()
+      const rsEffect: EmitHitEffect = {
+        ...effect,
+        damage: { ...effect.damage, type: "Resonance Skill" },
+      }
+      const hit = dispatcher.dispatch(
+        {
+          buffInstanceKey: buffInstanceKey(def.id, 1),
+          def,
+          effect: rsEffect,
+          effectIndex: 0,
+          sourceCharacterId: 1,
+        },
+        { frame: 0, depth: 0 },
+        host,
+        [],
+        [],
+      )
+      expect(hit).not.toBeNull()
+      expect(hit!.skillType).toBe("Resonance Skill")
+    })
+
+    it("uses explicit skillType override even when damage.type differs", () => {
+      const dispatcher = new EmitHitDispatcher({ chainDepthCap: 8 })
+      const host = makeHost()
+      const overrideEffect: EmitHitEffect = {
+        ...effect,
+        skillType: "Heavy Attack",
+        damage: { ...effect.damage, type: "Resonance Skill" },
+      }
+      const hit = dispatcher.dispatch(
+        {
+          buffInstanceKey: buffInstanceKey(def.id, 1),
+          def,
+          effect: overrideEffect,
+          effectIndex: 0,
+          sourceCharacterId: 1,
+        },
+        { frame: 0, depth: 0 },
+        host,
+        [],
+        [],
+      )
+      expect(hit).not.toBeNull()
+      expect(hit!.skillType).toBe("Heavy Attack")
+    })
+
+    it("defaults to Basic Attack when neither skillType override nor damage.type provides a value", () => {
+      const dispatcher = new EmitHitDispatcher({ chainDepthCap: 8 })
+      const host = makeHost()
+      const baEffect: EmitHitEffect = {
+        ...effect,
+        damage: { ...effect.damage, type: "Basic Attack" },
+      }
+      const hit = dispatcher.dispatch(
+        {
+          buffInstanceKey: buffInstanceKey(def.id, 1),
+          def,
+          effect: baEffect,
+          effectIndex: 0,
+          sourceCharacterId: 1,
+        },
+        { frame: 0, depth: 0 },
+        host,
+        [],
+        [],
+      )
+      expect(hit).not.toBeNull()
+      expect(hit!.skillType).toBe("Basic Attack")
+    })
+  })
 })
