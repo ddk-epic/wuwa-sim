@@ -13,6 +13,13 @@ _Avoid_: Rotation, sequence (overloaded with Resonance Chain Sequence)
 **Timeline Entry**:
 One authored action in the Timeline — a skill cast by a specific character at a specific position. Always represents an on-field action.
 
+**Timeline Node**:
+The persisted unit of the Timeline. A discriminated union of `{kind: "entry", ...TimelineEntry}` and `{kind: "group", ...TimelineGroup}`. The simulator, `validateTimeline`, and `TimelineSummary` operate on the flattened entry list (`nodes.flatMap(n => n.kind === "group" ? n.entries : [n])`); group nodes never reach the engine.
+
+**Timeline Group**:
+A purely organizational, single-row-height labeled header that owns a contiguous run of Timeline Entries inline (`entries: TimelineEntry[]`). Has an open/locked lifecycle: at most one group is open at a time, the open group captures every new sidebar-added entry as a member, and locking seals the boundary against drag-in / drag-out while permitting internal reorder and per-entry deletion. Does not increment row numbers, does not affect the engine, does not affect validation. Empty groups are valid. Flat-only — groups cannot contain other groups. No character restriction — a group may mix entries from any characters. See ADR-0016.
+_Avoid_: "Phase", "Section", "Block" (overloaded with other meanings in the codebase).
+
 **Simulation Log**:
 The full ordered output of a simulation run — Action Events, Hit Events, and Buff Events interleaved by frame.
 
@@ -35,7 +42,13 @@ An optional alternate execution of a Stage that ends the animation early. Author
 The closed taxonomy of supported variants: `cancel` (animation cut after damage lands) and `instantCancel` (animation cut before damage lands; the cast still counts for cooldown, resource gates, and `skillCast` triggers). `swap` and `fastCancel` are reserved enum slots not yet implemented — `swap` requires the unimplemented Trailing Window because it does not truncate.
 
 **Reaction Delay**:
-A global player-level simulator setting (frames; default 9 at 60fps) that pads every variant's action time and extends the damage-filter cutoff by the same amount. Models human reaction time as real play frames, not dead padding — hits authored within the reaction window land. Stored in localStorage, not on the Loadout.
+A global player-level simulator setting (frames; default 9 at 60fps) that pads every variant's action time and extends the damage-filter cutoff by the same amount. Models human reaction time as real play frames, not dead padding — hits authored within the reaction window land. Stored in localStorage, not on the Loadout. Does **not** apply to Movement Stages — their authored `actionTime` is raw.
+
+**Movement Stage**:
+A first-class Stage modeling a universal player movement action (`Dodge`, `Jump`) that exists on every character. Authored centrally in `src/data/movement.ts` and injected into every character's `skills` at enrichment time — never written in raw character JSON. Carries a hardcoded `actionTime` (Dodge 21 frames, Jump 18 frames at 60fps), empty `damage`, and `type: "Movement"`. Reaches the timeline as a normal Timeline Entry and emits an Action Event for log visibility, but **bypasses the Phase Pipeline** — no `skillCast` dispatch, no resource deltas, no cooldown roll, no `hitLanded` (no damage entries). The buff engine still `tickToFrame`s past the stage so duration-based expirations advance. Reaction Delay does not apply. See ADR-0015.
+
+**`comboAllows`**:
+An optional field on a Stage that declares a `requiresStageId` gate, listing which Movement skill names (`"Dodge"`, `"Jump"`) may sit between the stage and its prerequisite without breaking the chain. Type-locked through a discriminated union so the field is only legal in the presence of `requiresStageId`. Default (omitted) is opaque — any Movement entry between the stage and its prerequisite invalidates the gate. `validate-timeline`'s previous-stage walk skips backwards past entries whose stage's `skill.name` is in the listed set before comparing Stage IDs. A non-Movement entry (e.g. Resonance Skill) between the two always resets the chain regardless of `comboAllows`.
 
 ### The buff system
 
@@ -65,8 +78,8 @@ A pure-data expression for the magnitude of a `stat` Effect's modifier. Either `
 The flat typed struct of all damage-formula inputs for one character at one moment: ATK, ATK%, crit rate/dmg, element bonuses, skill-type bonuses, deepens, shreds. Base-value contributions (character intrinsics, weapon main/sub stats, echo main stats and substat rolls) are accumulated directly into a base table at sim start; permanent unconditional buffs are folded into that same base table; temporary and conditional buffs are layered on top per hit. Skill-type-keyed maps (`deepens`, `skillTypeBonus`, `shreds`) are keyed by **Skill Type**, not by UI category.
 
 **Skill Type**:
-The closed engine taxonomy for "what kind of skill produced this": `Basic Attack | Heavy Attack | Resonance Skill | Resonance Liberation | Forte Circuit | Intro Skill | Outro Skill | Echo Skill`. Used as the type of `DamageEntry.type`, `Trigger.skillType` (both event branches), `EngineEvent.skillType` (both branches), and as keys on the Stat Table maps above. See ADR-0012.
-_Avoid_: confusing with `Skill.type`, which is a UI grouping label that includes the parent term `"Normal Attack"` and never reaches the engine. A stage's effective Skill Type is derived from its `damage[0].type`, falling back to `Skill.type` only for stages with no damage entries (e.g. Liberation openers).
+The closed engine taxonomy for "what kind of skill produced this": `Basic Attack | Heavy Attack | Resonance Skill | Resonance Liberation | Forte Circuit | Intro Skill | Outro Skill | Echo Skill | Movement`. Used as the type of `DamageEntry.type`, `Trigger.skillType` (both event branches), `EngineEvent.skillType` (both branches), and as keys on the Stat Table maps above. `Movement` is its own coarse bucket — no roll-up to Basic/Heavy — and is the type that drives the Phase Pipeline bypass for Dodge and Jump (see ADR-0015). See ADR-0012.
+_Avoid_: confusing with `Skill.type`, which is a UI grouping label that includes the parent term `"Normal Attack"` and never reaches the engine. A stage's effective Skill Type is derived from its `damage[0].type`, falling back to `Skill.type` only for stages with no damage entries (e.g. Liberation openers, Movement Stages).
 
 **Echo Stat Roll**:
 A flat stat contribution from an equipped Echo — a main stat (one variable + one fixed per echo, scale by COST tier) or one of up to 5 substats. Modeled as a base-value contribution, not a Buff: accumulated directly into the base Stat Table at bootstrap. Values live in a single constants file. The user controls _which_ variable main each cost-4 and cost-3 echo rolls via per-cost-tier toggles; cost-1 variable mains are forced to the character's `primaryScalingStat` (no choice available in-game) and render as a display-only count badge. Substats default to a fixed 16-roll block (5× Crit Rate, 5× Crit DMG, 2× ATK%, 2× ER, 2× Skill DMG Bonus routed to the character's `recommendedSkillDmgPriority`).
