@@ -33,7 +33,7 @@ A log entry representing a single damage instance. Carries the Stat Table snapsh
 The named sub-phase of a skill that contains the actual Damage Entries (e.g. "Stage 1", "Stage 2", "Detonate"). One Timeline Entry resolves to exactly one Stage.
 
 **Damage Entry**:
-The pure-data description of a single hit within a Stage — its multiplier value, scaling stat, action frame offset, and resource-gain values.
+The pure-data description of a single hit within a Stage — its multiplier value, scaling stat, action frame offset, and resource-gain values. Heal entries may carry an optional `flat` addend (integer, base-stat units); total heal = `flat + value × scalingStat(...)`. Damage entries omit `flat`. The API does not expose flat heal values as structured data — they are extracted from the human-readable value string (e.g. `"950+23.80%"`).
 
 **Stage Variant**:
 An optional alternate execution of a Stage that ends the animation early. Authored per-stage as a `{ actionTime }` override under one of the closed Variant Kinds. The engine derives `effective = variant.actionTime + Reaction Delay` and uses that as both the action duration and the damage-filter cutoff: only Damage Entries with `actionFrame ≤ effective` resolve. Surviving Damage Entries are not scaled — energy, concerto, multiplier, toughness, and weakness pass through unchanged. Variants exist on a stage only when the character data declares them; they are not implicitly available.

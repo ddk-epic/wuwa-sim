@@ -347,7 +347,8 @@
               "energy": 0,
               "concerto": 0,
               "toughness": 0,
-              "weakness": 0
+              "weakness": 0,
+              "flat": 950
             }
           ]
         },
@@ -381,7 +382,8 @@
               "energy": 0,
               "concerto": 0,
               "toughness": 0,
-              "weakness": 0
+              "weakness": 0,
+              "flat": 428
             }
           ]
         }
@@ -486,7 +488,8 @@
               "energy": 0,
               "concerto": 0,
               "toughness": 0,
-              "weakness": 0
+              "weakness": 0,
+              "flat": 1188
             }
           ]
         },

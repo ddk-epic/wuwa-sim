@@ -32,14 +32,14 @@ interface ApiProperty {
   GrowthValues: ApiGrowthValue[]
 }
 
-interface ApiSkillAttribute {
+export interface ApiSkillAttribute {
   attributeId: number
   attributeName: string
   values: string[]
   Description: string
 }
 
-interface ApiDamageEntry {
+export interface ApiDamageEntry {
   EntryNumber: number
   Id: number
   Condition: string
@@ -141,23 +141,31 @@ interface ParsedRate {
   count: number
 }
 
-function parseValuesFromValue(value: string): ParsedRate[] {
-  const results: ParsedRate[] = []
+interface ParsedValues {
+  flat?: number
+  rates: ParsedRate[]
+}
+
+export function parseValuesFromValue(value: string): ParsedValues {
+  const flatMatch = value.match(/^(\d+(?:\.\d+)?)\+/)
+  const flat = flatMatch ? parseFloat(flatMatch[1]) : undefined
+
+  const rates: ParsedRate[] = []
   const regex = /([\d.]+)%(?:\*(\d+))?/g
   let match
   while ((match = regex.exec(value)) !== null) {
     const pct = match[1]
     const count = match[2] ? parseInt(match[2], 10) : 1
     const decimals = (pct.split(".")[1]?.length ?? 0) + 2
-    results.push({
+    rates.push({
       value: Number((parseFloat(pct) / 100).toFixed(decimals)),
       count,
     })
   }
-  return results
+  return { flat, rates }
 }
 
-function enrichSkill(
+export function enrichSkill(
   attributes: ApiSkillAttribute[],
   damageList: ApiDamageEntry[],
 ): {
@@ -173,17 +181,17 @@ function enrichSkill(
   const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
     (attr) => {
       const value = attr.values[9] ?? ""
-      const parsedRates = parseValuesFromValue(value)
+      const { flat, rates: parsedRates } = parseValuesFromValue(value)
 
       if (parsedRates.length === 0) {
         return { name: attr.attributeName, value }
       }
 
       const matched: DamageEntry[] = []
-      for (const { value, count } of parsedRates) {
+      for (const { value: rate, count } of parsedRates) {
         let consumed = 0
         for (let i = 0; i < pool.length && consumed < count; i++) {
-          if (pool[i].value === value) {
+          if (pool[i].value === rate) {
             matched.push(...pool.splice(i, 1))
             i--
             consumed++
@@ -192,7 +200,7 @@ function enrichSkill(
         if (consumed > 0 && consumed < count) {
           const missing = count - consumed
           console.warn(
-            `  [fill] "${attr.attributeName}" expects ${count}× value ${value} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
+            `  [fill] "${attr.attributeName}" expects ${count}× value ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
           )
           for (let i = 0; i < missing; i++) {
             matched.push({ ...matched[matched.length - 1] })
@@ -202,6 +210,15 @@ function enrichSkill(
 
       if (matched.length === 0) {
         return { name: attr.attributeName, value }
+      }
+
+      if (flat !== undefined) {
+        if (matched.length > 1) {
+          console.warn(
+            `  [flat] "${attr.attributeName}" has flat=${flat} but matched ${matched.length} entries — attaching to first only`,
+          )
+        }
+        matched[0] = { ...matched[0], flat }
       }
 
       return { name: attr.attributeName, value, damage: matched }

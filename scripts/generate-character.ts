@@ -30,19 +30,25 @@ export function deriveNewName(name: string): string {
 function formatDamageEntry(d: DamageEntry, level: number): string {
   const l = ind(level)
   const l1 = ind(level + 1)
-  return [
+  const lines = [
     `${l}{`,
     `${l1}type: ${s(d.type)},`,
     `${l1}dmgType: ${s(d.dmgType)},`,
     `${l1}scalingStat: ${s(d.scalingStat)},`,
     `${l1}actionFrame: 0,`,
+  ]
+  if (d.flat !== undefined) {
+    lines.push(`${l1}flat: ${d.flat},`)
+  }
+  lines.push(
     `${l1}value: ${d.value},`,
     `${l1}energy: ${d.energy},`,
     `${l1}concerto: ${d.concerto},`,
     `${l1}toughness: ${d.toughness},`,
     `${l1}weakness: ${d.weakness},`,
     `${l}}`,
-  ].join("\n")
+  )
+  return lines.join("\n")
 }
 
 function formatLiberationCastStage(skillName: string, level: number): string {

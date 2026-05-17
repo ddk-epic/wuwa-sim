@@ -258,4 +258,45 @@ describe("formatCharacter", () => {
     expect(outroSection).toContain("actionTime: 0,")
     expect(outroSection).toContain("damage: [],")
   })
+
+  it("emits flat: line in damage entry when flat is defined", () => {
+    const charWithFlat: Character = {
+      ...minimalChar,
+      skills: [
+        {
+          id: 1,
+          name: "Heal",
+          type: "Resonance Skill",
+          stages: [
+            {
+              name: "Healing",
+              value: "950+23.80%",
+              damage: [
+                {
+                  type: "Resonance Skill",
+                  dmgType: "Heal",
+                  scalingStat: "ATK",
+                  actionFrame: 0,
+                  flat: 950,
+                  value: 0.238,
+                  energy: 0,
+                  concerto: 0,
+                  toughness: 0,
+                  weakness: 0,
+                },
+              ],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    const out = formatCharacter(charWithFlat, "testHero")
+    expect(out).toContain("flat: 950,")
+  })
+
+  it("does not emit flat: line when flat is undefined", () => {
+    const out = formatCharacter(charWithSkills, "testHero")
+    expect(out).not.toContain("flat:")
+  })
 })
