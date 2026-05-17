@@ -110,7 +110,7 @@ const echoA: EnrichedEcho = {
   name: "Echo One",
   cost: 4,
   element: "Fusion",
-  set: "Test Set",
+  sets: ["Test Set"],
   buffs: [],
   skill: {
     cooldown: 20,

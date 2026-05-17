@@ -55,5 +55,9 @@ export function listWeaponsByType(weaponType: string): WeaponData[] {
 }
 
 export function getEchoSetForEcho(echo: EnrichedEcho): EchoSet | null {
-  return findEchoSetByName(echo.set)
+  for (const setName of echo.sets) {
+    const echoSet = findEchoSetByName(setName)
+    if (echoSet) return echoSet
+  }
+  return null
 }

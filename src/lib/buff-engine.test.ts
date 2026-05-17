@@ -640,7 +640,7 @@ describe("BuffEngine.bootstrap — collects from all four sources", () => {
         name: "E",
         cost: 4,
         element: "Fusion",
-        set: "S",
+        sets: ["S"],
         buffs: [stat(0.03, "echo")],
         skill: { cooldown: 0, description: "", stages: [] },
       },

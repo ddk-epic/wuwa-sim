@@ -98,14 +98,14 @@ describe("catalog — listWeaponsByType", () => {
 
 describe("catalog — getEchoSetForEcho", () => {
   it("returns the EchoSet whose name matches the echo's set", () => {
-    const echo = ALL_ECHOES.find((e) => e.set === ALL_ECHO_SETS[0].name)
+    const echo = ALL_ECHOES.find((e) => e.sets.includes(ALL_ECHO_SETS[0].name))
     expect(echo).toBeDefined()
     if (!echo) return
     expect(getEchoSetForEcho(echo)).toBe(ALL_ECHO_SETS[0])
   })
 
   it("returns null when the echo references an unknown set", () => {
-    const echo = { ...ALL_ECHOES[0], set: "Nonexistent Set" }
+    const echo = { ...ALL_ECHOES[0], sets: ["Nonexistent Set"] }
     expect(getEchoSetForEcho(echo)).toBeNull()
   })
 })

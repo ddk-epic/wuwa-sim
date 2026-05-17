@@ -57,7 +57,7 @@ const baseEcho = (overrides: Partial<EnrichedEcho> = {}): EnrichedEcho => ({
   name: "EchoSkill",
   cost: 3,
   element: "Glacio",
-  set: "TestSet",
+  sets: ["TestSet"],
   buffs: [],
   skill: {
     cooldown: 20,

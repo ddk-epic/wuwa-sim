@@ -99,23 +99,23 @@ function mapSkill(skill: ApiSkill): EchoSkill {
   }
 }
 
-function mapEchoSet(
+function mapEchoSets(
   fetterGroupDetails: ApiFetterGroupDetail[],
   fetterDetails: Record<string, ApiFetterDetail>,
-): EchoSet {
-  const group = fetterGroupDetails[0].Group
-  const effects = fetterDetails[group.FetterGroupName]
-
-  return {
-    id: group.Id,
-    name: group.FetterGroupName,
-    type: "two-five" as const,
-    effects: group.FetterMap.map((entry, i) => ({
-      pieces: entry.Key,
-      description: stripHtml(effects.EffectDescriptions[i]),
-    })),
-    buffs: [],
-  }
+): EchoSet[] {
+  return fetterGroupDetails.map(({ Group: group }) => {
+    const effects = fetterDetails[group.FetterGroupName]
+    return {
+      id: group.Id,
+      name: group.FetterGroupName,
+      type: "two-five" as const,
+      effects: group.FetterMap.map((entry, i) => ({
+        pieces: entry.Key,
+        description: stripHtml(effects.EffectDescriptions[i]),
+      })),
+      buffs: [],
+    }
+  })
 }
 
 // --- Main ---
@@ -145,7 +145,7 @@ export async function extractEcho(id: string): Promise<void> {
     console.warn(`Warning: unknown Rarity ${data.Rarity}, defaulting cost to 1`)
   }
 
-  const echoSet = mapEchoSet(data.FetterGroupDetails, data.FetterDetails)
+  const echoSets = mapEchoSets(data.FetterGroupDetails, data.FetterDetails)
 
   const echo: Echo = {
     id: data.MonsterId,
@@ -153,12 +153,11 @@ export async function extractEcho(id: string): Promise<void> {
     cost: cost ?? 1,
     element: data.Element.Name,
     skill: mapSkill(data.Skill),
-    set: echoSet.name,
+    sets: echoSets.map((s) => s.name),
     buffs: [],
   }
 
   const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, "-")
-  const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, "-")
 
   const echoDir = path.join(PROJECT_ROOT, "src/data/echoes/raw")
   const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets/raw")
@@ -176,17 +175,20 @@ export async function extractEcho(id: string): Promise<void> {
   await fs.writeFile(echoPath, JSON.stringify(echo, null, 2))
   console.log(`Written to src/data/echoes/raw/${echoSlug}.json`)
 
-  const { buffs: _omitBuffs, ...rawSet } = echoSet
-  const setPath = path.join(setDir, `${setSlug}.json`)
-  try {
-    await fs.access(setPath)
-    console.log(`Echo set "${echoSet.name}" already exists, skipping.`)
-  } catch {
-    await fs.writeFile(setPath, JSON.stringify(rawSet, null, 2))
-    console.log(`Written to src/data/echo-sets/raw/${setSlug}.json`)
-    console.log(
-      `Remember to add an entry for "${echoSet.name}" in src/data/echo-sets/index.ts.`,
-    )
+  for (const echoSet of echoSets) {
+    const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, "-")
+    const { buffs: _omitBuffs, ...rawSet } = echoSet
+    const setPath = path.join(setDir, `${setSlug}.json`)
+    try {
+      await fs.access(setPath)
+      console.log(`Echo set "${echoSet.name}" already exists, skipping.`)
+    } catch {
+      await fs.writeFile(setPath, JSON.stringify(rawSet, null, 2))
+      console.log(`Written to src/data/echo-sets/raw/${setSlug}.json`)
+      console.log(
+        `Remember to add an entry for "${echoSet.name}" in src/data/echo-sets/index.ts.`,
+      )
+    }
   }
 }
 

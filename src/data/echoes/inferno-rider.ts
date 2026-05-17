@@ -5,7 +5,7 @@ export const infernoRider = {
   name: "Inferno Rider",
   cost: 4,
   element: "Fusion",
-  set: "Molten Rift",
+  sets: ["Molten Rift"],
   buffs: [
     {
       id: "echo.inferno-rider.tap.fusion-basic-bonus",

@@ -15,7 +15,7 @@ export interface Echo {
   cost: number
   element: string
   skill: EchoSkill
-  set: string
+  sets: string[]
   buffs: BuffDef[]
 }
 

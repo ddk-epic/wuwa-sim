@@ -5,7 +5,7 @@ export const impermanenceHeron = {
   name: "Impermanence Heron",
   cost: 4,
   element: "Havoc",
-  set: "Moonlit Clouds",
+  sets: ["Moonlit Clouds"],
   buffs: [
     {
       id: "echo.impermanence-heron.window",
