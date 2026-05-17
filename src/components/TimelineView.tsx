@@ -45,6 +45,7 @@ interface TimelineViewProps {
   onStartRename: (groupId: string) => void
   onDuplicateGroup: (groupId: string) => void
   onDeleteGroup: (groupId: string) => void
+  onReorderGroupEntries: (groupId: string, fromId: string, toId: string) => void
 }
 
 function GroupLabelInput({
@@ -97,11 +98,16 @@ export function TimelineView({
   onStartRename,
   onDuplicateGroup,
   onDeleteGroup,
+  onReorderGroupEntries,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [draggingType, setDraggingType] = useState<"entry" | "group" | null>(
     null,
   )
+  const [dragSrcCtx, setDragSrcCtx] = useState<{
+    groupId: string | null
+    locked: boolean
+  } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [openMenuGroupId, setOpenMenuGroupId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
@@ -144,6 +150,8 @@ export function TimelineView({
         entry: TimelineEntry
         flatIndex: number
         inGroup: boolean
+        groupId: string | null
+        groupLocked: boolean
       }
 
   const renderItems: RenderItem[] = []
@@ -163,6 +171,8 @@ export function TimelineView({
           entry,
           flatIndex: flatIndex++,
           inGroup: true,
+          groupId: node.id,
+          groupLocked: node.locked,
         })
       }
     } else {
@@ -172,11 +182,30 @@ export function TimelineView({
         entry: { id, characterId, stageId, variantKind },
         flatIndex: flatIndex++,
         inGroup: false,
+        groupId: null,
+        groupLocked: false,
       })
     }
   }
 
-  function renderEntryRow(entry: TimelineEntry, i: number, inGroup: boolean) {
+  function isDropAllowed(
+    targetGroupId: string | null,
+    targetGroupLocked: boolean,
+  ): boolean {
+    if (!dragSrcCtx) return true
+    const { groupId: srcGroupId, locked: srcLocked } = dragSrcCtx
+    if (srcLocked) return targetGroupId === srcGroupId
+    if (targetGroupLocked && targetGroupId !== srcGroupId) return false
+    return true
+  }
+
+  function renderEntryRow(
+    entry: TimelineEntry,
+    i: number,
+    inGroup: boolean,
+    groupId: string | null,
+    groupLocked: boolean,
+  ) {
     const char = getCharacterById(entry.characterId)
     const row = summary.rows[i] ?? { time: 0, damage: null }
     const isInvalid = validation.invalidRowIds.has(entry.id)
@@ -193,6 +222,17 @@ export function TimelineView({
         : null
     // Reject group drags dropping onto group-contained entries
     const rejectsGroupDrop = inGroup && draggingType === "group"
+    const allowed = isDropAllowed(groupId, groupLocked)
+
+    function handleDrop() {
+      if (draggedId === null || draggedId === entry.id) return
+      if (inGroup && groupId && dragSrcCtx?.groupId === groupId) {
+        onReorderGroupEntries(groupId, draggedId, entry.id)
+      } else if (!inGroup && dragSrcCtx?.groupId === null) {
+        onReorder(draggedId, entry.id)
+      }
+      // Cross-boundary or unsupported: swallow silently
+    }
 
     return (
       <tr
@@ -202,26 +242,27 @@ export function TimelineView({
           ev.dataTransfer.effectAllowed = "move"
           setDraggedId(entry.id)
           setDraggingType("entry")
+          setDragSrcCtx({ groupId, locked: groupLocked })
         }}
         onDragOver={(ev) => {
-          if (rejectsGroupDrop) return
+          if (rejectsGroupDrop || !allowed) return
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
           if (entry.id !== draggedId) setDropTargetId(entry.id)
         }}
         onDrop={(ev) => {
-          if (rejectsGroupDrop) return
+          if (rejectsGroupDrop || !allowed) return
           ev.preventDefault()
-          if (draggedId !== null && draggedId !== entry.id) {
-            onReorder(draggedId, entry.id)
-          }
+          handleDrop()
           setDraggedId(null)
           setDraggingType(null)
+          setDragSrcCtx(null)
           setDropTargetId(null)
         }}
         onDragEnd={() => {
           setDraggedId(null)
           setDraggingType(null)
+          setDragSrcCtx(null)
           setDropTargetId(null)
         }}
         className={[
@@ -229,6 +270,7 @@ export function TimelineView({
           isDragging ? "opacity-40" : "hover:bg-gray-800/50",
           isDropTarget ? "border-t-blue-500 border-t-2" : "",
           isInvalid ? "bg-red-950/30" : "",
+          inGroup && groupLocked ? "border-l-2 border-l-gray-600/60" : "",
         ].join(" ")}
       >
         <td className="px-3 py-2 text-gray-400">{i + 1}</td>
@@ -465,7 +507,13 @@ export function TimelineView({
                 </tr>
               )
             }
-            return renderEntryRow(item.entry, item.flatIndex, item.inGroup)
+            return renderEntryRow(
+              item.entry,
+              item.flatIndex,
+              item.inGroup,
+              item.groupId,
+              item.groupLocked,
+            )
           })}
         </tbody>
       </table>

@@ -332,6 +332,41 @@ describe("useTimeline group support", () => {
   })
 })
 
+describe("useTimeline reorderGroupEntries", () => {
+  it("reorders entries within the same group", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.addEntry({ characterId: 1, stageId: "S::1" })
+      result.current.addEntry({ characterId: 1, stageId: "S::2" })
+    })
+    const [e1Id, e2Id] = result.current.entries.map((e) => e.id)
+    act(() => {
+      result.current.reorderGroupEntries(groupId, e2Id, e1Id)
+    })
+    const group = result.current.nodes.find((n) => n.id === groupId)
+    if (group?.kind === "group") {
+      expect(group.entries[0].stageId).toBe("S::2")
+      expect(group.entries[1].stageId).toBe("S::1")
+    }
+  })
+
+  it("is a no-op for unknown groupId", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.addEntry({ characterId: 1, stageId: "S::1" })
+    })
+    const before = result.current.nodes.slice()
+    act(() => {
+      result.current.reorderGroupEntries("unknown", "x", "y")
+    })
+    expect(result.current.nodes).toEqual(before)
+  })
+})
+
 describe("useTimeline reorderNodes", () => {
   it("moves a group node to a new top-level position", () => {
     const { result } = renderHook(() => useTimeline())

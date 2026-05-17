@@ -141,6 +141,22 @@ export function useTimeline() {
     })
   }
 
+  function reorderGroupEntries(groupId: string, fromId: string, toId: string) {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if (node.kind !== "group" || node.id !== groupId) return node
+        const fromIndex = node.entries.findIndex((e) => e.id === fromId)
+        const toIndex = node.entries.findIndex((e) => e.id === toId)
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+          return node
+        const next = [...node.entries]
+        const [item] = next.splice(fromIndex, 1)
+        next.splice(toIndex, 0, item)
+        return { ...node, entries: next }
+      }),
+    )
+  }
+
   function updateEntry(id: string, patch: Partial<Omit<TimelineEntry, "id">>) {
     setNodes((prev) =>
       prev.map((node) => {
@@ -182,6 +198,7 @@ export function useTimeline() {
     deleteGroup,
     duplicateGroup,
     reorderNodes,
+    reorderGroupEntries,
     clearTimeline,
   }
 }

@@ -31,6 +31,7 @@ export function SimulatorPage() {
     removeEntry,
     reorderEntries,
     reorderNodes,
+    reorderGroupEntries,
     updateEntry,
     updateGroupLabel,
     toggleGroupLock,
@@ -107,6 +108,7 @@ export function SimulatorPage() {
             onStartRename={setRenamingGroupId}
             onDuplicateGroup={duplicateGroup}
             onDeleteGroup={deleteGroup}
+            onReorderGroupEntries={reorderGroupEntries}
           />
         </div>
         <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
