@@ -8,7 +8,13 @@ export type WeaponValueExpr =
 export type WeaponStatEffect = Omit<StatEffect, "value"> & {
   value: WeaponValueExpr
 }
-export type WeaponEffect = WeaponStatEffect | Exclude<Effect, StatEffect>
+export type WeaponResourceEffect = Omit<ResourceEffect, "value"> & {
+  value: WeaponValueExpr
+}
+export type WeaponEffect =
+  | WeaponStatEffect
+  | WeaponResourceEffect
+  | Exclude<Effect, StatEffect | ResourceEffect>
 export type WeaponBuffDef = Omit<BuffDef, "effects"> & {
   effects: WeaponEffect[]
 }

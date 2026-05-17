@@ -11,8 +11,10 @@ export function resolveWeaponBuffs(
   return weapon.buffs.map((buff) => ({
     ...buff,
     effects: buff.effects.map((effect) => {
-      if (effect.kind !== "stat") return effect
-      return { ...effect, value: resolveValue(effect.value, rank) }
+      if (effect.kind === "stat" || effect.kind === "resource") {
+        return { ...effect, value: resolveValue(effect.value, rank) }
+      }
+      return effect
     }),
   }))
 }

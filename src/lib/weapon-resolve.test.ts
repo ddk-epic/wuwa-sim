@@ -149,4 +149,35 @@ describe("resolveWeaponBuffs", () => {
       value: { v: [0.1, 0.15, 0.18, 0.21, 0.24] },
     })
   })
+
+  it("resolves resource effect array v by rank", () => {
+    const resourceBuff: WeaponBuffDef = {
+      id: "test-resource",
+      name: "test",
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      cooldown: 20,
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: [8, 10, 12, 14, 16] },
+        },
+      ],
+    }
+    const w = weapon(resourceBuff)
+    for (let rank = 1; rank <= 5; rank++) {
+      const resolved = resolveWeaponBuffs(w, rank)
+      expect(resolved[0].effects[0]).toMatchObject({
+        kind: "resource",
+        value: { kind: "const", v: [8, 10, 12, 14, 16][rank - 1] },
+      })
+    }
+  })
 })

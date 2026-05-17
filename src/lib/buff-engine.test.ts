@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { stringmaster } from "#/data/weapons/stringmaster"
+import { variation } from "#/data/weapons/variation"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
@@ -3802,5 +3803,76 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     engine.onEvent({ kind: "swapIn", characterId: 2, frame: 2 })
 
     expect(engine.activeBuffIds(2)).toContain("test.conditional-nof")
+  })
+})
+
+describe("Variation weapon — Ceaseless Aria concerto restore", () => {
+  const FPS = 60
+
+  function setupVariation(rank: number) {
+    const char = baseChar({ id: 10 })
+    testCharacters = [char]
+    testWeapons = [variation]
+    const loadout: SlotLoadout = {
+      ...emptyLoadout,
+      weaponId: variation.id,
+      weaponRank: rank,
+    }
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [10, null, null],
+      loadouts: [loadout, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  it.each([1, 2, 3, 4, 5])(
+    "rank %i: Resonance Skill cast restores correct concerto",
+    (rank) => {
+      const expected = [8, 10, 12, 14, 16][rank - 1]
+      const engine = setupVariation(rank)
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 10,
+        skillType: "Resonance Skill",
+        frame: 0,
+      })
+      expect(engine.getResource(10).concerto).toBe(expected)
+    },
+  )
+
+  it("cooldown: second cast within 20s does not restore concerto again", () => {
+    const engine = setupVariation(1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 10,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    const afterFirst = engine.getResource(10).concerto
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 10,
+      skillType: "Resonance Skill",
+      frame: 10 * FPS - 1,
+    })
+    expect(engine.getResource(10).concerto).toBe(afterFirst)
+  })
+
+  it("cooldown: cast after 20s does restore concerto again", () => {
+    const engine = setupVariation(1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 10,
+      skillType: "Resonance Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 10,
+      skillType: "Resonance Skill",
+      frame: 20 * FPS,
+    })
+    expect(engine.getResource(10).concerto).toBe(8 + 8)
   })
 })
