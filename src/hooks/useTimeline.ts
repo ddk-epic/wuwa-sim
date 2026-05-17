@@ -128,6 +128,19 @@ export function useTimeline() {
     })
   }
 
+  function reorderNodes(fromId: string, toId: string) {
+    setNodes((prev) => {
+      const fromIndex = prev.findIndex((n) => n.id === fromId)
+      const toIndex = prev.findIndex((n) => n.id === toId)
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+        return prev
+      const next = [...prev]
+      const [item] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, item)
+      return next
+    })
+  }
+
   function updateEntry(id: string, patch: Partial<Omit<TimelineEntry, "id">>) {
     setNodes((prev) =>
       prev.map((node) => {
@@ -168,6 +181,7 @@ export function useTimeline() {
     toggleGroupLock,
     deleteGroup,
     duplicateGroup,
+    reorderNodes,
     clearTimeline,
   }
 }

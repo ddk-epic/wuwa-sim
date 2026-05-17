@@ -30,6 +30,7 @@ export function SimulatorPage() {
     addGroup,
     removeEntry,
     reorderEntries,
+    reorderNodes,
     updateEntry,
     updateGroupLabel,
     toggleGroupLock,
@@ -98,6 +99,7 @@ export function SimulatorPage() {
             renamingGroupId={renamingGroupId}
             onRemove={removeEntry}
             onReorder={reorderEntries}
+            onReorderNodes={reorderNodes}
             onUpdateEntry={updateEntry}
             onGroupLabelCommit={updateGroupLabel}
             onGroupLabelRenameEnd={() => setRenamingGroupId(null)}

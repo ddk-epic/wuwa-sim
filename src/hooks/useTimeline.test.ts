@@ -332,6 +332,41 @@ describe("useTimeline group support", () => {
   })
 })
 
+describe("useTimeline reorderNodes", () => {
+  it("moves a group node to a new top-level position", () => {
+    const { result } = renderHook(() => useTimeline())
+    let g1!: string
+    let g2!: string
+    act(() => {
+      g1 = result.current.addGroup()
+      g2 = result.current.addGroup()
+    })
+    // nodes: [g1(locked), g2(open)] — add g1 first, then g2 which locks g1
+    act(() => {
+      result.current.reorderNodes(g2, g1) // move g2 before g1
+    })
+    const nodeIds = result.current.nodes.map((n) => n.id)
+    expect(nodeIds[0]).toBe(g2)
+    expect(nodeIds[1]).toBe(g1)
+  })
+
+  it("moves a group after a top-level entry node", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      result.current.addEntry(sample) // top-level entry
+      groupId = result.current.addGroup()
+    })
+    const entryId = result.current.nodes[0].id
+    act(() => {
+      result.current.reorderNodes(groupId, entryId) // move group before entry
+    })
+    expect(result.current.nodes[0].kind).toBe("group")
+    expect(result.current.nodes[0].id).toBe(groupId)
+    expect(result.current.nodes[1].kind).toBe("entry")
+  })
+})
+
 describe("useTimeline lock invariant", () => {
   it("addGroup auto-locks the previously-open group", () => {
     const { result } = renderHook(() => useTimeline())

@@ -37,6 +37,7 @@ interface TimelineViewProps {
   renamingGroupId: string | null
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
+  onReorderNodes: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
   onGroupLabelRenameEnd: () => void
@@ -88,6 +89,7 @@ export function TimelineView({
   renamingGroupId,
   onRemove,
   onReorder,
+  onReorderNodes,
   onUpdateEntry,
   onGroupLabelCommit,
   onGroupLabelRenameEnd,
@@ -97,6 +99,9 @@ export function TimelineView({
   onDeleteGroup,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [draggingType, setDraggingType] = useState<"entry" | "group" | null>(
+    null,
+  )
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [openMenuGroupId, setOpenMenuGroupId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
@@ -134,7 +139,12 @@ export function TimelineView({
   // Build a flat render list: group headers interleaved with entry rows
   type RenderItem =
     | { type: "groupHeader"; groupId: string; label: string; locked: boolean }
-    | { type: "entry"; entry: TimelineEntry; flatIndex: number }
+    | {
+        type: "entry"
+        entry: TimelineEntry
+        flatIndex: number
+        inGroup: boolean
+      }
 
   const renderItems: RenderItem[] = []
   let flatIndex = 0
@@ -148,7 +158,12 @@ export function TimelineView({
         locked: node.locked,
       })
       for (const entry of node.entries) {
-        renderItems.push({ type: "entry", entry, flatIndex: flatIndex++ })
+        renderItems.push({
+          type: "entry",
+          entry,
+          flatIndex: flatIndex++,
+          inGroup: true,
+        })
       }
     } else {
       const { id, characterId, stageId, variantKind } = node
@@ -156,11 +171,12 @@ export function TimelineView({
         type: "entry",
         entry: { id, characterId, stageId, variantKind },
         flatIndex: flatIndex++,
+        inGroup: false,
       })
     }
   }
 
-  function renderEntryRow(entry: TimelineEntry, i: number) {
+  function renderEntryRow(entry: TimelineEntry, i: number, inGroup: boolean) {
     const char = getCharacterById(entry.characterId)
     const row = summary.rows[i] ?? { time: 0, damage: null }
     const isInvalid = validation.invalidRowIds.has(entry.id)
@@ -175,6 +191,8 @@ export function TimelineView({
       Object.keys(resolved.stage.variants).length > 0
         ? resolved.stage
         : null
+    // Reject group drags dropping onto group-contained entries
+    const rejectsGroupDrop = inGroup && draggingType === "group"
 
     return (
       <tr
@@ -183,22 +201,27 @@ export function TimelineView({
         onDragStart={(ev) => {
           ev.dataTransfer.effectAllowed = "move"
           setDraggedId(entry.id)
+          setDraggingType("entry")
         }}
         onDragOver={(ev) => {
+          if (rejectsGroupDrop) return
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
           if (entry.id !== draggedId) setDropTargetId(entry.id)
         }}
         onDrop={(ev) => {
+          if (rejectsGroupDrop) return
           ev.preventDefault()
           if (draggedId !== null && draggedId !== entry.id) {
             onReorder(draggedId, entry.id)
           }
           setDraggedId(null)
+          setDraggingType(null)
           setDropTargetId(null)
         }}
         onDragEnd={() => {
           setDraggedId(null)
+          setDraggingType(null)
           setDropTargetId(null)
         }}
         className={[
@@ -302,10 +325,46 @@ export function TimelineView({
             if (item.type === "groupHeader") {
               const isOpen = !item.locked
               const isRenaming = renamingGroupId === item.groupId
+              const isGroupDropTarget = dropTargetId === `group:${item.groupId}`
+              const isDraggingThisGroup = draggedId === item.groupId
               return (
                 <tr
                   key={`group-${item.groupId}`}
-                  className="border-t border-gray-600 bg-gray-900/60"
+                  draggable
+                  onDragStart={(ev) => {
+                    ev.dataTransfer.effectAllowed = "move"
+                    setDraggedId(item.groupId)
+                    setDraggingType("group")
+                  }}
+                  onDragOver={(ev) => {
+                    if (draggingType === "group") {
+                      ev.preventDefault()
+                      ev.dataTransfer.dropEffect = "move"
+                      if (item.groupId !== draggedId)
+                        setDropTargetId(`group:${item.groupId}`)
+                    }
+                  }}
+                  onDrop={(ev) => {
+                    if (draggingType === "group") {
+                      ev.preventDefault()
+                      if (draggedId !== null && draggedId !== item.groupId) {
+                        onReorderNodes(draggedId, item.groupId)
+                      }
+                      setDraggedId(null)
+                      setDraggingType(null)
+                      setDropTargetId(null)
+                    }
+                  }}
+                  onDragEnd={() => {
+                    setDraggedId(null)
+                    setDraggingType(null)
+                    setDropTargetId(null)
+                  }}
+                  className={[
+                    "border-t border-gray-600 bg-gray-900/60 cursor-grab",
+                    isDraggingThisGroup ? "opacity-40" : "",
+                    isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
+                  ].join(" ")}
                 >
                   <td className="px-3 py-1.5 text-gray-500 text-xs">—</td>
                   <td
@@ -406,7 +465,7 @@ export function TimelineView({
                 </tr>
               )
             }
-            return renderEntryRow(item.entry, item.flatIndex)
+            return renderEntryRow(item.entry, item.flatIndex, item.inGroup)
           })}
         </tbody>
       </table>
