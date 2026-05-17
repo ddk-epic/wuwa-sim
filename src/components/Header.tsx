@@ -8,6 +8,7 @@ import { SettingsModal } from "./SettingsModal"
 interface HeaderProps {
   slots: Slots
   onEditTeam: () => void
+  onAddGroup: () => void
   onResetTimeline: () => void
   onSimulate: () => void
   onOpenSimulationLog: () => void
@@ -19,6 +20,7 @@ interface HeaderProps {
 export function Header({
   slots,
   onEditTeam,
+  onAddGroup,
   onResetTimeline,
   onSimulate,
   onOpenSimulationLog,
@@ -54,6 +56,12 @@ export function Header({
       </button>
       <div className="ml-auto flex items-center gap-4">
         {/** Buttons */}
+        <button
+          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
+          onClick={onAddGroup}
+        >
+          + Group
+        </button>
         <button
           className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           disabled={timelineEmpty}

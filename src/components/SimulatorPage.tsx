@@ -24,17 +24,21 @@ export function SimulatorPage() {
   } = useTeam()
 
   const {
+    nodes,
     entries,
     addEntry,
+    addGroup,
     removeEntry,
     reorderEntries,
     updateEntry,
+    updateGroupLabel,
     clearTimeline,
   } = useTimeline()
   const { log, setLog, clearLog } = useSimulationLog()
   const [settings, setReactionDelay] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
 
   const summary = getTimelineSummary(
     entries,
@@ -48,6 +52,11 @@ export function SimulatorPage() {
     clearLog()
   }
 
+  function handleAddGroup() {
+    const id = addGroup()
+    setEditingGroupId(id)
+  }
+
   function handleSimulate() {
     setLog(
       generateSimulationLog(entries, slots, loadouts, settings.reactionDelay),
@@ -59,6 +68,7 @@ export function SimulatorPage() {
       <Header
         slots={slots}
         onEditTeam={() => setModalOpen(true)}
+        onAddGroup={handleAddGroup}
         onResetTimeline={handleResetTimeline}
         onSimulate={handleSimulate}
         onOpenSimulationLog={() => setSimulationLogOpen(true)}
@@ -77,14 +87,19 @@ export function SimulatorPage() {
         <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
         <div className="flex-75 flex flex-col min-h-0">
           <TimelineView
-            entries={entries}
+            nodes={nodes}
             summary={summary}
             slots={slots}
             loadouts={loadouts}
             reactionDelay={settings.reactionDelay}
+            editingGroupId={editingGroupId}
             onRemove={removeEntry}
             onReorder={reorderEntries}
             onUpdateEntry={updateEntry}
+            onGroupLabelCommit={(groupId, label) => {
+              updateGroupLabel(groupId, label)
+              setEditingGroupId(null)
+            }}
           />
         </div>
         <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
