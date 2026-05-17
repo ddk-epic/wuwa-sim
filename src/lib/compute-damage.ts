@@ -40,7 +40,8 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
     (stats.elementBonus["all"] ?? 0) +
     stats.skillTypeBonus[ctx.skillType] +
     stats.allDmgBonus
-  const deepen = stats.deepens[ctx.skillType]
+  const deepen =
+    (stats.deepens[ctx.skillType] ?? 0) + (stats.deepens["all"] ?? 0)
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = 1 - critRate + critRate * stats.critDmg
 

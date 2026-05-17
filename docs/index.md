@@ -7,6 +7,7 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 
 - [engine-overview](engine-overview.md) — start here: how Timeline → Engine → Damage flows, which modules compose
 - [buff-engine](buff-engine.md) — coordinator, Phase Pipeline, Instance Store lifecycle
+- [BUFFS](BUFFS.md) — StatPath reference table (stat paths, keys, semantics)
 
 ## Game model
 

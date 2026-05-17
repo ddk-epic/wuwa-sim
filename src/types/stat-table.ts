@@ -32,7 +32,7 @@ export interface StatTable {
   critDmg: number
   elementBonus: Record<string, number>
   skillTypeBonus: Record<SkillType, number>
-  deepens: Record<SkillType, number>
+  deepens: Record<string, number>
   defShred: number
   shreds: Record<SkillType, number>
   allDmgBonus: number

@@ -110,7 +110,7 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
       stats.skillTypeBonus[path.key] += v
       return
     case "deepen":
-      stats.deepens[path.key] += v
+      stats.deepens[path.key] = (stats.deepens[path.key] ?? 0) + v
       return
     case "shred":
       stats.shreds[path.key] += v

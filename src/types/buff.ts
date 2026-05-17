@@ -17,7 +17,7 @@ export type StatPath =
     }
   | { stat: "elementBonus"; key: string }
   | { stat: "skillTypeBonus"; key: SkillType }
-  | { stat: "deepen"; key: SkillType }
+  | { stat: "deepen"; key: SkillType | "all" }
   | { stat: "shred"; key: SkillType }
 
 export type ValueExpr =

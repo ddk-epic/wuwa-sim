@@ -85,6 +85,28 @@ describe("computeDamage", () => {
     )
   })
 
+  it("deepen keyed 'all' applies to Basic Attack, Resonance Skill, and Outro Skill equally", () => {
+    const s = stats({ deepens: { ...emptyStatTable().deepens, all: 0.2 } })
+    const expected = Math.round(1 * 1000 * 1.2 * DEFRES)
+    expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(expected)
+    expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
+      expected,
+    )
+    expect(computeDamage(ctx({ skillType: "Outro Skill" }), s)).toBe(expected)
+  })
+
+  it("deepen 'all' and skill-type-specific deepen stack additively before the factor", () => {
+    const s = stats({
+      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.1, all: 0.2 },
+    })
+    expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(
+      Math.round(1 * 1000 * 1.3 * DEFRES),
+    )
+    expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
+      Math.round(1 * 1000 * 1.2 * DEFRES),
+    )
+  })
+
   it("crit at sub-cap applies expected-value (totalCritDamage used directly per reference)", () => {
     const s = stats({ critRate: 0.5, critDmg: 1.5 })
     expect(computeDamage(ctx(), s)).toBe(
