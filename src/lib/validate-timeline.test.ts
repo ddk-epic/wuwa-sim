@@ -383,6 +383,215 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
   })
 })
 
+describe("validateTimeline — comboAllows (Movement transparency)", () => {
+  const movementChar = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack::Stage 1",
+              comboAllows: ["Dodge"],
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 2,
+          name: "Dodge",
+          type: "Movement",
+          stages: [
+            {
+              name: "Dodge",
+              value: "",
+              actionTime: 21,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 3,
+          name: "Jump",
+          type: "Movement",
+          stages: [
+            {
+              name: "Jump",
+              value: "",
+              actionTime: 18,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("comboAllows: Dodge between Stage 1 and Stage 2 validates green", () => {
+    testCharacters = [movementChar(1)]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Dodge::_", "dodge"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("default omitted comboAllows: Dodge between Stage 1 and Stage 2 validates red", () => {
+    const opaqueChar = baseChar({
+      id: 1,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresStageId: "Normal Attack::Stage 1",
+              // comboAllows omitted → opaque
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 2,
+          name: "Dodge",
+          type: "Movement",
+          stages: [{ name: "Dodge", value: "", actionTime: 21, damage: [] }],
+          damage: [],
+        },
+      ],
+    })
+    testCharacters = [opaqueChar]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Dodge::_", "dodge"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+  })
+
+  it("comboAllows: Dodge, Jump between Stage 1 and Stage 2 still validates green", () => {
+    const charWithBoth: EnrichedCharacter = {
+      ...movementChar(1),
+      skills: movementChar(1).skills.map((skill) => {
+        if (skill.name !== "Normal Attack") return skill
+        return {
+          ...skill,
+          stages: skill.stages.map((s) => {
+            if (s.newName !== "Stage 2") return s
+            return { ...s, comboAllows: ["Dodge", "Jump"] as const }
+          }),
+        }
+      }),
+    }
+    testCharacters = [charWithBoth]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Dodge::_", "dodge"),
+        entry(1, "Jump::_", "jump"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("comboAllows Dodge: Jump between Stage 1 and Stage 2 still resets the chain", () => {
+    testCharacters = [movementChar(1)]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Jump::_", "jump"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+  })
+
+  it("non-Movement entry between gate and prerequisite always resets the chain", () => {
+    const charWithSkill: EnrichedCharacter = {
+      ...movementChar(1),
+      skills: [
+        ...movementChar(1).skills,
+        {
+          id: 10,
+          name: "Resonance Skill",
+          type: "Resonance Skill",
+          stages: [{ name: "Skill", value: "", actionTime: 30, damage: [] }],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charWithSkill]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Resonance Skill::_", "skill"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+  })
+
+  it("two consecutive Dodges still resolve to the prior real stage", () => {
+    testCharacters = [movementChar(1)]
+    const result = validateTimeline(
+      [
+        entry(1, "Normal Attack::Stage 1", "s1"),
+        entry(1, "Dodge::_", "d1"),
+        entry(1, "Dodge::_", "d2"),
+        entry(1, "Normal Attack::Stage 2", "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+})
+
 describe("validateTimeline — cascade suppression", () => {
   // Chain: Stage 0 → Stage 1 (req Stage 0) → Stage 2 (req Stage 1) → Stage 3 (req Stage 2)
   const chainChar = (): EnrichedCharacter =>

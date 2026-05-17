@@ -83,14 +83,24 @@ export interface StageVariant {
   actionTime: number
 }
 
-export type EnrichedSkillAttribute = Omit<SkillAttribute, "staCost"> & {
+export type MovementKind = "Dodge" | "Jump"
+
+type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   id?: string
   actionTime: number
   hidden?: boolean
   newName?: string
-  requiresStageId?: string
   variants?: Partial<Record<VariantKind, StageVariant>>
 }
+
+export type EnrichedSkillAttribute =
+  | (EnrichedSkillAttributeBase & {
+      requiresStageId: string
+      comboAllows?: readonly MovementKind[]
+    })
+  | (EnrichedSkillAttributeBase & {
+      requiresStageId?: never
+    })
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {
   stages: EnrichedSkillAttribute[]

@@ -1,5 +1,6 @@
 import type {
   DamageEntry,
+  MovementKind,
   SkillCategory,
   SkillType,
   VariantKind,
@@ -25,6 +26,7 @@ export interface ResolvedStage {
   skillType: SkillType
   skillName: string
   requiresStageId?: string
+  comboAllows?: readonly MovementKind[]
 }
 
 export function makeStageId(baseName: string, newName?: string): string {
@@ -60,6 +62,15 @@ export function findStageByEntry(
     for (const skill of character.skills) {
       for (const s of skill.stages) {
         if (makeStageId(skill.name, s.newName) === entry.stageId) {
+          const comboAllows =
+            s.requiresStageId !== undefined
+              ? (
+                  s as {
+                    requiresStageId: string
+                    comboAllows?: readonly MovementKind[]
+                  }
+                ).comboAllows
+              : undefined
           return {
             stage: s,
             stageId: entry.stageId,
@@ -71,6 +82,7 @@ export function findStageByEntry(
             skillType: s.damage?.[0]?.type ?? categoryToSkillType(skill.type),
             skillName: stageLabel(skill.name, s.newName),
             requiresStageId: s.requiresStageId,
+            comboAllows,
           }
         }
       }

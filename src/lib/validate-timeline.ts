@@ -32,6 +32,7 @@ export function validateTimeline(
     const resolved = findStageByEntry(entry, slots, loadouts)
     const skillType = resolved?.skillType ?? null
     const requiredStageId = resolved?.requiresStageId
+    const comboAllows = resolved?.comboAllows ?? []
 
     // Intro Skill must follow Outro Skill
     if (skillType === "Intro Skill") {
@@ -64,16 +65,30 @@ export function validateTimeline(
         })
       }
     } else if (skillType !== "Echo Skill" && requiredStageId !== undefined) {
-      const prevSameChar = entries
-        .slice(0, i)
-        .reverse()
-        .find((e) => e.characterId === entry.characterId)
-      if (!prevSameChar || prevSameChar.stageId !== requiredStageId) {
+      // Walk backwards, skipping Movement entries whose skill name is in comboAllows
+      let effectivePrev: TimelineEntry | undefined
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = entries[j]
+        if (prev.characterId !== entry.characterId) continue
+        if (comboAllows.length > 0) {
+          const prevResolved = findStageByEntry(prev, slots, loadouts)
+          const skillBaseName = prev.stageId.split("::")[0]
+          if (
+            prevResolved?.skillType === "Movement" &&
+            (comboAllows as readonly string[]).includes(skillBaseName)
+          ) {
+            continue
+          }
+        }
+        effectivePrev = prev
+        break
+      }
+      if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
         errors.push({
           message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
           isConsequence: false,
         })
-      } else if (invalidRowIds.has(prevSameChar.id)) {
+      } else if (invalidRowIds.has(effectivePrev.id)) {
         errors.push({
           message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
           isConsequence: true,
