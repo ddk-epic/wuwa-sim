@@ -489,4 +489,6 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 
 **`resource` effect** — `op: "add" | "sub" | "set"` against a `ResourceKind` (`energy`, `concerto`, `forte`, `resonance`). `target` defaults to the buff's target but can be overridden to `"self"` / `"target"` / `"source"`.
 
+All four `ResourceKind` values are **per-character** — every character on the team has their own counter. `energy`, `concerto`, and `resonance` map to the same in-game concepts across all characters. `forte` is the **per-character character-specific resource bucket**, named per character: Verina's "Photosynthesis Energy", Sanhua's "Frostmoon Cycle", Encore's "Cosmos Energy", etc. Authors should treat `forte` as "this character's Forte resource", not as a single shared gauge. Add/sub against `forte` from a character's own buffs; do not cross-write another character's `forte`.
+
 **Snapshot vs. dynamic value** — without `snapshot`, a `ValueExpr` recomputes against current stats every frame; with `snapshot: true`, the value is frozen at apply time using the source's stats then. Use snapshot for "X% of caster's ATK at cast time" patterns, dynamic for "while you have N stacks of buff Y, gain Z%".
