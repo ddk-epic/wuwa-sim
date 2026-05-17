@@ -32,17 +32,20 @@ export function generateSimulationLog(
     )
 
     pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
-    const skillCastResult = engine.onEvent({
-      kind: "skillCast",
-      characterId: entry.characterId,
-      skillType: resolved.skillType,
-      stageId: resolved.stageId,
-      frame: stageStartFrame,
-      concerto: resolved.concerto,
-      resonanceCost: resolved.resonanceCost,
-    })
-    pushBuffEvents(log, skillCastResult.lifecycleEvents)
-    for (const synth of skillCastResult.syntheticHits) log.push(synth)
+
+    if (resolved.skillType !== "Movement") {
+      const skillCastResult = engine.onEvent({
+        kind: "skillCast",
+        characterId: entry.characterId,
+        skillType: resolved.skillType,
+        stageId: resolved.stageId,
+        frame: stageStartFrame,
+        concerto: resolved.concerto,
+        resonanceCost: resolved.resonanceCost,
+      })
+      pushBuffEvents(log, skillCastResult.lifecycleEvents)
+      for (const synth of skillCastResult.syntheticHits) log.push(synth)
+    }
 
     const actorState = engine.getResource(entry.characterId)
     const actionEvent: ActionEvent = {

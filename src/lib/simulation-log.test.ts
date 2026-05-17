@@ -1165,3 +1165,146 @@ describe("generateSimulationLog — Energy Recharge (#98)", () => {
     expect(synth?.cumulativeEnergy).toBeCloseTo(10 * (1 + 0.5 + BASE_ER))
   })
 })
+
+describe("generateSimulationLog — Movement stages", () => {
+  const charWithMovement: EnrichedCharacter = {
+    id: 99,
+    name: "Movement Char",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 991,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          {
+            name: "Stage 1",
+            value: "100%",
+            actionTime: 60,
+            damage: [dmgHit(1.5, 10, 5)],
+          },
+        ],
+        damage: [],
+      },
+      {
+        id: 992,
+        name: "Dodge",
+        type: "Movement",
+        stages: [
+          {
+            name: "Dodge",
+            value: "",
+            actionTime: 21,
+            damage: [],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("Dodge produces an Action Event in the log", () => {
+    testCharacters = [charWithMovement]
+    const result = generateSimulationLog(
+      [tlEntry(99, "Dodge::_")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const action = result.find((e) => e.kind === "action")
+    expect(action).toBeDefined()
+    expect(action?.skillType).toBe("Movement")
+    expect(action?.frame).toBe(0)
+  })
+
+  it("Dodge produces only an Action Event — no hit events", () => {
+    testCharacters = [charWithMovement]
+    const result = generateSimulationLog(
+      [tlEntry(99, "Dodge::_")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(0)
+  })
+
+  it("concerto stays unchanged across a Dodge (no skillCast dispatch)", () => {
+    testCharacters = [charWithMovement]
+    const result = generateSimulationLog(
+      [
+        tlEntry(99, "Normal Attack::_"), // gains concerto from hit
+        tlEntry(99, "Dodge::_"),
+      ],
+      emptySlots,
+      emptyLoadouts,
+    )
+    // After Normal Attack hits: concerto accumulated; the Dodge action event shows
+    // the same concerto (Dodge did not apply any concerto delta)
+    const hits = result.filter((e) => e.kind === "hit")
+    const hitAfterNormal = hits[0] as { cumulativeConcerto: number } | undefined
+    const dodgeAction = result.find(
+      (e) => e.kind === "action" && e.skillType === "Movement",
+    )
+    expect(hitAfterNormal?.cumulativeConcerto).toBeGreaterThan(0)
+    expect(dodgeAction?.cumulativeConcerto).toBe(
+      hitAfterNormal?.cumulativeConcerto,
+    )
+  })
+
+  it("energy is preserved across a Dodge (Liberation energy not drained)", () => {
+    testCharacters = [charWithMovement]
+    const result = generateSimulationLog(
+      [
+        tlEntry(99, "Normal Attack::_"), // accumulates energy via hit
+        tlEntry(99, "Dodge::_"),
+      ],
+      emptySlots,
+      emptyLoadouts,
+    )
+    // Energy set by the hit event; the Dodge action event must show same value
+    const hits = result.filter((e) => e.kind === "hit")
+    const hitAfterNormal = hits[0] as { cumulativeEnergy: number } | undefined
+    const dodgeAction = result.find(
+      (e) => e.kind === "action" && e.skillType === "Movement",
+    )
+    expect(hitAfterNormal?.cumulativeEnergy).toBeGreaterThan(0)
+    expect(dodgeAction?.cumulativeEnergy).toBe(hitAfterNormal?.cumulativeEnergy)
+  })
+
+  it("skillCast-triggered buff does not promote when Dodge is cast", () => {
+    const skillCastBuff: BuffDef = {
+      id: "test.on-cast",
+      name: "On Cast Buff",
+      trigger: { event: "skillCast", characterId: 99, skillType: "Movement" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Fusion" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    }
+    const charWithBuff: EnrichedCharacter = {
+      ...charWithMovement,
+      buffs: [skillCastBuff],
+    }
+    testCharacters = [charWithBuff]
+    const result = generateSimulationLog(
+      [tlEntry(99, "Dodge::_")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const buffEvents = result.filter((e) => e.kind === "buff")
+    expect(buffEvents).toHaveLength(0)
+  })
+})
