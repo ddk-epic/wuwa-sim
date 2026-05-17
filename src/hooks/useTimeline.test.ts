@@ -400,6 +400,29 @@ describe("useTimeline reorderNodes", () => {
     expect(result.current.nodes[0].id).toBe(groupId)
     expect(result.current.nodes[1].kind).toBe("entry")
   })
+
+  it("moves a top-level entry to a group's flat position (entry dropped on group header)", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup() // group(open)
+    })
+    act(() => {
+      result.current.toggleGroupLock(groupId) // lock it
+    })
+    act(() => {
+      result.current.addEntry(sample) // top-level entry (group is locked)
+    })
+    // nodes: [group(locked), entry(top-level)]
+    const entryId = result.current.nodes.find((n) => n.kind === "entry")!.id
+    act(() => {
+      result.current.reorderNodes(entryId, groupId) // entry moves before group
+    })
+    expect(result.current.nodes[0].kind).toBe("entry")
+    expect(result.current.nodes[0].id).toBe(entryId)
+    expect(result.current.nodes[1].kind).toBe("group")
+    expect(result.current.nodes[1].id).toBe(groupId)
+  })
 })
 
 describe("useTimeline lock invariant", () => {

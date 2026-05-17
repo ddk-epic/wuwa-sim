@@ -237,6 +237,8 @@ export function TimelineView({
         onReorderGroupEntries(groupId, draggedId, entry.id)
       } else if (!inGroup && dragSrcCtx?.groupId === null) {
         onReorder(draggedId, entry.id)
+      } else if (!inGroup && draggingType === "group") {
+        onReorderNodes(draggedId, entry.id)
       }
       // Cross-boundary or unsupported: swallow silently
     }
@@ -391,6 +393,13 @@ export function TimelineView({
                       ev.dataTransfer.dropEffect = "move"
                       if (item.groupId !== draggedId)
                         setDropTargetId(`group:${item.groupId}`)
+                    } else if (
+                      draggingType === "entry" &&
+                      dragSrcCtx?.groupId === null
+                    ) {
+                      ev.preventDefault()
+                      ev.dataTransfer.dropEffect = "move"
+                      setDropTargetId(`group:${item.groupId}`)
                     }
                   }}
                   onDrop={(ev) => {
@@ -401,6 +410,17 @@ export function TimelineView({
                       }
                       setDraggedId(null)
                       setDraggingType(null)
+                      setDropTargetId(null)
+                    } else if (
+                      draggingType === "entry" &&
+                      dragSrcCtx?.groupId === null &&
+                      draggedId !== null
+                    ) {
+                      ev.preventDefault()
+                      onReorderNodes(draggedId, item.groupId)
+                      setDraggedId(null)
+                      setDraggingType(null)
+                      setDragSrcCtx(null)
                       setDropTargetId(null)
                     }
                   }}
