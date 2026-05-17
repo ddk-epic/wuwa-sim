@@ -280,3 +280,91 @@ describe("useTimeline group support", () => {
     }
   })
 })
+
+describe("useTimeline lock invariant", () => {
+  it("addGroup auto-locks the previously-open group", () => {
+    const { result } = renderHook(() => useTimeline())
+    let g1!: string
+    let g2!: string
+    act(() => {
+      g1 = result.current.addGroup()
+    })
+    // g1 is open
+    const g1Before = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === g1,
+    )
+    expect(g1Before?.kind === "group" && g1Before.locked).toBe(false)
+
+    act(() => {
+      g2 = result.current.addGroup()
+    })
+    // g1 should now be locked, g2 open
+    const g1After = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === g1,
+    )
+    const g2After = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === g2,
+    )
+    expect(g1After?.kind === "group" && g1After.locked).toBe(true)
+    expect(g2After?.kind === "group" && g2After.locked).toBe(false)
+  })
+
+  it("toggleGroupLock locks an open group", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    act(() => {
+      result.current.toggleGroupLock(groupId)
+    })
+    const group = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === groupId,
+    )
+    expect(group?.kind === "group" && group.locked).toBe(true)
+  })
+
+  it("toggleGroupLock opens a locked group and locks all other open groups", () => {
+    const { result } = renderHook(() => useTimeline())
+    let g1!: string
+    let g2!: string
+    act(() => {
+      g1 = result.current.addGroup()
+      g2 = result.current.addGroup() // auto-locks g1
+    })
+    // g2 is open, g1 is locked. Now toggle g1 to open it.
+    act(() => {
+      result.current.toggleGroupLock(g1)
+    })
+    const g1Node = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === g1,
+    )
+    const g2Node = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === g2,
+    )
+    expect(g1Node?.kind === "group" && g1Node.locked).toBe(false)
+    expect(g2Node?.kind === "group" && g2Node.locked).toBe(true)
+  })
+
+  it("addEntry lands at top level when no group is open", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    act(() => {
+      result.current.toggleGroupLock(groupId) // lock the group
+    })
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    const topLevel = result.current.nodes.filter((n) => n.kind === "entry")
+    expect(topLevel).toHaveLength(1)
+    const group = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === groupId,
+    )
+    if (group?.kind === "group") {
+      expect(group.entries).toHaveLength(0)
+    }
+  })
+})

@@ -46,11 +46,35 @@ export function useTimeline() {
 
   function addGroup(): string {
     const id = crypto.randomUUID()
-    setNodes((prev) => [
-      ...prev,
-      { kind: "group" as const, id, label: "", locked: false, entries: [] },
-    ])
+    setNodes((prev) => {
+      const updated = prev.map((n) =>
+        n.kind === "group" && !n.locked ? { ...n, locked: true } : n,
+      )
+      return [
+        ...updated,
+        { kind: "group" as const, id, label: "", locked: false, entries: [] },
+      ]
+    })
     return id
+  }
+
+  function toggleGroupLock(groupId: string) {
+    setNodes((prev) => {
+      const target = prev.find((n) => n.kind === "group" && n.id === groupId)
+      if (!target || target.kind !== "group") return prev
+      if (target.locked) {
+        // Opening this group — lock all currently-open groups (at-most-one-open)
+        return prev.map((n) => {
+          if (n.kind !== "group") return n
+          if (n.id === groupId) return { ...n, locked: false }
+          return n.locked ? n : { ...n, locked: true }
+        })
+      }
+      // Locking this group
+      return prev.map((n) =>
+        n.kind === "group" && n.id === groupId ? { ...n, locked: true } : n,
+      )
+    })
   }
 
   function removeEntry(id: string) {
@@ -114,6 +138,7 @@ export function useTimeline() {
     reorderEntries,
     updateEntry,
     updateGroupLabel,
+    toggleGroupLock,
     clearTimeline,
   }
 }

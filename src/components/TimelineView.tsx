@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { Lock, LockOpen } from "lucide-react"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
@@ -37,6 +38,7 @@ interface TimelineViewProps {
   onReorder: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
+  onToggleGroupLock: (groupId: string) => void
 }
 
 function GroupLabelInput({
@@ -83,6 +85,7 @@ export function TimelineView({
   onReorder,
   onUpdateEntry,
   onGroupLabelCommit,
+  onToggleGroupLock,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -285,15 +288,23 @@ export function TimelineView({
                     colSpan={5}
                     className="px-3 py-1.5 text-gray-400 text-xs font-medium"
                   >
-                    <span
+                    <button
+                      onClick={() => onToggleGroupLock(item.groupId)}
                       className={[
-                        "mr-2 text-xs",
-                        isOpen ? "text-blue-400" : "text-gray-600",
+                        "mr-2 align-middle transition-colors",
+                        isOpen
+                          ? "text-blue-400 hover:text-blue-300"
+                          : "text-gray-600 hover:text-gray-400",
                       ].join(" ")}
-                      title={isOpen ? "Open" : "Locked"}
+                      title={
+                        isOpen
+                          ? "Open — click to lock"
+                          : "Locked — click to open"
+                      }
+                      aria-label={isOpen ? "Lock group" : "Unlock group"}
                     >
-                      {isOpen ? "◉" : "○"}
-                    </span>
+                      {isOpen ? <LockOpen size={14} /> : <Lock size={14} />}
+                    </button>
                     <GroupLabelInput
                       groupId={item.groupId}
                       initialLabel={item.label}

@@ -32,6 +32,7 @@ export function SimulatorPage() {
     reorderEntries,
     updateEntry,
     updateGroupLabel,
+    toggleGroupLock,
     clearTimeline,
   } = useTimeline()
   const { log, setLog, clearLog } = useSimulationLog()
@@ -100,6 +101,7 @@ export function SimulatorPage() {
               updateGroupLabel(groupId, label)
               setEditingGroupId(null)
             }}
+            onToggleGroupLock={toggleGroupLock}
           />
         </div>
         <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
