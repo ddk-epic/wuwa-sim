@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react"
-import { Lock, LockOpen } from "lucide-react"
+import {
+  LockClosedIcon,
+  LockOpen1Icon,
+  CopyIcon,
+  TrashIcon,
+} from "@radix-ui/react-icons"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
@@ -109,20 +114,7 @@ export function TimelineView({
     locked: boolean
   } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
-  const [openMenuGroupId, setOpenMenuGroupId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!openMenuGroupId) return
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuGroupId(null)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [openMenuGroupId])
 
   const entries = flattenNodes(nodes)
 
@@ -435,104 +427,78 @@ export function TimelineView({
                     isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
                   ].join(" ")}
                 >
-                  <td className="px-3 py-1.5 text-gray-500 text-xs">—</td>
+                  <td className="w-8 px-3 py-1.5 text-gray-500 text-xs">—</td>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-3 py-1.5 text-gray-400 text-xs font-medium"
                   >
-                    <button
-                      onClick={() => onToggleGroupLock(item.groupId)}
-                      className={[
-                        "mr-2 align-middle transition-colors",
-                        isOpen
-                          ? "text-blue-400 hover:text-blue-300"
-                          : "text-gray-600 hover:text-gray-400",
-                      ].join(" ")}
-                      title={
-                        isOpen
-                          ? "Open — click to lock"
-                          : "Locked — click to open"
-                      }
-                      aria-label={isOpen ? "Lock group" : "Unlock group"}
-                    >
-                      {isOpen ? <LockOpen size={14} /> : <Lock size={14} />}
-                    </button>
-                    {isOpen || isRenaming ? (
-                      <GroupLabelInput
-                        groupId={item.groupId}
-                        initialLabel={item.label}
-                        autoFocus={isRenaming}
-                        onCommit={(gid, label) => {
-                          onGroupLabelCommit(gid, label)
-                          onGroupLabelRenameEnd()
-                        }}
-                      />
-                    ) : (
-                      <span
-                        onClick={() => onStartRename(item.groupId)}
-                        className="cursor-text hover:text-white transition-colors"
-                        title="Click to rename"
-                      >
-                        {item.label || (
-                          <span className="italic text-gray-600">unnamed</span>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        {isOpen || isRenaming ? (
+                          <GroupLabelInput
+                            groupId={item.groupId}
+                            initialLabel={item.label}
+                            autoFocus={isRenaming}
+                            onCommit={(gid, label) => {
+                              onGroupLabelCommit(gid, label)
+                              onGroupLabelRenameEnd()
+                            }}
+                          />
+                        ) : (
+                          <span
+                            onClick={() => onStartRename(item.groupId)}
+                            className="cursor-text hover:text-white transition-colors text-sm inline-block w-40 border-b border-transparent"
+                            title="Click to rename"
+                          >
+                            {item.label || (
+                              <span className="italic text-gray-600">
+                                unnamed
+                              </span>
+                            )}
+                          </span>
                         )}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-1.5 text-right">
-                    <div
-                      ref={
-                        openMenuGroupId === item.groupId ? menuRef : undefined
-                      }
-                      className="relative inline-block"
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setOpenMenuGroupId((prev) =>
-                            prev === item.groupId ? null : item.groupId,
-                          )
-                        }}
-                        className="text-gray-500 hover:text-gray-300 transition-colors px-1"
-                        aria-label="Group options"
-                      >
-                        ⋯
-                      </button>
-                      {openMenuGroupId === item.groupId && (
-                        <div className="absolute right-0 top-full z-10 bg-gray-800 border border-gray-600 rounded shadow-lg min-w-[160px]">
-                          <button
-                            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                            onClick={() => {
-                              setOpenMenuGroupId(null)
-                              onDuplicateGroup(item.groupId)
-                            }}
-                          >
-                            Duplicate
-                          </button>
-                          <button
-                            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                            onClick={() => {
-                              setOpenMenuGroupId(null)
-                              onStartRename(item.groupId)
-                            }}
-                          >
-                            Rename
-                          </button>
-                          <button
-                            className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
-                            onClick={() => {
-                              setOpenMenuGroupId(null)
-                              if (item.entryCount >= 2) {
-                                setDeletingGroupId(item.groupId)
-                              } else {
-                                onDeleteGroup(item.groupId)
-                              }
-                            }}
-                          >
-                            Delete group + contents
-                          </button>
-                        </div>
-                      )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => onToggleGroupLock(item.groupId)}
+                          className={[
+                            "p-0.5 transition-colors",
+                            isOpen
+                              ? "text-blue-400 hover:text-blue-300"
+                              : "text-gray-600 hover:text-gray-400",
+                          ].join(" ")}
+                          title={
+                            isOpen
+                              ? "Open — click to lock"
+                              : "Locked — click to open"
+                          }
+                          aria-label={isOpen ? "Lock group" : "Unlock group"}
+                        >
+                          {isOpen ? <LockOpen1Icon /> : <LockClosedIcon />}
+                        </button>
+                        <button
+                          onClick={() => onDuplicateGroup(item.groupId)}
+                          className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+                          title="Duplicate group"
+                          aria-label="Duplicate group"
+                        >
+                          <CopyIcon />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (item.entryCount >= 2) {
+                              setDeletingGroupId(item.groupId)
+                            } else {
+                              onDeleteGroup(item.groupId)
+                            }
+                          }}
+                          className="p-0.5 text-gray-500 hover:text-red-400 transition-colors"
+                          title="Delete group and contents"
+                          aria-label="Delete group and contents"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>
