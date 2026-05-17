@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { DamageEntry, EnrichedCharacter } from "#/types/character"
-import type { EnrichedSkillAttribute } from "#/types/character"
+import type {
+  DamageEntry,
+  EnrichedCharacter,
+  EnrichedSkillAttribute,
+} from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { findStageByEntry, makeStageId, resolveStageExecution } from "./stage"

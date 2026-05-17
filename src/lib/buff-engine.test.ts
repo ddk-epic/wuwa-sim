@@ -3289,7 +3289,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
   const STRINGMASTER_ID = 21050016
 
   const bootstrapStringmaster = (rank: number, slots: Slots = slotsOf(1)) => {
-    testWeapons = [stringmaster as WeaponData]
+    testWeapons = [stringmaster]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots,
