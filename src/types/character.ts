@@ -9,6 +9,7 @@ export type SkillType =
   | "Intro Skill"
   | "Outro Skill"
   | "Echo Skill"
+  | "Movement"
 
 /** UI grouping labels for skills — not engine types. */
 export type SkillCategory =

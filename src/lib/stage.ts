@@ -45,6 +45,7 @@ function categoryToSkillType(cat: SkillCategory): SkillType {
   ) {
     return "Basic Attack"
   }
+  // Movement self-routes — no roll-up
   return cat
 }
 

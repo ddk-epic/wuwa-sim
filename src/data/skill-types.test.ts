@@ -11,6 +11,7 @@ describe("formatSkillType", () => {
     ["Intro Skill", "INTRO"],
     ["Outro Skill", "OUTRO"],
     ["Echo Skill", "ECHO"],
+    ["Movement", "MOVE"],
   ])("maps %s → %s", (input, expected) => {
     expect(formatSkillType(input)).toBe(expected)
   })
