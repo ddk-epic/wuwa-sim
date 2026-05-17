@@ -1,0 +1,29 @@
+{
+  "id": 21050024,
+  "name": "Variation",
+  "rarity": "SR",
+  "weaponType": "Rectifier",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 27,
+      "max": 337.5
+    },
+    "sub": {
+      "name": "Energy Regen",
+      "base": 0.1152,
+      "max": 0.5184
+    }
+  },
+  "passive": {
+    "name": "Ceaseless Aria",
+    "description": "When Resonance Skill is cast, restores 8/10/12/14/16 Concerto Energy. This effect can be triggered 1/1/1/1/1 times every 20/20/20/20/20s.",
+    "params": [
+      [8, 20, 1],
+      [10, 20, 1],
+      [12, 20, 1],
+      [14, 20, 1],
+      [16, 20, 1]
+    ]
+  }
+}

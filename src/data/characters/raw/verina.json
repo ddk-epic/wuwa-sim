@@ -1,0 +1,593 @@
+{
+  "id": 1503,
+  "name": "Verina",
+  "element": "Spectro",
+  "weaponType": "Rectifier",
+  "rarity": "SSR",
+  "stats": {
+    "base": {
+      "hp": 1139,
+      "atk": 27,
+      "def": 90
+    },
+    "max": {
+      "hp": 14237.5,
+      "atk": 337.5,
+      "def": 1099.998
+    }
+  },
+  "skills": [
+    {
+      "id": 1000301,
+      "name": "Cultivation",
+      "type": "Normal Attack",
+      "stages": [
+        {
+          "name": "Stage 1 DMG",
+          "value": "37.86%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3786,
+              "energy": 0.95,
+              "concerto": 3.04,
+              "toughness": 0.3047,
+              "weakness": 0.76
+            }
+          ]
+        },
+        {
+          "name": "Stage 2 DMG",
+          "value": "51.16%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.5116,
+              "energy": 1.28,
+              "concerto": 4.11,
+              "toughness": 0.4117,
+              "weakness": 1.02
+            }
+          ]
+        },
+        {
+          "name": "Stage 3 DMG",
+          "value": "25.58%*2",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2558,
+              "energy": 0.64,
+              "concerto": 2.05,
+              "toughness": 0.2059,
+              "weakness": 0.51
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2558,
+              "energy": 0.64,
+              "concerto": 2.05,
+              "toughness": 0.2059,
+              "weakness": 0.51
+            }
+          ]
+        },
+        {
+          "name": "Stage 4 DMG",
+          "value": "67.32%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.6732,
+              "energy": 1.69,
+              "concerto": 5.41,
+              "toughness": 0.5418,
+              "weakness": 1.36
+            }
+          ]
+        },
+        {
+          "name": "Stage 5 DMG",
+          "value": "71.62%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.7162,
+              "energy": 1.8,
+              "concerto": 5.76,
+              "toughness": 0.5764,
+              "weakness": 1.44
+            }
+          ]
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "value": "99.41%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.9941,
+              "energy": 2.5,
+              "concerto": 8,
+              "toughness": 0.8,
+              "weakness": 2
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack Stage 1 DMG",
+          "value": "56.37%",
+          "staCost": 5,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.5637,
+              "energy": 1.41,
+              "concerto": 4.53,
+              "toughness": 0.4536,
+              "weakness": 1.134
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack Stage 2 DMG",
+          "value": "53.19%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.5319,
+              "energy": 1.33,
+              "concerto": 4.28,
+              "toughness": 0.428,
+              "weakness": 1.07
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack Stage 3 DMG",
+          "value": "25.42%*3",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2542,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2542,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2542,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Heavy Attack DMG",
+          "value": "61.64%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.6164,
+              "energy": 0.51,
+              "concerto": 1,
+              "toughness": 0.496,
+              "weakness": 1.24
+            }
+          ]
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "value": "129.23%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 1.2923,
+              "energy": 3.25,
+              "concerto": 5.6,
+              "toughness": 1.5,
+              "weakness": 1.4
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000302,
+      "name": "Botany Experiment",
+      "type": "Resonance Skill",
+      "cooldown": 12,
+      "concerto": 30,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "35.79%*3+71.58%",
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3579,
+              "energy": 3,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.532
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3579,
+              "energy": 3,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.532
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3579,
+              "energy": 3,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.532
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.7158,
+              "energy": 6,
+              "concerto": 0,
+              "toughness": 0.8,
+              "weakness": 1.064
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000303,
+      "name": "Arboreal Flourish",
+      "type": "Resonance Liberation",
+      "cooldown": 25,
+      "duration": 12,
+      "concerto": 20,
+      "resonanceCost": 175,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "198.81%",
+          "damage": [
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 1.9881,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 4,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Arboreal Flourish Healing",
+          "value": "950+23.80%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Heal",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.238,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Coordinated Attack DMG",
+          "value": "9.95%",
+          "damage": [
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.0995,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.2,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Coordinated Attack Healing",
+          "value": "428+10.71%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Heal",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1071,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Heal",
+          "scalingStat": "ATK",
+          "actionFrame": 0,
+          "value": 0.12,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        }
+      ]
+    },
+    {
+      "id": 1000304,
+      "name": "Grace of Life",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000305,
+      "name": "Gift of Nature",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000306,
+      "name": "Verdant Growth",
+      "type": "Intro Skill",
+      "concerto": 10,
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "value": "99.41%",
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.9941,
+              "energy": 10,
+              "concerto": 0,
+              "toughness": 0.4492,
+              "weakness": 1.123
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000307,
+      "name": "Starflower Blooms",
+      "type": "Forte Circuit",
+      "stages": [
+        {
+          "name": "Heavy Attack: Starflower Blooms Damage",
+          "value": "64.95%+97.42%",
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.6495,
+              "energy": 1.16,
+              "concerto": 1.86,
+              "toughness": 0.3734,
+              "weakness": 0.584
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.9742,
+              "energy": 1.75,
+              "concerto": 2.8,
+              "toughness": 0.56,
+              "weakness": 0.876
+            }
+          ]
+        },
+        {
+          "name": "Starflower Blooms Healing",
+          "value": "1188+29.75%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Heal",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2975,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack: Starflower Blooms Stage 1 DMG",
+          "value": "67.64%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.6764,
+              "energy": 1.41,
+              "concerto": 4.53,
+              "toughness": 0.4536,
+              "weakness": 1.134
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack: Starflower Blooms Stage 2 DMG",
+          "value": "63.82%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.6382,
+              "energy": 1.33,
+              "concerto": 4.28,
+              "toughness": 0.428,
+              "weakness": 1.07
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack: Starflower Blooms Stage 3 DMG",
+          "value": "30.50%*3",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.305,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.305,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.305,
+              "energy": 0.63,
+              "concerto": 2.04,
+              "toughness": 0.2046,
+              "weakness": 0.5114
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1000308,
+      "name": "Skillful Cooking",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000309,
+      "name": "Blossom",
+      "type": "Outro Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1000310,
+      "name": "",
+      "type": "Tune Break",
+      "stages": [],
+      "damage": []
+    }
+  ],
+  "skillTreeBonuses": ["Healing Bonus", "ATK"],
+  "buffs": []
+}
