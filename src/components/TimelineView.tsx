@@ -144,7 +144,13 @@ export function TimelineView({
 
   // Build a flat render list: group headers interleaved with entry rows
   type RenderItem =
-    | { type: "groupHeader"; groupId: string; label: string; locked: boolean }
+    | {
+        type: "groupHeader"
+        groupId: string
+        label: string
+        locked: boolean
+        entryCount: number
+      }
     | {
         type: "entry"
         entry: TimelineEntry
@@ -164,6 +170,7 @@ export function TimelineView({
         groupId: node.id,
         label: node.label,
         locked: node.locked,
+        entryCount: node.entries.length,
       })
       for (const entry of node.entries) {
         renderItems.push({
@@ -495,7 +502,11 @@ export function TimelineView({
                             className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
                             onClick={() => {
                               setOpenMenuGroupId(null)
-                              setDeletingGroupId(item.groupId)
+                              if (item.entryCount >= 2) {
+                                setDeletingGroupId(item.groupId)
+                              } else {
+                                onDeleteGroup(item.groupId)
+                              }
                             }}
                           >
                             Delete group + contents
