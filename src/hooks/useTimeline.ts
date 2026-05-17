@@ -77,6 +77,33 @@ export function useTimeline() {
     })
   }
 
+  function deleteGroup(groupId: string) {
+    setNodes((prev) =>
+      prev.filter((n) => !(n.kind === "group" && n.id === groupId)),
+    )
+  }
+
+  function duplicateGroup(groupId: string) {
+    setNodes((prev) => {
+      const sourceIndex = prev.findIndex(
+        (n) => n.kind === "group" && n.id === groupId,
+      )
+      if (sourceIndex === -1) return prev
+      const source = prev[sourceIndex]
+      if (source.kind !== "group") return prev
+      const clone: TimelineGroup = {
+        kind: "group",
+        id: crypto.randomUUID(),
+        label: source.label ? `${source.label} copy` : "copy",
+        locked: source.locked ? true : true, // copy of open group is always locked
+        entries: source.entries.map((e) => ({ ...e, id: crypto.randomUUID() })),
+      }
+      const result = [...prev]
+      result.splice(sourceIndex + 1, 0, clone)
+      return result
+    })
+  }
+
   function removeEntry(id: string) {
     setNodes((prev) =>
       prev.flatMap((node) => {
@@ -139,6 +166,8 @@ export function useTimeline() {
     updateEntry,
     updateGroupLabel,
     toggleGroupLock,
+    deleteGroup,
+    duplicateGroup,
     clearTimeline,
   }
 }

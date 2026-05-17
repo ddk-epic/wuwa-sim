@@ -279,6 +279,57 @@ describe("useTimeline group support", () => {
       expect(group.entries).toHaveLength(0)
     }
   })
+
+  it("deleteGroup removes the group node entirely", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.addEntry(sample)
+    })
+    act(() => {
+      result.current.deleteGroup(groupId)
+    })
+    expect(result.current.nodes.every((n) => n.kind !== "group")).toBe(true)
+    expect(result.current.entries).toHaveLength(0)
+  })
+
+  it("duplicateGroup inserts a deep clone after the source with fresh ids", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.addEntry(sample)
+    })
+    act(() => {
+      result.current.duplicateGroup(groupId)
+    })
+    const groups = result.current.nodes.filter((n) => n.kind === "group")
+    expect(groups).toHaveLength(2)
+    if (groups[0].kind === "group" && groups[1].kind === "group") {
+      expect(groups[1].label).toBe("copy") // empty label → "copy"
+      expect(groups[1].entries[0].id).not.toBe(groups[0].entries[0].id)
+      expect(groups[1].entries[0].stageId).toBe(groups[0].entries[0].stageId)
+      // duplicate of open group is locked
+      expect(groups[1].locked).toBe(true)
+    }
+  })
+
+  it("duplicateGroup appends '<label> copy' label", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.updateGroupLabel(groupId, "Burst Window")
+    })
+    act(() => {
+      result.current.duplicateGroup(groupId)
+    })
+    const groups = result.current.nodes.filter((n) => n.kind === "group")
+    if (groups[1].kind === "group") {
+      expect(groups[1].label).toBe("Burst Window copy")
+    }
+  })
 })
 
 describe("useTimeline lock invariant", () => {

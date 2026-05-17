@@ -9,6 +9,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { ActionTimeStage } from "#/lib/stage"
 import { validateTimeline } from "#/lib/validate-timeline"
+import { ConfirmModal } from "./ConfirmModal"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
@@ -33,12 +34,16 @@ interface TimelineViewProps {
   slots: Slots
   loadouts: SlotLoadout[]
   reactionDelay: number
-  editingGroupId: string | null
+  renamingGroupId: string | null
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
+  onGroupLabelRenameEnd: () => void
   onToggleGroupLock: (groupId: string) => void
+  onStartRename: (groupId: string) => void
+  onDuplicateGroup: (groupId: string) => void
+  onDeleteGroup: (groupId: string) => void
 }
 
 function GroupLabelInput({
@@ -80,15 +85,33 @@ export function TimelineView({
   slots,
   loadouts,
   reactionDelay,
-  editingGroupId,
+  renamingGroupId,
   onRemove,
   onReorder,
   onUpdateEntry,
   onGroupLabelCommit,
+  onGroupLabelRenameEnd,
   onToggleGroupLock,
+  onStartRename,
+  onDuplicateGroup,
+  onDeleteGroup,
 }: TimelineViewProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [openMenuGroupId, setOpenMenuGroupId] = useState<string | null>(null)
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!openMenuGroupId) return
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuGroupId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [openMenuGroupId])
 
   const entries = flattenNodes(nodes)
 
@@ -278,6 +301,7 @@ export function TimelineView({
           {renderItems.map((item) => {
             if (item.type === "groupHeader") {
               const isOpen = !item.locked
+              const isRenaming = renamingGroupId === item.groupId
               return (
                 <tr
                   key={`group-${item.groupId}`}
@@ -305,14 +329,80 @@ export function TimelineView({
                     >
                       {isOpen ? <LockOpen size={14} /> : <Lock size={14} />}
                     </button>
-                    <GroupLabelInput
-                      groupId={item.groupId}
-                      initialLabel={item.label}
-                      autoFocus={editingGroupId === item.groupId}
-                      onCommit={onGroupLabelCommit}
-                    />
+                    {isOpen || isRenaming ? (
+                      <GroupLabelInput
+                        groupId={item.groupId}
+                        initialLabel={item.label}
+                        autoFocus={isRenaming}
+                        onCommit={(gid, label) => {
+                          onGroupLabelCommit(gid, label)
+                          onGroupLabelRenameEnd()
+                        }}
+                      />
+                    ) : (
+                      <span
+                        onClick={() => onStartRename(item.groupId)}
+                        className="cursor-text hover:text-white transition-colors"
+                        title="Click to rename"
+                      >
+                        {item.label || (
+                          <span className="italic text-gray-600">unnamed</span>
+                        )}
+                      </span>
+                    )}
                   </td>
-                  <td className="px-3 py-1.5" />
+                  <td className="px-3 py-1.5 text-right">
+                    <div
+                      ref={
+                        openMenuGroupId === item.groupId ? menuRef : undefined
+                      }
+                      className="relative inline-block"
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuGroupId((prev) =>
+                            prev === item.groupId ? null : item.groupId,
+                          )
+                        }}
+                        className="text-gray-500 hover:text-gray-300 transition-colors px-1"
+                        aria-label="Group options"
+                      >
+                        ⋯
+                      </button>
+                      {openMenuGroupId === item.groupId && (
+                        <div className="absolute right-0 top-full z-10 bg-gray-800 border border-gray-600 rounded shadow-lg min-w-[160px]">
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                            onClick={() => {
+                              setOpenMenuGroupId(null)
+                              onDuplicateGroup(item.groupId)
+                            }}
+                          >
+                            Duplicate
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                            onClick={() => {
+                              setOpenMenuGroupId(null)
+                              onStartRename(item.groupId)
+                            }}
+                          >
+                            Rename
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
+                            onClick={() => {
+                              setOpenMenuGroupId(null)
+                              setDeletingGroupId(item.groupId)
+                            }}
+                          >
+                            Delete group + contents
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               )
             }
@@ -320,6 +410,16 @@ export function TimelineView({
           })}
         </tbody>
       </table>
+      {deletingGroupId !== null && (
+        <ConfirmModal
+          message="Delete this group and all its entries? This cannot be undone."
+          onConfirm={() => {
+            onDeleteGroup(deletingGroupId)
+            setDeletingGroupId(null)
+          }}
+          onCancel={() => setDeletingGroupId(null)}
+        />
+      )}
     </div>
   )
 }

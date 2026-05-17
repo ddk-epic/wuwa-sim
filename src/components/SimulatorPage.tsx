@@ -33,13 +33,15 @@ export function SimulatorPage() {
     updateEntry,
     updateGroupLabel,
     toggleGroupLock,
+    deleteGroup,
+    duplicateGroup,
     clearTimeline,
   } = useTimeline()
   const { log, setLog, clearLog } = useSimulationLog()
   const [settings, setReactionDelay] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
 
   const summary = getTimelineSummary(
     entries,
@@ -55,7 +57,7 @@ export function SimulatorPage() {
 
   function handleAddGroup() {
     const id = addGroup()
-    setEditingGroupId(id)
+    setRenamingGroupId(id)
   }
 
   function handleSimulate() {
@@ -93,15 +95,16 @@ export function SimulatorPage() {
             slots={slots}
             loadouts={loadouts}
             reactionDelay={settings.reactionDelay}
-            editingGroupId={editingGroupId}
+            renamingGroupId={renamingGroupId}
             onRemove={removeEntry}
             onReorder={reorderEntries}
             onUpdateEntry={updateEntry}
-            onGroupLabelCommit={(groupId, label) => {
-              updateGroupLabel(groupId, label)
-              setEditingGroupId(null)
-            }}
+            onGroupLabelCommit={updateGroupLabel}
+            onGroupLabelRenameEnd={() => setRenamingGroupId(null)}
             onToggleGroupLock={toggleGroupLock}
+            onStartRename={setRenamingGroupId}
+            onDuplicateGroup={duplicateGroup}
+            onDeleteGroup={deleteGroup}
           />
         </div>
         <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
