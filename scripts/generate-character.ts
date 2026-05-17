@@ -123,7 +123,6 @@ function formatSkill(
   if (skill.resonanceCost !== undefined)
     lines.push(`${l1}resonanceCost: ${skill.resonanceCost},`)
   if (skill.type === "Inherent Skill") lines.push(`${l1}hidden: true,`)
-  lines.push(`${l1}// animationLock: 0,`)
   if (skill.type === "Outro Skill") {
     lines.push(`${l1}stages: [`)
     lines.push(formatOutroStage(level + 2) + ",")

@@ -421,7 +421,6 @@ export const sanhua = {
       id: 1000501,
       name: "Frigid Light",
       type: "Normal Attack",
-      // animationLock: 0,
       stages: [
         {
           name: "Stage 1 DMG",
@@ -692,7 +691,6 @@ export const sanhua = {
       type: "Resonance Skill",
       cooldown: 10,
       concerto: 15,
-      // animationLock: 0,
       stages: [
         {
           name: "Skill DMG",
@@ -723,7 +721,6 @@ export const sanhua = {
       cooldown: 16,
       concerto: 20,
       resonanceCost: 100,
-      // animationLock: 0,
       stages: [
         {
           name: "Skill DMG",
@@ -752,7 +749,6 @@ export const sanhua = {
       name: "Condensation",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -761,7 +757,6 @@ export const sanhua = {
       name: "Avalanche",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -770,7 +765,6 @@ export const sanhua = {
       name: "Freezing Thorns",
       type: "Intro Skill",
       concerto: 10,
-      // animationLock: 0,
       stages: [
         {
           name: "Skill DMG",
@@ -799,7 +793,6 @@ export const sanhua = {
       name: "Clarity of Mind",
       type: "Forte Circuit",
       duration: 8,
-      // animationLock: 0,
       stages: [
         {
           name: "Detonate Damage",
@@ -840,7 +833,6 @@ export const sanhua = {
       name: "",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -848,7 +840,6 @@ export const sanhua = {
       id: 1000509,
       name: "Silversnow",
       type: "Outro Skill",
-      // animationLock: 0,
       stages: [
         {
           name: "Outro DMG",
@@ -864,7 +855,6 @@ export const sanhua = {
       id: 1000510,
       name: "",
       type: "Tune Break",
-      // animationLock: 0,
       stages: [],
       damage: [],
     },

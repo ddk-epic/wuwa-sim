@@ -176,7 +176,6 @@ export const encore = {
       id: 1000701,
       name: "Wooly Attack",
       type: "Normal Attack",
-      // animationLock: 0,
       stages: [
         {
           name: "Stage 1 DMG",
@@ -548,7 +547,6 @@ export const encore = {
       duration: 10,
       concerto: 20,
       resonanceCost: 125,
-      // animationLock: 0,
       stages: [
         {
           name: "Cosmos Rave",
@@ -870,7 +868,6 @@ export const encore = {
       name: "Angry Cosmos",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -879,7 +876,6 @@ export const encore = {
       name: "Woolies Cheer Dance",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -888,7 +884,6 @@ export const encore = {
       name: "Woolies Helpers",
       type: "Intro Skill",
       concerto: 10,
-      // animationLock: 0,
       stages: [
         {
           name: "Skill DMG",
@@ -916,7 +911,6 @@ export const encore = {
       id: 1000707,
       name: "Black & White Woolies",
       type: "Forte Circuit",
-      // animationLock: 0,
       stages: [
         {
           name: "Cloudy Frenzy Damage",
@@ -1066,7 +1060,6 @@ export const encore = {
       name: "Skillful Cooking",
       type: "Inherent Skill",
       hidden: true,
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
@@ -1074,7 +1067,6 @@ export const encore = {
       id: 1000709,
       name: "Thermal Field",
       type: "Outro Skill",
-      // animationLock: 0,
       stages: [
         {
           name: "Outro DMG",
@@ -1135,7 +1127,6 @@ export const encore = {
       id: 1000710,
       name: "",
       type: "Tune Break",
-      // animationLock: 0,
       stages: [],
       damage: [],
     },
