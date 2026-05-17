@@ -8,8 +8,8 @@ export const verina = {
   rarity: "SSR",
   template: {
     weapon: "Variation",
-    echo: "",
-    echoSet: "",
+    echo: "Bell-Borne Geochelone",
+    echoSet: "Rejuvenating Glow",
   },
   stats: {
     base: { hp: 1139, atk: 27, def: 90 },
@@ -27,7 +27,7 @@ export const verina = {
           name: "Stage 1 DMG",
           newName: "Stage 1",
           value: "37.86%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -46,7 +46,7 @@ export const verina = {
           name: "Stage 2 DMG",
           newName: "Stage 2",
           value: "51.16%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -65,7 +65,7 @@ export const verina = {
           name: "Stage 3 DMG",
           newName: "Stage 3",
           value: "25.58%*2",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -95,7 +95,7 @@ export const verina = {
           name: "Stage 4 DMG",
           newName: "Stage 4",
           value: "67.32%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -114,7 +114,7 @@ export const verina = {
           name: "Stage 5 DMG",
           newName: "Stage 5",
           value: "71.62%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Basic Attack",
@@ -133,7 +133,7 @@ export const verina = {
           name: "Heavy Attack DMG",
           newName: "Heavy Attack",
           value: "99.41%",
-          actionTime: 0,
+          actionTime: 30,
           damage: [
             {
               type: "Heavy Attack",
@@ -363,6 +363,7 @@ export const verina = {
           name: "Arboreal Flourish Healing",
           newName: "Arboreal Flourish Healing",
           value: "950+23.80%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -382,6 +383,7 @@ export const verina = {
           name: "Coordinated Attack DMG",
           newName: "Coordinated Attack",
           value: "9.95%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -401,6 +403,7 @@ export const verina = {
           name: "Coordinated Attack Healing",
           newName: "Coordinated Attack Healing",
           value: "428+10.71%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -482,7 +485,7 @@ export const verina = {
       stages: [
         {
           name: "Heavy Attack: Starflower Blooms Damage",
-          newName: "Heavy Attack: Starflower Blooms",
+          newName: "Heavy Attack",
           value: "64.95%+97.42%",
           actionTime: 0,
           damage: [
@@ -514,6 +517,7 @@ export const verina = {
           name: "Starflower Blooms Healing",
           newName: "Starflower Blooms Healing",
           value: "1188+29.75%",
+          hidden: true,
           actionTime: 0,
           damage: [
             {
@@ -531,7 +535,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 1 DMG",
-          newName: "Mid-air Attack: Starflower Blooms Stage 1",
+          newName: "Mid-air Attack: Stage 1",
           value: "67.64%",
           actionTime: 0,
           damage: [
@@ -550,7 +554,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 2 DMG",
-          newName: "Mid-air Attack: Starflower Blooms Stage 2",
+          newName: "Mid-air Attack: Stage 2",
           value: "63.82%",
           actionTime: 0,
           damage: [
@@ -569,7 +573,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 3 DMG",
-          newName: "Mid-air Attack: Starflower Blooms Stage 3",
+          newName: "Mid-air Attack: Stage 3",
           value: "30.50%*3",
           actionTime: 0,
           damage: [
