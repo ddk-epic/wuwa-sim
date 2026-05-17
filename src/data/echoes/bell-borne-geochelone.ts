@@ -6,7 +6,29 @@ export const bellBorneGeochelone = {
   cost: 1,
   element: "Glacio",
   sets: ["Moonlit Clouds", "Rejuvenating Glow"],
-  buffs: [],
+  buffs: [
+    {
+      id: "echo.bell-borne-geochelone.dmg-boost",
+      name: "Bell-Borne Geochelone (DMG Boost)",
+      description:
+        "On Echo Skill cast (Tap), grants team +10% All DMG Bonus for 15s. (In-game shield, DMG reduction, and 3-hits expiry are not modeled — deferred to a future shield/defense pass.)",
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        skillType: "Echo Skill",
+        stageId: "Bell-Borne Geochelone::",
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 15 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+  ],
   skill: {
     cooldown: 20,
     description:

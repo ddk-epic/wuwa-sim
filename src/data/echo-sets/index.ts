@@ -87,4 +87,10 @@ const moonlitClouds = {
   ],
 } satisfies EchoSet
 
-export const ALL_ECHO_SETS: EchoSet[] = [moltenRift, moonlitClouds]
+import { rejuvenatingGlow } from "./rejuvenating-glow"
+
+export const ALL_ECHO_SETS: EchoSet[] = [
+  moltenRift,
+  moonlitClouds,
+  rejuvenatingGlow,
+]
