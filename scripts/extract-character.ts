@@ -57,6 +57,7 @@ interface ApiSkill {
   SkillId: number
   SkillType: string
   SkillName: string
+  SkillDescribe: string
   SkillAttributes: ApiSkillAttribute[]
   DamageList: ApiDamageEntry[]
 }
@@ -68,6 +69,7 @@ interface ApiSkillTreeNode {
 interface ApiResonantChainNode {
   NodeName: string
   GroupIndex: number
+  AttributesDescription: string
 }
 
 interface ApiCharacter {
@@ -322,6 +324,74 @@ export function mapSkillTreeBonuses(skillTree: ApiSkillTreeNode[]): string[] {
   return result
 }
 
+// --- Reference Markdown ---
+
+function htmlToMarkdown(html: string): string {
+  // <span class="font-bold font-whitney text-3xl ...">Title</span> → ### Title
+  let result = html.replace(
+    /<span[^>]*class="[^"]*font-bold[^"]*text-3xl[^"]*"[^>]*>(.*?)<\/span>/gi,
+    (_, inner) => `### ${inner.replace(/<[^>]+>/g, "")}`,
+  )
+  // <br><br> → double newline (handle both <br> and <br/>)
+  result = result.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "\n\n")
+  // strip remaining tags, keep inner text
+  result = result.replace(/<[^>]+>/g, "")
+  return result.trim()
+}
+
+const SECTION_ORDER: string[] = [
+  "Intro Skill",
+  "Outro Skill",
+  "Normal Attack",
+  "Resonance Skill",
+  "Resonance Liberation",
+  "Forte Circuit",
+  "Inherent Skill",
+  "Resonance Chain",
+]
+
+function buildReferenceMarkdown(data: ApiCharacter): string {
+  const sections: string[] = []
+
+  // Skills in canonical order (excluding Inherent Skill — handled separately)
+  const mainSkillTypes = SECTION_ORDER.filter(
+    (t) => t !== "Inherent Skill" && t !== "Resonance Chain",
+  )
+
+  for (const skillType of mainSkillTypes) {
+    const skill = data.Skills.find((s) => s.SkillType === skillType)
+    if (!skill) continue
+    const description = htmlToMarkdown(skill.SkillDescribe ?? "")
+    sections.push(`## ${skillType} — ${skill.SkillName}\n\n${description}`)
+  }
+
+  // Inherent Skills
+  const inherentSkills = data.Skills.filter(
+    (s) => s.SkillType === "Inherent Skill" && s.SkillName.trim() !== "",
+  )
+  if (inherentSkills.length > 0) {
+    const inherentParts = inherentSkills.map((skill) => {
+      const description = htmlToMarkdown(skill.SkillDescribe ?? "")
+      return `### ${skill.SkillName}\n\n${description}`
+    })
+    sections.push(`## Inherent Skill\n\n${inherentParts.join("\n\n")}`)
+  }
+
+  // Resonance Chain
+  const chainNodes = [...(data.ResonantChain ?? [])].sort(
+    (a, b) => a.GroupIndex - b.GroupIndex,
+  )
+  if (chainNodes.length > 0) {
+    const chainParts = chainNodes.map((node) => {
+      const description = htmlToMarkdown(node.AttributesDescription ?? "")
+      return `### S${node.GroupIndex} - ${node.NodeName}\n\n${description}`
+    })
+    sections.push(`## Resonance Chain\n\n${chainParts.join("\n\n")}`)
+  }
+
+  return sections.join("\n\n") + "\n"
+}
+
 // --- Main ---
 
 export async function extractCharacter(id: string): Promise<void> {
@@ -377,6 +447,28 @@ export async function extractCharacter(id: string): Promise<void> {
   await fs.mkdir(outputDir, { recursive: true })
   await fs.writeFile(outputPath, JSON.stringify(character, null, 2))
   console.log(`Written to src/data/characters/raw/${slug}.json`)
+
+  // Write reference markdown (skip if already exists)
+  const refDir = path.join(PROJECT_ROOT, "references/characters")
+  const refPath = path.join(refDir, `${slug}.md`)
+  let refExists = false
+  try {
+    await fs.access(refPath)
+    refExists = true
+  } catch {
+    // File doesn't exist yet
+  }
+
+  if (refExists) {
+    console.log(
+      `Skipping references/characters/${slug}.md (already exists — delete to regenerate)`,
+    )
+  } else {
+    const markdown = buildReferenceMarkdown(data)
+    await fs.mkdir(refDir, { recursive: true })
+    await fs.writeFile(refPath, markdown)
+    console.log(`Written to references/characters/${slug}.md`)
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
