@@ -16,7 +16,204 @@ export const verina = {
     max: { hp: 14237.5, atk: 337.5, def: 1099.998 },
   },
   skillTreeBonuses: ["Healing Bonus", "ATK"],
-  buffs: [],
+  buffs: [
+    {
+      id: "char.verina.outro.blossom-deepen",
+      name: "Blossom (DMG Amp)",
+      description:
+        "Outro Skill Blossom amplifies All DMG for all Resonators by 15% for 30s. 6s HoT portion is deferred (no HoT primitive).",
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Outro Skill",
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 30 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "deepen", key: "all" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.inherent.gift-of-nature",
+      name: "Gift of Nature",
+      description:
+        "When Verina casts Heavy Attack Starflower Blooms, Mid-air Attack Starflower Blooms, Resonance Liberation Arboreal Flourish or Outro Skill Blossom, all team ATK +20% for 20s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: ["Forte Circuit", "Resonance Liberation", "Outro Skill"],
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 20 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.s1.moment-of-emergence",
+      name: "S1: Moment of Emergence",
+      description:
+        "Outro Skill Blossom grants the next character continuous healing (20% ATK every 5s for 30s). Heal portion is deferred — no HoT primitive in the engine yet.",
+      requiresSequence: 1,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Outro Skill",
+      },
+      target: { kind: "nextOnField" },
+      duration: { kind: "frames", v: 1 },
+      effects: [],
+    },
+    {
+      id: "char.verina.s2.photosynthesis-energy",
+      name: "Photosynthesis Energy",
+      description:
+        "Resonance Skill Botany Experiment grants +1 Photosynthesis Energy (up to 4 stacks). Tracked as a stacking buff; affects S3 healingBonus on Liberation heals.",
+      requiresSequence: 2,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      stacking: { max: 4, onRetrigger: "addStack" },
+      effects: [],
+    },
+    {
+      id: "char.verina.s2.concerto-grant",
+      name: "S2: Concerto Restore",
+      description:
+        "Resonance Skill Botany Experiment additionally restores 10 Concerto Energy.",
+      requiresSequence: 2,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 10 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.s3.choice-to-flourish",
+      name: "S3: The Choice to Flourish",
+      description:
+        "Resonance Liberation Photosynthesis Mark healing +12% (modeled as global healingBonus; per-stage scoping deferred).",
+      requiresSequence: 3,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "healingBonus" },
+          value: { kind: "const", v: 0.12 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.s4.blossoming-embrace",
+      name: "S4: Blossoming Embrace",
+      description:
+        "Heavy Attack Starflower Blooms, Mid-air Attack Starflower Blooms, Resonance Liberation Arboreal Flourish and Outro Skill Blossom grant team Spectro DMG +15% for 24s.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: ["Forte Circuit", "Resonance Liberation", "Outro Skill"],
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 24 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Spectro" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.s6.joyous-harvest-dmg",
+      name: "S6: Joyous Harvest (DMG)",
+      description:
+        "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms deal 20% more DMG.",
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Forte Circuit",
+        stageId: [
+          "Starflower Blooms::Heavy Attack",
+          "Starflower Blooms::Mid-air Attack: Stage 1",
+          "Starflower Blooms::Mid-air Attack: Stage 2",
+          "Starflower Blooms::Mid-air Attack: Stage 3",
+        ],
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.s6.joyous-harvest-coord",
+      name: "S6: Joyous Harvest (Coord. Attack)",
+      description:
+        "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms trigger an extra Coordinated Attack (same DMG as Liberation Photosynthesis Mark).",
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillType: "Forte Circuit",
+        stageId: [
+          "Starflower Blooms::Heavy Attack",
+          "Starflower Blooms::Mid-air Attack: Stage 1",
+          "Starflower Blooms::Mid-air Attack: Stage 2",
+          "Starflower Blooms::Mid-air Attack: Stage 3",
+        ],
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "Resonance Liberation",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 0.0995,
+            energy: 0,
+            concerto: 0,
+            toughness: 0.2,
+            weakness: 0,
+          },
+          icdFrames: 1,
+          skillType: "Resonance Liberation",
+        },
+      ],
+    },
+  ],
   skills: [
     {
       id: 1000301,
