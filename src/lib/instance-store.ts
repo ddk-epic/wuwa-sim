@@ -42,6 +42,14 @@ export type EngineEvent =
       /** Buff def id that produced this synthetic hit via emitHit; undefined for authored hits. */
       sourceBuffId?: string
     }
+  | {
+      kind: "healLanded"
+      characterId: number
+      skillType: SkillType
+      frame: number
+      stageId?: string
+      hitIndex?: number
+    }
   | { kind: "swapIn"; characterId: number; frame: number }
   | { kind: "swapOut"; characterId: number; frame: number }
   | {
@@ -519,6 +527,36 @@ export function matchesTrigger(
         ? trigger.sourceBuffId
         : [trigger.sourceBuffId]
       if (!ids.includes(event.sourceBuffId ?? "")) return false
+    }
+    return true
+  }
+
+  if (trigger.event === "healLanded" && event.kind === "healLanded") {
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
+      return false
+    }
+    if (trigger.skillType !== undefined) {
+      const types = Array.isArray(trigger.skillType)
+        ? trigger.skillType
+        : [trigger.skillType]
+      if (!types.includes(event.skillType)) return false
+    }
+    if (trigger.stageId !== undefined) {
+      const sid = event.stageId
+      if (!sid) return false
+      const ids = Array.isArray(trigger.stageId)
+        ? trigger.stageId
+        : [trigger.stageId]
+      if (!ids.includes(sid)) return false
+    }
+    if (trigger.hitIndex !== undefined && trigger.hitIndex !== event.hitIndex) {
+      return false
     }
     return true
   }

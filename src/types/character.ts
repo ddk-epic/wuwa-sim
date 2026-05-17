@@ -38,6 +38,13 @@ export interface SkillAttribute {
   damage?: DamageEntry[]
 }
 
+export type HealTarget =
+  | "self"
+  | "source"
+  | "team"
+  | "currentOnField"
+  | "nextOnField"
+
 export interface DamageEntry {
   type: SkillType
   dmgType: string
@@ -49,6 +56,8 @@ export interface DamageEntry {
   concerto: number
   toughness: number
   weakness: number
+  /** Recipient scope for heal entries (dmgType: "Heal"). Defaults to "self" when omitted. */
+  target?: HealTarget
 }
 
 export interface Skill {

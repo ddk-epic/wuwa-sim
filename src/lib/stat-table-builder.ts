@@ -85,6 +85,7 @@ export function cloneStats(s: StatTable): StatTable {
     shreds: { ...s.shreds },
     allDmgBonus: s.allDmgBonus,
     energyRechargePct: s.energyRechargePct,
+    healingBonus: s.healingBonus,
   }
 }
 
@@ -101,6 +102,7 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "defShred":
     case "allDmgBonus":
     case "energyRechargePct":
+    case "healingBonus":
       stats[path.stat] += v
       return
     case "elementBonus":

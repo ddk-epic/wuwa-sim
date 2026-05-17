@@ -38,6 +38,21 @@ export interface HitEvent extends SimulationLogBase {
   sourceBuffId?: string
 }
 
+export interface SustainEvent extends SimulationLogBase {
+  kind: "sustain"
+  sub: "heal" | "shield"
+  amount: number
+  targets: number[]
+  scalingStat?: string
+  multiplier: number
+  flat?: number
+  statsSnapshot: StatTable
+  activeBuffs: ActiveBuff[]
+  passiveBuffs: ActiveBuff[]
+  synthetic?: boolean
+  sourceBuffId?: string
+}
+
 export interface BuffEvent {
   kind: "buffApplied" | "buffRefreshed" | "buffExpired" | "buffConsumed"
   buffId: string
@@ -48,4 +63,8 @@ export interface BuffEvent {
   stacks: number
 }
 
-export type SimulationLogEntry = ActionEvent | HitEvent | BuffEvent
+export type SimulationLogEntry =
+  | ActionEvent
+  | HitEvent
+  | SustainEvent
+  | BuffEvent

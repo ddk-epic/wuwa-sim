@@ -37,6 +37,7 @@ export interface StatTable {
   shreds: Record<SkillType, number>
   allDmgBonus: number
   energyRechargePct: number
+  healingBonus: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -59,5 +60,6 @@ export function emptyStatTable(): StatTable {
     shreds: emptySkillTypeMap(),
     allDmgBonus: 0,
     energyRechargePct: 0,
+    healingBonus: 0,
   }
 }

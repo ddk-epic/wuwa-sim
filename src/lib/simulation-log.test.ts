@@ -2,13 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type {
   DamageEntry,
   EnrichedCharacter,
+  HealTarget,
   SkillType,
 } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
-import type { HitEvent } from "#/types/simulation-log"
+import type { HitEvent, SustainEvent } from "#/types/simulation-log"
 import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
@@ -38,6 +39,25 @@ const dmgHit = (
   concerto,
   toughness: 0,
   weakness: 0,
+})
+
+const healHit = (
+  value: number,
+  flat = 0,
+  target: HealTarget = "self",
+  type: SkillType = "Basic Attack",
+): DamageEntry => ({
+  type,
+  dmgType: "Heal",
+  scalingStat: "ATK",
+  actionFrame: 0,
+  flat,
+  value,
+  energy: 0,
+  concerto: 0,
+  toughness: 0,
+  weakness: 0,
+  target,
 })
 
 const charA: EnrichedCharacter = {
@@ -1306,5 +1326,112 @@ describe("generateSimulationLog — Movement stages", () => {
     )
     const buffEvents = result.filter((e) => e.kind === "buff")
     expect(buffEvents).toHaveLength(0)
+  })
+})
+
+describe("generateSimulationLog — healing pipeline", () => {
+  const healerAtk = 2000
+
+  const charHealer: EnrichedCharacter = {
+    id: 20,
+    name: "Healer",
+    element: "Spectro",
+    weaponType: "Rectifier",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: healerAtk, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 100,
+        name: "Heal Skill",
+        type: "Resonance Skill",
+        stages: [
+          {
+            name: "Heal Stage",
+            value: "23.8%+950",
+            actionTime: 30,
+            damage: [healHit(0.238, 950, "team")],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("heal stage produces a SustainEvent instead of a HitEvent", () => {
+    testCharacters = [charHealer]
+    const result = generateSimulationLog(
+      [tlEntry(20, "Heal Skill::_")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const sustain = result.find((e) => e.kind === "sustain") as
+      | SustainEvent
+      | undefined
+    expect(sustain).toBeDefined()
+    expect(sustain!.sub).toBe("heal")
+    expect(result.every((e) => e.kind !== "hit")).toBe(true)
+  })
+
+  it("heal amount = (ATK × multiplier + flat) × (1 + healingBonus)", () => {
+    testCharacters = [charHealer]
+    const result = generateSimulationLog(
+      [tlEntry(20, "Heal Skill::_")],
+      emptySlots,
+      emptyLoadouts,
+    )
+    const sustain = result.find((e) => e.kind === "sustain") as SustainEvent
+    const expected = Math.round(healerAtk * 0.238 + 950)
+    expect(sustain.amount).toBe(expected)
+  })
+
+  it("team target resolves to all non-null slot character IDs", () => {
+    testCharacters = [charHealer]
+    const slots: Slots = [20, null, null]
+    const result = generateSimulationLog(
+      [tlEntry(20, "Heal Skill::_")],
+      slots,
+      emptyLoadouts,
+    )
+    const sustain = result.find((e) => e.kind === "sustain") as SustainEvent
+    expect(sustain.targets).toEqual([20])
+  })
+
+  it("healLanded trigger fires a buff in response to a heal", () => {
+    const healBuff: BuffDef = {
+      id: "test.heal-triggered-buff",
+      name: "Heal Buff",
+      trigger: { event: "healLanded", actor: "self" },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 60 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    const healerWithBuff: EnrichedCharacter = {
+      ...charHealer,
+      buffs: [healBuff],
+    }
+    testCharacters = [healerWithBuff]
+    const slots: Slots = [20, null, null]
+    const result = generateSimulationLog(
+      [tlEntry(20, "Heal Skill::_")],
+      slots,
+      emptyLoadouts,
+    )
+    const buffApplied = result.find((e) => e.kind === "buffApplied")
+    expect(buffApplied).toBeDefined()
+    expect((buffApplied as { buffId: string }).buffId).toBe(
+      "test.heal-triggered-buff",
+    )
   })
 })

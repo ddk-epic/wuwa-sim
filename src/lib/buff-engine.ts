@@ -40,6 +40,7 @@ function conditionCacheKeyString(k: ConditionCacheKey): string {
 }
 
 export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
+export type HealLandedEvent = Extract<EngineEvent, { kind: "healLanded" }>
 
 export interface ResolvedHit {
   stats: StatTable
@@ -751,6 +752,12 @@ export class BuffEngine {
    * events, synthetic hits, and the post-hit Resource State for the actor.
    */
   recordHit(event: HitLandedEvent): HitDispatch {
+    const { lifecycleEvents, syntheticHits } = this.onEvent(event)
+    const postState = this.getResource(event.characterId)
+    return { lifecycleEvents, syntheticHits, postState }
+  }
+
+  recordHeal(event: HealLandedEvent): HitDispatch {
     const { lifecycleEvents, syntheticHits } = this.onEvent(event)
     const postState = this.getResource(event.characterId)
     return { lifecycleEvents, syntheticHits, postState }

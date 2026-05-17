@@ -14,6 +14,7 @@ export type StatPath =
         | "defShred"
         | "allDmgBonus"
         | "energyRechargePct"
+        | "healingBonus"
     }
   | { stat: "elementBonus"; key: string }
   | { stat: "skillTypeBonus"; key: SkillType }
@@ -89,6 +90,14 @@ export type Trigger =
       event: "swapOut"
       actor?: "self" | "any"
       characterId?: number
+    }
+  | {
+      event: "healLanded"
+      actor?: "self" | "any"
+      characterId?: number
+      skillType?: SkillType | SkillType[]
+      stageId?: string | string[]
+      hitIndex?: number
     }
   | {
       event: "resourceCrossed"

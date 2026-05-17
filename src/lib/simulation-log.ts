@@ -4,9 +4,12 @@ import type {
   BuffEvent,
   HitEvent,
   SimulationLogEntry,
+  SustainEvent,
 } from "#/types/simulation-log"
+import type { HealTarget } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./compute-damage"
+import { computeHealing } from "./compute-healing"
 import { BuffEngine } from "./buff-engine"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 
@@ -66,50 +69,97 @@ export function generateSimulationLog(
       const hitResolved = engine.resolveHit(entry.characterId, hitFrame)
       pushBuffEvents(log, hitResolved.lifecycleEvents)
 
-      const dmg = computeDamage(
-        {
-          multiplier: hit.value,
-          element: resolved.element,
+      if (hit.dmgType === "Heal") {
+        const amount = computeHealing(
+          {
+            multiplier: hit.value,
+            scalingStat: hit.scalingStat,
+            flat: hit.flat,
+          },
+          hitResolved.stats,
+        )
+
+        const dispatch = engine.recordHeal({
+          kind: "healLanded",
+          characterId: entry.characterId,
+          skillType: hit.type,
+          frame: hitFrame,
+          stageId: resolved.stageId,
+          hitIndex: i + 1,
+        })
+
+        const sustainEvent: SustainEvent = {
+          kind: "sustain",
+          sub: "heal",
+          characterId: entry.characterId,
           skillType: resolved.skillType,
+          skillName: `${resolved.skillName} [heal ${i + 1}]`,
+          frame: hitFrame,
+          cumulativeEnergy: dispatch.postState.energy,
+          cumulativeConcerto: dispatch.postState.concerto,
+          amount,
+          targets: resolveHealTargets(
+            hit.target ?? "self",
+            entry.characterId,
+            slots,
+          ),
+          scalingStat: hit.scalingStat,
+          multiplier: hit.value,
+          flat: hit.flat,
+          statsSnapshot: { ...hitResolved.stats },
+          activeBuffs: hitResolved.activeBuffs,
+          passiveBuffs: hitResolved.passiveBuffs,
+        }
+        log.push(sustainEvent)
+
+        pushBuffEvents(log, dispatch.lifecycleEvents)
+        for (const synth of dispatch.syntheticHits) log.push(synth)
+      } else {
+        const dmg = computeDamage(
+          {
+            multiplier: hit.value,
+            element: resolved.element,
+            skillType: resolved.skillType,
+            dmgType: hit.dmgType,
+            scalingStat: hit.scalingStat,
+          },
+          hitResolved.stats,
+        )
+
+        const dispatch = engine.recordHit({
+          kind: "hitLanded",
+          characterId: entry.characterId,
+          skillType: hit.type,
+          dmgType: hit.dmgType,
+          frame: hitFrame,
+          stageId: resolved.stageId,
+          hitIndex: i + 1,
+          energy: hit.energy,
+          concerto: hit.concerto,
+        })
+
+        const hitEvent: HitEvent = {
+          kind: "hit",
+          characterId: entry.characterId,
+          skillType: resolved.skillType,
+          skillName: `${resolved.skillName} [hit ${i + 1}]`,
+          frame: hitFrame,
+          cumulativeEnergy: dispatch.postState.energy,
+          cumulativeConcerto: dispatch.postState.concerto,
+          damage: dmg,
+          element: resolved.element,
           dmgType: hit.dmgType,
           scalingStat: hit.scalingStat,
-        },
-        hitResolved.stats,
-      )
+          multiplier: hit.value,
+          statsSnapshot: { ...hitResolved.stats },
+          activeBuffs: hitResolved.activeBuffs,
+          passiveBuffs: hitResolved.passiveBuffs,
+        }
+        log.push(hitEvent)
 
-      const dispatch = engine.recordHit({
-        kind: "hitLanded",
-        characterId: entry.characterId,
-        skillType: hit.type,
-        dmgType: hit.dmgType,
-        frame: hitFrame,
-        stageId: resolved.stageId,
-        hitIndex: i + 1,
-        energy: hit.energy,
-        concerto: hit.concerto,
-      })
-
-      const hitEvent: HitEvent = {
-        kind: "hit",
-        characterId: entry.characterId,
-        skillType: resolved.skillType,
-        skillName: `${resolved.skillName} [hit ${i + 1}]`,
-        frame: hitFrame,
-        cumulativeEnergy: dispatch.postState.energy,
-        cumulativeConcerto: dispatch.postState.concerto,
-        damage: dmg,
-        element: resolved.element,
-        dmgType: hit.dmgType,
-        scalingStat: hit.scalingStat,
-        multiplier: hit.value,
-        statsSnapshot: { ...hitResolved.stats },
-        activeBuffs: hitResolved.activeBuffs,
-        passiveBuffs: hitResolved.passiveBuffs,
+        pushBuffEvents(log, dispatch.lifecycleEvents)
+        for (const synth of dispatch.syntheticHits) log.push(synth)
       }
-      log.push(hitEvent)
-
-      pushBuffEvents(log, dispatch.lifecycleEvents)
-      for (const synth of dispatch.syntheticHits) log.push(synth)
     }
 
     stageStartFrame += stageDuration
@@ -120,4 +170,22 @@ export function generateSimulationLog(
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
   for (const e of events) log.push(e)
+}
+
+function resolveHealTargets(
+  target: HealTarget,
+  healerId: number,
+  slots: Slots,
+): number[] {
+  switch (target) {
+    case "self":
+    case "source":
+      return [healerId]
+    case "currentOnField":
+      return [healerId]
+    case "team":
+      return slots.filter((id) => id !== null) as number[]
+    case "nextOnField":
+      return []
+  }
 }
