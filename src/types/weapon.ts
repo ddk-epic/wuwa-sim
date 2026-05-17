@@ -58,6 +58,3 @@ export interface WeaponData {
   passive: { name: string }
   buffs: WeaponBuffDef[]
 }
-
-/** @deprecated Use WeaponData */
-export type EnrichedWeapon = WeaponData

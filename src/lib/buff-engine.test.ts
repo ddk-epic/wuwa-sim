@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { stringmaster } from "#/data/weapons/stringmaster"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
-import type { EnrichedWeapon } from "#/types/weapon"
+import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
@@ -27,7 +27,7 @@ const BASE_ELEM_BONUS =
   ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 let testCharacters: EnrichedCharacter[] = []
-let testWeapons: EnrichedWeapon[] = []
+let testWeapons: WeaponData[] = []
 let testEchoes: EnrichedEcho[] = []
 let testEchoSets: EchoSet[] = []
 
@@ -3289,7 +3289,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
   const STRINGMASTER_ID = 21050016
 
   const bootstrapStringmaster = (rank: number, slots: Slots = slotsOf(1)) => {
-    testWeapons = [stringmaster as EnrichedWeapon]
+    testWeapons = [stringmaster as WeaponData]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots,
