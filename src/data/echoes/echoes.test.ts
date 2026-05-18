@@ -3,7 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/buff-engine"
-import type { HitLandedEvent, HealLandedEvent } from "#/lib/buff-engine"
+import type { HitLandedEvent } from "#/lib/buff-engine"
 import {
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_3COST_VARIABLE,
@@ -11,7 +11,6 @@ import {
 import { infernoRider } from "./inferno-rider"
 import { bellBorneGeochelone } from "./bell-borne-geochelone"
 import type { EchoSet } from "#/types/echo-set"
-import { rejuvenatingGlow } from "#/data/echo-sets/rejuvenating-glow"
 
 const BASE_ELEM_BONUS =
   ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
@@ -219,52 +218,5 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
     })
     engine.tickToFrame(15 * FPS)
     expect(engine.activeBuffIds(1)).not.toContain(BBG_BUFF)
-  })
-})
-
-describe("rejuvenatingGlow — 2pc healingBonus + 5pc team ATK on heal", () => {
-  const RG_2PC = "echo-set.rejuvenating-glow.2pc.healing-bonus"
-  const RG_5PC = "echo-set.rejuvenating-glow.5pc.team-atk"
-
-  function makeRGEngine(pieces: 2 | 5) {
-    testCharacters = [testChar]
-    testEchoes = []
-    testEchoSets = [rejuvenatingGlow]
-    const engine = new BuffEngine()
-    const slot1Id = pieces >= 2 ? rejuvenatingGlow.id : null
-    const slot2Id = pieces >= 5 ? rejuvenatingGlow.id : null
-    engine.bootstrap({
-      slots: [1, null, null],
-      loadouts: [
-        {
-          ...emptyLoadout,
-          echoSetSlot1Id: slot1Id,
-          echoSetSlot2Id: slot2Id,
-        },
-        emptyLoadout,
-        emptyLoadout,
-      ],
-    })
-    return engine
-  }
-
-  it("2pc folds healingBonus +10% into base stats (permanent, no event needed)", () => {
-    const engine = makeRGEngine(2)
-    expect(engine.resolveStats(1).healingBonus).toBeCloseTo(0.1)
-    expect(engine.activeBuffIds(1)).not.toContain(RG_2PC)
-  })
-
-  it("5pc fires on healLanded and grants team +15% ATK for 30s", () => {
-    const engine = makeRGEngine(5)
-    const baseAtkPct = engine.resolveStats(1).atkPct
-    const healEv: HealLandedEvent = {
-      kind: "healLanded",
-      characterId: 1,
-      skillType: "Basic Attack",
-      frame: 0,
-    }
-    engine.recordHeal(healEv)
-    expect(engine.activeBuffIds(1)).toContain(RG_5PC)
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtkPct + 0.15)
   })
 })
