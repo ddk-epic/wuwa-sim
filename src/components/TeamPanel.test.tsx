@@ -12,7 +12,7 @@ vi.mock("#/lib/catalog", () => ({
   listEchoSets: () => [],
 }))
 
-let testChar: EnrichedCharacter = {
+const testChar: EnrichedCharacter = {
   id: 1,
   name: "Test",
   element: "Aero",

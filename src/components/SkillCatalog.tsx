@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
-import type { SkillType } from "#/types/character"
-import type { EnrichedCharacter } from "#/types/character"
+import type { SkillType, EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { ELEMENT_HEX } from "#/data/elements"
