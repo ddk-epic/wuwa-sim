@@ -14,6 +14,8 @@ export interface FocusedStage {
   key: string
   label: string
   typeLabel: string
+  skillType: SkillType
+  durationFrames: number
   clickPayload: Omit<TimelineEntry, "id">
 }
 
@@ -84,6 +86,8 @@ function buildEchoStage(
     key,
     label,
     typeLabel: STAGE_TYPE_LABELS[skillType],
+    skillType,
+    durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
       stageId: makeStageId(echoName, stage.newName),
@@ -103,6 +107,8 @@ function buildCharacterStage(
     key,
     label,
     typeLabel: STAGE_TYPE_LABELS[skillType],
+    skillType,
+    durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
       stageId: makeStageId(skill.name, stage.newName),

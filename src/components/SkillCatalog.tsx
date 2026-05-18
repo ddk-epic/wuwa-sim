@@ -1,12 +1,27 @@
+import { useState, useEffect } from "react"
+import type { SkillType } from "#/types/character"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { ELEMENT_BORDER_CLASSES } from "#/data/elements"
+import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
 import { getFocusedStageCatalog } from "#/lib/focused-stage-catalog"
 import type { FocusedStage } from "#/lib/focused-stage-catalog"
 
 type NewEntry = Omit<TimelineEntry, "id">
+
+const FILTER_ORDER: Array<SkillType> = [
+  "Intro Skill",
+  "Basic Attack",
+  "Heavy Attack",
+  "Resonance Skill",
+  "Resonance Liberation",
+  "Forte Circuit",
+  "Outro Skill",
+  "Echo Skill",
+  "Movement",
+]
 
 interface SkillCatalogProps {
   slots: Slots
@@ -14,6 +29,7 @@ interface SkillCatalogProps {
   focusedId: number | null
   onFocus: (id: number) => void
   onStageClick: (entry: NewEntry) => void
+  reactionDelay: number
 }
 
 export function SkillCatalog({
@@ -22,7 +38,14 @@ export function SkillCatalog({
   focusedId,
   onFocus,
   onStageClick,
+  reactionDelay: _reactionDelay,
 }: SkillCatalogProps) {
+  const [filterType, setFilterType] = useState<SkillType | null>(null)
+
+  useEffect(() => {
+    setFilterType(null)
+  }, [focusedId])
+
   const filledCharacters = slots
     .filter((id): id is number => id !== null)
     .map((id) => getCharacterById(id))
@@ -34,7 +57,14 @@ export function SkillCatalog({
     focusedId,
   )
 
-  const showDivider = echoStages.length > 0 && characterStages.length > 0
+  const filteredEcho = filterType
+    ? echoStages.filter((s) => s.skillType === filterType)
+    : echoStages
+  const filteredChar = filterType
+    ? characterStages.filter((s) => s.skillType === filterType)
+    : characterStages
+
+  const showDivider = filteredEcho.length > 0 && filteredChar.length > 0
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -60,8 +90,35 @@ export function SkillCatalog({
           )
         })}
       </div>
+      <div className="flex flex-wrap gap-1 px-2 py-1.5 border-b border-gray-700 shrink-0">
+        <button
+          className={[
+            "px-2 py-0.5 rounded text-xs font-mono transition-colors",
+            filterType === null
+              ? "bg-gray-500 text-white"
+              : "bg-gray-800 text-gray-400 hover:bg-gray-700",
+          ].join(" ")}
+          onClick={() => setFilterType(null)}
+        >
+          all
+        </button>
+        {FILTER_ORDER.map((type) => (
+          <button
+            key={type}
+            className={[
+              "px-2 py-0.5 rounded text-xs font-mono transition-colors",
+              filterType === type
+                ? "bg-gray-500 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700",
+            ].join(" ")}
+            onClick={() => setFilterType(type)}
+          >
+            {STAGE_TYPE_LABELS[type]}
+          </button>
+        ))}
+      </div>
       <div className="flex-1 overflow-y-auto">
-        {echoStages.map((stage) => (
+        {filteredEcho.map((stage) => (
           <StageRow key={stage.key} stage={stage} onStageClick={onStageClick} />
         ))}
         {showDivider && (
@@ -70,7 +127,7 @@ export function SkillCatalog({
             className="border-b border-gray-600 my-1 mx-2"
           />
         )}
-        {characterStages.map((stage) => (
+        {filteredChar.map((stage) => (
           <StageRow key={stage.key} stage={stage} onStageClick={onStageClick} />
         ))}
       </div>
@@ -84,6 +141,7 @@ interface StageRowProps {
 }
 
 function StageRow({ stage, onStageClick }: StageRowProps) {
+  const durationSec = (stage.durationFrames / 60).toFixed(2) + "s"
   return (
     <button
       className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-gray-700/50 transition-colors"
@@ -93,6 +151,9 @@ function StageRow({ stage, onStageClick }: StageRowProps) {
         {stage.typeLabel}
       </span>
       <span className="flex-1 text-sm text-gray-200">{stage.label}</span>
+      <span className="font-mono text-xs text-gray-500 ml-2">
+        {durationSec}
+      </span>
     </button>
   )
 }

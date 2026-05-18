@@ -168,6 +168,7 @@ describe("SkillSidebar — tab strip", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
+        reactionDelay={0}
       />,
     )
     expect(screen.getByText("Encore")).toBeTruthy()
@@ -185,6 +186,7 @@ describe("SkillSidebar — tab strip", () => {
         focusedId={1}
         onFocus={onFocus}
         onStageClick={vi.fn()}
+        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
@@ -202,10 +204,11 @@ describe("SkillSidebar — stage rendering", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
+        reactionDelay={0}
       />,
     )
     expect(screen.getByText("Normal Attack")).toBeTruthy()
-    expect(screen.getByText("BASIC")).toBeTruthy()
+    expect(screen.getAllByText("BASIC").length).toBeGreaterThan(0)
   })
 
   it("clicking a stage row calls onStageClick with the stage's click payload", () => {
@@ -218,6 +221,7 @@ describe("SkillSidebar — stage rendering", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={onStageClick}
+        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByText("Normal Attack"))
@@ -227,6 +231,28 @@ describe("SkillSidebar — stage rendering", () => {
         stageId: "Normal Attack::_",
       }),
     )
+  })
+
+  it("shows duration for each stage row in seconds 2dp", () => {
+    setCatalog([char1], [testEcho])
+    const loadoutsWithEcho: SlotLoadout[] = [
+      { ...noLoadouts[0], echoId: 9001 },
+      ...noLoadouts.slice(1),
+    ]
+    render(
+      <SkillCatalog
+        slots={[1, null, null]}
+        loadouts={loadoutsWithEcho}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+        reactionDelay={0}
+      />,
+    )
+    // testEcho stage has actionTime 30 → 30/60 = 0.50s
+    expect(screen.getByText("0.50s")).toBeTruthy()
+    // char1 stage has actionTime 0 → 0.00s
+    expect(screen.getByText("0.00s")).toBeTruthy()
   })
 })
 
@@ -276,6 +302,7 @@ describe("SkillSidebar — divider presence", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
+        reactionDelay={0}
       />,
     )
     expect(screen.getByTestId("echo-character-divider")).toBeTruthy()
@@ -290,8 +317,62 @@ describe("SkillSidebar — divider presence", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
+        reactionDelay={0}
       />,
     )
     expect(screen.queryByTestId("echo-character-divider")).toBeNull()
+  })
+})
+
+describe("SkillSidebar — filter chips", () => {
+  it("renders filter chips including 'all'", () => {
+    setCatalog([char1], [])
+    render(
+      <SkillCatalog
+        slots={[1, null, null]}
+        loadouts={noLoadouts}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+        reactionDelay={0}
+      />,
+    )
+    expect(screen.getByRole("button", { name: "all" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "BASIC" })).toBeTruthy()
+  })
+
+  it("filtering to ECHO hides non-echo stages", () => {
+    setCatalog([char1], [testEcho])
+    render(
+      <SkillCatalog
+        slots={[1, null, null]}
+        loadouts={[{ ...noLoadouts[0], echoId: 9001 }, ...noLoadouts.slice(1)]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+        reactionDelay={0}
+      />,
+    )
+    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
+    expect(screen.queryByText("Normal Attack")).toBeNull()
+    expect(screen.getByText(/Test Echo/)).toBeTruthy()
+  })
+
+  it("clicking 'all' after a specific filter restores all stages", () => {
+    setCatalog([char1], [testEcho])
+    render(
+      <SkillCatalog
+        slots={[1, null, null]}
+        loadouts={[{ ...noLoadouts[0], echoId: 9001 }, ...noLoadouts.slice(1)]}
+        focusedId={1}
+        onFocus={vi.fn()}
+        onStageClick={vi.fn()}
+        reactionDelay={0}
+      />,
+    )
+    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
+    fireEvent.click(screen.getByRole("button", { name: "all" }))
+    expect(screen.getByText("Normal Attack")).toBeTruthy()
+    expect(screen.getByText(/Test Echo/)).toBeTruthy()
   })
 })
