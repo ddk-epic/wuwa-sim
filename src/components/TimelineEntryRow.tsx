@@ -10,6 +10,7 @@ import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
+import { useReactionDelay } from "#/hooks/useSettingsContext"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
@@ -61,7 +62,6 @@ interface TimelineEntryRowProps {
   summary: TimelineSummary
   slots: Slots
   loadouts: SlotLoadout[]
-  reactionDelay: number
   validation: ValidationResult
   showMessage: boolean
   actionEventAtIndex:
@@ -86,7 +86,6 @@ export function TimelineEntryRow({
   summary,
   slots,
   loadouts,
-  reactionDelay,
   validation,
   showMessage,
   actionEventAtIndex,
@@ -97,6 +96,7 @@ export function TimelineEntryRow({
   onReorderNodes,
   onReorderGroupEntries,
 }: TimelineEntryRowProps) {
+  const reactionDelay = useReactionDelay()
   const char = getCharacterById(entry.characterId)
   const row = summary.rows[index] ?? { time: 0, damage: null }
   const isInvalid = validation.invalidRowIds.has(entry.id)

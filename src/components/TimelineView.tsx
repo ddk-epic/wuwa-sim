@@ -15,7 +15,6 @@ interface TimelineViewProps {
   summary: TimelineSummary
   slots: Slots
   loadouts: SlotLoadout[]
-  reactionDelay: number
   log: SimulationLogEntry[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
@@ -53,7 +52,6 @@ export function TimelineView({
   summary,
   slots,
   loadouts,
-  reactionDelay,
   log,
   onRemove,
   onReorder,
@@ -210,7 +208,6 @@ export function TimelineView({
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   slots={slots}
                   loadouts={loadouts}
-                  reactionDelay={reactionDelay}
                   summary={summary}
                   actionEvents={actionEvents}
                   logMatches={logMatches}
@@ -242,7 +239,6 @@ export function TimelineView({
                 summary={summary}
                 slots={slots}
                 loadouts={loadouts}
-                reactionDelay={reactionDelay}
                 validation={validation}
                 showMessage={
                   validation.invalidRowIds.has(item.entry.id) &&

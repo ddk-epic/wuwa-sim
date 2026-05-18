@@ -28,7 +28,6 @@ interface SkillCatalogProps {
   focusedId: number | null
   onFocus: (id: number) => void
   onStageClick: (entry: NewEntry) => void
-  reactionDelay: number
 }
 
 export function SkillCatalog({
@@ -37,7 +36,6 @@ export function SkillCatalog({
   focusedId,
   onFocus,
   onStageClick,
-  reactionDelay: _reactionDelay,
 }: SkillCatalogProps) {
   const [filterType, setFilterType] = useState<SkillType | null>(null)
 

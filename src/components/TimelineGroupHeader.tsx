@@ -16,6 +16,7 @@ import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
+import { useReactionDelay } from "#/hooks/useSettingsContext"
 import { renderPoolValue } from "./TimelineEntryRow"
 
 export function getDistinctCharsBySlot(
@@ -125,7 +126,6 @@ interface TimelineGroupHeaderProps {
   isExpanded: boolean
   slots: Slots
   loadouts: SlotLoadout[]
-  reactionDelay: number
   summary: TimelineSummary
   actionEvents: SimulationLogEntry[]
   logMatches: boolean
@@ -149,7 +149,6 @@ export function TimelineGroupHeader({
   isExpanded,
   slots,
   loadouts,
-  reactionDelay,
   summary,
   actionEvents,
   logMatches,
@@ -163,6 +162,7 @@ export function TimelineGroupHeader({
   onRequestDeleteConfirm,
 }: TimelineGroupHeaderProps) {
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
+  const reactionDelay = useReactionDelay()
   const isRenaming = renamingGroupId === groupId
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId

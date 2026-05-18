@@ -168,7 +168,6 @@ describe("SkillSidebar — tab strip", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     expect(screen.getByText("Encore")).toBeTruthy()
@@ -186,7 +185,6 @@ describe("SkillSidebar — tab strip", () => {
         focusedId={1}
         onFocus={onFocus}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
@@ -204,7 +202,6 @@ describe("SkillSidebar — stage rendering", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     expect(screen.getByText("Normal Attack")).toBeTruthy()
@@ -221,7 +218,6 @@ describe("SkillSidebar — stage rendering", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={onStageClick}
-        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByText("Normal Attack"))
@@ -246,7 +242,6 @@ describe("SkillSidebar — stage rendering", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     // testEcho stage has actionTime 30 → 30/60 = 0.50s
@@ -302,7 +297,6 @@ describe("SkillSidebar — divider presence", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     expect(screen.getByTestId("echo-character-divider")).toBeTruthy()
@@ -317,7 +311,6 @@ describe("SkillSidebar — divider presence", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     expect(screen.queryByTestId("echo-character-divider")).toBeNull()
@@ -334,7 +327,6 @@ describe("SkillSidebar — filter chips", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     expect(screen.getByRole("button", { name: "all" })).toBeTruthy()
@@ -350,7 +342,6 @@ describe("SkillSidebar — filter chips", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
@@ -367,7 +358,6 @@ describe("SkillSidebar — filter chips", () => {
         focusedId={1}
         onFocus={vi.fn()}
         onStageClick={vi.fn()}
-        reactionDelay={0}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: "ECHO" }))

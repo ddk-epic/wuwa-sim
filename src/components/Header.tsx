@@ -8,6 +8,10 @@ import {
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
+import {
+  useReactionDelay,
+  useSettingsActions,
+} from "#/hooks/useSettingsContext"
 import { ConfirmModal } from "./ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
@@ -19,8 +23,6 @@ interface HeaderProps {
   onSimulate: () => void
   onOpenSimulationLog: () => void
   timelineEmpty: boolean
-  reactionDelay: number
-  onReactionDelayChange: (value: number) => void
 }
 
 export function Header({
@@ -30,9 +32,9 @@ export function Header({
   onSimulate,
   onOpenSimulationLog,
   timelineEmpty,
-  reactionDelay,
-  onReactionDelayChange,
 }: HeaderProps) {
+  const reactionDelay = useReactionDelay()
+  const { setReactionDelay } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -136,7 +138,7 @@ export function Header({
       {settingsOpen && (
         <SettingsModal
           reactionDelay={reactionDelay}
-          onReactionDelayChange={onReactionDelayChange}
+          onReactionDelayChange={setReactionDelay}
           onClose={() => setSettingsOpen(false)}
         />
       )}
