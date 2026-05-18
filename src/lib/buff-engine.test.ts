@@ -3876,3 +3876,96 @@ describe("Variation weapon — Ceaseless Aria concerto restore", () => {
     expect(engine.getResource(10).concerto).toBe(8 + 8)
   })
 })
+
+describe("BuffEngine — ADR-0011: target collapses to source at trigger time", () => {
+  it("nextOnField def with cond.on=target evaluates against source, not nextOnField char", () => {
+    const windowBuff: BuffDef = {
+      id: "test.window",
+      name: "Window",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 15 },
+      effects: [],
+    }
+    // Condition uses on: "target" — at trigger time this collapses to source (char 1)
+    const nextOnFieldDef: BuffDef = {
+      id: "test.nof-target-cond",
+      name: "NOF target cond",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      target: { kind: "nextOnField" },
+      duration: { kind: "seconds", v: 15 },
+      condition: { kind: "buffActive", buffId: "test.window", on: "target" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [windowBuff, nextOnFieldDef] }),
+      baseChar({ id: 2, buffs: [] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    // Activate window on char 1 (source), then trigger outro
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Echo Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 1,
+    })
+    // Swap in char 2 — condition should pass because window is active on char 1 (source = target)
+    engine.onEvent({ kind: "swapIn", characterId: 2, frame: 2 })
+
+    expect(engine.activeBuffIds(2)).toContain("test.nof-target-cond")
+  })
+
+  it("nextOnField def with cond.on=target does not pass when source lacks the buff", () => {
+    const nextOnFieldDef: BuffDef = {
+      id: "test.nof-target-absent",
+      name: "NOF target absent",
+      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      target: { kind: "nextOnField" },
+      duration: { kind: "seconds", v: 15 },
+      condition: { kind: "buffActive", buffId: "test.absent", on: "target" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [nextOnFieldDef] }),
+      baseChar({ id: 2, buffs: [] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+    engine.onEvent({ kind: "swapIn", characterId: 2, frame: 1 })
+
+    expect(engine.activeBuffIds(2)).not.toContain("test.nof-target-absent")
+  })
+})

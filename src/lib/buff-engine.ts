@@ -76,6 +76,22 @@ export interface BootstrapInput {
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
+interface ConditionSubject {
+  sourceCharacterId: number
+  targetCharacterId: number
+}
+
+function subjectFromInstance(inst: BuffInstance): ConditionSubject {
+  return {
+    sourceCharacterId: inst.sourceCharacterId,
+    targetCharacterId: inst.targetCharacterId,
+  }
+}
+
+function subjectAtTrigger(sourceCharacterId: number): ConditionSubject {
+  return { sourceCharacterId, targetCharacterId: sourceCharacterId }
+}
+
 type PendingOutroBuff = {
   def: BuffDef
   sourceCharacterId: number
@@ -160,7 +176,10 @@ export class BuffEngine {
     if (def.target.kind === "nextOnField") {
       if (
         def.condition &&
-        !this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
+        !this.evaluateCondition(
+          def.condition,
+          subjectAtTrigger(sourceCharacterId),
+        )
       ) {
         return
       }
@@ -349,7 +368,10 @@ export class BuffEngine {
         def.effects.length > 0 &&
         def.effects.every((e) => e.kind === "emitHit")
       ) {
-        return this.evaluateConditionAtTrigger(def.condition, sourceCharacterId)
+        return this.evaluateCondition(
+          def.condition,
+          subjectAtTrigger(sourceCharacterId),
+        )
       }
       return true
     })
@@ -646,7 +668,7 @@ export class BuffEngine {
     const key = conditionCacheKeyString(cacheKey)
     const cached = this.conditionCache.get(key)
     if (cached !== undefined) return cached
-    const result = this.evaluateCondition(cond, inst)
+    const result = this.evaluateCondition(cond, subjectFromInstance(inst))
     this.conditionEvalCount_++
     this.conditionCache.set(key, result)
     return result
@@ -657,49 +679,31 @@ export class BuffEngine {
     return this.conditionEvalCount_
   }
 
-  private evaluateCondition(cond: Condition, inst: BuffInstance): boolean {
-    switch (cond.kind) {
-      case "buffActive": {
-        const subjectId =
-          cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId
-        return this.store.hasActiveOnTarget(cond.buffId, subjectId)
-      }
-      case "onField":
-        return this.onField.isOnField(inst.targetCharacterId)
-      case "actorIsOnField":
-        return this.onField.isOnField(inst.sourceCharacterId)
-      case "actorIsOffField":
-        return !this.onField.isOnField(inst.sourceCharacterId)
-      case "resourceAtLeast": {
-        const subjectId =
-          cond.on === "source" ? inst.sourceCharacterId : inst.targetCharacterId
-        return this.resources.getResource(subjectId)[cond.resource] >= cond.n
-      }
-    }
-  }
-
-  /**
-   * Evaluate a condition at trigger time using only the source character's context.
-   * Used for emitHit-only defs and nextOnField defs where no BuffInstance exists yet
-   * and the target character is unknown or irrelevant (ADR-0011).
-   */
-  private evaluateConditionAtTrigger(
+  private evaluateCondition(
     cond: Condition,
-    sourceCharacterId: number,
+    subject: ConditionSubject,
   ): boolean {
     switch (cond.kind) {
-      case "buffActive":
-        return this.store.hasActiveOnTarget(cond.buffId, sourceCharacterId)
-      case "actorIsOnField":
-        return this.onField.isOnField(sourceCharacterId)
-      case "actorIsOffField":
-        return !this.onField.isOnField(sourceCharacterId)
+      case "buffActive": {
+        const id =
+          cond.on === "source"
+            ? subject.sourceCharacterId
+            : subject.targetCharacterId
+        return this.store.hasActiveOnTarget(cond.buffId, id)
+      }
       case "onField":
-        return this.onField.isOnField(sourceCharacterId)
-      case "resourceAtLeast":
-        return (
-          this.resources.getResource(sourceCharacterId)[cond.resource] >= cond.n
-        )
+        return this.onField.isOnField(subject.targetCharacterId)
+      case "actorIsOnField":
+        return this.onField.isOnField(subject.sourceCharacterId)
+      case "actorIsOffField":
+        return !this.onField.isOnField(subject.sourceCharacterId)
+      case "resourceAtLeast": {
+        const id =
+          cond.on === "source"
+            ? subject.sourceCharacterId
+            : subject.targetCharacterId
+        return this.resources.getResource(id)[cond.resource] >= cond.n
+      }
     }
   }
 
