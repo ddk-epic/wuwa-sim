@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import type { SkillType, EnrichedCharacter } from "#/types/character"
-import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
+import { useTeamContext } from "#/hooks/useTeamContext"
 import { ELEMENT_HEX } from "#/data/elements"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
@@ -23,20 +23,12 @@ const FILTER_ORDER: Array<SkillType> = [
 ]
 
 interface SkillCatalogProps {
-  slots: Slots
-  loadouts: SlotLoadout[]
-  focusedId: number | null
-  onFocus: (id: number) => void
   onStageClick: (entry: NewEntry) => void
 }
 
-export function SkillCatalog({
-  slots,
-  loadouts,
-  focusedId,
-  onFocus,
-  onStageClick,
-}: SkillCatalogProps) {
+export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
+  const { slots, loadouts, focusedId, focusCharacter } = useTeamContext()
+  const onFocus = focusCharacter
   const [filterType, setFilterType] = useState<SkillType | null>(null)
 
   useEffect(() => {

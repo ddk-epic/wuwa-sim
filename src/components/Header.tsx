@@ -12,12 +12,12 @@ import {
   useReactionDelay,
   useSettingsActions,
 } from "#/hooks/useSettingsContext"
+import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 
 interface HeaderProps {
-  slots: Slots
   onEditTeam: () => void
   onResetTimeline: () => void
   onSimulate: () => void
@@ -26,13 +26,13 @@ interface HeaderProps {
 }
 
 export function Header({
-  slots,
   onEditTeam,
   onResetTimeline,
   onSimulate,
   onOpenSimulationLog,
   timelineEmpty,
 }: HeaderProps) {
+  const { slots } = useTeamContext()
   const reactionDelay = useReactionDelay()
   const { setReactionDelay } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)

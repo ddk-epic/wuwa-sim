@@ -7,7 +7,7 @@ import {
   ChevronRightIcon,
 } from "@radix-ui/react-icons"
 import type { TimelineEntry } from "#/types/timeline"
-import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { Slots } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
@@ -17,6 +17,7 @@ import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { useReactionDelay } from "#/hooks/useSettingsContext"
+import { useTeamContext } from "#/hooks/useTeamContext"
 import { renderPoolValue } from "./TimelineEntryRow"
 
 export function getDistinctCharsBySlot(
@@ -124,8 +125,6 @@ interface TimelineGroupHeaderProps {
   groupEntries: TimelineEntry[]
   startFlatIndex: number
   isExpanded: boolean
-  slots: Slots
-  loadouts: SlotLoadout[]
   summary: TimelineSummary
   actionEvents: SimulationLogEntry[]
   logMatches: boolean
@@ -147,8 +146,6 @@ export function TimelineGroupHeader({
   groupEntries,
   startFlatIndex,
   isExpanded,
-  slots,
-  loadouts,
   summary,
   actionEvents,
   logMatches,
@@ -163,6 +160,7 @@ export function TimelineGroupHeader({
 }: TimelineGroupHeaderProps) {
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
   const reactionDelay = useReactionDelay()
+  const { slots, loadouts } = useTeamContext()
   const isRenaming = renamingGroupId === groupId
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId

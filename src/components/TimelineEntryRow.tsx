@@ -1,6 +1,5 @@
 import type { TimelineEntry } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
-import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { ValidationResult } from "#/lib/validate-timeline"
@@ -11,6 +10,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useReactionDelay } from "#/hooks/useSettingsContext"
+import { useTeamContext } from "#/hooks/useTeamContext"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
@@ -60,8 +60,6 @@ interface TimelineEntryRowProps {
   isLastInGroup: boolean
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
-  slots: Slots
-  loadouts: SlotLoadout[]
   validation: ValidationResult
   showMessage: boolean
   actionEventAtIndex:
@@ -84,8 +82,6 @@ export function TimelineEntryRow({
   isLastInGroup,
   prevEntry,
   summary,
-  slots,
-  loadouts,
   validation,
   showMessage,
   actionEventAtIndex,
@@ -97,6 +93,7 @@ export function TimelineEntryRow({
   onReorderGroupEntries,
 }: TimelineEntryRowProps) {
   const reactionDelay = useReactionDelay()
+  const { slots, loadouts } = useTeamContext()
   const char = getCharacterById(entry.characterId)
   const row = summary.rows[index] ?? { time: 0, damage: null }
   const isInvalid = validation.invalidRowIds.has(entry.id)

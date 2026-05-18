@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
-import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { validateTimeline } from "#/lib/validate-timeline"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
+import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
@@ -13,8 +13,6 @@ import { TimelineGroupHeader } from "./TimelineGroupHeader"
 interface TimelineViewProps {
   nodes: TimelineNode[]
   summary: TimelineSummary
-  slots: Slots
-  loadouts: SlotLoadout[]
   log: SimulationLogEntry[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
@@ -50,8 +48,6 @@ type RenderItem =
 export function TimelineView({
   nodes,
   summary,
-  slots,
-  loadouts,
   log,
   onRemove,
   onReorder,
@@ -63,6 +59,7 @@ export function TimelineView({
   onDeleteGroup,
   onReorderGroupEntries,
 }: TimelineViewProps) {
+  const { slots, loadouts } = useTeamContext()
   const drag = useTimelineDrag()
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
   const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(
@@ -206,8 +203,6 @@ export function TimelineView({
                   groupEntries={item.groupEntries}
                   startFlatIndex={item.startFlatIndex}
                   isExpanded={expandedGroupIds.has(item.groupId)}
-                  slots={slots}
-                  loadouts={loadouts}
                   summary={summary}
                   actionEvents={actionEvents}
                   logMatches={logMatches}
@@ -237,8 +232,6 @@ export function TimelineView({
                 isLastInGroup={item.isLastInGroup}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
-                slots={slots}
-                loadouts={loadouts}
                 validation={validation}
                 showMessage={
                   validation.invalidRowIds.has(item.entry.id) &&

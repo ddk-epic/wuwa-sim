@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, cleanup } from "@testing-library/react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
+import { TeamProvider, type TeamContextValue } from "#/hooks/useTeamContext"
 import { TeamPanel } from "./TeamPanel"
 
 vi.mock("#/lib/catalog", () => ({
@@ -43,27 +44,31 @@ function makeLoadout(echoBuild: "4-3-3-1-1" | "4-4-1-1-1"): SlotLoadout {
 
 const emptyLoadout = makeLoadout("4-3-3-1-1")
 
+function renderWithTeam(loadout: SlotLoadout) {
+  const value: TeamContextValue = {
+    slots: [1, null, null],
+    loadouts: [loadout, loadout, loadout],
+    focusedId: 1,
+    selectedCount: 1,
+    toggleCharacter: vi.fn(),
+    focusCharacter: vi.fn(),
+    setSlotPatch: vi.fn(),
+  }
+  return render(
+    <TeamProvider value={value}>
+      <TeamPanel />
+    </TeamProvider>,
+  )
+}
+
 describe("TeamPanel — cost-3 row visibility", () => {
   it("shows Elem DMG option for 4-3-3-1-1 build", () => {
-    render(
-      <TeamPanel
-        slots={[1, null, null]}
-        loadouts={[emptyLoadout, emptyLoadout, emptyLoadout]}
-        onSlotChange={vi.fn()}
-      />,
-    )
+    renderWithTeam(emptyLoadout)
     expect(screen.queryByText("Elem DMG")).not.toBeNull()
   })
 
   it("hides cost-3 row for 4-4-1-1-1 build", () => {
-    const loadout441 = makeLoadout("4-4-1-1-1")
-    render(
-      <TeamPanel
-        slots={[1, null, null]}
-        loadouts={[loadout441, loadout441, loadout441]}
-        onSlotChange={vi.fn()}
-      />,
-    )
+    renderWithTeam(makeLoadout("4-4-1-1-1"))
     expect(screen.queryByText("Elem DMG")).toBeNull()
     expect(screen.queryByText("ER")).toBeNull()
   })

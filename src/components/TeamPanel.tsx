@@ -1,69 +1,47 @@
-import type { Character } from "#/types/character"
-import type { Slots, SlotLoadout } from "#/types/loadout"
-import { getCharacterById, listWeaponsByType } from "#/lib/catalog"
+import { listWeaponsByType } from "#/lib/catalog"
+import { useTeamContext, useSlot } from "#/hooks/useTeamContext"
 import { SegmentedToggle } from "#/components/SegmentedToggle"
 import { EchoBuildEditor } from "#/components/EchoBuildEditor"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]
 
-interface TeamPanelProps {
-  slots: Slots
-  loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
-  onSlotChange: (slotIndex: number, patch: Partial<SlotLoadout>) => void
-}
-
-export function TeamPanel({ slots, loadouts, onSlotChange }: TeamPanelProps) {
+export function TeamPanel() {
+  const { slots } = useTeamContext()
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
         Team
       </p>
       <div className="flex gap-3">
-        {slots.map((charId, i) => {
-          const character = charId !== null ? getCharacterById(charId) : null
-          return (
-            <TeamSlot
-              key={i}
-              slotNumber={i + 1}
-              character={character}
-              loadout={loadouts[i]}
-              onSlotChange={(patch) => onSlotChange(i, patch)}
-            />
-          )
-        })}
+        {slots.map((_, i) => (
+          <TeamSlot key={i} slotIndex={i} />
+        ))}
       </div>
     </div>
   )
 }
 
 interface TeamSlotProps {
-  slotNumber: number
-  character: Character | null
-  loadout: SlotLoadout
-  onSlotChange: (patch: Partial<SlotLoadout>) => void
+  slotIndex: number
 }
 
 function SectionDivider() {
   return <hr className="border-gray-700" />
 }
 
-function TeamSlot({
-  slotNumber,
-  character,
-  loadout,
-  onSlotChange,
-}: TeamSlotProps) {
+function TeamSlot({ slotIndex }: TeamSlotProps) {
+  const { character, loadout, setPatch } = useSlot(slotIndex)
+
   if (character === null) {
     return (
       <div className="flex-1 border border-dashed border-gray-700 rounded p-3 flex items-center justify-center min-h-22">
-        <span className="text-gray-600 text-xs">Slot {slotNumber}</span>
+        <span className="text-gray-600 text-xs">Slot {slotIndex + 1}</span>
       </div>
     )
   }
 
   const compatibleWeapons = listWeaponsByType(character.weaponType)
-  const scalingStat = character.primaryScalingStat ?? "atk"
 
   return (
     <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-4">
@@ -75,7 +53,7 @@ function TeamSlot({
       <SegmentedToggle
         options={SEQUENCES}
         value={loadout.sequence}
-        onChange={(sequence) => onSlotChange({ sequence })}
+        onChange={(sequence) => setPatch({ sequence })}
         label={(v) => `S${v}`}
       />
 
@@ -86,7 +64,7 @@ function TeamSlot({
         <select
           className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
           value={loadout.weaponId ?? ""}
-          onChange={(e) => onSlotChange({ weaponId: Number(e.target.value) })}
+          onChange={(e) => setPatch({ weaponId: Number(e.target.value) })}
         >
           <option value="">— Weapon —</option>
           {compatibleWeapons.map((w) => (
@@ -98,7 +76,7 @@ function TeamSlot({
         <SegmentedToggle
           options={RANKS}
           value={loadout.weaponRank}
-          onChange={(weaponRank) => onSlotChange({ weaponRank })}
+          onChange={(weaponRank) => setPatch({ weaponRank })}
           label={(v) => `R${v}`}
           disabled={loadout.weaponId === null}
         />
@@ -107,11 +85,7 @@ function TeamSlot({
       <SectionDivider />
 
       {/* Echo domain */}
-      <EchoBuildEditor
-        scalingStat={scalingStat}
-        loadout={loadout}
-        onChange={onSlotChange}
-      />
+      <EchoBuildEditor slotIndex={slotIndex} />
     </div>
   )
 }

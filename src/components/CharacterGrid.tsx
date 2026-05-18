@@ -1,21 +1,13 @@
 import type { Character } from "#/types/character"
-import type { Slots } from "#/types/loadout"
 import { ELEMENT_CLASSES } from "#/data/elements"
 import { listCharacters } from "#/lib/catalog"
+import { useTeamContext } from "#/hooks/useTeamContext"
 
-interface CharacterGridProps {
-  slots: Slots
-  focusedId: number | null
-  onToggle: (characterId: number) => void
-}
-
-export function CharacterGrid({
-  slots,
-  focusedId,
-  onToggle,
-}: CharacterGridProps) {
+export function CharacterGrid() {
+  const { slots, focusedId, toggleCharacter } = useTeamContext()
   const characters = listCharacters()
   const selectedCount = slots.filter((s) => s !== null).length
+  const onToggle = toggleCharacter
 
   return (
     <div className="grid grid-cols-4 gap-2">

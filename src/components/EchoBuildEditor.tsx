@@ -1,12 +1,8 @@
-import type {
-  Cost3Main,
-  Cost4Main,
-  EchoBuild,
-  SlotLoadout,
-} from "#/types/loadout"
+import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
 import { listEchoes, listEchoSets } from "#/lib/catalog"
 import { ECHO_BUILD_LAYOUT } from "#/lib/echo-stat-constants"
 import { COST3_MAINS_DEFAULT, COST4_MAINS_DEFAULT } from "#/lib/template"
+import { useSlot } from "#/hooks/useTeamContext"
 import { SegmentedToggle } from "#/components/SegmentedToggle"
 import { EchoMainsToggle } from "#/components/EchoMainsToggle"
 
@@ -19,16 +15,13 @@ const SCALING_STAT_LABEL: Record<"atk" | "hp" | "def", string> = {
 }
 
 interface EchoBuildEditorProps {
-  scalingStat: "atk" | "hp" | "def"
-  loadout: SlotLoadout
-  onChange: (patch: Partial<SlotLoadout>) => void
+  slotIndex: number
 }
 
-export function EchoBuildEditor({
-  scalingStat,
-  loadout,
-  onChange,
-}: EchoBuildEditorProps) {
+export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
+  const { character, loadout, setPatch } = useSlot(slotIndex)
+  const onChange = setPatch
+  const scalingStat = character?.primaryScalingStat ?? "atk"
   const echoes = listEchoes()
   const echoSets = listEchoSets()
   const layout = ECHO_BUILD_LAYOUT[loadout.echoBuild]
