@@ -146,7 +146,7 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-[16px] text-gray-300">
+      <td className="px-2 py-2 text-right font-mono text-[16px] text-[#a3bfff]">
         {row.time.toFixed(2)}s
       </td>
       <td className="px-2 py-2 text-white">

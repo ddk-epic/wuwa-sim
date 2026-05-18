@@ -239,7 +239,7 @@ export function TimelineGroupHeader({
           }}
         />
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-gray-300">
+      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-[#a3bfff]">
         {firstRowTime}s
       </td>
       <td className="px-2 py-1.5">
