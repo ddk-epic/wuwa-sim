@@ -308,20 +308,20 @@ export function TimelineView({
     return true
   }
 
-  function renderPoolValue(
-    val: number | null,
-    threshold: number,
-    boldColor: string,
-  ) {
-    if (val === null) return <span className="text-gray-600">—</span>
-    if (val >= threshold)
+  function renderPoolValue(val: number | null, activeColor: string) {
+    if (val === null) return <span style={{ color: "#42475a" }}>—</span>
+    if (val === 0) return <span style={{ color: "#42475a" }}>0</span>
+    if (val >= 100)
       return (
-        <span className="font-bold" style={{ color: boldColor }}>
+        <span className="font-bold" style={{ color: activeColor }}>
           {val}
         </span>
       )
-    if (val === 0) return <span className="text-gray-600">{val}</span>
-    return <span className="text-gray-300">{val}</span>
+    return (
+      <span className="font-medium" style={{ color: activeColor }}>
+        {val}
+      </span>
+    )
   }
 
   function renderEntryRow(
@@ -442,7 +442,7 @@ export function TimelineView({
         <td className="px-2 py-2 text-white">
           <div className="flex items-center gap-1.5">
             <span
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-[10px] font-bold text-gray-900 shrink-0"
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-[9px] font-black text-gray-900 shrink-0"
               style={{ backgroundColor: charHex }}
             >
               {elementLetter}
@@ -507,32 +507,34 @@ export function TimelineView({
           {duration.toFixed(2)}s
         </td>
         {/* con */}
-        <td className="px-2 py-2 text-right font-mono text-xs">
-          {renderPoolValue(conVal, 100, "#f5cf4d")}
+        <td className="px-2 py-2 text-right font-mono">
+          {renderPoolValue(conVal, "#f5cf4d")}
         </td>
         {/* res */}
-        <td className="px-2 py-2 text-right font-mono text-xs">
-          {renderPoolValue(resVal, 100, "#9b6cf0")}
+        <td className="px-2 py-2 text-right font-mono">
+          {renderPoolValue(resVal, "#9b6cf0")}
         </td>
         {/* dmg */}
-        <td className="px-2 py-2 text-right font-mono text-xs">
+        <td className="px-2 py-2 text-right font-mono">
           {row.damage !== null ? (
-            <span className="text-yellow-400">
+            <span className="font-semibold text-yellow-400">
               {row.damage.toLocaleString()}
             </span>
           ) : (
-            <span className="text-gray-600">—</span>
+            <span className="font-semibold text-gray-600">—</span>
           )}
         </td>
         {/* actions */}
         <td className="px-2 py-2">
-          <button
-            onClick={() => onRemove(entry.id)}
-            className="text-gray-500 hover:text-red-400 transition-colors"
-            aria-label="Remove"
-          >
-            ✕
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={() => onRemove(entry.id)}
+              className="text-gray-500 hover:text-red-400 transition-colors"
+              aria-label="Remove"
+            >
+              ✕
+            </button>
+          </div>
         </td>
       </tr>
     )
@@ -833,9 +835,9 @@ export function TimelineView({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <table className="w-full text-sm text-left">
+      <table className="w-full text-[12px] text-left">
         <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
-          <tr className="text-gray-400 text-xs uppercase">
+          <tr className="text-gray-400 text-[9px] tracking-[1px] uppercase">
             <th className="px-2 py-2 w-8">#</th>
             <th className="px-2 py-2 text-right">time</th>
             <th className="px-2 py-2">char</th>
