@@ -29,6 +29,7 @@ interface TableTopBarProps {
   totalDmg: number
   dps: number
   totalTimeSec: number
+  onAddGroup: () => void
 }
 
 export function TableTopBar({
@@ -36,13 +37,14 @@ export function TableTopBar({
   totalDmg,
   dps,
   totalTimeSec,
+  onAddGroup,
 }: TableTopBarProps) {
   return (
     <div className="flex w.full h-9.5 shrink-0 border-b border-border bg-card">
       {/* left rail spacer */}
       <div className="w-10 shrink-0 border-r border-border" />
 
-      {/* Table-side region: title left, Summarys right */}
+      {/* Table-side region: title left, KPIs right */}
       <div className="flex flex-1 items-center gap-4 px-4">
         <div className="flex items-baseline gap-2">
           <span className="font-semibold text-foreground">Timeline</span>
@@ -52,6 +54,13 @@ export function TableTopBar({
             <span className="font-mono">{entriesNumber}</span> actions
           </span>
         </div>
+
+        <button
+          className="items-center gap-1 px-2.5 py-0.5 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
+          onClick={onAddGroup}
+        >
+          + Group
+        </button>
 
         <div className="flex-1" />
 

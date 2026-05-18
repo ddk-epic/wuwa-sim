@@ -71,7 +71,6 @@ export function SimulatorPage() {
       <Header
         slots={slots}
         onEditTeam={() => setModalOpen(true)}
-        onAddGroup={handleAddGroup}
         onResetTimeline={handleResetTimeline}
         onSimulate={handleSimulate}
         onOpenSimulationLog={() => setSimulationLogOpen(true)}
@@ -84,6 +83,7 @@ export function SimulatorPage() {
         totalDmg={summary.totalDamage}
         dps={summary.dps}
         totalTimeSec={summary.totalTimeSec}
+        onAddGroup={handleAddGroup}
       />
       <div className="flex flex-1 min-h-0">
         {/* left rail spacer */}

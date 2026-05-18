@@ -1,6 +1,12 @@
 import { useState } from "react"
-import { CalendarSearch, Settings } from "lucide-react"
+import {
+  ClockIcon,
+  GearIcon,
+  UploadIcon,
+  DownloadIcon,
+} from "@radix-ui/react-icons"
 import type { Slots } from "#/types/loadout"
+import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
@@ -8,7 +14,6 @@ import { SettingsModal } from "./SettingsModal"
 interface HeaderProps {
   slots: Slots
   onEditTeam: () => void
-  onAddGroup: () => void
   onResetTimeline: () => void
   onSimulate: () => void
   onOpenSimulationLog: () => void
@@ -20,7 +25,6 @@ interface HeaderProps {
 export function Header({
   slots,
   onEditTeam,
-  onAddGroup,
   onResetTimeline,
   onSimulate,
   onOpenSimulationLog,
@@ -31,12 +35,16 @@ export function Header({
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const label = slots
-    .map((charId) => {
-      if (charId === null) return "—"
-      return getCharacterById(charId)?.name ?? "—"
-    })
-    .join(" / ")
+  const filledChars = slots
+    .map((id) => (id !== null ? getCharacterById(id) : null))
+    .filter(Boolean)
+
+  const teamNameChar =
+    (slots[0] !== null ? getCharacterById(slots[0]) : null) ??
+    filledChars[0] ??
+    null
+  const teamLabel = teamNameChar ? `${teamNameChar.name}'s Team` : "No Team"
+  const memberNames = filledChars.map((c) => c!.name).join(" · ")
 
   return (
     <div className="h-12 flex items-center shrink-0 gap-4 px-4 py-2 border-b border-border bg-card">
@@ -49,19 +57,20 @@ export function Header({
         </span>
       </div>
       <button
-        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
+        className="flex items-center gap-2 px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
         onClick={onEditTeam}
       >
-        {label}
+        <AvatarStack slots={slots} />
+        <div className="flex flex-col items-start leading-tight">
+          <span className="text-xs font-semibold text-gray-200">
+            {teamLabel}
+          </span>
+          {memberNames && (
+            <span className="text-[10px] text-gray-400">{memberNames}</span>
+          )}
+        </div>
       </button>
-      <div className="ml-auto flex items-center gap-4">
-        {/** Buttons */}
-        <button
-          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
-          onClick={onAddGroup}
-        >
-          + Group
-        </button>
+      <div className="ml-auto flex items-center gap-2">
         <button
           className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           disabled={timelineEmpty}
@@ -74,7 +83,7 @@ export function Header({
           onClick={onOpenSimulationLog}
           aria-label="Open simulation log"
         >
-          <CalendarSearch size={20} />
+          <ClockIcon />
           <span>Log</span>
         </button>
         <button
@@ -86,11 +95,25 @@ export function Header({
         </button>
         <div className="w-px h-6 bg-gray-700 mx-1" />
         <button
-          className="items-center gap-1 p-1.75 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
+          aria-label="Import"
+        >
+          <UploadIcon />
+          <span>Import</span>
+        </button>
+        <button
+          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
+          aria-label="Export"
+        >
+          <DownloadIcon />
+          <span>Export</span>
+        </button>
+        <button
+          className="flex items-center gap-1 p-1.75 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           onClick={() => setSettingsOpen(true)}
           aria-label="Open settings"
         >
-          <Settings size={20} />
+          <GearIcon />
         </button>
       </div>
       {confirmOpen && (
@@ -110,6 +133,40 @@ export function Header({
           onClose={() => setSettingsOpen(false)}
         />
       )}
+    </div>
+  )
+}
+
+interface AvatarStackProps {
+  slots: Slots
+}
+
+function AvatarStack({ slots }: AvatarStackProps) {
+  const chars = slots
+    .map((id) => (id !== null ? getCharacterById(id) : null))
+    .filter(Boolean)
+
+  if (chars.length === 0) return null
+
+  return (
+    <div className="flex items-center">
+      {chars.map((char, i) => {
+        const hex = ELEMENT_HEX[char!.element] ?? "#888"
+        const name = char!.name.toLowerCase()
+        return (
+          <img
+            key={char!.id}
+            src={`/${name}.png`}
+            alt={char!.name}
+            className="w-6.5 h-6.5 rounded-full object-cover"
+            style={{
+              marginLeft: i > 0 ? "-6px" : undefined,
+              outline: `2px solid ${hex}`,
+              outlineOffset: "0px",
+            }}
+          />
+        )
+      })}
     </div>
   )
 }
