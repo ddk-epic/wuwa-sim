@@ -47,53 +47,58 @@ export function Header({
   const memberNames = filledChars.map((c) => c!.name).join(" · ")
 
   return (
-    <div className="h-12 flex items-center shrink-0 gap-4 px-4 py-2 border-b border-border bg-card">
-      <div>
-        <span className="tracking-[0.5px] font-semibold text-2xl text-foreground">
-          WUWA
-        </span>
-        <span className="pr-2 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
-          Sim
-        </span>
-      </div>
-      <button
-        className="flex items-center gap-2 px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
-        onClick={onEditTeam}
-      >
-        <AvatarStack slots={slots} />
-        <div className="flex flex-col items-start leading-tight">
-          <span className="text-xs font-semibold text-gray-200">
-            {teamLabel}
+    <div className="h-12 flex items-stretch shrink-0">
+      {/* Left zone */}
+      <div className="flex-1 flex items-center gap-4 px-4 bg-card border-b border-border">
+        <div>
+          <span className="tracking-[0.5px] font-semibold text-2xl text-foreground">
+            WUWA
           </span>
-          {memberNames && (
-            <span className="text-[10px] text-gray-400">{memberNames}</span>
-          )}
+          <span className="pr-2 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
+            Sim
+          </span>
         </div>
-      </button>
-      <div className="ml-auto flex items-center gap-2">
         <button
-          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
-          disabled={timelineEmpty}
-          onClick={onSimulate}
+          className="flex items-center gap-2 px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
+          onClick={onEditTeam}
         >
-          Simulate
+          <AvatarStack slots={slots} />
+          <div className="flex flex-col items-start leading-tight">
+            <span className="text-xs font-semibold text-gray-200">
+              {teamLabel}
+            </span>
+            {memberNames && (
+              <span className="text-[10px] text-gray-400">{memberNames}</span>
+            )}
+          </div>
         </button>
-        <button
-          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
-          onClick={onOpenSimulationLog}
-          aria-label="Open simulation log"
-        >
-          <ClockIcon />
-          <span>Log</span>
-        </button>
-        <button
-          className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
-          disabled={timelineEmpty}
-          onClick={() => setConfirmOpen(true)}
-        >
-          Reset
-        </button>
-        <div className="w-px h-6 bg-gray-700 mx-1" />
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            disabled={timelineEmpty}
+            onClick={onSimulate}
+          >
+            Simulate
+          </button>
+          <button
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            onClick={onOpenSimulationLog}
+            aria-label="Open simulation log"
+          >
+            <ClockIcon />
+            <span>Log</span>
+          </button>
+          <button
+            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            disabled={timelineEmpty}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+      {/* Right zone */}
+      <div className="w-[280px] flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
           aria-label="Import"
@@ -108,6 +113,7 @@ export function Header({
           <DownloadIcon />
           <span>Export</span>
         </button>
+        <div className="ml-auto" />
         <button
           className="flex items-center gap-1 p-1.75 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           onClick={() => setSettingsOpen(true)}
