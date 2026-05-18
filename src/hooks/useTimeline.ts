@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type {
   TimelineEntry,
   TimelineGroup,
@@ -20,7 +21,17 @@ export function useTimeline(onShapeChange?: () => void) {
     transformNodes,
   )
 
+  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
+
   const entries = flattenNodes(nodes)
+
+  function startRename(groupId: string) {
+    setRenamingGroupId(groupId)
+  }
+
+  function endRename() {
+    setRenamingGroupId(null)
+  }
 
   function addEntry(entry: NewEntry) {
     setNodes((prev) => {
@@ -57,6 +68,12 @@ export function useTimeline(onShapeChange?: () => void) {
       ]
     })
     onShapeChange?.()
+    return id
+  }
+
+  function addGroupAndRename(): string {
+    const id = addGroup()
+    setRenamingGroupId(id)
     return id
   }
 
@@ -201,8 +218,12 @@ export function useTimeline(onShapeChange?: () => void) {
   return {
     nodes,
     entries,
+    renamingGroupId,
+    startRename,
+    endRename,
     addEntry,
     addGroup,
+    addGroupAndRename,
     removeEntry,
     reorderEntries,
     updateEntry,

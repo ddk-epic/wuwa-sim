@@ -3,6 +3,7 @@ import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
+import { RenamingGroupProvider } from "#/hooks/useRenamingGroup"
 import { SkillCatalog } from "#/components/SkillCatalog"
 import { Header } from "#/components/Header"
 import { TableTopBar } from "#/components/TableTopBar"
@@ -28,8 +29,11 @@ export function SimulatorPage() {
   const {
     nodes,
     entries,
+    renamingGroupId,
+    startRename,
+    endRename,
     addEntry,
-    addGroup,
+    addGroupAndRename,
     removeEntry,
     reorderEntries,
     reorderNodes,
@@ -44,7 +48,6 @@ export function SimulatorPage() {
   const [settings, setReactionDelay] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
-  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
 
   const summary = getTimelineSummary(
     entries,
@@ -57,95 +60,89 @@ export function SimulatorPage() {
     clearTimeline()
   }
 
-  function handleAddGroup() {
-    const id = addGroup()
-    setRenamingGroupId(id)
-  }
-
   function handleSimulate() {
     setLog(runSimulation(entries, slots, loadouts, settings.reactionDelay))
   }
 
   return (
-    <main className="flex flex-col h-screen">
-      <Header
-        slots={slots}
-        onEditTeam={() => setModalOpen(true)}
-        onResetTimeline={handleResetTimeline}
-        onSimulate={handleSimulate}
-        onOpenSimulationLog={() => setSimulationLogOpen(true)}
-        timelineEmpty={entries.length === 0}
-        reactionDelay={settings.reactionDelay}
-        onReactionDelayChange={setReactionDelay}
-      />
-      <div className="flex flex-1 min-h-0">
-        {/* left rail */}
-        <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
-        {/* center column */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <TableTopBar
-            entriesNumber={entries.length}
-            totalDmg={summary.totalDamage}
-            dps={summary.dps}
-            totalTimeSec={summary.totalTimeSec}
-            onAddGroup={handleAddGroup}
-          />
-          <TimelineView
-            nodes={nodes}
-            summary={summary}
-            slots={slots}
-            loadouts={loadouts}
-            reactionDelay={settings.reactionDelay}
-            renamingGroupId={renamingGroupId}
-            log={log}
-            onRemove={removeEntry}
-            onReorder={reorderEntries}
-            onReorderNodes={reorderNodes}
-            onUpdateEntry={updateEntry}
-            onGroupLabelCommit={updateGroupLabel}
-            onGroupLabelRenameEnd={() => setRenamingGroupId(null)}
-            onToggleGroupLock={toggleGroupLock}
-            onStartRename={setRenamingGroupId}
-            onDuplicateGroup={duplicateGroup}
-            onDeleteGroup={deleteGroup}
-            onReorderGroupEntries={reorderGroupEntries}
-          />
-        </div>
-        {/* right sidebar */}
-        <div className="w-100 shrink-0 border-l border-border flex flex-col min-h-0">
-          {slots.some((id) => id !== null) ? (
-            <SkillCatalog
+    <RenamingGroupProvider value={{ renamingGroupId, startRename, endRename }}>
+      <main className="flex flex-col h-screen">
+        <Header
+          slots={slots}
+          onEditTeam={() => setModalOpen(true)}
+          onResetTimeline={handleResetTimeline}
+          onSimulate={handleSimulate}
+          onOpenSimulationLog={() => setSimulationLogOpen(true)}
+          timelineEmpty={entries.length === 0}
+          reactionDelay={settings.reactionDelay}
+          onReactionDelayChange={setReactionDelay}
+        />
+        <div className="flex flex-1 min-h-0">
+          {/* left rail */}
+          <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
+          {/* center column */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <TableTopBar
+              entriesNumber={entries.length}
+              totalDmg={summary.totalDamage}
+              dps={summary.dps}
+              totalTimeSec={summary.totalTimeSec}
+              onAddGroup={addGroupAndRename}
+            />
+            <TimelineView
+              nodes={nodes}
+              summary={summary}
               slots={slots}
               loadouts={loadouts}
-              focusedId={focusedId}
-              onFocus={focusCharacter}
-              onStageClick={addEntry}
               reactionDelay={settings.reactionDelay}
+              log={log}
+              onRemove={removeEntry}
+              onReorder={reorderEntries}
+              onReorderNodes={reorderNodes}
+              onUpdateEntry={updateEntry}
+              onGroupLabelCommit={updateGroupLabel}
+              onToggleGroupLock={toggleGroupLock}
+              onDuplicateGroup={duplicateGroup}
+              onDeleteGroup={deleteGroup}
+              onReorderGroupEntries={reorderGroupEntries}
             />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500 text-lg">
-              Select a character to view skills
-            </div>
-          )}
+          </div>
+          {/* right sidebar */}
+          <div className="w-100 shrink-0 border-l border-border flex flex-col min-h-0">
+            {slots.some((id) => id !== null) ? (
+              <SkillCatalog
+                slots={slots}
+                loadouts={loadouts}
+                focusedId={focusedId}
+                onFocus={focusCharacter}
+                onStageClick={addEntry}
+                reactionDelay={settings.reactionDelay}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 text-lg">
+                Select a character to view skills
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      {modalOpen && (
-        <TeamModal
-          slots={slots}
-          loadouts={loadouts}
-          focusedId={focusedId}
-          selectedCount={selectedCount}
-          onToggle={toggleCharacter}
-          onSlotChange={setSlotPatch}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
-      {simulationLogOpen && (
-        <SimulationLogModal
-          log={log}
-          onClose={() => setSimulationLogOpen(false)}
-        />
-      )}
-    </main>
+        {modalOpen && (
+          <TeamModal
+            slots={slots}
+            loadouts={loadouts}
+            focusedId={focusedId}
+            selectedCount={selectedCount}
+            onToggle={toggleCharacter}
+            onSlotChange={setSlotPatch}
+            onClose={() => setModalOpen(false)}
+          />
+        )}
+        {simulationLogOpen && (
+          <SimulationLogModal
+            log={log}
+            onClose={() => setSimulationLogOpen(false)}
+          />
+        )}
+      </main>
+    </RenamingGroupProvider>
   )
 }

@@ -505,6 +505,54 @@ describe("useTimeline onShapeChange callback", () => {
   })
 })
 
+describe("useTimeline rename state", () => {
+  it("renamingGroupId starts as null", () => {
+    const { result } = renderHook(() => useTimeline())
+    expect(result.current.renamingGroupId).toBeNull()
+  })
+
+  it("startRename sets renamingGroupId", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    act(() => {
+      result.current.startRename(groupId)
+    })
+    expect(result.current.renamingGroupId).toBe(groupId)
+  })
+
+  it("endRename clears renamingGroupId", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    act(() => {
+      result.current.startRename(groupId)
+    })
+    act(() => {
+      result.current.endRename()
+    })
+    expect(result.current.renamingGroupId).toBeNull()
+  })
+
+  it("addGroupAndRename appends a group and sets it as renaming", () => {
+    const { result } = renderHook(() => useTimeline())
+    let id!: string
+    act(() => {
+      id = result.current.addGroupAndRename()
+    })
+    expect(typeof id).toBe("string")
+    expect(result.current.renamingGroupId).toBe(id)
+    const group = result.current.nodes.find(
+      (n) => n.kind === "group" && n.id === id,
+    )
+    expect(group).toBeDefined()
+  })
+})
+
 describe("useTimeline lock invariant", () => {
   it("addGroup auto-locks the previously-open group", () => {
     const { result } = renderHook(() => useTimeline())

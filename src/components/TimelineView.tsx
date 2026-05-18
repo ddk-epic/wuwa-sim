@@ -16,16 +16,13 @@ interface TimelineViewProps {
   slots: Slots
   loadouts: SlotLoadout[]
   reactionDelay: number
-  renamingGroupId: string | null
   log: SimulationLogEntry[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
   onReorderNodes: (fromId: string, toId: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
-  onGroupLabelRenameEnd: () => void
   onToggleGroupLock: (groupId: string) => void
-  onStartRename: (groupId: string) => void
   onDuplicateGroup: (groupId: string) => void
   onDeleteGroup: (groupId: string) => void
   onReorderGroupEntries: (groupId: string, fromId: string, toId: string) => void
@@ -57,16 +54,13 @@ export function TimelineView({
   slots,
   loadouts,
   reactionDelay,
-  renamingGroupId,
   log,
   onRemove,
   onReorder,
   onReorderNodes,
   onUpdateEntry,
   onGroupLabelCommit,
-  onGroupLabelRenameEnd,
   onToggleGroupLock,
-  onStartRename,
   onDuplicateGroup,
   onDeleteGroup,
   onReorderGroupEntries,
@@ -214,7 +208,6 @@ export function TimelineView({
                   groupEntries={item.groupEntries}
                   startFlatIndex={item.startFlatIndex}
                   isExpanded={expandedGroupIds.has(item.groupId)}
-                  isRenaming={renamingGroupId === item.groupId}
                   slots={slots}
                   loadouts={loadouts}
                   reactionDelay={reactionDelay}
@@ -225,9 +218,7 @@ export function TimelineView({
                   onToggleExpand={toggleExpand}
                   onReorderNodes={onReorderNodes}
                   onToggleGroupLock={onToggleGroupLock}
-                  onStartRename={onStartRename}
                   onGroupLabelCommit={onGroupLabelCommit}
-                  onGroupLabelRenameEnd={onGroupLabelRenameEnd}
                   onDuplicateGroup={onDuplicateGroup}
                   onDeleteGroup={onDeleteGroup}
                   onRequestDeleteConfirm={setDeletingGroupId}

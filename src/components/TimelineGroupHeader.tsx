@@ -15,6 +15,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
+import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "./TimelineEntryRow"
 
 export function getDistinctCharsBySlot(
@@ -122,7 +123,6 @@ interface TimelineGroupHeaderProps {
   groupEntries: TimelineEntry[]
   startFlatIndex: number
   isExpanded: boolean
-  isRenaming: boolean
   slots: Slots
   loadouts: SlotLoadout[]
   reactionDelay: number
@@ -133,9 +133,7 @@ interface TimelineGroupHeaderProps {
   onToggleExpand: (groupId: string) => void
   onReorderNodes: (fromId: string, toId: string) => void
   onToggleGroupLock: (groupId: string) => void
-  onStartRename: (groupId: string) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
-  onGroupLabelRenameEnd: () => void
   onDuplicateGroup: (groupId: string) => void
   onDeleteGroup: (groupId: string) => void
   onRequestDeleteConfirm: (groupId: string) => void
@@ -149,7 +147,6 @@ export function TimelineGroupHeader({
   groupEntries,
   startFlatIndex,
   isExpanded,
-  isRenaming,
   slots,
   loadouts,
   reactionDelay,
@@ -160,13 +157,13 @@ export function TimelineGroupHeader({
   onToggleExpand,
   onReorderNodes,
   onToggleGroupLock,
-  onStartRename,
   onGroupLabelCommit,
-  onGroupLabelRenameEnd,
   onDuplicateGroup,
   onDeleteGroup,
   onRequestDeleteConfirm,
 }: TimelineGroupHeaderProps) {
+  const { renamingGroupId, startRename, endRename } = useRenamingGroup()
+  const isRenaming = renamingGroupId === groupId
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId
   const dominantHex = getDominantHex(groupEntries)
@@ -338,14 +335,14 @@ export function TimelineGroupHeader({
               autoFocus={isRenaming}
               onCommit={(gid, l) => {
                 onGroupLabelCommit(gid, l)
-                onGroupLabelRenameEnd()
+                endRename()
               }}
             />
           ) : (
             <span
               onClick={(e) => {
                 e.stopPropagation()
-                onStartRename(groupId)
+                startRename(groupId)
               }}
               className="cursor-text hover:text-white transition-colors text-sm font-bold inline-block border-b border-transparent"
               title="Click to rename"
