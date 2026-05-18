@@ -67,7 +67,7 @@ export function SkillCatalog({
   const showDivider = filteredEcho.length > 0 && filteredChar.length > 0
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="h-full flex flex-col min-h-0">
       <div className="flex shrink-0">
         {filledCharacters.map((character) => {
           const isFocused = character.id === focusedId
@@ -76,7 +76,7 @@ export function SkillCatalog({
             <button
               key={character.id}
               className={[
-                "flex-1 flex flex-col items-center justify-center h-[38px] px-3 text-center border-b-2 transition-colors",
+                "h-11 flex-1 flex flex-col items-center justify-center px-3 text-center border-b-2 transition-colors",
                 isFocused ? "bg-card" : "border-transparent",
               ].join(" ")}
               style={isFocused ? { borderColor: hex } : undefined}
@@ -84,14 +84,14 @@ export function SkillCatalog({
             >
               <div
                 className={[
-                  "text-[11px] truncate leading-none",
+                  "text-sm truncate leading-none",
                   isFocused ? "text-foreground" : "text-muted-foreground",
                 ].join(" ")}
               >
                 {character.name}
               </div>
               <div
-                className="text-[9px] font-mono uppercase tracking-[1px] leading-none mt-0.5"
+                className="text-[12px] font-mono uppercase tracking-[1px] leading-none mt-1"
                 style={{ color: hex }}
               >
                 {character.element}
@@ -100,7 +100,7 @@ export function SkillCatalog({
           )
         })}
       </div>
-      <div className="flex flex-wrap gap-1 px-2 py-1.5 border-b border-gray-700 shrink-0">
+      <div className="flex flex-wrap gap-1 px-2 py-1.5 border-y border-border shrink-0">
         <button
           className={[
             "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
@@ -134,7 +134,7 @@ export function SkillCatalog({
         {showDivider && (
           <div
             data-testid="echo-character-divider"
-            className="border-b border-gray-600 my-1 mx-2"
+            className="border-b border-border my-1 mx-2"
           />
         )}
         {filteredChar.map((stage) => (
@@ -161,7 +161,7 @@ function StageRow({ stage, onStageClick }: StageRowProps) {
         {stage.typeLabel}
       </span>
       <span className="flex-1 text-sm text-gray-200">{stage.label}</span>
-      <span className="font-mono text-xs text-gray-500 ml-2">
+      <span className="font-mono text-[16px] text-gray-500 ml-2">
         {durationSec}
       </span>
     </button>

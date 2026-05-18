@@ -10,6 +10,7 @@ import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
 import { ConfirmModal } from "./ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
+import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 
 interface HeaderProps {
   slots: Slots
@@ -85,7 +86,7 @@ export function Header({
             onClick={onOpenSimulationLog}
             aria-label="Open simulation log"
           >
-            <ClockIcon />
+            <ClockIcon className="w-4 h-4" />
             <span>Log</span>
           </button>
           <button
@@ -98,28 +99,28 @@ export function Header({
         </div>
       </div>
       {/* Right zone */}
-      <div className="w-[280px] flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
+      <div className="w-100 flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
           aria-label="Import"
         >
-          <UploadIcon />
+          <UploadIcon className="w-4 h-4" />
           <span>Import</span>
         </button>
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
           aria-label="Export"
         >
-          <DownloadIcon />
+          <DownloadIcon className="w-4 h-4" />
           <span>Export</span>
         </button>
         <div className="ml-auto" />
         <button
-          className="flex items-center gap-1 p-1.75 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+          className="flex items-center gap-1 p-1.25 font-mono text-sm rounded-sm text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
           onClick={() => setSettingsOpen(true)}
           aria-label="Open settings"
         >
-          <GearIcon />
+          <GearIcon className="w-5 h-5" />
         </button>
       </div>
       {confirmOpen && (
@@ -169,6 +170,13 @@ function AvatarStack({ slots }: AvatarStackProps) {
               marginLeft: i > 0 ? "-6px" : undefined,
               outline: `2px solid ${hex}`,
               outlineOffset: "0px",
+            }}
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = avatarFallbackSrc(
+                char!.name[0].toUpperCase(),
+                hex,
+              )
             }}
           />
         )

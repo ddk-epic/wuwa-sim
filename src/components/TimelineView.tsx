@@ -18,6 +18,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { ActionTimeStage } from "#/lib/stage"
 import { validateTimeline } from "#/lib/validate-timeline"
+import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import { ConfirmModal } from "./ConfirmModal"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
@@ -314,12 +315,12 @@ export function TimelineView({
     if (val >= 100)
       return (
         <span className="font-bold" style={{ color: activeColor }}>
-          {val}
+          {val.toFixed(1)}
         </span>
       )
     return (
       <span className="font-medium" style={{ color: activeColor }}>
-        {val}
+        {val.toFixed(1)}
       </span>
     )
   }
@@ -428,21 +429,21 @@ export function TimelineView({
         {/* # with branch glyph */}
         <td className="px-2 py-2 font-mono text-xs w-8">
           {inGroup ? (
-            <span className="text-gray-600 font-light text-sm mr-0.5">
+            <span className="text-gray-500 font-light text-sm mr-1">
               {isLastInGroup ? "└" : "├"}
             </span>
           ) : null}
           <span className="text-gray-400">{i + 1}</span>
         </td>
         {/* time */}
-        <td className="px-2 py-2 text-right font-mono text-xs text-gray-300">
+        <td className="px-2 py-2 text-right font-mono text-[16px] text-gray-300">
           {row.time.toFixed(2)}s
         </td>
         {/* char */}
         <td className="px-2 py-2 text-white">
           <div className="flex items-center gap-1.5">
             <span
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-[9px] font-black text-gray-900 shrink-0"
+              className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-xs font-black text-gray-900 shrink-0"
               style={{ backgroundColor: charHex }}
             >
               {elementLetter}
@@ -454,7 +455,7 @@ export function TimelineView({
         <td className="px-2 py-2">
           {resolved && (
             <span
-              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase"
+              className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
               style={{
                 background: `${charHex}15`,
                 border: `1px solid ${charHex}33`,
@@ -467,7 +468,7 @@ export function TimelineView({
         </td>
         {/* skill */}
         <td className="px-2 py-2 text-gray-200">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap text-sm">
             <span
               className={isInvalid ? "text-red-400" : ""}
               title={isInvalid ? "red-marker" : undefined}
@@ -486,12 +487,8 @@ export function TimelineView({
                     ),
                   })
                 }}
-                className="text-[9px] px-1 py-0.5 rounded font-mono shrink-0"
-                style={{
-                  background: `${charHex}15`,
-                  border: `1px solid ${charHex}55`,
-                  color: charHex,
-                }}
+                className="text-[12px] px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border"
+                style={{ color: "#a3bfff", letterSpacing: "0.4px" }}
                 title="Full / Cancel / Instant Cancel"
               >
                 {variantLabel(entry.variantKind)}
@@ -503,12 +500,12 @@ export function TimelineView({
           </div>
         </td>
         {/* duration */}
-        <td className="px-2 py-2 text-right font-mono text-xs text-gray-300">
+        <td className="px-2 py-2 text-right font-mono text-[16px] text-gray-300">
           {duration.toFixed(2)}s
         </td>
         {/* con */}
         <td className="px-2 py-2 text-right font-mono">
-          {renderPoolValue(conVal, "#f5cf4d")}
+          {renderPoolValue(conVal, "#f5d061")}
         </td>
         {/* res */}
         <td className="px-2 py-2 text-right font-mono">
@@ -517,7 +514,7 @@ export function TimelineView({
         {/* dmg */}
         <td className="px-2 py-2 text-right font-mono">
           {row.damage !== null ? (
-            <span className="font-semibold text-yellow-400">
+            <span className="font-semibold text-[19px] text-yellow-400">
               {row.damage.toLocaleString()}
             </span>
           ) : (
@@ -525,11 +522,11 @@ export function TimelineView({
           )}
         </td>
         {/* actions */}
-        <td className="px-2 py-2">
+        <td className="px-3 py-2">
           <div className="flex justify-end">
             <button
               onClick={() => onRemove(entry.id)}
-              className="text-gray-500 hover:text-red-400 transition-colors"
+              className="text-xs text-gray-500 hover:text-red-400 transition-colors"
               aria-label="Remove"
             >
               ✕
@@ -693,12 +690,19 @@ export function TimelineView({
                       outline: `1.5px solid ${hex}`,
                       outlineOffset: "0px",
                     }}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null
+                      e.currentTarget.src = avatarFallbackSrc(
+                        char?.name[0].toUpperCase() ?? "?",
+                        hex,
+                      )
+                    }}
                   />
                 )
               })}
             </div>
             {distinctCharIds.length > 1 && (
-              <span className="text-gray-500 font-mono text-[10px] ml-1">
+              <span className="text-gray-500 font-mono text-xs ml-1">
                 × {distinctCharIds.length}
               </span>
             )}
@@ -707,7 +711,7 @@ export function TimelineView({
         {/* type — GROUP pill */}
         <td className="px-2 py-1.5">
           <span
-            className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase"
+            className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
             style={{
               background: `${dominantHex}15`,
               border: `1px solid ${dominantHex}33`,
@@ -749,7 +753,7 @@ export function TimelineView({
                 )}
               </span>
             )}
-            <span className="text-gray-500 text-xs font-mono">
+            <span className="text-gray-500 text-xs font-mono ml-1">
               {item.entryCount} actions
             </span>
           </div>
@@ -760,14 +764,14 @@ export function TimelineView({
         </td>
         {/* con */}
         <td className="px-2 py-1.5 text-right font-mono text-xs">
-          {renderPoolValue(lastConVal, 100, "#f5cf4d")}
+          {renderPoolValue(lastConVal, "#f5cf4d")}
         </td>
         {/* res */}
         <td className="px-2 py-1.5 text-right font-mono text-xs">
-          {renderPoolValue(lastResVal, 100, "#9b6cf0")}
+          {renderPoolValue(lastResVal, "#9b6cf0")}
         </td>
         {/* dmg */}
-        <td className="px-2 py-1.5 text-right font-mono text-xs">
+        <td className="px-2 py-1.5 font-semibold text-right font-mono">
           {hasDmg ? (
             isExpanded ? (
               <span className="text-gray-600">{totalDmg.toLocaleString()}</span>
@@ -792,14 +796,18 @@ export function TimelineView({
                 "p-0.5 transition-colors",
                 !item.locked
                   ? "text-blue-400 hover:text-blue-300"
-                  : "text-gray-600 hover:text-gray-400",
+                  : "text-gray-500 hover:text-gray-400",
               ].join(" ")}
               title={
                 !item.locked ? "Open — click to lock" : "Locked — click to open"
               }
               aria-label={!item.locked ? "Lock group" : "Unlock group"}
             >
-              {!item.locked ? <LockOpen1Icon /> : <LockClosedIcon />}
+              {!item.locked ? (
+                <LockOpen1Icon className="w-4 h-4" />
+              ) : (
+                <LockClosedIcon className="w-4 h-4" />
+              )}
             </button>
             <button
               onClick={(e) => {
@@ -810,7 +818,7 @@ export function TimelineView({
               title="Duplicate group"
               aria-label="Duplicate group"
             >
-              <CopyIcon />
+              <CopyIcon className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => {
@@ -821,11 +829,11 @@ export function TimelineView({
                   onDeleteGroup(item.groupId)
                 }
               }}
-              className="p-0.5 text-gray-500 hover:text-red-400 transition-colors"
+              className="pl-0.5 pt-px text-gray-500 hover:text-red-400 transition-colors"
               title="Delete group and contents"
               aria-label="Delete group and contents"
             >
-              <TrashIcon />
+              <TrashIcon className="w-4.5 h-4.5" />
             </button>
           </div>
         </td>
@@ -835,9 +843,9 @@ export function TimelineView({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <table className="w-full text-[12px] text-left">
+      <table className="w-full text-sm text-left">
         <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
-          <tr className="text-gray-400 text-[9px] tracking-[1px] uppercase">
+          <tr className="text-gray-400 text-xs tracking-[1px] uppercase">
             <th className="px-2 py-2 w-8">#</th>
             <th className="px-2 py-2 text-right">time</th>
             <th className="px-2 py-2">char</th>

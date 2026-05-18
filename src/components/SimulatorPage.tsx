@@ -78,17 +78,18 @@ export function SimulatorPage() {
         reactionDelay={settings.reactionDelay}
         onReactionDelayChange={setReactionDelay}
       />
-      <TableTopBar
-        entriesNumber={entries.length}
-        totalDmg={summary.totalDamage}
-        dps={summary.dps}
-        totalTimeSec={summary.totalTimeSec}
-        onAddGroup={handleAddGroup}
-      />
       <div className="flex flex-1 min-h-0">
-        {/* left rail spacer */}
+        {/* left rail */}
         <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
-        <div className="flex-75 flex flex-col min-h-0">
+        {/* center column */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <TableTopBar
+            entriesNumber={entries.length}
+            totalDmg={summary.totalDamage}
+            dps={summary.dps}
+            totalTimeSec={summary.totalTimeSec}
+            onAddGroup={handleAddGroup}
+          />
           <TimelineView
             nodes={nodes}
             summary={summary}
@@ -110,7 +111,8 @@ export function SimulatorPage() {
             onReorderGroupEntries={reorderGroupEntries}
           />
         </div>
-        <div className="flex-25 border-l border-gray-700 flex flex-col min-h-0">
+        {/* right sidebar */}
+        <div className="w-100 shrink-0 border-l border-border flex flex-col min-h-0">
           {slots.some((id) => id !== null) ? (
             <SkillCatalog
               slots={slots}
@@ -121,7 +123,7 @@ export function SimulatorPage() {
               reactionDelay={settings.reactionDelay}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-500 text-lg">
               Select a character to view skills
             </div>
           )}
