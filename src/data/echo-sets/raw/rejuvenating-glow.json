@@ -1,0 +1,15 @@
+{
+  "id": 7,
+  "name": "Rejuvenating Glow",
+  "type": "two-five",
+  "effects": [
+    {
+      "pieces": 2,
+      "description": "Healing Bonus + 10%."
+    },
+    {
+      "pieces": 5,
+      "description": "Increases the ATK of all party members by 15% for 30s upon healing allies."
+    }
+  ]
+}
