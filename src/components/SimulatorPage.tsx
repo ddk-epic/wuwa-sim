@@ -96,6 +96,7 @@ export function SimulatorPage() {
             loadouts={loadouts}
             reactionDelay={settings.reactionDelay}
             renamingGroupId={renamingGroupId}
+            log={log}
             onRemove={removeEntry}
             onReorder={reorderEntries}
             onReorderNodes={reorderNodes}

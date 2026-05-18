@@ -10,6 +10,9 @@ import { flattenNodes } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
+import type { SimulationLogEntry } from "#/types/simulation-log"
+import { ELEMENT_HEX } from "#/data/elements"
+import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { ActionTimeStage } from "#/lib/stage"
@@ -33,6 +36,12 @@ function nextVariant(
   return defined[(idx + 1) % defined.length]
 }
 
+function variantLabel(v: VariantKind | undefined): string {
+  if (v === "cancel") return "CNCL"
+  if (v === "instantCancel") return "INST"
+  return "FULL"
+}
+
 interface TimelineViewProps {
   nodes: TimelineNode[]
   summary: TimelineSummary
@@ -40,6 +49,7 @@ interface TimelineViewProps {
   loadouts: SlotLoadout[]
   reactionDelay: number
   renamingGroupId: string | null
+  log: SimulationLogEntry[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string) => void
   onReorderNodes: (fromId: string, toId: string) => void
@@ -93,6 +103,7 @@ export function TimelineView({
   loadouts,
   reactionDelay,
   renamingGroupId,
+  log,
   onRemove,
   onReorder,
   onReorderNodes,
@@ -133,6 +144,9 @@ export function TimelineView({
     return acc
   }, [])
   const messageIndexes = new Set(rowsWithMessages.slice(0, 2))
+
+  const actionEvents = log.filter((e) => e.kind === "action")
+  const logMatches = actionEvents.length === entries.length
 
   // Build a flat render list: group headers interleaved with entry rows
   type RenderItem =
@@ -219,9 +233,33 @@ export function TimelineView({
       Object.keys(resolved.stage.variants).length > 0
         ? resolved.stage
         : null
-    // Reject group drags dropping onto group-contained entries
     const rejectsGroupDrop = inGroup && draggingType === "group"
     const allowed = isDropAllowed(groupId, groupLocked)
+
+    const charElement = char?.element ?? ""
+    const charHex = ELEMENT_HEX[charElement] ?? "#888"
+    const elementLetter = charElement[0] ?? "?"
+
+    const duration = resolved
+      ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
+          .duration / 60
+      : 0
+
+    const conVal =
+      logMatches && actionEvents[i]?.kind === "action"
+        ? actionEvents[i].cumulativeConcerto
+        : null
+    const resVal =
+      logMatches && actionEvents[i]?.kind === "action"
+        ? actionEvents[i].cumulativeEnergy
+        : null
+
+    const prevEntry = i > 0 ? entries[i - 1] : null
+    const charSwitched =
+      prevEntry === null || prevEntry.characterId !== entry.characterId
+    const rowBorderStyle = charSwitched
+      ? { borderTopColor: `${charHex}33` }
+      : undefined
 
     function handleDrop() {
       if (draggedId === null || draggedId === entry.id) return
@@ -232,7 +270,6 @@ export function TimelineView({
       } else if (!inGroup && draggingType === "group") {
         onReorderNodes(draggedId, entry.id)
       }
-      // Cross-boundary or unsupported: swallow silently
     }
 
     return (
@@ -267,19 +304,52 @@ export function TimelineView({
           setDropTargetId(null)
         }}
         className={[
-          "border-t border-gray-700 cursor-grab",
+          "border-t cursor-grab",
+          charSwitched ? "" : "border-gray-700",
           isDragging ? "opacity-40" : "hover:bg-gray-800/50",
           isDropTarget ? "border-t-blue-500 border-t-2" : "",
           isInvalid ? "bg-red-950/30" : "",
           inGroup && groupLocked ? "border-l-2 border-l-gray-600/60" : "",
         ].join(" ")}
+        style={rowBorderStyle}
       >
-        <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-        <td className="px-3 py-2 text-white">{char?.name ?? "—"}</td>
-        <td className="px-3 py-2 text-gray-300">
-          {resolved?.skillType ?? "—"}
+        {/* # */}
+        <td className="px-2 py-2 text-gray-400 font-mono text-xs w-8">
+          {i + 1}
         </td>
-        <td className="px-3 py-2 text-gray-200">
+        {/* time */}
+        <td className="px-2 py-2 text-right font-mono text-xs text-gray-300">
+          {row.time.toFixed(2)}s
+        </td>
+        {/* char */}
+        <td className="px-2 py-2 text-white">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-[10px] font-bold text-gray-900 shrink-0"
+              style={{ backgroundColor: charHex }}
+            >
+              {elementLetter}
+            </span>
+            <span className="text-sm">{char?.name ?? "—"}</span>
+          </div>
+        </td>
+        {/* type */}
+        <td className="px-2 py-2">
+          {resolved && (
+            <span
+              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase"
+              style={{
+                background: `${charHex}15`,
+                border: `1px solid ${charHex}33`,
+                color: charHex,
+              }}
+            >
+              {STAGE_TYPE_LABELS[resolved.skillType] ?? resolved.skillType}
+            </span>
+          )}
+        </td>
+        {/* skill */}
+        <td className="px-2 py-2 text-gray-200">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span
               className={isInvalid ? "text-red-400" : ""}
@@ -299,14 +369,15 @@ export function TimelineView({
                     ),
                   })
                 }}
-                className="w-12 text-xs px-1.5 py-0.5 rounded border border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors shrink-0"
+                className="text-[9px] px-1 py-0.5 rounded font-mono shrink-0"
+                style={{
+                  background: `${charHex}15`,
+                  border: `1px solid ${charHex}55`,
+                  color: charHex,
+                }}
                 title="Full / Cancel / Instant Cancel"
               >
-                {entry.variantKind === undefined
-                  ? "Full"
-                  : entry.variantKind === "cancel"
-                    ? "Cancel"
-                    : "IC"}
+                {variantLabel(entry.variantKind)}
               </button>
             )}
             {showMessage && errors.length > 0 && (
@@ -314,29 +385,50 @@ export function TimelineView({
             )}
           </div>
         </td>
-        <td className="px-3 py-2 text-gray-300">
-          {(() => {
-            const frames = resolved
-              ? resolveStageExecution(
-                  resolved.stage,
-                  entry.variantKind,
-                  reactionDelay,
-                ).duration
-              : 0
-            return (
-              <>
-                <span className="text-sm">{frames}</span>
-                <span className="ml-1 text-xs text-gray-500">
-                  {row.time.toFixed(2)}s
-                </span>
-              </>
-            )
-          })()}
+        {/* duration */}
+        <td className="px-2 py-2 text-right font-mono text-xs text-gray-300">
+          {duration.toFixed(2)}s
         </td>
-        <td className="px-3 py-2 text-yellow-400">
-          {row.damage !== null ? row.damage.toLocaleString() : "—"}
+        {/* con */}
+        <td className="px-2 py-2 text-right font-mono text-xs">
+          {conVal === null ? (
+            <span className="text-gray-600">—</span>
+          ) : conVal >= 100 ? (
+            <span className="font-bold" style={{ color: "#f5cf4d" }}>
+              {conVal}
+            </span>
+          ) : conVal === 0 ? (
+            <span className="text-gray-600">{conVal}</span>
+          ) : (
+            <span className="text-gray-300">{conVal}</span>
+          )}
         </td>
-        <td className="px-3 py-2">
+        {/* res */}
+        <td className="px-2 py-2 text-right font-mono text-xs">
+          {resVal === null ? (
+            <span className="text-gray-600">—</span>
+          ) : resVal >= 100 ? (
+            <span className="font-bold" style={{ color: "#9b6cf0" }}>
+              {resVal}
+            </span>
+          ) : resVal === 0 ? (
+            <span className="text-gray-600">{resVal}</span>
+          ) : (
+            <span className="text-gray-300">{resVal}</span>
+          )}
+        </td>
+        {/* dmg */}
+        <td className="px-2 py-2 text-right font-mono text-xs">
+          {row.damage !== null ? (
+            <span className="text-yellow-400">
+              {row.damage.toLocaleString()}
+            </span>
+          ) : (
+            <span className="text-gray-600">—</span>
+          )}
+        </td>
+        {/* actions */}
+        <td className="px-2 py-2">
           <button
             onClick={() => onRemove(entry.id)}
             className="text-gray-500 hover:text-red-400 transition-colors"
@@ -354,13 +446,16 @@ export function TimelineView({
       <table className="w-full text-sm text-left">
         <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
           <tr className="text-gray-400 text-xs uppercase">
-            <th className="px-3 py-2 w-8">#</th>
-            <th className="px-3 py-2">Character</th>
-            <th className="px-3 py-2">Type</th>
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Time</th>
-            <th className="px-3 py-2">Damage</th>
-            <th className="px-3 py-2 w-8"></th>
+            <th className="px-2 py-2 w-8">#</th>
+            <th className="px-2 py-2 text-right">time</th>
+            <th className="px-2 py-2">char</th>
+            <th className="px-2 py-2">type</th>
+            <th className="px-2 py-2">skill</th>
+            <th className="px-2 py-2 text-right">dur</th>
+            <th className="px-2 py-2 text-right">con</th>
+            <th className="px-2 py-2 text-right">res</th>
+            <th className="px-2 py-2 text-right">dmg</th>
+            <th className="px-2 py-2 w-8"></th>
           </tr>
         </thead>
         <tbody>
@@ -427,10 +522,10 @@ export function TimelineView({
                     isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
                   ].join(" ")}
                 >
-                  <td className="w-8 px-3 py-1.5 text-gray-500 text-xs">—</td>
+                  <td className="w-8 px-2 py-1.5 text-gray-500 text-xs">—</td>
                   <td
-                    colSpan={6}
-                    className="px-3 py-1.5 text-gray-400 text-xs font-medium"
+                    colSpan={9}
+                    className="px-2 py-1.5 text-gray-400 text-xs font-medium"
                   >
                     <div className="flex justify-between items-center">
                       <div>
