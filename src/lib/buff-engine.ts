@@ -19,6 +19,7 @@ import type { Candidate, EngineEvent } from "./instance-store"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects } from "./stat-table-builder"
+import { TriggerIndex } from "./trigger-index"
 
 export type { EngineEvent } from "./instance-store"
 
@@ -83,6 +84,7 @@ type PendingOutroBuff = {
 
 export class BuffEngine {
   private store = new InstanceStore()
+  private triggerIndex = new TriggerIndex([])
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
   private cooldownLastFired = new Map<string, number>()
@@ -181,6 +183,7 @@ export class BuffEngine {
     this.pendingOutroBuffs = []
 
     const slots: number[] = []
+    const allTriggerable: BuffDef[] = []
     for (let i = 0; i < input.slots.length; i++) {
       const charId = input.slots[i]
       slots.push(charId ?? -1)
@@ -189,6 +192,7 @@ export class BuffEngine {
       if (!slot) continue
       this.store.setBaseStats(slot.charId, slot.baseStats)
       this.store.setTriggerable(slot.charId, slot.triggerable)
+      allTriggerable.push(...slot.triggerable)
       for (const inst of slot.permanentInstances) {
         this.store.pushPermanentInstance(inst)
       }
@@ -196,6 +200,7 @@ export class BuffEngine {
       this.resources.ensureState(slot.charId)
     }
     this.store.setSlots(slots)
+    this.triggerIndex = new TriggerIndex(allTriggerable)
     return { lifecycleEvents: [] }
   }
 
@@ -513,7 +518,7 @@ export class BuffEngine {
   ): void {
     if (before === after) return
     const direction: "up" | "down" = after > before ? "up" : "down"
-    const thresholds = this.store.findCrossedThresholds(
+    const thresholds = this.triggerIndex.crossedThresholds(
       resource,
       direction,
       before,

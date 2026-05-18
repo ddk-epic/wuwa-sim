@@ -276,29 +276,6 @@ export class InstanceStore {
    * `after`) on `(characterId,resource)`, filtered to triggers registered in
    * the registry. Caller turns these into synthetic resourceCrossed events.
    */
-  findCrossedThresholds(
-    resource: ResourceKind,
-    direction: "up" | "down",
-    before: number,
-    after: number,
-  ): number[] {
-    const crossed = new Set<number>()
-    for (const defs of this.triggerableBySource.values()) {
-      for (const def of defs) {
-        const t = def.trigger
-        if (t.event !== "resourceCrossed") continue
-        if (t.resource !== resource) continue
-        if (t.direction !== direction) continue
-        const isCrossed =
-          direction === "up"
-            ? before < t.threshold && after >= t.threshold
-            : before > t.threshold && after <= t.threshold
-        if (isCrossed) crossed.add(t.threshold)
-      }
-    }
-    return Array.from(crossed)
-  }
-
   applyBuff(
     def: BuffDef,
     sourceCharacterId: number,

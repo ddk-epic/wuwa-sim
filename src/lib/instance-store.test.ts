@@ -184,35 +184,6 @@ describe("InstanceStore — runConsumePhase", () => {
   })
 })
 
-describe("InstanceStore — findCrossedThresholds", () => {
-  it("returns thresholds registered on triggers that the transition crosses", () => {
-    const s = new InstanceStore()
-    const t60 = def({
-      id: "b.t60",
-      trigger: {
-        event: "resourceCrossed",
-        resource: "energy",
-        threshold: 60,
-        direction: "up",
-      },
-    })
-    const t100 = def({
-      id: "b.t100",
-      trigger: {
-        event: "resourceCrossed",
-        resource: "energy",
-        threshold: 100,
-        direction: "up",
-      },
-    })
-    s.setTriggerable(1, [t60, t100])
-    expect(
-      s.findCrossedThresholds("energy", "up", 0, 100).sort((a, b) => a - b),
-    ).toEqual([60, 100])
-    expect(s.findCrossedThresholds("energy", "up", 0, 50)).toEqual([])
-  })
-})
-
 describe("InstanceStore — resolveStats helpers", () => {
   it("cloneBaseStats returns an empty StatTable when no character or stats are set", () => {
     const s = new InstanceStore()
