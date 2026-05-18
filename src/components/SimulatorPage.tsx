@@ -10,7 +10,7 @@ import { TeamModal } from "#/components/TeamModal"
 import { SimulationLogModal } from "#/components/SimulationLogModal"
 import { TimelineView } from "#/components/TimelineView"
 import { getTimelineSummary } from "#/lib/timeline-summary"
-import { generateSimulationLog } from "#/lib/simulation-log"
+import { runSimulation } from "#/lib/simulation"
 
 export function SimulatorPage() {
   const {
@@ -63,9 +63,7 @@ export function SimulatorPage() {
   }
 
   function handleSimulate() {
-    setLog(
-      generateSimulationLog(entries, slots, loadouts, settings.reactionDelay),
-    )
+    setLog(runSimulation(entries, slots, loadouts, settings.reactionDelay))
   }
 
   return (
