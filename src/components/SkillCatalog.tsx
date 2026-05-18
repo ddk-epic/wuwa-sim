@@ -93,10 +93,10 @@ export function SkillCatalog({
       <div className="flex flex-wrap gap-1 px-2 py-1.5 border-b border-gray-700 shrink-0">
         <button
           className={[
-            "px-2 py-0.5 rounded text-xs font-mono transition-colors",
+            "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
             filterType === null
-              ? "bg-gray-500 text-white"
-              : "bg-gray-800 text-gray-400 hover:bg-gray-700",
+              ? "bg-card border-border text-foreground"
+              : "bg-transparent border-transparent text-muted-foreground",
           ].join(" ")}
           onClick={() => setFilterType(null)}
         >
@@ -106,10 +106,10 @@ export function SkillCatalog({
           <button
             key={type}
             className={[
-              "px-2 py-0.5 rounded text-xs font-mono transition-colors",
+              "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
               filterType === type
-                ? "bg-gray-500 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700",
+                ? "bg-card border-border text-foreground"
+                : "bg-transparent border-transparent text-muted-foreground",
             ].join(" ")}
             onClick={() => setFilterType(type)}
           >
