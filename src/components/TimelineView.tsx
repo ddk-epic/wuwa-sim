@@ -71,8 +71,20 @@ function buildGroupGradient(
     return ELEMENT_HEX[char?.element ?? ""] ?? "#888"
   })
   if (hexes.length === 0) return "transparent"
-  if (hexes.length === 1) return `${hexes[0]}3a`
-  return `linear-gradient(to right, ${hexes.map((h) => `${h}3a`).join(", ")})`
+  if (hexes.length === 1)
+    return `linear-gradient(90deg, ${hexes[0]}3a 0%, ${hexes[0]}14 50%, transparent 95%)`
+  const counts = new Map<number, number>()
+  for (const e of groupEntries)
+    counts.set(e.characterId, (counts.get(e.characterId) ?? 0) + 1)
+  const total = charIds.reduce((s, id) => s + (counts.get(id) ?? 0), 0)
+  let acc = 0
+  const stops = charIds.map((id, i) => {
+    const pct = ((counts.get(id) ?? 0) / total) * 95
+    const mid = acc + pct / 2
+    acc += pct
+    return `${hexes[i]}3a ${mid.toFixed(1)}%`
+  })
+  return `linear-gradient(90deg, ${stops.join(", ")}, transparent 95%)`
 }
 
 function getDominantHex(groupEntries: TimelineEntry[]): string {
@@ -844,8 +856,8 @@ export function TimelineView({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <table className="w-full text-sm text-left">
-        <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
-          <tr className="text-gray-400 text-xs tracking-[1px] uppercase">
+        <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
+          <tr className="text-muted-foreground text-xs font-mono tracking-[1px] uppercase">
             <th className="px-2 py-2 w-8">#</th>
             <th className="px-2 py-2 text-right">time</th>
             <th className="px-2 py-2">char</th>
