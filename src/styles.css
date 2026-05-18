@@ -36,9 +36,6 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --darkest: oklch(0.1456 0.008 273.86);
-  --dim: oklch(0.401 0.033 273.33);
-  --tag: oklch(0.787 0.108 270.38);
-  --tag-bg: oklch(0.238 0.047 263.81);
 }
 
 @theme inline {

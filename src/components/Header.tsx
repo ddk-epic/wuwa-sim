@@ -75,7 +75,7 @@ export function Header({
         </button>
         <div className="ml-auto flex items-center gap-2">
           <button
-            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-tag bg-tag-bg text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
             disabled={timelineEmpty}
             onClick={onSimulate}
           >
