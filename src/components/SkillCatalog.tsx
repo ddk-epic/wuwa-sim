@@ -3,7 +3,7 @@ import type { SkillType } from "#/types/character"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { ELEMENT_BORDER_CLASSES } from "#/data/elements"
+import { ELEMENT_HEX } from "#/data/elements"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
 import { getFocusedStageCatalog } from "#/lib/focused-stage-catalog"
@@ -68,24 +68,34 @@ export function SkillCatalog({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex border-b border-gray-700 shrink-0">
+      <div className="flex shrink-0">
         {filledCharacters.map((character) => {
           const isFocused = character.id === focusedId
-          const borderClass =
-            ELEMENT_BORDER_CLASSES[character.element] ?? "border-gray-500"
+          const hex = ELEMENT_HEX[character.element] ?? "#888"
           return (
             <button
               key={character.id}
               className={[
-                "flex-1 px-3 py-2 text-center border-b-2 transition-colors",
-                isFocused
-                  ? `${borderClass} text-white`
-                  : "border-gray-700 text-gray-400 hover:text-gray-200",
+                "flex-1 flex flex-col items-center justify-center h-[38px] px-3 text-center border-b-2 transition-colors",
+                isFocused ? "bg-card" : "border-transparent",
               ].join(" ")}
+              style={isFocused ? { borderColor: hex } : undefined}
               onClick={() => onFocus(character.id)}
             >
-              <div className="font-bold text-lg truncate">{character.name}</div>
-              <div className="text-sm text-gray-400">{character.element}</div>
+              <div
+                className={[
+                  "text-[11px] truncate leading-none",
+                  isFocused ? "text-foreground" : "text-muted-foreground",
+                ].join(" ")}
+              >
+                {character.name}
+              </div>
+              <div
+                className="text-[9px] font-mono uppercase tracking-[1px] leading-none mt-0.5"
+                style={{ color: hex }}
+              >
+                {character.element}
+              </div>
             </button>
           )
         })}
