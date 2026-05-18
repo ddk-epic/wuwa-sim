@@ -15,3 +15,12 @@ export const ELEMENT_BORDER_CLASSES: Record<string, string> = {
   Havoc: "border-violet-700",
   Spectro: "border-yellow-400",
 }
+
+export const ELEMENT_HEX: Record<string, string> = {
+  Fusion: "#ff7a3d",
+  Glacio: "#5ad7f0",
+  Electro: "#b67cff",
+  Aero: "#5fd49a",
+  Havoc: "#9b6cf0",
+  Spectro: "#f5cf4d",
+}
