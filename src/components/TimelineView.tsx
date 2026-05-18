@@ -4,6 +4,7 @@ import {
   LockOpen1Icon,
   CopyIcon,
   TrashIcon,
+  ChevronRightIcon,
 } from "@radix-ui/react-icons"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
@@ -40,6 +41,55 @@ function variantLabel(v: VariantKind | undefined): string {
   if (v === "cancel") return "CNCL"
   if (v === "instantCancel") return "INST"
   return "FULL"
+}
+
+function getDistinctCharsBySlot(entries: TimelineEntry[], slots: Slots) {
+  const seen = new Set<number>()
+  const charIds: number[] = []
+  for (const e of entries) {
+    if (!seen.has(e.characterId)) {
+      seen.add(e.characterId)
+      charIds.push(e.characterId)
+    }
+  }
+  charIds.sort((a, b) => {
+    const ia = slots.indexOf(a)
+    const ib = slots.indexOf(b)
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib)
+  })
+  return charIds
+}
+
+function buildGroupGradient(
+  groupEntries: TimelineEntry[],
+  slots: Slots,
+): string {
+  const charIds = getDistinctCharsBySlot(groupEntries, slots)
+  const hexes = charIds.map((id) => {
+    const char = getCharacterById(id)
+    return ELEMENT_HEX[char?.element ?? ""] ?? "#888"
+  })
+  if (hexes.length === 0) return "transparent"
+  if (hexes.length === 1) return `${hexes[0]}3a`
+  return `linear-gradient(to right, ${hexes.map((h) => `${h}3a`).join(", ")})`
+}
+
+function getDominantHex(groupEntries: TimelineEntry[]): string {
+  const counts = new Map<number, number>()
+  for (const e of groupEntries) {
+    counts.set(e.characterId, (counts.get(e.characterId) ?? 0) + 1)
+  }
+  let maxCount = 0
+  let dominantId: number | null = groupEntries[0]?.characterId ?? null
+  for (const [id, count] of counts) {
+    if (count > maxCount) {
+      maxCount = count
+      dominantId = id
+    }
+  }
+  if (dominantId === null) return "#888"
+  const char = getCharacterById(dominantId)
+  return ELEMENT_HEX[char?.element ?? ""] ?? "#888"
 }
 
 interface TimelineViewProps {
@@ -126,6 +176,39 @@ export function TimelineView({
   } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
+  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(
+    () =>
+      new Set(
+        nodes
+          .filter(
+            (n): n is Extract<TimelineNode, { kind: "group" }> =>
+              n.kind === "group",
+          )
+          .map((n) => n.id),
+      ),
+  )
+
+  useEffect(() => {
+    setExpandedGroupIds((prev) => {
+      const groupIds = new Set(
+        nodes
+          .filter(
+            (n): n is Extract<TimelineNode, { kind: "group" }> =>
+              n.kind === "group",
+          )
+          .map((n) => n.id),
+      )
+      const next = new Set<string>()
+      // keep existing state for known groups, add new groups as expanded
+      for (const id of groupIds) {
+        if (prev.has(id)) next.add(id)
+        else next.add(id) // new group → expanded
+      }
+      if (next.size === prev.size && [...next].every((id) => prev.has(id)))
+        return prev
+      return next
+    })
+  }, [nodes])
 
   const entries = flattenNodes(nodes)
 
@@ -148,7 +231,6 @@ export function TimelineView({
   const actionEvents = log.filter((e) => e.kind === "action")
   const logMatches = actionEvents.length === entries.length
 
-  // Build a flat render list: group headers interleaved with entry rows
   type RenderItem =
     | {
         type: "groupHeader"
@@ -156,6 +238,8 @@ export function TimelineView({
         label: string
         locked: boolean
         entryCount: number
+        groupEntries: TimelineEntry[]
+        startFlatIndex: number
       }
     | {
         type: "entry"
@@ -164,6 +248,7 @@ export function TimelineView({
         inGroup: boolean
         groupId: string | null
         groupLocked: boolean
+        isLastInGroup: boolean
       }
 
   const renderItems: RenderItem[] = []
@@ -171,22 +256,32 @@ export function TimelineView({
 
   for (const node of nodes) {
     if (node.kind === "group") {
+      const isExpanded = expandedGroupIds.has(node.id)
+      const startFlatIndex = flatIndex
       renderItems.push({
         type: "groupHeader",
         groupId: node.id,
         label: node.label,
         locked: node.locked,
         entryCount: node.entries.length,
+        groupEntries: node.entries as TimelineEntry[],
+        startFlatIndex,
       })
-      for (const entry of node.entries) {
-        renderItems.push({
-          type: "entry",
-          entry,
-          flatIndex: flatIndex++,
-          inGroup: true,
-          groupId: node.id,
-          groupLocked: node.locked,
+      if (isExpanded) {
+        node.entries.forEach((entry, entryIdx) => {
+          renderItems.push({
+            type: "entry",
+            entry: entry as TimelineEntry,
+            flatIndex: flatIndex++,
+            inGroup: true,
+            groupId: node.id,
+            groupLocked: node.locked,
+            isLastInGroup: entryIdx === node.entries.length - 1,
+          })
         })
+      } else {
+        // Advance flatIndex without rendering
+        flatIndex += node.entries.length
       }
     } else {
       const { id, characterId, stageId, variantKind } = node
@@ -197,6 +292,7 @@ export function TimelineView({
         inGroup: false,
         groupId: null,
         groupLocked: false,
+        isLastInGroup: false,
       })
     }
   }
@@ -212,12 +308,29 @@ export function TimelineView({
     return true
   }
 
+  function renderPoolValue(
+    val: number | null,
+    threshold: number,
+    boldColor: string,
+  ) {
+    if (val === null) return <span className="text-gray-600">—</span>
+    if (val >= threshold)
+      return (
+        <span className="font-bold" style={{ color: boldColor }}>
+          {val}
+        </span>
+      )
+    if (val === 0) return <span className="text-gray-600">{val}</span>
+    return <span className="text-gray-300">{val}</span>
+  }
+
   function renderEntryRow(
     entry: TimelineEntry,
     i: number,
     inGroup: boolean,
     groupId: string | null,
     groupLocked: boolean,
+    isLastInGroup: boolean,
   ) {
     const char = getCharacterById(entry.characterId)
     const row = summary.rows[i] ?? { time: 0, damage: null }
@@ -309,13 +422,17 @@ export function TimelineView({
           isDragging ? "opacity-40" : "hover:bg-gray-800/50",
           isDropTarget ? "border-t-blue-500 border-t-2" : "",
           isInvalid ? "bg-red-950/30" : "",
-          inGroup && groupLocked ? "border-l-2 border-l-gray-600/60" : "",
         ].join(" ")}
         style={rowBorderStyle}
       >
-        {/* # */}
-        <td className="px-2 py-2 text-gray-400 font-mono text-xs w-8">
-          {i + 1}
+        {/* # with branch glyph */}
+        <td className="px-2 py-2 font-mono text-xs w-8">
+          {inGroup ? (
+            <span className="text-gray-600 font-light text-sm mr-0.5">
+              {isLastInGroup ? "└" : "├"}
+            </span>
+          ) : null}
+          <span className="text-gray-400">{i + 1}</span>
         </td>
         {/* time */}
         <td className="px-2 py-2 text-right font-mono text-xs text-gray-300">
@@ -391,31 +508,11 @@ export function TimelineView({
         </td>
         {/* con */}
         <td className="px-2 py-2 text-right font-mono text-xs">
-          {conVal === null ? (
-            <span className="text-gray-600">—</span>
-          ) : conVal >= 100 ? (
-            <span className="font-bold" style={{ color: "#f5cf4d" }}>
-              {conVal}
-            </span>
-          ) : conVal === 0 ? (
-            <span className="text-gray-600">{conVal}</span>
-          ) : (
-            <span className="text-gray-300">{conVal}</span>
-          )}
+          {renderPoolValue(conVal, 100, "#f5cf4d")}
         </td>
         {/* res */}
         <td className="px-2 py-2 text-right font-mono text-xs">
-          {resVal === null ? (
-            <span className="text-gray-600">—</span>
-          ) : resVal >= 100 ? (
-            <span className="font-bold" style={{ color: "#9b6cf0" }}>
-              {resVal}
-            </span>
-          ) : resVal === 0 ? (
-            <span className="text-gray-600">{resVal}</span>
-          ) : (
-            <span className="text-gray-300">{resVal}</span>
-          )}
+          {renderPoolValue(resVal, 100, "#9b6cf0")}
         </td>
         {/* dmg */}
         <td className="px-2 py-2 text-right font-mono text-xs">
@@ -441,6 +538,299 @@ export function TimelineView({
     )
   }
 
+  function renderGroupHeader(
+    item: Extract<RenderItem, { type: "groupHeader" }>,
+  ) {
+    const isExpanded = expandedGroupIds.has(item.groupId)
+    const isRenaming = renamingGroupId === item.groupId
+    const isGroupDropTarget = dropTargetId === `group:${item.groupId}`
+    const isDraggingThisGroup = draggedId === item.groupId
+    const dominantHex = getDominantHex(item.groupEntries)
+    const gradient = buildGroupGradient(item.groupEntries, slots)
+    const distinctCharIds = getDistinctCharsBySlot(item.groupEntries, slots)
+    const startFlatIndex = item.startFlatIndex
+    const lastFlatIndex = startFlatIndex + item.entryCount - 1
+
+    // Aggregate values
+    const totalDurationSec = item.groupEntries.reduce((sum, entry) => {
+      const resolved = findStageByEntry(entry, slots, loadouts)
+      if (!resolved) return sum
+      return (
+        sum +
+        resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
+          .duration /
+          60
+      )
+    }, 0)
+
+    const firstRowTime =
+      item.entryCount > 0
+        ? (summary.rows[startFlatIndex]?.time ?? 0).toFixed(2)
+        : "0.00"
+
+    const lastConVal =
+      isExpanded || item.entryCount === 0 || !logMatches
+        ? null
+        : actionEvents[lastFlatIndex]?.kind === "action"
+          ? actionEvents[lastFlatIndex].cumulativeConcerto
+          : null
+
+    const lastResVal =
+      isExpanded || item.entryCount === 0 || !logMatches
+        ? null
+        : actionEvents[lastFlatIndex]?.kind === "action"
+          ? actionEvents[lastFlatIndex].cumulativeEnergy
+          : null
+
+    let totalDmg = 0
+    let hasDmg = false
+    for (let i = startFlatIndex; i <= lastFlatIndex; i++) {
+      const d = summary.rows[i]?.damage
+      if (d !== null && d !== undefined) {
+        totalDmg += d
+        hasDmg = true
+      }
+    }
+
+    function handleToggleExpand(e: React.MouseEvent) {
+      e.stopPropagation()
+      setExpandedGroupIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(item.groupId)) next.delete(item.groupId)
+        else next.add(item.groupId)
+        return next
+      })
+    }
+
+    return (
+      <tr
+        key={`group-${item.groupId}`}
+        draggable
+        onDragStart={(ev) => {
+          ev.dataTransfer.effectAllowed = "move"
+          setDraggedId(item.groupId)
+          setDraggingType("group")
+        }}
+        onDragOver={(ev) => {
+          if (draggingType === "group") {
+            ev.preventDefault()
+            ev.dataTransfer.dropEffect = "move"
+            if (item.groupId !== draggedId)
+              setDropTargetId(`group:${item.groupId}`)
+          } else if (draggingType === "entry" && dragSrcCtx?.groupId === null) {
+            ev.preventDefault()
+            ev.dataTransfer.dropEffect = "move"
+            setDropTargetId(`group:${item.groupId}`)
+          }
+        }}
+        onDrop={(ev) => {
+          if (draggingType === "group") {
+            ev.preventDefault()
+            if (draggedId !== null && draggedId !== item.groupId) {
+              onReorderNodes(draggedId, item.groupId)
+            }
+            setDraggedId(null)
+            setDraggingType(null)
+            setDropTargetId(null)
+          } else if (
+            draggingType === "entry" &&
+            dragSrcCtx?.groupId === null &&
+            draggedId !== null
+          ) {
+            ev.preventDefault()
+            onReorderNodes(draggedId, item.groupId)
+            setDraggedId(null)
+            setDraggingType(null)
+            setDragSrcCtx(null)
+            setDropTargetId(null)
+          }
+        }}
+        onDragEnd={() => {
+          setDraggedId(null)
+          setDraggingType(null)
+          setDropTargetId(null)
+        }}
+        onClick={handleToggleExpand}
+        className={[
+          "border-t border-gray-600 cursor-pointer",
+          isDraggingThisGroup ? "opacity-40" : "",
+          isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
+        ].join(" ")}
+        style={{ background: gradient }}
+      >
+        {/* # — chevron */}
+        <td className="w-8 px-2 py-1.5" onClick={handleToggleExpand}>
+          <ChevronRightIcon
+            style={{
+              color: dominantHex,
+              transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+              transition: "transform 0.15s",
+            }}
+          />
+        </td>
+        {/* time */}
+        <td className="px-2 py-1.5 text-right font-mono text-xs text-gray-300">
+          {firstRowTime}s
+        </td>
+        {/* char — stacked avatars */}
+        <td className="px-2 py-1.5">
+          <div className="flex items-center gap-1">
+            <div className="flex items-center">
+              {distinctCharIds.map((charId, idx) => {
+                const char = getCharacterById(charId)
+                const hex = ELEMENT_HEX[char?.element ?? ""] ?? "#888"
+                const name = char?.name.toLowerCase() ?? ""
+                return (
+                  <img
+                    key={charId}
+                    src={`/${name}.png`}
+                    alt={char?.name ?? ""}
+                    className="w-5 h-5 rounded-full object-cover"
+                    style={{
+                      marginLeft: idx > 0 ? "-6px" : undefined,
+                      outline: `1.5px solid ${hex}`,
+                      outlineOffset: "0px",
+                    }}
+                  />
+                )
+              })}
+            </div>
+            {distinctCharIds.length > 1 && (
+              <span className="text-gray-500 font-mono text-[10px] ml-1">
+                × {distinctCharIds.length}
+              </span>
+            )}
+          </div>
+        </td>
+        {/* type — GROUP pill */}
+        <td className="px-2 py-1.5">
+          <span
+            className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase"
+            style={{
+              background: `${dominantHex}15`,
+              border: `1px solid ${dominantHex}33`,
+              color: dominantHex,
+            }}
+          >
+            GROUP
+          </span>
+        </td>
+        {/* skill — group name + action count */}
+        <td
+          className="px-2 py-1.5 text-gray-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-2">
+            {!item.locked || isRenaming ? (
+              <GroupLabelInput
+                groupId={item.groupId}
+                initialLabel={item.label}
+                autoFocus={isRenaming}
+                onCommit={(gid, label) => {
+                  onGroupLabelCommit(gid, label)
+                  onGroupLabelRenameEnd()
+                }}
+              />
+            ) : (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onStartRename(item.groupId)
+                }}
+                className="cursor-text hover:text-white transition-colors text-sm font-bold inline-block border-b border-transparent"
+                title="Click to rename"
+              >
+                {item.label || (
+                  <span className="italic text-gray-600 font-normal">
+                    unnamed
+                  </span>
+                )}
+              </span>
+            )}
+            <span className="text-gray-500 text-xs font-mono">
+              {item.entryCount} actions
+            </span>
+          </div>
+        </td>
+        {/* dur — sum */}
+        <td className="px-2 py-1.5 text-right font-mono text-xs text-gray-300">
+          {totalDurationSec.toFixed(2)}s
+        </td>
+        {/* con */}
+        <td className="px-2 py-1.5 text-right font-mono text-xs">
+          {renderPoolValue(lastConVal, 100, "#f5cf4d")}
+        </td>
+        {/* res */}
+        <td className="px-2 py-1.5 text-right font-mono text-xs">
+          {renderPoolValue(lastResVal, 100, "#9b6cf0")}
+        </td>
+        {/* dmg */}
+        <td className="px-2 py-1.5 text-right font-mono text-xs">
+          {hasDmg ? (
+            isExpanded ? (
+              <span className="text-gray-600">{totalDmg.toLocaleString()}</span>
+            ) : (
+              <span className="font-bold text-yellow-400">
+                {totalDmg.toLocaleString()}
+              </span>
+            )
+          ) : (
+            <span className="text-gray-600">—</span>
+          )}
+        </td>
+        {/* actions */}
+        <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleGroupLock(item.groupId)
+              }}
+              className={[
+                "p-0.5 transition-colors",
+                !item.locked
+                  ? "text-blue-400 hover:text-blue-300"
+                  : "text-gray-600 hover:text-gray-400",
+              ].join(" ")}
+              title={
+                !item.locked ? "Open — click to lock" : "Locked — click to open"
+              }
+              aria-label={!item.locked ? "Lock group" : "Unlock group"}
+            >
+              {!item.locked ? <LockOpen1Icon /> : <LockClosedIcon />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDuplicateGroup(item.groupId)
+              }}
+              className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+              title="Duplicate group"
+              aria-label="Duplicate group"
+            >
+              <CopyIcon />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (item.entryCount >= 2) {
+                  setDeletingGroupId(item.groupId)
+                } else {
+                  onDeleteGroup(item.groupId)
+                }
+              }}
+              className="p-0.5 text-gray-500 hover:text-red-400 transition-colors"
+              title="Delete group and contents"
+              aria-label="Delete group and contents"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <table className="w-full text-sm text-left">
@@ -461,143 +851,7 @@ export function TimelineView({
         <tbody>
           {renderItems.map((item) => {
             if (item.type === "groupHeader") {
-              const isOpen = !item.locked
-              const isRenaming = renamingGroupId === item.groupId
-              const isGroupDropTarget = dropTargetId === `group:${item.groupId}`
-              const isDraggingThisGroup = draggedId === item.groupId
-              return (
-                <tr
-                  key={`group-${item.groupId}`}
-                  draggable
-                  onDragStart={(ev) => {
-                    ev.dataTransfer.effectAllowed = "move"
-                    setDraggedId(item.groupId)
-                    setDraggingType("group")
-                  }}
-                  onDragOver={(ev) => {
-                    if (draggingType === "group") {
-                      ev.preventDefault()
-                      ev.dataTransfer.dropEffect = "move"
-                      if (item.groupId !== draggedId)
-                        setDropTargetId(`group:${item.groupId}`)
-                    } else if (
-                      draggingType === "entry" &&
-                      dragSrcCtx?.groupId === null
-                    ) {
-                      ev.preventDefault()
-                      ev.dataTransfer.dropEffect = "move"
-                      setDropTargetId(`group:${item.groupId}`)
-                    }
-                  }}
-                  onDrop={(ev) => {
-                    if (draggingType === "group") {
-                      ev.preventDefault()
-                      if (draggedId !== null && draggedId !== item.groupId) {
-                        onReorderNodes(draggedId, item.groupId)
-                      }
-                      setDraggedId(null)
-                      setDraggingType(null)
-                      setDropTargetId(null)
-                    } else if (
-                      draggingType === "entry" &&
-                      dragSrcCtx?.groupId === null &&
-                      draggedId !== null
-                    ) {
-                      ev.preventDefault()
-                      onReorderNodes(draggedId, item.groupId)
-                      setDraggedId(null)
-                      setDraggingType(null)
-                      setDragSrcCtx(null)
-                      setDropTargetId(null)
-                    }
-                  }}
-                  onDragEnd={() => {
-                    setDraggedId(null)
-                    setDraggingType(null)
-                    setDropTargetId(null)
-                  }}
-                  className={[
-                    "border-t border-gray-600 bg-gray-900/60 cursor-grab",
-                    isDraggingThisGroup ? "opacity-40" : "",
-                    isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
-                  ].join(" ")}
-                >
-                  <td className="w-8 px-2 py-1.5 text-gray-500 text-xs">—</td>
-                  <td
-                    colSpan={9}
-                    className="px-2 py-1.5 text-gray-400 text-xs font-medium"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        {isOpen || isRenaming ? (
-                          <GroupLabelInput
-                            groupId={item.groupId}
-                            initialLabel={item.label}
-                            autoFocus={isRenaming}
-                            onCommit={(gid, label) => {
-                              onGroupLabelCommit(gid, label)
-                              onGroupLabelRenameEnd()
-                            }}
-                          />
-                        ) : (
-                          <span
-                            onClick={() => onStartRename(item.groupId)}
-                            className="cursor-text hover:text-white transition-colors text-sm inline-block w-40 border-b border-transparent"
-                            title="Click to rename"
-                          >
-                            {item.label || (
-                              <span className="italic text-gray-600">
-                                unnamed
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onToggleGroupLock(item.groupId)}
-                          className={[
-                            "p-0.5 transition-colors",
-                            isOpen
-                              ? "text-blue-400 hover:text-blue-300"
-                              : "text-gray-600 hover:text-gray-400",
-                          ].join(" ")}
-                          title={
-                            isOpen
-                              ? "Open — click to lock"
-                              : "Locked — click to open"
-                          }
-                          aria-label={isOpen ? "Lock group" : "Unlock group"}
-                        >
-                          {isOpen ? <LockOpen1Icon /> : <LockClosedIcon />}
-                        </button>
-                        <button
-                          onClick={() => onDuplicateGroup(item.groupId)}
-                          className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
-                          title="Duplicate group"
-                          aria-label="Duplicate group"
-                        >
-                          <CopyIcon />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (item.entryCount >= 2) {
-                              setDeletingGroupId(item.groupId)
-                            } else {
-                              onDeleteGroup(item.groupId)
-                            }
-                          }}
-                          className="p-0.5 text-gray-500 hover:text-red-400 transition-colors"
-                          title="Delete group and contents"
-                          aria-label="Delete group and contents"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )
+              return renderGroupHeader(item)
             }
             return renderEntryRow(
               item.entry,
@@ -605,6 +859,7 @@ export function TimelineView({
               item.inGroup,
               item.groupId,
               item.groupLocked,
+              item.isLastInGroup,
             )
           })}
         </tbody>
