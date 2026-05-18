@@ -1,182 +1,8 @@
-import { Fragment, useState } from "react"
-import type { SkillType } from "#/types/character"
-import type {
-  ActiveBuff,
-  HitEvent,
-  SimulationLogEntry,
-} from "#/types/simulation-log"
-import type { StatTable } from "#/types/stat-table"
-import { getCharacterById } from "#/lib/catalog"
-import { formatSkillType } from "#/data/skill-types"
-import { DEF_MULT_CONST, RES_MULT_CONST } from "#/lib/compute-damage"
+import { useState } from "react"
+import type { SimulationLogEntry } from "#/types/simulation-log"
 import { Modal } from "#/components/Modal"
-
-function resolvedScalingValue(snap: StatTable, rawStat?: string): number {
-  const stat = (rawStat ?? "ATK").toUpperCase()
-  if (stat === "HP") return snap.hpBase * (1 + snap.hpPct) + snap.hpFlat
-  if (stat === "DEF") return snap.defBase * (1 + snap.defPct) + snap.defFlat
-  return snap.atkBase * (1 + snap.atkPct) + snap.atkFlat
-}
-
-export function formatScalingCell(
-  snap: StatTable,
-  scalingStat?: string,
-): string {
-  const stat = (scalingStat ?? "ATK").toUpperCase()
-  const label = stat === "HP" || stat === "DEF" ? stat : "ATK"
-  return `${label} ${Math.round(resolvedScalingValue(snap, scalingStat))}`
-}
-
-export function formatERCell(pct: number): string {
-  return `${Math.round((1 + pct) * 100)}%`
-}
-
-export function formatCRCell(rate: number): string {
-  const pct = `${Math.round(rate * 100)}%`
-  return rate > 1 ? `${pct} (capped 100%)` : pct
-}
-
-export function formatCDCell(dmg: number): string {
-  return `${Math.round(dmg * 100)}%`
-}
-
-export function formatDMGPctCell(
-  snap: StatTable,
-  element: string,
-  skillType: SkillType,
-): string {
-  const total =
-    (snap.elementBonus[element] ?? 0) +
-    snap.skillTypeBonus[skillType] +
-    snap.allDmgBonus
-  return `+${Math.round(total * 100)}%`
-}
-
-export function formatDeepenCell(
-  snap: StatTable,
-  skillType: SkillType,
-): string {
-  return `+${Math.round(snap.deepens[skillType] * 100)}%`
-}
-
-type StatKind = "ATK" | "HP" | "DEF"
-
-function normalizeStatKind(raw?: string): StatKind {
-  const u = (raw ?? "ATK").toUpperCase()
-  if (u === "HP") return "HP"
-  if (u === "DEF") return "DEF"
-  return "ATK"
-}
-
-function statComponents(
-  snap: StatTable,
-  kind: StatKind,
-): { base: number; pct: number; flat: number } {
-  if (kind === "HP")
-    return { base: snap.hpBase, pct: snap.hpPct, flat: snap.hpFlat }
-  if (kind === "DEF")
-    return { base: snap.defBase, pct: snap.defPct, flat: snap.defFlat }
-  return { base: snap.atkBase, pct: snap.atkPct, flat: snap.atkFlat }
-}
-
-export function formatStatComponents(
-  snap: StatTable,
-  rawStat?: string,
-): string {
-  const kind = normalizeStatKind(rawStat)
-  const { base, pct, flat } = statComponents(snap, kind)
-  const resolved = Math.round(base * (1 + pct) + flat)
-  return `${kind} ${resolved} (${base} × ${(1 + pct).toFixed(2)} + ${flat})`
-}
-
-export interface FormulaBreakdown {
-  scalingValue: number
-  multiplier: number
-  dmgBonus: number
-  deepen: number
-  critFactor: number
-  defMult: number
-  resMult: number
-  result: number
-}
-
-export function computeFormulaBreakdown(
-  ev: Pick<
-    HitEvent,
-    | "element"
-    | "dmgType"
-    | "skillType"
-    | "scalingStat"
-    | "multiplier"
-    | "statsSnapshot"
-  >,
-): FormulaBreakdown {
-  const snap = ev.statsSnapshot
-  const kind = normalizeStatKind(ev.scalingStat)
-  const { base, pct, flat } = statComponents(snap, kind)
-  const scalingValue = base * (1 + pct) + flat
-
-  const dmgBonus =
-    (snap.elementBonus[ev.element] ?? 0) +
-    snap.skillTypeBonus[ev.skillType] +
-    snap.allDmgBonus
-
-  const deepen = snap.deepens[ev.skillType]
-  const cr = Math.min(snap.critRate, 1)
-  const critFactor = 1 - cr + cr * snap.critDmg
-
-  const defMult =
-    DEF_MULT_CONST /
-    (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - snap.defShred))
-  const baseResist = 1 - RES_MULT_CONST
-  const skillResShred = snap.shreds[ev.skillType]
-  const effectiveResist = baseResist - skillResShred
-  const resMult =
-    effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
-
-  const result = Math.round(
-    scalingValue *
-      ev.multiplier *
-      (1 + dmgBonus) *
-      (1 + deepen) *
-      critFactor *
-      defMult *
-      resMult,
-  )
-
-  return {
-    scalingValue,
-    multiplier: ev.multiplier,
-    dmgBonus,
-    deepen,
-    critFactor,
-    defMult,
-    resMult,
-    result,
-  }
-}
-
-export function formatActiveBuffLabel(
-  b: ActiveBuff,
-  resolveCharacterName: (id: number) => string,
-): string {
-  let tag: string
-  if (b.id.startsWith("char.") && b.sourceCharacterId !== undefined) {
-    tag = `[${resolveCharacterName(b.sourceCharacterId)}]`
-  } else if (b.id.startsWith("echo-set.")) {
-    tag = "[Set]"
-  } else if (b.id.startsWith("echo.")) {
-    tag = "[Echo]"
-  } else if (b.id.startsWith("weapon.")) {
-    tag = "[Weapon]"
-  } else if (b.id.startsWith("skill-tree.")) {
-    tag = "[Tree]"
-  } else {
-    tag = ""
-  }
-  const stacks = b.stacks > 1 ? ` ×${b.stacks}` : ""
-  return tag ? `${tag} ${b.name}${stacks}` : `${b.name}${stacks}`
-}
+import { BuffEventRow } from "#/components/BuffEventRow"
+import { HitEventRow } from "#/components/HitEventRow"
 
 interface SimulationLogModalProps {
   log: SimulationLogEntry[]
@@ -192,20 +18,10 @@ const BUFF_KINDS = new Set([
 
 export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
   const hitCount = log.filter((e) => e.kind === "hit").length
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const [showBuffs, setShowBuffs] = useState(true)
   const filteredLog = showBuffs
     ? log
     : log.filter((e) => !BUFF_KINDS.has(e.kind))
-
-  const toggleRow = (i: number) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
-      return next
-    })
-  }
 
   return (
     <Modal
@@ -252,8 +68,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
             </thead>
             <tbody>
               {filteredLog.map((entry, i) => {
-                const isBuff = BUFF_KINDS.has(entry.kind)
-                if (isBuff) {
+                if (BUFF_KINDS.has(entry.kind)) {
                   const buff = entry as Extract<
                     SimulationLogEntry,
                     {
@@ -264,216 +79,18 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
                         | "buffConsumed"
                     }
                   >
-                  const target = getCharacterById(buff.targetCharacterId)
-                  const verb =
-                    buff.kind === "buffApplied"
-                      ? "applied"
-                      : buff.kind === "buffRefreshed"
-                        ? "refreshed"
-                        : buff.kind === "buffConsumed"
-                          ? "consumed"
-                          : "expired"
-                  const color =
-                    buff.kind === "buffExpired"
-                      ? "text-rose-400/70"
-                      : buff.kind === "buffConsumed"
-                        ? "text-amber-400/80"
-                        : "text-emerald-400/80"
-                  return (
-                    <tr
-                      key={i}
-                      className="border-b border-gray-800 bg-gray-950/40"
-                    >
-                      <td className="py-1 pr-3 text-gray-500">{i + 1}</td>
-                      <td className="py-1 pr-3">{target?.name ?? "?"}</td>
-                      <td className={`py-1 pr-3 italic ${color}`}>
-                        buff {verb}
-                      </td>
-                      <td className="py-1 pr-3">
-                        {buff.buffName}
-                        {buff.stacks > 1 ? ` × ${buff.stacks}` : ""}
-                      </td>
-                      <td className="py-1 pr-3">
-                        {(buff.frame / 60).toFixed(2)}s
-                      </td>
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 pr-3 text-right" />
-                      <td className="py-1 text-right" />
-                    </tr>
-                  )
+                  return <BuffEventRow key={i} index={i} buff={buff} />
                 }
                 const ev = entry as Extract<
                   SimulationLogEntry,
                   { kind: "action" | "hit" }
                 >
-                const character = getCharacterById(ev.characterId)
-                const isAction = ev.kind === "action"
-                const isExpanded = expanded.has(i)
-                return (
-                  <Fragment key={i}>
-                    <tr
-                      className={`border-b border-gray-800 ${isAction ? "" : "text-gray-500"} ${ev.kind === "hit" ? "cursor-pointer hover:bg-gray-800/40" : ""}`}
-                      onClick={
-                        ev.kind === "hit" ? () => toggleRow(i) : undefined
-                      }
-                    >
-                      <td className="py-1 pr-3 text-gray-500">
-                        {ev.kind === "hit"
-                          ? `${isExpanded ? "▾" : "▸"} ${i + 1}`
-                          : i + 1}
-                      </td>
-                      <td className="py-1 pr-3">{character?.name ?? "?"}</td>
-                      <td className="py-1 pr-3 text-gray-400">
-                        {isAction ? formatSkillType(ev.skillType) : ""}
-                      </td>
-                      <td className="py-1 pr-3">
-                        {ev.skillName}
-                        {ev.kind === "action" && ev.variantKind ? (
-                          <span className="ml-2 text-xs text-blue-400/80">
-                            {ev.variantKind === "cancel"
-                              ? "(Cancel)"
-                              : "(Instant Cancel)"}
-                          </span>
-                        ) : null}
-                        {ev.kind === "hit" && ev.synthetic ? (
-                          <span className="ml-2 text-xs text-cyan-400/80 italic">
-                            (coord)
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="py-1 pr-3">
-                        {(ev.frame / 60).toFixed(2)}s
-                      </td>
-                      <td className="py-1 pr-3 text-right">
-                        {ev.cumulativeConcerto.toFixed(1)}
-                      </td>
-                      <td className="py-1 pr-3 text-right">
-                        {ev.cumulativeEnergy.toFixed(1)}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-yellow-400">
-                        {ev.kind === "hit" ? ev.damage.toLocaleString() : ""}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatScalingCell(ev.statsSnapshot, ev.scalingStat)
-                          : ""}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatERCell(ev.statsSnapshot.energyRechargePct)
-                          : ""}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatCRCell(ev.statsSnapshot.critRate)
-                          : ""}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatCDCell(ev.statsSnapshot.critDmg)
-                          : ""}
-                      </td>
-                      <td className="py-1 pr-3 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatDMGPctCell(
-                              ev.statsSnapshot,
-                              ev.element,
-                              ev.skillType,
-                            )
-                          : ""}
-                      </td>
-                      <td className="py-1 text-right text-xs">
-                        {ev.kind === "hit"
-                          ? formatDeepenCell(ev.statsSnapshot, ev.skillType)
-                          : ""}
-                      </td>
-                    </tr>
-                    {ev.kind === "hit" && isExpanded && (
-                      <tr className="border-b border-gray-800 bg-gray-950/60">
-                        <td colSpan={14} className="py-2 px-3">
-                          <HitDrawer ev={ev} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                )
+                return <HitEventRow key={i} index={i} ev={ev} />
               })}
             </tbody>
           </table>
         )}
       </div>
     </Modal>
-  )
-}
-
-function HitDrawer({ ev }: { ev: HitEvent }) {
-  const snap = ev.statsSnapshot
-  const bd = computeFormulaBreakdown(ev)
-  const cr = Math.min(snap.critRate, 1)
-  const critFactor = 1 - cr + cr * snap.critDmg
-
-  return (
-    <div className="text-xs text-gray-300 space-y-1.5">
-      <div className="flex flex-wrap gap-x-6 gap-y-0.5">
-        <span>{formatStatComponents(snap, "ATK")}</span>
-        <span>{formatStatComponents(snap, "HP")}</span>
-        <span>{formatStatComponents(snap, "DEF")}</span>
-      </div>
-      <div className="text-gray-400">
-        Crit Factor:{" "}
-        <span className="text-gray-200">{critFactor.toFixed(4)}</span>
-        <span className="text-gray-500 ml-1">
-          (1 − {(cr * 100).toFixed(0)}% + {(cr * 100).toFixed(0)}% ×{" "}
-          {(snap.critDmg * 100).toFixed(0)}%)
-        </span>
-      </div>
-      {snap.defShred !== 0 && (
-        <div className="text-gray-400">
-          DEF Shred:{" "}
-          <span className="text-gray-200">
-            {(snap.defShred * 100).toFixed(1)}%
-          </span>
-        </div>
-      )}
-      <div className="font-mono text-gray-400">
-        {Math.round(bd.scalingValue)} × {bd.multiplier.toFixed(2)} × (1 +{" "}
-        {(bd.dmgBonus * 100).toFixed(1)}%) × (1 + {(bd.deepen * 100).toFixed(1)}
-        %) × {bd.critFactor.toFixed(4)} × {bd.defMult.toFixed(4)} ×{" "}
-        {bd.resMult.toFixed(4)} ={" "}
-        <span className="text-yellow-400">{bd.result.toLocaleString()}</span>
-      </div>
-      <div className="text-gray-500">
-        Passive buffs:{" "}
-        {ev.passiveBuffs.length === 0
-          ? "—"
-          : ev.passiveBuffs
-              .map((b) =>
-                formatActiveBuffLabel(
-                  b,
-                  (id) => getCharacterById(id)?.name ?? `#${id}`,
-                ),
-              )
-              .join(", ")}
-      </div>
-      <div className="text-gray-500">
-        Active buffs:{" "}
-        {ev.activeBuffs.length === 0
-          ? "—"
-          : ev.activeBuffs
-              .map((b) =>
-                formatActiveBuffLabel(
-                  b,
-                  (id) => getCharacterById(id)?.name ?? `#${id}`,
-                ),
-              )
-              .join(", ")}
-      </div>
-    </div>
   )
 }

@@ -13,7 +13,7 @@ import {
   formatScalingCell,
   formatStatComponents,
   computeFormulaBreakdown,
-} from "./SimulationLogModal"
+} from "#/lib/hit-formula"
 
 const snap = (over: Partial<StatTable> = {}): StatTable => ({
   ...emptyStatTable(),
