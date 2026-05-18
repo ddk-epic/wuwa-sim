@@ -130,7 +130,6 @@ interface TimelineGroupHeaderProps {
   logMatches: boolean
   drag: TimelineDrag
   onToggleExpand: (groupId: string) => void
-  onReorderNodes: (fromId: string, toId: string) => void
   onToggleGroupLock: (groupId: string) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
   onDuplicateGroup: (groupId: string) => void
@@ -151,7 +150,6 @@ export function TimelineGroupHeader({
   logMatches,
   drag,
   onToggleExpand,
-  onReorderNodes,
   onToggleGroupLock,
   onGroupLabelCommit,
   onDuplicateGroup,
@@ -214,45 +212,16 @@ export function TimelineGroupHeader({
     onToggleExpand(groupId)
   }
 
+  const source = drag.groupSource(groupId)
+  const target = drag.groupTarget(groupId)
+
   return (
     <tr
       draggable
-      onDragStart={(ev) => {
-        ev.dataTransfer.effectAllowed = "move"
-        drag.startDrag(groupId, "group", null)
-      }}
-      onDragOver={(ev) => {
-        if (drag.draggingType === "group") {
-          ev.preventDefault()
-          ev.dataTransfer.dropEffect = "move"
-          if (groupId !== drag.draggedId) drag.setDropTarget(`group:${groupId}`)
-        } else if (
-          drag.draggingType === "entry" &&
-          drag.dragSrcCtx?.groupId === null
-        ) {
-          ev.preventDefault()
-          ev.dataTransfer.dropEffect = "move"
-          drag.setDropTarget(`group:${groupId}`)
-        }
-      }}
-      onDrop={(ev) => {
-        if (drag.draggingType === "group") {
-          ev.preventDefault()
-          if (drag.draggedId !== null && drag.draggedId !== groupId) {
-            onReorderNodes(drag.draggedId, groupId)
-          }
-          drag.clearDrag()
-        } else if (
-          drag.draggingType === "entry" &&
-          drag.dragSrcCtx?.groupId === null &&
-          drag.draggedId !== null
-        ) {
-          ev.preventDefault()
-          onReorderNodes(drag.draggedId, groupId)
-          drag.clearDrag()
-        }
-      }}
-      onDragEnd={() => drag.clearDrag()}
+      onDragStart={source.onDragStart}
+      onDragOver={target.onDragOver}
+      onDrop={target.onDrop}
+      onDragEnd={source.onDragEnd}
       onClick={handleToggleExpand}
       className={[
         "border-t border-gray-600 cursor-pointer",

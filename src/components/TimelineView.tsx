@@ -60,7 +60,11 @@ export function TimelineView({
   onReorderGroupEntries,
 }: TimelineViewProps) {
   const { slots, loadouts } = useTeamContext()
-  const drag = useTimelineDrag()
+  const drag = useTimelineDrag({
+    onReorderTopLevelEntry: onReorder,
+    onReorderNodes,
+    onReorderGroupEntries,
+  })
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
   const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(
     () =>
@@ -208,7 +212,6 @@ export function TimelineView({
                   logMatches={logMatches}
                   drag={drag}
                   onToggleExpand={toggleExpand}
-                  onReorderNodes={onReorderNodes}
                   onToggleGroupLock={onToggleGroupLock}
                   onGroupLabelCommit={onGroupLabelCommit}
                   onDuplicateGroup={onDuplicateGroup}
@@ -241,9 +244,6 @@ export function TimelineView({
                 drag={drag}
                 onRemove={onRemove}
                 onUpdateEntry={onUpdateEntry}
-                onReorder={onReorder}
-                onReorderNodes={onReorderNodes}
-                onReorderGroupEntries={onReorderGroupEntries}
               />
             )
           })}

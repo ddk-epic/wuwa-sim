@@ -68,9 +68,6 @@ interface TimelineEntryRowProps {
   drag: TimelineDrag
   onRemove: (id: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
-  onReorder: (fromId: string, toId: string) => void
-  onReorderNodes: (fromId: string, toId: string) => void
-  onReorderGroupEntries: (groupId: string, fromId: string, toId: string) => void
 }
 
 export function TimelineEntryRow({
@@ -88,9 +85,6 @@ export function TimelineEntryRow({
   drag,
   onRemove,
   onUpdateEntry,
-  onReorder,
-  onReorderNodes,
-  onReorderGroupEntries,
 }: TimelineEntryRowProps) {
   const reactionDelay = useReactionDelay()
   const { slots, loadouts } = useTeamContext()
@@ -107,8 +101,8 @@ export function TimelineEntryRow({
     Object.keys(resolved.stage.variants).length > 0
       ? resolved.stage
       : null
-  const rejectsGroupDrop = inGroup && drag.draggingType === "group"
-  const allowed = drag.isDropAllowed(groupId, groupLocked)
+  const source = drag.entrySource(entry.id, { groupId, locked: groupLocked })
+  const target = drag.entryTarget(entry.id, { groupId, groupLocked })
 
   const charElement = char?.element ?? ""
   const charHex = ELEMENT_HEX[charElement] ?? "#888"
@@ -128,37 +122,13 @@ export function TimelineEntryRow({
     ? { borderTopColor: `${charHex}33` }
     : undefined
 
-  function handleDrop() {
-    if (drag.draggedId === null || drag.draggedId === entry.id) return
-    if (inGroup && groupId && drag.dragSrcCtx?.groupId === groupId) {
-      onReorderGroupEntries(groupId, drag.draggedId, entry.id)
-    } else if (!inGroup && drag.dragSrcCtx?.groupId === null) {
-      onReorder(drag.draggedId, entry.id)
-    } else if (!inGroup && drag.draggingType === "group") {
-      onReorderNodes(drag.draggedId, entry.id)
-    }
-  }
-
   return (
     <tr
       draggable
-      onDragStart={(ev) => {
-        ev.dataTransfer.effectAllowed = "move"
-        drag.startDrag(entry.id, "entry", { groupId, locked: groupLocked })
-      }}
-      onDragOver={(ev) => {
-        if (rejectsGroupDrop || !allowed) return
-        ev.preventDefault()
-        ev.dataTransfer.dropEffect = "move"
-        if (entry.id !== drag.draggedId) drag.setDropTarget(entry.id)
-      }}
-      onDrop={(ev) => {
-        if (rejectsGroupDrop || !allowed) return
-        ev.preventDefault()
-        handleDrop()
-        drag.clearDrag()
-      }}
-      onDragEnd={() => drag.clearDrag()}
+      onDragStart={source.onDragStart}
+      onDragOver={target.onDragOver}
+      onDrop={target.onDrop}
+      onDragEnd={source.onDragEnd}
       className={[
         "border-t cursor-grab",
         charSwitched ? "" : "border-gray-700",
