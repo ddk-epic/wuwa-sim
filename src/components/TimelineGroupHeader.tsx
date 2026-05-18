@@ -275,7 +275,7 @@ export function TimelineGroupHeader({
           }}
         />
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-xs text-gray-300">
+      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-gray-300">
         {firstRowTime}s
       </td>
       <td className="px-2 py-1.5">
@@ -362,13 +362,13 @@ export function TimelineGroupHeader({
           </span>
         </div>
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-xs text-gray-300">
+      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-gray-300">
         {totalDurationSec.toFixed(2)}s
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-xs">
+      <td className="px-2 py-1.5 text-right font-mono">
         {renderPoolValue(lastConVal, "#f5cf4d")}
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-xs">
+      <td className="px-2 py-1.5 text-right font-mono">
         {renderPoolValue(lastResVal, "#9b6cf0")}
       </td>
       <td className="px-2 py-1.5 font-semibold text-right font-mono">
