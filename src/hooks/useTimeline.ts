@@ -13,7 +13,7 @@ function transformNodes(raw: unknown): TimelineNode[] {
   return migrateNodes(Array.isArray(raw) ? raw : [])
 }
 
-export function useTimeline() {
+export function useTimeline(onShapeChange?: () => void) {
   const [nodes, setNodes] = useLocalStorage<TimelineNode[]>(
     "wuwa.timeline.entries",
     [],
@@ -42,6 +42,7 @@ export function useTimeline() {
         { kind: "entry" as const, ...entry, id: crypto.randomUUID() },
       ]
     })
+    onShapeChange?.()
   }
 
   function addGroup(): string {
@@ -55,6 +56,7 @@ export function useTimeline() {
         { kind: "group" as const, id, label: "", locked: false, entries: [] },
       ]
     })
+    onShapeChange?.()
     return id
   }
 
@@ -75,12 +77,14 @@ export function useTimeline() {
         n.kind === "group" && n.id === groupId ? { ...n, locked: true } : n,
       )
     })
+    onShapeChange?.()
   }
 
   function deleteGroup(groupId: string) {
     setNodes((prev) =>
       prev.filter((n) => !(n.kind === "group" && n.id === groupId)),
     )
+    onShapeChange?.()
   }
 
   function duplicateGroup(groupId: string) {
@@ -102,6 +106,7 @@ export function useTimeline() {
       result.splice(sourceIndex + 1, 0, clone)
       return result
     })
+    onShapeChange?.()
   }
 
   function removeEntry(id: string) {
@@ -111,6 +116,7 @@ export function useTimeline() {
         return [{ ...node, entries: node.entries.filter((e) => e.id !== id) }]
       }),
     )
+    onShapeChange?.()
   }
 
   function reorderEntries(fromId: string, toId: string) {
@@ -126,6 +132,7 @@ export function useTimeline() {
       next.splice(toIndex, 0, item)
       return next
     })
+    onShapeChange?.()
   }
 
   function reorderNodes(fromId: string, toId: string) {
@@ -139,6 +146,7 @@ export function useTimeline() {
       next.splice(toIndex, 0, item)
       return next
     })
+    onShapeChange?.()
   }
 
   function reorderGroupEntries(groupId: string, fromId: string, toId: string) {
@@ -155,6 +163,7 @@ export function useTimeline() {
         return { ...node, entries: next }
       }),
     )
+    onShapeChange?.()
   }
 
   function updateEntry(id: string, patch: Partial<Omit<TimelineEntry, "id">>) {
@@ -171,6 +180,9 @@ export function useTimeline() {
         }
       }),
     )
+    if ("characterId" in patch || "stageId" in patch) {
+      onShapeChange?.()
+    }
   }
 
   function updateGroupLabel(groupId: string, label: string) {
@@ -183,6 +195,7 @@ export function useTimeline() {
 
   function clearTimeline() {
     setNodes([])
+    onShapeChange?.()
   }
 
   return {

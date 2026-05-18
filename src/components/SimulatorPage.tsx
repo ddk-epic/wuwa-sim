@@ -23,6 +23,8 @@ export function SimulatorPage() {
     setSlotPatch,
   } = useTeam()
 
+  const { log, setLog, clearLog } = useSimulationLog()
+
   const {
     nodes,
     entries,
@@ -38,8 +40,7 @@ export function SimulatorPage() {
     deleteGroup,
     duplicateGroup,
     clearTimeline,
-  } = useTimeline()
-  const { log, setLog, clearLog } = useSimulationLog()
+  } = useTimeline(clearLog)
   const [settings, setReactionDelay] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
@@ -54,7 +55,6 @@ export function SimulatorPage() {
 
   function handleResetTimeline() {
     clearTimeline()
-    clearLog()
   }
 
   function handleAddGroup() {

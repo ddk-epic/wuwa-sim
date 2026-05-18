@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, beforeEach } from "vitest"
+import { describe, expect, it, beforeEach, vi } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { flattenNodes } from "#/types/timeline"
 import { migrateNodes } from "#/lib/migrate-timeline"
@@ -422,6 +422,86 @@ describe("useTimeline reorderNodes", () => {
     expect(result.current.nodes[0].id).toBe(entryId)
     expect(result.current.nodes[1].kind).toBe("group")
     expect(result.current.nodes[1].id).toBe(groupId)
+  })
+})
+
+describe("useTimeline onShapeChange callback", () => {
+  it("addEntry calls onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    expect(onShapeChange).toHaveBeenCalledTimes(1)
+  })
+
+  it("removeEntry calls onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    const id = result.current.entries[0].id
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.removeEntry(id)
+    })
+    expect(onShapeChange).toHaveBeenCalledTimes(1)
+  })
+
+  it("updateEntry with stageId calls onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    const id = result.current.entries[0].id
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.updateEntry(id, { stageId: "Resonance Skill::_" })
+    })
+    expect(onShapeChange).toHaveBeenCalledTimes(1)
+  })
+
+  it("updateEntry with variantKind only does NOT call onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    const id = result.current.entries[0].id
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.updateEntry(id, { variantKind: "cancel" })
+    })
+    expect(onShapeChange).not.toHaveBeenCalled()
+  })
+
+  it("updateGroupLabel does NOT call onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.updateGroupLabel(groupId, "New Name")
+    })
+    expect(onShapeChange).not.toHaveBeenCalled()
+  })
+
+  it("clearTimeline calls onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    act(() => {
+      result.current.addEntry(sample)
+    })
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.clearTimeline()
+    })
+    expect(onShapeChange).toHaveBeenCalledTimes(1)
   })
 })
 
