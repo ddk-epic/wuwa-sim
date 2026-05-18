@@ -1,5 +1,10 @@
 import type { EnrichedEcho } from "#/types/echo"
+import { bellBorneGeochelone } from "./bell-borne-geochelone"
 import { impermanenceHeron } from "./impermanence-heron"
 import { infernoRider } from "./inferno-rider"
 
-export const ALL_ECHOES: EnrichedEcho[] = [impermanenceHeron, infernoRider]
+export const ALL_ECHOES: EnrichedEcho[] = [
+  impermanenceHeron,
+  infernoRider,
+  bellBorneGeochelone,
+]
