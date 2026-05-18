@@ -1,5 +1,23 @@
 import type { BuffDef, StatPath, ValueExpr } from "#/types/buff"
+import type { EnrichedCharacter, SkillType } from "#/types/character"
+import type {
+  Cost3Main,
+  Cost4Main,
+  EchoBuild,
+  SlotLoadout,
+} from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
+import { emptyStatTable } from "#/types/stat-table"
+import type { WeaponData } from "#/types/weapon"
+import {
+  DEFAULT_SUBSTAT_ROLLS,
+  ECHO_BUILD_LAYOUT,
+  ECHO_MAIN_1COST_SCALING,
+  ECHO_MAIN_3COST_VARIABLE,
+  ECHO_MAIN_4COST_VARIABLE,
+  ECHO_MAIN_FIXED,
+  ECHO_SUBSTAT,
+} from "./echo-stat-constants"
 
 export type StatContribution = {
   def: BuffDef
@@ -118,4 +136,135 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
       stats.shreds[path.key] += v
       return
   }
+}
+
+function accumulateEchoSubstatBlock(
+  stats: StatTable,
+  character: EnrichedCharacter,
+): void {
+  stats.critRate += DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
+  stats.critDmg += DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
+  stats.atkPct += DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+  stats.energyRechargePct +=
+    DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
+  const skillType: SkillType =
+    character.recommendedSkillDmgPriority ?? "Resonance Liberation"
+  stats.skillTypeBonus[skillType] +=
+    DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
+}
+
+function accumulateEchoMainBlock(
+  stats: StatTable,
+  echoBuild: EchoBuild,
+  primaryScalingStat: "atk" | "hp" | "def",
+): void {
+  const layout = ECHO_BUILD_LAYOUT[echoBuild]
+  stats.atkFlat +=
+    layout.cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
+    layout.cost3 * ECHO_MAIN_FIXED.cost3FlatAtk
+  stats.hpFlat += layout.cost1 * ECHO_MAIN_FIXED.cost1FlatHp
+  const scalingVal = ECHO_MAIN_1COST_SCALING[primaryScalingStat]
+  if (primaryScalingStat === "atk") stats.atkPct += layout.cost1 * scalingVal
+  else if (primaryScalingStat === "hp") stats.hpPct += layout.cost1 * scalingVal
+  else stats.defPct += layout.cost1 * scalingVal
+}
+
+function accumulateCost4Mains(
+  stats: StatTable,
+  cost4Mains: Cost4Main[],
+  primaryScalingStat: "atk" | "hp" | "def",
+): void {
+  for (const main of cost4Mains) {
+    if (main === "cr") {
+      stats.critRate += ECHO_MAIN_4COST_VARIABLE.cr
+    } else if (main === "cd") {
+      stats.critDmg += ECHO_MAIN_4COST_VARIABLE.cd
+    } else {
+      if (primaryScalingStat === "atk") {
+        stats.atkPct += ECHO_MAIN_4COST_VARIABLE.scalingAtk
+      } else if (primaryScalingStat === "hp") {
+        stats.hpPct += ECHO_MAIN_4COST_VARIABLE.scalingHp
+      } else {
+        stats.defPct += ECHO_MAIN_4COST_VARIABLE.scalingDef
+      }
+    }
+  }
+}
+
+function accumulateCost3Mains(
+  stats: StatTable,
+  cost3Mains: Cost3Main[],
+  primaryScalingStat: "atk" | "hp" | "def",
+  characterElement: string,
+): void {
+  for (const main of cost3Mains) {
+    if (main === "er") {
+      stats.energyRechargePct += ECHO_MAIN_3COST_VARIABLE.er
+    } else if (main === "elemDmg") {
+      stats.elementBonus[characterElement] =
+        (stats.elementBonus[characterElement] ?? 0) +
+        ECHO_MAIN_3COST_VARIABLE.elemDmg
+    } else {
+      if (primaryScalingStat === "atk") {
+        stats.atkPct += ECHO_MAIN_3COST_VARIABLE.scalingAtk
+      } else if (primaryScalingStat === "hp") {
+        stats.hpPct += ECHO_MAIN_3COST_VARIABLE.scalingHp
+      } else {
+        stats.defPct += ECHO_MAIN_3COST_VARIABLE.scalingDef
+      }
+    }
+  }
+}
+
+function applyWeaponIntrinsic(
+  stats: StatTable,
+  value: number,
+  statName: string,
+): void {
+  switch (statName) {
+    case "ATK":
+      stats.atkBase += value
+      return
+    case "Crit. Rate":
+      stats.critRate += value
+      return
+    case "Crit. DMG":
+      stats.critDmg += value
+      return
+    case "Energy Regen":
+      stats.energyRechargePct += value
+      return
+  }
+}
+
+export function compileBaseStats(
+  character: EnrichedCharacter,
+  loadout: SlotLoadout | null,
+  weapon: WeaponData | null,
+): StatTable {
+  const primaryScalingStat = character.primaryScalingStat ?? "atk"
+  const stats: StatTable = {
+    ...emptyStatTable(),
+    atkBase: character.stats.max.atk,
+    hpBase: character.stats.max.hp,
+    defBase: character.stats.max.def,
+  }
+  accumulateEchoSubstatBlock(stats, character)
+  accumulateEchoMainBlock(
+    stats,
+    loadout?.echoBuild ?? "4-3-3-1-1",
+    primaryScalingStat,
+  )
+  accumulateCost4Mains(stats, loadout?.cost4Mains ?? ["cd"], primaryScalingStat)
+  accumulateCost3Mains(
+    stats,
+    loadout?.cost3Mains ?? ["elemDmg", "elemDmg"],
+    primaryScalingStat,
+    character.element,
+  )
+  if (weapon) {
+    applyWeaponIntrinsic(stats, weapon.stats.main.max, weapon.stats.main.name)
+    applyWeaponIntrinsic(stats, weapon.stats.sub.max, weapon.stats.sub.name)
+  }
+  return stats
 }

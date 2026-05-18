@@ -1,14 +1,8 @@
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
-import type { EnrichedCharacter, SkillType } from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
-import type {
-  Cost3Main,
-  Cost4Main,
-  EchoBuild,
-  SlotLoadout,
-} from "#/types/loadout"
+import type { SlotLoadout } from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
-import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
 import {
   getCharacterById,
@@ -16,17 +10,12 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./catalog"
-import {
-  DEFAULT_SUBSTAT_ROLLS,
-  ECHO_BUILD_LAYOUT,
-  ECHO_MAIN_1COST_SCALING,
-  ECHO_MAIN_3COST_VARIABLE,
-  ECHO_MAIN_4COST_VARIABLE,
-  ECHO_MAIN_FIXED,
-  ECHO_SUBSTAT,
-} from "./echo-stat-constants"
 import { resolveEchoSets } from "./resolve-echo-sets"
-import { accumulateStatEffects, freezeSnapshots } from "./stat-table-builder"
+import {
+  accumulateStatEffects,
+  compileBaseStats,
+  freezeSnapshots,
+} from "./stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
 
 const ELEMENTS = ["Fusion", "Glacio", "Electro", "Aero", "Havoc", "Spectro"]
@@ -128,84 +117,6 @@ export function buildEchoSetBuffDefs(
   return buffs
 }
 
-export function accumulateEchoSubstatBlock(
-  stats: StatTable,
-  character: EnrichedCharacter,
-): void {
-  stats.critRate += DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
-  stats.critDmg += DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
-  stats.atkPct += DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
-  stats.energyRechargePct +=
-    DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
-  const skillType: SkillType =
-    character.recommendedSkillDmgPriority ?? "Resonance Liberation"
-  stats.skillTypeBonus[skillType] +=
-    DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
-}
-
-export function accumulateEchoMainBlock(
-  stats: StatTable,
-  echoBuild: EchoBuild,
-  primaryScalingStat: "atk" | "hp" | "def",
-): void {
-  const layout = ECHO_BUILD_LAYOUT[echoBuild]
-  stats.atkFlat +=
-    layout.cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
-    layout.cost3 * ECHO_MAIN_FIXED.cost3FlatAtk
-  stats.hpFlat += layout.cost1 * ECHO_MAIN_FIXED.cost1FlatHp
-  const scalingVal = ECHO_MAIN_1COST_SCALING[primaryScalingStat]
-  if (primaryScalingStat === "atk") stats.atkPct += layout.cost1 * scalingVal
-  else if (primaryScalingStat === "hp") stats.hpPct += layout.cost1 * scalingVal
-  else stats.defPct += layout.cost1 * scalingVal
-}
-
-export function accumulateCost4Mains(
-  stats: StatTable,
-  cost4Mains: Cost4Main[],
-  primaryScalingStat: "atk" | "hp" | "def",
-): void {
-  for (const main of cost4Mains) {
-    if (main === "cr") {
-      stats.critRate += ECHO_MAIN_4COST_VARIABLE.cr
-    } else if (main === "cd") {
-      stats.critDmg += ECHO_MAIN_4COST_VARIABLE.cd
-    } else {
-      if (primaryScalingStat === "atk") {
-        stats.atkPct += ECHO_MAIN_4COST_VARIABLE.scalingAtk
-      } else if (primaryScalingStat === "hp") {
-        stats.hpPct += ECHO_MAIN_4COST_VARIABLE.scalingHp
-      } else {
-        stats.defPct += ECHO_MAIN_4COST_VARIABLE.scalingDef
-      }
-    }
-  }
-}
-
-export function accumulateCost3Mains(
-  stats: StatTable,
-  cost3Mains: Cost3Main[],
-  primaryScalingStat: "atk" | "hp" | "def",
-  characterElement: string,
-): void {
-  for (const main of cost3Mains) {
-    if (main === "er") {
-      stats.energyRechargePct += ECHO_MAIN_3COST_VARIABLE.er
-    } else if (main === "elemDmg") {
-      stats.elementBonus[characterElement] =
-        (stats.elementBonus[characterElement] ?? 0) +
-        ECHO_MAIN_3COST_VARIABLE.elemDmg
-    } else {
-      if (primaryScalingStat === "atk") {
-        stats.atkPct += ECHO_MAIN_3COST_VARIABLE.scalingAtk
-      } else if (primaryScalingStat === "hp") {
-        stats.hpPct += ECHO_MAIN_3COST_VARIABLE.scalingHp
-      } else {
-        stats.defPct += ECHO_MAIN_3COST_VARIABLE.scalingDef
-      }
-    }
-  }
-}
-
 export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
@@ -227,41 +138,14 @@ export function bootstrapSlot(
 
   const sequence = loadout?.sequence ?? 0
 
-  const stats: StatTable = {
-    ...emptyStatTable(),
-    atkBase: character.stats.max.atk,
-    hpBase: character.stats.max.hp,
-    defBase: character.stats.max.def,
-  }
-
-  accumulateEchoSubstatBlock(stats, character)
-  accumulateEchoMainBlock(
-    stats,
-    loadout?.echoBuild ?? "4-3-3-1-1",
-    character.primaryScalingStat ?? "atk",
-  )
-  accumulateCost4Mains(
-    stats,
-    loadout?.cost4Mains ?? ["cd"],
-    character.primaryScalingStat ?? "atk",
-  )
-  accumulateCost3Mains(
-    stats,
-    loadout?.cost3Mains ?? ["elemDmg", "elemDmg"],
-    character.primaryScalingStat ?? "atk",
-    character.element,
-  )
+  const weaponId = loadout?.weaponId ?? null
+  const weapon = weaponId !== null ? getWeaponById(weaponId) : null
+  const stats: StatTable = compileBaseStats(character, loadout, weapon)
 
   const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]
 
-  const weaponId = loadout?.weaponId ?? null
-  if (weaponId !== null) {
-    const weapon = getWeaponById(weaponId)
-    if (weapon) {
-      applyWeaponIntrinsic(stats, weapon.stats.main.max, weapon.stats.main.name)
-      applyWeaponIntrinsic(stats, weapon.stats.sub.max, weapon.stats.sub.name)
-      buffs.push(...buildWeaponBuffDefs(weapon, loadout?.weaponRank ?? 1))
-    }
+  if (weapon) {
+    buffs.push(...buildWeaponBuffDefs(weapon, loadout?.weaponRank ?? 1))
   }
 
   const echoId = loadout?.echoId ?? null
@@ -309,26 +193,5 @@ export function bootstrapSlot(
     triggerable,
     permanentInstances,
     foldedBuffs,
-  }
-}
-
-function applyWeaponIntrinsic(
-  stats: StatTable,
-  value: number,
-  statName: string,
-): void {
-  switch (statName) {
-    case "ATK":
-      stats.atkBase += value
-      return
-    case "Crit. Rate":
-      stats.critRate += value
-      return
-    case "Crit. DMG":
-      stats.critDmg += value
-      return
-    case "Energy Regen":
-      stats.energyRechargePct += value
-      return
   }
 }
