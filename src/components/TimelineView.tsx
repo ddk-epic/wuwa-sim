@@ -8,7 +8,11 @@ import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
-import { TimelineGroupHeader } from "./TimelineGroupHeader"
+import {
+  TimelineGroupHeader,
+  buildGroupGradient,
+  getGroupFirstCharHex,
+} from "./TimelineGroupHeader"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -34,6 +38,7 @@ type RenderItem =
       entryCount: number
       groupEntries: TimelineEntry[]
       startFlatIndex: number
+      gradient: string
     }
   | {
       type: "entry"
@@ -43,6 +48,8 @@ type RenderItem =
       groupId: string | null
       groupLocked: boolean
       isLastInGroup: boolean
+      lastInGroupGradient: string | null
+      groupFirstCharHex: string | null
     }
 
 export function TimelineView({
@@ -130,6 +137,8 @@ export function TimelineView({
     if (node.kind === "group") {
       const isExpanded = expandedGroupIds.has(node.id)
       const startFlatIndex = flatIndex
+      const gradient = buildGroupGradient(node.entries, slots)
+      const groupFirstCharHex = getGroupFirstCharHex(node.entries, slots)
       renderItems.push({
         type: "groupHeader",
         groupId: node.id,
@@ -138,9 +147,11 @@ export function TimelineView({
         entryCount: node.entries.length,
         groupEntries: node.entries,
         startFlatIndex,
+        gradient,
       })
       if (isExpanded) {
         node.entries.forEach((entry, entryIdx) => {
+          const isLast = entryIdx === node.entries.length - 1
           renderItems.push({
             type: "entry",
             entry,
@@ -148,7 +159,9 @@ export function TimelineView({
             inGroup: true,
             groupId: node.id,
             groupLocked: node.locked,
-            isLastInGroup: entryIdx === node.entries.length - 1,
+            isLastInGroup: isLast,
+            lastInGroupGradient: isLast ? gradient : null,
+            groupFirstCharHex,
           })
         })
       } else {
@@ -164,6 +177,8 @@ export function TimelineView({
         groupId: null,
         groupLocked: false,
         isLastInGroup: false,
+        lastInGroupGradient: null,
+        groupFirstCharHex: null,
       })
     }
   }
@@ -206,6 +221,7 @@ export function TimelineView({
                   entryCount={item.entryCount}
                   groupEntries={item.groupEntries}
                   startFlatIndex={item.startFlatIndex}
+                  gradient={item.gradient}
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   summary={summary}
                   actionEvents={actionEvents}
@@ -233,6 +249,8 @@ export function TimelineView({
                 groupId={item.groupId}
                 groupLocked={item.groupLocked}
                 isLastInGroup={item.isLastInGroup}
+                lastInGroupGradient={item.lastInGroupGradient}
+                groupFirstCharHex={item.groupFirstCharHex}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
                 validation={validation}

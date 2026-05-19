@@ -66,6 +66,17 @@ export function buildGroupGradient(
   return `linear-gradient(90deg, ${stops.join(", ")}, transparent 95%)`
 }
 
+export function getGroupFirstCharHex(
+  groupEntries: TimelineEntry[],
+  slots: Slots,
+): string {
+  const charIds = getDistinctCharsBySlot(groupEntries, slots)
+  const firstId = charIds[0]
+  if (firstId === undefined) return "#888"
+  const char = getCharacterById(firstId)
+  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+}
+
 export function getDominantHex(groupEntries: TimelineEntry[]): string {
   const counts = new Map<number, number>()
   for (const e of groupEntries) {
@@ -105,7 +116,7 @@ function GroupLabelInput({
       ref={ref}
       defaultValue={initialLabel}
       placeholder="Group name"
-      className="bg-transparent border-b border-gray-600 text-white text-sm focus:outline-none focus:border-blue-400 w-40"
+      className="bg-transparent border-b border-gray-600 text-white text-sm font-bold focus:outline-none focus:border-blue-400 w-40"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           onCommit(groupId, e.currentTarget.value)
@@ -124,6 +135,7 @@ interface TimelineGroupHeaderProps {
   entryCount: number
   groupEntries: TimelineEntry[]
   startFlatIndex: number
+  gradient: string
   isExpanded: boolean
   summary: TimelineSummary
   actionEvents: SimulationLogEntry[]
@@ -144,6 +156,7 @@ export function TimelineGroupHeader({
   entryCount,
   groupEntries,
   startFlatIndex,
+  gradient,
   isExpanded,
   summary,
   actionEvents,
@@ -163,7 +176,6 @@ export function TimelineGroupHeader({
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId
   const dominantHex = getDominantHex(groupEntries)
-  const gradient = buildGroupGradient(groupEntries, slots)
   const distinctCharIds = getDistinctCharsBySlot(groupEntries, slots)
   const lastFlatIndex = startFlatIndex + entryCount - 1
 
@@ -394,7 +406,7 @@ export function TimelineGroupHeader({
             title="Delete group and contents"
             aria-label="Delete group and contents"
           >
-            <TrashIcon className="w-4.5 h-4.5" />
+            <TrashIcon className="w-4 h-4 mb-px" />
           </button>
         </div>
       </td>

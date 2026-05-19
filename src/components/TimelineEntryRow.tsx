@@ -58,6 +58,8 @@ interface TimelineEntryRowProps {
   groupId: string | null
   groupLocked: boolean
   isLastInGroup: boolean
+  lastInGroupGradient: string | null
+  groupFirstCharHex: string | null
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
   validation: ValidationResult
@@ -77,6 +79,8 @@ export function TimelineEntryRow({
   groupId,
   groupLocked,
   isLastInGroup,
+  lastInGroupGradient,
+  groupFirstCharHex,
   prevEntry,
   summary,
   validation,
@@ -118,9 +122,17 @@ export function TimelineEntryRow({
 
   const charSwitched =
     prevEntry === null || prevEntry.characterId !== entry.characterId
-  const rowBorderStyle = charSwitched
-    ? { borderTopColor: `${charHex}33` }
-    : undefined
+  const rowStyle: React.CSSProperties = {
+    ...(charSwitched ? { borderTopColor: `${charHex}33` } : {}),
+    ...(lastInGroupGradient !== null
+      ? {
+          backgroundImage: lastInGroupGradient,
+          backgroundSize: "100% 6px",
+          backgroundPosition: "bottom",
+          backgroundRepeat: "no-repeat",
+        }
+      : {}),
+  }
 
   return (
     <tr
@@ -136,11 +148,18 @@ export function TimelineEntryRow({
         isDropTarget ? "border-t-blue-500 border-t-2" : "",
         isInvalid ? "bg-red-950/30" : "",
       ].join(" ")}
-      style={rowBorderStyle}
+      style={rowStyle}
     >
       <td className="px-2 py-2 font-mono text-xs w-8">
         {inGroup ? (
-          <span className="text-gray-500 font-light text-sm mr-1">
+          <span
+            className="font-light text-sm mr-1"
+            style={
+              groupFirstCharHex !== null
+                ? { color: `${groupFirstCharHex}5a` }
+                : undefined
+            }
+          >
             {isLastInGroup ? "└" : "├"}
           </span>
         ) : null}
