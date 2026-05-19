@@ -19,7 +19,7 @@ const VARIANT_ORDER: (VariantKind | undefined)[] = [
   "swap",
 ]
 
-function nextVariant(
+export function nextVariant(
   current: VariantKind | undefined,
   stage: ActionTimeStage,
 ): VariantKind | undefined {
@@ -30,7 +30,7 @@ function nextVariant(
   return defined[(idx + 1) % defined.length]
 }
 
-function variantLabel(v: VariantKind | undefined): string {
+export function variantLabel(v: VariantKind | undefined): string {
   if (v === "cancel") return "CNCL"
   if (v === "instantCancel") return "INST"
   if (v === "swap") return "SWAP"
