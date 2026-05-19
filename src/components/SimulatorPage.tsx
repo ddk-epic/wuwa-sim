@@ -68,13 +68,14 @@ export function SimulatorPage() {
         <RenamingGroupProvider
           value={{ renamingGroupId, startRename, endRename }}
         >
-          <main className="flex flex-col h-screen">
+          <main className="flex flex-col min-w-345 h-screen">
             <Header
               onEditTeam={() => setModalOpen(true)}
               onResetTimeline={handleResetTimeline}
               onSimulate={handleSimulate}
               onOpenSimulationLog={() => setSimulationLogOpen(true)}
               timelineEmpty={entries.length === 0}
+              logEmpty={log.length === 0}
             />
             <div className="flex flex-1 min-h-0">
               {/* left rail */}

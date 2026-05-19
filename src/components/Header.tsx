@@ -25,6 +25,7 @@ interface HeaderProps {
   onSimulate: () => void
   onOpenSimulationLog: () => void
   timelineEmpty: boolean
+  logEmpty: boolean
 }
 
 export function Header({
@@ -33,6 +34,7 @@ export function Header({
   onSimulate,
   onOpenSimulationLog,
   timelineEmpty,
+  logEmpty,
 }: HeaderProps) {
   const { slots } = useTeamContext()
   const reactionDelay = useReactionDelay()
@@ -79,7 +81,7 @@ export function Header({
         </button>
         <div className="ml-auto flex items-center gap-2">
           <button
-            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
             disabled={timelineEmpty}
             onClick={onSimulate}
             aria-label="Run simulate"
@@ -88,7 +90,8 @@ export function Header({
             <span>Simulate</span>
           </button>
           <button
-            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
+            disabled={logEmpty}
             onClick={onOpenSimulationLog}
             aria-label="Open simulation log"
           >
@@ -96,7 +99,7 @@ export function Header({
             <span>Log</span>
           </button>
           <button
-            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
             disabled={timelineEmpty}
             onClick={() => setConfirmOpen(true)}
             aria-label="Reset Timeline"
