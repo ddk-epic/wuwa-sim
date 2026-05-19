@@ -469,6 +469,80 @@ describe("focused-stage-catalog — echo stages", () => {
   })
 })
 
+describe("focused-stage-catalog — characterStages ordering", () => {
+  const charWithIntroOutro: EnrichedCharacter = {
+    ...char1,
+    id: 2,
+    skills: [
+      {
+        id: 201,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          {
+            name: "Stage 1",
+            value: "1",
+            actionTime: 10,
+            damage: [
+              {
+                type: "Basic Attack",
+                dmgType: "Physical",
+                scalingStat: "ATK",
+                actionFrame: 0,
+                value: 1,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          },
+        ],
+        damage: [],
+      },
+      {
+        id: 202,
+        name: "Intro Skill",
+        type: "Intro Skill",
+        stages: [{ name: "Intro", value: "1", actionTime: 20, damage: [] }],
+        damage: [],
+      },
+      {
+        id: 203,
+        name: "Resonance Skill",
+        type: "Resonance Skill",
+        stages: [{ name: "Skill", value: "1", actionTime: 15, damage: [] }],
+        damage: [],
+      },
+      {
+        id: 204,
+        name: "Outro Skill",
+        type: "Outro Skill",
+        stages: [{ name: "Outro", value: "1", actionTime: 25, damage: [] }],
+        damage: [],
+      },
+    ],
+  }
+
+  it("puts Intro Skill stages first, then Outro Skill stages, then the rest in original order", () => {
+    setCatalog([charWithIntroOutro], [])
+    const result = getFocusedStageCatalog([2, null, null], noLoadouts, 2)
+    const types = result.characterStages.map((s) => s.skillType)
+    expect(types).toEqual([
+      "Intro Skill",
+      "Outro Skill",
+      "Basic Attack",
+      "Resonance Skill",
+    ])
+  })
+
+  it("preserves echoStages order unchanged", () => {
+    setCatalog([charWithIntroOutro], [echo1])
+    const result = getFocusedStageCatalog([2, null, null], noLoadouts, 2)
+    expect(result.echoStages).toEqual([])
+  })
+})
+
 describe("focused-stage-catalog — divider rule", () => {
   const loadoutsWithEcho: SlotLoadout[] = [
     {

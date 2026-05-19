@@ -61,7 +61,7 @@ export function getFocusedStageCatalog(
         )
     : []
 
-  const characterStages: FocusedStage[] = character.skills
+  const allCharacterStages: FocusedStage[] = character.skills
     .filter((skill) => !skill.hidden)
     .flatMap((skill) =>
       skill.stages
@@ -70,6 +70,17 @@ export function getFocusedStageCatalog(
           buildCharacterStage(skill, character.id, stage, `${skill.id}-${i}`),
         ),
     )
+
+  const introStages = allCharacterStages.filter(
+    (s) => s.skillType === "Intro Skill",
+  )
+  const outroStages = allCharacterStages.filter(
+    (s) => s.skillType === "Outro Skill",
+  )
+  const restStages = allCharacterStages.filter(
+    (s) => s.skillType !== "Intro Skill" && s.skillType !== "Outro Skill",
+  )
+  const characterStages = [...introStages, ...outroStages, ...restStages]
 
   return { echoStages, characterStages }
 }
