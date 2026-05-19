@@ -153,10 +153,10 @@ export function TimelineEntryRow({
       <td className="px-2 py-2 font-mono text-xs text-right w-8">
         {inGroup ? (
           <span
-            className="font-light text-sm mr-1"
+            className="font-light text-sm ml-1.5 mr-1"
             style={
               groupFirstCharHex !== null
-                ? { color: `${groupFirstCharHex}5a` }
+                ? { color: `${groupFirstCharHex}6a` }
                 : undefined
             }
           >
@@ -247,7 +247,7 @@ export function TimelineEntryRow({
         <div className="flex justify-end">
           <button
             onClick={() => onRemove(entry.id)}
-            className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+            className="p-1.5 -my-1.5 text-xs text-gray-500 hover:text-red-400 transition-colors"
             aria-label="Remove"
           >
             ✕

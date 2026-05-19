@@ -236,7 +236,7 @@ export function TimelineGroupHeader({
       onDragEnd={source.onDragEnd}
       onClick={handleToggleExpand}
       className={[
-        "border-t border-gray-600 cursor-pointer",
+        "border-t border-gray-600 cursor-grab",
         isDraggingThisGroup ? "opacity-40" : "",
         isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
       ].join(" ")}
@@ -327,7 +327,7 @@ export function TimelineGroupHeader({
               title="Click to rename"
             >
               {label || (
-                <span className="italic text-gray-600 font-normal">
+                <span className="italic text-gray-600 font-normal pr-0.5">
                   unnamed
                 </span>
               )}
@@ -362,8 +362,8 @@ export function TimelineGroupHeader({
           <span className="text-gray-600">—</span>
         )}
       </td>
-      <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-1">
+      <td className="px-1 py-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center -my-1.5">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -389,7 +389,7 @@ export function TimelineGroupHeader({
               e.stopPropagation()
               onDuplicateGroup(groupId)
             }}
-            className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+            className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
             title="Duplicate group"
             aria-label="Duplicate group"
           >
@@ -404,11 +404,11 @@ export function TimelineGroupHeader({
                 onDeleteGroup(groupId)
               }
             }}
-            className="pl-0.5 pt-px text-gray-500 hover:text-red-400 transition-colors"
+            className="p-1 text-gray-500 hover:text-red-400 transition-colors"
             title="Delete group and contents"
             aria-label="Delete group and contents"
           >
-            <TrashIcon className="w-4 h-4 mb-px" />
+            <TrashIcon className="w-4 h-4" />
           </button>
         </div>
       </td>
