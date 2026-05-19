@@ -32,6 +32,11 @@ interface PendingTrailingHit {
   hitFrame: number
 }
 
+interface CharPendingState {
+  hits: PendingTrailingHit[]
+  swapActionRef: ActionEvent
+}
+
 export function runSimulation(
   entries: TimelineEntry[],
   slots: Slots,
@@ -43,11 +48,12 @@ export function runSimulation(
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
   let frame = 0
-  const pending = new Map<number, PendingTrailingHit[]>()
+  const pending = new Map<number, CharPendingState>()
 
   for (const entry of entries) {
-    const charPending = pending.get(entry.characterId)
-    if (charPending && charPending.length > 0) {
+    const charState = pending.get(entry.characterId)
+    if (charState && charState.hits.length > 0) {
+      const charPending = charState.hits
       const hasCollision = charPending.some((p) => p.hitFrame >= frame)
       if (hasCollision) {
         const incomingResolved = findStageByEntry(entry, slots, loadouts)
@@ -65,7 +71,12 @@ export function runSimulation(
               slots,
             )
           }
-          // trailing hits at/after current frame are dropped (not processed)
+          const droppedCount = charPending.filter(
+            (p) => p.hitFrame >= frame,
+          ).length
+          if (droppedCount > 0) {
+            charState.swapActionRef.droppedHitCount = droppedCount
+          }
         } else {
           const lastHit = charPending[charPending.length - 1]
           frame = lastHit.hitFrame
@@ -99,7 +110,7 @@ export function runSimulation(
       pending.delete(entry.characterId)
     }
 
-    const { nextFrame, trailingHits } = processEntry(
+    const { nextFrame, trailingHits, swapActionRef } = processEntry(
       entry,
       frame,
       engine,
@@ -110,13 +121,13 @@ export function runSimulation(
       swapFrames,
     )
     frame = nextFrame
-    if (trailingHits.length > 0) {
-      pending.set(entry.characterId, trailingHits)
+    if (trailingHits.length > 0 && swapActionRef) {
+      pending.set(entry.characterId, { hits: trailingHits, swapActionRef })
     }
   }
 
   // Drain any remaining pending trailing hits
-  for (const hits of pending.values()) {
+  for (const { hits } of pending.values()) {
     for (const p of hits) {
       processHit(
         p.hit,
@@ -143,9 +154,14 @@ function processEntry(
   loadouts: SlotLoadout[],
   reactionDelay: number,
   swapFrames: number,
-): { nextFrame: number; trailingHits: PendingTrailingHit[] } {
+): {
+  nextFrame: number
+  trailingHits: PendingTrailingHit[]
+  swapActionRef: ActionEvent | null
+} {
   const resolved = findStageByEntry(entry, slots, loadouts)
-  if (!resolved) return { nextFrame: stageStartFrame, trailingHits: [] }
+  if (!resolved)
+    return { nextFrame: stageStartFrame, trailingHits: [], swapActionRef: null }
 
   const { advance: stageDuration, hits } = resolveStageExecution(
     resolved.stage,
@@ -160,7 +176,8 @@ function processEntry(
     fireSkillCast(entry, resolved, engine, log, stageStartFrame)
   }
 
-  log.push(buildActionEvent(entry, resolved, engine, stageStartFrame))
+  const actionEvent = buildActionEvent(entry, resolved, engine, stageStartFrame)
+  log.push(actionEvent)
 
   const isSwap = entry.variantKind === "swap"
   const immediateHits = isSwap
@@ -192,7 +209,11 @@ function processEntry(
     hitFrame: stageStartFrame + h.actionFrame,
   }))
 
-  return { nextFrame: stageStartFrame + stageDuration, trailingHits }
+  return {
+    nextFrame: stageStartFrame + stageDuration,
+    trailingHits,
+    swapActionRef: trailingHits.length > 0 ? actionEvent : null,
+  }
 }
 
 function fireSkillCast(

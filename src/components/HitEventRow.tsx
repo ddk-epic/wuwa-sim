@@ -47,7 +47,16 @@ export function HitEventRow({ index, ev }: HitEventRowProps) {
           {ev.skillName}
           {ev.kind === "action" && ev.variantKind ? (
             <span className="ml-2 text-xs text-blue-400/80">
-              {ev.variantKind === "cancel" ? "(Cancel)" : "(Instant Cancel)"}
+              {ev.variantKind === "cancel"
+                ? "(Cancel)"
+                : ev.variantKind === "instantCancel"
+                  ? "(Instant Cancel)"
+                  : "(Swap)"}
+            </span>
+          ) : null}
+          {ev.kind === "action" && ev.droppedHitCount ? (
+            <span className="ml-2 text-xs text-gray-500">
+              −{ev.droppedHitCount} hits
             </span>
           ) : null}
           {ev.kind === "hit" && ev.synthetic ? (

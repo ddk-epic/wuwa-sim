@@ -1758,3 +1758,63 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     expect(movAction?.frame).toBe(30)
   })
 })
+
+describe("runSimulation — droppedHitCount annotation on swap ActionEvent", () => {
+  it("backfills droppedHitCount on swap ActionEvent after cancel-capable drop", () => {
+    testCharacters = [charTrailingBase]
+    const entries: TimelineEntry[] = [
+      {
+        id: "d1",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      { id: "d2", characterId: 30, stageId: "Resonance Skill::_" },
+    ]
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const swapAction = result.find(
+      (e) =>
+        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    )
+    // 2 trailing hits (at frames 15 and 30) are dropped when Resonance Skill fires at frame 6
+    expect(swapAction?.droppedHitCount).toBe(2)
+  })
+
+  it("does not set droppedHitCount when no hits are dropped (non-cancel-capable pad)", () => {
+    testCharacters = [charTrailingBase, charOtherTrailing]
+    const entries: TimelineEntry[] = [
+      {
+        id: "d3",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      { id: "d4", characterId: 31, stageId: "Normal Attack::_" },
+      { id: "d5", characterId: 30, stageId: "Normal Attack::_" },
+    ]
+    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
+    const swapAction = result.find(
+      (e) =>
+        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    )
+    expect(swapAction?.droppedHitCount).toBeUndefined()
+  })
+
+  it("does not set droppedHitCount when no same-char collision (trailing hits drain normally)", () => {
+    testCharacters = [charTrailingBase]
+    const entries: TimelineEntry[] = [
+      {
+        id: "d6",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+    ]
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const swapAction = result.find(
+      (e) =>
+        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    )
+    expect(swapAction?.droppedHitCount).toBeUndefined()
+  })
+})

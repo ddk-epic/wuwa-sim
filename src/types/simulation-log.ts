@@ -14,6 +14,7 @@ interface SimulationLogBase {
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
   variantKind?: VariantKind
+  droppedHitCount?: number
 }
 
 export interface ActiveBuff {
