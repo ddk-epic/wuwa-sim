@@ -688,3 +688,181 @@ describe("validateTimeline — cascade suppression", () => {
     expect(result.rowErrors.size).toBe(0)
   })
 })
+
+// ── Warning channel: swap → same-character rule (ADR-0018 / issue #178) ─────
+
+const swapChar = (): EnrichedCharacter =>
+  baseChar({
+    id: 1,
+    skills: [
+      {
+        id: 1,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          {
+            name: "Stage 1",
+            value: "1",
+            actionTime: 30,
+            damage: [],
+            variants: { swap: { actionTime: 10 } },
+          },
+        ],
+        damage: [],
+      },
+    ],
+  })
+
+const swapEntry = (id: string): TimelineEntry => ({
+  id,
+  characterId: 1,
+  stageId: "Normal Attack::_",
+  variantKind: "swap",
+})
+
+const fullEntry = (id: string, characterId = 1): TimelineEntry => ({
+  id,
+  characterId,
+  stageId: "Normal Attack::_",
+})
+
+const emptyLoadoutsW: SlotLoadout[] = [
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+    echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+    echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
+  },
+  {
+    weaponId: null,
+    weaponRank: 1,
+    echoId: null,
+    echoSetSlot1Id: null,
+    echoSetSlot2Id: null,
+    sequence: 0,
+    echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
+  },
+]
+
+describe("validateTimeline — swap warning channel (ADR-0018)", () => {
+  it("emits a warning when a swap entry is immediately followed by the same character", () => {
+    testCharacters = [swapChar()]
+    const result = validateTimeline(
+      [swapEntry("e1"), fullEntry("e2")],
+      [1, null, null],
+      emptyLoadoutsW,
+    )
+    const warnings = result.rowWarnings.get("e1") ?? []
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0].message).toMatch(/different character/i)
+  })
+
+  it("emits no warning when the next entry is a different character", () => {
+    testCharacters = [swapChar(), baseChar({ id: 2 })]
+    const result = validateTimeline(
+      [swapEntry("e1"), fullEntry("e2", 2)],
+      [1, 2, null],
+      emptyLoadoutsW,
+    )
+    expect(result.rowWarnings.get("e1")).toBeUndefined()
+  })
+
+  it("emits no warning when the swap entry is the last entry", () => {
+    testCharacters = [swapChar()]
+    const result = validateTimeline(
+      [fullEntry("e1"), swapEntry("e2")],
+      [1, null, null],
+      emptyLoadoutsW,
+    )
+    expect(result.rowWarnings.get("e2")).toBeUndefined()
+  })
+
+  it("emits no warning for a non-swap entry followed by the same character", () => {
+    testCharacters = [swapChar()]
+    const result = validateTimeline(
+      [fullEntry("e1"), fullEntry("e2")],
+      [1, null, null],
+      emptyLoadoutsW,
+    )
+    expect(result.rowWarnings.get("e1")).toBeUndefined()
+  })
+
+  it("warnings do not affect invalidRowIds or rowErrors", () => {
+    testCharacters = [swapChar()]
+    const result = validateTimeline(
+      [swapEntry("e1"), fullEntry("e2")],
+      [1, null, null],
+      emptyLoadoutsW,
+    )
+    expect(result.invalidRowIds.size).toBe(0)
+    expect(result.rowErrors.size).toBe(0)
+    expect(result.rowWarnings.size).toBe(1)
+  })
+
+  it("requiresStageId is satisfied by a swap-variant preceding entry", () => {
+    testCharacters = [
+      baseChar({
+        id: 1,
+        skills: [
+          {
+            id: 1,
+            name: "Normal Attack",
+            type: "Normal Attack",
+            stages: [
+              {
+                name: "Stage 1",
+                value: "1",
+                actionTime: 30,
+                damage: [],
+                variants: { swap: { actionTime: 10 } },
+                newName: "first",
+              },
+              {
+                name: "Stage 2",
+                value: "1",
+                actionTime: 30,
+                damage: [],
+                newName: "second",
+                requiresStageId: "Normal Attack::first",
+              },
+            ],
+            damage: [],
+          },
+        ],
+      }),
+    ]
+    const e1: TimelineEntry = {
+      id: "e1",
+      characterId: 1,
+      stageId: "Normal Attack::first",
+      variantKind: "swap",
+    }
+    const e2: TimelineEntry = {
+      id: "e2",
+      characterId: 1,
+      stageId: "Normal Attack::second",
+    }
+    const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
+    // swap variant on the preceding entry still satisfies requiresStageId
+    expect(result.rowErrors.has("e2")).toBe(false)
+    expect(result.invalidRowIds.has("e2")).toBe(false)
+  })
+})

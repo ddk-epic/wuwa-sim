@@ -7,8 +7,13 @@ export interface ValidationError {
   message: string
 }
 
+export interface ValidationWarning {
+  message: string
+}
+
 export interface ValidationResult {
   rowErrors: Map<string, ValidationError[]>
+  rowWarnings: Map<string, ValidationWarning[]>
   invalidRowIds: Set<string>
 }
 
@@ -113,5 +118,19 @@ export function validateTimeline(
     }
   }
 
-  return { rowErrors, invalidRowIds }
+  // Pass 3: swap → same-character warnings
+  const rowWarnings = new Map<string, ValidationWarning[]>()
+  for (let i = 0; i < entries.length - 1; i++) {
+    const entry = entries[i]
+    if (
+      entry.variantKind === "swap" &&
+      entries[i + 1].characterId === entry.characterId
+    ) {
+      rowWarnings.set(entry.id, [
+        { message: "Swap forces the next entry to be a different character" },
+      ])
+    }
+  }
+
+  return { rowErrors, rowWarnings, invalidRowIds }
 }

@@ -99,6 +99,7 @@ export function TimelineEntryRow({
   const row = summary.rows[index] ?? { time: 0, damage: null }
   const isInvalid = validation.invalidRowIds.has(entry.id)
   const errors = validation.rowErrors.get(entry.id) ?? []
+  const warnings = validation.rowWarnings.get(entry.id) ?? []
   const isDragging = drag.draggedId === entry.id
   const isDropTarget = drag.dropTargetId === entry.id
   const resolved = findStageByEntry(entry, slots, loadouts)
@@ -229,6 +230,11 @@ export function TimelineEntryRow({
           )}
           {showMessage && errors.length > 0 && (
             <span className="text-xs text-red-400">{errors[0].message}</span>
+          )}
+          {showMessage && warnings.length > 0 && errors.length === 0 && (
+            <span className="text-xs text-yellow-400">
+              {warnings[0].message}
+            </span>
           )}
         </div>
       </td>
