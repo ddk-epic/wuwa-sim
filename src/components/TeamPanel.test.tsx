@@ -62,14 +62,14 @@ function renderWithTeam(loadout: SlotLoadout) {
 }
 
 describe("TeamPanel — cost-3 row visibility", () => {
-  it("shows Elem DMG option for 4-3-3-1-1 build", () => {
+  it("shows Ele DMG option for 4-3-3-1-1 build", () => {
     renderWithTeam(emptyLoadout)
-    expect(screen.queryByText("Elem DMG")).not.toBeNull()
+    expect(screen.queryByText("Ele DMG")).not.toBeNull()
   })
 
   it("hides cost-3 row for 4-4-1-1-1 build", () => {
     renderWithTeam(makeLoadout("4-4-1-1-1"))
-    expect(screen.queryByText("Elem DMG")).toBeNull()
+    expect(screen.queryByText("Ele DMG")).toBeNull()
     expect(screen.queryByText("ER")).toBeNull()
   })
 })

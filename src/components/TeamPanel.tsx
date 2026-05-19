@@ -1,7 +1,10 @@
+import { GhostIcon, SwordIcon } from "lucide-react"
 import { listWeaponsByType } from "#/lib/catalog"
-import { useTeamContext, useSlot } from "#/hooks/useTeamContext"
-import { SegmentedToggle } from "#/components/SegmentedToggle"
+import { ELEMENT_HEX } from "#/data/elements"
+import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
 import { EchoBuildEditor } from "#/components/EchoBuildEditor"
+import { TeamSlotPortrait } from "#/components/TeamSlotPortrait"
+import { ComboboxSelect, Stepper } from "#/components/TeamSlotControls"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]
@@ -9,83 +12,106 @@ const RANKS: number[] = [1, 2, 3, 4, 5]
 export function TeamPanel() {
   const { slots } = useTeamContext()
   return (
-    <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        Team
-      </p>
-      <div className="flex gap-3">
-        {slots.map((_, i) => (
-          <TeamSlot key={i} slotIndex={i} />
-        ))}
+    <div className="flex gap-3">
+      {slots.map((_, i) => (
+        <div key={i} className="flex-1 min-w-0">
+          <SlotCard slotIndex={i} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SlotCard({ slotIndex }: { slotIndex: number }) {
+  const { character, loadout, setPatch } = useSlot(slotIndex)
+
+  if (character === null) {
+    return (
+      <div className="min-h-60 border border-dashed border-border rounded-sm bg-darkest flex items-center justify-center">
+        <span className="font-mono uppercase tracking-[1.5px] text-muted-foreground">
+          slot {slotIndex + 1} — empty
+        </span>
+      </div>
+    )
+  }
+
+  const hex = ELEMENT_HEX[character.element] ?? "#888"
+  const compatibleWeapons = listWeaponsByType(character.weaponType)
+  const weapon =
+    compatibleWeapons.find((w) => w.id === loadout.weaponId) ?? null
+
+  return (
+    <div
+      className="bg-card border border-border rounded-sm overflow-hidden"
+      style={{ borderTop: `2px solid ${hex}` }}
+    >
+      <TeamSlotPortrait
+        character={character}
+        hex={hex}
+        slotIndex={slotIndex}
+        sequenceStepper={
+          <Stepper
+            options={SEQUENCES}
+            value={loadout.sequence}
+            onChange={(sequence) => setPatch({ sequence })}
+            label={(v) => `S${v}`}
+            hex={hex}
+            dense
+          />
+        }
+      />
+
+      <DomainStrip icon={<SwordIcon className="w-3 h-3" />} label="weapon" />
+      <div className="px-3 py-2.5">
+        <div className="flex items-stretch gap-1">
+          <div className="flex-1 min-w-0">
+            <ComboboxSelect
+              value={loadout.weaponId}
+              displayValue={weapon?.name ?? null}
+              placeholder="select weapon"
+              options={compatibleWeapons.map((w) => ({
+                value: w.id,
+                label: w.name,
+              }))}
+              onChange={(weaponId) => setPatch({ weaponId })}
+              hex={hex}
+            />
+          </div>
+          <div className="w-18 shrink-0">
+            <Stepper
+              options={RANKS}
+              value={loadout.weaponRank}
+              onChange={(weaponRank) => setPatch({ weaponRank })}
+              label={(v) => `R${v}`}
+              disabled={loadout.weaponId === null}
+              hex={hex}
+              dense
+            />
+          </div>
+        </div>
+      </div>
+
+      <DomainStrip icon={<GhostIcon className="w-3 h-3" />} label="echo" />
+      <div className="px-3 py-2.5">
+        <EchoBuildEditor slotIndex={slotIndex} />
       </div>
     </div>
   )
 }
 
-interface TeamSlotProps {
-  slotIndex: number
-}
-
-function SectionDivider() {
-  return <hr className="border-gray-700" />
-}
-
-function TeamSlot({ slotIndex }: TeamSlotProps) {
-  const { character, loadout, setPatch } = useSlot(slotIndex)
-
-  if (character === null) {
-    return (
-      <div className="flex-1 border border-dashed border-gray-700 rounded p-3 flex items-center justify-center min-h-22">
-        <span className="text-gray-600 text-xs">Slot {slotIndex + 1}</span>
-      </div>
-    )
-  }
-
-  const compatibleWeapons = listWeaponsByType(character.weaponType)
-
+function DomainStrip({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode
+  label: string
+}) {
   return (
-    <div className="flex-1 bg-gray-800 border border-gray-700 rounded p-3 space-y-4">
-      <div className="text-xs font-semibold text-white mb-2">
-        {character.name}
-      </div>
-
-      {/* Sequence domain */}
-      <SegmentedToggle
-        options={SEQUENCES}
-        value={loadout.sequence}
-        onChange={(sequence) => setPatch({ sequence })}
-        label={(v) => `S${v}`}
-      />
-
-      <SectionDivider />
-
-      {/* Weapon domain */}
-      <div className="space-y-1.5">
-        <select
-          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
-          value={loadout.weaponId ?? ""}
-          onChange={(e) => setPatch({ weaponId: Number(e.target.value) })}
-        >
-          <option value="">— Weapon —</option>
-          {compatibleWeapons.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.name}
-            </option>
-          ))}
-        </select>
-        <SegmentedToggle
-          options={RANKS}
-          value={loadout.weaponRank}
-          onChange={(weaponRank) => setPatch({ weaponRank })}
-          label={(v) => `R${v}`}
-          disabled={loadout.weaponId === null}
-        />
-      </div>
-
-      <SectionDivider />
-
-      {/* Echo domain */}
-      <EchoBuildEditor slotIndex={slotIndex} />
+    <div className="flex items-center gap-1.5 px-3 py-1 bg-darkest border-y border-border text-muted-foreground">
+      {icon}
+      <span className="font-mono text-[13px] uppercase tracking-[1.5px]">
+        {label}
+      </span>
     </div>
   )
 }
