@@ -2186,8 +2186,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       characterId: 1,
       frame: 0,
     })
-    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 435 (substat + echo main stats applied)
-    expect(result.syntheticHits[0].damage).toBe(1096)
+    // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in)
+    expect(result.syntheticHits[0].damage).toBe(1164)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2373,9 +2373,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     expect(result.syntheticHits).toHaveLength(1)
-    // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 744.
-    // With the +50%: 1116 * 1.5 → 1306 (substat + echo main stats applied).
-    expect(result.syntheticHits[0].damage).toBe(2877)
+    // 1.0 * ATK * critFactor * 0.5 * 0.9 * (1 + 0.5 Fusion bonus) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in).
+    expect(result.syntheticHits[0].damage).toBe(3056)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
