@@ -51,6 +51,7 @@ export function runSimulation(
   const pending = new Map<number, CharPendingState>()
 
   for (const entry of entries) {
+    let padFrames = 0
     const charState = pending.get(entry.characterId)
     if (charState && charState.hits.length > 0) {
       const charPending = charState.hits
@@ -79,7 +80,9 @@ export function runSimulation(
           }
         } else {
           const lastHit = charPending[charPending.length - 1]
+          const frameBeforePad = frame
           frame = lastHit.hitFrame
+          padFrames = frame - frameBeforePad
           for (const p of charPending) {
             processHit(
               p.hit,
@@ -119,6 +122,7 @@ export function runSimulation(
       loadouts,
       reactionDelay,
       swapFrames,
+      padFrames,
     )
     frame = nextFrame
     if (trailingHits.length > 0 && swapActionRef) {
@@ -154,6 +158,7 @@ function processEntry(
   loadouts: SlotLoadout[],
   reactionDelay: number,
   swapFrames: number,
+  padFrames: number = 0,
 ): {
   nextFrame: number
   trailingHits: PendingTrailingHit[]
@@ -176,7 +181,14 @@ function processEntry(
     fireSkillCast(entry, resolved, engine, log, stageStartFrame)
   }
 
-  const actionEvent = buildActionEvent(entry, resolved, engine, stageStartFrame)
+  const actionEvent = buildActionEvent(
+    entry,
+    resolved,
+    engine,
+    stageStartFrame,
+    reactionDelay,
+    padFrames,
+  )
   log.push(actionEvent)
 
   const isSwap = entry.variantKind === "swap"
@@ -241,9 +253,16 @@ function buildActionEvent(
   resolved: ResolvedStage,
   engine: BuffEngine,
   frame: number,
+  reactionDelay: number = 0,
+  padFrames: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
-  return {
+  const react = computeReactFrames(
+    entry.variantKind,
+    resolved.stage,
+    reactionDelay,
+  )
+  const event: ActionEvent = {
     kind: "action",
     characterId: entry.characterId,
     skillType: resolved.skillType,
@@ -253,6 +272,22 @@ function buildActionEvent(
     cumulativeConcerto: actorState.concerto,
     variantKind: entry.variantKind,
   }
+  if (react > 0 || padFrames > 0) {
+    event.delayBreakdown = { react, pad: padFrames }
+  }
+  return event
+}
+
+function computeReactFrames(
+  variantKind: ActionEvent["variantKind"],
+  stage: { variants?: Partial<Record<string, unknown>> },
+  reactionDelay: number,
+): number {
+  if (!variantKind) return 0
+  if (variantKind === "swap") {
+    return stage.variants?.swap !== undefined ? reactionDelay : 0
+  }
+  return stage.variants?.[variantKind] !== undefined ? reactionDelay : 0
 }
 
 function processHit(

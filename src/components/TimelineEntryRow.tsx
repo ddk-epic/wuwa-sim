@@ -125,6 +125,18 @@ export function TimelineEntryRow({
       ).advance / 60
     : 0
 
+  const reactDelayFrames = (() => {
+    if (!entry.variantKind || !resolved) return 0
+    if (entry.variantKind === "swap") {
+      return resolved.stage.variants?.swap !== undefined ? reactionDelay : 0
+    }
+    return resolved.stage.variants?.[entry.variantKind] !== undefined
+      ? reactionDelay
+      : 0
+  })()
+  const padFrames = actionEventAtIndex?.delayBreakdown?.pad ?? 0
+  const totalDelayFrames = reactDelayFrames + padFrames
+
   const conVal = actionEventAtIndex?.cumulativeConcerto ?? null
   const resVal = actionEventAtIndex?.cumulativeEnergy ?? null
 
@@ -227,6 +239,21 @@ export function TimelineEntryRow({
             >
               {variantLabel(entry.variantKind)}
             </button>
+          )}
+          {totalDelayFrames > 0 && (
+            <span
+              className="text-xs text-gray-500 shrink-0"
+              title={[
+                reactDelayFrames > 0
+                  ? `react: ${(reactDelayFrames / 60).toFixed(2)}s`
+                  : "",
+                padFrames > 0 ? `pad: ${(padFrames / 60).toFixed(2)}s` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            >
+              +{(totalDelayFrames / 60).toFixed(2)}s
+            </span>
           )}
           {showMessage && errors.length > 0 && (
             <span className="text-xs text-red-400">{errors[0].message}</span>

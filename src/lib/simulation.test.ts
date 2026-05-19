@@ -1818,3 +1818,82 @@ describe("runSimulation — droppedHitCount annotation on swap ActionEvent", () 
     expect(swapAction?.droppedHitCount).toBeUndefined()
   })
 })
+
+describe("runSimulation — delayBreakdown on ActionEvent", () => {
+  it("react-only: cancel variant sets react=reactionDelay, pad=0", () => {
+    testCharacters = [charVariant]
+    const entry: TimelineEntry = {
+      id: "db1",
+      characterId: 10,
+      stageId: "Normal Attack::_",
+      variantKind: "cancel",
+    }
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
+  })
+
+  it("no-delay: full stage has no delayBreakdown", () => {
+    testCharacters = [charVariant]
+    const entry = tlEntry(10, "Normal Attack::_")
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.delayBreakdown).toBeUndefined()
+  })
+
+  it("pad-only: non-cancel-capable re-entry after swap sets pad>0, react=0", () => {
+    testCharacters = [charTrailingBase, charOtherTrailing]
+    const entries: TimelineEntry[] = [
+      {
+        id: "db2",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      { id: "db3", characterId: 31, stageId: "Normal Attack::_" },
+      // Char 30 Basic Attack starts at frame 16, trailing hit at 30 → padded to 30
+      { id: "db4", characterId: 30, stageId: "Normal Attack::_" },
+    ]
+    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
+    const padAction = result.find(
+      (e) => e.kind === "action" && e.characterId === 30 && !e.variantKind,
+    )
+    // pad = 30 - 16 = 14
+    expect(padAction?.delayBreakdown?.pad).toBe(14)
+    expect(padAction?.delayBreakdown?.react).toBe(0)
+  })
+
+  it("swap with authored actionTime: react=reactionDelay, pad=0 (no collision)", () => {
+    const charWithSwap: EnrichedCharacter = {
+      ...charVariant,
+      id: 13,
+      skills: [
+        {
+          id: 8,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "100%",
+              actionTime: 50,
+              variants: { swap: { actionTime: 10 } },
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charWithSwap]
+    const entry: TimelineEntry = {
+      id: "db5",
+      characterId: 13,
+      stageId: "Normal Attack::_",
+      variantKind: "swap",
+    }
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
+  })
+})

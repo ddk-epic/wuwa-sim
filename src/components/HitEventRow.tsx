@@ -59,6 +59,29 @@ export function HitEventRow({ index, ev }: HitEventRowProps) {
               −{ev.droppedHitCount} hits
             </span>
           ) : null}
+          {ev.kind === "action" &&
+          ev.delayBreakdown &&
+          (ev.delayBreakdown.react > 0 || ev.delayBreakdown.pad > 0) ? (
+            <span
+              className="ml-2 text-xs text-gray-500"
+              title={[
+                ev.delayBreakdown.react > 0
+                  ? `react: ${(ev.delayBreakdown.react / 60).toFixed(2)}s`
+                  : "",
+                ev.delayBreakdown.pad > 0
+                  ? `pad: ${(ev.delayBreakdown.pad / 60).toFixed(2)}s`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            >
+              +
+              {((ev.delayBreakdown.react + ev.delayBreakdown.pad) / 60).toFixed(
+                2,
+              )}
+              s
+            </span>
+          ) : null}
           {ev.kind === "hit" && ev.synthetic ? (
             <span className="ml-2 text-xs text-cyan-400/80 italic">
               (coord)
