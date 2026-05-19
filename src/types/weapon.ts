@@ -1,4 +1,4 @@
-import type { BuffDef, Effect, StatEffect } from "./buff"
+import type { BuffDef, Effect, ResourceEffect, StatEffect } from "./buff"
 
 /** Value expression used in weapon buff authoring. `v` may be a rank-indexed array of 5 numbers. */
 export type WeaponValueExpr =
