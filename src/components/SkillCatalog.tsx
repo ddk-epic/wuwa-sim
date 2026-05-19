@@ -10,16 +10,39 @@ import type { FocusedStage } from "#/lib/focused-stage-catalog"
 
 type NewEntry = Omit<TimelineEntry, "id">
 
-const FILTER_ORDER: Array<SkillType> = [
-  "Intro Skill",
-  "Basic Attack",
-  "Heavy Attack",
-  "Resonance Skill",
-  "Resonance Liberation",
-  "Forte Circuit",
-  "Outro Skill",
-  "Echo Skill",
-  "Movement",
+type FilterKey =
+  | "Basic Attack"
+  | "Heavy Attack"
+  | "Resonance Skill"
+  | "Resonance Liberation"
+  | "Forte Circuit"
+  | "in-out"
+  | "Echo Skill"
+  | "Movement"
+
+const FILTER_KEY_TO_TYPES: Record<FilterKey, SkillType[]> = {
+  "Basic Attack": ["Basic Attack"],
+  "Heavy Attack": ["Heavy Attack"],
+  "Resonance Skill": ["Resonance Skill"],
+  "Resonance Liberation": ["Resonance Liberation"],
+  "Forte Circuit": ["Forte Circuit"],
+  "in-out": ["Intro Skill", "Outro Skill"],
+  "Echo Skill": ["Echo Skill"],
+  Movement: ["Movement"],
+}
+
+const FILTER_CHIPS: Array<{ key: FilterKey; label: string }> = [
+  { key: "in-out", label: "IN/OUT" },
+  { key: "Basic Attack", label: STAGE_TYPE_LABELS["Basic Attack"] },
+  { key: "Heavy Attack", label: STAGE_TYPE_LABELS["Heavy Attack"] },
+  { key: "Resonance Skill", label: STAGE_TYPE_LABELS["Resonance Skill"] },
+  {
+    key: "Resonance Liberation",
+    label: STAGE_TYPE_LABELS["Resonance Liberation"],
+  },
+  { key: "Forte Circuit", label: STAGE_TYPE_LABELS["Forte Circuit"] },
+  { key: "Echo Skill", label: STAGE_TYPE_LABELS["Echo Skill"] },
+  { key: "Movement", label: STAGE_TYPE_LABELS["Movement"] },
 ]
 
 interface SkillCatalogProps {
@@ -29,10 +52,10 @@ interface SkillCatalogProps {
 export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
   const { slots, loadouts, focusedId, focusCharacter } = useTeamContext()
   const onFocus = focusCharacter
-  const [filterType, setFilterType] = useState<SkillType | null>(null)
+  const [filterKey, setFilterKey] = useState<FilterKey | null>(null)
 
   useEffect(() => {
-    setFilterType(null)
+    setFilterKey(null)
   }, [focusedId])
 
   const filledCharacters = slots
@@ -46,11 +69,15 @@ export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
     focusedId,
   )
 
-  const filteredEcho = filterType
-    ? echoStages.filter((s) => s.skillType === filterType)
+  const filteredEcho = filterKey
+    ? echoStages.filter((s) =>
+        FILTER_KEY_TO_TYPES[filterKey].includes(s.skillType),
+      )
     : echoStages
-  const filteredChar = filterType
-    ? characterStages.filter((s) => s.skillType === filterType)
+  const filteredChar = filterKey
+    ? characterStages.filter((s) =>
+        FILTER_KEY_TO_TYPES[filterKey].includes(s.skillType),
+      )
     : characterStages
 
   const showDivider = filteredEcho.length > 0 && filteredChar.length > 0
@@ -89,32 +116,36 @@ export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
           )
         })}
       </div>
-      <div className="flex flex-wrap gap-1 px-2 py-1.5 border-y border-border shrink-0">
+      <div className="flex px-2 py-1.5 border-y border-border shrink-0">
         <button
           className={[
             "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
-            filterType === null
+            filterKey === null
               ? "bg-card border-border text-foreground"
               : "bg-transparent border-transparent text-muted-foreground",
           ].join(" ")}
-          onClick={() => setFilterType(null)}
+          onClick={() => setFilterKey(null)}
         >
           all
         </button>
-        {FILTER_ORDER.map((type) => (
-          <button
-            key={type}
-            className={[
-              "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
-              filterType === type
-                ? "bg-card border-border text-foreground"
-                : "bg-transparent border-transparent text-muted-foreground",
-            ].join(" ")}
-            onClick={() => setFilterType(type)}
-          >
-            {STAGE_TYPE_LABELS[type]}
-          </button>
-        ))}
+        <div className="flex flex-wrap gap-1 pl-2">
+          {FILTER_CHIPS.map((chip) => (
+            <button
+              key={chip.key}
+              className={[
+                "px-2 py-0.5 rounded text-xs font-mono border transition-colors",
+                filterKey === chip.key
+                  ? "bg-card border-border text-foreground"
+                  : "bg-transparent border-transparent text-muted-foreground",
+              ].join(" ")}
+              onClick={() =>
+                setFilterKey(filterKey === chip.key ? null : chip.key)
+              }
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         {filteredEcho.map((stage) => (

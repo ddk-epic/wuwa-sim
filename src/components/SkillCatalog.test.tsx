@@ -328,8 +328,56 @@ describe("SkillSidebar — divider presence", () => {
   })
 })
 
+const charWithIntroOutro: EnrichedCharacter = {
+  ...char1,
+  id: 3,
+  name: "TestHero",
+  skills: [
+    {
+      id: 301,
+      name: "Intro Skill",
+      type: "Intro Skill",
+      stages: [{ name: "Intro", value: "1", actionTime: 10, damage: [] }],
+      damage: [],
+    },
+    {
+      id: 302,
+      name: "Outro Skill",
+      type: "Outro Skill",
+      stages: [{ name: "Outro", value: "1", actionTime: 15, damage: [] }],
+      damage: [],
+    },
+    {
+      id: 303,
+      name: "Normal Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Stage 1",
+          value: "1",
+          actionTime: 0,
+          damage: [
+            {
+              type: "Basic Attack",
+              dmgType: "Physical",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 1,
+              energy: 0,
+              concerto: 0,
+              toughness: 0,
+              weakness: 0,
+            },
+          ],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
+
 describe("SkillSidebar — filter chips", () => {
-  it("renders filter chips including 'all'", () => {
+  it("renders filter chips including 'all' and 'BASIC' but no separate INTRO or OUTRO chips", () => {
     setCatalog([char1], [])
     renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
       slots: [1, null, null],
@@ -339,6 +387,9 @@ describe("SkillSidebar — filter chips", () => {
     })
     expect(screen.getByRole("button", { name: "all" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "BASIC" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "IN/OUT" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "INTRO" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "OUTRO" })).toBeNull()
   })
 
   it("filtering to ECHO hides non-echo stages", () => {
@@ -366,5 +417,33 @@ describe("SkillSidebar — filter chips", () => {
     fireEvent.click(screen.getByRole("button", { name: "all" }))
     expect(screen.getByText("Normal Attack")).toBeTruthy()
     expect(screen.getByText(/Test Echo/)).toBeTruthy()
+  })
+
+  it("clicking the active filter chip deselects it and re-highlights 'all'", () => {
+    setCatalog([char1], [testEcho])
+    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+      slots: [1, null, null],
+      loadouts: [{ ...noLoadouts[0], echoId: 9001 }, ...noLoadouts.slice(1)],
+      focusedId: 1,
+      onFocus: vi.fn(),
+    })
+    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
+    expect(screen.queryByText("Normal Attack")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
+    expect(screen.getByText("Normal Attack")).toBeTruthy()
+  })
+
+  it("IN/OUT chip shows both Intro Skill and Outro Skill stages, hides others", () => {
+    setCatalog([charWithIntroOutro], [])
+    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+      slots: [3, null, null],
+      loadouts: noLoadouts,
+      focusedId: 3,
+      onFocus: vi.fn(),
+    })
+    fireEvent.click(screen.getByRole("button", { name: "IN/OUT" }))
+    expect(screen.getByText("Intro Skill")).toBeTruthy()
+    expect(screen.getByText("Outro Skill")).toBeTruthy()
+    expect(screen.queryByText("Normal Attack")).toBeNull()
   })
 })
