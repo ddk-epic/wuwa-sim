@@ -155,10 +155,17 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
 function accumulateEchoSubstatBlock(
   stats: StatTable,
   character: EnrichedCharacter,
+  primaryScalingStat: "atk" | "hp" | "def",
 ): void {
   stats.critRate += DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
   stats.critDmg += DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
-  stats.atkPct += DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct
+  if (primaryScalingStat === "atk") {
+    stats.atkPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.atkPct
+  } else if (primaryScalingStat === "hp") {
+    stats.hpPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.hpPct
+  } else {
+    stats.defPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.defPct
+  }
   stats.energyRechargePct +=
     DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
   const skillType: SkillType =
@@ -263,7 +270,7 @@ export function compileBaseStats(
     critRate: CHARACTER_BASE_CRIT_RATE,
     critDmg: CHARACTER_BASE_CRIT_DMG,
   }
-  accumulateEchoSubstatBlock(stats, character)
+  accumulateEchoSubstatBlock(stats, character, primaryScalingStat)
   accumulateEchoMainBlock(
     stats,
     loadout?.echoBuild ?? "4-3-3-1-1",

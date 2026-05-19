@@ -241,11 +241,10 @@ describe("compileBaseStats", () => {
       }),
       null,
     )
-    expect(stats.atkPct).toBeCloseTo(
-      DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct,
-    )
+    expect(stats.atkPct).toBeCloseTo(0)
     expect(stats.hpPct).toBeCloseTo(
-      2 * ECHO_MAIN_1COST_SCALING.hp +
+      DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.hpPct +
+        2 * ECHO_MAIN_1COST_SCALING.hp +
         ECHO_MAIN_4COST_VARIABLE.scalingHp +
         2 * ECHO_MAIN_3COST_VARIABLE.scalingHp,
     )
