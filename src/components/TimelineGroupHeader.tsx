@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react"
 import {
-  LockClosedIcon,
-  LockOpen1Icon,
-  CopyIcon,
-  TrashIcon,
   ChevronRightIcon,
-} from "@radix-ui/react-icons"
+  CopyIcon,
+  LockIcon,
+  LockOpenIcon,
+  TrashIcon,
+} from "lucide-react"
 import type { TimelineEntry } from "#/types/timeline"
 import type { Slots } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
@@ -365,9 +365,9 @@ export function TimelineGroupHeader({
             aria-label={!locked ? "Lock group" : "Unlock group"}
           >
             {!locked ? (
-              <LockOpen1Icon className="w-4 h-4" />
+              <LockOpenIcon className="w-4 h-4" />
             ) : (
-              <LockClosedIcon className="w-4 h-4" />
+              <LockIcon className="w-4 h-4" />
             )}
           </button>
           <button

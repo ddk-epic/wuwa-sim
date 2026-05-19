@@ -1,10 +1,12 @@
 import { useState } from "react"
 import {
-  ClockIcon,
-  GearIcon,
-  UploadIcon,
   DownloadIcon,
-} from "@radix-ui/react-icons"
+  ListCheckIcon,
+  PlayIcon,
+  RotateCcw,
+  SettingsIcon,
+  UploadIcon,
+} from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
@@ -77,26 +79,30 @@ export function Header({
         </button>
         <div className="ml-auto flex items-center gap-2">
           <button
-            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
             disabled={timelineEmpty}
             onClick={onSimulate}
+            aria-label="Run simulate"
           >
-            Simulate
+            <PlayIcon className="w-4 h-4 mb-px" />
+            <span>Simulate</span>
           </button>
           <button
             className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
             onClick={onOpenSimulationLog}
             aria-label="Open simulation log"
           >
-            <ClockIcon className="w-4 h-4" />
+            <ListCheckIcon className="w-4 h-4" />
             <span>Log</span>
           </button>
           <button
-            className="items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+            className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
             disabled={timelineEmpty}
             onClick={() => setConfirmOpen(true)}
+            aria-label="Reset Timeline"
           >
-            Reset
+            <RotateCcw className="w-4 h-4 mb-px" />
+            <span>Reset</span>
           </button>
         </div>
       </div>
@@ -122,7 +128,7 @@ export function Header({
           onClick={() => setSettingsOpen(true)}
           aria-label="Open settings"
         >
-          <GearIcon className="w-5 h-5" />
+          <SettingsIcon className="w-5 h-5" />
         </button>
       </div>
       {confirmOpen && (
