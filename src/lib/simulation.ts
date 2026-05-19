@@ -1,4 +1,4 @@
-import type { DamageEntry, HealTarget } from "#/types/character"
+import type { DamageEntry, HealTarget, SkillType } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
@@ -15,6 +15,23 @@ import type { ResolvedHit } from "./buff-engine"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 import type { ResolvedStage } from "./stage"
 
+const CANCEL_CAPABLE = new Set<SkillType>([
+  "Resonance Skill",
+  "Resonance Liberation",
+  "Intro Skill",
+  "Outro Skill",
+  "Echo Skill",
+])
+
+interface PendingTrailingHit {
+  hit: DamageEntry
+  hitIndex: number
+  stageStartFrame: number
+  entry: TimelineEntry
+  resolved: ResolvedStage
+  hitFrame: number
+}
+
 export function runSimulation(
   entries: TimelineEntry[],
   slots: Slots,
@@ -26,8 +43,63 @@ export function runSimulation(
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
   let frame = 0
+  const pending = new Map<number, PendingTrailingHit[]>()
+
   for (const entry of entries) {
-    frame = processEntry(
+    const charPending = pending.get(entry.characterId)
+    if (charPending && charPending.length > 0) {
+      const hasCollision = charPending.some((p) => p.hitFrame >= frame)
+      if (hasCollision) {
+        const incomingResolved = findStageByEntry(entry, slots, loadouts)
+        const skillType = incomingResolved?.skillType ?? "Basic Attack"
+        if (CANCEL_CAPABLE.has(skillType)) {
+          for (const p of charPending.filter((p) => p.hitFrame < frame)) {
+            processHit(
+              p.hit,
+              p.hitIndex,
+              p.stageStartFrame,
+              p.entry,
+              p.resolved,
+              engine,
+              log,
+              slots,
+            )
+          }
+          // trailing hits at/after current frame are dropped (not processed)
+        } else {
+          const lastHit = charPending[charPending.length - 1]
+          frame = lastHit.hitFrame
+          for (const p of charPending) {
+            processHit(
+              p.hit,
+              p.hitIndex,
+              p.stageStartFrame,
+              p.entry,
+              p.resolved,
+              engine,
+              log,
+              slots,
+            )
+          }
+        }
+      } else {
+        for (const p of charPending) {
+          processHit(
+            p.hit,
+            p.hitIndex,
+            p.stageStartFrame,
+            p.entry,
+            p.resolved,
+            engine,
+            log,
+            slots,
+          )
+        }
+      }
+      pending.delete(entry.characterId)
+    }
+
+    const { nextFrame, trailingHits } = processEntry(
       entry,
       frame,
       engine,
@@ -37,7 +109,28 @@ export function runSimulation(
       reactionDelay,
       swapFrames,
     )
+    frame = nextFrame
+    if (trailingHits.length > 0) {
+      pending.set(entry.characterId, trailingHits)
+    }
   }
+
+  // Drain any remaining pending trailing hits
+  for (const hits of pending.values()) {
+    for (const p of hits) {
+      processHit(
+        p.hit,
+        p.hitIndex,
+        p.stageStartFrame,
+        p.entry,
+        p.resolved,
+        engine,
+        log,
+        slots,
+      )
+    }
+  }
+
   return log
 }
 
@@ -50,11 +143,11 @@ function processEntry(
   loadouts: SlotLoadout[],
   reactionDelay: number,
   swapFrames: number,
-): number {
+): { nextFrame: number; trailingHits: PendingTrailingHit[] } {
   const resolved = findStageByEntry(entry, slots, loadouts)
-  if (!resolved) return stageStartFrame
+  if (!resolved) return { nextFrame: stageStartFrame, trailingHits: [] }
 
-  const { advance: stageDuration, hits: damage } = resolveStageExecution(
+  const { advance: stageDuration, hits } = resolveStageExecution(
     resolved.stage,
     entry.variantKind,
     reactionDelay,
@@ -69,9 +162,17 @@ function processEntry(
 
   log.push(buildActionEvent(entry, resolved, engine, stageStartFrame))
 
-  for (let i = 0; i < damage.length; i++) {
+  const isSwap = entry.variantKind === "swap"
+  const immediateHits = isSwap
+    ? hits.filter((h) => h.actionFrame <= stageDuration)
+    : hits
+  const trailingHitData = isSwap
+    ? hits.filter((h) => h.actionFrame > stageDuration)
+    : []
+
+  for (let i = 0; i < immediateHits.length; i++) {
     processHit(
-      damage[i],
+      immediateHits[i],
       i,
       stageStartFrame,
       entry,
@@ -82,7 +183,16 @@ function processEntry(
     )
   }
 
-  return stageStartFrame + stageDuration
+  const trailingHits: PendingTrailingHit[] = trailingHitData.map((h, idx) => ({
+    hit: h,
+    hitIndex: immediateHits.length + idx,
+    stageStartFrame,
+    entry,
+    resolved,
+    hitFrame: stageStartFrame + h.actionFrame,
+  }))
+
+  return { nextFrame: stageStartFrame + stageDuration, trailingHits }
 }
 
 function fireSkillCast(

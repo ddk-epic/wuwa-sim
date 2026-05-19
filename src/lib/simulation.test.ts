@@ -1518,3 +1518,243 @@ describe("runSimulation — healing pipeline", () => {
     )
   })
 })
+
+// ── Trailing-window collision (ADR-0018 / issue #177) ───────────────────────
+
+const trailingHit = (actionFrame: number): DamageEntry => ({
+  type: "Basic Attack",
+  dmgType: "Damage",
+  scalingStat: "ATK",
+  actionFrame,
+  value: 1.0,
+  energy: 0,
+  concerto: 0,
+  toughness: 0,
+  weakness: 0,
+})
+
+const charTrailingBase: EnrichedCharacter = {
+  id: 30,
+  name: "Trailing Char",
+  element: "Fusion",
+  weaponType: "Sword",
+  rarity: "5",
+  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 1000, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: [],
+  skills: [
+    {
+      id: 200,
+      name: "Normal Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Stage",
+          value: "100%",
+          actionTime: 50,
+          damage: [trailingHit(3), trailingHit(15), trailingHit(30)],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 201,
+      name: "Resonance Skill",
+      type: "Resonance Skill",
+      stages: [{ name: "Stage", value: "100%", actionTime: 40, damage: [] }],
+      damage: [],
+    },
+    {
+      id: 202,
+      name: "Movement",
+      type: "Movement",
+      stages: [{ name: "Stage", value: "0", actionTime: 5, damage: [] }],
+      damage: [],
+    },
+  ],
+}
+
+const charOtherTrailing: EnrichedCharacter = {
+  id: 31,
+  name: "Other Char",
+  element: "Glacio",
+  weaponType: "Sword",
+  rarity: "5",
+  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 1000, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: [],
+  skills: [
+    {
+      id: 210,
+      name: "Normal Attack",
+      type: "Normal Attack",
+      stages: [{ name: "Stage", value: "100%", actionTime: 10, damage: [] }],
+      damage: [],
+    },
+  ],
+}
+
+describe("runSimulation — trailing-window collision (ADR-0018)", () => {
+  it("no collision: trailing hit has landed before same-char cancel-capable re-entry", () => {
+    const charSingleTrail: EnrichedCharacter = {
+      ...charTrailingBase,
+      id: 32,
+      skills: [
+        {
+          id: 220,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "100%",
+              actionTime: 50,
+              damage: [trailingHit(3), trailingHit(5)],
+            },
+          ],
+          damage: [],
+        },
+        charTrailingBase.skills[1],
+      ],
+    }
+    testCharacters = [charSingleTrail, charOtherTrailing]
+    const entries: TimelineEntry[] = [
+      {
+        id: "t1",
+        characterId: 32,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      { id: "t2", characterId: 31, stageId: "Normal Attack::_" },
+      // frame after t1=6, after t2(advance=10)=16; trailing hitFrame=5 < 16 → no collision
+      { id: "t3", characterId: 32, stageId: "Resonance Skill::_" },
+    ]
+    const result = runSimulation(entries, [32, 31, null], emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(2) // immediate(3) + trailing(5) — both land
+    const actions = result.filter((e) => e.kind === "action")
+    const rsAction = actions.find(
+      (a) =>
+        a.kind === "action" &&
+        a.characterId === 32 &&
+        a.skillType === "Resonance Skill",
+    )
+    expect(rsAction?.frame).toBe(16) // no pad
+  })
+
+  it("cancel-capable re-entry: drops trailing hits at or after new-entry start frame", () => {
+    testCharacters = [charTrailingBase]
+    const entries: TimelineEntry[] = [
+      {
+        id: "t1",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 → dropped
+      { id: "t2", characterId: 30, stageId: "Resonance Skill::_" },
+    ]
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(1) // only immediate hit at frame 3 survives
+    expect(hits[0].frame).toBe(3)
+  })
+
+  it("non-cancel-capable re-entry: pads frame to last trailing hit; all trailing hits land", () => {
+    testCharacters = [charTrailingBase, charOtherTrailing]
+    const entries: TimelineEntry[] = [
+      // Char 30 swap: advance=6, trailing hits at hitFrames 15 and 30
+      {
+        id: "t1",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      // Char 31: advance=10, frame → 6+10=16
+      { id: "t2", characterId: 31, stageId: "Normal Attack::_" },
+      // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 → pad to 30
+      { id: "t3", characterId: 30, stageId: "Normal Attack::_" },
+    ]
+    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
+    const actions = result.filter((e) => e.kind === "action")
+    // t3 action should be at frame 30 (padded from 16)
+    const t3Action = actions.find(
+      (a) => a.kind === "action" && a.characterId === 30 && !a.variantKind,
+    )
+    expect(t3Action?.frame).toBe(30)
+    // All trailing hits from t1 appear in log
+    const hits = result.filter((e) => e.kind === "hit" && e.characterId === 30)
+    const hitFrames = (hits as HitEvent[])
+      .map((h) => h.frame)
+      .sort((a, b) => a - b)
+    expect(hitFrames).toContain(15)
+    expect(hitFrames).toContain(30)
+  })
+
+  it("swap with all-zero actionFrame damage: no trailing hits, no collision drop", () => {
+    const charZero: EnrichedCharacter = {
+      ...charTrailingBase,
+      id: 33,
+      skills: [
+        {
+          id: 230,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "100%",
+              actionTime: 50,
+              damage: [{ ...trailingHit(0) }, { ...trailingHit(0) }],
+            },
+          ],
+          damage: [],
+        },
+        charTrailingBase.skills[1],
+      ],
+    }
+    testCharacters = [charZero]
+    const entries: TimelineEntry[] = [
+      {
+        id: "t1",
+        characterId: 33,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      { id: "t2", characterId: 33, stageId: "Resonance Skill::_" },
+    ]
+    const result = runSimulation(entries, [33, null, null], emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    // actionFrame=0 ≤ 6 → both immediate; Resonance Skill fires without collision logic
+    expect(hits).toHaveLength(2)
+  })
+
+  it("Movement (non-cancel-capable) after swap: pads frame to last trailing hit", () => {
+    testCharacters = [charTrailingBase]
+    const entries: TimelineEntry[] = [
+      {
+        id: "t1",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+      // Movement starts at frame 6; trailing 30 >= 6 → collision → pad to 30
+      { id: "t2", characterId: 30, stageId: "Movement::_" },
+    ]
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    // immediate(3) + trailing(15) + trailing(30) = 3 hits; Movement has no damage
+    expect(hits).toHaveLength(3)
+    // Movement action event at frame 30 (padded from 6)
+    const actions = result.filter((e) => e.kind === "action")
+    const movAction = actions.find(
+      (a) =>
+        a.kind === "action" &&
+        a.characterId === 30 &&
+        a.skillType === "Movement",
+    )
+    expect(movAction?.frame).toBe(30)
+  })
+})
