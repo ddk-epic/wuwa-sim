@@ -185,7 +185,7 @@ export function TimelineGroupHeader({
     return (
       sum +
       resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
-        .duration /
+        .advance /
         60
     )
   }, 0)
