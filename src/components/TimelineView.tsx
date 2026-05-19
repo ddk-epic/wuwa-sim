@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
 import type { TimelineSummary } from "#/lib/timeline-summary"
@@ -73,37 +73,34 @@ export function TimelineView({
     onReorderGroupEntries,
   })
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
-  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(
-    () =>
-      new Set(
-        nodes
-          .filter(
-            (n): n is Extract<TimelineNode, { kind: "group" }> =>
-              n.kind === "group",
-          )
-          .map((n) => n.id),
-      ),
+  const getGroupIds = (ns: TimelineNode[]) =>
+    new Set(
+      ns
+        .filter(
+          (n): n is Extract<TimelineNode, { kind: "group" }> =>
+            n.kind === "group",
+        )
+        .map((n) => n.id),
+    )
+
+  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(() =>
+    getGroupIds(nodes),
   )
+  const knownGroupIds = useRef<Set<string>>(getGroupIds(nodes))
 
   useEffect(() => {
+    const currentGroupIds = getGroupIds(nodes)
     setExpandedGroupIds((prev) => {
-      const groupIds = new Set(
-        nodes
-          .filter(
-            (n): n is Extract<TimelineNode, { kind: "group" }> =>
-              n.kind === "group",
-          )
-          .map((n) => n.id),
-      )
       const next = new Set<string>()
-      for (const id of groupIds) {
+      for (const id of currentGroupIds) {
         if (prev.has(id)) next.add(id)
-        else next.add(id)
+        else if (!knownGroupIds.current.has(id)) next.add(id) // truly new group — auto-expand
       }
       if (next.size === prev.size && [...next].every((id) => prev.has(id)))
         return prev
       return next
     })
+    knownGroupIds.current = currentGroupIds
   }, [nodes])
 
   const entries = flattenNodes(nodes)
