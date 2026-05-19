@@ -303,10 +303,10 @@ export function TimelineGroupHeader({
         </span>
       </td>
       <td
-        className="px-2 py-1.5 text-gray-200"
+        className="px-2 py-1.5 text-gray-200 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {!locked || isRenaming ? (
             <GroupLabelInput
               groupId={groupId}
@@ -323,7 +323,7 @@ export function TimelineGroupHeader({
                 e.stopPropagation()
                 startRename(groupId)
               }}
-              className="cursor-text hover:text-white transition-colors text-sm font-bold inline-block border-b border-transparent"
+              className="cursor-text hover:text-white transition-colors text-sm font-bold inline-block border-b border-transparent truncate min-w-0"
               title="Click to rename"
             >
               {label || (
@@ -333,7 +333,7 @@ export function TimelineGroupHeader({
               )}
             </span>
           )}
-          <span className="text-gray-500 text-xs font-mono ml-1">
+          <span className="text-gray-500 text-xs font-mono ml-1 shrink-0">
             {entryCount} actions
           </span>
         </div>
@@ -350,9 +350,11 @@ export function TimelineGroupHeader({
       <td className="px-2 py-1.5 font-semibold text-right font-mono">
         {hasDmg ? (
           isExpanded ? (
-            <span className="text-gray-600">{totalDmg.toLocaleString()}</span>
+            <span className="text-[19px] text-gray-600">
+              {totalDmg.toLocaleString()}
+            </span>
           ) : (
-            <span className="font-bold text-yellow-400">
+            <span className="font-bold text-[19px] text-yellow-400">
               {totalDmg.toLocaleString()}
             </span>
           )

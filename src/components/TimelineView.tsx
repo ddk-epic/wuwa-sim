@@ -191,19 +191,19 @@ export function TimelineView({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <table className="w-full text-sm text-left">
+      <table className="w-full text-sm text-left table-fixed min-w-235">
         <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
           <tr className="text-muted-foreground text-xs font-mono tracking-[1px] uppercase">
-            <th className="px-2 py-2 w-8">#</th>
-            <th className="px-2 py-2 text-right">time</th>
-            <th className="px-2 py-2">char</th>
-            <th className="px-2 py-2">type</th>
+            <th className="px-2 py-2 text-right w-7.5">#</th>
+            <th className="px-2 py-2 text-right w-18">time</th>
+            <th className="px-2 py-2 w-36">char</th>
+            <th className="px-2 py-2 w-16">type</th>
             <th className="px-2 py-2">skill</th>
-            <th className="px-2 py-2 text-right">dur</th>
-            <th className="px-2 py-2 text-right">con</th>
-            <th className="px-2 py-2 text-right">res</th>
-            <th className="px-2 py-2 text-right">dmg</th>
-            <th className="px-2 py-2 w-8"></th>
+            <th className="px-2 py-2 text-right w-18">dur</th>
+            <th className="px-2 py-2 text-right w-20">con</th>
+            <th className="px-2 py-2 text-right w-20">res</th>
+            <th className="px-2 py-2 text-right w-24">dmg</th>
+            <th className="px-2 py-2 w-20.75"></th>
           </tr>
         </thead>
         <tbody>
