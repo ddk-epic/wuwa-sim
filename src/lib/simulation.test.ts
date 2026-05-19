@@ -712,6 +712,103 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const action = result.find((e) => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
   })
+
+  it("swap variant with authored actionTime: advance = actionTime + reactionDelay", () => {
+    const charSwapAuthored: EnrichedCharacter = {
+      ...charVariant,
+      id: 11,
+      skills: [
+        {
+          id: 6,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "100%",
+              actionTime: 50,
+              variants: {
+                swap: { actionTime: 10 },
+              },
+              damage: [
+                {
+                  type: "Basic Attack",
+                  dmgType: "Damage",
+                  scalingStat: "ATK",
+                  actionFrame: 23,
+                  value: 1.0,
+                  energy: 0,
+                  concerto: 0,
+                  toughness: 0,
+                  weakness: 0,
+                },
+              ],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charSwapAuthored]
+    const entry: TimelineEntry = {
+      id: "sw1",
+      characterId: 11,
+      stageId: "Normal Attack::_",
+      variantKind: "swap",
+    }
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    // actionFrame 23 > advance 16 but swap does NOT filter — hit lands
+    expect(hits).toHaveLength(1)
+    const action = result.find((e) => e.kind === "action")
+    expect(action?.variantKind).toBe("swap")
+  })
+
+  it("swap variant with no authored swap: advance = swapFrames, hits unfiltered", () => {
+    const charSwapFallback: EnrichedCharacter = {
+      ...charVariant,
+      id: 12,
+      skills: [
+        {
+          id: 7,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "100%",
+              actionTime: 50,
+              damage: [
+                {
+                  type: "Basic Attack",
+                  dmgType: "Damage",
+                  scalingStat: "ATK",
+                  actionFrame: 40,
+                  value: 1.0,
+                  energy: 0,
+                  concerto: 0,
+                  toughness: 0,
+                  weakness: 0,
+                },
+              ],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charSwapFallback]
+    const entry: TimelineEntry = {
+      id: "sw2",
+      characterId: 12,
+      stageId: "Normal Attack::_",
+      variantKind: "swap",
+    }
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    // actionFrame 40 > swapFrames 6 but swap does NOT filter — hit lands
+    expect(hits).toHaveLength(1)
+  })
 })
 
 describe("runSimulation — skillType derivation from damage[0].type", () => {

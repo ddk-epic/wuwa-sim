@@ -117,22 +117,36 @@ export function resolveStageExecution(
   stage: ActionTimeStage & { damage?: DamageEntry[] },
   variantKind: VariantKind | undefined,
   reactionDelay: number,
-): { duration: number; damage: DamageEntry[] } {
+  swapFrames: number = 6,
+): { advance: number; hits: DamageEntry[] } {
   const allDamage = stage.damage ?? []
-  if (!variantKind) return { duration: stage.actionTime, damage: allDamage }
+  if (!variantKind) return { advance: stage.actionTime, hits: allDamage }
+  if (variantKind === "swap") {
+    const variant = stage.variants?.swap
+    const advance =
+      variant !== undefined ? variant.actionTime + reactionDelay : swapFrames
+    return { advance, hits: allDamage }
+  }
   const variant = stage.variants?.[variantKind]
-  if (!variant) return { duration: stage.actionTime, damage: allDamage }
-  const duration = variant.actionTime + reactionDelay
-  const damage = allDamage.filter((hit) => hit.actionFrame <= duration)
-  return { duration, damage }
+  if (!variant) return { advance: stage.actionTime, hits: allDamage }
+  const advance = variant.actionTime + reactionDelay
+  const hits = allDamage.filter((hit) => hit.actionFrame <= advance)
+  return { advance, hits }
 }
 
 export function resolveActionTime(
   stage: ActionTimeStage,
   variantKind: VariantKind | undefined,
   reactionDelay: number,
+  swapFrames: number = 6,
 ): number {
   if (!variantKind) return stage.actionTime
+  if (variantKind === "swap") {
+    const variant = stage.variants?.swap
+    return variant !== undefined
+      ? variant.actionTime + reactionDelay
+      : swapFrames
+  }
   const variant = stage.variants?.[variantKind]
   if (!variant) return stage.actionTime
   return variant.actionTime + reactionDelay

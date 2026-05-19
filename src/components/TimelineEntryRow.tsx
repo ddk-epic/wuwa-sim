@@ -9,13 +9,14 @@ import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
-import { useReactionDelay } from "#/hooks/useSettingsContext"
+import { useReactionDelay, useSwapFrames } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
   "cancel",
   "instantCancel",
+  "swap",
 ]
 
 function nextVariant(
@@ -32,6 +33,7 @@ function nextVariant(
 function variantLabel(v: VariantKind | undefined): string {
   if (v === "cancel") return "CNCL"
   if (v === "instantCancel") return "INST"
+  if (v === "swap") return "SWAP"
   return "FULL"
 }
 
@@ -91,6 +93,7 @@ export function TimelineEntryRow({
   onUpdateEntry,
 }: TimelineEntryRowProps) {
   const reactionDelay = useReactionDelay()
+  const swapFrames = useSwapFrames()
   const { slots, loadouts } = useTeamContext()
   const char = getCharacterById(entry.characterId)
   const row = summary.rows[index] ?? { time: 0, damage: null }
@@ -113,8 +116,12 @@ export function TimelineEntryRow({
   const elementLetter = charElement?.[0] ?? "?"
 
   const duration = resolved
-    ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
-        .duration / 60
+    ? resolveStageExecution(
+        resolved.stage,
+        entry.variantKind,
+        reactionDelay,
+        swapFrames,
+      ).advance / 60
     : 0
 
   const conVal = actionEventAtIndex?.cumulativeConcerto ?? null

@@ -39,10 +39,11 @@ export function getTimelineSummary(
       ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
       : null
 
-    cumulativeFrames += execution?.duration ?? 0
+    cumulativeFrames += execution?.advance ?? 0
 
-    if (execution && execution.damage.length > 0) {
-      const multiplier = execution.damage.reduce((sum, d) => sum + d.value, 0)
+    // TODO: replace estimate with log-derived damage once swap-aware attribution exists; frame-window grouping breaks when a swapped-out character's DoTs tick during the next action.
+    if (execution && execution.hits.length > 0) {
+      const multiplier = execution.hits.reduce((sum, d) => sum + d.value, 0)
       if (multiplier > 0) {
         const maxAtk = getCharacterById(entry.characterId)?.stats.max.atk ?? 0
         rowDamage = Math.round(multiplier * maxAtk)

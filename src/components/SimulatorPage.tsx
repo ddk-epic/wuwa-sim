@@ -56,7 +56,15 @@ export function SimulatorPage() {
   }
 
   function handleSimulate() {
-    setLog(runSimulation(entries, slots, loadouts, settings.reactionDelay))
+    setLog(
+      runSimulation(
+        entries,
+        slots,
+        loadouts,
+        settings.reactionDelay,
+        settings.swapFrames,
+      ),
+    )
   }
 
   return (

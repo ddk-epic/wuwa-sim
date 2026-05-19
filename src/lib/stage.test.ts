@@ -218,42 +218,90 @@ describe("findStageByEntry — echo skill", () => {
 })
 
 describe("resolveStageExecution — full stage (no variant)", () => {
-  it("returns stage.actionTime as duration when variantKind is undefined", () => {
-    expect(resolveStageExecution(makeStage(50), undefined, 9).duration).toBe(50)
+  it("returns stage.actionTime as advance when variantKind is undefined", () => {
+    expect(resolveStageExecution(makeStage(50), undefined, 9).advance).toBe(50)
   })
 
   it("falls back to stage.actionTime when variantKind not on stage", () => {
     const stage = makeStage(50, { cancel: { actionTime: 33 } })
-    expect(resolveStageExecution(stage, "instantCancel", 9).duration).toBe(50)
+    expect(resolveStageExecution(stage, "instantCancel", 9).advance).toBe(50)
   })
 
   it("falls back to stage.actionTime when stage has no variants", () => {
     expect(
-      resolveStageExecution(makeStage(50, undefined), "cancel", 9).duration,
+      resolveStageExecution(makeStage(50, undefined), "cancel", 9).advance,
     ).toBe(50)
   })
 })
 
 describe("resolveStageExecution — cancel variant", () => {
-  it("returns variant.actionTime + reactionDelay as duration", () => {
+  it("returns variant.actionTime + reactionDelay as advance", () => {
     const stage = makeStage(50, { cancel: { actionTime: 33 } })
-    expect(resolveStageExecution(stage, "cancel", 9).duration).toBe(42)
+    expect(resolveStageExecution(stage, "cancel", 9).advance).toBe(42)
   })
 
   it("varies with reactionDelay", () => {
     const stage = makeStage(50, { cancel: { actionTime: 33 } })
-    expect(resolveStageExecution(stage, "cancel", 0).duration).toBe(33)
-    expect(resolveStageExecution(stage, "cancel", 5).duration).toBe(38)
+    expect(resolveStageExecution(stage, "cancel", 0).advance).toBe(33)
+    expect(resolveStageExecution(stage, "cancel", 5).advance).toBe(38)
   })
 })
 
 describe("resolveStageExecution — instantCancel variant", () => {
-  it("returns variant.actionTime + reactionDelay as duration", () => {
+  it("returns variant.actionTime + reactionDelay as advance", () => {
     const stage = makeStage(50, {
       cancel: { actionTime: 33 },
       instantCancel: { actionTime: 7 },
     })
-    expect(resolveStageExecution(stage, "instantCancel", 9).duration).toBe(16)
+    expect(resolveStageExecution(stage, "instantCancel", 9).advance).toBe(16)
+  })
+})
+
+describe("resolveStageExecution — swap variant", () => {
+  it("uses authored actionTime + reactionDelay when variants.swap is defined", () => {
+    const stage = makeStage(50, { swap: { actionTime: 10 } })
+    expect(resolveStageExecution(stage, "swap", 6, 6).advance).toBe(16)
+  })
+
+  it("falls back to swapFrames when no variants.swap authored", () => {
+    const stage = makeStage(50, undefined)
+    expect(resolveStageExecution(stage, "swap", 6, 6).advance).toBe(6)
+  })
+
+  it("returns all damage unfiltered even when actionFrame > advance", () => {
+    const damage: DamageEntry[] = [
+      {
+        type: "Basic Attack",
+        dmgType: "Damage",
+        scalingStat: "ATK",
+        actionFrame: 5,
+        value: 100,
+        energy: 0,
+        concerto: 0,
+        toughness: 0,
+        weakness: 0,
+      },
+      {
+        type: "Basic Attack",
+        dmgType: "Damage",
+        scalingStat: "ATK",
+        actionFrame: 40,
+        value: 200,
+        energy: 0,
+        concerto: 0,
+        toughness: 0,
+        weakness: 0,
+      },
+    ]
+    const stage = makeStage(50, { swap: { actionTime: 10 } }, damage)
+    const { hits } = resolveStageExecution(stage, "swap", 6, 6)
+    expect(hits).toHaveLength(2)
+  })
+
+  it("authored swap advance respects different swapFrames fallback values", () => {
+    const stage = makeStage(50, undefined)
+    expect(resolveStageExecution(stage, "swap", 6, 12).advance).toBe(12)
+    expect(resolveStageExecution(stage, "swap", 6, 0).advance).toBe(0)
   })
 })
 
@@ -284,7 +332,7 @@ describe("resolveStageExecution — damage filtering", () => {
       },
     ]
     const stage = makeStage(50, undefined, damage)
-    expect(resolveStageExecution(stage, undefined, 9).damage).toHaveLength(2)
+    expect(resolveStageExecution(stage, undefined, 9).hits).toHaveLength(2)
   })
 
   it("filters hits beyond variant cutoff", () => {
@@ -313,7 +361,7 @@ describe("resolveStageExecution — damage filtering", () => {
       },
     ]
     const stage = makeStage(60, { cancel: { actionTime: 33 } }, damage)
-    const { damage: filtered } = resolveStageExecution(stage, "cancel", 9)
+    const { hits: filtered } = resolveStageExecution(stage, "cancel", 9)
     expect(filtered).toHaveLength(1)
     expect(filtered[0].actionFrame).toBe(10)
   })

@@ -10,18 +10,17 @@ import type {
 import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./compute-damage"
 import { computeHealing } from "./compute-healing"
-import { BuffEngine, type ResolvedHit } from "./buff-engine"
-import {
-  findStageByEntry,
-  resolveStageExecution,
-  type ResolvedStage,
-} from "./stage"
+import { BuffEngine } from "./buff-engine"
+import type { ResolvedHit } from "./buff-engine"
+import { findStageByEntry, resolveStageExecution } from "./stage"
+import type { ResolvedStage } from "./stage"
 
 export function runSimulation(
   entries: TimelineEntry[],
   slots: Slots,
   loadouts: SlotLoadout[],
   reactionDelay: number = 9,
+  swapFrames: number = 6,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
@@ -36,6 +35,7 @@ export function runSimulation(
       slots,
       loadouts,
       reactionDelay,
+      swapFrames,
     )
   }
   return log
@@ -49,14 +49,16 @@ function processEntry(
   slots: Slots,
   loadouts: SlotLoadout[],
   reactionDelay: number,
+  swapFrames: number,
 ): number {
   const resolved = findStageByEntry(entry, slots, loadouts)
   if (!resolved) return stageStartFrame
 
-  const { duration: stageDuration, damage } = resolveStageExecution(
+  const { advance: stageDuration, hits: damage } = resolveStageExecution(
     resolved.stage,
     entry.variantKind,
     reactionDelay,
+    swapFrames,
   )
 
   pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)

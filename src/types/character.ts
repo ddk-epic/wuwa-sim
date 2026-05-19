@@ -87,7 +87,7 @@ export interface Character {
   primaryScalingStat?: "atk" | "hp" | "def"
 }
 
-export type VariantKind = "cancel" | "instantCancel"
+export type VariantKind = "cancel" | "instantCancel" | "swap"
 
 export interface StageVariant {
   actionTime: number
