@@ -428,7 +428,8 @@ export const sanhua = {
           value: "48.71%",
           actionTime: 21,
           variants: {
-            cancel: { actionTime: 15 },
+            cancel: { actionTime: 14 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -450,7 +451,8 @@ export const sanhua = {
           value: "73.76%",
           actionTime: 31,
           variants: {
-            cancel: { actionTime: 18 },
+            cancel: { actionTime: 25 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -472,7 +474,8 @@ export const sanhua = {
           value: "21.58%*4",
           actionTime: 39,
           variants: {
-            cancel: { actionTime: 24 },
+            cancel: { actionTime: 34 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -527,7 +530,8 @@ export const sanhua = {
           value: "39.67%*2",
           actionTime: 37,
           variants: {
-            cancel: { actionTime: 28 },
+            cancel: { actionTime: 25 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -560,8 +564,8 @@ export const sanhua = {
           value: "233.81%",
           actionTime: 108,
           variants: {
-            cancel: { actionTime: 33 },
-            instantCancel: { actionTime: 7 },
+            cancel: { actionTime: 32 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -584,6 +588,7 @@ export const sanhua = {
           actionTime: 50,
           variants: {
             cancel: { actionTime: 41 },
+            swap: { actionTime: 0 },
           },
           damage: [
             {
@@ -648,6 +653,10 @@ export const sanhua = {
           newName: "Mid-air Attack",
           value: "86.29%",
           actionTime: 56,
+          variants: {
+            cancel: { actionTime: 28 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -668,6 +677,7 @@ export const sanhua = {
           value: "167.01%",
           hidden: true,
           actionTime: 1,
+          variants: {},
           damage: [
             {
               type: "Heavy Attack",
@@ -697,12 +707,15 @@ export const sanhua = {
           newName: "",
           value: "359.85%",
           actionTime: 64,
+          variants: {
+            cancel: { actionTime: 20 },
+          },
           damage: [
             {
               type: "Resonance Skill",
               dmgType: "Damage",
               scalingStat: "ATK",
-              actionFrame: 22,
+              actionFrame: 20,
               value: 3.5985,
               energy: 10,
               concerto: 0,
@@ -727,6 +740,7 @@ export const sanhua = {
           newName: "",
           value: "809.48%",
           actionTime: 3,
+          variants: {},
           damage: [
             {
               type: "Resonance Liberation",
@@ -771,6 +785,7 @@ export const sanhua = {
           newName: "",
           value: "139.17%",
           actionTime: 62,
+          variants: {},
           damage: [
             {
               type: "Intro Skill",
@@ -800,6 +815,10 @@ export const sanhua = {
           value: "186.29%*2",
           concerto: 15,
           actionTime: 82,
+          variants: {
+            cancel: { actionTime: 80 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Heavy Attack",
@@ -846,6 +865,7 @@ export const sanhua = {
           newName: "",
           value: "0%",
           actionTime: 0,
+          variants: {},
           damage: [],
         },
       ],

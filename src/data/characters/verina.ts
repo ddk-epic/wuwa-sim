@@ -225,6 +225,7 @@ export const verina = {
           newName: "Stage 1",
           value: "37.86%",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -244,6 +245,7 @@ export const verina = {
           newName: "Stage 2",
           value: "51.16%",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -263,6 +265,7 @@ export const verina = {
           newName: "Stage 3",
           value: "25.58%*2",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -293,6 +296,7 @@ export const verina = {
           newName: "Stage 4",
           value: "67.32%",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -312,6 +316,7 @@ export const verina = {
           newName: "Stage 5",
           value: "71.62%",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -331,6 +336,7 @@ export const verina = {
           newName: "Heavy Attack",
           value: "99.41%",
           actionTime: 30,
+          variants: {},
           damage: [
             {
               type: "Heavy Attack",
@@ -350,6 +356,7 @@ export const verina = {
           newName: "Mid-air Attack Stage 1",
           value: "56.37%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -369,6 +376,7 @@ export const verina = {
           newName: "Mid-air Attack Stage 2",
           value: "53.19%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -388,6 +396,7 @@ export const verina = {
           newName: "Mid-air Attack Stage 3",
           value: "25.42%*3",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -429,6 +438,7 @@ export const verina = {
           newName: "Mid-air Heavy Attack",
           value: "61.64%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Heavy Attack",
@@ -449,6 +459,7 @@ export const verina = {
           value: "129.23%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -478,6 +489,7 @@ export const verina = {
           newName: "",
           value: "35.79%*3+71.58%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Resonance Skill",
@@ -542,6 +554,7 @@ export const verina = {
           newName: "",
           value: "198.81%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Resonance Liberation",
@@ -562,6 +575,7 @@ export const verina = {
           value: "950+23.80%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -584,6 +598,7 @@ export const verina = {
           value: "9.95%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Resonance Liberation",
@@ -604,6 +619,7 @@ export const verina = {
           value: "428+10.71%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -662,6 +678,7 @@ export const verina = {
           newName: "",
           value: "99.41%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Intro Skill",
@@ -689,6 +706,7 @@ export const verina = {
           newName: "Heavy Attack",
           value: "64.95%+97.42%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Heavy Attack",
@@ -720,6 +738,7 @@ export const verina = {
           value: "1188+29.75%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -741,6 +760,7 @@ export const verina = {
           newName: "Mid-air Attack: Stage 1",
           value: "67.64%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -760,6 +780,7 @@ export const verina = {
           newName: "Mid-air Attack: Stage 2",
           value: "63.82%",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -779,6 +800,7 @@ export const verina = {
           newName: "Mid-air Attack: Stage 3",
           value: "30.50%*3",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -836,6 +858,7 @@ export const verina = {
           newName: "",
           value: "0%",
           actionTime: 0,
+          variants: {},
           damage: [],
         },
       ],

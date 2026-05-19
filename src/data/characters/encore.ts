@@ -182,6 +182,10 @@ export const encore = {
           newName: "Stage 1",
           value: "55.66%",
           actionTime: 17,
+          variants: {
+            cancel: { actionTime: 8 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -195,15 +199,16 @@ export const encore = {
               weakness: 0.336,
             },
           ],
-          variants: {
-            cancel: { actionTime: 8 },
-          },
         },
         {
           name: "Stage 2 DMG",
           newName: "Stage 2",
           value: "66.20%",
           actionTime: 28,
+          variants: {
+            cancel: { actionTime: 10 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -217,15 +222,16 @@ export const encore = {
               weakness: 0.3996,
             },
           ],
-          variants: {
-            cancel: { actionTime: 10 },
-          },
         },
         {
           name: "Stage 3 DMG",
           newName: "Stage 3",
           value: "66.30%*2",
           actionTime: 39,
+          variants: {
+            cancel: { actionTime: 28 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -250,15 +256,16 @@ export const encore = {
               weakness: 0.4002,
             },
           ],
-          variants: {
-            cancel: { actionTime: 28 },
-          },
         },
         {
           name: "Stage 4 DMG",
           newName: "Stage 4",
           value: "38.27%*4",
           actionTime: 45,
+          variants: {
+            cancel: { actionTime: 51 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -305,15 +312,16 @@ export const encore = {
               weakness: 0.231,
             },
           ],
-          variants: {
-            cancel: { actionTime: 51 },
-          },
         },
         {
           name: "Stage 5 DMG",
           newName: "Stage 5 - Wooly Strike",
           value: "238.57%",
           actionTime: 81,
+          variants: {
+            cancel: { actionTime: 34 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -327,9 +335,6 @@ export const encore = {
               weakness: 1.44,
             },
           ],
-          variants: {
-            cancel: { actionTime: 34 },
-          },
         },
         {
           name: "Heavy Attack DMG",
@@ -337,6 +342,10 @@ export const encore = {
           value: "187.08%",
           hidden: true,
           actionTime: 59,
+          variants: {
+            cancel: { actionTime: 27 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Heavy Attack",
@@ -350,15 +359,16 @@ export const encore = {
               weakness: 1.1292,
             },
           ],
-          variants: {
-            cancel: { actionTime: 27 },
-          },
         },
         {
           name: "Mid-air Attack",
           newName: "Mid-air Attack",
           value: "123.26%",
           actionTime: 56,
+          variants: {
+            cancel: { actionTime: 38 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -372,9 +382,6 @@ export const encore = {
               weakness: 1.44,
             },
           ],
-          variants: {
-            cancel: { actionTime: 38 },
-          },
         },
         {
           name: "Dodge Counter DMG",
@@ -382,6 +389,7 @@ export const encore = {
           value: "125.94%*2",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -422,6 +430,9 @@ export const encore = {
           value: "76.61%*8",
           concerto: 15,
           actionTime: 108,
+          variants: {
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Resonance Skill",
@@ -519,6 +530,10 @@ export const encore = {
           value: "339.16%",
           concerto: 5,
           actionTime: 51,
+          variants: {
+            cancel: { actionTime: 15 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Resonance Skill",
@@ -532,9 +547,6 @@ export const encore = {
               weakness: 0.9072,
             },
           ],
-          variants: {
-            cancel: { actionTime: 15 },
-          },
         },
       ],
       damage: [],
@@ -560,6 +572,10 @@ export const encore = {
           newName: "Cosmos: Frolicking Stage 1",
           value: "90.18%*2",
           actionTime: 22,
+          variants: {
+            cancel: { actionTime: 22 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -584,15 +600,16 @@ export const encore = {
               weakness: 0.3198,
             },
           ],
-          variants: {
-            cancel: { actionTime: 22 },
-          },
         },
         {
           name: "Cosmos: Frolicking Stage 2 DMG",
           newName: "Cosmos: Frolicking Stage 2",
           value: "56.40%*3",
           actionTime: 54,
+          variants: {
+            cancel: { actionTime: 43 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -628,15 +645,16 @@ export const encore = {
               weakness: 0.2,
             },
           ],
-          variants: {
-            cancel: { actionTime: 43 },
-          },
         },
         {
           name: "Cosmos: Frolicking Stage 3 DMG",
           newName: "Cosmos: Frolicking Stage 3",
           value: "65.99%*4",
           actionTime: 48,
+          variants: {
+            cancel: { actionTime: 42 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -683,15 +701,16 @@ export const encore = {
               weakness: 0.234,
             },
           ],
-          variants: {
-            cancel: { actionTime: 42 },
-          },
         },
         {
           name: "Stage 4 DMG",
           newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
           actionTime: 107,
+          variants: {
+            cancel: { actionTime: 54 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Basic Attack",
@@ -727,9 +746,6 @@ export const encore = {
               weakness: 0.688,
             },
           ],
-          variants: {
-            cancel: { actionTime: 54 },
-          },
         },
         {
           name: "Cosmos: Heavy Attack DMG",
@@ -737,6 +753,7 @@ export const encore = {
           value: "217.58%",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Heavy Attack",
@@ -757,6 +774,10 @@ export const encore = {
           value: "63.32%*4",
           cooldown: 4,
           actionTime: 47,
+          variants: {
+            cancel: { actionTime: 33 },
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Resonance Skill",
@@ -803,9 +824,6 @@ export const encore = {
               weakness: 0.1542,
             },
           ],
-          variants: {
-            cancel: { actionTime: 33 },
-          },
         },
         {
           name: "Cosmos: Dodge Counter DMG",
@@ -813,6 +831,7 @@ export const encore = {
           value: "65.99%*4",
           hidden: true,
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -890,6 +909,7 @@ export const encore = {
           newName: "",
           value: "198.81%",
           actionTime: 91,
+          variants: {},
           damage: [
             {
               type: "Intro Skill",
@@ -918,6 +938,9 @@ export const encore = {
           value: "334.00%",
           concerto: 206,
           actionTime: 25,
+          variants: {
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Resonance Liberation",
@@ -938,6 +961,9 @@ export const encore = {
           value: "46.42%*6+495.21%",
           concerto: 10,
           actionTime: 243,
+          variants: {
+            swap: { actionTime: 0 },
+          },
           damage: [
             {
               type: "Resonance Liberation",
@@ -1073,6 +1099,7 @@ export const encore = {
           newName: "",
           value: "176.76%*4",
           actionTime: 0,
+          variants: {},
           damage: [
             {
               type: "Outro Skill",
