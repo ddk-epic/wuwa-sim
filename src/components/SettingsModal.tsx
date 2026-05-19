@@ -18,7 +18,7 @@ export function SettingsModal({
   return (
     <Modal onClose={onClose}>
       <h2 className="text-white text-lg font-semibold mb-4">Settings</h2>
-      <div className="flex flex-col gap-1 mb-4">
+      <div className="grid grid-cols-2 gap-1 mb-4">
         <label className="text-sm text-gray-400" htmlFor="reaction-delay">
           Reaction Delay (frames)
         </label>
@@ -32,7 +32,7 @@ export function SettingsModal({
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
       </div>
-      <div className="flex flex-col gap-1 mb-6">
+      <div className="grid grid-cols-2 gap-1 mb-6">
         <label className="text-sm text-gray-400" htmlFor="swap-frames">
           Swap Frames (frames)
         </label>
