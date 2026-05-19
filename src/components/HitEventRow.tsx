@@ -89,7 +89,7 @@ export function HitEventRow({ index, ev }: HitEventRowProps) {
         </td>
         <td className="py-1 text-right text-xs">
           {ev.kind === "hit"
-            ? formatDeepenCell(ev.statsSnapshot, ev.skillType)
+            ? formatDeepenCell(ev.statsSnapshot, ev.element, ev.skillType)
             : ""}
         </td>
       </tr>

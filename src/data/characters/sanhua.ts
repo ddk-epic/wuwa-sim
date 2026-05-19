@@ -33,7 +33,7 @@ export const sanhua = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "deepen", key: "Basic Attack" },
+          path: { stat: "skillTypeDeepen", key: "Basic Attack" },
           value: { kind: "const", v: 0.38 },
         },
       ],

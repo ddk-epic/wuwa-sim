@@ -4,34 +4,37 @@ Reference for `StatPath` values accepted by `kind: "stat"` buff effects.
 
 ## Stat paths
 
-| `stat`              | `key`                              | Description                                                                                                                                                                 |
-| ------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `atkPct`            | —                                  | ATK multiplier (additive with other atkPct contributions)                                                                                                                   |
-| `atkFlat`           | —                                  | Flat ATK added after percent                                                                                                                                                |
-| `hpPct`             | —                                  | HP multiplier                                                                                                                                                               |
-| `hpFlat`            | —                                  | Flat HP                                                                                                                                                                     |
-| `defPct`            | —                                  | DEF multiplier                                                                                                                                                              |
-| `defFlat`           | —                                  | Flat DEF                                                                                                                                                                    |
-| `critRate`          | —                                  | Critical rate                                                                                                                                                               |
-| `critDmg`           | —                                  | Critical damage multiplier                                                                                                                                                  |
-| `defShred`          | —                                  | Enemy DEF reduction                                                                                                                                                         |
-| `allDmgBonus`       | —                                  | Flat additive DMG bonus applied across all skill types                                                                                                                      |
-| `energyRechargePct` | —                                  | Energy recharge percent                                                                                                                                                     |
-| `elementBonus`      | `string` (element name or `"all"`) | Element-typed DMG amp; `"all"` applies to every element                                                                                                                     |
-| `skillTypeBonus`    | `SkillType`                        | Skill-type DMG amp (additive)                                                                                                                                               |
-| `deepen`            | `SkillType` \| `"all"`             | Multiplicative DMG amp applied as a separate `(1 + deepen)` factor; `"all"` applies to every skill type and stacks additively with a skill-type-specific deepen at hit time |
-| `shred`             | `SkillType`                        | Enemy RES reduction for the given skill type                                                                                                                                |
-| `healingBonus`      | —                                  | Flat additive healing bonus; multiplies the entire heal expression `(1 + healingBonus)`                                                                                     |
+| `stat`              | `key`       | Description                                                                             |
+| ------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| `atkPct`            | —           | ATK multiplier (additive with other atkPct contributions)                               |
+| `atkFlat`           | —           | Flat ATK added after percent                                                            |
+| `hpPct`             | —           | HP multiplier                                                                           |
+| `hpFlat`            | —           | Flat HP                                                                                 |
+| `defPct`            | —           | DEF multiplier                                                                          |
+| `defFlat`           | —           | Flat DEF                                                                                |
+| `critRate`          | —           | Critical rate                                                                           |
+| `critDmg`           | —           | Critical damage multiplier                                                              |
+| `defShred`          | —           | Enemy DEF reduction                                                                     |
+| `allDmgBonus`       | —           | Wildcard DMG amp summed alongside element/skill-type bonuses                            |
+| `allDeepen`         | —           | Wildcard deepen summed alongside element/skill-type deepens                             |
+| `energyRechargePct` | —           | Energy recharge percent                                                                 |
+| `elementBonus`      | `Element`   | Per-element DMG amp                                                                     |
+| `skillTypeBonus`    | `SkillType` | Per-skill-type DMG amp                                                                  |
+| `elementDeepen`     | `Element`   | Per-element deepen                                                                      |
+| `skillTypeDeepen`   | `SkillType` | Per-skill-type deepen                                                                   |
+| `shred`             | `SkillType` | Enemy RES reduction for the given skill type                                            |
+| `healingBonus`      | —           | Flat additive healing bonus; multiplies the entire heal expression `(1 + healingBonus)` |
 
-### `deepen "all"` semantics
+### DMG bonus and deepen buckets
 
-`deepen` keyed `"all"` is evaluated at hit time in `compute-damage.ts`:
+DMG bonus and deepen each have three symmetric buckets — per-element, per-skill-type, and a global wildcard. They sum additively at hit time:
 
 ```
-deepen = deepens[skillType] + deepens["all"]
+dmgBonus = elementBonus[element] + skillTypeBonus[skillType] + allDmgBonus
+deepen   = elementDeepen[element] + skillTypeDeepen[skillType] + allDeepen
 ```
 
-Both contributions fold into the single `(1 + deepen)` factor in the damage formula. Authored buffs that use `{ stat: "deepen", key: "all" }` will boost all skill types by the same amount.
+Authored buffs targeting "all" damage of a kind should use the scalar paths `allDmgBonus` / `allDeepen`. See ADR-0017.
 
 ## Healing pipeline
 

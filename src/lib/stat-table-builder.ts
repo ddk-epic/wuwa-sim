@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { BuffDef, StatPath, ValueExpr } from "#/types/buff"
 import type { EnrichedCharacter, SkillType } from "#/types/character"
 import type {
@@ -18,6 +19,13 @@ import {
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
 } from "./echo-stat-constants"
+
+/**
+ * Every character has these as an intrinsic floor before any echo/weapon/buff
+ * contribution. Applied in `compileBaseStats`.
+ */
+const CHARACTER_BASE_CRIT_RATE = 0.05
+const CHARACTER_BASE_CRIT_DMG = 1.5
 
 export type StatContribution = {
   def: BuffDef
@@ -99,9 +107,11 @@ export function cloneStats(s: StatTable): StatTable {
     defShred: s.defShred,
     elementBonus: { ...s.elementBonus },
     skillTypeBonus: { ...s.skillTypeBonus },
-    deepens: { ...s.deepens },
-    shreds: { ...s.shreds },
     allDmgBonus: s.allDmgBonus,
+    elementDeepen: { ...s.elementDeepen },
+    skillTypeDeepen: { ...s.skillTypeDeepen },
+    allDeepen: s.allDeepen,
+    shreds: { ...s.shreds },
     energyRechargePct: s.energyRechargePct,
     healingBonus: s.healingBonus,
   }
@@ -119,18 +129,22 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "critDmg":
     case "defShred":
     case "allDmgBonus":
+    case "allDeepen":
     case "energyRechargePct":
     case "healingBonus":
       stats[path.stat] += v
       return
     case "elementBonus":
-      stats.elementBonus[path.key] = (stats.elementBonus[path.key] ?? 0) + v
+      stats.elementBonus[path.key] += v
       return
     case "skillTypeBonus":
       stats.skillTypeBonus[path.key] += v
       return
-    case "deepen":
-      stats.deepens[path.key] = (stats.deepens[path.key] ?? 0) + v
+    case "elementDeepen":
+      stats.elementDeepen[path.key] += v
+      return
+    case "skillTypeDeepen":
+      stats.skillTypeDeepen[path.key] += v
       return
     case "shred":
       stats.shreds[path.key] += v
@@ -195,15 +209,13 @@ function accumulateCost3Mains(
   stats: StatTable,
   cost3Mains: Cost3Main[],
   primaryScalingStat: "atk" | "hp" | "def",
-  characterElement: string,
+  characterElement: Element,
 ): void {
   for (const main of cost3Mains) {
     if (main === "er") {
       stats.energyRechargePct += ECHO_MAIN_3COST_VARIABLE.er
     } else if (main === "elemDmg") {
-      stats.elementBonus[characterElement] =
-        (stats.elementBonus[characterElement] ?? 0) +
-        ECHO_MAIN_3COST_VARIABLE.elemDmg
+      stats.elementBonus[characterElement] += ECHO_MAIN_3COST_VARIABLE.elemDmg
     } else {
       if (primaryScalingStat === "atk") {
         stats.atkPct += ECHO_MAIN_3COST_VARIABLE.scalingAtk
@@ -248,6 +260,8 @@ export function compileBaseStats(
     atkBase: character.stats.max.atk,
     hpBase: character.stats.max.hp,
     defBase: character.stats.max.def,
+    critRate: CHARACTER_BASE_CRIT_RATE,
+    critDmg: CHARACTER_BASE_CRIT_DMG,
   }
   accumulateEchoSubstatBlock(stats, character)
   accumulateEchoMainBlock(

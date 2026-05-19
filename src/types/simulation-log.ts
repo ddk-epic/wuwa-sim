@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { StatTable } from "./stat-table"
 import type { SkillType, VariantKind } from "./character"
 
@@ -25,7 +26,7 @@ export interface ActiveBuff {
 export interface HitEvent extends SimulationLogBase {
   kind: "hit"
   damage: number
-  element: string
+  element: Element
   dmgType: string
   scalingStat?: string
   multiplier: number

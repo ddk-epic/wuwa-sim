@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { BuffDef } from "./buff"
 
 export type SkillType =
@@ -75,7 +76,7 @@ export interface Skill {
 export interface Character {
   id: number
   name: string
-  element: string
+  element: Element
   weaponType: string
   rarity: string
   stats: CharacterStats

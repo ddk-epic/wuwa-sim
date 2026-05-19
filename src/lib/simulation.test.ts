@@ -384,13 +384,13 @@ describe("runSimulation — echo skill entries", () => {
     })
     expect(result[1]).toMatchObject({
       kind: "hit",
-      damage: 2786,
+      damage: 4384,
       cumulativeEnergy: expect.closeTo(10 * (1 + BASE_ER)),
       cumulativeConcerto: 5,
     })
     expect(result[2]).toMatchObject({
       kind: "hit",
-      damage: 1393,
+      damage: 2192,
       cumulativeEnergy: expect.closeTo(20 * (1 + BASE_ER)),
       cumulativeConcerto: 10,
     })

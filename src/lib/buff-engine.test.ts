@@ -18,10 +18,14 @@ import {
   ECHO_SUBSTAT,
 } from "./echo-stat-constants"
 
+const CHARACTER_BASE_CRIT_RATE = 0.05
+const CHARACTER_BASE_CRIT_DMG = 1.5
 const BASE_ATK_PCT =
   DEFAULT_SUBSTAT_ROLLS.atkPct * ECHO_SUBSTAT.atkPct +
   ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost1 * ECHO_MAIN_1COST_SCALING.atk
-const BASE_CR = DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
+const BASE_CR =
+  CHARACTER_BASE_CRIT_RATE +
+  DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
 const BASE_ER =
   DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
 const BASE_ELEM_BONUS =
@@ -2183,7 +2187,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) ≈ 435 (substat + echo main stats applied)
-    expect(result.syntheticHits[0].damage).toBe(697)
+    expect(result.syntheticHits[0].damage).toBe(1096)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2371,7 +2375,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     expect(result.syntheticHits).toHaveLength(1)
     // Without the +50% Fusion: 1.0 * ATK * critFactor * 0.5 * 0.9 ≈ 744.
     // With the +50%: 1116 * 1.5 → 1306 (substat + echo main stats applied).
-    expect(result.syntheticHits[0].damage).toBe(1829)
+    expect(result.syntheticHits[0].damage).toBe(2877)
     expect(result.syntheticHits[0].characterId).toBe(1)
   })
 
@@ -3313,14 +3317,12 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     return engine
   }
 
-  it("buff 1: elementBonus[all] is applied at simStart for all ranks", () => {
+  it("buff 1: allDmgBonus is applied at simStart for all ranks", () => {
     const values = [0.12, 0.15, 0.18, 0.21, 0.24]
     for (let rank = 1; rank <= 5; rank++) {
       testCharacters = [baseChar({ id: 1, element: "Electro" })]
       const engine = bootstrapStringmaster(rank)
-      expect(engine.resolveStats(1).elementBonus["all"] ?? 0).toBeCloseTo(
-        values[rank - 1],
-      )
+      expect(engine.resolveStats(1).allDmgBonus).toBeCloseTo(values[rank - 1])
     }
   })
 

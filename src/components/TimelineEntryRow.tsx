@@ -104,9 +104,9 @@ export function TimelineEntryRow({
   const source = drag.entrySource(entry.id, { groupId, locked: groupLocked })
   const target = drag.entryTarget(entry.id, { groupId, groupLocked })
 
-  const charElement = char?.element ?? ""
-  const charHex = ELEMENT_HEX[charElement] ?? "#888"
-  const elementLetter = charElement[0] ?? "?"
+  const charElement = char?.element
+  const charHex = (charElement && ELEMENT_HEX[charElement]) ?? "#888"
+  const elementLetter = charElement?.[0] ?? "?"
 
   const duration = resolved
     ? resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)

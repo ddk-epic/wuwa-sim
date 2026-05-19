@@ -131,7 +131,7 @@ describe("formatCDCell", () => {
 describe("formatDMGPctCell", () => {
   it("sums elementBonus + skillTypeBonus + allDmgBonus", () => {
     const s = snap({
-      elementBonus: { Fusion: 0.3 },
+      elementBonus: { ...emptyStatTable().elementBonus, Fusion: 0.3 },
       skillTypeBonus: {
         ...emptyStatTable().skillTypeBonus,
         "Basic Attack": 0.2,
@@ -146,25 +146,44 @@ describe("formatDMGPctCell", () => {
   })
 
   it("only matching element contributes", () => {
-    const s = snap({ elementBonus: { Glacio: 0.5, Fusion: 0.1 } })
+    const s = snap({
+      elementBonus: {
+        ...emptyStatTable().elementBonus,
+        Glacio: 0.5,
+        Fusion: 0.1,
+      },
+    })
     expect(formatDMGPctCell(s, "Fusion", "Basic Attack")).toBe("+10%")
   })
 })
 
 describe("formatDeepenCell", () => {
   it("0 deepen shows +0%", () =>
-    expect(formatDeepenCell(snap(), "Basic Attack")).toBe("+0%"))
-  it("matching deepen shown", () => {
+    expect(formatDeepenCell(snap(), "Fusion", "Basic Attack")).toBe("+0%"))
+  it("matching skillTypeDeepen shown", () => {
     const s = snap({
-      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.2 },
+      skillTypeDeepen: {
+        ...emptyStatTable().skillTypeDeepen,
+        "Basic Attack": 0.2,
+      },
     })
-    expect(formatDeepenCell(s, "Basic Attack")).toBe("+20%")
+    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+20%")
   })
   it("non-matching skill type shows +0%", () => {
     const s = snap({
-      deepens: { ...emptyStatTable().deepens, "Resonance Skill": 0.3 },
+      skillTypeDeepen: {
+        ...emptyStatTable().skillTypeDeepen,
+        "Resonance Skill": 0.3,
+      },
     })
-    expect(formatDeepenCell(s, "Basic Attack")).toBe("+0%")
+    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+0%")
+  })
+  it("elementDeepen + allDeepen sum into deepen cell", () => {
+    const s = snap({
+      elementDeepen: { ...emptyStatTable().elementDeepen, Fusion: 0.1 },
+      allDeepen: 0.05,
+    })
+    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+15%")
   })
 })
 
@@ -192,7 +211,7 @@ describe("computeFormulaBreakdown", () => {
     const s = snap({ defShred: 0 })
     const ev = {
       damage: 0,
-      element: "Fusion",
+      element: "Fusion" as const,
       dmgType: "Damage",
       skillType: "Basic Attack" as SkillType,
       multiplier: 1,
@@ -206,7 +225,7 @@ describe("computeFormulaBreakdown", () => {
     const s = snap({ defShred: 0.2 })
     const ev = {
       damage: 0,
-      element: "Fusion",
+      element: "Fusion" as const,
       dmgType: "Damage",
       skillType: "Basic Attack" as SkillType,
       multiplier: 1,

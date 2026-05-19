@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { SkillType } from "#/types/character"
 import type { StatTable } from "#/types/stat-table"
 
@@ -8,7 +9,7 @@ export type ScalingStat = "ATK" | "HP" | "DEF"
 
 export interface DamageContext {
   multiplier: number
-  element: string
+  element: Element
   skillType: SkillType
   dmgType: string
   scalingStat?: string
@@ -36,12 +37,13 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const stat = normalizeScalingStat(ctx.scalingStat)
   const base = scalingBase(stat, stats)
   const dmgBonus =
-    (stats.elementBonus[ctx.element] ?? 0) +
-    (stats.elementBonus["all"] ?? 0) +
+    stats.elementBonus[ctx.element] +
     stats.skillTypeBonus[ctx.skillType] +
     stats.allDmgBonus
   const deepen =
-    (stats.deepens[ctx.skillType] ?? 0) + (stats.deepens["all"] ?? 0)
+    stats.elementDeepen[ctx.element] +
+    stats.skillTypeDeepen[ctx.skillType] +
+    stats.allDeepen
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = 1 - critRate + critRate * stats.critDmg
 

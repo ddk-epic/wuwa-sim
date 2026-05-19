@@ -20,7 +20,7 @@ export const stringmaster = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "elementBonus", key: "all" },
+          path: { stat: "allDmgBonus" },
           value: { kind: "const", v: [0.12, 0.15, 0.18, 0.21, 0.24] },
         },
       ],

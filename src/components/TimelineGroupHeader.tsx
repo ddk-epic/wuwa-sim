@@ -47,7 +47,7 @@ export function buildGroupGradient(
   const charIds = getDistinctCharsBySlot(groupEntries, slots)
   const hexes = charIds.map((id) => {
     const char = getCharacterById(id)
-    return ELEMENT_HEX[char?.element ?? ""] ?? "#888"
+    return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
   })
   if (hexes.length === 0) return "transparent"
   if (hexes.length === 1)
@@ -81,7 +81,7 @@ export function getDominantHex(groupEntries: TimelineEntry[]): string {
   }
   if (dominantId === null) return "#888"
   const char = getCharacterById(dominantId)
-  return ELEMENT_HEX[char?.element ?? ""] ?? "#888"
+  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
 }
 
 function GroupLabelInput({
@@ -247,7 +247,7 @@ export function TimelineGroupHeader({
           <div className="flex items-center">
             {distinctCharIds.map((charId, idx) => {
               const char = getCharacterById(charId)
-              const hex = ELEMENT_HEX[char?.element ?? ""] ?? "#888"
+              const hex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
               const name = char?.name.toLowerCase() ?? ""
               return (
                 <img

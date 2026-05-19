@@ -1,3 +1,5 @@
+import type { Element } from "#/data/elements"
+import { ELEMENTS } from "#/data/elements"
 import type { SkillType } from "./character"
 
 const SKILL_TYPES: SkillType[] = [
@@ -18,6 +20,13 @@ function emptySkillTypeMap(): Record<SkillType, number> {
   >
 }
 
+function emptyElementMap(): Record<Element, number> {
+  return Object.fromEntries(ELEMENTS.map((e) => [e, 0])) as Record<
+    Element,
+    number
+  >
+}
+
 export interface StatTable {
   atkBase: number
   atkPct: number
@@ -30,12 +39,14 @@ export interface StatTable {
   defFlat: number
   critRate: number
   critDmg: number
-  elementBonus: Record<string, number>
+  elementBonus: Record<Element, number>
   skillTypeBonus: Record<SkillType, number>
-  deepens: Record<string, number>
+  allDmgBonus: number
+  elementDeepen: Record<Element, number>
+  skillTypeDeepen: Record<SkillType, number>
+  allDeepen: number
   defShred: number
   shreds: Record<SkillType, number>
-  allDmgBonus: number
   energyRechargePct: number
   healingBonus: number
 }
@@ -53,12 +64,14 @@ export function emptyStatTable(): StatTable {
     defFlat: 0,
     critRate: 0,
     critDmg: 0,
-    elementBonus: {},
+    elementBonus: emptyElementMap(),
     skillTypeBonus: emptySkillTypeMap(),
-    deepens: emptySkillTypeMap(),
+    allDmgBonus: 0,
+    elementDeepen: emptyElementMap(),
+    skillTypeDeepen: emptySkillTypeMap(),
+    allDeepen: 0,
     defShred: 0,
     shreds: emptySkillTypeMap(),
-    allDmgBonus: 0,
     energyRechargePct: 0,
     healingBonus: 0,
   }

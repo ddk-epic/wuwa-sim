@@ -1,3 +1,4 @@
+import { ELEMENTS } from "#/data/elements"
 import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
@@ -17,8 +18,6 @@ import {
   freezeSnapshots,
 } from "./stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
-
-const ELEMENTS = ["Fusion", "Glacio", "Electro", "Aero", "Havoc", "Spectro"]
 
 const FLAT_VALUE_BY_NAME: Record<string, { path: StatPath; v: number }> = {
   ATK: { path: { stat: "atkPct" }, v: 0.12 },

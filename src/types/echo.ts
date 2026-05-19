@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { DamageEntry } from "./character.js"
 import type { BuffDef } from "./buff"
 
@@ -13,7 +14,7 @@ export interface Echo {
   id: number
   name: string
   cost: number
-  element: string
+  element: Element
   skill: EchoSkill
   sets: string[]
   buffs: BuffDef[]

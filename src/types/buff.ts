@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { DamageEntry, SkillType } from "./character"
 
 export type StatPath =
@@ -13,12 +14,14 @@ export type StatPath =
         | "critDmg"
         | "defShred"
         | "allDmgBonus"
+        | "allDeepen"
         | "energyRechargePct"
         | "healingBonus"
     }
-  | { stat: "elementBonus"; key: string }
+  | { stat: "elementBonus"; key: Element }
   | { stat: "skillTypeBonus"; key: SkillType }
-  | { stat: "deepen"; key: SkillType | "all" }
+  | { stat: "elementDeepen"; key: Element }
+  | { stat: "skillTypeDeepen"; key: SkillType }
   | { stat: "shred"; key: SkillType }
 
 export type ValueExpr =
@@ -45,7 +48,7 @@ export type EmitHitEffect = {
   /** Skill type label used for triggers and log rendering. */
   skillType?: SkillType
   /** Element override; defaults to source character's element. */
-  element?: string
+  element?: Element
 }
 
 export type ResourceEffect = {

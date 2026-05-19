@@ -57,7 +57,7 @@ describe("Verina — Outro Blossom (deepen all +15%)", () => {
     expect(engine.activeBuffIds(1503)).toContain(
       "char.verina.outro.blossom-deepen",
     )
-    expect(engine.resolveStats(1503).deepens["all"]).toBeCloseTo(0.15)
+    expect(engine.resolveStats(1503).allDeepen).toBeCloseTo(0.15)
   })
 
   it("buff expires after 30s (1800 frames)", () => {
@@ -193,7 +193,7 @@ describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
     "%s cast grants team Spectro DMG +15% for 24s (sequence 4)",
     (skillType) => {
       const engine = makeEngine(4)
-      const baseSpectro = engine.resolveStats(1503).elementBonus["Spectro"] ?? 0
+      const baseSpectro = engine.resolveStats(1503).elementBonus["Spectro"]
       engine.onEvent({
         kind: "skillCast",
         characterId: 1503,

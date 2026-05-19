@@ -32,7 +32,7 @@ export const verina = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "deepen", key: "all" },
+          path: { stat: "allDeepen" },
           value: { kind: "const", v: 0.15 },
         },
       ],

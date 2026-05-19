@@ -44,7 +44,7 @@ describe("computeDamage", () => {
 
   it("element bonus and skillType bonus share one additive bucket", () => {
     const s = stats({
-      elementBonus: { Fusion: 0.3 },
+      elementBonus: { ...emptyStatTable().elementBonus, Fusion: 0.3 },
       skillTypeBonus: {
         ...emptyStatTable().skillTypeBonus,
         "Basic Attack": 0.2,
@@ -56,37 +56,49 @@ describe("computeDamage", () => {
   })
 
   it("only element matching ctx.element contributes", () => {
-    const s = stats({ elementBonus: { Glacio: 0.4, Fusion: 0.1 } })
+    const s = stats({
+      elementBonus: {
+        ...emptyStatTable().elementBonus,
+        Glacio: 0.4,
+        Fusion: 0.1,
+      },
+    })
     expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
       Math.round(1 * 1000 * 1.1 * DEFRES),
     )
   })
 
-  it('elementBonus["all"] wildcard stacks with element-specific bonus', () => {
-    const s = stats({ elementBonus: { Fusion: 0.1, all: 0.12 } })
+  it("allDmgBonus stacks with element-specific bonus", () => {
+    const s = stats({
+      elementBonus: { ...emptyStatTable().elementBonus, Fusion: 0.1 },
+      allDmgBonus: 0.12,
+    })
     expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
       Math.round(1 * 1000 * (1 + 0.1 + 0.12) * DEFRES),
     )
   })
 
-  it('elementBonus["all"] applies regardless of element', () => {
-    const s = stats({ elementBonus: { all: 0.24 } })
+  it("allDmgBonus applies regardless of element", () => {
+    const s = stats({ allDmgBonus: 0.24 })
     expect(computeDamage(ctx({ element: "Glacio" }), s)).toBe(
       Math.round(1 * 1000 * 1.24 * DEFRES),
     )
   })
 
-  it("deepens applies as its own multiplicative factor on matching skillType", () => {
+  it("skillTypeDeepen applies as its own multiplicative factor on matching skillType", () => {
     const s = stats({
-      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.25 },
+      skillTypeDeepen: {
+        ...emptyStatTable().skillTypeDeepen,
+        "Basic Attack": 0.25,
+      },
     })
     expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(
       Math.round(1 * 1000 * 1.25 * DEFRES),
     )
   })
 
-  it("deepen keyed 'all' applies to Basic Attack, Resonance Skill, and Outro Skill equally", () => {
-    const s = stats({ deepens: { ...emptyStatTable().deepens, all: 0.2 } })
+  it("allDeepen applies to every skill type equally", () => {
+    const s = stats({ allDeepen: 0.2 })
     const expected = Math.round(1 * 1000 * 1.2 * DEFRES)
     expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(expected)
     expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
@@ -95,15 +107,31 @@ describe("computeDamage", () => {
     expect(computeDamage(ctx({ skillType: "Outro Skill" }), s)).toBe(expected)
   })
 
-  it("deepen 'all' and skill-type-specific deepen stack additively before the factor", () => {
+  it("allDeepen and skillTypeDeepen stack additively before the factor", () => {
     const s = stats({
-      deepens: { ...emptyStatTable().deepens, "Basic Attack": 0.1, all: 0.2 },
+      skillTypeDeepen: {
+        ...emptyStatTable().skillTypeDeepen,
+        "Basic Attack": 0.1,
+      },
+      allDeepen: 0.2,
     })
     expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(
       Math.round(1 * 1000 * 1.3 * DEFRES),
     )
     expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
       Math.round(1 * 1000 * 1.2 * DEFRES),
+    )
+  })
+
+  it("elementDeepen applies when element matches", () => {
+    const s = stats({
+      elementDeepen: { ...emptyStatTable().elementDeepen, Fusion: 0.15 },
+    })
+    expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
+      Math.round(1 * 1000 * 1.15 * DEFRES),
+    )
+    expect(computeDamage(ctx({ element: "Glacio" }), s)).toBe(
+      Math.round(1 * 1000 * DEFRES),
     )
   })
 

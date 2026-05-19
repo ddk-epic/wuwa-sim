@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type {
   DamageEntry,
   MovementKind,
@@ -19,7 +20,7 @@ export interface ResolvedStage {
   stage: ActionTimeStage & { damage?: DamageEntry[] }
   stageId: string
   stageName: string
-  element: string
+  element: Element
   concerto: number
   resonanceCost?: number
   damage: DamageEntry[]

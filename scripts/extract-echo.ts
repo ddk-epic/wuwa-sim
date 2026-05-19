@@ -151,7 +151,7 @@ export async function extractEcho(id: string): Promise<void> {
     id: data.MonsterId,
     name: data.MonsterName,
     cost: cost ?? 1,
-    element: data.Element.Name,
+    element: data.Element.Name as Echo["element"],
     skill: mapSkill(data.Skill),
     sets: echoSets.map((s) => s.name),
     buffs: [],

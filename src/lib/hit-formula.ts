@@ -1,3 +1,4 @@
+import type { Element } from "#/data/elements"
 import type { SkillType } from "#/types/character"
 import type { ActiveBuff, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
@@ -34,11 +35,11 @@ export function formatCDCell(dmg: number): string {
 
 export function formatDMGPctCell(
   snap: StatTable,
-  element: string,
+  element: Element,
   skillType: SkillType,
 ): string {
   const total =
-    (snap.elementBonus[element] ?? 0) +
+    snap.elementBonus[element] +
     snap.skillTypeBonus[skillType] +
     snap.allDmgBonus
   return `+${Math.round(total * 100)}%`
@@ -46,9 +47,14 @@ export function formatDMGPctCell(
 
 export function formatDeepenCell(
   snap: StatTable,
+  element: Element,
   skillType: SkillType,
 ): string {
-  return `+${Math.round(snap.deepens[skillType] * 100)}%`
+  const total =
+    snap.elementDeepen[element] +
+    snap.skillTypeDeepen[skillType] +
+    snap.allDeepen
+  return `+${Math.round(total * 100)}%`
 }
 
 type StatKind = "ATK" | "HP" | "DEF"
@@ -109,11 +115,14 @@ export function computeFormulaBreakdown(
   const scalingValue = base * (1 + pct) + flat
 
   const dmgBonus =
-    (snap.elementBonus[ev.element] ?? 0) +
+    snap.elementBonus[ev.element] +
     snap.skillTypeBonus[ev.skillType] +
     snap.allDmgBonus
 
-  const deepen = snap.deepens[ev.skillType]
+  const deepen =
+    snap.elementDeepen[ev.element] +
+    snap.skillTypeDeepen[ev.skillType] +
+    snap.allDeepen
   const cr = Math.min(snap.critRate, 1)
   const critFactor = 1 - cr + cr * snap.critDmg
 

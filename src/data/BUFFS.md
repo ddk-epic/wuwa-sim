@@ -328,21 +328,22 @@ Don't include version numbers, balance patches, or character IDs (in human-autho
 
 **Multi-effect buffs** — append a parenthetical listing short labels for each effect, comma-separated: `"Woolies Cheer Dance (Fusion, Basic)"`. Short labels by stat path:
 
-| Stat path                    | Label                                |
-| ---------------------------- | ------------------------------------ |
-| `elementBonus/<Element>`     | element name (`Fusion`, `Glacio`, …) |
-| `skillTypeBonus/<SkillType>` | short skill name (see table below)   |
-| `deepen/<SkillType>`         | `<short> Deepen`                     |
-| `shred/<SkillType>`          | `<short> Shred`                      |
-| `atkPct`                     | `ATK`                                |
-| `hpPct`                      | `HP`                                 |
-| `defPct`                     | `DEF`                                |
-| `critRate`                   | `CRIT Rate`                          |
-| `critDmg`                    | `CRIT DMG`                           |
-| `defShred`                   | `DEF Shred`                          |
-| `allDmgBonus`                | `All`                                |
-| `energyRechargePct`          | `ER`                                 |
-| flat stats (rare)            | `ATK Flat`, `HP Flat`, `DEF Flat`    |
+| Stat path                     | Label                                |
+| ----------------------------- | ------------------------------------ |
+| `elementBonus/<Element>`      | element name (`Fusion`, `Glacio`, …) |
+| `skillTypeBonus/<SkillType>`  | short skill name (see table below)   |
+| `elementDeepen/<Element>`     | `<element> Deepen`                   |
+| `skillTypeDeepen/<SkillType>` | `<short> Deepen`                     |
+| `shred/<SkillType>`           | `<short> Shred`                      |
+| `atkPct`                      | `ATK`                                |
+| `hpPct`                       | `HP`                                 |
+| `defPct`                      | `DEF`                                |
+| `critRate`                    | `CRIT Rate`                          |
+| `critDmg`                     | `CRIT DMG`                           |
+| `defShred`                    | `DEF Shred`                          |
+| `allDmgBonus`                 | `All`                                |
+| `energyRechargePct`           | `ER`                                 |
+| flat stats (rare)             | `ATK Flat`, `HP Flat`, `DEF Flat`    |
 
 SkillType short forms:
 
@@ -413,8 +414,8 @@ A buff's `effects` is an array; entries can mix kinds.
 
 **Stat paths** (`StatPath`):
 
-- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`
-- Keyed: `elementBonus` (key = element name, or `"all"` as a wildcard that applies regardless of element), `skillTypeBonus` (key = `SkillType`), `deepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys
+- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`, `allDeepen`
+- Keyed: `elementBonus` (key = `Element`), `skillTypeBonus` (key = `SkillType`), `elementDeepen` (key = `Element`), `skillTypeDeepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys. Wildcards use the flat scalars `allDmgBonus` / `allDeepen` (see ADR-0017).
 
 **Value expressions** (`ValueExpr`):
 
@@ -468,7 +469,7 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 
 ### SkillType values
 
-`SkillType` is a closed union. These are the only valid values for `Trigger.skillType`, `DamageEntry.type`, and `skillTypeBonus` / `deepens` / `shreds` keys:
+`SkillType` is a closed union. These are the only valid values for `Trigger.skillType`, `DamageEntry.type`, and `skillTypeBonus` / `skillTypeDeepen` / `shreds` keys:
 
 | Value                    |
 | ------------------------ |

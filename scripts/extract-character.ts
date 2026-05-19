@@ -441,7 +441,7 @@ export async function extractCharacter(id: string): Promise<void> {
   const character: Character = {
     id: data.Id,
     name: data.Name.Content,
-    element: data.ElementName,
+    element: data.ElementName as Character["element"],
     weaponType: weaponType ?? String(data.WeaponType),
     rarity: data.QualityName,
     stats: mapStats(data.Properties),
