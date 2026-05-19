@@ -2,19 +2,23 @@ import { Modal } from "#/components/Modal"
 
 interface SettingsModalProps {
   reactionDelay: number
+  swapFrames: number
   onReactionDelayChange: (value: number) => void
+  onSwapFramesChange: (value: number) => void
   onClose: () => void
 }
 
 export function SettingsModal({
   reactionDelay,
+  swapFrames,
   onReactionDelayChange,
+  onSwapFramesChange,
   onClose,
 }: SettingsModalProps) {
   return (
     <Modal onClose={onClose}>
       <h2 className="text-white text-lg font-semibold mb-4">Settings</h2>
-      <div className="flex flex-col gap-1 mb-6">
+      <div className="flex flex-col gap-1 mb-4">
         <label className="text-sm text-gray-400" htmlFor="reaction-delay">
           Reaction Delay (frames)
         </label>
@@ -25,6 +29,20 @@ export function SettingsModal({
           max={60}
           value={reactionDelay}
           onChange={(e) => onReactionDelayChange(Number(e.target.value))}
+          className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
+        />
+      </div>
+      <div className="flex flex-col gap-1 mb-6">
+        <label className="text-sm text-gray-400" htmlFor="swap-frames">
+          Swap Frames (frames)
+        </label>
+        <input
+          id="swap-frames"
+          type="number"
+          min={0}
+          max={60}
+          value={swapFrames}
+          onChange={(e) => onSwapFramesChange(Number(e.target.value))}
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
       </div>

@@ -13,6 +13,7 @@ import { getCharacterById } from "#/lib/catalog"
 import {
   useReactionDelay,
   useSettingsActions,
+  useSwapFrames,
 } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ConfirmModal"
@@ -38,7 +39,8 @@ export function Header({
 }: HeaderProps) {
   const { slots } = useTeamContext()
   const reactionDelay = useReactionDelay()
-  const { setReactionDelay } = useSettingsActions()
+  const swapFrames = useSwapFrames()
+  const { setSettings } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -147,7 +149,11 @@ export function Header({
       {settingsOpen && (
         <SettingsModal
           reactionDelay={reactionDelay}
-          onReactionDelayChange={setReactionDelay}
+          swapFrames={swapFrames}
+          onReactionDelayChange={(value) =>
+            setSettings({ reactionDelay: value })
+          }
+          onSwapFramesChange={(value) => setSettings({ swapFrames: value })}
           onClose={() => setSettingsOpen(false)}
         />
       )}

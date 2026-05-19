@@ -40,7 +40,7 @@ export function SimulatorPage() {
     duplicateGroup,
     clearTimeline,
   } = useTimeline(clearLog)
-  const [settings, setReactionDelay] = useSettings()
+  const [settings, setSettings] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
 
@@ -61,10 +61,7 @@ export function SimulatorPage() {
 
   return (
     <TeamProvider value={team}>
-      <SettingsProvider
-        reactionDelay={settings.reactionDelay}
-        actions={{ setReactionDelay }}
-      >
+      <SettingsProvider settings={settings} actions={{ setSettings }}>
         <RenamingGroupProvider
           value={{ renamingGroupId, startRename, endRename }}
         >

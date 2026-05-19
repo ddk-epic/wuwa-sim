@@ -2,21 +2,48 @@ import { useLocalStorage } from "./useLocalStorage"
 
 export interface Settings {
   reactionDelay: number
+  swapFrames: number
 }
 
-const DEFAULTS: Settings = { reactionDelay: 9 }
+const DEFAULTS: Settings = { reactionDelay: 6, swapFrames: 6 }
 const STORAGE_KEY = "wuwa.settings"
 
-export function useSettings(): [Settings, (reactionDelay: number) => void] {
+function clamp(value: number): number {
+  return Math.max(0, Math.min(60, Math.round(value)))
+}
+
+function mergeWithDefaults(stored: unknown): Settings {
+  if (stored === null || typeof stored !== "object") return DEFAULTS
+  const partial = stored as Partial<Settings>
+  return {
+    reactionDelay:
+      typeof partial.reactionDelay === "number"
+        ? partial.reactionDelay
+        : DEFAULTS.reactionDelay,
+    swapFrames:
+      typeof partial.swapFrames === "number"
+        ? partial.swapFrames
+        : DEFAULTS.swapFrames,
+  }
+}
+
+export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
   const [settings, setSettings] = useLocalStorage<Settings>(
     STORAGE_KEY,
     DEFAULTS,
+    mergeWithDefaults,
   )
 
-  function setReactionDelay(value: number) {
-    const clamped = Math.max(0, Math.min(60, Math.round(value)))
-    setSettings({ ...settings, reactionDelay: clamped })
+  function applyPatch(patch: Partial<Settings>) {
+    const next: Settings = { ...settings }
+    if (patch.reactionDelay !== undefined) {
+      next.reactionDelay = clamp(patch.reactionDelay)
+    }
+    if (patch.swapFrames !== undefined) {
+      next.swapFrames = clamp(patch.swapFrames)
+    }
+    setSettings(next)
   }
 
-  return [settings, setReactionDelay]
+  return [settings, applyPatch]
 }

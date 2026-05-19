@@ -1,27 +1,28 @@
 import { createContext, useContext, type ReactNode } from "react"
+import type { Settings } from "./useSettings"
 
 interface SettingsActions {
-  setReactionDelay: (value: number) => void
+  setSettings: (patch: Partial<Settings>) => void
 }
 
 interface SettingsContextValue {
-  reactionDelay: number
+  settings: Settings
   actions: SettingsActions
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 export function SettingsProvider({
-  reactionDelay,
+  settings,
   actions,
   children,
 }: {
-  reactionDelay: number
+  settings: Settings
   actions: SettingsActions
   children: ReactNode
 }) {
   return (
-    <SettingsContext.Provider value={{ reactionDelay, actions }}>
+    <SettingsContext.Provider value={{ settings, actions }}>
       {children}
     </SettingsContext.Provider>
   )
@@ -36,7 +37,15 @@ function useSettingsContext(): SettingsContextValue {
 }
 
 export function useReactionDelay(): number {
-  return useSettingsContext().reactionDelay
+  return useSettingsContext().settings.reactionDelay
+}
+
+export function useSwapFrames(): number {
+  return useSettingsContext().settings.swapFrames
+}
+
+export function useSettingsValue(): Settings {
+  return useSettingsContext().settings
 }
 
 export function useSettingsActions(): SettingsActions {
