@@ -60,6 +60,7 @@ function formatLiberationCastStage(skillName: string, level: number): string {
     `${l1}newName: ${s(skillName)},`,
     `${l1}value: "",`,
     `${l1}actionTime: 0,`,
+    `${l1}variants: {},`,
     `${l1}damage: [],`,
     `${l}}`,
   ].join("\n")
@@ -74,6 +75,7 @@ function formatOutroStage(level: number): string {
     `${l1}newName: '',`,
     `${l1}value: "0%",`,
     `${l1}actionTime: 0,`,
+    `${l1}variants: {},`,
     `${l1}damage: [],`,
     `${l}}`,
   ].join("\n")
@@ -96,6 +98,7 @@ function formatStage(stage: SkillAttribute, level: number): string {
   if (stage.concerto !== undefined)
     lines.push(`${l1}concerto: ${stage.concerto},`)
   lines.push(`${l1}actionTime: 0,`)
+  lines.push(`${l1}variants: {},`)
   if (stage.damage && stage.damage.length > 0) {
     lines.push(`${l1}damage: [`)
     for (const d of stage.damage)

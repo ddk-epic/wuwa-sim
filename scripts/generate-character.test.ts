@@ -256,7 +256,20 @@ describe("formatCharacter", () => {
     expect(outroSection).toContain("newName: '',")
     expect(outroSection).toContain('value: "0%",')
     expect(outroSection).toContain("actionTime: 0,")
+    expect(outroSection).toContain("variants: {},")
     expect(outroSection).toContain("damage: [],")
+  })
+
+  it("emits variants: {} in normal stages", () => {
+    const out = formatCharacter(charWithSkills, "testHero")
+    expect(out).toContain("variants: {},")
+  })
+
+  it("emits variants: {} in the Liberation cast stage", () => {
+    const out = formatCharacter(charWithSkills, "testHero")
+    const libIdx = out.indexOf('"Resonance Liberation"')
+    const libSection = out.slice(libIdx)
+    expect(libSection).toContain("variants: {},")
   })
 
   it("emits flat: line in damage entry when flat is defined", () => {
