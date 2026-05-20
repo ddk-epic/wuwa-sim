@@ -1,11 +1,6 @@
-import type {
-  ActionEvent,
-  HitEvent,
-  SimulationLogEntry,
-} from "#/types/simulation-log"
+import type { ActionEvent, SimulationLogEntry } from "#/types/simulation-log"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById } from "#/lib/catalog"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 
 const EMPTY_SLOTS: Slots = [null, null, null]
@@ -59,8 +54,7 @@ export function getTimelineSummary(
       } else if (e.kind === "hit" && e.sourceEntryId !== undefined) {
         hitDamageByEntryId.set(
           e.sourceEntryId,
-          (hitDamageByEntryId.get(e.sourceEntryId) ?? 0) +
-            (e as HitEvent).damage,
+          (hitDamageByEntryId.get(e.sourceEntryId) ?? 0) + e.damage,
         )
       }
     }
@@ -121,18 +115,7 @@ export function getTimelineSummary(
         ? fallbackReactFrames(entry, resolved.stage, reactionDelay)
         : 0
       padFrames = 0
-
-      if (execution && execution.hits.length > 0) {
-        const multiplier = execution.hits.reduce((sum, d) => sum + d.value, 0)
-        if (multiplier > 0) {
-          const maxAtk = getCharacterById(entry.characterId)?.stats.max.atk ?? 0
-          damage = Math.round(multiplier * maxAtk)
-        } else {
-          damage = null
-        }
-      } else {
-        damage = null
-      }
+      damage = null
     }
 
     cumulativeFrames += durationFrames

@@ -135,7 +135,7 @@ describe("getTimelineSummary — empty", () => {
 })
 
 describe("getTimelineSummary — single entry", () => {
-  it("first row starts at timeFrames 0 and includes computed damage", () => {
+  it("first row starts at timeFrames 0 with null damage when no simulation log is provided", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([normalAttack(1)])
     expect(result.rows).toEqual([
@@ -144,21 +144,12 @@ describe("getTimelineSummary — single entry", () => {
         durationFrames: 60,
         reactFrames: 0,
         padFrames: 0,
-        damage: 1500,
+        damage: null,
       },
     ])
-    expect(result.totalDamage).toBe(1500)
+    expect(result.totalDamage).toBe(0)
     expect(result.totalTimeFrames).toBe(60)
-    expect(result.dps).toBe(1500)
-  })
-
-  it("rounds damage to a whole number", () => {
-    testCharacters = [
-      { ...charA, stats: { ...charA.stats, max: { hp: 0, atk: 3, def: 0 } } },
-    ]
-    const result = getTimelineSummary([normalAttack(1)])
-    // 1.5 * 3 = 4.5, rounds to 5
-    expect(result.rows[0].damage).toBe(5)
+    expect(result.dps).toBe(0)
   })
 
   it("damage is null when stage has no damage entries", () => {
@@ -182,45 +173,35 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     expect(result.totalTimeFrames).toBe(180)
   })
 
-  it("totalDamage sums damages across entries from different characters", () => {
+  it("damage is null for every fallback row regardless of character", () => {
     testCharacters = [charA, charB]
     const result = getTimelineSummary([normalAttack(1), normalAttack(2)])
-    // charA: 1.5 * 1000 = 1500, charB: 1.5 * 500 = 750
-    expect(result.totalDamage).toBe(2250)
+    expect(result.rows.map((r) => r.damage)).toEqual([null, null])
+    expect(result.totalDamage).toBe(0)
   })
 })
 
 describe("getTimelineSummary — zero-damage rule", () => {
-  it("stages with no damage entries are excluded from totalDamage but still advance time", () => {
+  it("fallback rows have null damage and totalDamage stays 0, but time still advances", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       tlEntry(1, "No Damage Skill::_", "a"),
       normalAttack(1, "b"),
     ])
     expect(result.rows[0].damage).toBeNull()
-    expect(result.rows[1].damage).toBe(1500)
-    expect(result.totalDamage).toBe(1500)
+    expect(result.rows[1].damage).toBeNull()
+    expect(result.totalDamage).toBe(0)
     expect(result.totalTimeFrames).toBe(120) // No Damage 60f + Normal Attack 60f
   })
 })
 
 describe("getTimelineSummary — dps", () => {
-  it("dps is 0 when total time is 0 even with damaging entries", () => {
-    testCharacters = [charA]
-    // Instant Skill has actionTime=0 and damage entries → time=0, damage=1000
-    const result = getTimelineSummary([tlEntry(1, "Instant Skill::_", "x")])
-    expect(result.totalDamage).toBe(1000)
-    expect(result.totalTimeFrames).toBe(0)
-    expect(result.dps).toBe(0)
-  })
-
-  it("dps rounds to a whole number", () => {
+  it("dps is 0 without a simulation log", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([tlEntry(1, "Resonance Skill::_")])
-    // 90f = 1.5s, damage = 1.0 * 1000 = 1000 → dps = round(667) = 667
     expect(result.totalTimeFrames).toBe(90)
-    expect(result.totalDamage).toBe(1000)
-    expect(result.dps).toBe(667)
+    expect(result.totalDamage).toBe(0)
+    expect(result.dps).toBe(0)
   })
 })
 
@@ -347,7 +328,7 @@ describe("getTimelineSummary — log ingestion: mixed match/fallback", () => {
       durationFrames: 60,
       reactFrames: 0,
       padFrames: 0,
-      damage: 1500, // fallback stage-math estimate
+      damage: null, // fallback rows show no estimate
     })
   })
 })
