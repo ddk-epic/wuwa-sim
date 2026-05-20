@@ -100,8 +100,6 @@ export function TimelineEntryRow({
     damage: null,
   }
   const isDragging = drag.draggedId === entry.id
-  const dropTargetMatch =
-    drag.dropTarget?.id === entry.id ? drag.dropTarget : null
   const source = drag.entrySource(
     entry.id,
     { groupId, locked: groupLocked },
@@ -146,12 +144,6 @@ export function TimelineEntryRow({
         "border-t cursor-grab",
         charSwitched ? "" : "border-gray-700",
         isDragging ? "opacity-40" : "hover:bg-gray-800/50",
-        dropTargetMatch?.position === "above"
-          ? "border-t-blue-500 border-t-2"
-          : "",
-        dropTargetMatch?.position === "below"
-          ? "border-b-blue-500 border-b-2"
-          : "",
         isInvalid ? "bg-red-950/30" : "",
       ].join(" ")}
       style={rowStyle}

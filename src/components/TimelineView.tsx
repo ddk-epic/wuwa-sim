@@ -8,9 +8,11 @@ import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import type { DropPosition } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { buildTimelineRenderItems } from "#/lib/timeline-render-items"
+import { applyDragPreview } from "#/lib/timeline-drag-preview"
 import { ConfirmModal } from "./ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
+import { GhostEntryRow } from "./GhostEntryRow"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -90,7 +92,7 @@ export function TimelineView({
     [entries, slots, loadouts],
   )
 
-  const renderItems = useMemo(
+  const baseRenderItems = useMemo(
     () =>
       buildTimelineRenderItems(
         nodes,
@@ -101,6 +103,11 @@ export function TimelineView({
       ),
     [nodes, expandedGroupIds, slots, loadouts, validation],
   )
+
+  const renderItems = applyDragPreview(baseRenderItems, {
+    draggedId: drag.draggedId,
+    dropTarget: drag.dropTarget,
+  })
 
   if (entries.length === 0 && nodes.length === 0) {
     return (
@@ -141,6 +148,11 @@ export function TimelineView({
         </thead>
         <tbody>
           {renderItems.map((item) => {
+            if (item.type === "ghost") {
+              return (
+                <GhostEntryRow key={`ghost-${item.sourceId}`} item={item} />
+              )
+            }
             if (item.type === "groupHeader") {
               return (
                 <TimelineGroupHeader
@@ -159,6 +171,9 @@ export function TimelineView({
                   onRequestDeleteConfirm={setDeletingGroupId}
                 />
               )
+            }
+            if (item.hidden) {
+              return <tr key={item.entry.id} style={{ display: "none" }} />
             }
             const i = item.flatIndex
             const ev = actionEvents[i]

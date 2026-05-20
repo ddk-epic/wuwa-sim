@@ -56,6 +56,15 @@ export type RenderItem =
        * within-group index for group entries.
        */
       containerIndex: number
+      /** Set by applyDragPreview to collapse the source row while dragging. */
+      hidden?: boolean
+    }
+  | {
+      type: "ghost"
+      /** ID of the entry being dragged — used as React key. */
+      sourceId: string
+      charHex: string
+      skillName: string | null
     }
 
 function buildShowMessageIds(
