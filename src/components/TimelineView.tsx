@@ -13,6 +13,7 @@ import { ConfirmModal } from "./ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
 import { GhostEntryRow } from "./GhostEntryRow"
+import { GhostGroupRow } from "./GhostGroupRow"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -153,7 +154,23 @@ export function TimelineView({
                 <GhostEntryRow key={`ghost-${item.sourceId}`} item={item} />
               )
             }
+            if (item.type === "groupGhost") {
+              return (
+                <GhostGroupRow
+                  key={`groupGhost-${item.sourceGroupId}`}
+                  item={item}
+                />
+              )
+            }
             if (item.type === "groupHeader") {
+              if (item.hidden) {
+                return (
+                  <tr
+                    key={`group-${item.groupId}`}
+                    style={{ display: "none" }}
+                  />
+                )
+              }
               return (
                 <TimelineGroupHeader
                   key={`group-${item.groupId}`}

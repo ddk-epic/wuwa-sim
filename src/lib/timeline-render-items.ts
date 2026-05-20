@@ -30,6 +30,8 @@ export type RenderItem =
       distinctCharIds: number[]
       /** Index of this group among all top-level nodes */
       containerIndex: number
+      /** Set by applyDragPreview to collapse the entire group block while dragging. */
+      hidden?: boolean
     }
   | {
       type: "entry"
@@ -65,6 +67,14 @@ export type RenderItem =
       sourceId: string
       charHex: string
       skillName: string | null
+    }
+  | {
+      type: "groupGhost"
+      /** ID of the group being dragged — used as React key. */
+      sourceGroupId: string
+      label: string
+      entryCount: number
+      dominantHex: string
     }
 
 function buildShowMessageIds(

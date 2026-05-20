@@ -3,6 +3,37 @@ import { applyDragPreview } from "./timeline-drag-preview"
 import type { RenderItem } from "./timeline-render-items"
 import type { DragPreviewState } from "./timeline-drag-preview"
 
+function groupHeaderItem(
+  groupId: string,
+  opts: Partial<Extract<RenderItem, { type: "groupHeader" }>> = {},
+): Extract<RenderItem, { type: "groupHeader" }> {
+  return {
+    type: "groupHeader",
+    groupId,
+    label: groupId,
+    locked: false,
+    entryCount: 0,
+    startFlatIndex: 0,
+    gradient: "",
+    dominantHex: "#888",
+    distinctCharIds: [],
+    containerIndex: 0,
+    ...opts,
+  }
+}
+
+function groupEntryItem(
+  id: string,
+  groupId: string,
+  containerIndex = 0,
+): Extract<RenderItem, { type: "entry" }> {
+  return entryItem(id, "#888", "Skill", {
+    groupId,
+    inGroup: true,
+    containerIndex,
+  })
+}
+
 function entryItem(
   id: string,
   charHex = "#888",
@@ -213,5 +244,193 @@ describe("applyDragPreview — ghost carries source metadata", () => {
     const result = applyDragPreview([src, tgt], state)
     const ghost = result.find((r) => r.type === "ghost")
     expect(ghost).toMatchObject({ type: "ghost", skillName: null })
+  })
+})
+
+describe("applyDragPreview — group source: no-op cases", () => {
+  it("returns items unchanged when source group not found", () => {
+    const items: RenderItem[] = [groupHeaderItem("g1"), entryItem("e1")]
+    expect(
+      applyDragPreview(items, {
+        draggedId: "unknown",
+        dropTarget: { id: "group:g1", position: "above" },
+      }),
+    ).toBe(items)
+  })
+})
+
+describe("applyDragPreview — group source: ghost inserted at group target", () => {
+  it("above a group: ghost inserted before target group header, source hidden", () => {
+    // items: [g1 header, g1-e1, g2 header, g2-e1]
+    const g1 = groupHeaderItem("g1", {
+      entryCount: 1,
+      label: "Group 1",
+      dominantHex: "#f00",
+      containerIndex: 0,
+    })
+    const g1e1 = groupEntryItem("g1e1", "g1", 0)
+    const g2 = groupHeaderItem("g2", {
+      entryCount: 1,
+      label: "Group 2",
+      dominantHex: "#0f0",
+      containerIndex: 1,
+    })
+    const g2e1 = groupEntryItem("g2e1", "g2", 0)
+    const items: RenderItem[] = [g1, g1e1, g2, g2e1]
+
+    const result = applyDragPreview(items, {
+      draggedId: "g1",
+      dropTarget: { id: "group:g2", position: "above" },
+    })
+
+    expect(result).toHaveLength(5)
+    expect(result[0]).toMatchObject({
+      type: "groupHeader",
+      groupId: "g1",
+      hidden: true,
+    })
+    expect(result[1]).toMatchObject({
+      type: "entry",
+      entry: { id: "g1e1" },
+      hidden: true,
+    })
+    expect(result[2]).toMatchObject({
+      type: "groupGhost",
+      sourceGroupId: "g1",
+      label: "Group 1",
+    })
+    expect(result[3]).toMatchObject({ type: "groupHeader", groupId: "g2" })
+    expect(result[4]).toMatchObject({ type: "entry", entry: { id: "g2e1" } })
+  })
+
+  it("below a group: ghost inserted after last entry of target group", () => {
+    const g1 = groupHeaderItem("g1", {
+      entryCount: 1,
+      label: "G1",
+      dominantHex: "#f00",
+      containerIndex: 0,
+    })
+    const g1e1 = groupEntryItem("g1e1", "g1", 0)
+    const g2 = groupHeaderItem("g2", {
+      entryCount: 2,
+      label: "G2",
+      dominantHex: "#0f0",
+      containerIndex: 1,
+    })
+    const g2e1 = groupEntryItem("g2e1", "g2", 0)
+    const g2e2 = groupEntryItem("g2e2", "g2", 1)
+    const items: RenderItem[] = [g1, g1e1, g2, g2e1, g2e2]
+
+    const result = applyDragPreview(items, {
+      draggedId: "g1",
+      dropTarget: { id: "group:g2", position: "below" },
+    })
+
+    expect(result).toHaveLength(6)
+    expect(result[0]).toMatchObject({
+      type: "groupHeader",
+      groupId: "g1",
+      hidden: true,
+    })
+    expect(result[1]).toMatchObject({
+      type: "entry",
+      entry: { id: "g1e1" },
+      hidden: true,
+    })
+    expect(result[2]).toMatchObject({ type: "groupHeader", groupId: "g2" })
+    expect(result[3]).toMatchObject({ type: "entry", entry: { id: "g2e1" } })
+    expect(result[4]).toMatchObject({ type: "entry", entry: { id: "g2e2" } })
+    expect(result[5]).toMatchObject({ type: "groupGhost", sourceGroupId: "g1" })
+  })
+})
+
+describe("applyDragPreview — group source: ghost inserted at entry target", () => {
+  it("above a top-level entry: ghost inserted before that entry", () => {
+    const g1 = groupHeaderItem("g1", {
+      entryCount: 1,
+      label: "G1",
+      dominantHex: "#f00",
+      containerIndex: 0,
+    })
+    const g1e1 = groupEntryItem("g1e1", "g1", 0)
+    const e1 = entryItem("e1", "#00f", "Skill", { containerIndex: 1 })
+    const items: RenderItem[] = [g1, g1e1, e1]
+
+    const result = applyDragPreview(items, {
+      draggedId: "g1",
+      dropTarget: { id: "e1", position: "above" },
+    })
+
+    expect(result).toHaveLength(4)
+    expect(result[0]).toMatchObject({
+      type: "groupHeader",
+      groupId: "g1",
+      hidden: true,
+    })
+    expect(result[1]).toMatchObject({
+      type: "entry",
+      entry: { id: "g1e1" },
+      hidden: true,
+    })
+    expect(result[2]).toMatchObject({ type: "groupGhost", sourceGroupId: "g1" })
+    expect(result[3]).toMatchObject({ type: "entry", entry: { id: "e1" } })
+  })
+
+  it("below a top-level entry: ghost inserted after that entry", () => {
+    const e1 = entryItem("e1", "#00f", "Skill", { containerIndex: 0 })
+    const g1 = groupHeaderItem("g1", {
+      entryCount: 1,
+      label: "G1",
+      dominantHex: "#f00",
+      containerIndex: 1,
+    })
+    const g1e1 = groupEntryItem("g1e1", "g1", 0)
+    const items: RenderItem[] = [e1, g1, g1e1]
+
+    const result = applyDragPreview(items, {
+      draggedId: "g1",
+      dropTarget: { id: "e1", position: "below" },
+    })
+
+    expect(result).toHaveLength(4)
+    expect(result[0]).toMatchObject({ type: "entry", entry: { id: "e1" } })
+    expect(result[1]).toMatchObject({ type: "groupGhost", sourceGroupId: "g1" })
+    expect(result[2]).toMatchObject({
+      type: "groupHeader",
+      groupId: "g1",
+      hidden: true,
+    })
+    expect(result[3]).toMatchObject({
+      type: "entry",
+      entry: { id: "g1e1" },
+      hidden: true,
+    })
+  })
+})
+
+describe("applyDragPreview — group ghost carries source metadata", () => {
+  it("groupGhost has label, entryCount, dominantHex from source group", () => {
+    const g1 = groupHeaderItem("g1", {
+      label: "MyGroup",
+      entryCount: 3,
+      dominantHex: "#abc123",
+      containerIndex: 0,
+    })
+    const g2 = groupHeaderItem("g2", { containerIndex: 1 })
+    const items: RenderItem[] = [g1, g2]
+
+    const result = applyDragPreview(items, {
+      draggedId: "g1",
+      dropTarget: { id: "group:g2", position: "above" },
+    })
+
+    const groupGhost = result.find((r) => r.type === "groupGhost")
+    expect(groupGhost).toMatchObject({
+      type: "groupGhost",
+      sourceGroupId: "g1",
+      label: "MyGroup",
+      entryCount: 3,
+      dominantHex: "#abc123",
+    })
   })
 })

@@ -93,8 +93,6 @@ export function TimelineGroupHeader({
   } = item
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
   const isRenaming = renamingGroupId === groupId
-  const dropTargetMatch =
-    drag.dropTarget?.id === `group:${groupId}` ? drag.dropTarget : null
   const isDraggingThisGroup = drag.draggedId === groupId
   const lastFlatIndex = startFlatIndex + entryCount - 1
 
@@ -152,12 +150,6 @@ export function TimelineGroupHeader({
       className={[
         "border-t border-gray-600 cursor-grab",
         isDraggingThisGroup ? "opacity-40" : "",
-        dropTargetMatch?.position === "above"
-          ? "border-t-blue-500 border-t-2"
-          : "",
-        dropTargetMatch?.position === "below"
-          ? "border-b-blue-500 border-b-2"
-          : "",
       ].join(" ")}
       style={{ background: gradient }}
     >
