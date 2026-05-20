@@ -1,5 +1,15 @@
 import type { TimelineNode, TimelineEntry } from "#/types/timeline"
-import type { Slots } from "#/types/loadout"
+import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { SkillType } from "#/types/character"
+import type { ActionTimeStage } from "#/lib/stage"
+import type {
+  ValidationResult,
+  ValidationError,
+  ValidationWarning,
+} from "#/lib/validate-timeline"
+import { getCharacterById } from "#/lib/catalog"
+import { ELEMENT_HEX } from "#/data/elements"
+import { findStageByEntry } from "#/lib/stage"
 import {
   buildGroupGradient,
   getDominantHex,
@@ -29,15 +39,101 @@ export type RenderItem =
       isLastInGroup: boolean
       lastInGroupGradient: string | null
       groupFirstCharHex: string | null
+      charName: string
+      charHex: string
+      elementLetter: string
+      skillType: SkillType | null
+      skillName: string | null
+      stageWithVariants: ActionTimeStage | null
+      isInvalid: boolean
+      errors: ValidationError[]
+      warnings: ValidationWarning[]
+      showMessage: boolean
     }
+
+function buildShowMessageIds(
+  nodes: TimelineNode[],
+  validation: ValidationResult,
+): Set<string> {
+  const ids = new Set<string>()
+  let remaining = 2
+  for (const node of nodes) {
+    const entries: Array<{ id: string }> =
+      node.kind === "group" ? node.entries : [node]
+    for (const e of entries) {
+      if (remaining === 0) return ids
+      if ((validation.rowErrors.get(e.id)?.length ?? 0) > 0) {
+        ids.add(e.id)
+        remaining--
+      }
+    }
+  }
+  return ids
+}
+
+function resolveEntryFields(
+  entry: TimelineEntry,
+  slots: Slots,
+  loadouts: SlotLoadout[],
+  validation: ValidationResult,
+  showMessageIds: Set<string>,
+): Pick<
+  Extract<RenderItem, { type: "entry" }>,
+  | "charName"
+  | "charHex"
+  | "elementLetter"
+  | "skillType"
+  | "skillName"
+  | "stageWithVariants"
+  | "isInvalid"
+  | "errors"
+  | "warnings"
+  | "showMessage"
+> {
+  const char = getCharacterById(entry.characterId)
+  const charHex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+  const charName = char?.name ?? "—"
+  const elementLetter = char?.element?.[0] ?? "?"
+
+  const resolved = findStageByEntry(entry, slots, loadouts)
+  const skillType = resolved?.skillType ?? null
+  const skillName = resolved?.skillName ?? null
+  const stageWithVariants =
+    resolved !== null &&
+    resolved.stage.variants !== undefined &&
+    Object.keys(resolved.stage.variants).length > 0
+      ? resolved.stage
+      : null
+
+  const isInvalid = validation.invalidRowIds.has(entry.id)
+  const errors = validation.rowErrors.get(entry.id) ?? []
+  const warnings = validation.rowWarnings.get(entry.id) ?? []
+  const showMessage = showMessageIds.has(entry.id)
+
+  return {
+    charName,
+    charHex,
+    elementLetter,
+    skillType,
+    skillName,
+    stageWithVariants,
+    isInvalid,
+    errors,
+    warnings,
+    showMessage,
+  }
+}
 
 export function buildTimelineRenderItems(
   nodes: TimelineNode[],
   expandedGroupIds: Set<string>,
   slots: Slots,
+  loadouts: SlotLoadout[],
+  validation: ValidationResult,
 ): RenderItem[] {
   const items: RenderItem[] = []
   let flatIndex = 0
+  const showMessageIds = buildShowMessageIds(nodes, validation)
 
   for (const node of nodes) {
     if (node.kind === "group") {
@@ -71,16 +167,28 @@ export function buildTimelineRenderItems(
             isLastInGroup: isLast,
             lastInGroupGradient: isLast ? gradient : null,
             groupFirstCharHex,
+            ...resolveEntryFields(
+              entry,
+              slots,
+              loadouts,
+              validation,
+              showMessageIds,
+            ),
           })
         })
       } else {
         flatIndex += node.entries.length
       }
     } else {
-      const { id, characterId, stageId, variantKind } = node
+      const entry: TimelineEntry = {
+        id: node.id,
+        characterId: node.characterId,
+        stageId: node.stageId,
+        variantKind: node.variantKind,
+      }
       items.push({
         type: "entry",
-        entry: { id, characterId, stageId, variantKind },
+        entry,
         flatIndex: flatIndex++,
         inGroup: false,
         groupId: null,
@@ -88,6 +196,13 @@ export function buildTimelineRenderItems(
         isLastInGroup: false,
         lastInGroupGradient: null,
         groupFirstCharHex: null,
+        ...resolveEntryFields(
+          entry,
+          slots,
+          loadouts,
+          validation,
+          showMessageIds,
+        ),
       })
     }
   }

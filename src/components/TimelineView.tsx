@@ -92,18 +92,19 @@ export function TimelineView({
     )
   }
 
-  const rowsWithMessages = entries.reduce<number[]>((acc, e, i) => {
-    if ((validation.rowErrors.get(e.id)?.length ?? 0) > 0) acc.push(i)
-    return acc
-  }, [])
-  const messageIndexes = new Set(rowsWithMessages.slice(0, 2))
-
   const actionEvents = log.filter((e) => e.kind === "action")
   const logMatches = actionEvents.length === entries.length
 
   const renderItems = useMemo(
-    () => buildTimelineRenderItems(nodes, expandedGroupIds, slots),
-    [nodes, expandedGroupIds, slots],
+    () =>
+      buildTimelineRenderItems(
+        nodes,
+        expandedGroupIds,
+        slots,
+        loadouts,
+        validation,
+      ),
+    [nodes, expandedGroupIds, slots, loadouts, validation],
   )
 
   function toggleExpand(groupId: string) {
@@ -177,11 +178,16 @@ export function TimelineView({
                 groupFirstCharHex={item.groupFirstCharHex}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
-                validation={validation}
-                showMessage={
-                  validation.invalidRowIds.has(item.entry.id) &&
-                  messageIndexes.has(i)
-                }
+                charName={item.charName}
+                charHex={item.charHex}
+                elementLetter={item.elementLetter}
+                skillType={item.skillType}
+                skillName={item.skillName}
+                stageWithVariants={item.stageWithVariants}
+                isInvalid={item.isInvalid}
+                errors={item.errors}
+                warnings={item.warnings}
+                showMessage={item.showMessage}
                 actionEventAtIndex={actionEventAtIndex}
                 drag={drag}
                 onRemove={onRemove}

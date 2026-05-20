@@ -1,15 +1,14 @@
 import type { TimelineEntry } from "#/types/timeline"
-import type { VariantKind } from "#/types/character"
+import type { VariantKind, SkillType } from "#/types/character"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
-import type { ValidationResult } from "#/lib/validate-timeline"
+import type {
+  ValidationError,
+  ValidationWarning,
+} from "#/lib/validate-timeline"
 import type { ActionTimeStage } from "#/lib/stage"
-import { ELEMENT_HEX } from "#/data/elements"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
-import { getCharacterById } from "#/lib/catalog"
-import { findStageByEntry } from "#/lib/stage"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
-import { useTeamContext } from "#/hooks/useTeamContext"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
@@ -63,7 +62,15 @@ interface TimelineEntryRowProps {
   groupFirstCharHex: string | null
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
-  validation: ValidationResult
+  charName: string
+  charHex: string
+  elementLetter: string
+  skillType: SkillType | null
+  skillName: string | null
+  stageWithVariants: ActionTimeStage | null
+  isInvalid: boolean
+  errors: ValidationError[]
+  warnings: ValidationWarning[]
   showMessage: boolean
   actionEventAtIndex:
     | Extract<SimulationLogEntry, { kind: "action" }>
@@ -84,15 +91,21 @@ export function TimelineEntryRow({
   groupFirstCharHex,
   prevEntry,
   summary,
-  validation,
+  charName,
+  charHex,
+  elementLetter,
+  skillType,
+  skillName,
+  stageWithVariants,
+  isInvalid,
+  errors,
+  warnings,
   showMessage,
   actionEventAtIndex,
   drag,
   onRemove,
   onUpdateEntry,
 }: TimelineEntryRowProps) {
-  const { slots, loadouts } = useTeamContext()
-  const char = getCharacterById(entry.characterId)
   const row = summary.rows[index] ?? {
     timeFrames: 0,
     durationFrames: 0,
@@ -100,24 +113,10 @@ export function TimelineEntryRow({
     padFrames: 0,
     damage: null,
   }
-  const isInvalid = validation.invalidRowIds.has(entry.id)
-  const errors = validation.rowErrors.get(entry.id) ?? []
-  const warnings = validation.rowWarnings.get(entry.id) ?? []
   const isDragging = drag.draggedId === entry.id
   const isDropTarget = drag.dropTargetId === entry.id
-  const resolved = findStageByEntry(entry, slots, loadouts)
-  const stageWithVariants =
-    resolved !== null &&
-    resolved.stage.variants !== undefined &&
-    Object.keys(resolved.stage.variants).length > 0
-      ? resolved.stage
-      : null
   const source = drag.entrySource(entry.id, { groupId, locked: groupLocked })
   const target = drag.entryTarget(entry.id, { groupId, groupLocked })
-
-  const charElement = char?.element
-  const charHex = (charElement && ELEMENT_HEX[charElement]) ?? "#888"
-  const elementLetter = charElement?.[0] ?? "?"
 
   const duration = row.durationFrames / 60
   const reactDelayFrames = row.reactFrames
@@ -183,11 +182,11 @@ export function TimelineEntryRow({
           >
             {elementLetter}
           </span>
-          <span className="text-sm truncate">{char?.name ?? "—"}</span>
+          <span className="text-sm truncate">{charName}</span>
         </div>
       </td>
       <td className="px-2 py-2">
-        {resolved && (
+        {skillType !== null && (
           <span
             className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
             style={{
@@ -196,7 +195,7 @@ export function TimelineEntryRow({
               color: charHex,
             }}
           >
-            {STAGE_TYPE_LABELS[resolved.skillType] ?? resolved.skillType}
+            {STAGE_TYPE_LABELS[skillType] ?? skillType}
           </span>
         )}
       </td>
@@ -206,7 +205,7 @@ export function TimelineEntryRow({
             className={`truncate min-w-0 ${isInvalid ? "text-red-400" : ""}`}
             title={isInvalid ? "red-marker" : undefined}
           >
-            {resolved?.skillName ?? "—"}
+            {skillName ?? "—"}
           </span>
           {stageWithVariants && (
             <button
