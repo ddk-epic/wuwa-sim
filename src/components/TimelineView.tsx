@@ -84,17 +84,6 @@ export function TimelineView({
     [entries, slots, loadouts],
   )
 
-  if (entries.length === 0 && nodes.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
-        Select a skill from the sidebar to build your rotation
-      </div>
-    )
-  }
-
-  const actionEvents = log.filter((e) => e.kind === "action")
-  const logMatches = actionEvents.length === entries.length
-
   const renderItems = useMemo(
     () =>
       buildTimelineRenderItems(
@@ -106,6 +95,17 @@ export function TimelineView({
       ),
     [nodes, expandedGroupIds, slots, loadouts, validation],
   )
+
+  if (entries.length === 0 && nodes.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
+        Select a skill from the sidebar to build your rotation
+      </div>
+    )
+  }
+
+  const actionEvents = log.filter((e) => e.kind === "action")
+  const logMatches = actionEvents.length === entries.length
 
   function toggleExpand(groupId: string) {
     setExpandedGroupIds((prev) => {
