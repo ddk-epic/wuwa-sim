@@ -78,7 +78,7 @@ function stripHtml(html: string): string {
 }
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
-  return (damageList ?? []).map((entry) => ({
+  return damageList.map((entry) => ({
     type: entry.Type as SkillType,
     dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
@@ -129,28 +129,14 @@ export async function extractEcho(id: string): Promise<void> {
 
   const data: ApiEcho = await res.json()
 
-  const missing: string[] = []
-  if (!data.MonsterId) missing.push("MonsterId")
-  if (!data.MonsterName) missing.push("MonsterName")
-  if (!data.Skill) missing.push("Skill")
-  if (!data.FetterGroupDetails?.length) missing.push("FetterGroupDetails")
-  if (missing.length > 0) {
-    console.warn(
-      `Warning: missing or empty fields in API response: ${missing.join(", ")}`,
-    )
-  }
-
   const cost = ECHO_COST_MAP[data.Rarity]
-  if (cost === undefined) {
-    console.warn(`Warning: unknown Rarity ${data.Rarity}, defaulting cost to 1`)
-  }
 
   const echoSets = mapEchoSets(data.FetterGroupDetails, data.FetterDetails)
 
   const echo: Echo = {
     id: data.MonsterId,
     name: data.MonsterName,
-    cost: cost ?? 1,
+    cost: cost,
     element: data.Element.Name as Echo["element"],
     skill: mapSkill(data.Skill),
     sets: echoSets.map((s) => s.name),

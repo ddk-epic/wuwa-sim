@@ -138,7 +138,7 @@ function formatSkill(
     lines.push(`${l1}],`)
   } else if (skill.type === "Resonance Liberation") {
     lines.push(`${l1}stages: [`)
-    const hasCastStage = skill.stages.some((s) => s.name === "Skill DMG")
+    const hasCastStage = skill.stages.some((st) => st.name === "Skill DMG")
     if (!hasCastStage)
       lines.push(formatLiberationCastStage(skill.name, level + 2) + ",")
     for (const stage of skill.stages)

@@ -48,7 +48,7 @@ function parsePct(str: string): number {
 function mapStat(prop: ApiProperty): WeaponStat {
   const isPercentage = prop.GrowthValues[0]?.Value.endsWith("%") ?? false
   const lastGrowth = prop.GrowthValues[prop.GrowthValues.length - 1]
-  const maxRaw = lastGrowth?.Value ?? String(prop.BaseValue)
+  const maxRaw = lastGrowth.Value
 
   const base = isPercentage ? prop.BaseValue / 10000 : prop.BaseValue
   const max = isPercentage ? parsePct(maxRaw) : parseFloat(maxRaw)
@@ -69,7 +69,7 @@ function parseParamValue(v: string): number {
 }
 
 function mapParams(descParams: ApiDescParam[]): number[][] {
-  if (!descParams?.length) return []
+  if (!descParams.length) return []
   const rankCount = descParams[0].ArrayString.length
   return Array.from({ length: rankCount }, (_, rank) =>
     descParams.map((p) => parseParamValue(p.ArrayString[rank])),
@@ -94,7 +94,7 @@ export async function extractWeapon(id: string): Promise<void> {
   const missing: string[] = []
   if (!data.ItemId) missing.push("ItemId")
   if (!data.WeaponName) missing.push("WeaponName")
-  if (!data.Properties?.length) missing.push("Properties")
+  if (!data.Properties.length) missing.push("Properties")
   if (missing.length > 0) {
     console.warn(
       `Warning: missing or empty fields in API response: ${missing.join(", ")}`,

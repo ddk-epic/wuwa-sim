@@ -106,11 +106,9 @@ function mapStats(properties: ApiProperty[]): CharacterStats {
 
   for (const prop of properties) {
     const key = STAT_KEY_MAP[prop.Name]
-    if (!key) continue
-
     base[key] = prop.BaseValue
     const maxGrowth = prop.GrowthValues[prop.GrowthValues.length - 1]
-    max[key] = maxGrowth?.value ?? prop.BaseValue
+    max[key] = maxGrowth.value
   }
 
   return { base, max }
@@ -123,7 +121,7 @@ function parseValue(rateStr: string): number {
 }
 
 function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
-  return (damageList ?? []).map((entry) => ({
+  return damageList.map((entry) => ({
     type: entry.Type as SkillType,
     dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
@@ -178,52 +176,50 @@ export function enrichSkill(
 } {
   const pool = mapDamageEntries(damageList)
 
-  const enrichedAttributes: SkillAttribute[] = (attributes ?? []).map(
-    (attr) => {
-      const value = attr.values[9] ?? ""
-      const { flat, rates: parsedRates } = parseValuesFromValue(value)
+  const enrichedAttributes: SkillAttribute[] = attributes.map((attr) => {
+    const value = attr.values[9] ?? ""
+    const { flat, rates: parsedRates } = parseValuesFromValue(value)
 
-      if (parsedRates.length === 0) {
-        return { name: attr.attributeName, value }
-      }
+    if (parsedRates.length === 0) {
+      return { name: attr.attributeName, value }
+    }
 
-      const matched: DamageEntry[] = []
-      for (const { value: rate, count } of parsedRates) {
-        let consumed = 0
-        for (let i = 0; i < pool.length && consumed < count; i++) {
-          if (pool[i].value === rate) {
-            matched.push(...pool.splice(i, 1))
-            i--
-            consumed++
-          }
-        }
-        if (consumed > 0 && consumed < count) {
-          const missing = count - consumed
-          console.warn(
-            `  [fill] "${attr.attributeName}" expects ${count}× value ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
-          )
-          for (let i = 0; i < missing; i++) {
-            matched.push({ ...matched[matched.length - 1] })
-          }
+    const matched: DamageEntry[] = []
+    for (const { value: rate, count } of parsedRates) {
+      let consumed = 0
+      for (let i = 0; i < pool.length && consumed < count; i++) {
+        if (pool[i].value === rate) {
+          matched.push(...pool.splice(i, 1))
+          i--
+          consumed++
         }
       }
-
-      if (matched.length === 0) {
-        return { name: attr.attributeName, value }
-      }
-
-      if (flat !== undefined) {
-        if (matched.length > 1) {
-          console.warn(
-            `  [flat] "${attr.attributeName}" has flat=${flat} but matched ${matched.length} entries — attaching to first only`,
-          )
+      if (consumed > 0 && consumed < count) {
+        const missing = count - consumed
+        console.warn(
+          `  [fill] "${attr.attributeName}" expects ${count}× value ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
+        )
+        for (let i = 0; i < missing; i++) {
+          matched.push({ ...matched[matched.length - 1] })
         }
-        matched[0] = { ...matched[0], flat }
       }
+    }
 
-      return { name: attr.attributeName, value, damage: matched }
-    },
-  )
+    if (matched.length === 0) {
+      return { name: attr.attributeName, value }
+    }
+
+    if (flat !== undefined) {
+      if (matched.length > 1) {
+        console.warn(
+          `  [flat] "${attr.attributeName}" has flat=${flat} but matched ${matched.length} entries — attaching to first only`,
+        )
+      }
+      matched[0] = { ...matched[0], flat }
+    }
+
+    return { name: attr.attributeName, value, damage: matched }
+  })
 
   const STA_COST_SUFFIX = " STA Cost"
   const COOLDOWN_SUFFIX = " Cooldown"
@@ -308,7 +304,7 @@ export function enrichSkill(
 }
 
 function mapSkills(skills: ApiSkill[]): Skill[] {
-  return (skills ?? []).map((skill) => {
+  return skills.map((skill) => {
     const { stages, damage, cooldown, duration, concerto, resonanceCost } =
       enrichSkill(skill.SkillAttributes, skill.DamageList)
     return {
@@ -378,7 +374,7 @@ function buildReferenceMarkdown(data: ApiCharacter): string {
   for (const skillType of mainSkillTypes) {
     const skill = data.Skills.find((s) => s.SkillType === skillType)
     if (!skill) continue
-    const description = htmlToMarkdown(skill.SkillDescribe ?? "")
+    const description = htmlToMarkdown(skill.SkillDescribe)
     sections.push(`## ${skillType} — ${skill.SkillName}\n\n${description}`)
   }
 
@@ -388,19 +384,19 @@ function buildReferenceMarkdown(data: ApiCharacter): string {
   )
   if (inherentSkills.length > 0) {
     const inherentParts = inherentSkills.map((skill) => {
-      const description = htmlToMarkdown(skill.SkillDescribe ?? "")
+      const description = htmlToMarkdown(skill.SkillDescribe)
       return `### ${skill.SkillName}\n\n${description}`
     })
     sections.push(`## Inherent Skill\n\n${inherentParts.join("\n\n")}`)
   }
 
   // Resonance Chain
-  const chainNodes = [...(data.ResonantChain ?? [])].sort(
+  const chainNodes = [...data.ResonantChain].sort(
     (a, b) => a.GroupIndex - b.GroupIndex,
   )
   if (chainNodes.length > 0) {
     const chainParts = chainNodes.map((node) => {
-      const description = htmlToMarkdown(node.AttributesDescription ?? "")
+      const description = htmlToMarkdown(node.AttributesDescription)
       return `### S${node.GroupIndex} - ${node.NodeName}\n\n${description}`
     })
     sections.push(`## Resonance Chain\n\n${chainParts.join("\n\n")}`)
@@ -420,33 +416,17 @@ export async function extractCharacter(id: string): Promise<void> {
 
   const data: ApiCharacter = await res.json()
 
-  const missing: string[] = []
-  if (!data.Id) missing.push("Id")
-  if (!data.Name?.Content) missing.push("Name.Content")
-  if (!data.Skills?.length) missing.push("Skills")
-  if (!data.Properties?.length) missing.push("Properties")
-  if (missing.length > 0) {
-    console.warn(
-      `Warning: missing or empty fields in API response: ${missing.join(", ")}`,
-    )
-  }
-
   const weaponType = WEAPON_TYPE_MAP[data.WeaponType]
-  if (!weaponType) {
-    console.warn(
-      `Warning: unknown WeaponType ${data.WeaponType}, using raw value`,
-    )
-  }
 
   const character: Character = {
     id: data.Id,
     name: data.Name.Content,
     element: data.ElementName as Character["element"],
-    weaponType: weaponType ?? String(data.WeaponType),
+    weaponType: weaponType,
     rarity: data.QualityName,
     stats: mapStats(data.Properties),
     skills: mapSkills(data.Skills),
-    skillTreeBonuses: mapSkillTreeBonuses(data.SkillTree ?? []),
+    skillTreeBonuses: mapSkillTreeBonuses(data.SkillTree),
     buffs: [],
   }
 
