@@ -39,7 +39,7 @@ export function TeamSlotPortrait({
         className="absolute inset-x-0 bottom-0 px-3 pt-10 pb-2 flex items-end gap-2"
         style={{
           background:
-            "linear-gradient(to top, rgba(9,10,14,0.98) 0px, rgba(9,10,14,0.98) 36px, rgba(9,10,14,0) 100%)",
+            "linear-gradient(to top, rgba(9,10,14,0.98) 0%, rgba(9,10,14,0) 100%)",
         }}
       >
         <div className="flex-1 min-w-0">
