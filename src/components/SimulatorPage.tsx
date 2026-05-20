@@ -49,6 +49,8 @@ export function SimulatorPage() {
     slots,
     loadouts,
     settings.reactionDelay,
+    settings.swapFrames,
+    log.length > 0 ? log : undefined,
   )
 
   function handleResetTimeline() {
@@ -91,7 +93,7 @@ export function SimulatorPage() {
                   entriesNumber={entries.length}
                   totalDmg={summary.totalDamage}
                   dps={summary.dps}
-                  totalTimeSec={summary.totalTimeSec}
+                  totalTimeSec={summary.totalTimeFrames / 60}
                   onAddGroup={addGroupAndRename}
                 />
                 <TimelineView

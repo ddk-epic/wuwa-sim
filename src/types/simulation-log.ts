@@ -16,6 +16,7 @@ export interface ActionEvent extends SimulationLogBase {
   variantKind?: VariantKind
   droppedHitCount?: number
   delayBreakdown?: { react: number; pad: number }
+  sourceEntryId?: string
 }
 
 export interface ActiveBuff {

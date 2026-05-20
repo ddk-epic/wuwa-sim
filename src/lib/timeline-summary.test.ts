@@ -1,14 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
+import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
 
 import { getTimelineSummary } from "./timeline-summary"
 
-const dmgEntry = (value: number): DamageEntry => ({
+const dmgEntry = (value: number, actionFrame = 0): DamageEntry => ({
   type: "Basic Attack",
   dmgType: "Fusion",
   scalingStat: "ATK",
-  actionFrame: 0,
+  actionFrame,
   value,
   energy: 0,
   concerto: 0,
@@ -127,19 +128,27 @@ describe("getTimelineSummary — empty", () => {
     expect(result).toEqual({
       rows: [],
       totalDamage: 0,
-      totalTimeSec: 0,
+      totalTimeFrames: 0,
       dps: 0,
     })
   })
 })
 
 describe("getTimelineSummary — single entry", () => {
-  it("first row starts at time 0 and includes computed damage", () => {
+  it("first row starts at timeFrames 0 and includes computed damage", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([normalAttack(1)])
-    expect(result.rows).toEqual([{ time: 0, damage: 1500 }])
+    expect(result.rows).toEqual([
+      {
+        timeFrames: 0,
+        durationFrames: 60,
+        reactFrames: 0,
+        padFrames: 0,
+        damage: 1500,
+      },
+    ])
     expect(result.totalDamage).toBe(1500)
-    expect(result.totalTimeSec).toBe(1)
+    expect(result.totalTimeFrames).toBe(60)
     expect(result.dps).toBe(1500)
   })
 
@@ -161,16 +170,16 @@ describe("getTimelineSummary — single entry", () => {
 })
 
 describe("getTimelineSummary — multi-entry accumulation", () => {
-  it("accumulates time across entries (in seconds)", () => {
+  it("accumulates timeFrames across entries (in frames)", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       normalAttack(1, "a"),
       tlEntry(1, "Heavy Attack::_", "b"),
       tlEntry(1, "Resonance Skill::_", "c"),
     ])
-    // Normal Attack: 60f=1s, Heavy Attack: 30f=0.5s, Resonance Skill: 90f=1.5s
-    expect(result.rows.map((r) => r.time)).toEqual([0, 1, 1.5])
-    expect(result.totalTimeSec).toBe(3)
+    // Normal Attack: 60f, Heavy Attack: 30f (starts at 60), Resonance Skill: 90f (starts at 90)
+    expect(result.rows.map((r) => r.timeFrames)).toEqual([0, 60, 90])
+    expect(result.totalTimeFrames).toBe(180)
   })
 
   it("totalDamage sums damages across entries from different characters", () => {
@@ -191,7 +200,7 @@ describe("getTimelineSummary — zero-damage rule", () => {
     expect(result.rows[0].damage).toBeNull()
     expect(result.rows[1].damage).toBe(1500)
     expect(result.totalDamage).toBe(1500)
-    expect(result.totalTimeSec).toBe(2) // No Damage 60f + Normal Attack 60f = 2s
+    expect(result.totalTimeFrames).toBe(120) // No Damage 60f + Normal Attack 60f
   })
 })
 
@@ -201,7 +210,7 @@ describe("getTimelineSummary — dps", () => {
     // Instant Skill has actionTime=0 and damage entries → time=0, damage=1000
     const result = getTimelineSummary([tlEntry(1, "Instant Skill::_", "x")])
     expect(result.totalDamage).toBe(1000)
-    expect(result.totalTimeSec).toBe(0)
+    expect(result.totalTimeFrames).toBe(0)
     expect(result.dps).toBe(0)
   })
 
@@ -209,7 +218,7 @@ describe("getTimelineSummary — dps", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([tlEntry(1, "Resonance Skill::_")])
     // 90f = 1.5s, damage = 1.0 * 1000 = 1000 → dps = round(667) = 667
-    expect(result.totalTimeSec).toBe(1.5)
+    expect(result.totalTimeFrames).toBe(90)
     expect(result.totalDamage).toBe(1000)
     expect(result.dps).toBe(667)
   })
@@ -221,5 +230,161 @@ describe("getTimelineSummary — missing character", () => {
     const result = getTimelineSummary([normalAttack(99)])
     expect(result.rows[0].damage).toBeNull()
     expect(result.totalDamage).toBe(0)
+  })
+})
+
+// ── Log ingestion (#187) ─────────────────────────────────────────────────────
+
+function makeActionEvent(
+  entryId: string,
+  frame: number,
+  delayBreakdown?: { react: number; pad: number },
+): Extract<SimulationLogEntry, { kind: "action" }> {
+  return {
+    kind: "action",
+    characterId: 1,
+    skillType: "Basic Attack",
+    skillName: "Normal Attack",
+    frame,
+    cumulativeEnergy: 0,
+    cumulativeConcerto: 0,
+    sourceEntryId: entryId,
+    ...(delayBreakdown !== undefined ? { delayBreakdown } : {}),
+  }
+}
+
+function makeHitEvent(
+  entryId: string,
+  frame: number,
+  damage: number,
+): Extract<SimulationLogEntry, { kind: "hit" }> {
+  return {
+    kind: "hit",
+    characterId: 1,
+    skillType: "Basic Attack",
+    skillName: "Normal Attack [hit 1]",
+    frame,
+    cumulativeEnergy: 0,
+    cumulativeConcerto: 0,
+    damage,
+    element: "Fusion",
+    dmgType: "Fusion",
+    multiplier: 1,
+    statsSnapshot: {
+      atkBase: 1000,
+      atkPct: 0,
+      atkFlat: 0,
+      hpBase: 0,
+      hpPct: 0,
+      hpFlat: 0,
+      defBase: 0,
+      defPct: 0,
+      defFlat: 0,
+      critRate: 0,
+      critDmg: 0,
+      healingBonus: 0,
+      energyRechargePct: 0,
+    },
+    activeBuffs: [],
+    passiveBuffs: [],
+    sourceEntryId: entryId,
+  }
+}
+
+describe("getTimelineSummary — log ingestion: all rows matched", () => {
+  it("reads timeFrames, reactFrames, padFrames from ActionEvents when all entries are matched", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const e2 = normalAttack(1, "e2")
+
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeHitEvent("e1", 0, 900),
+      makeActionEvent("e2", 60, { react: 9, pad: 0 }),
+      makeHitEvent("e2", 60, 1200),
+    ]
+
+    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
+    expect(result.rows[0]).toMatchObject({
+      timeFrames: 0,
+      durationFrames: 60,
+      reactFrames: 0,
+      padFrames: 0,
+      damage: 900,
+    })
+    expect(result.rows[1]).toMatchObject({
+      timeFrames: 60,
+      reactFrames: 9,
+      padFrames: 0,
+      damage: 1200,
+    })
+    expect(result.totalDamage).toBe(2100)
+    expect(result.totalTimeFrames).toBe(60 + result.rows[1].durationFrames)
+  })
+})
+
+describe("getTimelineSummary — log ingestion: mixed match/fallback", () => {
+  it("fallback row after matched rows uses cumulative durationFrames for timeFrames", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const e2 = normalAttack(1, "e2") // added after sim — no ActionEvent in log
+
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeHitEvent("e1", 0, 900),
+    ]
+
+    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
+    // e1 matched: timeFrames=0, durationFrames=60 (stage-math for last matched row)
+    expect(result.rows[0]).toMatchObject({
+      timeFrames: 0,
+      durationFrames: 60,
+      damage: 900,
+    })
+    // e2 fallback: timeFrames = cumulative = 60
+    expect(result.rows[1]).toMatchObject({
+      timeFrames: 60,
+      durationFrames: 60,
+      reactFrames: 0,
+      padFrames: 0,
+      damage: 1500, // fallback stage-math estimate
+    })
+  })
+})
+
+describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
+  it("sums hit damage by sourceEntryId, attributing trailing-window hits to swap entry", () => {
+    testCharacters = [charA]
+    const swapEntry: TimelineEntry = {
+      id: "swap-e",
+      characterId: 1,
+      stageId: "Normal Attack::_",
+      variantKind: "swap",
+    }
+    const nextEntry = normalAttack(1, "next-e")
+
+    // swap-e: action at frame 0, advance=6; trailing hit lands at frame 15
+    // next-e: action at frame 6, advance=60
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("swap-e", 0),
+      makeHitEvent("swap-e", 3, 300), // immediate hit
+      makeActionEvent("next-e", 6),
+      makeHitEvent("swap-e", 15, 200), // trailing hit attributed to swap-e
+      makeHitEvent("next-e", 6, 400),
+    ]
+
+    const result = getTimelineSummary(
+      [swapEntry, nextEntry],
+      undefined,
+      undefined,
+      9,
+      6,
+      log,
+    )
+    // swap-e: damage = 300 + 200 = 500 (both hits attributed to it)
+    expect(result.rows[0].damage).toBe(500)
+    // next-e: damage = 400
+    expect(result.rows[1].damage).toBe(400)
+    expect(result.totalDamage).toBe(900)
   })
 })

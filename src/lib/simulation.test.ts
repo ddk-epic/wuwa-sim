@@ -217,7 +217,7 @@ describe("runSimulation — single hit", () => {
     const entry = tlEntry(1, "Normal Attack::_")
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
-    expect(result[0]).toEqual({
+    expect(result[0]).toMatchObject({
       kind: "action",
       characterId: 1,
       skillType: "Basic Attack",

@@ -7,9 +7,8 @@ import type { ActionTimeStage } from "#/lib/stage"
 import { ELEMENT_HEX } from "#/data/elements"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/catalog"
-import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
+import { findStageByEntry } from "#/lib/stage"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
-import { useReactionDelay, useSwapFrames } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
@@ -92,11 +91,15 @@ export function TimelineEntryRow({
   onRemove,
   onUpdateEntry,
 }: TimelineEntryRowProps) {
-  const reactionDelay = useReactionDelay()
-  const swapFrames = useSwapFrames()
   const { slots, loadouts } = useTeamContext()
   const char = getCharacterById(entry.characterId)
-  const row = summary.rows[index] ?? { time: 0, damage: null }
+  const row = summary.rows[index] ?? {
+    timeFrames: 0,
+    durationFrames: 0,
+    reactFrames: 0,
+    padFrames: 0,
+    damage: null,
+  }
   const isInvalid = validation.invalidRowIds.has(entry.id)
   const errors = validation.rowErrors.get(entry.id) ?? []
   const warnings = validation.rowWarnings.get(entry.id) ?? []
@@ -116,25 +119,9 @@ export function TimelineEntryRow({
   const charHex = (charElement && ELEMENT_HEX[charElement]) ?? "#888"
   const elementLetter = charElement?.[0] ?? "?"
 
-  const duration = resolved
-    ? resolveStageExecution(
-        resolved.stage,
-        entry.variantKind,
-        reactionDelay,
-        swapFrames,
-      ).advance / 60
-    : 0
-
-  const reactDelayFrames = (() => {
-    if (!entry.variantKind || !resolved) return 0
-    if (entry.variantKind === "swap") {
-      return resolved.stage.variants?.swap !== undefined ? reactionDelay : 0
-    }
-    return resolved.stage.variants?.[entry.variantKind] !== undefined
-      ? reactionDelay
-      : 0
-  })()
-  const padFrames = actionEventAtIndex?.delayBreakdown?.pad ?? 0
+  const duration = row.durationFrames / 60
+  const reactDelayFrames = row.reactFrames
+  const padFrames = row.padFrames
   const totalDelayFrames = reactDelayFrames + padFrames
 
   const conVal = actionEventAtIndex?.cumulativeConcerto ?? null
@@ -186,7 +173,7 @@ export function TimelineEntryRow({
         <span className="text-gray-400">{index + 1}</span>
       </td>
       <td className="px-2 py-2 text-right font-mono text-[16px] text-[#a3bfff]">
-        {row.time.toFixed(2)}s
+        {(row.timeFrames / 60).toFixed(2)}s
       </td>
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">

@@ -274,6 +274,7 @@ function buildActionEvent(
     cumulativeEnergy: actorState.energy,
     cumulativeConcerto: actorState.concerto,
     variantKind: entry.variantKind,
+    sourceEntryId: entry.id,
   }
   if (react > 0 || padFrames > 0) {
     event.delayBreakdown = { react, pad: padFrames }

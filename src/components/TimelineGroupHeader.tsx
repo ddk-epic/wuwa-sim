@@ -12,11 +12,9 @@ import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
-import { findStageByEntry, resolveStageExecution } from "#/lib/stage"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
-import { useReactionDelay } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { renderPoolValue } from "./TimelineEntryRow"
 
@@ -170,8 +168,7 @@ export function TimelineGroupHeader({
   onRequestDeleteConfirm,
 }: TimelineGroupHeaderProps) {
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
-  const reactionDelay = useReactionDelay()
-  const { slots, loadouts } = useTeamContext()
+  const { slots } = useTeamContext()
   const isRenaming = renamingGroupId === groupId
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId
@@ -179,20 +176,15 @@ export function TimelineGroupHeader({
   const distinctCharIds = getDistinctCharsBySlot(groupEntries, slots)
   const lastFlatIndex = startFlatIndex + entryCount - 1
 
-  const totalDurationSec = groupEntries.reduce((sum, entry) => {
-    const resolved = findStageByEntry(entry, slots, loadouts)
-    if (!resolved) return sum
-    return (
-      sum +
-      resolveStageExecution(resolved.stage, entry.variantKind, reactionDelay)
-        .advance /
-        60
-    )
-  }, 0)
+  const totalDurationSec =
+    groupEntries.reduce(
+      (s, _, i) => s + (summary.rows[startFlatIndex + i]?.durationFrames ?? 0),
+      0,
+    ) / 60
 
   const firstRowTime =
     entryCount > 0
-      ? (summary.rows[startFlatIndex]?.time ?? 0).toFixed(2)
+      ? ((summary.rows[startFlatIndex]?.timeFrames ?? 0) / 60).toFixed(2)
       : "0.00"
 
   const lastConVal =
