@@ -44,17 +44,6 @@ export function Header({
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const filledChars = slots
-    .map((id) => (id !== null ? getCharacterById(id) : null))
-    .filter(Boolean)
-
-  const teamNameChar =
-    (slots[0] !== null ? getCharacterById(slots[0]) : null) ??
-    filledChars[0] ??
-    null
-  const teamLabel = teamNameChar ? `${teamNameChar.name}'s Team` : "No Team"
-  const memberNames = filledChars.map((c) => c!.name).join(" · ")
-
   return (
     <div className="h-12 flex items-stretch shrink-0">
       {/* Left zone */}
@@ -67,20 +56,7 @@ export function Header({
             Sim
           </span>
         </div>
-        <button
-          className="flex items-center gap-2 px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:border-gray-500 text-sm text-gray-300 transition-colors"
-          onClick={onEditTeam}
-        >
-          <AvatarStack slots={slots} />
-          <div className="flex flex-col items-start leading-tight">
-            <span className="text-xs font-semibold text-gray-200">
-              {teamLabel}
-            </span>
-            {memberNames && (
-              <span className="text-[10px] text-gray-400">{memberNames}</span>
-            )}
-          </div>
-        </button>
+        <TeamButton slots={slots} onClick={onEditTeam} />
         <div className="ml-auto flex items-center gap-2">
           <button
             className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
@@ -161,43 +137,65 @@ export function Header({
   )
 }
 
-interface AvatarStackProps {
+interface TeamButtonProps {
   slots: Slots
+  onClick: () => void
 }
 
-function AvatarStack({ slots }: AvatarStackProps) {
-  const chars = slots
+function TeamButton({ slots, onClick }: TeamButtonProps) {
+  const filled = slots
     .map((id) => (id !== null ? getCharacterById(id) : null))
     .filter(Boolean)
 
-  if (chars.length === 0) return null
+  const leadChar =
+    (slots[0] !== null ? getCharacterById(slots[0]) : null) ?? filled[0] ?? null
+  const teamLabel = leadChar ? `${leadChar.name}'s Team` : "No Team"
+  const memberNames = filled.map((c) => c!.name)
 
   return (
-    <div className="flex items-center">
-      {chars.map((char, i) => {
-        const hex = ELEMENT_HEX[char!.element] ?? "#888"
-        const name = char!.name.toLowerCase()
-        return (
-          <img
-            key={char!.id}
-            src={`/${name}.png`}
-            alt={char!.name}
-            className="w-6.5 h-6.5 rounded-full object-cover"
-            style={{
-              marginLeft: i > 0 ? "-6px" : undefined,
-              outline: `2px solid ${hex}`,
-              outlineOffset: "0px",
-            }}
-            onError={(e) => {
-              e.currentTarget.onerror = null
-              e.currentTarget.src = avatarFallbackSrc(
-                char!.name[0].toUpperCase(),
-                hex,
-              )
-            }}
-          />
-        )
-      })}
-    </div>
+    <button
+      onClick={onClick}
+      className="group flex items-center gap-3 h-10 pl-2 pr-3.5 rounded-md bg-transparent border border-gray-500/10 hover:border-gray-500/20 hover:bg-gray-500/6 transition-colors"
+    >
+      <div className="flex items-center gap-1">
+        {filled.length === 0 ? (
+          <div className="w-9 h-9 rounded-sm bg-white/4" />
+        ) : (
+          filled.map((char) => {
+            const hex = ELEMENT_HEX[char!.element] ?? "#888"
+            const name = char!.name.toLowerCase()
+            return (
+              <div
+                key={char!.id}
+                className="w-9 h-9 rounded-sm overflow-hidden"
+              >
+                <img
+                  src={`/${name}.png`}
+                  alt={char!.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null
+                    e.currentTarget.src = avatarFallbackSrc(
+                      char!.name[0].toUpperCase(),
+                      hex,
+                    )
+                  }}
+                />
+              </div>
+            )
+          })
+        )}
+      </div>
+      <div className="flex flex-col items-start leading-tight text-left">
+        <span className="text-sm font-semibold text-gray-100 tracking-tight">
+          {teamLabel}
+        </span>
+        {memberNames.length > 0 && (
+          <span className="mt-0.5 text-[13px] text-gray-400 tracking-tight">
+            {memberNames.join(" · ")}
+          </span>
+        )}
+      </div>
+    </button>
   )
 }
