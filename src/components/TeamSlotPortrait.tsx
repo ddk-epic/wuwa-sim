@@ -36,21 +36,21 @@ export function TeamSlotPortrait({
         </span>
       </div>
       <div
-        className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-2 flex items-end gap-2"
+        className="absolute inset-x-0 bottom-0 px-3 pt-10 pb-2 flex items-end gap-2"
         style={{
           background:
-            "linear-gradient(to top, rgba(9,10,14,0.95) 0%, rgba(9,10,14,0.65) 50%, rgba(9,10,14,0) 100%)",
+            "linear-gradient(to top, rgba(9,10,14,0.98) 0px, rgba(9,10,14,0.98) 36px, rgba(9,10,14,0) 100%)",
         }}
       >
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-foreground leading-tight truncate">
-            {character.name}
-          </div>
           <div
-            className="text-xs text-muted-foreground mt-0.5"
-            style={{ borderLeft: `2px solid ${hex}`, paddingLeft: 6 }}
+            className="font-mono text-[10px] uppercase tracking-[2px] leading-tight"
+            style={{ color: hex }}
           >
-            {character.weaponType} · {character.primaryScalingStat}
+            {character.element}
+          </div>
+          <div className="font-semibold text-foreground leading-tight truncate tracking-tight mt-0.5">
+            {character.name}
           </div>
         </div>
         {sequenceStepper && (

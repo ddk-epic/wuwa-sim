@@ -25,8 +25,10 @@ export function Stepper<T extends string | number>({
 }: StepperProps<T>) {
   const idx = options.findIndex((o) => o === value)
   function step(delta: number) {
-    if (disabled) return
-    const next = options[Math.max(0, Math.min(options.length - 1, idx + delta))]
+    if (disabled || options.length === 0) return
+    const len = options.length
+    const nextIdx = (((idx + delta) % len) + len) % len
+    const next = options[nextIdx]
     if (next !== undefined && next !== value) onChange(next)
   }
   return (
@@ -38,7 +40,7 @@ export function Stepper<T extends string | number>({
     >
       <button
         type="button"
-        disabled={disabled || idx <= 0}
+        disabled={disabled}
         onClick={() => step(-1)}
         className="px-1.5 text-muted-foreground enabled:hover:text-foreground disabled:opacity-30"
         aria-label="Decrement"
@@ -58,7 +60,7 @@ export function Stepper<T extends string | number>({
       )}
       <button
         type="button"
-        disabled={disabled || idx >= options.length - 1}
+        disabled={disabled}
         onClick={() => step(1)}
         className="px-1.5 text-muted-foreground enabled:hover:text-foreground disabled:opacity-30"
         aria-label="Increment"
@@ -88,7 +90,7 @@ export function ComboboxSelect({
   return (
     <div className="relative h-7">
       <select
-        className="w-full h-full appearance-none bg-darkest border border-border rounded-sm pl-2 pr-7 py-0 text-[16px] text-foreground cursor-pointer hover:border-foreground/40 transition-colors"
+        className="w-full h-full appearance-none bg-darkest border border-border rounded-sm pl-2 pr-7 py-0 text-[16px] text-foreground cursor-pointer hover:border-foreground/40 transition-colors truncate"
         value={value ?? ""}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{

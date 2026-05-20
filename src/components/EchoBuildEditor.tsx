@@ -56,12 +56,11 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
 
   return (
     <div className="space-y-2">
-      <BuildToggle value={loadout.echoBuild} onChange={setBuild} hex={hex} />
       <div className="space-y-1.5">
         <ComboboxSelect
           value={loadout.echoId}
           displayValue={echo?.name ?? null}
-          placeholder="select echo"
+          placeholder="— Echo —"
           options={echoes.map((e) => ({ value: e.id, label: e.name }))}
           onChange={(echoId) => setPatch({ echoId })}
           hex={hex}
@@ -71,7 +70,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
             <ComboboxSelect
               value={loadout.echoSetSlot1Id}
               displayValue={set1?.name ?? null}
-              placeholder="set 1"
+              placeholder="— Set 1 —"
               options={echoSets.map((s) => ({ value: s.id, label: s.name }))}
               onChange={(id) => setPatch({ echoSetSlot1Id: id })}
               hex={hex}
@@ -81,7 +80,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
             <ComboboxSelect
               value={loadout.echoSetSlot2Id}
               displayValue={set2?.name ?? null}
-              placeholder="set 2"
+              placeholder="— Set 2 —"
               options={echoSets.map((s) => ({ value: s.id, label: s.name }))}
               onChange={(id) => setPatch({ echoSetSlot2Id: id })}
               hex={hex}
@@ -89,6 +88,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
           </div>
         </div>
       </div>
+      <BuildToggle value={loadout.echoBuild} onChange={setBuild} hex={hex} />
       <div className="border border-border rounded-sm overflow-hidden divide-y divide-border">
         <TabularHeader />
         <TabularRow

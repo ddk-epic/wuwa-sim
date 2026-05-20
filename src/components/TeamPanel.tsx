@@ -41,10 +41,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
     compatibleWeapons.find((w) => w.id === loadout.weaponId) ?? null
 
   return (
-    <div
-      className="bg-card border border-border rounded-sm overflow-hidden"
-      style={{ borderTop: `2px solid ${hex}` }}
-    >
+    <div className="overflow-hidden" style={{ borderTop: `2px solid ${hex}` }}>
       <TeamSlotPortrait
         character={character}
         hex={hex}
@@ -61,14 +58,16 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
         }
       />
 
-      <DomainStrip icon={<SwordIcon className="w-3 h-3" />} label="weapon" />
-      <div className="px-3 py-2.5">
+      <DomainSection
+        icon={<SwordIcon className="w-3 h-3" />}
+        label={character.weaponType}
+      >
         <div className="flex items-stretch gap-1">
           <div className="flex-1 min-w-0">
             <ComboboxSelect
               value={loadout.weaponId}
               displayValue={weapon?.name ?? null}
-              placeholder="select weapon"
+              placeholder="— Weapon —"
               options={compatibleWeapons.map((w) => ({
                 value: w.id,
                 label: w.name,
@@ -89,29 +88,44 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
             />
           </div>
         </div>
-      </div>
+      </DomainSection>
 
-      <DomainStrip icon={<GhostIcon className="w-3 h-3" />} label="echo" />
-      <div className="px-3 py-2.5">
+      <DomainSection icon={<GhostIcon className="w-3 h-3" />} label="echo">
         <EchoBuildEditor slotIndex={slotIndex} />
-      </div>
+      </DomainSection>
     </div>
   )
 }
 
-function DomainStrip({
+// "Melted" domain section — the header sits flush atop a dark-to-card gradient
+// that fades over a fixed 80px, so the seam between header and content vanishes
+// regardless of how tall the content is.
+function DomainSection({
   icon,
   label,
+  children,
 }: {
   icon: React.ReactNode
   label: string
+  children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1 bg-darkest border-y border-border text-muted-foreground">
-      {icon}
-      <span className="font-mono text-[13px] uppercase tracking-[1.5px]">
-        {label}
-      </span>
+    <div className="mt-2 mb-2 overflow-hidden bg-darkest">
+      <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 text-muted-foreground">
+        {icon}
+        <span className="font-mono text-[13px] uppercase tracking-[1.5px]">
+          {label}
+        </span>
+      </div>
+      <div
+        className="px-3 pb-1 pt-1"
+        style={{
+          background:
+            "linear-gradient(to bottom, var(--color-darkest, #0b0b0b) 0px, var(--color-card, #181818) 80%)",
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
