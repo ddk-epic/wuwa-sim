@@ -41,7 +41,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
     compatibleWeapons.find((w) => w.id === loadout.weaponId) ?? null
 
   return (
-    <div className="overflow-hidden" style={{ borderTop: `2px solid ${hex}` }}>
+    <div className="overflow-hidden rounded-t-xl">
       <TeamSlotPortrait
         character={character}
         hex={hex}
@@ -97,9 +97,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
   )
 }
 
-// "Melted" domain section — the header sits flush atop a dark-to-card gradient
-// that fades over a fixed 80px, so the seam between header and content vanishes
-// regardless of how tall the content is.
+// "Melted" domain section
 function DomainSection({
   icon,
   label,
