@@ -1,4 +1,5 @@
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext } from "react"
+import type { ReactNode } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { getCharacterById } from "#/lib/catalog"

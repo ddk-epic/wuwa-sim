@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, cleanup } from "@testing-library/react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
-import { TeamProvider, type TeamContextValue } from "#/hooks/useTeamContext"
+import { TeamProvider } from "#/hooks/useTeamContext"
+import type { TeamContextValue } from "#/hooks/useTeamContext"
 import { TeamPanel } from "./TeamPanel"
 
 vi.mock("#/lib/catalog", () => ({
