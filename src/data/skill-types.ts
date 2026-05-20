@@ -13,5 +13,5 @@ export const STAGE_TYPE_LABELS: Record<SkillType, string> = {
 }
 
 export function formatSkillType(raw: string): string {
-  return STAGE_TYPE_LABELS[raw as SkillType] ?? raw
+  return (STAGE_TYPE_LABELS as Record<string, string | undefined>)[raw] ?? raw
 }

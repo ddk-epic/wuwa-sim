@@ -108,7 +108,7 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
   it("hit 1 does not trigger the buff", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(1, 10))
-    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBeCloseTo(
+    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
       BASE_ELEM_BONUS,
     )
     expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)
@@ -117,7 +117,7 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
   it("hit 2 does not trigger the buff", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(2, 44))
-    expect(engine.resolveStats(1).elementBonus["Fusion"] ?? 0).toBeCloseTo(
+    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
       BASE_ELEM_BONUS,
     )
     expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)

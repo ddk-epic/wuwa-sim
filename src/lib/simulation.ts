@@ -60,7 +60,7 @@ export function runSimulation(
         const incomingResolved = findStageByEntry(entry, slots, loadouts)
         const skillType = incomingResolved?.skillType ?? "Basic Attack"
         if (CANCEL_CAPABLE.has(skillType)) {
-          for (const p of charPending.filter((p) => p.hitFrame < frame)) {
+          for (const p of charPending.filter((ph) => ph.hitFrame < frame)) {
             processHit(
               p.hit,
               p.hitIndex,

@@ -19,7 +19,10 @@ import {
 } from "./stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
 
-const FLAT_VALUE_BY_NAME: Record<string, { path: StatPath; v: number }> = {
+const FLAT_VALUE_BY_NAME: Record<
+  string,
+  { path: StatPath; v: number } | undefined
+> = {
   ATK: { path: { stat: "atkPct" }, v: 0.12 },
   HP: { path: { stat: "hpPct" }, v: 0.12 },
   DEF: { path: { stat: "defPct" }, v: 0.12 },

@@ -29,7 +29,7 @@ export function Stepper<T extends string | number>({
     const len = options.length
     const nextIdx = (((idx + delta) % len) + len) % len
     const next = options[nextIdx]
-    if (next !== undefined && next !== value) onChange(next)
+    if (next !== value) onChange(next)
   }
   return (
     <div

@@ -187,7 +187,9 @@ export function TimelineEntryRow({
               color: charHex,
             }}
           >
-            {STAGE_TYPE_LABELS[skillType] ?? skillType}
+            {(STAGE_TYPE_LABELS as Record<string, string | undefined>)[
+              skillType
+            ] ?? skillType}
           </span>
         )}
       </td>

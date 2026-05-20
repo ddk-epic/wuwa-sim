@@ -711,9 +711,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"] ?? 0).toBe(
-      0,
-    )
+    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"]).toBe(0)
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
@@ -802,9 +800,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
       kind: "buffExpired",
       buffId: "char.intro",
     })
-    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"] ?? 0).toBe(
-      0,
-    )
+    expect(engine.resolveStats(1).skillTypeBonus["Resonance Skill"]).toBe(0)
   })
 
   it("dedupes by (id, target): re-application from any source refreshes the same instance", () => {

@@ -589,9 +589,9 @@ describe("runSimulation — emitHit pilot (#60)", () => {
     const hits = result.filter((e) => e.kind === "hit")
     // Authored hit + 1 synthetic hit
     expect(hits).toHaveLength(2)
-    const synth = hits.find((h) => h.kind === "hit" && h.synthetic === true)
+    const synth = hits.find((h) => h.synthetic === true)
     expect(synth).toBeDefined()
-    if (synth && synth.kind === "hit") {
+    if (synth) {
       expect(synth.characterId).toBe(1)
       expect(synth.sourceBuffId).toBe("char.coord")
       expect(synth.skillType).toBe("Basic Attack")
@@ -924,13 +924,13 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
     const frolickingHit = result.find(
       (e) => e.kind === "hit" && e.skillType === "Basic Attack",
     ) as HitEvent | undefined
-    expect(frolickingHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(
+    expect(frolickingHit?.statsSnapshot.elementBonus["Fusion"]).toBeCloseTo(
       BASE_ELEM_BONUS,
     )
     const rampageHit = result.find(
       (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
     ) as HitEvent | undefined
-    expect(rampageHit?.statsSnapshot.elementBonus?.["Fusion"]).toBeCloseTo(
+    expect(rampageHit?.statsSnapshot.elementBonus["Fusion"]).toBeCloseTo(
       0.1 + BASE_ELEM_BONUS,
     )
   })
@@ -1636,10 +1636,7 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     expect(hits).toHaveLength(2) // immediate(3) + trailing(5) — both land
     const actions = result.filter((e) => e.kind === "action")
     const rsAction = actions.find(
-      (a) =>
-        a.kind === "action" &&
-        a.characterId === 32 &&
-        a.skillType === "Resonance Skill",
+      (a) => a.characterId === 32 && a.skillType === "Resonance Skill",
     )
     expect(rsAction?.frame).toBe(16) // no pad
   })
@@ -1680,9 +1677,7 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
     const actions = result.filter((e) => e.kind === "action")
     // t3 action should be at frame 30 (padded from 16)
-    const t3Action = actions.find(
-      (a) => a.kind === "action" && a.characterId === 30 && !a.variantKind,
-    )
+    const t3Action = actions.find((a) => a.characterId === 30 && !a.variantKind)
     expect(t3Action?.frame).toBe(30)
     // All trailing hits from t1 appear in log
     const hits = result.filter((e) => e.kind === "hit" && e.characterId === 30)
@@ -1750,10 +1745,7 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     // Movement action event at frame 30 (padded from 6)
     const actions = result.filter((e) => e.kind === "action")
     const movAction = actions.find(
-      (a) =>
-        a.kind === "action" &&
-        a.characterId === 30 &&
-        a.skillType === "Movement",
+      (a) => a.characterId === 30 && a.skillType === "Movement",
     )
     expect(movAction?.frame).toBe(30)
   })

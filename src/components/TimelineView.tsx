@@ -194,8 +194,7 @@ export function TimelineView({
             }
             const i = item.flatIndex
             const ev = actionEvents[i]
-            const actionEventAtIndex =
-              logMatches && ev?.kind === "action" ? ev : undefined
+            const actionEventAtIndex = logMatches ? ev : undefined
             return (
               <TimelineEntryRow
                 key={item.entry.id}

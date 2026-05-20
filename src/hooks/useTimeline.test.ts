@@ -306,13 +306,11 @@ describe("useTimeline group support", () => {
     })
     const groups = result.current.nodes.filter((n) => n.kind === "group")
     expect(groups).toHaveLength(2)
-    if (groups[0].kind === "group" && groups[1].kind === "group") {
-      expect(groups[1].label).toBe("copy") // empty label → "copy"
-      expect(groups[1].entries[0].id).not.toBe(groups[0].entries[0].id)
-      expect(groups[1].entries[0].stageId).toBe(groups[0].entries[0].stageId)
-      // duplicate of open group is locked
-      expect(groups[1].locked).toBe(true)
-    }
+    expect(groups[1].label).toBe("copy") // empty label → "copy"
+    expect(groups[1].entries[0].id).not.toBe(groups[0].entries[0].id)
+    expect(groups[1].entries[0].stageId).toBe(groups[0].entries[0].stageId)
+    // duplicate of open group is locked
+    expect(groups[1].locked).toBe(true)
   })
 
   it("duplicateGroup appends '<label> copy' label", () => {
@@ -326,9 +324,7 @@ describe("useTimeline group support", () => {
       result.current.duplicateGroup(groupId)
     })
     const groups = result.current.nodes.filter((n) => n.kind === "group")
-    if (groups[1].kind === "group") {
-      expect(groups[1].label).toBe("Burst Window copy")
-    }
+    expect(groups[1].label).toBe("Burst Window copy")
   })
 })
 

@@ -119,7 +119,7 @@ function resolveEntryFields(
   const char = getCharacterById(entry.characterId)
   const charHex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
   const charName = char?.name ?? "—"
-  const elementLetter = char?.element?.[0] ?? "?"
+  const elementLetter = char?.element[0] ?? "?"
 
   const resolved = findStageByEntry(entry, slots, loadouts)
   const skillType = resolved?.skillType ?? null

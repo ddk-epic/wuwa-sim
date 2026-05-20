@@ -80,7 +80,7 @@ function resolveValue(
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
 ): number {
-  if (value.snapshot && snapshots && snapshots[effectIndex] !== undefined) {
+  if (value.snapshot && snapshots) {
     return snapshots[effectIndex]
   }
   switch (value.kind) {
