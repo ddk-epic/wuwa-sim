@@ -39,6 +39,8 @@ export interface HitEvent extends SimulationLogBase {
   synthetic?: boolean
   /** When `synthetic` is true, the BuffDef.id that emitted the hit. */
   sourceBuffId?: string
+  /** The TimelineEntry.id whose stage produced this hit (authored or synthetic). */
+  sourceEntryId?: string
 }
 
 export interface SustainEvent extends SimulationLogBase {

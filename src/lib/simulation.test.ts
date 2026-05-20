@@ -1897,3 +1897,61 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
   })
 })
+
+describe("runSimulation — sourceEntryId (#186)", () => {
+  it("authored hits carry sourceEntryId of their timeline entry", () => {
+    testCharacters = [charA]
+    const e1 = tlEntry(1, "Normal Attack::_", "entry-1")
+    const e2 = tlEntry(1, "Normal Attack::_", "entry-2")
+    const result = runSimulation([e1, e2], emptySlots, emptyLoadouts)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(2)
+    expect(hits[0].sourceEntryId).toBe("entry-1")
+    expect(hits[1].sourceEntryId).toBe("entry-2")
+  })
+
+  it("trailing-window hits carry sourceEntryId of the originating swap entry", () => {
+    testCharacters = [charTrailingBase]
+    const entries: TimelineEntry[] = [
+      {
+        id: "swap-entry",
+        characterId: 30,
+        stageId: "Normal Attack::_",
+        variantKind: "swap",
+      },
+    ]
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits.length).toBeGreaterThan(0)
+    for (const hit of hits) {
+      expect(hit.sourceEntryId).toBe("swap-entry")
+    }
+  })
+
+  it("emitHit synthetic hits carry sourceEntryId of the triggering entry", () => {
+    const coord: BuffDef = {
+      id: "char.coord2",
+      name: "Coord2",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: dmgHit(0.5),
+          icdFrames: 0,
+          skillType: "Basic Attack",
+        },
+      ],
+    }
+    const charWithCoord: EnrichedCharacter = { ...charA, buffs: [coord] }
+    testCharacters = [charWithCoord]
+    const entry = tlEntry(1, "Normal Attack::_", "trigger-entry")
+    const result = runSimulation([entry], [1, null, null], emptyLoadouts)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(2)
+    for (const hit of hits) {
+      expect(hit.sourceEntryId).toBe("trigger-entry")
+    }
+  })
+})

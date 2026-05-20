@@ -245,7 +245,10 @@ function fireSkillCast(
     resonanceCost: resolved.resonanceCost,
   })
   pushBuffEvents(log, result.lifecycleEvents)
-  for (const synth of result.syntheticHits) log.push(synth)
+  for (const synth of result.syntheticHits) {
+    synth.sourceEntryId = entry.id
+    log.push(synth)
+  }
 }
 
 function buildActionEvent(
@@ -373,7 +376,10 @@ function processHeal(
   }
   log.push(sustainEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticHits) log.push(synth)
+  for (const synth of dispatch.syntheticHits) {
+    synth.sourceEntryId = entry.id
+    log.push(synth)
+  }
 }
 
 function processDamageHit(
@@ -423,10 +429,14 @@ function processDamageHit(
     statsSnapshot: { ...hitResolved.stats },
     activeBuffs: hitResolved.activeBuffs,
     passiveBuffs: hitResolved.passiveBuffs,
+    sourceEntryId: entry.id,
   }
   log.push(hitEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticHits) log.push(synth)
+  for (const synth of dispatch.syntheticHits) {
+    synth.sourceEntryId = entry.id
+    log.push(synth)
+  }
 }
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
