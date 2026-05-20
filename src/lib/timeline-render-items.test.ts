@@ -1,0 +1,196 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import type { EnrichedCharacter } from "#/types/character"
+import type { TimelineNode } from "#/types/timeline"
+import type { Slots } from "#/types/loadout"
+import { buildTimelineRenderItems } from "./timeline-render-items"
+
+let testCharacters: EnrichedCharacter[] = []
+
+vi.mock("./catalog", () => ({
+  getCharacterById: (id: number) =>
+    testCharacters.find((c) => c.id === id) ?? null,
+}))
+
+afterEach(() => {
+  testCharacters = []
+})
+
+const makeChar = (id: number, element: string): EnrichedCharacter =>
+  ({
+    id,
+    name: `Char${id}`,
+    element,
+    weaponType: "Sword",
+    rarity: "5",
+    stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [],
+  }) as EnrichedCharacter
+
+const topEntry = (id: string, characterId = 1): TimelineNode => ({
+  kind: "entry",
+  id,
+  characterId,
+  stageId: "s1",
+})
+
+const group = (
+  id: string,
+  entryIds: string[],
+  locked = false,
+): Extract<TimelineNode, { kind: "group" }> => ({
+  kind: "group",
+  id,
+  label: `Group ${id}`,
+  locked,
+  entries: entryIds.map((eid) => ({ id: eid, characterId: 1, stageId: "s1" })),
+})
+
+const slots: Slots = [1, 2, 3]
+
+describe("buildTimelineRenderItems", () => {
+  it("returns empty array for no nodes", () => {
+    expect(buildTimelineRenderItems([], new Set(), slots)).toEqual([])
+  })
+
+  it("returns single entry item for ungrouped node", () => {
+    const items = buildTimelineRenderItems([topEntry("e1")], new Set(), slots)
+    expect(items).toHaveLength(1)
+    const item = items[0]
+    expect(item.type).toBe("entry")
+    if (item.type === "entry") {
+      expect(item.entry.id).toBe("e1")
+      expect(item.flatIndex).toBe(0)
+      expect(item.inGroup).toBe(false)
+      expect(item.groupId).toBeNull()
+      expect(item.groupLocked).toBe(false)
+      expect(item.isLastInGroup).toBe(false)
+      expect(item.lastInGroupGradient).toBeNull()
+      expect(item.groupFirstCharHex).toBeNull()
+    }
+  })
+
+  it("assigns sequential flatIndexes to multiple ungrouped entries", () => {
+    const items = buildTimelineRenderItems(
+      [topEntry("e1"), topEntry("e2"), topEntry("e3")],
+      new Set(),
+      slots,
+    )
+    expect(items).toHaveLength(3)
+    expect(items.map((i) => i.type)).toEqual(["entry", "entry", "entry"])
+    const flatIndexes = items
+      .filter((i) => i.type === "entry")
+      .map((i) => i.flatIndex)
+    expect(flatIndexes).toEqual([0, 1, 2])
+  })
+
+  it("emits groupHeader + entry items for expanded group", () => {
+    const g = group("g1", ["e1", "e2"])
+    const items = buildTimelineRenderItems([g], new Set(["g1"]), slots)
+    expect(items).toHaveLength(3)
+    expect(items[0].type).toBe("groupHeader")
+    expect(items[1].type).toBe("entry")
+    expect(items[2].type).toBe("entry")
+  })
+
+  it("expanded group entries have correct inGroup and groupId", () => {
+    const g = group("g1", ["e1", "e2"])
+    const items = buildTimelineRenderItems([g], new Set(["g1"]), slots)
+    const entries = items.filter(
+      (i): i is Extract<(typeof items)[number], { type: "entry" }> =>
+        i.type === "entry",
+    )
+    expect(entries[0].inGroup).toBe(true)
+    expect(entries[0].groupId).toBe("g1")
+    expect(entries[1].inGroup).toBe(true)
+    expect(entries[1].isLastInGroup).toBe(true)
+    expect(entries[0].isLastInGroup).toBe(false)
+  })
+
+  it("collapsed group emits only groupHeader and skips flatIndex", () => {
+    const g = group("g1", ["e1", "e2", "e3"])
+    const items = buildTimelineRenderItems(
+      [g, topEntry("e4")],
+      new Set(),
+      slots,
+    )
+    expect(items).toHaveLength(2)
+    expect(items[0].type).toBe("groupHeader")
+    expect(items[1].type).toBe("entry")
+    const entryItem = items[1] as Extract<
+      (typeof items)[number],
+      { type: "entry" }
+    >
+    expect(entryItem.flatIndex).toBe(3)
+  })
+
+  it("mixed nodes: ungrouped then group then ungrouped", () => {
+    const g = group("g1", ["e2", "e3"])
+    const nodes: TimelineNode[] = [topEntry("e1"), g, topEntry("e4")]
+    const items = buildTimelineRenderItems(nodes, new Set(["g1"]), slots)
+    // e1, groupHeader, e2, e3, e4
+    expect(items).toHaveLength(5)
+    expect(items[0].type).toBe("entry")
+    expect(items[1].type).toBe("groupHeader")
+    expect(items[2].type).toBe("entry")
+    expect(items[3].type).toBe("entry")
+    expect(items[4].type).toBe("entry")
+    const flatIndexes = items
+      .filter(
+        (i): i is Extract<(typeof items)[number], { type: "entry" }> =>
+          i.type === "entry",
+      )
+      .map((i) => i.flatIndex)
+    expect(flatIndexes).toEqual([0, 1, 2, 3])
+  })
+
+  it("groupHeader carries pre-computed dominantHex and distinctCharIds", () => {
+    testCharacters = [makeChar(1, "Fusion")]
+    const g = group("g1", ["e1"])
+    const items = buildTimelineRenderItems([g], new Set(["g1"]), slots)
+    const header = items[0]
+    expect(header.type).toBe("groupHeader")
+    if (header.type === "groupHeader") {
+      expect(header.dominantHex).toBeDefined()
+      expect(typeof header.dominantHex).toBe("string")
+      expect(Array.isArray(header.distinctCharIds)).toBe(true)
+      expect(header.distinctCharIds).toContain(1)
+    }
+  })
+
+  it("groupHeader gradient is pre-computed", () => {
+    testCharacters = [makeChar(1, "Fusion")]
+    const g = group("g1", ["e1"])
+    const items = buildTimelineRenderItems([g], new Set(), slots)
+    const header = items[0]
+    expect(header.type).toBe("groupHeader")
+    if (header.type === "groupHeader") {
+      expect(header.gradient).toContain("linear-gradient")
+    }
+  })
+
+  it("locked group propagates groupLocked to entries", () => {
+    const g = group("g1", ["e1", "e2"], true)
+    const items = buildTimelineRenderItems([g], new Set(["g1"]), slots)
+    const entries = items.filter(
+      (i): i is Extract<(typeof items)[number], { type: "entry" }> =>
+        i.type === "entry",
+    )
+    expect(entries.every((e) => e.groupLocked)).toBe(true)
+  })
+
+  it("lastInGroupGradient is set only on the last entry of an expanded group", () => {
+    testCharacters = [makeChar(1, "Fusion")]
+    const g = group("g1", ["e1", "e2", "e3"])
+    const items = buildTimelineRenderItems([g], new Set(["g1"]), slots)
+    const entries = items.filter(
+      (i): i is Extract<(typeof items)[number], { type: "entry" }> =>
+        i.type === "entry",
+    )
+    expect(entries[0].lastInGroupGradient).toBeNull()
+    expect(entries[1].lastInGroupGradient).toBeNull()
+    expect(entries[2].lastInGroupGradient).not.toBeNull()
+  })
+})

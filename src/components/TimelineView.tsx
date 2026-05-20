@@ -6,13 +6,10 @@ import type { SimulationLogEntry } from "#/types/simulation-log"
 import { validateTimeline } from "#/lib/validate-timeline"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
+import { buildTimelineRenderItems } from "#/lib/timeline-render-items"
 import { ConfirmModal } from "./ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
-import {
-  TimelineGroupHeader,
-  buildGroupGradient,
-  getGroupFirstCharHex,
-} from "./TimelineGroupHeader"
+import { TimelineGroupHeader } from "./TimelineGroupHeader"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -28,29 +25,6 @@ interface TimelineViewProps {
   onDeleteGroup: (groupId: string) => void
   onReorderGroupEntries: (groupId: string, fromId: string, toId: string) => void
 }
-
-type RenderItem =
-  | {
-      type: "groupHeader"
-      groupId: string
-      label: string
-      locked: boolean
-      entryCount: number
-      groupEntries: TimelineEntry[]
-      startFlatIndex: number
-      gradient: string
-    }
-  | {
-      type: "entry"
-      entry: TimelineEntry
-      flatIndex: number
-      inGroup: boolean
-      groupId: string | null
-      groupLocked: boolean
-      isLastInGroup: boolean
-      lastInGroupGradient: string | null
-      groupFirstCharHex: string | null
-    }
 
 export function TimelineView({
   nodes,
@@ -127,58 +101,10 @@ export function TimelineView({
   const actionEvents = log.filter((e) => e.kind === "action")
   const logMatches = actionEvents.length === entries.length
 
-  const renderItems: RenderItem[] = []
-  let flatIndex = 0
-
-  for (const node of nodes) {
-    if (node.kind === "group") {
-      const isExpanded = expandedGroupIds.has(node.id)
-      const startFlatIndex = flatIndex
-      const gradient = buildGroupGradient(node.entries, slots)
-      const groupFirstCharHex = getGroupFirstCharHex(node.entries, slots)
-      renderItems.push({
-        type: "groupHeader",
-        groupId: node.id,
-        label: node.label,
-        locked: node.locked,
-        entryCount: node.entries.length,
-        groupEntries: node.entries,
-        startFlatIndex,
-        gradient,
-      })
-      if (isExpanded) {
-        node.entries.forEach((entry, entryIdx) => {
-          const isLast = entryIdx === node.entries.length - 1
-          renderItems.push({
-            type: "entry",
-            entry,
-            flatIndex: flatIndex++,
-            inGroup: true,
-            groupId: node.id,
-            groupLocked: node.locked,
-            isLastInGroup: isLast,
-            lastInGroupGradient: isLast ? gradient : null,
-            groupFirstCharHex,
-          })
-        })
-      } else {
-        flatIndex += node.entries.length
-      }
-    } else {
-      const { id, characterId, stageId, variantKind } = node
-      renderItems.push({
-        type: "entry",
-        entry: { id, characterId, stageId, variantKind },
-        flatIndex: flatIndex++,
-        inGroup: false,
-        groupId: null,
-        groupLocked: false,
-        isLastInGroup: false,
-        lastInGroupGradient: null,
-        groupFirstCharHex: null,
-      })
-    }
-  }
+  const renderItems = useMemo(
+    () => buildTimelineRenderItems(nodes, expandedGroupIds, slots),
+    [nodes, expandedGroupIds, slots],
+  )
 
   function toggleExpand(groupId: string) {
     setExpandedGroupIds((prev) => {
@@ -216,7 +142,8 @@ export function TimelineView({
                   label={item.label}
                   locked={item.locked}
                   entryCount={item.entryCount}
-                  groupEntries={item.groupEntries}
+                  dominantHex={item.dominantHex}
+                  distinctCharIds={item.distinctCharIds}
                   startFlatIndex={item.startFlatIndex}
                   gradient={item.gradient}
                   isExpanded={expandedGroupIds.has(item.groupId)}

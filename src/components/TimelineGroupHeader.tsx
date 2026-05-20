@@ -6,8 +6,6 @@ import {
   LockOpenIcon,
   TrashIcon,
 } from "lucide-react"
-import type { TimelineEntry } from "#/types/timeline"
-import type { Slots } from "#/types/loadout"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
@@ -15,83 +13,7 @@ import { getCharacterById } from "#/lib/catalog"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
-import { useTeamContext } from "#/hooks/useTeamContext"
 import { renderPoolValue } from "./TimelineEntryRow"
-
-export function getDistinctCharsBySlot(
-  entries: TimelineEntry[],
-  slots: Slots,
-): number[] {
-  const seen = new Set<number>()
-  const charIds: number[] = []
-  for (const e of entries) {
-    if (!seen.has(e.characterId)) {
-      seen.add(e.characterId)
-      charIds.push(e.characterId)
-    }
-  }
-  charIds.sort((a, b) => {
-    const ia = slots.indexOf(a)
-    const ib = slots.indexOf(b)
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib)
-  })
-  return charIds
-}
-
-export function buildGroupGradient(
-  groupEntries: TimelineEntry[],
-  slots: Slots,
-): string {
-  const charIds = getDistinctCharsBySlot(groupEntries, slots)
-  const hexes = charIds.map((id) => {
-    const char = getCharacterById(id)
-    return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
-  })
-  if (hexes.length === 0) return "transparent"
-  if (hexes.length === 1)
-    return `linear-gradient(90deg, ${hexes[0]}3a 0%, ${hexes[0]}14 50%, transparent 95%)`
-  const counts = new Map<number, number>()
-  for (const e of groupEntries)
-    counts.set(e.characterId, (counts.get(e.characterId) ?? 0) + 1)
-  const total = charIds.reduce((s, id) => s + (counts.get(id) ?? 0), 0)
-  let acc = 0
-  const stops = charIds.map((id, i) => {
-    const pct = ((counts.get(id) ?? 0) / total) * 95
-    const mid = acc + pct / 2
-    acc += pct
-    return `${hexes[i]}3a ${mid.toFixed(1)}%`
-  })
-  return `linear-gradient(90deg, ${stops.join(", ")}, transparent 95%)`
-}
-
-export function getGroupFirstCharHex(
-  groupEntries: TimelineEntry[],
-  slots: Slots,
-): string {
-  const charIds = getDistinctCharsBySlot(groupEntries, slots)
-  const firstId = charIds[0]
-  if (firstId === undefined) return "#888"
-  const char = getCharacterById(firstId)
-  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
-}
-
-export function getDominantHex(groupEntries: TimelineEntry[]): string {
-  const counts = new Map<number, number>()
-  for (const e of groupEntries) {
-    counts.set(e.characterId, (counts.get(e.characterId) ?? 0) + 1)
-  }
-  let maxCount = 0
-  let dominantId: number | null = groupEntries[0]?.characterId ?? null
-  for (const [id, count] of counts) {
-    if (count > maxCount) {
-      maxCount = count
-      dominantId = id
-    }
-  }
-  if (dominantId === null) return "#888"
-  const char = getCharacterById(dominantId)
-  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
-}
 
 function GroupLabelInput({
   groupId,
@@ -131,7 +53,8 @@ interface TimelineGroupHeaderProps {
   label: string
   locked: boolean
   entryCount: number
-  groupEntries: TimelineEntry[]
+  dominantHex: string
+  distinctCharIds: number[]
   startFlatIndex: number
   gradient: string
   isExpanded: boolean
@@ -152,7 +75,8 @@ export function TimelineGroupHeader({
   label,
   locked,
   entryCount,
-  groupEntries,
+  dominantHex,
+  distinctCharIds,
   startFlatIndex,
   gradient,
   isExpanded,
@@ -168,19 +92,16 @@ export function TimelineGroupHeader({
   onRequestDeleteConfirm,
 }: TimelineGroupHeaderProps) {
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
-  const { slots } = useTeamContext()
   const isRenaming = renamingGroupId === groupId
   const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
   const isDraggingThisGroup = drag.draggedId === groupId
-  const dominantHex = getDominantHex(groupEntries)
-  const distinctCharIds = getDistinctCharsBySlot(groupEntries, slots)
   const lastFlatIndex = startFlatIndex + entryCount - 1
 
-  const totalDurationSec =
-    groupEntries.reduce(
-      (s, _, i) => s + (summary.rows[startFlatIndex + i]?.durationFrames ?? 0),
-      0,
-    ) / 60
+  let totalDurFrames = 0
+  for (let i = 0; i < entryCount; i++) {
+    totalDurFrames += summary.rows[startFlatIndex + i]?.durationFrames ?? 0
+  }
+  const totalDurationSec = totalDurFrames / 60
 
   const firstRowTime =
     entryCount > 0
