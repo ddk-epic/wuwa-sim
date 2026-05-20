@@ -149,6 +149,7 @@ export interface TimelineDrag {
   ) => DropHandlerBundle
   groupSource: (groupId: string, containerIndex: number) => DragHandlerBundle
   groupTarget: (groupId: string, containerIndex: number) => DropHandlerBundle
+  ghostHandlers: () => DropHandlerBundle
 }
 
 export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
@@ -157,10 +158,15 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
     id: string
     position: DropPosition
   } | null>(null)
+  const [pending, setPending] = useState<{
+    decision: Exclude<DropDecision, { kind: "none" }>
+    position: DropPosition
+  } | null>(null)
 
   function clear() {
     setSource(null)
     setDropTarget(null)
+    setPending(null)
   }
 
   function dispatch(
@@ -220,11 +226,13 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
             isNoOp(source.containerIndex, containerIndex, position)
           ) {
             setDropTarget(null)
+            setPending(null)
             return
           }
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
           setDropTarget({ id: entryId, position })
+          setPending({ decision, position })
         },
         onDrop(ev) {
           if (!source) return
@@ -273,11 +281,13 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
             isNoOp(source.containerIndex, containerIndex, position)
           ) {
             setDropTarget(null)
+            setPending(null)
             return
           }
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
           setDropTarget({ id: `group:${groupId}`, position })
+          setPending({ decision, position })
         },
         onDrop(ev) {
           if (!source) return
@@ -296,6 +306,24 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
           }
           ev.preventDefault()
           dispatch(decision, position)
+          clear()
+        },
+      }
+    },
+    ghostHandlers() {
+      return {
+        onDragOver(ev) {
+          if (!source || !pending) return
+          ev.preventDefault()
+          ev.dataTransfer.dropEffect = "move"
+        },
+        onDrop(ev) {
+          if (!source || !pending) {
+            clear()
+            return
+          }
+          ev.preventDefault()
+          dispatch(pending.decision, pending.position)
           clear()
         },
       }

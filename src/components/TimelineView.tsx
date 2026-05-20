@@ -151,7 +151,11 @@ export function TimelineView({
           {renderItems.map((item) => {
             if (item.type === "ghost") {
               return (
-                <GhostEntryRow key={`ghost-${item.sourceId}`} item={item} />
+                <GhostEntryRow
+                  key={`ghost-${item.sourceId}`}
+                  item={item}
+                  handlers={drag.ghostHandlers()}
+                />
               )
             }
             if (item.type === "groupGhost") {
@@ -159,22 +163,16 @@ export function TimelineView({
                 <GhostGroupRow
                   key={`groupGhost-${item.sourceGroupId}`}
                   item={item}
+                  handlers={drag.ghostHandlers()}
                 />
               )
             }
             if (item.type === "groupHeader") {
-              if (item.hidden) {
-                return (
-                  <tr
-                    key={`group-${item.groupId}`}
-                    style={{ display: "none" }}
-                  />
-                )
-              }
               return (
                 <TimelineGroupHeader
                   key={`group-${item.groupId}`}
                   item={item}
+                  hidden={item.hidden === true}
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   summary={summary}
                   actionEvents={actionEvents}
@@ -189,9 +187,6 @@ export function TimelineView({
                 />
               )
             }
-            if (item.hidden) {
-              return <tr key={item.entry.id} style={{ display: "none" }} />
-            }
             const i = item.flatIndex
             const ev = actionEvents[i]
             const actionEventAtIndex = logMatches ? ev : undefined
@@ -199,6 +194,7 @@ export function TimelineView({
               <TimelineEntryRow
                 key={item.entry.id}
                 item={item}
+                hidden={item.hidden === true}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
                 actionEventAtIndex={actionEventAtIndex}

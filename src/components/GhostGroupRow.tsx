@@ -1,15 +1,21 @@
 import type { RenderItem } from "#/lib/timeline-render-items"
+import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
 
 type GroupGhostItem = Extract<RenderItem, { type: "groupGhost" }>
 
 interface GhostGroupRowProps {
   item: GroupGhostItem
+  handlers: DropHandlerBundle
 }
 
-export function GhostGroupRow({ item }: GhostGroupRowProps) {
+export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
   const { label, entryCount, dominantHex } = item
   return (
-    <tr className="opacity-40 pointer-events-none">
+    <tr
+      className="opacity-40"
+      onDragOver={handlers.onDragOver}
+      onDrop={handlers.onDrop}
+    >
       <td className="px-2 py-1.5 w-8" />
       <td className="px-2 py-1.5 w-18" />
       <td className="px-2 py-1.5 w-36" />

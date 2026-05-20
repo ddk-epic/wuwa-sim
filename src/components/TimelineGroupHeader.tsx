@@ -58,6 +58,7 @@ interface TimelineGroupHeaderProps {
   actionEvents: SimulationLogEntry[]
   logMatches: boolean
   drag: TimelineDrag
+  hidden?: boolean
   onToggleExpand: (groupId: string) => void
   onToggleGroupLock: (groupId: string) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
@@ -73,6 +74,7 @@ export function TimelineGroupHeader({
   actionEvents,
   logMatches,
   drag,
+  hidden = false,
   onToggleExpand,
   onToggleGroupLock,
   onGroupLabelCommit,
@@ -151,7 +153,7 @@ export function TimelineGroupHeader({
         "border-t border-gray-600 cursor-grab",
         isDraggingThisGroup ? "opacity-40" : "",
       ].join(" ")}
-      style={{ background: gradient }}
+      style={{ background: gradient, ...(hidden ? { display: "none" } : {}) }}
     >
       <td className="w-8 px-2 py-1.5" onClick={handleToggleExpand}>
         <ChevronRightIcon

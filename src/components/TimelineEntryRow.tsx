@@ -58,6 +58,7 @@ interface TimelineEntryRowProps {
     | Extract<SimulationLogEntry, { kind: "action" }>
     | undefined
   drag: TimelineDrag
+  hidden?: boolean
   onRemove: (id: string) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
 }
@@ -68,6 +69,7 @@ export function TimelineEntryRow({
   summary,
   actionEventAtIndex,
   drag,
+  hidden = false,
   onRemove,
   onUpdateEntry,
 }: TimelineEntryRowProps) {
@@ -131,6 +133,7 @@ export function TimelineEntryRow({
           backgroundRepeat: "no-repeat",
         }
       : {}),
+    ...(hidden ? { display: "none" } : {}),
   }
 
   return (

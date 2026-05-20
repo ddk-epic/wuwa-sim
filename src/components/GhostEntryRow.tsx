@@ -1,15 +1,21 @@
 import type { RenderItem } from "#/lib/timeline-render-items"
+import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
 
 type GhostItem = Extract<RenderItem, { type: "ghost" }>
 
 interface GhostEntryRowProps {
   item: GhostItem
+  handlers: DropHandlerBundle
 }
 
-export function GhostEntryRow({ item }: GhostEntryRowProps) {
+export function GhostEntryRow({ item, handlers }: GhostEntryRowProps) {
   const { charHex, skillName } = item
   return (
-    <tr className="opacity-40 pointer-events-none">
+    <tr
+      className="opacity-40"
+      onDragOver={handlers.onDragOver}
+      onDrop={handlers.onDrop}
+    >
       <td className="px-2 py-2 w-8" />
       <td className="px-2 py-2 w-18" />
       <td className="px-2 py-2 w-36">
