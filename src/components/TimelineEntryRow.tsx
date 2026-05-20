@@ -1,14 +1,11 @@
 import type { TimelineEntry } from "#/types/timeline"
-import type { VariantKind, SkillType } from "#/types/character"
+import type { VariantKind } from "#/types/character"
 import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
-import type {
-  ValidationError,
-  ValidationWarning,
-} from "#/lib/validate-timeline"
 import type { ActionTimeStage } from "#/lib/stage"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
+import type { RenderItem } from "#/lib/timeline-render-items"
 
 const VARIANT_ORDER: (VariantKind | undefined)[] = [
   undefined,
@@ -51,27 +48,12 @@ export function renderPoolValue(val: number | null, activeColor: string) {
   )
 }
 
+type EntryRenderItem = Extract<RenderItem, { type: "entry" }>
+
 interface TimelineEntryRowProps {
-  entry: TimelineEntry
-  index: number
-  inGroup: boolean
-  groupId: string | null
-  groupLocked: boolean
-  isLastInGroup: boolean
-  lastInGroupGradient: string | null
-  groupFirstCharHex: string | null
+  item: EntryRenderItem
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
-  charName: string
-  charHex: string
-  elementLetter: string
-  skillType: SkillType | null
-  skillName: string | null
-  stageWithVariants: ActionTimeStage | null
-  isInvalid: boolean
-  errors: ValidationError[]
-  warnings: ValidationWarning[]
-  showMessage: boolean
   actionEventAtIndex:
     | Extract<SimulationLogEntry, { kind: "action" }>
     | undefined
@@ -81,31 +63,35 @@ interface TimelineEntryRowProps {
 }
 
 export function TimelineEntryRow({
-  entry,
-  index,
-  inGroup,
-  groupId,
-  groupLocked,
-  isLastInGroup,
-  lastInGroupGradient,
-  groupFirstCharHex,
+  item,
   prevEntry,
   summary,
-  charName,
-  charHex,
-  elementLetter,
-  skillType,
-  skillName,
-  stageWithVariants,
-  isInvalid,
-  errors,
-  warnings,
-  showMessage,
   actionEventAtIndex,
   drag,
   onRemove,
   onUpdateEntry,
 }: TimelineEntryRowProps) {
+  const {
+    entry,
+    flatIndex: index,
+    inGroup,
+    groupId,
+    groupLocked,
+    isLastInGroup,
+    lastInGroupGradient,
+    groupFirstCharHex,
+    charName,
+    charHex,
+    elementLetter,
+    skillType,
+    skillName,
+    stageWithVariants,
+    isInvalid,
+    errors,
+    warnings,
+    showMessage,
+    containerIndex,
+  } = item
   const row = summary.rows[index] ?? {
     timeFrames: 0,
     durationFrames: 0,
@@ -114,9 +100,18 @@ export function TimelineEntryRow({
     damage: null,
   }
   const isDragging = drag.draggedId === entry.id
-  const isDropTarget = drag.dropTargetId === entry.id
-  const source = drag.entrySource(entry.id, { groupId, locked: groupLocked })
-  const target = drag.entryTarget(entry.id, { groupId, groupLocked })
+  const dropTargetMatch =
+    drag.dropTarget?.id === entry.id ? drag.dropTarget : null
+  const source = drag.entrySource(
+    entry.id,
+    { groupId, locked: groupLocked },
+    containerIndex,
+  )
+  const target = drag.entryTarget(
+    entry.id,
+    { groupId, groupLocked },
+    containerIndex,
+  )
 
   const duration = row.durationFrames / 60
   const reactDelayFrames = row.reactFrames
@@ -151,7 +146,12 @@ export function TimelineEntryRow({
         "border-t cursor-grab",
         charSwitched ? "" : "border-gray-700",
         isDragging ? "opacity-40" : "hover:bg-gray-800/50",
-        isDropTarget ? "border-t-blue-500 border-t-2" : "",
+        dropTargetMatch?.position === "above"
+          ? "border-t-blue-500 border-t-2"
+          : "",
+        dropTargetMatch?.position === "below"
+          ? "border-b-blue-500 border-b-2"
+          : "",
         isInvalid ? "bg-red-950/30" : "",
       ].join(" ")}
       style={rowStyle}

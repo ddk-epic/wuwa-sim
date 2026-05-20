@@ -5,6 +5,7 @@ import type { TimelineSummary } from "#/lib/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { validateTimeline } from "#/lib/validate-timeline"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
+import type { DropPosition } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { buildTimelineRenderItems } from "#/lib/timeline-render-items"
 import { ConfirmModal } from "./ConfirmModal"
@@ -16,14 +17,19 @@ interface TimelineViewProps {
   summary: TimelineSummary
   log: SimulationLogEntry[]
   onRemove: (id: string) => void
-  onReorder: (fromId: string, toId: string) => void
-  onReorderNodes: (fromId: string, toId: string) => void
+  onReorder: (fromId: string, toId: string, position: DropPosition) => void
+  onReorderNodes: (fromId: string, toId: string, position: DropPosition) => void
   onUpdateEntry: (id: string, patch: Partial<TimelineEntry>) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
   onToggleGroupLock: (groupId: string) => void
   onDuplicateGroup: (groupId: string) => void
   onDeleteGroup: (groupId: string) => void
-  onReorderGroupEntries: (groupId: string, fromId: string, toId: string) => void
+  onReorderGroupEntries: (
+    groupId: string,
+    fromId: string,
+    toId: string,
+    position: DropPosition,
+  ) => void
 }
 
 export function TimelineView({
@@ -139,14 +145,7 @@ export function TimelineView({
               return (
                 <TimelineGroupHeader
                   key={`group-${item.groupId}`}
-                  groupId={item.groupId}
-                  label={item.label}
-                  locked={item.locked}
-                  entryCount={item.entryCount}
-                  dominantHex={item.dominantHex}
-                  distinctCharIds={item.distinctCharIds}
-                  startFlatIndex={item.startFlatIndex}
-                  gradient={item.gradient}
+                  item={item}
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   summary={summary}
                   actionEvents={actionEvents}
@@ -168,26 +167,9 @@ export function TimelineView({
             return (
               <TimelineEntryRow
                 key={item.entry.id}
-                entry={item.entry}
-                index={i}
-                inGroup={item.inGroup}
-                groupId={item.groupId}
-                groupLocked={item.groupLocked}
-                isLastInGroup={item.isLastInGroup}
-                lastInGroupGradient={item.lastInGroupGradient}
-                groupFirstCharHex={item.groupFirstCharHex}
+                item={item}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
-                charName={item.charName}
-                charHex={item.charHex}
-                elementLetter={item.elementLetter}
-                skillType={item.skillType}
-                skillName={item.skillName}
-                stageWithVariants={item.stageWithVariants}
-                isInvalid={item.isInvalid}
-                errors={item.errors}
-                warnings={item.warnings}
-                showMessage={item.showMessage}
                 actionEventAtIndex={actionEventAtIndex}
                 drag={drag}
                 onRemove={onRemove}

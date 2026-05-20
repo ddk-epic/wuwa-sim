@@ -7,6 +7,7 @@ import type {
 import { flattenNodes } from "#/types/timeline"
 import { migrateNodes } from "#/lib/migrate-timeline"
 import { useLocalStorage } from "./useLocalStorage"
+import type { DropPosition } from "./useTimelineDrag"
 
 type NewEntry = Omit<TimelineEntry, "id">
 
@@ -136,47 +137,59 @@ export function useTimeline(onShapeChange?: () => void) {
     onShapeChange?.()
   }
 
-  function reorderEntries(fromId: string, toId: string) {
+  function reorderEntries(
+    fromId: string,
+    toId: string,
+    position: DropPosition,
+  ) {
     setNodes((prev) => {
       const fromIndex = prev.findIndex(
         (n) => n.kind === "entry" && n.id === fromId,
       )
       const toIndex = prev.findIndex((n) => n.kind === "entry" && n.id === toId)
-      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
-        return prev
+      if (fromIndex === -1 || toIndex === -1) return prev
       const next = [...prev]
       const [item] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, item)
+      const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex
+      const insertAt = position === "above" ? adjustedTo : adjustedTo + 1
+      next.splice(insertAt, 0, item)
       return next
     })
     onShapeChange?.()
   }
 
-  function reorderNodes(fromId: string, toId: string) {
+  function reorderNodes(fromId: string, toId: string, position: DropPosition) {
     setNodes((prev) => {
       const fromIndex = prev.findIndex((n) => n.id === fromId)
       const toIndex = prev.findIndex((n) => n.id === toId)
-      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
-        return prev
+      if (fromIndex === -1 || toIndex === -1) return prev
       const next = [...prev]
       const [item] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, item)
+      const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex
+      const insertAt = position === "above" ? adjustedTo : adjustedTo + 1
+      next.splice(insertAt, 0, item)
       return next
     })
     onShapeChange?.()
   }
 
-  function reorderGroupEntries(groupId: string, fromId: string, toId: string) {
+  function reorderGroupEntries(
+    groupId: string,
+    fromId: string,
+    toId: string,
+    position: DropPosition,
+  ) {
     setNodes((prev) =>
       prev.map((node) => {
         if (node.kind !== "group" || node.id !== groupId) return node
         const fromIndex = node.entries.findIndex((e) => e.id === fromId)
         const toIndex = node.entries.findIndex((e) => e.id === toId)
-        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
-          return node
+        if (fromIndex === -1 || toIndex === -1) return node
         const next = [...node.entries]
         const [item] = next.splice(fromIndex, 1)
-        next.splice(toIndex, 0, item)
+        const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex
+        const insertAt = position === "above" ? adjustedTo : adjustedTo + 1
+        next.splice(insertAt, 0, item)
         return { ...node, entries: next }
       }),
     )

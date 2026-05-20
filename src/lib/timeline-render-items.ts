@@ -28,6 +28,8 @@ export type RenderItem =
       gradient: string
       dominantHex: string
       distinctCharIds: number[]
+      /** Index of this group among all top-level nodes */
+      containerIndex: number
     }
   | {
       type: "entry"
@@ -49,6 +51,11 @@ export type RenderItem =
       errors: ValidationError[]
       warnings: ValidationWarning[]
       showMessage: boolean
+      /**
+       * Index within the item's container: node index for top-level entries,
+       * within-group index for group entries.
+       */
+      containerIndex: number
     }
 
 function buildShowMessageIds(
@@ -135,7 +142,8 @@ export function buildTimelineRenderItems(
   let flatIndex = 0
   const showMessageIds = buildShowMessageIds(nodes, validation)
 
-  for (const node of nodes) {
+  for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+    const node = nodes[nodeIndex]
     if (node.kind === "group") {
       const isExpanded = expandedGroupIds.has(node.id)
       const startFlatIndex = flatIndex
@@ -153,6 +161,7 @@ export function buildTimelineRenderItems(
         gradient,
         dominantHex,
         distinctCharIds,
+        containerIndex: nodeIndex,
       })
       if (isExpanded) {
         node.entries.forEach((entry, entryIdx) => {
@@ -167,6 +176,7 @@ export function buildTimelineRenderItems(
             isLastInGroup: isLast,
             lastInGroupGradient: isLast ? gradient : null,
             groupFirstCharHex,
+            containerIndex: entryIdx,
             ...resolveEntryFields(
               entry,
               slots,
@@ -196,6 +206,7 @@ export function buildTimelineRenderItems(
         isLastInGroup: false,
         lastInGroupGradient: null,
         groupFirstCharHex: null,
+        containerIndex: nodeIndex,
         ...resolveEntryFields(
           entry,
           slots,

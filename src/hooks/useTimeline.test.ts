@@ -333,7 +333,7 @@ describe("useTimeline group support", () => {
 })
 
 describe("useTimeline reorderGroupEntries", () => {
-  it("reorders entries within the same group", () => {
+  it("reorders entries within the same group — above", () => {
     const { result } = renderHook(() => useTimeline())
     let groupId!: string
     act(() => {
@@ -343,12 +343,34 @@ describe("useTimeline reorderGroupEntries", () => {
     })
     const [e1Id, e2Id] = result.current.entries.map((e) => e.id)
     act(() => {
-      result.current.reorderGroupEntries(groupId, e2Id, e1Id)
+      result.current.reorderGroupEntries(groupId, e2Id, e1Id, "above")
     })
     const group = result.current.nodes.find((n) => n.id === groupId)
     if (group?.kind === "group") {
       expect(group.entries[0].stageId).toBe("S::2")
       expect(group.entries[1].stageId).toBe("S::1")
+    }
+  })
+
+  it("reorders entries within the same group — below inserts after target", () => {
+    const { result } = renderHook(() => useTimeline())
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+      result.current.addEntry({ characterId: 1, stageId: "S::1" })
+      result.current.addEntry({ characterId: 1, stageId: "S::2" })
+      result.current.addEntry({ characterId: 1, stageId: "S::3" })
+    })
+    const [e1Id, , e3Id] = result.current.entries.map((e) => e.id)
+    // move e3 below e1 → [e1, e3, e2]
+    act(() => {
+      result.current.reorderGroupEntries(groupId, e3Id, e1Id, "below")
+    })
+    const group = result.current.nodes.find((n) => n.id === groupId)
+    if (group?.kind === "group") {
+      expect(group.entries[0].stageId).toBe("S::1")
+      expect(group.entries[1].stageId).toBe("S::3")
+      expect(group.entries[2].stageId).toBe("S::2")
     }
   })
 
@@ -361,14 +383,14 @@ describe("useTimeline reorderGroupEntries", () => {
     })
     const before = result.current.nodes.slice()
     act(() => {
-      result.current.reorderGroupEntries("unknown", "x", "y")
+      result.current.reorderGroupEntries("unknown", "x", "y", "above")
     })
     expect(result.current.nodes).toEqual(before)
   })
 })
 
 describe("useTimeline reorderNodes", () => {
-  it("moves a group node to a new top-level position", () => {
+  it("moves a group node to a new top-level position — above", () => {
     const { result } = renderHook(() => useTimeline())
     let g1!: string
     let g2!: string
@@ -376,16 +398,36 @@ describe("useTimeline reorderNodes", () => {
       g1 = result.current.addGroup()
       g2 = result.current.addGroup()
     })
-    // nodes: [g1(locked), g2(open)] — add g1 first, then g2 which locks g1
+    // nodes: [g1(locked), g2(open)]
     act(() => {
-      result.current.reorderNodes(g2, g1) // move g2 before g1
+      result.current.reorderNodes(g2, g1, "above") // move g2 before g1
     })
     const nodeIds = result.current.nodes.map((n) => n.id)
     expect(nodeIds[0]).toBe(g2)
     expect(nodeIds[1]).toBe(g1)
   })
 
-  it("moves a group after a top-level entry node", () => {
+  it("moves a group node to a new top-level position — below", () => {
+    const { result } = renderHook(() => useTimeline())
+    let g1!: string
+    let g2!: string
+    let g3!: string
+    act(() => {
+      g1 = result.current.addGroup()
+      g2 = result.current.addGroup()
+      g3 = result.current.addGroup()
+    })
+    // nodes: [g1, g2, g3]
+    act(() => {
+      result.current.reorderNodes(g1, g2, "below") // move g1 after g2 → [g2, g1, g3]
+    })
+    const nodeIds = result.current.nodes.map((n) => n.id)
+    expect(nodeIds[0]).toBe(g2)
+    expect(nodeIds[1]).toBe(g1)
+    expect(nodeIds[2]).toBe(g3)
+  })
+
+  it("moves a group after a top-level entry node — above", () => {
     const { result } = renderHook(() => useTimeline())
     let groupId!: string
     act(() => {
@@ -394,14 +436,14 @@ describe("useTimeline reorderNodes", () => {
     })
     const entryId = result.current.nodes[0].id
     act(() => {
-      result.current.reorderNodes(groupId, entryId) // move group before entry
+      result.current.reorderNodes(groupId, entryId, "above") // move group before entry
     })
     expect(result.current.nodes[0].kind).toBe("group")
     expect(result.current.nodes[0].id).toBe(groupId)
     expect(result.current.nodes[1].kind).toBe("entry")
   })
 
-  it("moves a top-level entry to a group's flat position (entry dropped on group header)", () => {
+  it("moves a top-level entry to a group's flat position — above", () => {
     const { result } = renderHook(() => useTimeline())
     let groupId!: string
     act(() => {
@@ -416,7 +458,7 @@ describe("useTimeline reorderNodes", () => {
     // nodes: [group(locked), entry(top-level)]
     const entryId = result.current.nodes.find((n) => n.kind === "entry")!.id
     act(() => {
-      result.current.reorderNodes(entryId, groupId) // entry moves before group
+      result.current.reorderNodes(entryId, groupId, "above") // entry moves before group
     })
     expect(result.current.nodes[0].kind).toBe("entry")
     expect(result.current.nodes[0].id).toBe(entryId)

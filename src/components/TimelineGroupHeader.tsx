@@ -14,6 +14,7 @@ import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "./TimelineEntryRow"
+import type { RenderItem } from "#/lib/timeline-render-items"
 
 function GroupLabelInput({
   groupId,
@@ -48,15 +49,10 @@ function GroupLabelInput({
   )
 }
 
+type GroupHeaderRenderItem = Extract<RenderItem, { type: "groupHeader" }>
+
 interface TimelineGroupHeaderProps {
-  groupId: string
-  label: string
-  locked: boolean
-  entryCount: number
-  dominantHex: string
-  distinctCharIds: number[]
-  startFlatIndex: number
-  gradient: string
+  item: GroupHeaderRenderItem
   isExpanded: boolean
   summary: TimelineSummary
   actionEvents: SimulationLogEntry[]
@@ -71,14 +67,7 @@ interface TimelineGroupHeaderProps {
 }
 
 export function TimelineGroupHeader({
-  groupId,
-  label,
-  locked,
-  entryCount,
-  dominantHex,
-  distinctCharIds,
-  startFlatIndex,
-  gradient,
+  item,
   isExpanded,
   summary,
   actionEvents,
@@ -91,9 +80,21 @@ export function TimelineGroupHeader({
   onDeleteGroup,
   onRequestDeleteConfirm,
 }: TimelineGroupHeaderProps) {
+  const {
+    groupId,
+    label,
+    locked,
+    entryCount,
+    dominantHex,
+    distinctCharIds,
+    startFlatIndex,
+    gradient,
+    containerIndex,
+  } = item
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
   const isRenaming = renamingGroupId === groupId
-  const isGroupDropTarget = drag.dropTargetId === `group:${groupId}`
+  const dropTargetMatch =
+    drag.dropTarget?.id === `group:${groupId}` ? drag.dropTarget : null
   const isDraggingThisGroup = drag.draggedId === groupId
   const lastFlatIndex = startFlatIndex + entryCount - 1
 
@@ -137,8 +138,8 @@ export function TimelineGroupHeader({
     onToggleExpand(groupId)
   }
 
-  const source = drag.groupSource(groupId)
-  const target = drag.groupTarget(groupId)
+  const source = drag.groupSource(groupId, containerIndex)
+  const target = drag.groupTarget(groupId, containerIndex)
 
   return (
     <tr
@@ -151,7 +152,12 @@ export function TimelineGroupHeader({
       className={[
         "border-t border-gray-600 cursor-grab",
         isDraggingThisGroup ? "opacity-40" : "",
-        isGroupDropTarget ? "border-t-blue-500 border-t-2" : "",
+        dropTargetMatch?.position === "above"
+          ? "border-t-blue-500 border-t-2"
+          : "",
+        dropTargetMatch?.position === "below"
+          ? "border-b-blue-500 border-b-2"
+          : "",
       ].join(" ")}
       style={{ background: gradient }}
     >

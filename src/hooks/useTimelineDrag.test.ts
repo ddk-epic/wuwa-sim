@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest"
-import {
-  decideDrop,
-  isDropAllowed,
-  type DragSource,
-  type DropTarget,
-} from "./useTimelineDrag"
+import { decideDrop, isDropAllowed, isNoOp } from "./useTimelineDrag"
+import type { DragSource, DropTarget } from "./useTimelineDrag"
 
 describe("isDropAllowed", () => {
   it("allows any drop when no drag source is set", () => {
@@ -49,11 +45,12 @@ function entrySrc(
   id: string,
   groupId: string | null,
   locked: boolean,
+  containerIndex = 0,
 ): DragSource {
-  return { kind: "entry", id, groupId, locked }
+  return { kind: "entry", id, groupId, locked, containerIndex }
 }
-function groupSrc(id: string): DragSource {
-  return { kind: "group", id }
+function groupSrc(id: string, containerIndex = 0): DragSource {
+  return { kind: "group", id, containerIndex }
 }
 function entryTgt(
   id: string,
@@ -181,5 +178,41 @@ describe("decideDrop policy table", () => {
       from: "g1",
       to: "g2",
     })
+  })
+})
+
+describe("isNoOp — no-op detection by container index and position", () => {
+  it("returns false for non-adjacent items regardless of position", () => {
+    expect(isNoOp(0, 3, "above")).toBe(false)
+    expect(isNoOp(0, 3, "below")).toBe(false)
+    expect(isNoOp(3, 0, "above")).toBe(false)
+    expect(isNoOp(3, 0, "below")).toBe(false)
+  })
+
+  it("above: no-op when target is immediately after source (S+1/above)", () => {
+    expect(isNoOp(1, 2, "above")).toBe(true)
+    expect(isNoOp(0, 1, "above")).toBe(true)
+    expect(isNoOp(4, 5, "above")).toBe(true)
+  })
+
+  it("above: not a no-op when target is not S+1", () => {
+    expect(isNoOp(1, 3, "above")).toBe(false) // two steps ahead
+    expect(isNoOp(2, 1, "above")).toBe(false) // behind
+  })
+
+  it("below: no-op when target is immediately before source (S-1/below)", () => {
+    expect(isNoOp(2, 1, "below")).toBe(true)
+    expect(isNoOp(1, 0, "below")).toBe(true)
+    expect(isNoOp(5, 4, "below")).toBe(true)
+  })
+
+  it("below: not a no-op when target is not S-1", () => {
+    expect(isNoOp(2, 0, "below")).toBe(false) // two steps behind
+    expect(isNoOp(1, 2, "below")).toBe(false) // ahead
+  })
+
+  it("self-target (same index) is not caught by isNoOp — handled by id check upstream", () => {
+    expect(isNoOp(1, 1, "above")).toBe(false)
+    expect(isNoOp(1, 1, "below")).toBe(false)
   })
 })
