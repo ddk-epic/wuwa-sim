@@ -232,13 +232,13 @@ describe("buildTimelineRenderItems", () => {
       element: "Fusion",
       concerto: 0,
       damage: [],
-      skillType: "Normal Attack" as const,
+      skillType: "Basic Attack" as const,
       skillName: "Heavy Attack",
     } as ResolvedStage
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     const e = entryItems(items)[0]
-    expect(e.skillType).toBe("Normal Attack")
+    expect(e.skillType).toBe("Basic Attack")
     expect(e.skillName).toBe("Heavy Attack")
   })
 
@@ -261,7 +261,7 @@ describe("buildTimelineRenderItems", () => {
       element: "Fusion",
       concerto: 0,
       damage: [],
-      skillType: "Normal Attack" as const,
+      skillType: "Basic Attack" as const,
       skillName: "Test",
     } as unknown as ResolvedStage
     resolvedStages.set("s1", stage)
@@ -277,7 +277,7 @@ describe("buildTimelineRenderItems", () => {
       element: "Fusion",
       concerto: 0,
       damage: [],
-      skillType: "Normal Attack" as const,
+      skillType: "Basic Attack" as const,
       skillName: "Test",
     } as ResolvedStage
     resolvedStages.set("s1", stage)

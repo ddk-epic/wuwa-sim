@@ -125,8 +125,10 @@ export function TimelineGroupHeader({
   let hasDmg = false
   for (let i = startFlatIndex; i <= lastFlatIndex; i++) {
     const d = summary.rows[i].damage
-    totalDmg += d
-    hasDmg = true
+    if (d !== null) {
+      totalDmg += d
+      hasDmg = true
+    }
   }
 
   function handleToggleExpand(e: React.MouseEvent) {

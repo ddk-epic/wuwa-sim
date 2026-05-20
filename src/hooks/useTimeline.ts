@@ -129,7 +129,7 @@ export function useTimeline(onShapeChange?: () => void) {
 
   function removeEntry(id: string) {
     setNodes((prev) =>
-      prev.flatMap((node) => {
+      prev.flatMap<TimelineNode>((node) => {
         if (node.kind === "entry") return node.id === id ? [] : [node]
         return [{ ...node, entries: node.entries.filter((e) => e.id !== id) }]
       }),

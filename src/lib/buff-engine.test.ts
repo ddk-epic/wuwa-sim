@@ -19,7 +19,6 @@ import {
 } from "./echo-stat-constants"
 
 const CHARACTER_BASE_CRIT_RATE = 0.05
-const CHARACTER_BASE_CRIT_DMG = 1.5
 const BASE_ATK_PCT =
   DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.atkPct +
   ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost1 * ECHO_MAIN_1COST_SCALING.atk

@@ -3,6 +3,8 @@ import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
 
+import { emptyStatTable } from "#/types/stat-table"
+
 import { getTimelineSummary } from "./timeline-summary"
 
 const dmgEntry = (value: number, actionFrame = 0): DamageEntry => ({
@@ -251,21 +253,7 @@ function makeHitEvent(
     element: "Fusion",
     dmgType: "Fusion",
     multiplier: 1,
-    statsSnapshot: {
-      atkBase: 1000,
-      atkPct: 0,
-      atkFlat: 0,
-      hpBase: 0,
-      hpPct: 0,
-      hpFlat: 0,
-      defBase: 0,
-      defPct: 0,
-      defFlat: 0,
-      critRate: 0,
-      critDmg: 0,
-      healingBonus: 0,
-      energyRechargePct: 0,
-    },
+    statsSnapshot: { ...emptyStatTable(), atkBase: 1000 },
     activeBuffs: [],
     passiveBuffs: [],
     sourceEntryId: entryId,

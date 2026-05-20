@@ -372,9 +372,8 @@ describe("useTimeline reorderGroupEntries", () => {
 
   it("is a no-op for unknown groupId", () => {
     const { result } = renderHook(() => useTimeline())
-    let groupId!: string
     act(() => {
-      groupId = result.current.addGroup()
+      result.current.addGroup()
       result.current.addEntry({ characterId: 1, stageId: "S::1" })
     })
     const before = result.current.nodes.slice()

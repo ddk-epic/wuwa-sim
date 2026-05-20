@@ -9,7 +9,11 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
-import type { HitEvent, SustainEvent } from "#/types/simulation-log"
+import type {
+  ActionEvent,
+  HitEvent,
+  SustainEvent,
+} from "#/types/simulation-log"
 import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
@@ -701,7 +705,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBe("cancel")
   })
 
@@ -709,7 +713,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     testCharacters = [charVariant]
     const entry = tlEntry(10, "Normal Attack::_")
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
   })
 
@@ -760,7 +764,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const hits = result.filter((e) => e.kind === "hit")
     // actionFrame 23 > advance 16 but swap does NOT filter — hit lands
     expect(hits).toHaveLength(1)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBe("swap")
   })
 
@@ -870,7 +874,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       emptySlots,
       emptyLoadouts,
     )
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.skillType).toBe("Basic Attack")
   })
 
@@ -881,7 +885,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       emptySlots,
       emptyLoadouts,
     )
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.skillType).toBe("Resonance Skill")
   })
 
@@ -1324,7 +1328,7 @@ describe("runSimulation — Movement stages", () => {
       emptySlots,
       emptyLoadouts,
     )
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action).toBeDefined()
     expect(action?.skillType).toBe("Movement")
     expect(action?.frame).toBe(0)
@@ -1353,11 +1357,10 @@ describe("runSimulation — Movement stages", () => {
     )
     // After Normal Attack hits: concerto accumulated; the Dodge action event shows
     // the same concerto (Dodge did not apply any concerto delta)
-    const hits = result.filter((e) => e.kind === "hit")
-    const hitAfterNormal = hits[0] as { cumulativeConcerto: number } | undefined
-    const dodgeAction = result.find(
-      (e) => e.kind === "action" && e.skillType === "Movement",
-    )
+    const hits = result.filter((e): e is HitEvent => e.kind === "hit")
+    const hitAfterNormal = hits[0]
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const dodgeAction = actions.find((a) => a.skillType === "Movement")
     expect(hitAfterNormal?.cumulativeConcerto).toBeGreaterThan(0)
     expect(dodgeAction?.cumulativeConcerto).toBe(
       hitAfterNormal?.cumulativeConcerto,
@@ -1375,11 +1378,10 @@ describe("runSimulation — Movement stages", () => {
       emptyLoadouts,
     )
     // Energy set by the hit event; the Dodge action event must show same value
-    const hits = result.filter((e) => e.kind === "hit")
-    const hitAfterNormal = hits[0] as { cumulativeEnergy: number } | undefined
-    const dodgeAction = result.find(
-      (e) => e.kind === "action" && e.skillType === "Movement",
-    )
+    const hits = result.filter((e): e is HitEvent => e.kind === "hit")
+    const hitAfterNormal = hits[0]
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const dodgeAction = actions.find((a) => a.skillType === "Movement")
     expect(hitAfterNormal?.cumulativeEnergy).toBeGreaterThan(0)
     expect(dodgeAction?.cumulativeEnergy).toBe(hitAfterNormal?.cumulativeEnergy)
   })
@@ -1409,7 +1411,7 @@ describe("runSimulation — Movement stages", () => {
       emptySlots,
       emptyLoadouts,
     )
-    const buffEvents = result.filter((e) => e.kind === "buff")
+    const buffEvents = result.filter((e) => e.kind === "buffApplied")
     expect(buffEvents).toHaveLength(0)
   })
 })
@@ -1764,9 +1766,9 @@ describe("runSimulation — droppedHitCount annotation on swap ActionEvent", () 
       { id: "d2", characterId: 30, stageId: "Resonance Skill::_" },
     ]
     const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
-    const swapAction = result.find(
-      (e) =>
-        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const swapAction = actions.find(
+      (a) => a.characterId === 30 && a.variantKind === "swap",
     )
     // 2 trailing hits (at frames 15 and 30) are dropped when Resonance Skill fires at frame 6
     expect(swapAction?.droppedHitCount).toBe(2)
@@ -1785,9 +1787,9 @@ describe("runSimulation — droppedHitCount annotation on swap ActionEvent", () 
       { id: "d5", characterId: 30, stageId: "Normal Attack::_" },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
-    const swapAction = result.find(
-      (e) =>
-        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const swapAction = actions.find(
+      (a) => a.characterId === 30 && a.variantKind === "swap",
     )
     expect(swapAction?.droppedHitCount).toBeUndefined()
   })
@@ -1803,9 +1805,9 @@ describe("runSimulation — droppedHitCount annotation on swap ActionEvent", () 
       },
     ]
     const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
-    const swapAction = result.find(
-      (e) =>
-        e.kind === "action" && e.characterId === 30 && e.variantKind === "swap",
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const swapAction = actions.find(
+      (a) => a.characterId === 30 && a.variantKind === "swap",
     )
     expect(swapAction?.droppedHitCount).toBeUndefined()
   })
@@ -1821,7 +1823,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
   })
 
@@ -1829,7 +1831,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     testCharacters = [charVariant]
     const entry = tlEntry(10, "Normal Attack::_")
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toBeUndefined()
   })
 
@@ -1847,8 +1849,11 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       { id: "db4", characterId: 30, stageId: "Normal Attack::_" },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
-    const padAction = result.find(
-      (e) => e.kind === "action" && e.characterId === 30 && !e.variantKind,
+    const padActions = result.filter(
+      (e): e is ActionEvent => e.kind === "action",
+    )
+    const padAction = padActions.find(
+      (a) => a.characterId === 30 && !a.variantKind,
     )
     // pad = 30 - 16 = 14
     expect(padAction?.delayBreakdown?.pad).toBe(14)
@@ -1885,7 +1890,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
-    const action = result.find((e) => e.kind === "action")
+    const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
   })
 })
