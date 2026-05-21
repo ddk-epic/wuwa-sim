@@ -50,7 +50,7 @@ A global player-level simulator setting (frames; default 6 at 60fps) used as the
 **Trailing Window**:
 The interval during which a swap-variant stage continues to emit hits after the timeline cursor has moved past its `advance` frame. Trailing hits land at their authored `actionFrame` offset from the swap stage's start, possibly overlapping later Timeline Entries on the same or other characters. The hit's Acting Character remains the swapped-out character. There is no on-field / off-field distinction in buff snapshotting — trailing hits read whatever buff state is active at their fire frame. On same-character re-entry while trailing hits are pending, the engine branches on the re-entry's Skill Type:
 
-- **Cancel-capable** (`Resonance Skill`, `Resonance Liberation`, `Intro Skill`, `Outro Skill`, `Echo Skill`): trailing hits with `hitFrame ≥ newEntry.startFrame` are **dropped** (the new stage's animation cancels the residual). The drop count is annotated on the swap stage's Action Event in the Simulation Log.
+- **Cancel-capable** (`Resonance Skill`, `Resonance Liberation`, `Intro Skill`, `Outro Skill`, `Echo Skill`): trailing hits with `hitFrame ≥ newEntry.startFrame` are silently **dropped** (the new stage's animation cancels the residual).
 - **Non-cancel-capable** (`Basic Attack`, `Movement`): the **immediately preceding** entry's `advance` is extended just enough to push the re-entry past the last trailing hit (Padding Delay). All trailing hits land.
 
 See ADR-0018.

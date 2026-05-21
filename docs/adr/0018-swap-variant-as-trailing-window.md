@@ -40,3 +40,37 @@ The split is by post-rollup `skillType` so that "normal attack combos cannot be 
 - Stages whose authored Damage Entries are all at `actionFrame: 0` derive no trailing window from `swap` — every hit lands at the cursor regardless. The variant remains authorable on such stages but produces the same DPS as `instantCancel` plus the `swapFrames` cursor cost. A backfill of realistic `actionFrame` data on swap-relevant stages is a prerequisite for swap to be meaningfully distinguishable on those stages, exactly as ADR-0008 already noted for `cancel`/`instantCancel`.
 - New domain terms enter the project glossary under Core simulation: **Swap (Variant Kind)**, **Swap Frames**, **Trailing Window**, **Padding Delay**.
 - On-field / off-field character tracking remains explicitly out of scope. Future authors of a buff that keys on field state will reopen this question in a new ADR.
+
+## Amendment — Trailing Window extracted to its own module; drop-count annotation removed
+
+Two sections of this ADR are superseded:
+
+1. **Drop-count annotation removed.** The "per-entry 'N hits dropped' annotation on the swap-canceled stage's Action Event" (described in the cancel-capable branch above and in the Simulation Log consequence) is dropped. Cancel-capable trailing hits are silently discarded. The `droppedHitCount` field on `ActionEvent` is removed; the `swapActionRef` reach-back into the log no longer exists. Forensics can be reintroduced later as a dedicated log event emitted at drop time (which is temporally honest — drops happen at the new entry's frame, not at the swap stage) if a use case arises.
+
+2. **Trailing Window coordination lives in its own module.** The pending-trailing-hit Map, the same-character collision branching, the pad-extension, the immediate/trailing partition rule, and the `CANCEL_CAPABLE` Skill Type set move out of `simulation.ts` and into `src/lib/trailing-window.ts` as pure functions over a `TrailingWindowState` value:
+
+   ```ts
+   export interface TrailingHit {
+     hit
+     hitIndex
+     stageStartFrame
+     entry
+     resolved
+     hitFrame
+   }
+   export type TrailingWindowState = ReadonlyMap<number, readonly TrailingHit[]>
+   export function empty(): TrailingWindowState
+   export function onEntryArrival(
+     state,
+     { characterId, skillType, frame },
+   ): { fireBeforeEntry; padFrames; stateAfter }
+   export function scheduleStage(
+     state,
+     { entry, resolved, stageStartFrame, hits, variantKind, stageDuration },
+   ): { immediate; stateAfter }
+   export function drainAll(state): readonly TrailingHit[]
+   ```
+
+   `runSimulation` becomes a thin walker: per entry it calls `onEntryArrival` (drain + pad), runs the entry, calls `scheduleStage` (partition + schedule), and `drainAll` at the end. `processHit` is refactored to take a `TrailingHit` bundle so immediate, pre-entry, and final-drain hits all flow through the same firing loop. No engine, log, or stage data leaks into `trailing-window.ts` — the state machine is testable in isolation against ADR-0018's branching rules.
+
+   The behavioral contract above (cancel-capable drops vs. non-cancel-capable pad, default-fallback `advance`, trailing-hit ownership, `reactionDelay` stacking) is preserved bit-exact on every path except the removed annotation.
