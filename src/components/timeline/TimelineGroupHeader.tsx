@@ -13,7 +13,7 @@ import { getCharacterById } from "#/lib/loadout/catalog"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
-import { renderPoolValue } from "./TimelineEntryRow"
+import { renderPoolValue } from "../log/log-cells"
 import { formatFrames } from "#/lib/format"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 

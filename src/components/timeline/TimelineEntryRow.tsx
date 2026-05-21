@@ -5,6 +5,8 @@ import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { ActionTimeStage } from "#/lib/stage/stage"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
+import { formatVariantKind } from "#/lib/format-variant-kind"
+import { renderPoolValue } from "../log/log-cells"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -24,29 +26,6 @@ export function nextVariant(
   )
   const idx = defined.indexOf(current)
   return defined[(idx + 1) % defined.length]
-}
-
-export function variantLabel(v: VariantKind | undefined): string {
-  if (v === "cancel") return "CNCL"
-  if (v === "instantCancel") return "INST"
-  if (v === "swap") return "SWAP"
-  return "FULL"
-}
-
-export function renderPoolValue(val: number | null, activeColor: string) {
-  if (val === null) return <span style={{ color: "#42475a" }}>—</span>
-  if (val === 0) return <span style={{ color: "#42475a" }}>0</span>
-  if (val >= 100)
-    return (
-      <span className="font-bold" style={{ color: activeColor }}>
-        {val.toFixed(1)}
-      </span>
-    )
-  return (
-    <span className="font-medium" style={{ color: activeColor }}>
-      {val.toFixed(1)}
-    </span>
-  )
 }
 
 type EntryRenderItem = Extract<RenderItem, { type: "entry" }>
@@ -220,7 +199,7 @@ export function TimelineEntryRow({
               style={{ color: "#a3bfff", letterSpacing: "0.4px" }}
               title="Full / Cancel / Instant Cancel"
             >
-              {variantLabel(entry.variantKind)}
+              {formatVariantKind(entry.variantKind, "short")}
             </button>
           )}
           {totalDelayFrames > 0 && (
