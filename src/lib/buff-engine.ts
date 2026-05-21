@@ -1,7 +1,5 @@
 import type {
   BuffDef,
-  BuffInstance,
-  Condition,
   EmitHitEffect,
   ResourceEffect,
   ResourceKind,
@@ -14,6 +12,8 @@ import { getCharacterById } from "./catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { EmitHitHost } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "./engine-bootstrap"
+import { ConditionEvaluator } from "./condition-evaluator"
+import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
 import { InstanceStore } from "./instance-store"
 import type { Candidate, EngineEvent } from "./instance-store"
 import { OnFieldTracker } from "./on-field-tracker"
@@ -22,23 +22,6 @@ import { accumulateStatEffects } from "./stat-table-builder"
 import { TriggerIndex } from "./trigger-index"
 
 export type { EngineEvent } from "./instance-store"
-
-type ConditionCacheVersions = {
-  store: number
-  resources: number
-  onField: number
-}
-
-type ConditionCacheKey = {
-  buffId: string
-  sourceCharacterId: number
-  targetCharacterId: number
-  actingCharacterId: number
-}
-
-function conditionCacheKeyString(k: ConditionCacheKey): string {
-  return `${k.buffId}|${k.sourceCharacterId}|${k.targetCharacterId}|${k.actingCharacterId}`
-}
 
 export type HitLandedEvent = Extract<EngineEvent, { kind: "hitLanded" }>
 export type HealLandedEvent = Extract<EngineEvent, { kind: "healLanded" }>
@@ -76,18 +59,6 @@ export interface BootstrapInput {
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
-interface ConditionSubject {
-  sourceCharacterId: number
-  targetCharacterId: number
-}
-
-function subjectFromInstance(inst: BuffInstance): ConditionSubject {
-  return {
-    sourceCharacterId: inst.sourceCharacterId,
-    targetCharacterId: inst.targetCharacterId,
-  }
-}
-
 function subjectAtTrigger(sourceCharacterId: number): ConditionSubject {
   return { sourceCharacterId, targetCharacterId: sourceCharacterId }
 }
@@ -106,6 +77,7 @@ export class BuffEngine {
   private cooldownLastFired = new Map<string, number>()
   private foldedBuffsMap = new Map<number, BuffDef[]>()
   private pendingOutroBuffs: PendingOutroBuff[] = []
+  private evaluator = new ConditionEvaluator(this.buildConditionWorld())
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -136,6 +108,19 @@ export class BuffEngine {
   /** Test/inspection helper exposing the dispatch phase order as a value. */
   phaseOrder(): readonly string[] {
     return this.phases.map((p) => p.name)
+  }
+
+  private buildConditionWorld(): ConditionWorld {
+    return {
+      hasActiveBuff: (id, charId) => this.store.hasActiveOnTarget(id, charId),
+      isOnField: (charId) => this.onField.isOnField(charId),
+      getResourceValue: (charId, r) => this.resources.getResource(charId)[r],
+      mutationVersions: () => ({
+        store: this.store.mutationVersion(),
+        resources: this.resources.mutationVersion(),
+        onField: this.onField.mutationVersion(),
+      }),
+    }
   }
 
   private deferOutroBuff(
@@ -176,7 +161,7 @@ export class BuffEngine {
     if (def.target.kind === "nextOnField") {
       if (
         def.condition &&
-        !this.evaluateCondition(
+        !this.evaluator.evaluateUncached(
           def.condition,
           subjectAtTrigger(sourceCharacterId),
         )
@@ -368,7 +353,7 @@ export class BuffEngine {
         def.effects.length > 0 &&
         def.effects.every((e) => e.kind === "emitHit")
       ) {
-        return this.evaluateCondition(
+        return this.evaluator.evaluateUncached(
           def.condition,
           subjectAtTrigger(sourceCharacterId),
         )
@@ -622,7 +607,7 @@ export class BuffEngine {
     for (const inst of contributions) {
       if (
         inst.def.condition &&
-        !this.cachedEvaluateCondition(inst.def.condition, inst, characterId)
+        !this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
       ) {
         continue
       }
@@ -635,76 +620,9 @@ export class BuffEngine {
     return base
   }
 
-  private conditionCache = new Map<string, boolean>()
-  private conditionCacheVersions: ConditionCacheVersions | null = null
-  private conditionEvalCount_ = 0
-
-  private cachedEvaluateCondition(
-    cond: Condition,
-    inst: BuffInstance,
-    actingCharacterId: number,
-  ): boolean {
-    const versions: ConditionCacheVersions = {
-      store: this.store.mutationVersion(),
-      resources: this.resources.mutationVersion(),
-      onField: this.onField.mutationVersion(),
-    }
-    const prev = this.conditionCacheVersions
-    if (
-      prev === null ||
-      prev.store !== versions.store ||
-      prev.resources !== versions.resources ||
-      prev.onField !== versions.onField
-    ) {
-      this.conditionCache.clear()
-      this.conditionCacheVersions = versions
-    }
-    const cacheKey: ConditionCacheKey = {
-      buffId: inst.def.id,
-      sourceCharacterId: inst.sourceCharacterId,
-      targetCharacterId: inst.targetCharacterId,
-      actingCharacterId,
-    }
-    const key = conditionCacheKeyString(cacheKey)
-    const cached = this.conditionCache.get(key)
-    if (cached !== undefined) return cached
-    const result = this.evaluateCondition(cond, subjectFromInstance(inst))
-    this.conditionEvalCount_++
-    this.conditionCache.set(key, result)
-    return result
-  }
-
   /** @internal Test-only: counts evaluateCondition calls that bypassed the cache. */
   conditionEvalCountForTest(): number {
-    return this.conditionEvalCount_
-  }
-
-  private evaluateCondition(
-    cond: Condition,
-    subject: ConditionSubject,
-  ): boolean {
-    switch (cond.kind) {
-      case "buffActive": {
-        const id =
-          cond.on === "source"
-            ? subject.sourceCharacterId
-            : subject.targetCharacterId
-        return this.store.hasActiveOnTarget(cond.buffId, id)
-      }
-      case "onField":
-        return this.onField.isOnField(subject.targetCharacterId)
-      case "actorIsOnField":
-        return this.onField.isOnField(subject.sourceCharacterId)
-      case "actorIsOffField":
-        return !this.onField.isOnField(subject.sourceCharacterId)
-      case "resourceAtLeast": {
-        const id =
-          cond.on === "source"
-            ? subject.sourceCharacterId
-            : subject.targetCharacterId
-        return this.resources.getResource(id)[cond.resource] >= cond.n
-      }
-    }
+    return this.evaluator.evalCountForTest()
   }
 
   /** Test/inspection helper. */
@@ -724,7 +642,7 @@ export class BuffEngine {
       .filter(
         (inst) =>
           !inst.def.condition ||
-          this.cachedEvaluateCondition(inst.def.condition, inst, characterId),
+          this.evaluator.evaluateCached(inst.def.condition, inst, characterId),
       )
       .map((inst) => ({
         id: inst.def.id,
