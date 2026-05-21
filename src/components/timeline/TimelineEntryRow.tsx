@@ -124,7 +124,7 @@ export function TimelineEntryRow({
       onDragEnd={source.onDragEnd}
       className={[
         "border-t cursor-grab",
-        charSwitched ? "" : "border-gray-700",
+        charSwitched ? "" : "border-gray-800/70",
         isDragging ? "opacity-40" : "hover:bg-gray-800/50",
         isInvalid ? "bg-red-950/30" : "",
       ].join(" ")}
@@ -195,7 +195,7 @@ export function TimelineEntryRow({
                   ),
                 })
               }}
-              className="text-[12px] px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border"
+              className="text-[12px] px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border cursor-pointer"
               style={{ color: "#a3bfff", letterSpacing: "0.4px" }}
               title="Full / Cancel / Instant Cancel"
             >
