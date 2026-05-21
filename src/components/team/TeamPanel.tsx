@@ -3,8 +3,8 @@ import { listWeaponsByType } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
 import { EchoBuildEditor } from "#/components/EchoBuildEditor"
-import { TeamSlotPortrait } from "#/components/TeamSlotPortrait"
-import { ComboboxSelect, Stepper } from "#/components/TeamSlotControls"
+import { TeamSlotPortrait } from "#/components/team/TeamSlotPortrait"
+import { ComboboxSelect, Stepper } from "#/components/team/TeamSlotControls"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]

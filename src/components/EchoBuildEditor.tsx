@@ -7,7 +7,7 @@ import {
 } from "#/lib/loadout/template"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot } from "#/hooks/useTeamContext"
-import { ComboboxSelect } from "#/components/TeamSlotControls"
+import { ComboboxSelect } from "#/components/team/TeamSlotControls"
 
 const ECHO_BUILDS: EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
 
