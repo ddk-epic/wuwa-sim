@@ -1,4 +1,4 @@
-import { GhostIcon, SwordIcon } from "lucide-react"
+import { UsersRoundIcon, SwordsIcon } from "lucide-react"
 import { listWeaponsByType } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
@@ -59,7 +59,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
       />
 
       <DomainSection
-        icon={<SwordIcon className="w-3 h-3" />}
+        icon={<SwordsIcon className="w-3 h-3" />}
         label={character.weaponType}
       >
         <div className="flex items-stretch gap-1">
@@ -90,7 +90,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
         </div>
       </DomainSection>
 
-      <DomainSection icon={<GhostIcon className="w-3 h-3" />} label="echo">
+      <DomainSection icon={<UsersRoundIcon className="w-3 h-3" />} label="echo">
         <EchoBuildEditor slotIndex={slotIndex} />
       </DomainSection>
     </div>
