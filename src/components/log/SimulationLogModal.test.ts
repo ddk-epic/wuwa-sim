@@ -112,8 +112,8 @@ describe("formatScalingCell", () => {
 })
 
 describe("formatERCell", () => {
-  it("0% ER shows 100%", () => expect(formatERCell(0)).toBe("100%"))
-  it("0.2 ER shows 120%", () => expect(formatERCell(0.2)).toBe("120%"))
+  it("0% ER shows 100.0%", () => expect(formatERCell(0)).toBe("100.0%"))
+  it("0.2 ER shows 120.0%", () => expect(formatERCell(0.2)).toBe("120.0%"))
 })
 
 describe("formatCritCell", () => {
