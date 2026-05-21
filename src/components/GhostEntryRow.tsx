@@ -24,8 +24,19 @@ export function GhostEntryRow({ item, handlers }: GhostEntryRowProps) {
           style={{ backgroundColor: charHex }}
         />
       </td>
-      <td className="px-2 py-2 w-16" />
-      <td className="px-2 py-2" style={{ borderLeft: `3px solid ${charHex}` }}>
+      <td className="px-2 py-2 w-16">
+        <span
+          className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
+          style={{
+            background: `${charHex}15`,
+            border: `1px solid ${charHex}33`,
+            color: charHex,
+          }}
+        >
+          <p className="opacity-0">Empty</p>
+        </span>
+      </td>
+      <td className="px-2 py-2">
         <span className="text-sm text-gray-200 truncate">
           {skillName ?? "—"}
         </span>

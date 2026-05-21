@@ -1,5 +1,7 @@
 import type { RenderItem } from "#/lib/timeline-render-items"
 import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
+import { getCharacterById } from "#/lib/catalog"
+import { ELEMENT_HEX } from "#/data/elements"
 
 type GroupGhostItem = Extract<RenderItem, { type: "groupGhost" }>
 
@@ -9,7 +11,7 @@ interface GhostGroupRowProps {
 }
 
 export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
-  const { label, entryCount, dominantHex } = item
+  const { label, entryCount, dominantHex, distinctCharIds } = item
   return (
     <tr
       className="opacity-40"
@@ -18,7 +20,25 @@ export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
     >
       <td className="px-2 py-1.5 w-8" />
       <td className="px-2 py-1.5 w-18" />
-      <td className="px-2 py-1.5 w-36" />
+      <td className="px-2 py-1.5 w-36">
+        <div className="flex items-center">
+          {distinctCharIds.map((charId, idx) => {
+            const char = getCharacterById(charId)
+            const hex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+            return (
+              <span
+                key={charId}
+                className="w-5 h-5 rounded-full"
+                style={{
+                  marginLeft: idx > 0 ? "-6px" : undefined,
+                  outline: `1.5px solid ${hex}93`,
+                  outlineOffset: "0px",
+                }}
+              />
+            )
+          })}
+        </div>
+      </td>
       <td className="px-2 py-1.5 w-16">
         <span
           className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"

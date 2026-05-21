@@ -109,6 +109,7 @@ export function applyDragPreview(
     label: sourceHeader.label,
     entryCount: sourceHeader.entryCount,
     dominantHex: sourceHeader.dominantHex,
+    distinctCharIds: sourceHeader.distinctCharIds,
   }
   result.splice(targetInsertIdx, 0, groupGhost)
   return result

@@ -75,6 +75,7 @@ export type RenderItem =
       label: string
       entryCount: number
       dominantHex: string
+      distinctCharIds: number[]
     }
 
 function buildShowMessageIds(
