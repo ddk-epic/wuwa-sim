@@ -1,8 +1,8 @@
 import { useState } from "react"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { Modal } from "#/components/Modal"
-import { BuffEventRow } from "#/components/BuffEventRow"
-import { HitEventRow } from "#/components/HitEventRow"
+import { BuffEventRow } from "#/components/timeline/BuffEventRow"
+import { HitEventRow } from "#/components/timeline/HitEventRow"
 
 interface SimulationLogModalProps {
   log: SimulationLogEntry[]
