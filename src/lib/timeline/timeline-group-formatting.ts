@@ -1,7 +1,7 @@
 import type { TimelineEntry } from "#/types/timeline"
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 
 export function getDistinctCharsBySlot(
   entries: TimelineEntry[],

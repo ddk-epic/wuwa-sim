@@ -1,6 +1,6 @@
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 
 type GroupGhostItem = Extract<RenderItem, { type: "groupGhost" }>

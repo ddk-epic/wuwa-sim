@@ -1,11 +1,11 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
-import { getCharacterById, getEchoSetById } from "#/lib/catalog"
+import { getCharacterById, getEchoSetById } from "#/lib/loadout/catalog"
 import {
   emptyLoadout,
   inferEchoSetForEcho,
   loadoutFromTemplate,
-} from "#/lib/template"
+} from "#/lib/loadout/template"
 
 function updateSlot(
   prev: [SlotLoadout, SlotLoadout, SlotLoadout],

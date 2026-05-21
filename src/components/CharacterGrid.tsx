@@ -1,6 +1,6 @@
 import type { Character } from "#/types/character"
 import { ELEMENT_HEX } from "#/data/elements"
-import { listCharacters } from "#/lib/catalog"
+import { listCharacters } from "#/lib/loadout/catalog"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 

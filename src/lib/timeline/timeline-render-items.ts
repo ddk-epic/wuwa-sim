@@ -7,7 +7,7 @@ import type {
   ValidationError,
   ValidationWarning,
 } from "#/lib/timeline/validate-timeline"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { findStageByEntry } from "#/lib/stage/stage"
 import {

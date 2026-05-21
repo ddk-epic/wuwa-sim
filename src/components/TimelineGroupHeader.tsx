@@ -9,7 +9,7 @@ import {
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"

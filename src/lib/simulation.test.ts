@@ -19,7 +19,7 @@ import {
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_3COST_VARIABLE,
   ECHO_SUBSTAT,
-} from "./echo-stat-constants"
+} from "./loadout/echo-stat-constants"
 
 import { runSimulation } from "./simulation"
 
@@ -153,7 +153,7 @@ const echoA: EnrichedEcho = {
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
 
-vi.mock("./catalog", () => ({
+vi.mock("./loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,

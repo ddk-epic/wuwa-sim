@@ -12,14 +12,14 @@ import {
 
 let testEchoSets: EchoSet[] = []
 
-vi.mock("./catalog", () => ({
+vi.mock("./loadout/catalog", () => ({
   getCharacterById: () => null,
   getEchoById: () => null,
   getEchoSetById: (id: number) => testEchoSets.find((s) => s.id === id) ?? null,
   getWeaponById: () => null,
 }))
 
-vi.mock("./resolve-echo-sets", () => ({
+vi.mock("./loadout/resolve-echo-sets", () => ({
   resolveEchoSets: (slot1Id: number | null, slot2Id: number | null) => {
     if (slot1Id === null && slot2Id === null) return []
     if (slot1Id !== null && slot2Id !== null && slot1Id === slot2Id) {

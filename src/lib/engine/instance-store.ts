@@ -9,7 +9,7 @@ import type { SkillType } from "#/types/character"
 import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
-import { getCharacterById } from "../catalog"
+import { getCharacterById } from "../loadout/catalog"
 import { cloneStats, freezeSnapshots } from "./stat-table-builder"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }

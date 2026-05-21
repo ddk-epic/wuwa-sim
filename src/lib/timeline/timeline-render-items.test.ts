@@ -9,7 +9,7 @@ import { buildTimelineRenderItems } from "./timeline-render-items"
 let testCharacters: EnrichedCharacter[] = []
 let resolvedStages: Map<string, ResolvedStage | null> = new Map()
 
-vi.mock("../catalog", () => ({
+vi.mock("../loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
 }))

@@ -1,6 +1,6 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById } from "../catalog"
+import { getCharacterById } from "../loadout/catalog"
 import { findStageByEntry } from "../stage/stage"
 
 export interface ValidationError {

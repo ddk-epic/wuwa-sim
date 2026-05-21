@@ -7,7 +7,7 @@ import type { EnrichedEchoStage } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
-import { getCharacterById, getEchoById } from "../catalog"
+import { getCharacterById, getEchoById } from "../loadout/catalog"
 import { makeStageId } from "./stage"
 
 export interface FocusedStage {

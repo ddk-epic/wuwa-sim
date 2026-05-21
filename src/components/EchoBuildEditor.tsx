@@ -1,7 +1,10 @@
 import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
-import { listEchoes, listEchoSets } from "#/lib/catalog"
-import { ECHO_BUILD_LAYOUT } from "#/lib/echo-stat-constants"
-import { COST3_MAINS_DEFAULT, COST4_MAINS_DEFAULT } from "#/lib/template"
+import { listEchoes, listEchoSets } from "#/lib/loadout/catalog"
+import { ECHO_BUILD_LAYOUT } from "#/lib/loadout/echo-stat-constants"
+import {
+  COST3_MAINS_DEFAULT,
+  COST4_MAINS_DEFAULT,
+} from "#/lib/loadout/template"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot } from "#/hooks/useTeamContext"
 import { ComboboxSelect } from "#/components/TeamSlotControls"

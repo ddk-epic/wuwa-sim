@@ -1,5 +1,5 @@
 import { GhostIcon, SwordIcon } from "lucide-react"
-import { listWeaponsByType } from "#/lib/catalog"
+import { listWeaponsByType } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
 import { EchoBuildEditor } from "#/components/EchoBuildEditor"

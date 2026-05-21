@@ -2,7 +2,7 @@ import { createContext, useContext } from "react"
 import type { ReactNode } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 
 export interface TeamContextValue {
   slots: Slots

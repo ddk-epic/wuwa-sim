@@ -7,7 +7,7 @@ import { verina } from "./verina"
 
 let testCharacters: EnrichedCharacter[] = []
 
-vi.mock("../../lib/catalog", () => ({
+vi.mock("../../lib/loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getWeaponById: () => null,

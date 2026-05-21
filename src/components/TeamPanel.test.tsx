@@ -7,7 +7,7 @@ import { TeamProvider } from "#/hooks/useTeamContext"
 import type { TeamContextValue } from "#/hooks/useTeamContext"
 import { TeamPanel } from "./TeamPanel"
 
-vi.mock("#/lib/catalog", () => ({
+vi.mock("#/lib/loadout/catalog", () => ({
   getCharacterById: (id: number) => (id === 1 ? testChar : null),
   listWeaponsByType: () => [],
   listEchoes: () => [],

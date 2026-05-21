@@ -8,7 +8,7 @@ import type {
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
-import { getCharacterById } from "../catalog"
+import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { EmitHitHost } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "../engine-bootstrap"

@@ -7,7 +7,7 @@ import type { HitLandedEvent } from "#/lib/engine/buff-engine"
 import {
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_3COST_VARIABLE,
-} from "#/lib/echo-stat-constants"
+} from "#/lib/loadout/echo-stat-constants"
 import { infernoRider } from "./inferno-rider"
 import { bellBorneGeochelone } from "./bell-borne-geochelone"
 import type { EchoSet } from "#/types/echo-set"
@@ -20,7 +20,7 @@ let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
 let testEchoSets: EchoSet[] = []
 
-vi.mock("../../lib/catalog", () => ({
+vi.mock("../../lib/loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getWeaponById: () => null,

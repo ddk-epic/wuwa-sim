@@ -10,14 +10,14 @@ import {
   getEchoById,
   getEchoSetById,
   getWeaponById,
-} from "./catalog"
-import { resolveEchoSets } from "./resolve-echo-sets"
+} from "./loadout/catalog"
+import { resolveEchoSets } from "./loadout/resolve-echo-sets"
 import {
   accumulateStatEffects,
   compileBaseStats,
   freezeSnapshots,
 } from "./engine/stat-table-builder"
-import { resolveWeaponBuffs } from "./weapon-resolve"
+import { resolveWeaponBuffs } from "./loadout/weapon-resolve"
 
 const FLAT_VALUE_BY_NAME: Record<
   string,

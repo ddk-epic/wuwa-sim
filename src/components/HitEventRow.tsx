@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react"
 import type { HitEvent, SimulationLogEntry } from "#/types/simulation-log"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import { formatSkillType } from "#/data/skill-types"
 import {
   computeFormulaBreakdown,

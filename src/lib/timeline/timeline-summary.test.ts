@@ -102,7 +102,7 @@ const charB: EnrichedCharacter = {
 
 let testCharacters: EnrichedCharacter[] = []
 
-vi.mock("../catalog", () => ({
+vi.mock("../loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: () => null,

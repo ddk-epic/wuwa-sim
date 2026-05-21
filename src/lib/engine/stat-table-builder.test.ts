@@ -16,7 +16,7 @@ import {
   ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
-} from "../echo-stat-constants"
+} from "../loadout/echo-stat-constants"
 
 const baseBuff = (overrides: Partial<BuffDef>): BuffDef => ({
   id: "b",

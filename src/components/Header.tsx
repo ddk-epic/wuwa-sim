@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import {
   useReactionDelay,
   useSettingsActions,

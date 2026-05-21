@@ -1,5 +1,5 @@
 import type { SimulationLogEntry } from "#/types/simulation-log"
-import { getCharacterById } from "#/lib/catalog"
+import { getCharacterById } from "#/lib/loadout/catalog"
 
 type BuffEntry = Extract<
   SimulationLogEntry,

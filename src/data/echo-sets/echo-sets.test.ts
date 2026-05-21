@@ -8,7 +8,7 @@ import { ALL_ECHO_SETS } from "./index"
 
 let testEchoSets: EchoSet[] = []
 
-vi.mock("../../lib/catalog", () => ({
+vi.mock("../../lib/loadout/catalog", () => ({
   getCharacterById: (id: number) => (id === 1 ? testChar : null),
   getWeaponById: () => null,
   getEchoById: () => null,
