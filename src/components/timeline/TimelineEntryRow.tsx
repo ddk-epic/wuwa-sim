@@ -4,6 +4,7 @@ import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { ActionTimeStage } from "#/lib/stage/stage"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
+import { formatFrames } from "#/lib/format"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -113,7 +114,6 @@ export function TimelineEntryRow({
     containerIndex,
   )
 
-  const duration = row.durationFrames / 60
   const reactDelayFrames = row.reactFrames
   const padFrames = row.padFrames
   const totalDelayFrames = reactDelayFrames + padFrames
@@ -167,7 +167,7 @@ export function TimelineEntryRow({
         <span className="text-gray-400">{index + 1}</span>
       </td>
       <td className="px-2 py-2 text-right font-mono text-[16px] text-[#a3bfff]">
-        {(row.timeFrames / 60).toFixed(2)}s
+        {formatFrames(row.timeFrames)}
       </td>
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -228,14 +228,14 @@ export function TimelineEntryRow({
               className="text-xs text-gray-500 shrink-0"
               title={[
                 reactDelayFrames > 0
-                  ? `react: ${(reactDelayFrames / 60).toFixed(2)}s`
+                  ? `react: ${formatFrames(reactDelayFrames)}`
                   : "",
-                padFrames > 0 ? `pad: ${(padFrames / 60).toFixed(2)}s` : "",
+                padFrames > 0 ? `pad: ${formatFrames(padFrames)}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}
             >
-              +{(totalDelayFrames / 60).toFixed(2)}s
+              +{formatFrames(totalDelayFrames)}
             </span>
           )}
           {showMessage && errors.length > 0 && (
@@ -249,7 +249,7 @@ export function TimelineEntryRow({
         </div>
       </td>
       <td className="px-2 py-2 text-right font-mono text-[16px] text-gray-300">
-        {duration.toFixed(2)}s
+        {formatFrames(row.durationFrames)}
       </td>
       <td className="px-2 py-2 text-right font-mono">
         {renderPoolValue(conVal, "#f5d061")}

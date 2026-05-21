@@ -7,6 +7,7 @@ import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { getFocusedStageCatalog } from "#/lib/stage/focused-stage-catalog"
 import type { FocusedStage } from "#/lib/stage/focused-stage-catalog"
+import { formatFrames } from "#/lib/format"
 
 type NewEntry = Omit<TimelineEntry, "id">
 
@@ -171,7 +172,7 @@ interface StageRowProps {
 }
 
 function StageRow({ stage, onStageClick }: StageRowProps) {
-  const durationSec = (stage.durationFrames / 60).toFixed(2) + "s"
+  const durationSec = formatFrames(stage.durationFrames)
   return (
     <button
       className="w-full flex items-center px-2 py-2 text-left hover:bg-gray-800 border-gray-700/50 transition-colors"

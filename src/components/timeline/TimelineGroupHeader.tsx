@@ -14,6 +14,7 @@ import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "./TimelineEntryRow"
+import { formatFrames } from "#/lib/format"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
 function GroupLabelInput({
@@ -102,12 +103,10 @@ export function TimelineGroupHeader({
   for (let i = 0; i < entryCount; i++) {
     totalDurFrames += summary.rows[startFlatIndex + i]?.durationFrames ?? 0
   }
-  const totalDurationSec = totalDurFrames / 60
-
   const firstRowTime =
     entryCount > 0
-      ? ((summary.rows[startFlatIndex]?.timeFrames ?? 0) / 60).toFixed(2)
-      : "0.00"
+      ? formatFrames(summary.rows[startFlatIndex]?.timeFrames ?? 0)
+      : "0.00s"
 
   const lastConVal =
     isExpanded || entryCount === 0 || !logMatches
@@ -165,7 +164,7 @@ export function TimelineGroupHeader({
         />
       </td>
       <td className="px-2 py-1.5 text-right font-mono text-[16px] text-[#a3bfff]">
-        {firstRowTime}s
+        {firstRowTime}
       </td>
       <td className="px-2 py-1.5">
         <div className="flex items-center gap-1">
@@ -252,7 +251,7 @@ export function TimelineGroupHeader({
         </div>
       </td>
       <td className="px-2 py-1.5 text-right font-mono text-[16px] text-gray-300">
-        {totalDurationSec.toFixed(2)}s
+        {formatFrames(totalDurFrames)}
       </td>
       <td className="px-2 py-1.5 text-right font-mono">
         {renderPoolValue(lastConVal, "#f5cf4d")}

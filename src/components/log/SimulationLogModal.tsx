@@ -20,6 +20,7 @@ import {
   formatScalingCell,
   formatStatComponents,
 } from "#/lib/damage/hit-formula"
+import { formatFrames } from "#/lib/format"
 
 const BUFF_KINDS = new Set([
   "buffApplied",
@@ -158,7 +159,7 @@ function LogTable({
                   {i + 1}
                 </td>
                 <td className={`${numCell} text-[16px] text-[#a3bfff]`}>
-                  {(ev.frame / 60).toFixed(2)}s
+                  {formatFrames(ev.frame)}
                 </td>
                 <td className="px-2 py-2">
                   <CharCell id={ev.characterId} />
@@ -469,13 +470,13 @@ function SkillNameSuffix({ ev }: { ev: Hittable }) {
           <span
             className="ml-2 text-xs text-muted-foreground"
             title={[
-              delay.react > 0 ? `react: ${(delay.react / 60).toFixed(2)}s` : "",
-              delay.pad > 0 ? `pad: ${(delay.pad / 60).toFixed(2)}s` : "",
+              delay.react > 0 ? `react: ${formatFrames(delay.react)}` : "",
+              delay.pad > 0 ? `pad: ${formatFrames(delay.pad)}` : "",
             ]
               .filter(Boolean)
               .join(" · ")}
           >
-            +{((delay.react + delay.pad) / 60).toFixed(2)}s
+            +{formatFrames(delay.react + delay.pad)}
           </span>
         )}
       </>
@@ -568,7 +569,7 @@ function BuffRow({
         {index + 1}
       </td>
       <td className={`${numCell} text-[#a3bfff] text-xs`}>
-        {(buff.frame / 60).toFixed(2)}s
+        {formatFrames(buff.frame)}
       </td>
       <td className="px-2 py-1">
         <CharCell id={buff.targetCharacterId} />
