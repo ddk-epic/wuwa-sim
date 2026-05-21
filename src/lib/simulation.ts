@@ -1,4 +1,4 @@
-import type { DamageEntry, HealTarget, SkillType } from "#/types/character"
+import type { DamageEntry, HealTarget } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
@@ -14,27 +14,8 @@ import { BuffEngine } from "./buff-engine"
 import type { ResolvedHit } from "./buff-engine"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 import type { ResolvedStage } from "./stage"
-
-const CANCEL_CAPABLE = new Set<SkillType>([
-  "Resonance Skill",
-  "Resonance Liberation",
-  "Intro Skill",
-  "Outro Skill",
-  "Echo Skill",
-])
-
-interface PendingTrailingHit {
-  hit: DamageEntry
-  hitIndex: number
-  stageStartFrame: number
-  entry: TimelineEntry
-  resolved: ResolvedStage
-  hitFrame: number
-}
-
-interface CharPendingState {
-  hits: PendingTrailingHit[]
-}
+import * as TrailingWindow from "./trailing-window"
+import type { TrailingHit } from "./trailing-window"
 
 export function runSimulation(
   entries: TimelineEntry[],
@@ -47,66 +28,21 @@ export function runSimulation(
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
   let frame = 0
-  const pending = new Map<number, CharPendingState>()
+  let state = TrailingWindow.empty()
 
   for (const entry of entries) {
-    let padFrames = 0
-    const charState = pending.get(entry.characterId)
-    if (charState && charState.hits.length > 0) {
-      const charPending = charState.hits
-      const hasCollision = charPending.some((p) => p.hitFrame >= frame)
-      if (hasCollision) {
-        const incomingResolved = findStageByEntry(entry, slots, loadouts)
-        const skillType = incomingResolved?.skillType ?? "Basic Attack"
-        if (CANCEL_CAPABLE.has(skillType)) {
-          for (const p of charPending.filter((ph) => ph.hitFrame < frame)) {
-            processHit(
-              p.hit,
-              p.hitIndex,
-              p.stageStartFrame,
-              p.entry,
-              p.resolved,
-              engine,
-              log,
-              slots,
-            )
-          }
-        } else {
-          const lastHit = charPending[charPending.length - 1]
-          const frameBeforePad = frame
-          frame = lastHit.hitFrame
-          padFrames = frame - frameBeforePad
-          for (const p of charPending) {
-            processHit(
-              p.hit,
-              p.hitIndex,
-              p.stageStartFrame,
-              p.entry,
-              p.resolved,
-              engine,
-              log,
-              slots,
-            )
-          }
-        }
-      } else {
-        for (const p of charPending) {
-          processHit(
-            p.hit,
-            p.hitIndex,
-            p.stageStartFrame,
-            p.entry,
-            p.resolved,
-            engine,
-            log,
-            slots,
-          )
-        }
-      }
-      pending.delete(entry.characterId)
-    }
+    const incomingSkillType =
+      findStageByEntry(entry, slots, loadouts)?.skillType ?? "Basic Attack"
+    const arrival = TrailingWindow.onEntryArrival(state, {
+      characterId: entry.characterId,
+      skillType: incomingSkillType,
+      frame,
+    })
+    state = arrival.stateAfter
+    for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
+    frame += arrival.padFrames
 
-    const { nextFrame, trailingHits } = processEntry(
+    const { resolved, allHits, stageDuration, nextFrame } = processEntry(
       entry,
       frame,
       engine,
@@ -115,29 +51,25 @@ export function runSimulation(
       loadouts,
       reactionDelay,
       swapFrames,
-      padFrames,
+      arrival.padFrames,
     )
-    frame = nextFrame
-    if (trailingHits.length > 0) {
-      pending.set(entry.characterId, { hits: trailingHits })
+    if (resolved) {
+      const sched = TrailingWindow.scheduleStage(state, {
+        entry,
+        resolved,
+        stageStartFrame: frame,
+        hits: allHits,
+        variantKind: entry.variantKind,
+        stageDuration,
+      })
+      state = sched.stateAfter
+      for (const h of sched.immediate) processHit(h, engine, log, slots)
     }
+    frame = nextFrame
   }
 
-  // Drain any remaining pending trailing hits
-  for (const { hits } of pending.values()) {
-    for (const p of hits) {
-      processHit(
-        p.hit,
-        p.hitIndex,
-        p.stageStartFrame,
-        p.entry,
-        p.resolved,
-        engine,
-        log,
-        slots,
-      )
-    }
-  }
+  for (const h of TrailingWindow.drainAll(state))
+    processHit(h, engine, log, slots)
 
   return log
 }
@@ -153,15 +85,23 @@ function processEntry(
   swapFrames: number,
   padFrames: number = 0,
 ): {
+  resolved: ResolvedStage | null
+  allHits: DamageEntry[]
+  stageDuration: number
   nextFrame: number
-  trailingHits: PendingTrailingHit[]
 } {
   const resolved = findStageByEntry(entry, slots, loadouts)
-  if (!resolved) return { nextFrame: stageStartFrame, trailingHits: [] }
+  if (!resolved)
+    return {
+      resolved: null,
+      allHits: [],
+      stageDuration: 0,
+      nextFrame: stageStartFrame,
+    }
 
   const {
     advance: stageDuration,
-    hits,
+    hits: allHits,
     react,
   } = resolveStageExecution(
     resolved.stage,
@@ -186,39 +126,11 @@ function processEntry(
   )
   log.push(actionEvent)
 
-  const isSwap = entry.variantKind === "swap"
-  const immediateHits = isSwap
-    ? hits.filter((h) => h.actionFrame <= stageDuration)
-    : hits
-  const trailingHitData = isSwap
-    ? hits.filter((h) => h.actionFrame > stageDuration)
-    : []
-
-  for (let i = 0; i < immediateHits.length; i++) {
-    processHit(
-      immediateHits[i],
-      i,
-      stageStartFrame,
-      entry,
-      resolved,
-      engine,
-      log,
-      slots,
-    )
-  }
-
-  const trailingHits: PendingTrailingHit[] = trailingHitData.map((h, idx) => ({
-    hit: h,
-    hitIndex: immediateHits.length + idx,
-    stageStartFrame,
-    entry,
-    resolved,
-    hitFrame: stageStartFrame + h.actionFrame,
-  }))
-
   return {
+    resolved,
+    allHits,
+    stageDuration,
     nextFrame: stageStartFrame + stageDuration,
-    trailingHits,
   }
 }
 
@@ -272,16 +184,12 @@ function buildActionEvent(
 }
 
 function processHit(
-  hit: DamageEntry,
-  hitIndex: number,
-  stageStartFrame: number,
-  entry: TimelineEntry,
-  resolved: ResolvedStage,
+  bundle: TrailingHit,
   engine: BuffEngine,
   log: SimulationLogEntry[],
   slots: Slots,
 ): void {
-  const hitFrame = stageStartFrame + hit.actionFrame
+  const { hit, hitIndex, entry, resolved, hitFrame } = bundle
   const hitResolved = engine.resolveHit(entry.characterId, hitFrame)
   pushBuffEvents(log, hitResolved.lifecycleEvents)
 
