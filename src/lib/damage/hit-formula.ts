@@ -21,16 +21,11 @@ export function formatScalingCell(
 }
 
 export function formatERCell(pct: number): string {
-  return `${Math.round((1 + pct) * 100)}%`
+  return `${((1 + pct) * 100).toFixed(1)}%`
 }
 
-export function formatCRCell(rate: number): string {
-  const pct = `${Math.round(rate * 100)}%`
-  return rate > 1 ? `${pct} (capped 100%)` : pct
-}
-
-export function formatCDCell(dmg: number): string {
-  return `${Math.round(dmg * 100)}%`
+export function formatCritCell(value: number): string {
+  return `${(value * 100).toFixed(1)}%`
 }
 
 export function formatDMGPctCell(

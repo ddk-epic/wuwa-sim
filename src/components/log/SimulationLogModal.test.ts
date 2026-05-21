@@ -5,8 +5,7 @@ import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"
 import {
   formatActiveBuffLabel,
-  formatCDCell,
-  formatCRCell,
+  formatCritCell,
   formatDeepenCell,
   formatDMGPctCell,
   formatERCell,
@@ -117,15 +116,11 @@ describe("formatERCell", () => {
   it("0.2 ER shows 120%", () => expect(formatERCell(0.2)).toBe("120%"))
 })
 
-describe("formatCRCell", () => {
-  it("50% crit rate shows 50%", () => expect(formatCRCell(0.5)).toBe("50%"))
-  it("100% crit rate shows 100%", () => expect(formatCRCell(1.0)).toBe("100%"))
-  it("over-cap crit rate shows capped suffix", () =>
-    expect(formatCRCell(1.5)).toBe("150% (capped 100%)"))
-})
-
-describe("formatCDCell", () => {
-  it("150% crit dmg shows 150%", () => expect(formatCDCell(1.5)).toBe("150%"))
+describe("formatCritCell", () => {
+  it("50% shows 50.0%", () => expect(formatCritCell(0.5)).toBe("50.0%"))
+  it("100% shows 100.0%", () => expect(formatCritCell(1.0)).toBe("100.0%"))
+  it("over 100% shows the raw value (caller decides whether to warn)", () =>
+    expect(formatCritCell(1.5)).toBe("150.0%"))
 })
 
 describe("formatDMGPctCell", () => {
