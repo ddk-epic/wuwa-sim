@@ -6,7 +6,7 @@ import {
   LockOpenIcon,
   TrashIcon,
 } from "lucide-react"
-import type { TimelineSummary } from "#/lib/timeline-summary"
+import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/catalog"
@@ -14,7 +14,7 @@ import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "./TimelineEntryRow"
-import type { RenderItem } from "#/lib/timeline-render-items"
+import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
 function GroupLabelInput({
   groupId,

@@ -4,8 +4,8 @@ import type {
   TimelineNode,
 } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
-import { getCharacterById } from "./catalog"
-import { makeStageId, stageLabel } from "./stage/stage"
+import { getCharacterById } from "../catalog"
+import { makeStageId, stageLabel } from "../stage/stage"
 
 type LegacyEntry = {
   id?: string

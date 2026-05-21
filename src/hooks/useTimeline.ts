@@ -5,7 +5,7 @@ import type {
   TimelineNode,
 } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
-import { migrateNodes } from "#/lib/migrate-timeline"
+import { migrateNodes } from "#/lib/timeline/migrate-timeline"
 import { useLocalStorage } from "./useLocalStorage"
 import type { DropPosition } from "./useTimelineDrag"
 

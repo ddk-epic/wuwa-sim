@@ -1,4 +1,4 @@
-import type { RenderItem } from "#/lib/timeline-render-items"
+import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
 import { getCharacterById } from "#/lib/catalog"
 import { ELEMENT_HEX } from "#/data/elements"

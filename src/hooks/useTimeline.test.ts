@@ -2,7 +2,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { flattenNodes } from "#/types/timeline"
-import { migrateNodes } from "#/lib/migrate-timeline"
+import { migrateNodes } from "#/lib/timeline/migrate-timeline"
 import { useTimeline } from "./useTimeline"
 
 beforeEach(() => {

@@ -12,7 +12,7 @@ import { TableTopBar } from "#/components/TableTopBar"
 import { TeamModal } from "#/components/TeamModal"
 import { SimulationLogModal } from "#/components/SimulationLogModal"
 import { TimelineView } from "#/components/TimelineView"
-import { getTimelineSummary } from "#/lib/timeline-summary"
+import { getTimelineSummary } from "#/lib/timeline/timeline-summary"
 import { runSimulation } from "#/lib/simulation"
 
 export function SimulatorPage() {
