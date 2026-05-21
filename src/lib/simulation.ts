@@ -34,7 +34,6 @@ interface PendingTrailingHit {
 
 interface CharPendingState {
   hits: PendingTrailingHit[]
-  swapActionRef: ActionEvent
 }
 
 export function runSimulation(
@@ -72,12 +71,6 @@ export function runSimulation(
               slots,
             )
           }
-          const droppedCount = charPending.filter(
-            (p) => p.hitFrame >= frame,
-          ).length
-          if (droppedCount > 0) {
-            charState.swapActionRef.droppedHitCount = droppedCount
-          }
         } else {
           const lastHit = charPending[charPending.length - 1]
           const frameBeforePad = frame
@@ -113,7 +106,7 @@ export function runSimulation(
       pending.delete(entry.characterId)
     }
 
-    const { nextFrame, trailingHits, swapActionRef } = processEntry(
+    const { nextFrame, trailingHits } = processEntry(
       entry,
       frame,
       engine,
@@ -125,8 +118,8 @@ export function runSimulation(
       padFrames,
     )
     frame = nextFrame
-    if (trailingHits.length > 0 && swapActionRef) {
-      pending.set(entry.characterId, { hits: trailingHits, swapActionRef })
+    if (trailingHits.length > 0) {
+      pending.set(entry.characterId, { hits: trailingHits })
     }
   }
 
@@ -162,11 +155,9 @@ function processEntry(
 ): {
   nextFrame: number
   trailingHits: PendingTrailingHit[]
-  swapActionRef: ActionEvent | null
 } {
   const resolved = findStageByEntry(entry, slots, loadouts)
-  if (!resolved)
-    return { nextFrame: stageStartFrame, trailingHits: [], swapActionRef: null }
+  if (!resolved) return { nextFrame: stageStartFrame, trailingHits: [] }
 
   const { advance: stageDuration, hits } = resolveStageExecution(
     resolved.stage,
@@ -224,7 +215,6 @@ function processEntry(
   return {
     nextFrame: stageStartFrame + stageDuration,
     trailingHits,
-    swapActionRef: trailingHits.length > 0 ? actionEvent : null,
   }
 }
 

@@ -54,11 +54,6 @@ export function HitEventRow({ index, ev }: HitEventRowProps) {
                   : "(Swap)"}
             </span>
           ) : null}
-          {ev.kind === "action" && ev.droppedHitCount ? (
-            <span className="ml-2 text-xs text-gray-500">
-              −{ev.droppedHitCount} hits
-            </span>
-          ) : null}
           {ev.kind === "action" &&
           ev.delayBreakdown &&
           (ev.delayBreakdown.react > 0 || ev.delayBreakdown.pad > 0) ? (
