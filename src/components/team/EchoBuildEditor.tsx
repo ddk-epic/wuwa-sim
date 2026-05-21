@@ -214,9 +214,9 @@ function TabularRow({
               disabled={disabled}
               onClick={() => click(o.value)}
               className={[
-                "min-w-14 px-2 py-0.5 rounded-sm text-xs leading-tight flex items-center justify-center gap-1 transition-colors",
+                "min-w-14 px-1.5 py-0.5 rounded-sm text-xs tracking-wide flex items-center justify-center gap-1 transition-colors",
                 disabled
-                  ? "bg-darkest text-muted-foreground/50 cursor-not-allowed"
+                  ? "bg-darkest text-muted-foreground/40 cursor-not-allowed"
                   : active
                     ? ""
                     : "border-border bg-darkest text-muted-foreground hover:text-foreground hover:border-foreground/40",
