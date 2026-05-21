@@ -9,7 +9,7 @@ import type {
 } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "./catalog"
+import { getCharacterById, getEchoById } from "../catalog"
 
 export interface ActionTimeStage {
   actionTime: number

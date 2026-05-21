@@ -1,7 +1,7 @@
 import type { TimelineNode, TimelineEntry } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { SkillType } from "#/types/character"
-import type { ActionTimeStage } from "#/lib/stage"
+import type { ActionTimeStage } from "#/lib/stage/stage"
 import type {
   ValidationResult,
   ValidationError,
@@ -9,7 +9,7 @@ import type {
 } from "#/lib/validate-timeline"
 import { getCharacterById } from "#/lib/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
-import { findStageByEntry } from "#/lib/stage"
+import { findStageByEntry } from "#/lib/stage/stage"
 import {
   buildGroupGradient,
   getDominantHex,

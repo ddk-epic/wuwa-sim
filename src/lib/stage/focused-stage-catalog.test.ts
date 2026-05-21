@@ -157,7 +157,7 @@ const echoParen: EnrichedEcho = {
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
 
-vi.mock("./catalog", () => ({
+vi.mock("../catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,

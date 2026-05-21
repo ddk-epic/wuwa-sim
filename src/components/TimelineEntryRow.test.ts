@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ActionTimeStage } from "#/lib/stage"
+import type { ActionTimeStage } from "#/lib/stage/stage"
 import { nextVariant, variantLabel } from "./TimelineEntryRow"
 
 const stageAllVariants: ActionTimeStage = {

@@ -1,7 +1,7 @@
 import type { ActionEvent, SimulationLogEntry } from "#/types/simulation-log"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { findStageByEntry, resolveStageExecution } from "./stage"
+import { findStageByEntry, resolveStageExecution } from "./stage/stage"
 
 const EMPTY_SLOTS: Slots = [null, null, null]
 const EMPTY_LOADOUTS: SlotLoadout[] = []

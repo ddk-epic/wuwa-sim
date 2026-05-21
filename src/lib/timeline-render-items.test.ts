@@ -3,7 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { TimelineNode } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { ValidationResult } from "./validate-timeline"
-import type { ResolvedStage } from "./stage"
+import type { ResolvedStage } from "./stage/stage"
 import { buildTimelineRenderItems } from "./timeline-render-items"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -14,7 +14,7 @@ vi.mock("./catalog", () => ({
     testCharacters.find((c) => c.id === id) ?? null,
 }))
 
-vi.mock("./stage", () => ({
+vi.mock("./stage/stage", () => ({
   findStageByEntry: (entry: { stageId: string }) =>
     resolvedStages.get(entry.stageId) ?? null,
 }))
