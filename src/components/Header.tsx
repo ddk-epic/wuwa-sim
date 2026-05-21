@@ -155,13 +155,11 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="group flex items-center gap-3 h-10 pl-2 pr-3.5 rounded-md bg-transparent border border-gray-500/10 hover:border-gray-500/20 hover:bg-gray-500/6 transition-colors"
+      className="group flex items-center gap-3 h-10 pl-3.5 pr-3.5 rounded-md bg-transparent border border-gray-500/10 hover:border-gray-500/20 hover:bg-gray-500/6 transition-colors"
     >
-      <div className="flex items-center gap-1">
-        {filled.length === 0 ? (
-          <div className="w-9 h-9 rounded-sm bg-white/4" />
-        ) : (
-          filled.map((char) => {
+      {filled.length > 0 && (
+        <div className="flex items-center gap-1 -ml-1.5">
+          {filled.map((char) => {
             const hex = ELEMENT_HEX[char!.element] ?? "#888"
             const name = char!.name.toLowerCase()
             return (
@@ -183,9 +181,9 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
                 />
               </div>
             )
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
       <div className="flex flex-col items-start leading-tight text-left">
         <span className="text-sm font-semibold text-gray-100 tracking-tight">
           {teamLabel}
