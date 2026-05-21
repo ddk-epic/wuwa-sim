@@ -7,7 +7,7 @@ import type {
 import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../catalog"
-import { computeDamage } from "../compute-damage"
+import { computeDamage } from "../damage/compute-damage"
 import { cloneStats } from "./stat-table-builder"
 
 declare const buffInstanceKeyBrand: unique symbol

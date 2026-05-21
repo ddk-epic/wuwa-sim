@@ -8,8 +8,8 @@ import type {
   SustainEvent,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
-import { computeDamage } from "./compute-damage"
-import { computeHealing } from "./compute-healing"
+import { computeDamage } from "./damage/compute-damage"
+import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
 import { findStageByEntry, resolveStageExecution } from "./stage"

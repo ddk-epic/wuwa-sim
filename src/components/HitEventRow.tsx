@@ -12,7 +12,7 @@ import {
   formatERCell,
   formatScalingCell,
   formatStatComponents,
-} from "#/lib/hit-formula"
+} from "#/lib/damage/hit-formula"
 
 type ActionOrHitEntry = Extract<SimulationLogEntry, { kind: "action" | "hit" }>
 

@@ -2,7 +2,7 @@ import type { Element } from "#/data/elements"
 import type { SkillType } from "#/types/character"
 import type { ActiveBuff, HitEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
-import { DEF_MULT_CONST, RES_MULT_CONST } from "#/lib/compute-damage"
+import { DEF_MULT_CONST, RES_MULT_CONST } from "#/lib/damage/compute-damage"
 
 function resolvedScalingValue(snap: StatTable, rawStat?: string): number {
   const stat = (rawStat ?? "ATK").toUpperCase()
