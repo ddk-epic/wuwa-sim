@@ -2,7 +2,7 @@ import { GhostIcon, SwordIcon } from "lucide-react"
 import { listWeaponsByType } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
-import { EchoBuildEditor } from "#/components/EchoBuildEditor"
+import { EchoBuildEditor } from "#/components/echo/EchoBuildEditor"
 import { TeamSlotPortrait } from "#/components/team/TeamSlotPortrait"
 import { ComboboxSelect, Stepper } from "#/components/team/TeamSlotControls"
 

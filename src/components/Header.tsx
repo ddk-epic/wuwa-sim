@@ -16,7 +16,7 @@ import {
   useSwapFrames,
 } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
-import { ConfirmModal } from "./ConfirmModal"
+import { ConfirmModal } from "./ui/ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
 

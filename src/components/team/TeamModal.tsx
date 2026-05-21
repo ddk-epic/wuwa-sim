@@ -1,7 +1,7 @@
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { CharacterGrid } from "#/components/team/CharacterGrid"
 import { TeamPanel } from "#/components/team/TeamPanel"
-import { Modal } from "#/components/Modal"
+import { Modal } from "#/components/ui/Modal"
 import { XIcon } from "lucide-react"
 
 interface TeamModalProps {
