@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EchoSet } from "#/types/echo-set"
 import type { SlotLoadout } from "#/types/loadout"
-import { BuffEngine } from "#/lib/buff-engine"
-import type { HealLandedEvent } from "#/lib/buff-engine"
+import { BuffEngine } from "#/lib/engine/buff-engine"
+import type { HealLandedEvent } from "#/lib/engine/buff-engine"
 import { ALL_ECHO_SETS } from "./index"
 
 let testEchoSets: EchoSet[] = []

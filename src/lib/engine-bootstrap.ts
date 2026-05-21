@@ -16,7 +16,7 @@ import {
   accumulateStatEffects,
   compileBaseStats,
   freezeSnapshots,
-} from "./stat-table-builder"
+} from "./engine/stat-table-builder"
 import { resolveWeaponBuffs } from "./weapon-resolve"
 
 const FLAT_VALUE_BY_NAME: Record<

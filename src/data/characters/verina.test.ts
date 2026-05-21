@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
-import { BuffEngine } from "#/lib/buff-engine"
-import { pendingNextOnFieldCount } from "#/lib/buff-engine.test-utils"
+import { BuffEngine } from "#/lib/engine/buff-engine"
+import { pendingNextOnFieldCount } from "#/lib/engine/buff-engine.test-utils"
 import { verina } from "./verina"
 
 let testCharacters: EnrichedCharacter[] = []

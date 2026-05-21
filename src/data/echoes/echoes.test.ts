@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { SlotLoadout } from "#/types/loadout"
-import { BuffEngine } from "#/lib/buff-engine"
-import type { HitLandedEvent } from "#/lib/buff-engine"
+import { BuffEngine } from "#/lib/engine/buff-engine"
+import type { HitLandedEvent } from "#/lib/engine/buff-engine"
 import {
   ECHO_BUILD_LAYOUT,
   ECHO_MAIN_3COST_VARIABLE,

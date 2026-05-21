@@ -5,7 +5,7 @@ import { emptyStatTable } from "#/types/stat-table"
 import { InstanceStore, matchesTrigger } from "./instance-store"
 import type { EngineEvent } from "./instance-store"
 
-vi.mock("./catalog", () => ({
+vi.mock("../catalog", () => ({
   getCharacterById: () => null,
 }))
 

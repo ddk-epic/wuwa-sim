@@ -16,7 +16,7 @@ import {
   ECHO_MAIN_1COST_SCALING,
   ECHO_MAIN_3COST_VARIABLE,
   ECHO_SUBSTAT,
-} from "./echo-stat-constants"
+} from "../echo-stat-constants"
 
 const CHARACTER_BASE_CRIT_RATE = 0.05
 const BASE_ATK_PCT =
@@ -35,7 +35,7 @@ let testWeapons: WeaponData[] = []
 let testEchoes: EnrichedEcho[] = []
 let testEchoSets: EchoSet[] = []
 
-vi.mock("./catalog", () => ({
+vi.mock("../catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getWeaponById: (id: number) => testWeapons.find((w) => w.id === id) ?? null,

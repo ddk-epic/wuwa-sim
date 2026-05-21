@@ -18,7 +18,7 @@ import {
   ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
-} from "./echo-stat-constants"
+} from "../echo-stat-constants"
 
 /**
  * Every character has these as an intrinsic floor before any echo/weapon/buff
