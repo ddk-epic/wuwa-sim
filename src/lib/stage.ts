@@ -133,21 +133,3 @@ export function resolveStageExecution(
   const hits = allDamage.filter((hit) => hit.actionFrame <= advance)
   return { advance, hits }
 }
-
-export function resolveActionTime(
-  stage: ActionTimeStage,
-  variantKind: VariantKind | undefined,
-  reactionDelay: number,
-  swapFrames: number = 6,
-): number {
-  if (!variantKind) return stage.actionTime
-  if (variantKind === "swap") {
-    const variant = stage.variants?.swap
-    return variant !== undefined
-      ? variant.actionTime + reactionDelay
-      : swapFrames
-  }
-  const variant = stage.variants?.[variantKind]
-  if (!variant) return stage.actionTime
-  return variant.actionTime + reactionDelay
-}
