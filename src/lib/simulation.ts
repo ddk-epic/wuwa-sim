@@ -159,7 +159,11 @@ function processEntry(
   const resolved = findStageByEntry(entry, slots, loadouts)
   if (!resolved) return { nextFrame: stageStartFrame, trailingHits: [] }
 
-  const { advance: stageDuration, hits } = resolveStageExecution(
+  const {
+    advance: stageDuration,
+    hits,
+    react,
+  } = resolveStageExecution(
     resolved.stage,
     entry.variantKind,
     reactionDelay,
@@ -177,7 +181,7 @@ function processEntry(
     resolved,
     engine,
     stageStartFrame,
-    reactionDelay,
+    react,
     padFrames,
   )
   log.push(actionEvent)
@@ -246,15 +250,10 @@ function buildActionEvent(
   resolved: ResolvedStage,
   engine: BuffEngine,
   frame: number,
-  reactionDelay: number = 0,
+  react: number = 0,
   padFrames: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
-  const react = computeReactFrames(
-    entry.variantKind,
-    resolved.stage,
-    reactionDelay,
-  )
   const event: ActionEvent = {
     kind: "action",
     characterId: entry.characterId,
@@ -270,18 +269,6 @@ function buildActionEvent(
     event.delayBreakdown = { react, pad: padFrames }
   }
   return event
-}
-
-function computeReactFrames(
-  variantKind: ActionEvent["variantKind"],
-  stage: { variants?: Partial<Record<string, unknown>> },
-  reactionDelay: number,
-): number {
-  if (!variantKind) return 0
-  if (variantKind === "swap") {
-    return stage.variants?.swap !== undefined ? reactionDelay : 0
-  }
-  return stage.variants?.[variantKind] !== undefined ? reactionDelay : 0
 }
 
 function processHit(

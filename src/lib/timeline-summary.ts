@@ -21,18 +21,6 @@ export interface TimelineSummary {
   dps: number
 }
 
-function fallbackReactFrames(
-  entry: TimelineEntry,
-  stage: { variants?: Partial<Record<string, unknown>> },
-  reactionDelay: number,
-): number {
-  const vk = entry.variantKind
-  if (!vk) return 0
-  if (vk === "swap")
-    return stage.variants?.swap !== undefined ? reactionDelay : 0
-  return stage.variants?.[vk] !== undefined ? reactionDelay : 0
-}
-
 export function getTimelineSummary(
   entries: TimelineEntry[],
   slots: Slots = EMPTY_SLOTS,
@@ -111,9 +99,7 @@ export function getTimelineSummary(
         : null
 
       durationFrames = execution?.advance ?? 0
-      reactFrames = resolved
-        ? fallbackReactFrames(entry, resolved.stage, reactionDelay)
-        : 0
+      reactFrames = execution?.react ?? 0
       padFrames = 0
       damage = null
     }

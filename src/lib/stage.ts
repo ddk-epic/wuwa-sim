@@ -118,18 +118,19 @@ export function resolveStageExecution(
   variantKind: VariantKind | undefined,
   reactionDelay: number,
   swapFrames: number = 6,
-): { advance: number; hits: DamageEntry[] } {
+): { advance: number; hits: DamageEntry[]; react: number } {
   const allDamage = stage.damage ?? []
-  if (!variantKind) return { advance: stage.actionTime, hits: allDamage }
+  if (!variantKind)
+    return { advance: stage.actionTime, hits: allDamage, react: 0 }
   if (variantKind === "swap") {
     const variant = stage.variants?.swap
-    const advance =
-      variant !== undefined ? variant.actionTime + reactionDelay : swapFrames
-    return { advance, hits: allDamage }
+    const authored = variant !== undefined
+    const advance = authored ? variant.actionTime + reactionDelay : swapFrames
+    return { advance, hits: allDamage, react: authored ? reactionDelay : 0 }
   }
   const variant = stage.variants?.[variantKind]
-  if (!variant) return { advance: stage.actionTime, hits: allDamage }
+  if (!variant) return { advance: stage.actionTime, hits: allDamage, react: 0 }
   const advance = variant.actionTime + reactionDelay
   const hits = allDamage.filter((hit) => hit.actionFrame <= advance)
-  return { advance, hits }
+  return { advance, hits, react: reactionDelay }
 }

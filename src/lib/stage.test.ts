@@ -366,3 +366,29 @@ describe("resolveStageExecution — damage filtering", () => {
     expect(filtered[0].actionFrame).toBe(10)
   })
 })
+
+describe("resolveStageExecution — react value", () => {
+  it("returns react=0 when no variant", () => {
+    expect(resolveStageExecution(makeStage(50), undefined, 9).react).toBe(0)
+  })
+
+  it("returns react=reactionDelay for cancel with stage-authored variant", () => {
+    const stage = makeStage(50, { cancel: { actionTime: 33 } })
+    expect(resolveStageExecution(stage, "cancel", 9).react).toBe(9)
+  })
+
+  it("returns react=0 for cancel when stage does not author the variant", () => {
+    const stage = makeStage(50, undefined)
+    expect(resolveStageExecution(stage, "cancel", 9).react).toBe(0)
+  })
+
+  it("returns react=reactionDelay for swap with stage-authored variants.swap", () => {
+    const stage = makeStage(50, { swap: { actionTime: 10 } })
+    expect(resolveStageExecution(stage, "swap", 6, 6).react).toBe(6)
+  })
+
+  it("returns react=0 for swap falling back to swapFrames", () => {
+    const stage = makeStage(50, undefined)
+    expect(resolveStageExecution(stage, "swap", 6, 6).react).toBe(0)
+  })
+})
