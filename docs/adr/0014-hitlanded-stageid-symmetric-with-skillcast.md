@@ -37,6 +37,6 @@ Stage names are not unique across skills, but `stageId` (encoded as `"<Skill nam
 - `simulation-log.ts` passes `stageId: resolved.stageId` (already computed for the sibling skillCast event) instead of `stage: resolved.stageName`.
 - `instance-store.ts` `matchesTrigger`: the `stage`-equality branch in the hitLanded arm is replaced by the same `stageId` array-or-string check already used in the skillCast arm.
 - `src/data/echoes/inferno-rider.ts`: trigger updated to the form above (adds `actor: "self"`, `source: "self"`; replaces `stage` with `stageId`).
-- `src/lib/instance-store.test.ts` — the `stage + hitIndex` test block (#94) renames `stage` → `stageId` and uses namespaced fixtures.
+- `src/lib/engine/instance-store.test.ts` — the `stage + hitIndex` test block (#94) renames `stage` → `stageId` and uses namespaced fixtures.
 - `BUFFS.md` — the trigger reference is updated to document `stageId` and `hitIndex` on hitLanded (currently undocumented).
 - Synthetic hits emitted via `emitHit` continue to carry no `stageId`. A trigger that filters on `stageId` is therefore implicitly restricted to authored (real) hits, regardless of `source`. Authors who want synthetic-only stage filtering would need an explicit `source: "synthetic"` and a future `sourceBuffId` filter (already supported).

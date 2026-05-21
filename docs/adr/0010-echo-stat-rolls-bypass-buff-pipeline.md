@@ -11,5 +11,5 @@ Echo main stats and the default substat block accumulate directly into the base 
 
 - ADR-0001's "every damage modifier is a buff" no longer holds literally. The carve-out: pure base-value contributions (character intrinsic stats, weapon main/sub stats, echo stat rolls) bypass the pipeline; everything with a trigger, condition, duration, or stack count stays in it.
 - The Stat Table glossary entry's phrase "Permanent buffs are folded into a base table at sim start" must be read narrowly — echo stats _are_ the base table for that purpose, not buffs folded into it.
-- Echo stat-roll constants live in one file (`src/lib/echo-stat-constants.ts`) so revising values when sourced data arrives is a single-file edit.
+- Echo stat-roll constants live in one file (`src/lib/loadout/echo-stat-constants.ts`) so revising values when sourced data arrives is a single-file edit.
 - Adding a new echo stat _kind_ (a new main-stat option, a new substat) means editing the constants file and possibly the Stat Table type — not authoring a BuffDef.

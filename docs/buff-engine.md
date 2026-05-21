@@ -2,7 +2,7 @@
 
 `BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`), selects matching buff candidates, and routes them through a fixed four-phase pipeline. It composes five internal modules rather than owning their state directly.
 
-**Source files:** `src/lib/buff-engine.ts`, `src/lib/instance-store.ts`, `src/lib/emit-hit-dispatcher.ts`, `src/lib/on-field-tracker.ts`, `src/lib/resource-ledger.ts`, `src/lib/stat-table-builder.ts`, `src/lib/engine-bootstrap.ts`
+**Source files:** `src/lib/engine/buff-engine.ts`, `src/lib/engine/instance-store.ts`, `src/lib/engine/emit-hit-dispatcher.ts`, `src/lib/engine/on-field-tracker.ts`, `src/lib/engine/resource-ledger.ts`, `src/lib/engine/stat-table-builder.ts`, `src/lib/engine-bootstrap.ts`
 
 ## How it works
 
