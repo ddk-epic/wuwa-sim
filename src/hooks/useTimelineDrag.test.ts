@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest"
-import { decideDrop, isDropAllowed, isNoOp } from "./useTimelineDrag"
-import type { DragSource, DropTarget } from "./useTimelineDrag"
+import { act, renderHook } from "@testing-library/react"
+import {
+  decideDrop,
+  isDropAllowed,
+  isNoOp,
+  useTimelineDrag,
+} from "./useTimelineDrag"
+import type {
+  DragSource,
+  DropTarget,
+  TimelineDropHandlers,
+} from "./useTimelineDrag"
 
 describe("isDropAllowed", () => {
   it("allows any drop when no drag source is set", () => {
@@ -214,5 +224,140 @@ describe("isNoOp — no-op detection by container index and position", () => {
   it("self-target (same index) is not caught by isNoOp — handled by id check upstream", () => {
     expect(isNoOp(1, 1, "above")).toBe(false)
     expect(isNoOp(1, 1, "below")).toBe(false)
+  })
+})
+
+const noopHandlers: TimelineDropHandlers = {
+  onReorderTopLevelEntry: () => {},
+  onReorderNodes: () => {},
+  onReorderGroupEntries: () => {},
+}
+
+function makeDragEvent(
+  clientY: number,
+  rectTop: number,
+  rectHeight: number,
+): React.DragEvent {
+  return {
+    preventDefault: () => {},
+    dataTransfer: { effectAllowed: "move", dropEffect: "move" },
+    currentTarget: {
+      getBoundingClientRect: () => ({
+        top: rectTop,
+        height: rectHeight,
+        left: 0,
+        right: 0,
+        bottom: rectTop + rectHeight,
+        width: 0,
+      }),
+    },
+    clientY,
+  } as unknown as React.DragEvent
+}
+
+const aboveEv = makeDragEvent(0, 5, 20) // clientY(0) < top(5)+height/2(10) → "above"
+const belowEv = makeDragEvent(20, 5, 20) // clientY(20) > top(5)+height/2(10) → "below"
+
+function dragStartEv(): React.DragEvent {
+  return {
+    dataTransfer: { effectAllowed: "move" },
+  } as unknown as React.DragEvent
+}
+
+describe("useTimelineDrag — DropResolution bail-on-equal", () => {
+  // src=containerIndex 0, tgt=containerIndex 5: isNoOp(0,5,"above") = false
+  it("bails re-render on identical dragOver: same id+position yields same dropTarget reference", () => {
+    const { result } = renderHook(() => useTimelineDrag(noopHandlers))
+
+    act(() => {
+      result.current
+        .entrySource("src", { groupId: null, locked: false }, 0)
+        .onDragStart(dragStartEv())
+    })
+
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    const first = result.current.dropTarget
+    expect(first?.id).toBe("tgt")
+
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+
+    expect(result.current.dropTarget).toBe(first)
+  })
+
+  it("updates dropTarget reference on row crossing (id change)", () => {
+    const { result } = renderHook(() => useTimelineDrag(noopHandlers))
+
+    act(() => {
+      result.current
+        .entrySource("src", { groupId: null, locked: false }, 0)
+        .onDragStart(dragStartEv())
+    })
+
+    act(() => {
+      result.current
+        .entryTarget("e1", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    const afterE1 = result.current.dropTarget
+    expect(afterE1?.id).toBe("e1")
+
+    act(() => {
+      result.current
+        .entryTarget("e2", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    expect(result.current.dropTarget).not.toBe(afterE1)
+    expect(result.current.dropTarget?.id).toBe("e2")
+  })
+
+  it("updates dropTarget reference on position flip (above ↔ below)", () => {
+    const { result } = renderHook(() => useTimelineDrag(noopHandlers))
+
+    act(() => {
+      result.current
+        .entrySource("src", { groupId: null, locked: false }, 0)
+        .onDragStart(dragStartEv())
+    })
+
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    const afterAbove = result.current.dropTarget
+    expect(afterAbove?.position).toBe("above")
+
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(belowEv)
+    })
+    expect(result.current.dropTarget).not.toBe(afterAbove)
+    expect(result.current.dropTarget?.position).toBe("below")
+  })
+
+  it("clear-bail: no source means onDragOver returns early, dropTarget stays null", () => {
+    const { result } = renderHook(() => useTimelineDrag(noopHandlers))
+    expect(result.current.dropTarget).toBeNull()
+
+    act(() => {
+      result.current
+        .entryTarget("tgt", { groupId: null, groupLocked: false }, 5)
+        .onDragOver(aboveEv)
+    })
+    expect(result.current.dropTarget).toBeNull()
   })
 })

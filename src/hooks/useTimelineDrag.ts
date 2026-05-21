@@ -29,6 +29,12 @@ export type DropDecision =
   | { kind: "reorderGroupEntries"; groupId: string; from: string; to: string }
   | { kind: "reorderNodes"; from: string; to: string }
 
+export type DropResolution = {
+  id: string
+  position: DropPosition
+  decision: Exclude<DropDecision, { kind: "none" }>
+}
+
 export function isDropAllowed(
   srcCtx: DragSrcCtx | null,
   targetGroupId: string | null,
@@ -136,7 +142,7 @@ export interface DropHandlerBundle {
 
 export interface TimelineDrag {
   draggedId: string | null
-  dropTarget: { id: string; position: DropPosition } | null
+  dropTarget: DropResolution | null
   entrySource: (
     entryId: string,
     ctx: EntrySourceCtx,
@@ -154,19 +160,11 @@ export interface TimelineDrag {
 
 export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
   const [source, setSource] = useState<DragSource | null>(null)
-  const [dropTarget, setDropTarget] = useState<{
-    id: string
-    position: DropPosition
-  } | null>(null)
-  const [pending, setPending] = useState<{
-    decision: Exclude<DropDecision, { kind: "none" }>
-    position: DropPosition
-  } | null>(null)
+  const [resolution, setResolution] = useState<DropResolution | null>(null)
 
   function clear() {
     setSource(null)
-    setDropTarget(null)
-    setPending(null)
+    setResolution(null)
   }
 
   function dispatch(
@@ -193,7 +191,7 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
 
   return {
     draggedId: source?.id ?? null,
-    dropTarget,
+    dropTarget: resolution,
     entrySource(entryId, ctx, containerIndex) {
       return {
         onDragStart(ev) {
@@ -225,14 +223,16 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
             entryId === source.id ||
             isNoOp(source.containerIndex, containerIndex, position)
           ) {
-            setDropTarget(null)
-            setPending(null)
+            setResolution((prev) => (prev === null ? prev : null))
             return
           }
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
-          setDropTarget({ id: entryId, position })
-          setPending({ decision, position })
+          setResolution((prev) =>
+            prev !== null && prev.id === entryId && prev.position === position
+              ? prev
+              : { id: entryId, position, decision },
+          )
         },
         onDrop(ev) {
           if (!source) return
@@ -280,14 +280,17 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
             source.id === groupId ||
             isNoOp(source.containerIndex, containerIndex, position)
           ) {
-            setDropTarget(null)
-            setPending(null)
+            setResolution((prev) => (prev === null ? prev : null))
             return
           }
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
-          setDropTarget({ id: `group:${groupId}`, position })
-          setPending({ decision, position })
+          setResolution((prev) => {
+            const id = `group:${groupId}`
+            return prev !== null && prev.id === id && prev.position === position
+              ? prev
+              : { id, position, decision }
+          })
         },
         onDrop(ev) {
           if (!source) return
@@ -313,17 +316,17 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
     ghostHandlers() {
       return {
         onDragOver(ev) {
-          if (!source || !pending) return
+          if (!source || !resolution) return
           ev.preventDefault()
           ev.dataTransfer.dropEffect = "move"
         },
         onDrop(ev) {
-          if (!source || !pending) {
+          if (!source || !resolution) {
             clear()
             return
           }
           ev.preventDefault()
-          dispatch(pending.decision, pending.position)
+          dispatch(resolution.decision, resolution.position)
           clear()
         },
       }
