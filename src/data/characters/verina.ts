@@ -90,7 +90,7 @@ export const verina = {
     },
     {
       id: "char.verina.lib.mark-coord-reaction",
-      name: "Mark: Coordinated Attack",
+      name: "Arboreal Flourish",
       description:
         "While Photosynthesis Mark is active, any non-synthetic teammate hit triggers Verina's coordinated attack (DMG + heal). ICD: 1s each.",
       trigger: {
@@ -340,7 +340,7 @@ export const verina = {
     },
     {
       id: "char.verina.s6.joyous-harvest-coord",
-      name: "S6: Joyous Harvest (Coord. Attack)",
+      name: "S6: Joyous Harvest",
       description:
         "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms trigger an extra Coordinated Attack (same DMG as Liberation Photosynthesis Mark).",
       requiresSequence: 6,
