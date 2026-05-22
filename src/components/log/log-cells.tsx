@@ -4,6 +4,7 @@ import type {
   HitEvent,
   SustainEvent,
 } from "#/types/simulation-log"
+import type { Element } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { formatSkillType } from "#/data/skill-types"
@@ -114,6 +115,22 @@ export function CritCellValue({
         </svg>
       )}
       <span>{formatCritCell(value)}</span>
+    </span>
+  )
+}
+
+export function CoordPill({ element }: { element: Element }) {
+  const hex = ELEMENT_HEX[element] ?? "#888"
+  return (
+    <span
+      className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
+      style={{
+        background: `${hex}15`,
+        border: `1px solid ${hex}33`,
+        color: hex,
+      }}
+    >
+      COORD
     </span>
   )
 }

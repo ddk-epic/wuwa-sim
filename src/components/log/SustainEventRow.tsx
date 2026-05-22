@@ -1,5 +1,5 @@
 import type { SustainEvent } from "#/types/simulation-log"
-import { CharCell, SustainPill, renderPoolValue, numCell } from "./log-cells"
+import { CharCell, SustainPill, numCell } from "./log-cells"
 import { formatFrames } from "#/lib/format"
 
 export function SustainEventRow({
@@ -23,12 +23,12 @@ export function SustainEventRow({
       <td className="px-2 py-2">
         <SustainPill sub={ev.sub} />
       </td>
-      <td className="px-2 py-2 truncate">{ev.skillName} (heal)</td>
+      <td className="px-2 py-2 text-muted truncate">{ev.skillName} (heal)</td>
       <td className={numCell}>
-        {renderPoolValue(ev.cumulativeConcerto, "#f5d061")}
+        <span className="text-muted-foreground/40">—</span>
       </td>
       <td className={numCell}>
-        {renderPoolValue(ev.cumulativeEnergy, "#9b6cf0")}
+        <span className="text-muted-foreground/40">—</span>
       </td>
       <td className={numCell}>
         <span className="font-semibold text-sm" style={{ color: "#4ade80" }}>

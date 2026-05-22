@@ -2,6 +2,7 @@ import { Fragment } from "react"
 import type { HitEvent } from "#/types/simulation-log"
 import {
   CharCell,
+  CoordPill,
   CritCellValue,
   SkillNameSuffix,
   renderPoolValue,
@@ -47,7 +48,9 @@ export function HitEventRow({
         <td className="px-2 py-2">
           <CharCell id={ev.characterId} />
         </td>
-        <td className="px-2 py-2" />
+        <td className="px-2 py-2">
+          {ev.coord && <CoordPill element={ev.element} />}
+        </td>
         <td className="px-2 py-2 truncate">
           {ev.skillName}
           <SkillNameSuffix ev={ev} />

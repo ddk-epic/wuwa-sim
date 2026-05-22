@@ -44,35 +44,37 @@ export function TableTopBar({
       <div className="flex items-baseline gap-2">
         <span className="font-semibold text-foreground">Timeline</span>
 
-        <span className="space-x-2 text-muted-foreground">
+        <span className="space-x-2 text-muted-foreground font-mono">
           <span>·</span>
-          <span className="font-mono">{entriesNumber}</span> actions
+          <span>{entriesNumber}</span> actions
         </span>
       </div>
 
-      <button
-        className="items-center gap-1 px-2.5 py-0.5 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
-        onClick={onAddGroup}
-      >
-        + Group
-      </button>
-
       <div className="flex-1" />
 
-      <Display
-        label="dmg"
-        value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
-        accent={totalDmg > 0 ? "text-[#f5cf4d]" : ""}
-        big
-      />
+      <button
+        className="items-center gap-1 px-1.5 py-0.75 font-mono text-sm rounded-sm border border-muted-foreground text-muted-foreground hover:text-foreground"
+        onClick={onAddGroup}
+      >
+        + Group
+      </button>
 
-      <Display
-        label="dps"
-        value={dps > 0 ? dps.toLocaleString() : " — "}
-        accent={dps > 0 ? "text-[#5ad7f0]" : ""}
-      />
+      <div className="flex items-end gap-3">
+        <Display
+          label="dmg"
+          value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
+          accent={totalDmg > 0 ? "text-[#f5cf4d]" : ""}
+          big
+        />
 
-      <Display label="time" value={`${totalTimeSec.toFixed(2)}s`} />
+        <Display
+          label="dps"
+          value={dps > 0 ? dps.toLocaleString() : " — "}
+          accent={dps > 0 ? "text-[#5ad7f0]" : ""}
+        />
+
+        <Display label="time" value={`${totalTimeSec.toFixed(2)}s`} />
+      </div>
     </div>
   )
 }
