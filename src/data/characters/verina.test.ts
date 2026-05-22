@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
-import type { SlotLoadout } from "#/types/loadout"
+import type { SlotLoadout, Slots } from "#/types/loadout"
+import type { TimelineEntry } from "#/types/timeline"
+import type { HitEvent, SustainEvent } from "#/types/simulation-log"
 import { BuffEngine } from "#/lib/engine/buff-engine"
 import { pendingNextOnFieldCount } from "#/lib/engine/buff-engine.test-utils"
+import { runSimulation } from "#/lib/simulation"
 import { verina } from "./verina"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -154,39 +157,39 @@ describe("Verina — Forte grants via hitLanded", () => {
     })
   }
 
-  it("Cultivation Stage 5 hitIndex 0 grants +1 forte", () => {
+  it("Cultivation Stage 5 hitIndex 1 grants +1 forte", () => {
     const engine = makeEngine()
     expect(engine.getResource(1503).forte).toBe(0)
-    hitLanded(engine, "Cultivation::Stage 5", 0, 0)
+    hitLanded(engine, "Cultivation::Stage 5", 1, 0)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
-  it("Cultivation Stage 5 hitIndex 1 does NOT grant forte", () => {
+  it("Cultivation Stage 5 hitIndex 2 does NOT grant forte", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Cultivation::Stage 5", 1, 0)
+    hitLanded(engine, "Cultivation::Stage 5", 2, 0)
     expect(engine.getResource(1503).forte).toBe(0)
   })
 
-  it("Botany Experiment hitIndex 0 grants +1 forte (fires once despite 4 hits)", () => {
+  it("Botany Experiment hitIndex 1 grants +1 forte (fires once despite 4 hits)", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Botany Experiment::", 0, 0)
     hitLanded(engine, "Botany Experiment::", 1, 0)
     hitLanded(engine, "Botany Experiment::", 2, 0)
     hitLanded(engine, "Botany Experiment::", 3, 0)
+    hitLanded(engine, "Botany Experiment::", 4, 0)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
-  it("Verdant Growth hitIndex 0 grants +1 forte", () => {
+  it("Verdant Growth hitIndex 1 grants +1 forte", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 0, 0)
+    hitLanded(engine, "Verdant Growth::", 1, 0)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
   it("forte caps at 4 across multiple qualifying hits", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 0, 0)
+    hitLanded(engine, "Verdant Growth::", 1, 0)
     for (let i = 1; i <= 5; i++) {
-      hitLanded(engine, "Cultivation::Stage 5", 0, i)
+      hitLanded(engine, "Cultivation::Stage 5", 1, i)
     }
     expect(engine.getResource(1503).forte).toBe(4)
   })
@@ -211,15 +214,15 @@ describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)",
     })
   }
 
-  it("Botany Experiment hitIndex 0 grants +10 Concerto at sequence 2", () => {
+  it("Botany Experiment hitIndex 1 grants +10 Concerto at sequence 2", () => {
     const engine = makeEngine(2)
-    hitLanded(engine, 0, 0)
+    hitLanded(engine, 1, 0)
     expect(engine.getResource(1503).concerto).toBe(10)
   })
 
   it("Botany Experiment 4 hits only grant 10 concerto total (not 40)", () => {
     const engine = makeEngine(2)
-    for (let i = 0; i < 4; i++) {
+    for (let i = 1; i <= 4; i++) {
       hitLanded(engine, i, 0)
     }
     expect(engine.getResource(1503).concerto).toBe(10)
@@ -227,7 +230,7 @@ describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)",
 
   it("not active at sequence 0", () => {
     const engine = makeEngine(0)
-    hitLanded(engine, 0, 0)
+    hitLanded(engine, 1, 0)
     expect(engine.getResource(1503).concerto).toBe(0)
   })
 })
@@ -347,7 +350,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
         skillType: "Basic Attack",
         dmgType: "Damage",
         stageId: "Cultivation::Stage 5",
-        hitIndex: 0,
+        hitIndex: 1,
         frame: i,
         energy: 0,
         concerto: 0,
@@ -468,7 +471,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       skillType: "Resonance Liberation",
       dmgType: "Damage",
       stageId: "Arboreal Flourish::",
-      hitIndex: 0,
+      hitIndex: 1,
       frame,
       energy: 0,
       concerto: 0,
@@ -492,7 +495,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     })
   }
 
-  it("Liberation hitIndex 0 applies Photosynthesis Mark", () => {
+  it("Liberation hitIndex 1 applies Photosynthesis Mark", () => {
     const engine = makeTwoCharEngine()
     libHitLanded(engine, 0)
     expect(engine.activeBuffIds(1503)).toContain(
@@ -602,5 +605,113 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       (h) => h.sourceBuffId === "char.verina.s6.joyous-harvest-coord",
     )
     expect(s6Coord).toBeDefined()
+  })
+})
+
+describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () => {
+  const TEAMMATE_ID = 9999
+  const COORD_ID = "char.verina.lib.mark-coord-reaction"
+
+  const makeTeammate = (): EnrichedCharacter =>
+    ({
+      id: TEAMMATE_ID,
+      name: "Teammate",
+      element: "Fusion",
+      weaponType: "Sword",
+      rarity: "5",
+      stats: {
+        base: { hp: 0, atk: 0, def: 0 },
+        max: { hp: 0, atk: 1000, def: 0 },
+      },
+      template: { weapon: "", echo: "", echoSet: "" },
+      skillTreeBonuses: [],
+      buffs: [],
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: (["S1", "S2", "S3"] as const).map((label) => ({
+            name: label,
+            newName: label,
+            actionTime: 62,
+            damage: [
+              {
+                type: "Basic Attack" as const,
+                dmgType: "Fusion",
+                scalingStat: "atk",
+                actionFrame: 15,
+                value: 1.0,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          })),
+          damage: [],
+        },
+      ],
+    }) as unknown as EnrichedCharacter
+
+  // TODO(#219): un-skip once coordHit ships. Today the heal half of the coord
+  // pair surfaces as a `kind: "hit"` event with `dmgType: "Heal"` instead of a
+  // `kind: "sustain"` event, because the emitHit dispatcher doesn't branch on
+  // dmgType. Fix lands with ADR-0020 (#218 + #219).
+  it.skip("teammate basic combo during 12s mark window triggers coord pairs (damage + heal) at ≈1s cadence", () => {
+    const verinaChar = {
+      ...verina,
+      buffs: verina.buffs,
+    } as unknown as EnrichedCharacter
+    testCharacters = [verinaChar, makeTeammate()]
+    const slots: Slots = [1503, TEAMMATE_ID, null]
+    const loadouts: SlotLoadout[] = [
+      { ...emptyLoadout },
+      { ...emptyLoadout },
+      { ...emptyLoadout },
+    ]
+
+    const combo = ["S1", "S2", "S3"] as const
+    const timeline: TimelineEntry[] = [
+      { id: "lib", characterId: 1503, stageId: "Arboreal Flourish::" },
+      ...Array.from({ length: 12 }, (_, i) => ({
+        id: `na-${i}`,
+        characterId: TEAMMATE_ID,
+        stageId: `Normal Attack::${combo[i % 3]}`,
+      })),
+    ]
+
+    const log = runSimulation(timeline, slots, loadouts)
+
+    const coordDamage = log.filter(
+      (e): e is HitEvent =>
+        e.kind === "hit" && e.synthetic === true && e.sourceBuffId === COORD_ID,
+    )
+    const coordHeal = log.filter(
+      (e): e is SustainEvent =>
+        e.kind === "sustain" &&
+        e.synthetic === true &&
+        e.sourceBuffId === COORD_ID,
+    )
+
+    // Damage + heal fire as a pair per trigger.
+    expect(coordDamage.length).toBeGreaterThanOrEqual(10)
+    expect(coordHeal.length).toBe(coordDamage.length)
+    coordDamage.forEach((dmg, i) => {
+      expect(coordHeal[i].frame).toBe(dmg.frame)
+    })
+
+    // ICD respected: consecutive coords are > 60 frames apart.
+    for (let i = 1; i < coordDamage.length; i++) {
+      const gap = coordDamage[i].frame - coordDamage[i - 1].frame
+      expect(gap).toBeGreaterThan(60)
+    }
+
+    // No coord lands after the 12s (720f) mark window.
+    coordDamage.forEach((h) => expect(h.frame).toBeLessThan(720))
+
+    // Acting Character on every coord is Verina (not the teammate that triggered it).
+    coordDamage.forEach((h) => expect(h.characterId).toBe(1503))
+    coordHeal.forEach((h) => expect(h.characterId).toBe(1503))
   })
 })
