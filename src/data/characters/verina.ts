@@ -77,7 +77,7 @@ export const verina = {
       id: "char.verina.lib.photosynthesis-mark",
       name: "Photosynthesis Mark",
       description:
-        "Arboreal Flourish applies a Photosynthesis Mark presence flag on Verina (stand-in for the enemy mark per ADR-0019) for 12s. Enables coordinated attack reactions.",
+        "Arboreal Flourish applies a Photosynthesis Mark presence flag on Verina for 12s. Enables coordinated attack reactions.",
       trigger: {
         event: "hitLanded",
         characterId: 1503,
@@ -136,66 +136,6 @@ export const verina = {
             target: "currentOnField",
           },
           icdFrames: 60,
-        },
-      ],
-    },
-    {
-      id: "char.verina.forte.grant-b5",
-      name: "Forte: B5 Grant",
-      description:
-        "Cultivation Stage 5 landing grants +1 Forte (hitIndex 1 collapses the single hit).",
-      trigger: {
-        event: "hitLanded",
-        characterId: 1503,
-        stageId: "Cultivation::Stage 5",
-        hitIndex: 1,
-      },
-      effects: [
-        {
-          kind: "resource",
-          resource: "forte",
-          op: "add",
-          value: { kind: "const", v: 1 },
-        },
-      ],
-    },
-    {
-      id: "char.verina.forte.grant-skill",
-      name: "Forte: Botany Experiment Grant",
-      description:
-        "Resonance Skill Botany Experiment landing grants +1 Forte (hitIndex 1 fires once per cast).",
-      trigger: {
-        event: "hitLanded",
-        characterId: 1503,
-        stageId: "Botany Experiment::",
-        hitIndex: 1,
-      },
-      effects: [
-        {
-          kind: "resource",
-          resource: "forte",
-          op: "add",
-          value: { kind: "const", v: 1 },
-        },
-      ],
-    },
-    {
-      id: "char.verina.forte.grant-intro",
-      name: "Forte: Intro Grant",
-      description:
-        "Intro Skill Verdant Growth landing grants +1 Forte (hitIndex 1).",
-      trigger: {
-        event: "hitLanded",
-        characterId: 1503,
-        stageId: "Verdant Growth::",
-        hitIndex: 1,
-      },
-      effects: [
-        {
-          kind: "resource",
-          resource: "forte",
-          op: "add",
-          value: { kind: "const", v: 1 },
         },
       ],
     },
@@ -489,6 +429,7 @@ export const verina = {
               concerto: 5.76,
               toughness: 0.5764,
               weakness: 1.44,
+              forte: 1,
             },
           ],
         },
@@ -662,6 +603,7 @@ export const verina = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.532,
+              forte: 1,
             },
             {
               type: "Resonance Skill",
@@ -851,6 +793,7 @@ export const verina = {
               concerto: 0,
               toughness: 0.4492,
               weakness: 1.123,
+              forte: 1,
             },
           ],
         },

@@ -137,12 +137,13 @@ describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
   })
 })
 
-describe("Verina — Forte grants via hitLanded", () => {
+describe("Verina — Forte grants via DamageEntry.forte", () => {
   function hitLanded(
     engine: ReturnType<typeof makeEngine>,
     stageId: string,
     hitIndex: number,
     frame: number,
+    forte?: number,
   ) {
     engine.onEvent({
       kind: "hitLanded",
@@ -154,25 +155,26 @@ describe("Verina — Forte grants via hitLanded", () => {
       frame,
       energy: 0,
       concerto: 0,
+      forte,
     })
   }
 
   it("Cultivation Stage 5 hitIndex 1 grants +1 forte", () => {
     const engine = makeEngine()
     expect(engine.getResource(1503).forte).toBe(0)
-    hitLanded(engine, "Cultivation::Stage 5", 1, 0)
+    hitLanded(engine, "Cultivation::Stage 5", 1, 0, 1)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
-  it("Cultivation Stage 5 hitIndex 2 does NOT grant forte", () => {
+  it("Cultivation Stage 5 hitIndex 2 does NOT grant forte (no forte on second hit)", () => {
     const engine = makeEngine()
     hitLanded(engine, "Cultivation::Stage 5", 2, 0)
     expect(engine.getResource(1503).forte).toBe(0)
   })
 
-  it("Botany Experiment hitIndex 1 grants +1 forte (fires once despite 4 hits)", () => {
+  it("Botany Experiment hitIndex 1 grants +1 forte (only first DamageEntry carries forte)", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Botany Experiment::", 1, 0)
+    hitLanded(engine, "Botany Experiment::", 1, 0, 1)
     hitLanded(engine, "Botany Experiment::", 2, 0)
     hitLanded(engine, "Botany Experiment::", 3, 0)
     hitLanded(engine, "Botany Experiment::", 4, 0)
@@ -181,15 +183,15 @@ describe("Verina — Forte grants via hitLanded", () => {
 
   it("Verdant Growth hitIndex 1 grants +1 forte", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 1, 0)
+    hitLanded(engine, "Verdant Growth::", 1, 0, 1)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
   it("forte caps at 4 across multiple qualifying hits", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 1, 0)
+    hitLanded(engine, "Verdant Growth::", 1, 0, 1)
     for (let i = 1; i <= 5; i++) {
-      hitLanded(engine, "Cultivation::Stage 5", 1, i)
+      hitLanded(engine, "Cultivation::Stage 5", 1, i, 1)
     }
     expect(engine.getResource(1503).forte).toBe(4)
   })
@@ -354,6 +356,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
         frame: i,
         energy: 0,
         concerto: 0,
+        forte: 1,
       })
     }
   }
