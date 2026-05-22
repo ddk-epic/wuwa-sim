@@ -1,5 +1,9 @@
 import type { ReactNode } from "react"
-import type { ActionEvent, HitEvent } from "#/types/simulation-log"
+import type {
+  ActionEvent,
+  HitEvent,
+  SustainEvent,
+} from "#/types/simulation-log"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
 import { formatSkillType } from "#/data/skill-types"
@@ -114,6 +118,21 @@ export function CritCellValue({
   )
 }
 
+export function SustainPill({ sub: _sub }: { sub: SustainEvent["sub"] }) {
+  return (
+    <span
+      className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
+      style={{
+        background: "#4ade8015",
+        border: "1px solid #4ade8033",
+        color: "#4ade80",
+      }}
+    >
+      HEAL
+    </span>
+  )
+}
+
 export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
   if (ev.kind === "action") {
     const label = formatVariantKind(ev.variantKind, "long")
@@ -144,7 +163,7 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
     )
   }
   if (ev.synthetic) {
-    return <span>(coord)</span>
+    return <span> (coord)</span>
   }
   return null
 }

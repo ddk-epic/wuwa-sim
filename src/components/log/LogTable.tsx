@@ -3,6 +3,7 @@ import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ActionEventRow } from "./ActionEventRow"
 import { HitEventRow } from "./HitEventRow"
 import { BuffEventRow, isBuff } from "./BuffEventRow"
+import { SustainEventRow } from "./SustainEventRow"
 
 const headerCell = "px-2 py-2 font-mono text-xs tracking-[1px] uppercase"
 
@@ -54,6 +55,9 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
           }
           if (entry.kind === "action") {
             return <ActionEventRow key={i} ev={entry} index={i} />
+          }
+          if (entry.kind === "sustain") {
+            return <SustainEventRow key={i} ev={entry} index={i} />
           }
           return null
         })}
