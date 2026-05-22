@@ -131,6 +131,8 @@ export function resolveStageExecution(
   const variant = stage.variants?.[variantKind]
   if (!variant) return { advance: stage.actionTime, hits: allDamage, react: 0 }
   const advance = variant.actionTime + reactionDelay
-  const hits = allDamage.filter((hit) => hit.actionFrame <= advance)
+  const hits = allDamage.filter(
+    (hit) => hit.actionFrame <= advance || hit.independent,
+  )
   return { advance, hits, react: reactionDelay }
 }

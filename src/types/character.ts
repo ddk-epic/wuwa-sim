@@ -59,6 +59,8 @@ export interface DamageEntry {
   weakness: number
   /** Recipient scope for heal entries (dmgType: "Heal"). Defaults to "self" when omitted. */
   target?: HealTarget
+  /** Lands at its authored actionFrame regardless of cancel/instantCancel cutoff. */
+  independent?: boolean
 }
 
 export interface Skill {

@@ -367,6 +367,57 @@ describe("resolveStageExecution — damage filtering", () => {
   })
 })
 
+describe("resolveStageExecution — independent flag (#217)", () => {
+  const baseDamage = (
+    actionFrame: number,
+    independent?: boolean,
+  ): DamageEntry => ({
+    type: "Basic Attack",
+    dmgType: "Damage",
+    scalingStat: "ATK",
+    actionFrame,
+    value: 1,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+    ...(independent ? { independent } : {}),
+  })
+
+  it("flagged entry survives cancel past cutoff", () => {
+    const damage = [baseDamage(10), baseDamage(90, true)]
+    const stage = makeStage(107, { cancel: { actionTime: 54 } }, damage)
+    const { hits } = resolveStageExecution(stage, "cancel", 9)
+    expect(hits).toHaveLength(2)
+    expect(hits.find((h) => h.actionFrame === 90)).toBeDefined()
+  })
+
+  it("flagged entry survives instantCancel past cutoff", () => {
+    const damage = [baseDamage(10), baseDamage(90, true)]
+    const stage = makeStage(107, { instantCancel: { actionTime: 20 } }, damage)
+    const { hits } = resolveStageExecution(stage, "instantCancel", 9)
+    expect(hits).toHaveLength(2)
+    expect(hits.find((h) => h.actionFrame === 90)).toBeDefined()
+  })
+
+  it("unflagged entries beyond cutoff are still truncated", () => {
+    const damage = [baseDamage(10), baseDamage(90), baseDamage(90, true)]
+    const stage = makeStage(107, { cancel: { actionTime: 54 } }, damage)
+    const { hits } = resolveStageExecution(stage, "cancel", 9)
+    // frame-10 survives, frame-90 unflagged truncated, frame-90 flagged survives
+    expect(hits).toHaveLength(2)
+    expect(hits[0].actionFrame).toBe(10)
+    expect(hits[1].independent).toBe(true)
+  })
+
+  it("flag is inert on full execution (no variant)", () => {
+    const damage = [baseDamage(10), baseDamage(90, true)]
+    const stage = makeStage(107, { cancel: { actionTime: 54 } }, damage)
+    const { hits } = resolveStageExecution(stage, undefined, 9)
+    expect(hits).toHaveLength(2)
+  })
+})
+
 describe("resolveStageExecution — react value", () => {
   it("returns react=0 when no variant", () => {
     expect(resolveStageExecution(makeStage(50), undefined, 9).react).toBe(0)
