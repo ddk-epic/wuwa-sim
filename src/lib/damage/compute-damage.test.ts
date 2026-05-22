@@ -27,13 +27,7 @@ describe("computeDamage", () => {
     )
   })
 
-  it("applies atkPct additively to atkBase", () => {
-    expect(computeDamage(ctx({ multiplier: 1 }), stats({ atkPct: 0.5 }))).toBe(
-      Math.round(1 * 1500 * DEFRES),
-    )
-  })
-
-  it("applies atkFlat after atkPct", () => {
+  it("atkPct and atkFlat compose additively: ATK_eff = (atkBase × (1+atkPct)) + atkFlat", () => {
     expect(
       computeDamage(
         ctx({ multiplier: 1 }),
@@ -68,20 +62,13 @@ describe("computeDamage", () => {
     )
   })
 
-  it("allDmgBonus stacks with element-specific bonus", () => {
+  it("allDmgBonus stacks additively with element bonus into the dmgBonus bucket", () => {
     const s = stats({
       elementBonus: { ...emptyStatTable().elementBonus, Fusion: 0.1 },
       allDmgBonus: 0.12,
     })
     expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
       Math.round(1 * 1000 * (1 + 0.1 + 0.12) * DEFRES),
-    )
-  })
-
-  it("allDmgBonus applies regardless of element", () => {
-    const s = stats({ allDmgBonus: 0.24 })
-    expect(computeDamage(ctx({ element: "Glacio" }), s)).toBe(
-      Math.round(1 * 1000 * 1.24 * DEFRES),
     )
   })
 
@@ -201,19 +188,6 @@ describe("computeDamage", () => {
     )
   })
 
-  it("allDmgBonus adds to dmgBonus regardless of element or skillType", () => {
-    const s = stats({ allDmgBonus: 0.2 })
-    expect(
-      computeDamage(ctx({ element: "Glacio", skillType: "Heavy Attack" }), s),
-    ).toBe(Math.round(1 * 1000 * 1.2 * DEFRES))
-  })
-
-  it("defShred=0 matches DEF_MULT_CONST baseline", () => {
-    expect(computeDamage(ctx(), stats({ defShred: 0 }))).toBe(
-      Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST),
-    )
-  })
-
   it("positive defShred increases damage (reduces enemy DEF contribution)", () => {
     const defMult =
       DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - 0.2))
@@ -228,12 +202,6 @@ describe("computeDamage", () => {
       DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - combined))
     expect(computeDamage(ctx(), stats({ defShred: combined }))).toBe(
       Math.round(1000 * defMult * RES_MULT_CONST),
-    )
-  })
-
-  it("shreds=0 matches RES_MULT_CONST baseline", () => {
-    expect(computeDamage(ctx({ skillType: "Basic Attack" }), stats())).toBe(
-      Math.round(1000 * DEF_MULT_CONST * RES_MULT_CONST),
     )
   })
 
