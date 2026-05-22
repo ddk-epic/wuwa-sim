@@ -715,11 +715,6 @@ export class BuffEngine {
     return base
   }
 
-  /** @internal Test-only: counts evaluateCondition calls that bypassed the cache. */
-  conditionEvalCountForTest(): number {
-    return this.evaluator.evalCountForTest()
-  }
-
   /** Test/inspection helper. */
   getOnFieldCharacterId(): number | null {
     return this.onField.current()
