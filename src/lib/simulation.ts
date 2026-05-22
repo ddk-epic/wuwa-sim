@@ -305,6 +305,7 @@ function processDamageHit(
     hitIndex: hitIndex + 1,
     energy: hit.energy,
     concerto: hit.concerto,
+    forte: hit.forte,
   })
   const hitEvent: HitEvent = {
     kind: "hit",

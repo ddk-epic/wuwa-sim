@@ -39,6 +39,8 @@ export type EngineEvent =
       energy?: number
       /** Per-hit concerto gained by the actor. Implicit `resource` effect. */
       concerto?: number
+      /** Per-hit forte gained by the actor. Scaled by forteRechargePct. Actor-only. */
+      forte?: number
       /** Buff def id that produced this synthetic hit via emitHit; undefined for authored hits. */
       sourceBuffId?: string
     }

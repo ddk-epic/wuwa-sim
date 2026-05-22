@@ -16,6 +16,7 @@ export type StatPath =
         | "allDmgBonus"
         | "allDeepen"
         | "energyRechargePct"
+        | "forteRechargePct"
         | "healingBonus"
     }
   | { stat: "elementBonus"; key: Element }

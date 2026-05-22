@@ -61,6 +61,8 @@ export interface DamageEntry {
   target?: HealTarget
   /** Lands at its authored actionFrame regardless of cancel/instantCancel cutoff. */
   independent?: boolean
+  /** Per-hit forte resource gain for the actor. Scaled by forteRechargePct. */
+  forte?: number
 }
 
 export interface Skill {

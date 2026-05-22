@@ -48,6 +48,7 @@ export interface StatTable {
   defShred: number
   shreds: Record<SkillType, number>
   energyRechargePct: number
+  forteRechargePct: number
   healingBonus: number
 }
 
@@ -73,6 +74,7 @@ export function emptyStatTable(): StatTable {
     defShred: 0,
     shreds: emptySkillTypeMap(),
     energyRechargePct: 0,
+    forteRechargePct: 0,
     healingBonus: 0,
   }
 }

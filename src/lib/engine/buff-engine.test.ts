@@ -1813,6 +1813,134 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
   })
 })
 
+describe("BuffEngine — forte resource channel (#225)", () => {
+  it("accumulates forte from hitLanded events, unscaled when forteRechargePct = 0", () => {
+    testCharacters = [baseChar({ id: 1, forteCap: 100 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      forte: 20,
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 10,
+      forte: 10,
+    })
+    expect(engine.getResource(1).forte).toBeCloseTo(30)
+  })
+
+  it("forte gain scales by forteRechargePct when buff applies it", () => {
+    const forteBuff: BuffDef = {
+      id: "char.forte-recharge",
+      name: "Forte Recharge",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
+      target: { kind: "self" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "forteRechargePct" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+      duration: { kind: "permanent" },
+    }
+    testCharacters = [baseChar({ id: 1, forteCap: 200, buffs: [forteBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 1,
+      forte: 20,
+    })
+    expect(engine.getResource(1).forte).toBeCloseTo(20 * 1.5)
+  })
+
+  it("forte gain clamps at forteCap", () => {
+    testCharacters = [baseChar({ id: 1, forteCap: 50 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      forte: 100,
+    })
+    expect(engine.getResource(1).forte).toBe(50)
+  })
+
+  it("forte is actor-only and not shared with teammates", () => {
+    testCharacters = [
+      baseChar({ id: 1, forteCap: 100 }),
+      baseChar({ id: 2, forteCap: 100 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      forte: 15,
+    })
+    expect(engine.getResource(1).forte).toBe(15)
+    expect(engine.getResource(2).forte).toBe(0)
+  })
+
+  it("missing forte field on hitLanded is a no-op", () => {
+    testCharacters = [baseChar({ id: 1, forteCap: 100 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 5,
+    })
+    expect(engine.getResource(1).forte).toBe(0)
+  })
+})
+
 describe("BuffEngine — stacking policies (#59)", () => {
   const makeStackingBuff = (
     onRetrigger:

@@ -319,6 +319,18 @@ export class BuffEngine {
           depth,
         )
       }
+      if (event.forte) {
+        const actorFRPct = this.resolveStats(event.characterId).forteRechargePct
+        this.applyResourceDelta(
+          event.characterId,
+          "forte",
+          event.forte * (1 + actorFRPct),
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
+      }
     }
     if (event.kind === "skillCast") {
       if (event.concerto) {
