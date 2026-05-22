@@ -31,3 +31,34 @@ A Stage may declare optional **Stage Variants** — initially `cancel` and `inst
 - TimelineEntry's `actionTime` field is removed from the schema. Saved timelines with stale values silently drop the field on load. Saved entries carrying a `variantKind` whose stage no longer defines that variant silently fall back to the full stage.
 - New domain terms — Stage Variant, Variant Kind, Reaction Delay — enter `CONTEXT.md` under Core simulation.
 - `DamageEntry` gains an optional `independent?: boolean`. Authored true on hits the game spawns as separate entities (summons, delayed drops). The cancel filter becomes `entry.actionFrame ≤ advance || entry.independent`; outside `cancel`/`instantCancel` the flag is inert. Acting Character on an independent hit is the original caster; buff state is snapshotted live at fire frame; energy / concerto / `skillCast` / cooldown semantics are unchanged (the hit lands like any other, and `skillCast` already fired at stage start). The hit is **uncancelable** — no drop on a subsequent cancel-capable re-entry, no padding on non-cancel-capable re-entry; once spawned, it lands.
+
+## Amendment — Variant Floor: minimum advance for authored variants
+
+The advance formula in this ADR (`variant.actionTime + reactionDelay`) — and the parallel `authored swap` path in [ADR-0018](0018-swap-variant-as-trailing-window.md) — gain a **floor**: a player-level minimum duration for any authored-variant execution. The new formula, applied uniformly to all three variants (`cancel`, `instantCancel`, authored `swap`):
+
+```
+advance = max(variant.actionTime + reactionDelay, variantFloor)
+```
+
+`variantFloor` is a new field on `Settings` (frames; default 15 ≈ 0.25s at 60fps), stored under the existing `wuwa.settings` localStorage key alongside `reactionDelay` and `swapFrames`. Models the physical-reality claim that a player cannot actually execute any swap/cancel input faster than ~15 frames; setting it to 0 disables the floor.
+
+**Consequences of the raised advance fall out automatically** from the existing `advance` semantics:
+
+- **cancel / instantCancel:** because `advance` is also the damage-filter cutoff (`hit.actionFrame ≤ advance || hit.independent`), flooring raises the cutoff in lockstep. A stage authored with `variants.cancel = { actionTime: 0 }` and a damage entry at `actionFrame: 10` previously dropped that hit (10 > 6); under the floor it lands (10 ≤ 15). The cancel becomes less lossy, which matches the model — if the player spent 15 frames committed to the input, hits authored within those 15 frames did land.
+- **swap:** `advance` is only the cursor step (no damage filter). Hits previously trailing at `actionFrame: 7..15` become immediate; total damage is unchanged; trailing-window collision rules in ADR-0018 continue to key off `hitFrame > stageStartFrame + advance` with the floored value.
+
+**Liberation is not specially carved out.** Liberation stages do not author variants, so the floor never applies to them in practice — the exception is structural, not encoded.
+
+**Tooltip rendering.** The Timeline-row / Simulation-Log `+0.Xs` suffix tooltip (ADR-0018) gains a `floor` component that is **mutually exclusive** with `react`: whichever wins the `max` is shown. `pad` from trailing-window collisions remains additive on top. Examples:
+
+- `actionTime: 0, reactionDelay: 6, variantFloor: 15` → advance 15; tooltip `floor: 0.25s`.
+- `actionTime: 30, reactionDelay: 6, variantFloor: 15` → advance 36; tooltip `react: 0.10s`.
+- `actionTime: 0, reactionDelay: 6, variantFloor: 15` plus 12-frame trailing-window pad on the preceding entry → that preceding entry's tooltip shows `react: 0.10s, pad: 0.20s` (the floor is on the swap entry itself, not on the preceding one).
+
+### Considered alternatives
+
+- **Floor only when `variant.actionTime === 0`.** Rejected. Creates a discontinuity (authored 0 → 15, authored 3 → 9) that has no physical justification — the player's minimum input time doesn't care which authored number happened to be below the floor. A uniform `max` is simpler to reason about and to test.
+- **Floor cursor-advance only; leave the cancel damage cutoff at `actionTime + reactionDelay`.** Rejected. Decouples two numbers that ADR-0008 and ADR-0018 deliberately keep aligned (cancel/instantCancel collapse them; swap separates them with an explicit rationale). Introducing a third semantic — "advance for cursor but a smaller value for damage cutoff" — gains nothing the uniform floor doesn't already deliver.
+- **Per-stage `noVariantFloor` opt-out flag (e.g. for Liberation).** Rejected as unnecessary. Liberation stages don't author variants; the only stages affected by the floor are those that explicitly opted into a variant, and there are no current authoring cases where an authored variant should defeat the floor.
+- **Hardcode the floor at 15 frames; not a Setting.** Rejected. `reactionDelay` and `swapFrames` are already player-level settings on the same dimension (frames of input-timing); making the floor configurable matches the precedent and lets users disable it (set to 0) to compare scenarios.
+- **Make the floor stack with `reactionDelay` (`actionTime + reactionDelay + variantFloor`).** Rejected. The floor models the _minimum_ player input duration including reaction; reactionDelay is already part of that duration. Stacking would over-count the same physical time.
