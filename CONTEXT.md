@@ -84,7 +84,7 @@ A view-layer term for the subset of Buffs folded directly into `baseStats` at bo
 _Avoid_: confusing with the `passive.*` segment in some buff IDs, which is a naming convention not a category — `char.encore.passive.angry-cosmos` is a conditional permanent Buff Instance, not a Passive Buff.
 
 **Effect**:
-What a Buff Instance _does_ while active. One of three kinds: `stat` (patches a Stat Table field), `emitHit` (injects a synthetic hit), or `resource` (produces or consumes Energy/Concerto/Forte/Resonance).
+What a Buff Instance _does_ while active. One of four kinds: `stat` (patches a Stat Table field), `emitHit` (injects a synthetic hit or heal — routes on inner `dmgType`), `coordHit` (same shape as `emitHit` but the emitted event bypasses the trigger matcher entirely and carries a `coord` display flag — see Coordinated Attack), or `resource` (produces or consumes Energy/Concerto/Forte/Resonance).
 
 **Trigger**:
 The structured predicate `{ event, ...filters }` that promotes a Buff Def into a Buff Instance. The event is from a small closed taxonomy (`skillCast`, `hitLanded`, `swapIn`, `swapOut`, `simStart`, `resourceCrossed`, etc.).
@@ -128,13 +128,13 @@ The character whose ability produced a given action or hit. For authored Timelin
 The character currently positioned to receive on-field-only effects. Inferred implicitly from successive authored Timeline Entries — when `characterId` changes, the engine fires `swapOut` for the old and `swapIn` for the new.
 
 **Synthetic Hit**:
-A hit injected by an `emitHit` Effect rather than authored in the Timeline. Carries `synthetic: true`. By default, `hitLanded` triggers ignore synthetic hits — buff authors must opt in to chain off them.
+A damage hit or heal sustain injected by an `emitHit` or `coordHit` Effect rather than authored in the Timeline. Carries `synthetic: true`. Routing branches on the inner `DamageEntry.dmgType`: `"Heal"` produces a SustainEvent via `computeHealing` and `resolveHealTargets`; otherwise a HitEvent via `computeDamage`. By default, `hitLanded` triggers ignore synthetic hits — buff authors must opt in via `source: "synthetic"` to chain off them. `healLanded` triggers match synthetic heals freely (no `source` gating — the chain-loop concern that motivates hitLanded's default-off doesn't apply to heals). `coordHit`-sourced synthetic events bypass the matcher entirely and never fire any trigger regardless of opt-ins.
 
 **ICD** (internal cooldown):
 The minimum frame interval between successive firings of an `emitHit` Effect from a single Buff Instance. Required field on every `emitHit`. Caps coordinated-attack frequency and prevents feedback loops.
 
 **Coordinated Attack**:
-A hit produced by an off-field character in response to events on the on-field character's hits. Modeled as two buffs: a **presence flag** (self-applied on the coord-attack owner, marking that their reactive state is armed) plus a **reaction** (a `hitLanded`-triggered `emitHit` with `actor: "any" + source: "self"` so teammate non-synthetic hits qualify, gated by `Condition.buffActive(..., on: "source")` against the presence flag). In a single-target sim the self-flag stands in for what would conceptually be a flag on the enemy — see ADR-0019.
+A hit or heal produced by an off-field character in response to events on the on-field character's hits. Modeled as two buffs: a **presence flag** (self-applied on the coord-attack owner, marking that their reactive state is armed) plus a **reaction** (a `hitLanded`-triggered BuffDef with `actor: "any" + source: "self"` so teammate non-synthetic hits qualify, gated by `Condition.buffActive(..., on: "source")` against the presence flag, whose effects are `coordHit` rather than `emitHit`). `coordHit` carries two policies beyond the shared dispatch: emitted events bypass the matcher entirely (hardcoded non-chainable — no `source: "synthetic"` opt-in escapes it), and the output carries `coord: true` which the log renderer surfaces as a `"Coord"` skill label. A coord pair (damage + heal) is two sibling `coordHit` effects on the same reaction buff, differentiated by inner `dmgType`. Resource generation on coord events follows the inner `DamageEntry.energy` / `concerto` — coord-doesn't-gen-resources is a data convention (`energy: 0, concerto: 0`), not an engine rule. In a single-target sim the self-flag stands in for what would conceptually be a flag on the enemy — see ADR-0019 and ADR-0020.
 
 ### WuWa game concepts (shared with all data files)
 
