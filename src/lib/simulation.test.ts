@@ -1764,7 +1764,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
+    expect(action?.delayBreakdown).toEqual({ react: 6, floor: 0, pad: 0 })
   })
 
   it("no-delay: full stage has no delayBreakdown", () => {
@@ -1831,7 +1831,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.delayBreakdown).toEqual({ react: 6, pad: 0 })
+    expect(action?.delayBreakdown).toEqual({ react: 6, floor: 0, pad: 0 })
   })
 })
 

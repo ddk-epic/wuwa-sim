@@ -14,6 +14,7 @@ import {
   useReactionDelay,
   useSettingsActions,
   useSwapFrames,
+  useVariantFloor,
 } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
@@ -40,6 +41,7 @@ export function Header({
   const { slots } = useTeamContext()
   const reactionDelay = useReactionDelay()
   const swapFrames = useSwapFrames()
+  const variantFloor = useVariantFloor()
   const { setSettings } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -126,10 +128,12 @@ export function Header({
         <SettingsModal
           reactionDelay={reactionDelay}
           swapFrames={swapFrames}
+          variantFloor={variantFloor}
           onReactionDelayChange={(value) =>
             setSettings({ reactionDelay: value })
           }
           onSwapFramesChange={(value) => setSettings({ swapFrames: value })}
+          onVariantFloorChange={(value) => setSettings({ variantFloor: value })}
           onClose={() => setSettingsOpen(false)}
         />
       )}

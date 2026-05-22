@@ -3,9 +3,10 @@ import { useLocalStorage } from "./useLocalStorage"
 export interface Settings {
   reactionDelay: number
   swapFrames: number
+  variantFloor: number
 }
 
-const DEFAULTS: Settings = { reactionDelay: 6, swapFrames: 6 }
+const DEFAULTS: Settings = { reactionDelay: 6, swapFrames: 6, variantFloor: 15 }
 const STORAGE_KEY = "wuwa.settings"
 
 function clamp(value: number): number {
@@ -24,6 +25,10 @@ function mergeWithDefaults(stored: unknown): Settings {
       typeof partial.swapFrames === "number"
         ? partial.swapFrames
         : DEFAULTS.swapFrames,
+    variantFloor:
+      typeof partial.variantFloor === "number"
+        ? partial.variantFloor
+        : DEFAULTS.variantFloor,
   }
 }
 
@@ -41,6 +46,9 @@ export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
     }
     if (patch.swapFrames !== undefined) {
       next.swapFrames = clamp(patch.swapFrames)
+    }
+    if (patch.variantFloor !== undefined) {
+      next.variantFloor = clamp(patch.variantFloor)
     }
     setSettings(next)
   }

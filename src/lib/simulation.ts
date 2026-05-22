@@ -23,6 +23,7 @@ export function runSimulation(
   loadouts: SlotLoadout[],
   reactionDelay: number = 9,
   swapFrames: number = 6,
+  variantFloor: number = 0,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
@@ -52,6 +53,7 @@ export function runSimulation(
       reactionDelay,
       swapFrames,
       arrival.padFrames,
+      variantFloor,
     )
     if (resolved) {
       const sched = TrailingWindow.scheduleStage(state, {
@@ -84,6 +86,7 @@ function processEntry(
   reactionDelay: number,
   swapFrames: number,
   padFrames: number = 0,
+  variantFloor: number = 0,
 ): {
   resolved: ResolvedStage | null
   allHits: DamageEntry[]
@@ -103,11 +106,13 @@ function processEntry(
     advance: stageDuration,
     hits: allHits,
     react,
+    floor,
   } = resolveStageExecution(
     resolved.stage,
     entry.variantKind,
     reactionDelay,
     swapFrames,
+    variantFloor,
   )
 
   pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
@@ -122,6 +127,7 @@ function processEntry(
     engine,
     stageStartFrame,
     react,
+    floor,
     padFrames,
   )
   log.push(actionEvent)
@@ -163,6 +169,7 @@ function buildActionEvent(
   engine: BuffEngine,
   frame: number,
   react: number = 0,
+  floor: number = 0,
   padFrames: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
@@ -177,8 +184,8 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
-  if (react > 0 || padFrames > 0) {
-    event.delayBreakdown = { react, pad: padFrames }
+  if (react > 0 || floor > 0 || padFrames > 0) {
+    event.delayBreakdown = { react, floor, pad: padFrames }
   }
   return event
 }

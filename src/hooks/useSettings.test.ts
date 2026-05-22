@@ -8,18 +8,26 @@ beforeEach(() => {
 })
 
 describe("useSettings", () => {
-  it("returns default settings of { reactionDelay: 6, swapFrames: 6 } when storage is empty", () => {
+  it("returns default settings of { reactionDelay: 6, swapFrames: 6, variantFloor: 15 } when storage is empty", () => {
     const { result } = renderHook(() => useSettings())
-    expect(result.current[0]).toEqual({ reactionDelay: 6, swapFrames: 6 })
+    expect(result.current[0]).toEqual({
+      reactionDelay: 6,
+      swapFrames: 6,
+      variantFloor: 15,
+    })
   })
 
   it("rehydrates settings from localStorage", () => {
     localStorage.setItem(
       "wuwa.settings",
-      JSON.stringify({ reactionDelay: 5, swapFrames: 10 }),
+      JSON.stringify({ reactionDelay: 5, swapFrames: 10, variantFloor: 20 }),
     )
     const { result } = renderHook(() => useSettings())
-    expect(result.current[0]).toEqual({ reactionDelay: 5, swapFrames: 10 })
+    expect(result.current[0]).toEqual({
+      reactionDelay: 5,
+      swapFrames: 10,
+      variantFloor: 20,
+    })
   })
 
   it("merges legacy localStorage entry lacking swapFrames with defaults", () => {
@@ -27,6 +35,16 @@ describe("useSettings", () => {
     const { result } = renderHook(() => useSettings())
     expect(result.current[0].reactionDelay).toBe(9)
     expect(result.current[0].swapFrames).toBe(6)
+    expect(result.current[0].variantFloor).toBe(15)
+  })
+
+  it("merges legacy localStorage entry lacking variantFloor with default", () => {
+    localStorage.setItem(
+      "wuwa.settings",
+      JSON.stringify({ reactionDelay: 5, swapFrames: 10 }),
+    )
+    const { result } = renderHook(() => useSettings())
+    expect(result.current[0].variantFloor).toBe(15)
   })
 
   it("patch setter updates reactionDelay and persists", () => {
@@ -36,9 +54,11 @@ describe("useSettings", () => {
     })
     expect(result.current[0].reactionDelay).toBe(15)
     expect(result.current[0].swapFrames).toBe(6)
+    expect(result.current[0].variantFloor).toBe(15)
     expect(JSON.parse(localStorage.getItem("wuwa.settings")!)).toEqual({
       reactionDelay: 15,
       swapFrames: 6,
+      variantFloor: 15,
     })
   })
 
@@ -49,6 +69,16 @@ describe("useSettings", () => {
     })
     expect(result.current[0].reactionDelay).toBe(6)
     expect(result.current[0].swapFrames).toBe(12)
+  })
+
+  it("patch setter updates variantFloor independently", () => {
+    const { result } = renderHook(() => useSettings())
+    act(() => {
+      result.current[1]({ variantFloor: 30 })
+    })
+    expect(result.current[0].variantFloor).toBe(30)
+    expect(result.current[0].reactionDelay).toBe(6)
+    expect(result.current[0].swapFrames).toBe(6)
   })
 
   it("clamps reactionDelay to 0 minimum", () => {
@@ -77,5 +107,17 @@ describe("useSettings", () => {
       result.current[1]({ swapFrames: 99 })
     })
     expect(result.current[0].swapFrames).toBe(60)
+  })
+
+  it("clamps variantFloor to [0, 60]", () => {
+    const { result } = renderHook(() => useSettings())
+    act(() => {
+      result.current[1]({ variantFloor: -5 })
+    })
+    expect(result.current[0].variantFloor).toBe(0)
+    act(() => {
+      result.current[1]({ variantFloor: 99 })
+    })
+    expect(result.current[0].variantFloor).toBe(60)
   })
 })

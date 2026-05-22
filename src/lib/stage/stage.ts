@@ -118,21 +118,40 @@ export function resolveStageExecution(
   variantKind: VariantKind | undefined,
   reactionDelay: number,
   swapFrames: number = 6,
-): { advance: number; hits: DamageEntry[]; react: number } {
+  variantFloor: number = 0,
+): { advance: number; hits: DamageEntry[]; react: number; floor: number } {
   const allDamage = stage.damage ?? []
   if (!variantKind)
-    return { advance: stage.actionTime, hits: allDamage, react: 0 }
+    return { advance: stage.actionTime, hits: allDamage, react: 0, floor: 0 }
   if (variantKind === "swap") {
     const variant = stage.variants?.swap
     const authored = variant !== undefined
-    const advance = authored ? variant.actionTime + reactionDelay : swapFrames
-    return { advance, hits: allDamage, react: authored ? reactionDelay : 0 }
+    if (!authored) {
+      return { advance: swapFrames, hits: allDamage, react: 0, floor: 0 }
+    }
+    const reactResult = variant.actionTime + reactionDelay
+    const advance = Math.max(reactResult, variantFloor)
+    const floorWon = variantFloor > reactResult
+    return {
+      advance,
+      hits: allDamage,
+      react: floorWon ? 0 : reactionDelay,
+      floor: floorWon ? variantFloor : 0,
+    }
   }
   const variant = stage.variants?.[variantKind]
-  if (!variant) return { advance: stage.actionTime, hits: allDamage, react: 0 }
-  const advance = variant.actionTime + reactionDelay
+  if (!variant)
+    return { advance: stage.actionTime, hits: allDamage, react: 0, floor: 0 }
+  const reactResult = variant.actionTime + reactionDelay
+  const advance = Math.max(reactResult, variantFloor)
+  const floorWon = variantFloor > reactResult
   const hits = allDamage.filter(
     (hit) => hit.actionFrame <= advance || hit.independent,
   )
-  return { advance, hits, react: reactionDelay }
+  return {
+    advance,
+    hits,
+    react: floorWon ? 0 : reactionDelay,
+    floor: floorWon ? variantFloor : 0,
+  }
 }

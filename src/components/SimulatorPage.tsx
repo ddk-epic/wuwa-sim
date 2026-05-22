@@ -51,6 +51,7 @@ export function SimulatorPage() {
     settings.reactionDelay,
     settings.swapFrames,
     log.length > 0 ? log : undefined,
+    settings.variantFloor,
   )
 
   function handleResetTimeline() {
@@ -65,6 +66,7 @@ export function SimulatorPage() {
         loadouts,
         settings.reactionDelay,
         settings.swapFrames,
+        settings.variantFloor,
       ),
     )
   }

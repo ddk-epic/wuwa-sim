@@ -94,8 +94,9 @@ export function TimelineEntryRow({
   )
 
   const reactDelayFrames = row.reactFrames
+  const floorFrames = row.floorFrames
   const padFrames = row.padFrames
-  const totalDelayFrames = reactDelayFrames + padFrames
+  const totalDelayFrames = reactDelayFrames + floorFrames + padFrames
 
   const conVal = actionEventAtIndex?.cumulativeConcerto ?? null
   const resVal = actionEventAtIndex?.cumulativeEnergy ?? null
@@ -206,9 +207,11 @@ export function TimelineEntryRow({
             <span
               className="text-xs text-gray-500 shrink-0"
               title={[
-                reactDelayFrames > 0
-                  ? `react: ${formatFrames(reactDelayFrames)}`
-                  : "",
+                floorFrames > 0
+                  ? `floor: ${formatFrames(floorFrames)}`
+                  : reactDelayFrames > 0
+                    ? `react: ${formatFrames(reactDelayFrames)}`
+                    : "",
                 padFrames > 0 ? `pad: ${formatFrames(padFrames)}` : "",
               ]
                 .filter(Boolean)

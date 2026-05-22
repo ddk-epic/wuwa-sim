@@ -10,6 +10,7 @@ export interface TimelineSummaryRow {
   timeFrames: number
   durationFrames: number
   reactFrames: number
+  floorFrames: number
   padFrames: number
   damage: number | null
 }
@@ -28,6 +29,7 @@ export function getTimelineSummary(
   reactionDelay = 9,
   swapFrames = 6,
   log?: SimulationLogEntry[],
+  variantFloor = 0,
 ): TimelineSummary {
   const logActionEvents: ActionEvent[] = []
   const actionIdxByEntryId = new Map<string, number>()
@@ -61,12 +63,14 @@ export function getTimelineSummary(
     let timeFrames: number
     let durationFrames: number
     let reactFrames: number
+    let floorFrames: number
     let padFrames: number
     let damage: number | null
 
     if (ae !== undefined) {
       timeFrames = ae.frame
       reactFrames = ae.delayBreakdown?.react ?? 0
+      floorFrames = ae.delayBreakdown?.floor ?? 0
       padFrames = ae.delayBreakdown?.pad ?? 0
 
       if (nextAe !== undefined) {
@@ -79,6 +83,7 @@ export function getTimelineSummary(
               entry.variantKind,
               reactionDelay,
               swapFrames,
+              variantFloor,
             ).advance
           : 0
       }
@@ -95,18 +100,27 @@ export function getTimelineSummary(
             entry.variantKind,
             reactionDelay,
             swapFrames,
+            variantFloor,
           )
         : null
 
       durationFrames = execution?.advance ?? 0
       reactFrames = execution?.react ?? 0
+      floorFrames = execution?.floor ?? 0
       padFrames = 0
       damage = null
     }
 
     cumulativeFrames += durationFrames
     if (damage !== null) totalDamage += damage
-    rows.push({ timeFrames, durationFrames, reactFrames, padFrames, damage })
+    rows.push({
+      timeFrames,
+      durationFrames,
+      reactFrames,
+      floorFrames,
+      padFrames,
+      damage,
+    })
   }
 
   const totalTimeFrames = rows.reduce((s, r) => s + r.durationFrames, 0)

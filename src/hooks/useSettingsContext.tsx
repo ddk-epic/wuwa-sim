@@ -45,6 +45,10 @@ export function useSwapFrames(): number {
   return useSettingsContext().settings.swapFrames
 }
 
+export function useVariantFloor(): number {
+  return useSettingsContext().settings.variantFloor
+}
+
 export function useSettingsValue(): Settings {
   return useSettingsContext().settings
 }

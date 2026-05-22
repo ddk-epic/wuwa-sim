@@ -145,6 +145,7 @@ describe("getTimelineSummary — single entry", () => {
         timeFrames: 0,
         durationFrames: 60,
         reactFrames: 0,
+        floorFrames: 0,
         padFrames: 0,
         damage: null,
       },
@@ -221,7 +222,7 @@ describe("getTimelineSummary — missing character", () => {
 function makeActionEvent(
   entryId: string,
   frame: number,
-  delayBreakdown?: { react: number; pad: number },
+  delayBreakdown?: { react: number; floor: number; pad: number },
 ): Extract<SimulationLogEntry, { kind: "action" }> {
   return {
     kind: "action",
@@ -269,7 +270,7 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     const log: SimulationLogEntry[] = [
       makeActionEvent("e1", 0),
       makeHitEvent("e1", 0, 900),
-      makeActionEvent("e2", 60, { react: 9, pad: 0 }),
+      makeActionEvent("e2", 60, { react: 9, floor: 0, pad: 0 }),
       makeHitEvent("e2", 60, 1200),
     ]
 
@@ -355,5 +356,52 @@ describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
     // next-e: damage = 400
     expect(result.rows[1].damage).toBe(400)
     expect(result.totalDamage).toBe(900)
+  })
+})
+
+describe("getTimelineSummary — variantFloor / floorFrames", () => {
+  it("floorFrames=0 and reactFrames=reactionDelay when react wins", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0, { react: 9, floor: 0, pad: 0 }),
+    ]
+    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
+    expect(result.rows[0].reactFrames).toBe(9)
+    expect(result.rows[0].floorFrames).toBe(0)
+  })
+
+  it("floorFrames=variantFloor and reactFrames=0 when floor wins", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0, { react: 0, floor: 15, pad: 0 }),
+    ]
+    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)
+    expect(result.rows[0].reactFrames).toBe(0)
+    expect(result.rows[0].floorFrames).toBe(15)
+  })
+
+  it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
+    // charA has Normal Attack::_ with actionTime=60, no cancel variant
+    // With no log, fallback to resolveStageExecution with variantFloor=0 → react wins
+    testCharacters = [charA]
+    const entry: TimelineEntry = {
+      id: "f1",
+      characterId: 1,
+      stageId: "Normal Attack::_",
+      variantKind: undefined,
+    }
+    const result = getTimelineSummary(
+      [entry],
+      undefined,
+      undefined,
+      9,
+      6,
+      undefined,
+      0,
+    )
+    expect(result.rows[0].floorFrames).toBe(0)
+    expect(result.rows[0].reactFrames).toBe(0)
   })
 })

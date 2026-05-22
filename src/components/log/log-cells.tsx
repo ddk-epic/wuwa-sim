@@ -118,7 +118,8 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
   if (ev.kind === "action") {
     const label = formatVariantKind(ev.variantKind, "long")
     const delay = ev.delayBreakdown
-    const hasDelay = delay && (delay.react > 0 || delay.pad > 0)
+    const hasDelay =
+      delay && (delay.react > 0 || delay.floor > 0 || delay.pad > 0)
     return (
       <>
         {label && <span className="ml-2 text-sm">{label}</span>}
@@ -126,13 +127,17 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
           <span
             className="ml-2 text-xs text-muted-foreground"
             title={[
-              delay.react > 0 ? `react: ${formatFrames(delay.react)}` : "",
+              delay.floor > 0
+                ? `floor: ${formatFrames(delay.floor)}`
+                : delay.react > 0
+                  ? `react: ${formatFrames(delay.react)}`
+                  : "",
               delay.pad > 0 ? `pad: ${formatFrames(delay.pad)}` : "",
             ]
               .filter(Boolean)
               .join(" · ")}
           >
-            +{formatFrames(delay.react + delay.pad)}
+            +{formatFrames(delay.react + delay.floor + delay.pad)}
           </span>
         )}
       </>

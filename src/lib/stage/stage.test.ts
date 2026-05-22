@@ -443,3 +443,76 @@ describe("resolveStageExecution — react value", () => {
     expect(resolveStageExecution(stage, "swap", 6, 6).react).toBe(0)
   })
 })
+
+describe("resolveStageExecution — variantFloor", () => {
+  it("floor wins: actionTime=0, react=6, floor=15 → advance=15, floor=15, react=0", () => {
+    const stage = makeStage(50, { cancel: { actionTime: 0 } })
+    const result = resolveStageExecution(stage, "cancel", 6, 6, 15)
+    expect(result.advance).toBe(15)
+    expect(result.floor).toBe(15)
+    expect(result.react).toBe(0)
+  })
+
+  it("react wins: actionTime=30, react=6, floor=15 → advance=36, react=6, floor=0", () => {
+    const stage = makeStage(50, { cancel: { actionTime: 30 } })
+    const result = resolveStageExecution(stage, "cancel", 6, 6, 15)
+    expect(result.advance).toBe(36)
+    expect(result.react).toBe(6)
+    expect(result.floor).toBe(0)
+  })
+
+  it("swap authored: floor wins when floor > actionTime + react", () => {
+    const stage = makeStage(50, { swap: { actionTime: 0 } })
+    const result = resolveStageExecution(stage, "swap", 6, 6, 15)
+    expect(result.advance).toBe(15)
+    expect(result.floor).toBe(15)
+    expect(result.react).toBe(0)
+  })
+
+  it("swap unauthored fallback: floor does not apply to swapFrames path", () => {
+    const stage = makeStage(50, undefined)
+    const result = resolveStageExecution(stage, "swap", 6, 6, 15)
+    expect(result.advance).toBe(6)
+    expect(result.floor).toBe(0)
+    expect(result.react).toBe(0)
+  })
+
+  it("variantFloor=0 disables flooring (react wins at tie or above)", () => {
+    const stage = makeStage(50, { cancel: { actionTime: 0 } })
+    const result = resolveStageExecution(stage, "cancel", 6, 6, 0)
+    expect(result.advance).toBe(6)
+    expect(result.react).toBe(6)
+    expect(result.floor).toBe(0)
+  })
+
+  it("instantCancel with floor wins", () => {
+    const stage = makeStage(50, { instantCancel: { actionTime: 0 } })
+    const result = resolveStageExecution(stage, "instantCancel", 6, 6, 15)
+    expect(result.advance).toBe(15)
+    expect(result.floor).toBe(15)
+    expect(result.react).toBe(0)
+  })
+
+  it("floor raises damage cutoff: hit at actionFrame=10 survives under floor=15", () => {
+    const damage: DamageEntry[] = [
+      {
+        type: "Basic Attack",
+        dmgType: "Damage",
+        scalingStat: "ATK",
+        actionFrame: 10,
+        value: 100,
+        energy: 0,
+        concerto: 0,
+        toughness: 0,
+        weakness: 0,
+      },
+    ]
+    // actionTime=0 + react=6 = 6 < 10, so without floor the hit would be dropped
+    // with floor=15 the advance becomes 15, so 10 <= 15 passes
+    const stage = makeStage(50, { cancel: { actionTime: 0 } }, damage)
+    const withFloor = resolveStageExecution(stage, "cancel", 6, 6, 15)
+    expect(withFloor.hits).toHaveLength(1)
+    const withoutFloor = resolveStageExecution(stage, "cancel", 6, 6, 0)
+    expect(withoutFloor.hits).toHaveLength(0)
+  })
+})
