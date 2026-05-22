@@ -8,11 +8,25 @@ export interface ResourceCrossingInfo {
 
 export class ResourceLedger {
   private resources = new Map<number, ResourceState>()
+  private caps = new Map<number, Partial<Record<ResourceKind, number>>>()
   private version_ = 0
 
   clear(): void {
     this.resources.clear()
     this.version_++
+  }
+
+  clearCaps(): void {
+    this.caps.clear()
+  }
+
+  registerCap(characterId: number, resource: ResourceKind, cap: number): void {
+    let entry = this.caps.get(characterId)
+    if (!entry) {
+      entry = {}
+      this.caps.set(characterId, entry)
+    }
+    entry[resource] = cap
   }
 
   mutationVersion(): number {
@@ -41,7 +55,9 @@ export class ResourceLedger {
   ): ResourceCrossingInfo {
     const state = this.getResource(characterId)
     const before = state[resource]
-    const after = before + delta
+    const cap = this.caps.get(characterId)?.[resource]
+    const after =
+      cap !== undefined ? Math.min(before + delta, cap) : before + delta
     state[resource] = after
     if (before !== after) this.version_++
     return { before, after }

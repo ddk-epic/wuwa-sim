@@ -3965,3 +3965,79 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     expect(engine.activeBuffIds(2)).not.toContain("test.nof-target-absent")
   })
 })
+
+describe("BuffEngine — forteCap bootstrap (#213)", () => {
+  it("character with forteCap: 2 cannot exceed 2 forte via resource buffs", () => {
+    const forteBuff: BuffDef = {
+      id: "test.forte-grant",
+      name: "Forte Grant",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, forteCap: 2, buffs: [forteBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    for (let i = 0; i < 5; i++) {
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+        frame: i,
+      })
+    }
+    expect(engine.getResource(1).forte).toBe(2)
+  })
+
+  it("character without forteCap accumulates forte freely", () => {
+    const forteBuff: BuffDef = {
+      id: "test.forte-uncapped",
+      name: "Forte Uncapped",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [forteBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    for (let i = 0; i < 10; i++) {
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+        frame: i,
+      })
+    }
+    expect(engine.getResource(1).forte).toBe(10)
+  })
+})

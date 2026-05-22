@@ -138,5 +138,6 @@ export interface CharacterTemplate {
 
 export interface EnrichedCharacter extends Omit<Character, "skills"> {
   skills: EnrichedSkill[]
+  forteCap?: number
   template: CharacterTemplate
 }

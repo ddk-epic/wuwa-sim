@@ -180,6 +180,7 @@ export class BuffEngine {
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.store.clear()
     this.resources.clear()
+    this.resources.clearCaps()
     this.onField.clear()
     this.cooldownLastFired.clear()
     this.emitHitDispatcher.reset()
@@ -192,6 +193,10 @@ export class BuffEngine {
       const charId = input.slots[i]
       slots.push(charId ?? -1)
       if (charId === null) continue
+      const character = getCharacterById(charId)
+      if (character?.forteCap !== undefined) {
+        this.resources.registerCap(charId, "forte", character.forteCap)
+      }
       const slot = bootstrapSlot(charId, input.loadouts[i] ?? null)
       if (!slot) continue
       this.store.setBaseStats(slot.charId, slot.baseStats)
