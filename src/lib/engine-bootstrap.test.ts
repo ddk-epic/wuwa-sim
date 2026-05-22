@@ -8,6 +8,7 @@ import {
   buildEchoBuffDefs,
   buildEchoSetBuffDefs,
   buildWeaponBuffDefs,
+  validateBuffDef,
 } from "./engine-bootstrap"
 
 let testEchoSets: EchoSet[] = []
@@ -224,5 +225,128 @@ describe("buildEchoSetBuffDefs", () => {
     testEchoSets = [baseEchoSet(1, { buffs: [fivePieceBuff] })]
     const result = buildEchoSetBuffDefs(1, 1)
     expect(result).toHaveLength(0)
+  })
+})
+
+describe("validateBuffDef (#220)", () => {
+  const baseTrigger: BuffDef["trigger"] = {
+    event: "skillCast",
+    characterId: 1,
+  }
+
+  it("accepts a valid stateful buff (target + duration both present)", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.stateful",
+        name: "Stateful",
+        trigger: baseTrigger,
+        target: { kind: "self" },
+        duration: { kind: "frames", v: 10 },
+        effects: [
+          {
+            kind: "stat",
+            path: { stat: "atkPct" },
+            value: { kind: "const", v: 0.1 },
+          },
+        ],
+      }),
+    ).not.toThrow()
+  })
+
+  it("accepts a valid reaction (target + duration both absent)", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.reaction",
+        name: "Reaction",
+        trigger: baseTrigger,
+        effects: [
+          {
+            kind: "resource",
+            resource: "forte",
+            op: "add",
+            value: { kind: "const", v: 1 },
+          },
+        ],
+      }),
+    ).not.toThrow()
+  })
+
+  it("rejects target present without duration", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad",
+        name: "Bad",
+        trigger: baseTrigger,
+        target: { kind: "self" },
+        effects: [],
+      } as BuffDef),
+    ).toThrow(/target and duration must both be present/)
+  })
+
+  it("rejects duration present without target", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad",
+        name: "Bad",
+        trigger: baseTrigger,
+        duration: { kind: "frames", v: 1 },
+        effects: [],
+      } as BuffDef),
+    ).toThrow(/target and duration must both be present/)
+  })
+
+  it("rejects reaction with a stat effect", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad-stat",
+        name: "Bad Stat Reaction",
+        trigger: baseTrigger,
+        effects: [
+          {
+            kind: "stat",
+            path: { stat: "atkPct" },
+            value: { kind: "const", v: 0.1 },
+          },
+        ],
+      }),
+    ).toThrow(/cannot have stat effects/)
+  })
+
+  it("rejects reaction with stacking", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad-stacking",
+        name: "Bad Stacking Reaction",
+        trigger: baseTrigger,
+        effects: [
+          {
+            kind: "resource",
+            resource: "forte",
+            op: "add",
+            value: { kind: "const", v: 1 },
+          },
+        ],
+        stacking: { max: 2, onRetrigger: "addStack" },
+      }),
+    ).toThrow(/cannot declare stacking/)
+  })
+
+  it("rejects reaction with consumedBy", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad-consumed",
+        name: "Bad ConsumedBy Reaction",
+        trigger: baseTrigger,
+        effects: [
+          {
+            kind: "resource",
+            resource: "forte",
+            op: "add",
+            value: { kind: "const", v: 1 },
+          },
+        ],
+        consumedBy: { event: "skillCast" },
+      }),
+    ).toThrow(/cannot declare consumedBy/)
   })
 })

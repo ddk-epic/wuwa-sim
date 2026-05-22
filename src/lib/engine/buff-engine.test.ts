@@ -4234,3 +4234,122 @@ describe("BuffEngine — forteCap bootstrap (#213)", () => {
     expect(engine.getResource(1).forte).toBe(10)
   })
 })
+
+describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
+  it("reaction fires resource effect and grants forte to source character", () => {
+    const reactionBuff: BuffDef = {
+      id: "test.reaction-forte",
+      name: "Reaction Forte Grant",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ buffs: [reactionBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 0,
+    })
+    expect(engine.getResource(1).forte).toBe(1)
+  })
+
+  it("reaction emits no buffApplied or buffExpired lifecycle events", () => {
+    const reactionBuff: BuffDef = {
+      id: "test.reaction-no-log",
+      name: "Reaction No Log",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillType: "Basic Attack",
+      },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ buffs: [reactionBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 0,
+    })
+    const buffEvents = lifecycleEvents.filter(
+      (e) =>
+        e.kind === "buffApplied" ||
+        e.kind === "buffExpired" ||
+        e.kind === "buffRefreshed" ||
+        e.kind === "buffConsumed",
+    )
+    expect(buffEvents).toHaveLength(0)
+  })
+
+  it("verina forte.grant-skill reaction: gains +1 forte on Botany Experiment hit (canary)", () => {
+    const reactionBuff: BuffDef = {
+      id: "char.verina.forte.grant-skill",
+      name: "Forte: Botany Experiment Grant",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1503,
+        stageId: "Botany Experiment::",
+        hitIndex: 1,
+      },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1503, buffs: [reactionBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1503),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1503,
+      skillType: "Resonance Skill",
+      dmgType: "Physical",
+      stageId: "Botany Experiment::",
+      hitIndex: 1,
+      frame: 0,
+    })
+    expect(engine.getResource(1503).forte).toBe(1)
+    const buffLogEvents = lifecycleEvents.filter(
+      (e) =>
+        (e.kind === "buffApplied" || e.kind === "buffExpired") &&
+        "buffId" in e &&
+        e.buffId === "char.verina.forte.grant-skill",
+    )
+    expect(buffLogEvents).toHaveLength(0)
+  })
+})

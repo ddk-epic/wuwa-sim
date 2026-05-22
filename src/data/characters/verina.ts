@@ -174,8 +174,6 @@ export const verina = {
         stageId: "Botany Experiment::",
         hitIndex: 1,
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",

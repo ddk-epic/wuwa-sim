@@ -176,9 +176,17 @@ export interface BuffDef {
   name: string
   description?: string
   trigger: Trigger
-  target: BuffTarget
+  /**
+   * Absent on reactions (reaction-shaped BuffDef). Both `target` and `duration`
+   * must be either both present (stateful buff) or both absent (reaction).
+   */
+  target?: BuffTarget
   effects: Effect[]
-  duration: Duration
+  /**
+   * Absent on reactions. Both `target` and `duration` must be either both
+   * present (stateful buff) or both absent (reaction).
+   */
+  duration?: Duration
   /** Default `{ max: 1, onRetrigger: "refresh" }` when omitted. */
   stacking?: StackingPolicy
   /** Resonance chain sequence required (1..6). v1 only filters at bootstrap. */

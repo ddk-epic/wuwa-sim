@@ -127,6 +127,34 @@ export interface SlotBootstrap {
   foldedBuffs: BuffDef[]
 }
 
+/** Load-time validator for BuffDef structural invariants. Throws on violation. */
+export function validateBuffDef(def: BuffDef): void {
+  const hasTarget = def.target != null
+  const hasDuration = def.duration != null
+  if (hasTarget !== hasDuration) {
+    throw new Error(
+      `BuffDef "${def.id}": target and duration must both be present (stateful) or both absent (reaction).`,
+    )
+  }
+  if (!hasDuration) {
+    if (def.effects.some((e) => e.kind === "stat")) {
+      throw new Error(
+        `BuffDef "${def.id}": reaction-shaped BuffDef cannot have stat effects.`,
+      )
+    }
+    if (def.stacking) {
+      throw new Error(
+        `BuffDef "${def.id}": reaction-shaped BuffDef cannot declare stacking.`,
+      )
+    }
+    if (def.consumedBy) {
+      throw new Error(
+        `BuffDef "${def.id}": reaction-shaped BuffDef cannot declare consumedBy.`,
+      )
+    }
+  }
+}
+
 /**
  * Resolve a single slot into base stats, triggerable BuffDefs, and permanent
  * sim-start instances (those with a Condition). Pure aside from catalog reads.
@@ -165,12 +193,14 @@ export function bootstrapSlot(
 
   buffs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 
+  for (const buff of buffs) validateBuffDef(buff)
+
   const triggerable: BuffDef[] = []
   const permanentInstances: BuffInstance[] = []
   const foldedBuffs: BuffDef[] = []
   for (const buff of buffs) {
     const isPermanentSimStart =
-      buff.trigger.event === "simStart" && buff.duration.kind === "permanent"
+      buff.trigger.event === "simStart" && buff.duration?.kind === "permanent"
     if (isPermanentSimStart && !buff.condition) {
       accumulateStatEffects(stats, { def: buff, stacks: 1 })
       foldedBuffs.push(buff)

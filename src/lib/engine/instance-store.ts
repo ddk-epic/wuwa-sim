@@ -159,6 +159,7 @@ export class InstanceStore {
   }
 
   resolveTargetIds(def: BuffDef, sourceCharacterId: number): number[] {
+    if (def.target == null) return [sourceCharacterId]
     switch (def.target.kind) {
       case "self":
         return [sourceCharacterId]
@@ -557,6 +558,7 @@ export function matchesTrigger(
 }
 
 function computeEndTime(def: BuffDef, frame: number): number {
+  if (def.duration == null) return frame
   switch (def.duration.kind) {
     case "permanent":
       return Number.POSITIVE_INFINITY

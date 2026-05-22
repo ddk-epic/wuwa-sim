@@ -177,7 +177,7 @@ export class BuffEngine {
     frame: number,
     out: BuffEvent[],
   ): void {
-    if (def.target.kind === "nextOnField") {
+    if (def.target?.kind === "nextOnField") {
       if (
         def.condition &&
         !this.evaluator.evaluateUncached(
@@ -423,6 +423,7 @@ export class BuffEngine {
 
   private runStatPhase(ctx: PhaseContext): void {
     for (const { def, sourceCharacterId } of ctx.candidates) {
+      if (def.duration == null) continue
       this.applyOrDefer(def, sourceCharacterId, ctx.event.frame, ctx.out)
     }
   }
