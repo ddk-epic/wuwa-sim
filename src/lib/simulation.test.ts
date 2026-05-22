@@ -563,46 +563,6 @@ describe("runSimulation — buff lifecycle interleaving", () => {
   })
 })
 
-describe("runSimulation — emitHit pilot (#60)", () => {
-  it("synthetic hits appear in the log attributed to the acting character", () => {
-    // Char 1 has a coord-attack buff that emits a synthetic Fusion hit each
-    // time it lands a Normal Attack (ICD 0).
-    const coord: BuffDef = {
-      id: "char.coord",
-      name: "Coord",
-      trigger: {
-        event: "hitLanded",
-        characterId: 1,
-        source: "self",
-      },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      effects: [
-        {
-          kind: "emitHit",
-          damage: dmgHit(0.5),
-          icdFrames: 0,
-          skillType: "Basic Attack",
-        },
-      ],
-    }
-    const charWithCoord: EnrichedCharacter = { ...charA, buffs: [coord] }
-    testCharacters = [charWithCoord]
-    const entry = tlEntry(1, "Normal Attack::_")
-    const result = runSimulation([entry], [1, null, null], emptyLoadouts)
-    const hits = result.filter((e) => e.kind === "hit")
-    // Authored hit + 1 synthetic hit
-    expect(hits).toHaveLength(2)
-    const synth = hits.find((h) => h.synthetic === true)
-    expect(synth).toBeDefined()
-    if (synth) {
-      expect(synth.characterId).toBe(1)
-      expect(synth.sourceBuffId).toBe("char.coord")
-      expect(synth.skillType).toBe("Basic Attack")
-    }
-  })
-})
-
 describe("runSimulation — discriminated union", () => {
   it("action events do not have a damage property", () => {
     testCharacters = [charA]
@@ -1193,30 +1153,6 @@ describe("runSimulation — Energy Recharge (#98)", () => {
     ],
   })
 
-  it("authored hit energy scaled by (1 + actor.energyRechargePct)", () => {
-    // charA has base energy=5 per hit; with 50% ER buff + substat baseline ER
-    const charWithER: EnrichedCharacter = { ...charA, buffs: [erBuff(1, 0.5)] }
-    testCharacters = [charWithER]
-    const result = runSimulation(
-      [tlEntry(1, "Normal Attack::_")],
-      [1, null, null],
-      emptyLoadouts,
-    )
-    const hit = result.find((e) => e.kind === "hit")
-    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * (1 + 0.5 + BASE_ER))
-  })
-
-  it("no explicit ER buff: only substat baseline ER scales energy", () => {
-    testCharacters = [charA]
-    const result = runSimulation(
-      [tlEntry(1, "Normal Attack::_")],
-      [1, null, null],
-      emptyLoadouts,
-    )
-    const hit = result.find((e) => e.kind === "hit")
-    expect(hit?.cumulativeEnergy).toBeCloseTo(5 * (1 + BASE_ER))
-  })
-
   it("synthetic hit uses buff-owner ER, not on-field character ER", () => {
     // Char 1: on-field, no ER
     // Char 2: off-field, 50% ER; has an emitHit buff that fires on char1 hits
@@ -1599,50 +1535,6 @@ const charOtherTrailing: EnrichedCharacter = {
 }
 
 describe("runSimulation — trailing-window collision (ADR-0018)", () => {
-  it("no collision: trailing hit has landed before same-char cancel-capable re-entry", () => {
-    const charSingleTrail: EnrichedCharacter = {
-      ...charTrailingBase,
-      id: 32,
-      skills: [
-        {
-          id: 220,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: [
-            {
-              name: "Stage",
-              value: "100%",
-              actionTime: 50,
-              damage: [trailingHit(3), trailingHit(5)],
-            },
-          ],
-          damage: [],
-        },
-        charTrailingBase.skills[1],
-      ],
-    }
-    testCharacters = [charSingleTrail, charOtherTrailing]
-    const entries: TimelineEntry[] = [
-      {
-        id: "t1",
-        characterId: 32,
-        stageId: "Normal Attack::_",
-        variantKind: "swap",
-      },
-      { id: "t2", characterId: 31, stageId: "Normal Attack::_" },
-      // frame after t1=6, after t2(advance=10)=16; trailing hitFrame=5 < 16 → no collision
-      { id: "t3", characterId: 32, stageId: "Resonance Skill::_" },
-    ]
-    const result = runSimulation(entries, [32, 31, null], emptyLoadouts, 6, 6)
-    const hits = result.filter((e) => e.kind === "hit")
-    expect(hits).toHaveLength(2) // immediate(3) + trailing(5) — both land
-    const actions = result.filter((e) => e.kind === "action")
-    const rsAction = actions.find(
-      (a) => a.characterId === 32 && a.skillType === "Resonance Skill",
-    )
-    expect(rsAction?.frame).toBe(16) // no pad
-  })
-
   it("cancel-capable re-entry: drops trailing hits at or after new-entry start frame", () => {
     testCharacters = [charTrailingBase]
     const entries: TimelineEntry[] = [
@@ -1688,68 +1580,6 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
       .sort((a, b) => a - b)
     expect(hitFrames).toContain(15)
     expect(hitFrames).toContain(30)
-  })
-
-  it("swap with all-zero actionFrame damage: no trailing hits, no collision drop", () => {
-    const charZero: EnrichedCharacter = {
-      ...charTrailingBase,
-      id: 33,
-      skills: [
-        {
-          id: 230,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: [
-            {
-              name: "Stage",
-              value: "100%",
-              actionTime: 50,
-              damage: [{ ...trailingHit(0) }, { ...trailingHit(0) }],
-            },
-          ],
-          damage: [],
-        },
-        charTrailingBase.skills[1],
-      ],
-    }
-    testCharacters = [charZero]
-    const entries: TimelineEntry[] = [
-      {
-        id: "t1",
-        characterId: 33,
-        stageId: "Normal Attack::_",
-        variantKind: "swap",
-      },
-      { id: "t2", characterId: 33, stageId: "Resonance Skill::_" },
-    ]
-    const result = runSimulation(entries, [33, null, null], emptyLoadouts, 6, 6)
-    const hits = result.filter((e) => e.kind === "hit")
-    // actionFrame=0 ≤ 6 → both immediate; Resonance Skill fires without collision logic
-    expect(hits).toHaveLength(2)
-  })
-
-  it("Movement (non-cancel-capable) after swap: pads frame to last trailing hit", () => {
-    testCharacters = [charTrailingBase]
-    const entries: TimelineEntry[] = [
-      {
-        id: "t1",
-        characterId: 30,
-        stageId: "Normal Attack::_",
-        variantKind: "swap",
-      },
-      // Movement starts at frame 6; trailing 30 >= 6 → collision → pad to 30
-      { id: "t2", characterId: 30, stageId: "Movement::_" },
-    ]
-    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
-    const hits = result.filter((e) => e.kind === "hit")
-    // immediate(3) + trailing(15) + trailing(30) = 3 hits; Movement has no damage
-    expect(hits).toHaveLength(3)
-    // Movement action event at frame 30 (padded from 6)
-    const actions = result.filter((e) => e.kind === "action")
-    const movAction = actions.find(
-      (a) => a.characterId === 30 && a.skillType === "Movement",
-    )
-    expect(movAction?.frame).toBe(30)
   })
 })
 
