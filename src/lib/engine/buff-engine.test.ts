@@ -2119,6 +2119,153 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
   })
 })
 
+describe("BuffEngine — coordHit (#219)", () => {
+  const dmg = (
+    overrides: Partial<{
+      value: number
+      dmgType: string
+    }> = {},
+  ): DamageEntry => ({
+    type: "Resonance Liberation",
+    dmgType: "Damage",
+    scalingStat: "atk",
+    actionFrame: 0,
+    value: 1.0,
+    energy: 0,
+    concerto: 0,
+    toughness: 0,
+    weakness: 0,
+    ...overrides,
+  })
+
+  const coordBuff = (overrides: Partial<BuffDef> = {}): BuffDef => ({
+    id: "char.coord",
+    name: "Coord",
+    trigger: { event: "hitLanded", characterId: 1, source: "self" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [{ kind: "coordHit", damage: dmg(), icdFrames: 0 }],
+    ...overrides,
+  })
+
+  it("(a) coordHit damage fires and is a HitEvent with coord: true and synthetic: true", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [coordBuff()] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticEvents).toHaveLength(1)
+    const ev = result.syntheticEvents[0]
+    expect(ev.kind).toBe("hit")
+    expect(ev.coord).toBe(true)
+    expect(ev.synthetic).toBe(true)
+  })
+
+  it("(b) coordHit-emitted event never enters the matcher — source: synthetic trigger cannot catch it", () => {
+    // A buff with source: "synthetic" fires ONLY on synthetic hitLanded events.
+    // If coordHit were to fire a hitLanded, this trap buff would catch it.
+    // With bypass working: coordHit fires no hitLanded, so the trap never fires.
+    const synthTrap: BuffDef = {
+      id: "char.synth-trap",
+      name: "Synth Trap",
+      trigger: { event: "hitLanded", characterId: 1, source: "synthetic" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 1000 }],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [coordBuff(), synthTrap] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    // coordBuff fires on original (non-synthetic) hit → 1 coord event, no hitLanded emitted.
+    // synthTrap requires source: "synthetic" — original hit is not synthetic, so it does not fire.
+    // Because coordHit fires no hitLanded, synthTrap NEVER fires.
+    expect(result.syntheticEvents).toHaveLength(1)
+    expect(result.syntheticEvents[0].coord).toBe(true)
+  })
+
+  it("(c) coord damage + heal fire on the same frame", () => {
+    const coordPairBuff: BuffDef = {
+      id: "char.coord-pair",
+      name: "Coord Pair",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        { kind: "coordHit", damage: dmg(), icdFrames: 0 },
+        { kind: "coordHit", damage: dmg({ dmgType: "Heal" }), icdFrames: 0 },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [coordPairBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 42,
+    })
+    expect(result.syntheticEvents).toHaveLength(2)
+    const [dmgEvt, healEvt] = result.syntheticEvents
+    expect(dmgEvt.kind).toBe("hit")
+    expect(healEvt.kind).toBe("sustain")
+    expect(dmgEvt.frame).toBe(42)
+    expect(healEvt.frame).toBe(42)
+  })
+
+  it("(d) coord heal fires as SustainEvent with coord: true and synthetic: true", () => {
+    const healCoordBuff: BuffDef = {
+      id: "char.heal-coord",
+      name: "Heal Coord",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        { kind: "coordHit", damage: dmg({ dmgType: "Heal" }), icdFrames: 0 },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [healCoordBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticEvents).toHaveLength(1)
+    const ev = result.syntheticEvents[0]
+    expect(ev.kind).toBe("sustain")
+    expect(ev.coord).toBe(true)
+    expect(ev.synthetic).toBe(true)
+  })
+})
+
 describe("BuffEngine — emitHit (#60)", () => {
   const dmg = (
     overrides: Partial<{

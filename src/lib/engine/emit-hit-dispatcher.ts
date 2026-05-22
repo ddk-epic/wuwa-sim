@@ -1,5 +1,6 @@
 import type {
   BuffDef,
+  CoordHitEffect,
   EmitHitEffect,
   ResourceKind,
   ResourceState,
@@ -35,7 +36,7 @@ export interface EmitHitDispatchContext {
 export interface EmitHitInput {
   buffInstanceKey: BuffInstanceKey
   def: BuffDef
-  effect: EmitHitEffect
+  effect: EmitHitEffect | CoordHitEffect
   effectIndex: number
   sourceCharacterId: number
 }
@@ -134,6 +135,8 @@ export class EmitHitDispatcher {
     }
     const post = host.getResource(input.sourceCharacterId)
 
+    const isCoord = input.effect.kind === "coordHit"
+
     if (input.effect.damage.dmgType === "Heal") {
       const amount = computeHealing(
         {
@@ -147,6 +150,7 @@ export class EmitHitDispatcher {
         kind: "sustain",
         sub: "heal",
         synthetic: true,
+        ...(isCoord && { coord: true as const }),
         sourceBuffId: input.def.id,
         characterId: input.sourceCharacterId,
         skillType,
@@ -183,6 +187,7 @@ export class EmitHitDispatcher {
     return {
       kind: "hit",
       synthetic: true,
+      ...(isCoord && { coord: true as const }),
       sourceBuffId: input.def.id,
       characterId: input.sourceCharacterId,
       skillType,

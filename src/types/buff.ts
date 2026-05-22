@@ -51,6 +51,19 @@ export type EmitHitEffect = {
   element?: Element
 }
 
+/**
+ * Like `EmitHitEffect` but the resulting event is never re-entered into the
+ * trigger matcher (ADR-0020 non-chain rule). Use for coordinated attack
+ * reactions where coord→coord chaining must be impossible.
+ */
+export type CoordHitEffect = {
+  kind: "coordHit"
+  damage: DamageEntry
+  icdFrames: number
+  skillType?: SkillType
+  element?: Element
+}
+
 export type ResourceEffect = {
   kind: "resource"
   resource: ResourceKind
@@ -60,7 +73,11 @@ export type ResourceEffect = {
   target?: "self" | "target" | "source"
 }
 
-export type Effect = StatEffect | ResourceEffect | EmitHitEffect
+export type Effect =
+  | StatEffect
+  | ResourceEffect
+  | EmitHitEffect
+  | CoordHitEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 

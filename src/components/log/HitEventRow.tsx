@@ -49,7 +49,7 @@ export function HitEventRow({
         </td>
         <td className="px-2 py-2" />
         <td className="px-2 py-2 truncate">
-          {ev.skillName}
+          {ev.coord ? "Coord" : ev.skillName}
           <SkillNameSuffix ev={ev} />
         </td>
         <td className={numCell}>

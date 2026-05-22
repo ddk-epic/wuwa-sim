@@ -41,6 +41,8 @@ export interface HitEvent extends SimulationLogBase {
   sourceBuffId?: string
   /** The TimelineEntry.id whose stage produced this hit (authored or synthetic). */
   sourceEntryId?: string
+  /** True when emitted by a `coordHit` effect (coordinated attack). */
+  coord?: true
 }
 
 export interface SustainEvent extends SimulationLogBase {
@@ -57,6 +59,7 @@ export interface SustainEvent extends SimulationLogBase {
   synthetic?: boolean
   sourceBuffId?: string
   sourceEntryId?: string
+  coord?: true
 }
 
 export interface BuffEvent {

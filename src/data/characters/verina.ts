@@ -107,7 +107,7 @@ export const verina = {
       duration: { kind: "frames", v: 1 },
       effects: [
         {
-          kind: "emitHit",
+          kind: "coordHit",
           damage: {
             type: "Resonance Liberation",
             dmgType: "Damage",
@@ -123,7 +123,7 @@ export const verina = {
           skillType: "Resonance Liberation",
         },
         {
-          kind: "emitHit",
+          kind: "coordHit",
           damage: {
             type: "Basic Attack",
             dmgType: "Heal",

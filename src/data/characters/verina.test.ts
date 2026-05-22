@@ -654,11 +654,7 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
       ],
     }) as unknown as EnrichedCharacter
 
-  // TODO(#219): un-skip once coordHit ships. Today the heal half of the coord
-  // pair surfaces as a `kind: "hit"` event with `dmgType: "Heal"` instead of a
-  // `kind: "sustain"` event, because the emitHit dispatcher doesn't branch on
-  // dmgType. Fix lands with ADR-0020 (#218 + #219).
-  it.skip("teammate basic combo during 12s mark window triggers coord pairs (damage + heal) at ≈1s cadence", () => {
+  it("teammate basic combo during 12s mark window triggers coord pairs (damage + heal) at ≈1s cadence", () => {
     const verinaChar = {
       ...verina,
       buffs: verina.buffs,
@@ -685,13 +681,11 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
 
     const coordDamage = log.filter(
       (e): e is HitEvent =>
-        e.kind === "hit" && e.synthetic === true && e.sourceBuffId === COORD_ID,
+        e.kind === "hit" && e.coord === true && e.sourceBuffId === COORD_ID,
     )
     const coordHeal = log.filter(
       (e): e is SustainEvent =>
-        e.kind === "sustain" &&
-        e.synthetic === true &&
-        e.sourceBuffId === COORD_ID,
+        e.kind === "sustain" && e.coord === true && e.sourceBuffId === COORD_ID,
     )
 
     // Damage + heal fire as a pair per trigger.

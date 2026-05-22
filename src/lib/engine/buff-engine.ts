@@ -1,5 +1,6 @@
 import type {
   BuffDef,
+  CoordHitEffect,
   EmitHitEffect,
   ResourceEffect,
   ResourceKind,
@@ -116,6 +117,7 @@ export class BuffEngine {
     { name: "resource", run: (ctx) => this.runResourcePhase(ctx) },
     { name: "stat", run: (ctx) => this.runStatPhase(ctx) },
     { name: "emitHit", run: (ctx) => this.runEmitHitPhase(ctx) },
+    { name: "coordHit", run: (ctx) => this.runCoordHitPhase(ctx) },
     {
       name: "consume",
       run: (ctx) => this.store.runConsumePhase(ctx.event, ctx.out),
@@ -374,7 +376,12 @@ export class BuffEngine {
       if (
         def.condition &&
         def.effects.length > 0 &&
-        def.effects.every((e) => e.kind === "emitHit" || e.kind === "resource")
+        def.effects.every(
+          (e) =>
+            e.kind === "emitHit" ||
+            e.kind === "coordHit" ||
+            e.kind === "resource",
+        )
       ) {
         return this.evaluator.evaluateUncached(
           def.condition,
@@ -496,6 +503,54 @@ export class BuffEngine {
         depth + 1,
       )
     }
+  }
+
+  private runCoordHitPhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
+      for (let i = 0; i < def.effects.length; i++) {
+        const effect = def.effects[i]
+        if (effect.kind !== "coordHit") continue
+        this.fireCoordHit(
+          def,
+          effect,
+          i,
+          sourceCharacterId,
+          ctx.event.frame,
+          ctx.out,
+          ctx.hitsOut,
+          ctx.depth,
+        )
+      }
+    }
+  }
+
+  private fireCoordHit(
+    def: BuffDef,
+    effect: CoordHitEffect,
+    effectIndex: number,
+    sourceCharacterId: number,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    const hit = this.emitHitDispatcher.dispatch(
+      {
+        buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
+        def,
+        effect,
+        effectIndex,
+        sourceCharacterId,
+      },
+      { frame, depth },
+      this.emitHitHost,
+      out,
+      hitsOut,
+    )
+    if (!hit) return
+    hitsOut.push(hit)
+    // Bypass: coord events are NOT re-entered into the trigger matcher.
+    // No dispatchEvent call here — coordHit→coord chain is structurally impossible.
   }
 
   private applyResourceDelta(

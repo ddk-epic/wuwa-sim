@@ -13,3 +13,4 @@ Revisit when **multiple** enemy-conceptual buffs accumulate and the self-flag pa
 - `Condition.buffActive` references such marks with `on: "source"`, not `on: "target"`.
 - Multi-source mark stacking (two characters who both apply "their own" mark to the enemy) is currently impossible to query as a single fact — the disjunction is the author's problem until the migration.
 - A teammate's hit against a Mark-tagged enemy queries the **mark-owner's** self-flag, which means the reaction buff's `sourceCharacterId` is the mark owner (correct — the reaction is _their_ coord attack). `actor: "any"` on the trigger is what lets teammate hits qualify.
+- The reaction buff's effects use `coordHit` (not `emitHit`) so the resulting hit and heal events are never re-entered into the trigger matcher — preventing coord→coord chains. See ADR-0020.
