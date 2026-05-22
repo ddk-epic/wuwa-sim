@@ -112,9 +112,6 @@ export const encore = {
           "Flaming Woolies::Energetic Welcome",
         ],
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
-      stacking: { max: 1, onRetrigger: "refresh" },
       cooldown: 10,
       effects: [
         {
@@ -708,7 +705,7 @@ export const encore = {
           value: "194.01%*3",
           actionTime: 107,
           variants: {
-            cancel: { actionTime: 54 },
+            cancel: { actionTime: 0 },
             swap: { actionTime: 0 },
           },
           damage: [
@@ -717,6 +714,7 @@ export const encore = {
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 54,
+              independent: true,
               value: 1.9401,
               energy: 1.43,
               concerto: 2.86,
@@ -728,6 +726,7 @@ export const encore = {
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 54,
+              independent: true,
               value: 1.9401,
               energy: 1.43,
               concerto: 2.86,
@@ -738,7 +737,7 @@ export const encore = {
               type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
-              actionFrame: 90,
+              actionFrame: 54,
               independent: true,
               value: 1.9401,
               energy: 1.43,

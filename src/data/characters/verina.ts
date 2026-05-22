@@ -103,8 +103,6 @@ export const verina = {
         buffId: "char.verina.lib.photosynthesis-mark",
         on: "source",
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "coordHit",
@@ -152,8 +150,6 @@ export const verina = {
         stageId: "Cultivation::Stage 5",
         hitIndex: 1,
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",
@@ -194,8 +190,6 @@ export const verina = {
         stageId: "Verdant Growth::",
         hitIndex: 1,
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",
@@ -226,8 +220,6 @@ export const verina = {
         n: 1,
         on: "source",
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",
@@ -272,8 +264,6 @@ export const verina = {
         stageId: "Botany Experiment::",
         hitIndex: 1,
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",
@@ -365,8 +355,6 @@ export const verina = {
           "Starflower Blooms::Mid-air Attack: Stage 3",
         ],
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "emitHit",

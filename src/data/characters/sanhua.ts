@@ -146,8 +146,6 @@ export const sanhua = {
         stageId: "Clarity of Mind::Detonate",
         source: "self",
       },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
         buffId: "char.sanhua.flag.ice-thorn",
@@ -182,8 +180,6 @@ export const sanhua = {
         stageId: "Clarity of Mind::Detonate",
         source: "self",
       },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
         buffId: "char.sanhua.flag.ice-prism",
@@ -218,8 +214,6 @@ export const sanhua = {
         stageId: "Clarity of Mind::Detonate",
         source: "self",
       },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
         buffId: "char.sanhua.flag.ice-glacier",
@@ -276,8 +270,6 @@ export const sanhua = {
         skillType: "Resonance Liberation",
         source: "self",
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       effects: [
         {
           kind: "resource",

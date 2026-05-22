@@ -20,8 +20,6 @@ export const variation = {
         actor: "self",
         skillType: "Resonance Skill",
       },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
       cooldown: 20,
       effects: [
         {

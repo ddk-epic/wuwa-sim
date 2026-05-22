@@ -3797,7 +3797,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
   })
 })
 
-describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () => {
+describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", () => {
   const dmg = (): DamageEntry => ({
     type: "Basic Attack",
     dmgType: "Fusion",
@@ -3829,8 +3829,6 @@ describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () 
     id: "test.conditional-emit",
     name: "Conditional Emit",
     trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
-    target: { kind: "self" },
-    duration: { kind: "permanent" },
     condition: { kind: "buffActive", buffId: "test.window", on: "source" },
     effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
   }
@@ -3882,13 +3880,11 @@ describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () 
     expect(result.syntheticEvents[0].synthetic).toBe(true)
   })
 
-  it("does not suppress emitHit defs without a condition", () => {
+  it("does not suppress reaction defs without a condition", () => {
     const unconditionalEmit: BuffDef = {
       id: "test.unconditional-emit",
       name: "Unconditional Emit",
       trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
       effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
     }
     testCharacters = [baseChar({ id: 1, buffs: [unconditionalEmit] })]

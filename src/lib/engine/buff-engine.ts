@@ -370,19 +370,9 @@ export class BuffEngine {
         if (last !== undefined && event.frame - last < def.cooldown * 60)
           return false
       }
-      // Defs whose effects are all "immediate" (resource or emitHit) have no
-      // persistent instance to re-evaluate lazily, so the condition is evaluated
+      // Reactions have no instance for lazy re-evaluation; evaluate condition
       // at candidate-selection time (ADR-0011).
-      if (
-        def.condition &&
-        def.effects.length > 0 &&
-        def.effects.every(
-          (e) =>
-            e.kind === "emitHit" ||
-            e.kind === "coordHit" ||
-            e.kind === "resource",
-        )
-      ) {
+      if (def.condition && def.duration == null) {
         return this.evaluator.evaluateUncached(
           def.condition,
           subjectAtTrigger(sourceCharacterId),
