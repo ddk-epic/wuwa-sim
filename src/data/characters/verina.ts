@@ -6,6 +6,7 @@ export const verina = {
   element: "Spectro",
   weaponType: "Rectifier",
   rarity: "SSR",
+  forteCap: 4,
   template: {
     weapon: "Variation",
     echo: "Bell-Borne Geochelone",
@@ -73,31 +74,82 @@ export const verina = {
       effects: [],
     },
     {
-      id: "char.verina.s2.photosynthesis-energy",
-      name: "Photosynthesis Energy",
+      id: "char.verina.forte.grant-b5",
+      name: "Forte: B5 Grant",
       description:
-        "Resonance Skill Botany Experiment grants +1 Photosynthesis Energy (up to 4 stacks). Tracked as a stacking buff; affects S3 healingBonus on Liberation heals.",
-      requiresSequence: 2,
+        "Cultivation Stage 5 landing grants +1 Forte (hitIndex 0 collapses the single hit).",
       trigger: {
-        event: "skillCast",
+        event: "hitLanded",
         characterId: 1503,
-        skillType: "Resonance Skill",
+        stageId: "Cultivation::Stage 5",
+        hitIndex: 0,
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
-      stacking: { max: 4, onRetrigger: "addStack" },
-      effects: [],
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.forte.grant-skill",
+      name: "Forte: Botany Experiment Grant",
+      description:
+        "Resonance Skill Botany Experiment landing grants +1 Forte (hitIndex 0 fires once per cast).",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1503,
+        stageId: "Botany Experiment::",
+        hitIndex: 0,
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
+    },
+    {
+      id: "char.verina.forte.grant-intro",
+      name: "Forte: Intro Grant",
+      description:
+        "Intro Skill Verdant Growth landing grants +1 Forte (hitIndex 0).",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1503,
+        stageId: "Verdant Growth::",
+        hitIndex: 0,
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
+      ],
     },
     {
       id: "char.verina.s2.concerto-grant",
       name: "S2: Concerto Restore",
       description:
-        "Resonance Skill Botany Experiment additionally restores 10 Concerto Energy.",
+        "Botany Experiment landing restores 10 Concerto Energy once per cast (hitIndex 0).",
       requiresSequence: 2,
       trigger: {
-        event: "skillCast",
+        event: "hitLanded",
         characterId: 1503,
-        skillType: "Resonance Skill",
+        stageId: "Botany Experiment::",
+        hitIndex: 0,
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 1 },

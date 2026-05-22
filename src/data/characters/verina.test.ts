@@ -134,45 +134,101 @@ describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
   })
 })
 
-describe("Verina — S2 Sprouting Reflections (Photosynthesis Energy + Concerto)", () => {
-  it("Resonance Skill cast adds Photosynthesis Energy stack at sequence 2", () => {
-    const engine = makeEngine(2)
+describe("Verina — Forte grants via hitLanded", () => {
+  function hitLanded(
+    engine: ReturnType<typeof makeEngine>,
+    stageId: string,
+    hitIndex: number,
+    frame: number,
+  ) {
     engine.onEvent({
-      kind: "skillCast",
+      kind: "hitLanded",
       characterId: 1503,
-      skillType: "Resonance Skill",
-      frame: 0,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      stageId,
+      hitIndex,
+      frame,
+      energy: 0,
+      concerto: 0,
     })
-    expect(engine.activeBuffIds(1503)).toContain(
-      "char.verina.s2.photosynthesis-energy",
-    )
+  }
+
+  it("Cultivation Stage 5 hitIndex 0 grants +1 forte", () => {
+    const engine = makeEngine()
+    expect(engine.getResource(1503).forte).toBe(0)
+    hitLanded(engine, "Cultivation::Stage 5", 0, 0)
+    expect(engine.getResource(1503).forte).toBe(1)
   })
 
-  it("Photosynthesis Energy stacks up to 4 times", () => {
-    const engine = makeEngine(2)
-    for (let i = 0; i < 5; i++) {
-      engine.onEvent({
-        kind: "skillCast",
-        characterId: 1503,
-        skillType: "Resonance Skill",
-        frame: i * 60,
-      })
+  it("Cultivation Stage 5 hitIndex 1 does NOT grant forte", () => {
+    const engine = makeEngine()
+    hitLanded(engine, "Cultivation::Stage 5", 1, 0)
+    expect(engine.getResource(1503).forte).toBe(0)
+  })
+
+  it("Botany Experiment hitIndex 0 grants +1 forte (fires once despite 4 hits)", () => {
+    const engine = makeEngine()
+    hitLanded(engine, "Botany Experiment::", 0, 0)
+    hitLanded(engine, "Botany Experiment::", 1, 0)
+    hitLanded(engine, "Botany Experiment::", 2, 0)
+    hitLanded(engine, "Botany Experiment::", 3, 0)
+    expect(engine.getResource(1503).forte).toBe(1)
+  })
+
+  it("Verdant Growth hitIndex 0 grants +1 forte", () => {
+    const engine = makeEngine()
+    hitLanded(engine, "Verdant Growth::", 0, 0)
+    expect(engine.getResource(1503).forte).toBe(1)
+  })
+
+  it("forte caps at 4 across multiple qualifying hits", () => {
+    const engine = makeEngine()
+    hitLanded(engine, "Verdant Growth::", 0, 0)
+    for (let i = 1; i <= 5; i++) {
+      hitLanded(engine, "Cultivation::Stage 5", 0, i)
     }
-    const stacks = engine
-      .activeBuffIds(1503)
-      .filter((id) => id === "char.verina.s2.photosynthesis-energy").length
-    expect(stacks).toBe(1)
+    expect(engine.getResource(1503).forte).toBe(4)
   })
+})
 
-  it("Resonance Skill cast grants +10 Concerto at sequence 2", () => {
-    const engine = makeEngine(2)
+describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)", () => {
+  function hitLanded(
+    engine: ReturnType<typeof makeEngine>,
+    hitIndex: number,
+    frame: number,
+  ) {
     engine.onEvent({
-      kind: "skillCast",
+      kind: "hitLanded",
       characterId: 1503,
       skillType: "Resonance Skill",
-      frame: 0,
+      dmgType: "Damage",
+      stageId: "Botany Experiment::",
+      hitIndex,
+      frame,
+      energy: 0,
+      concerto: 0,
     })
+  }
+
+  it("Botany Experiment hitIndex 0 grants +10 Concerto at sequence 2", () => {
+    const engine = makeEngine(2)
+    hitLanded(engine, 0, 0)
     expect(engine.getResource(1503).concerto).toBe(10)
+  })
+
+  it("Botany Experiment 4 hits only grant 10 concerto total (not 40)", () => {
+    const engine = makeEngine(2)
+    for (let i = 0; i < 4; i++) {
+      hitLanded(engine, i, 0)
+    }
+    expect(engine.getResource(1503).concerto).toBe(10)
+  })
+
+  it("not active at sequence 0", () => {
+    const engine = makeEngine(0)
+    hitLanded(engine, 0, 0)
+    expect(engine.getResource(1503).concerto).toBe(0)
   })
 })
 
