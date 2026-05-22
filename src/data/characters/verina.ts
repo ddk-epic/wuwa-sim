@@ -74,6 +74,74 @@ export const verina = {
       effects: [],
     },
     {
+      id: "char.verina.lib.photosynthesis-mark",
+      name: "Photosynthesis Mark",
+      description:
+        "Arboreal Flourish applies a Photosynthesis Mark presence flag on Verina (stand-in for the enemy mark per ADR-0019) for 12s. Enables coordinated attack reactions.",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1503,
+        stageId: "Arboreal Flourish::",
+        hitIndex: 0,
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 12 },
+      effects: [],
+    },
+    {
+      id: "char.verina.lib.mark-coord-reaction",
+      name: "Mark: Coordinated Attack",
+      description:
+        "While Photosynthesis Mark is active, any non-synthetic teammate hit triggers Verina's coordinated attack (DMG + heal). ICD: 1s each.",
+      trigger: {
+        event: "hitLanded",
+        actor: "any",
+        source: "self",
+      },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.verina.lib.photosynthesis-mark",
+        on: "source",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "Resonance Liberation",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 0.0995,
+            energy: 0,
+            concerto: 0,
+            toughness: 0.2,
+            weakness: 0,
+          },
+          icdFrames: 60,
+          skillType: "Resonance Liberation",
+        },
+        {
+          kind: "emitHit",
+          damage: {
+            type: "Basic Attack",
+            dmgType: "Heal",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            flat: 428,
+            value: 0.1071,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+            target: "currentOnField",
+          },
+          icdFrames: 60,
+        },
+      ],
+    },
+    {
       id: "char.verina.forte.grant-b5",
       name: "Forte: B5 Grant",
       description:

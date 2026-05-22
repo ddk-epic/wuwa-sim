@@ -425,3 +425,182 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(healCount).toBe(1)
   })
 })
+
+describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () => {
+  const TEAMMATE_ID = 9999
+
+  function makeTwoCharEngine(sequence = 0) {
+    const verinaChar = {
+      ...verina,
+      buffs: verina.buffs,
+    } as unknown as EnrichedCharacter
+    const teammate: EnrichedCharacter = {
+      id: TEAMMATE_ID,
+      name: "Teammate",
+      element: "Fusion",
+      weaponType: "Sword",
+      rarity: "5",
+      stats: {
+        base: { hp: 0, atk: 0, def: 0 },
+        max: { hp: 0, atk: 1000, def: 0 },
+      },
+      template: { weapon: "", echo: "", echoSet: "" },
+      skillTreeBonuses: [],
+      buffs: [],
+      skills: [],
+    }
+    testCharacters = [verinaChar, teammate]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1503, TEAMMATE_ID, null],
+      loadouts: [{ ...emptyLoadout, sequence }, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  function libHitLanded(
+    engine: ReturnType<typeof makeTwoCharEngine>,
+    frame: number,
+  ) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1503,
+      skillType: "Resonance Liberation",
+      dmgType: "Damage",
+      stageId: "Arboreal Flourish::",
+      hitIndex: 0,
+      frame,
+      energy: 0,
+      concerto: 0,
+    })
+  }
+
+  function teammateHit(
+    engine: ReturnType<typeof makeTwoCharEngine>,
+    frame: number,
+    synthetic = false,
+  ) {
+    return engine.onEvent({
+      kind: "hitLanded",
+      characterId: TEAMMATE_ID,
+      skillType: "Basic Attack",
+      dmgType: "Damage",
+      frame,
+      energy: 0,
+      concerto: 0,
+      ...(synthetic ? { synthetic: true, sourceBuffId: "some.coord" } : {}),
+    })
+  }
+
+  it("Liberation hitIndex 0 applies Photosynthesis Mark", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    expect(engine.activeBuffIds(1503)).toContain(
+      "char.verina.lib.photosynthesis-mark",
+    )
+  })
+
+  it("teammate hit while mark is active fires coord (damage + heal)", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    const result = teammateHit(engine, 10)
+    const dmgCoord = result.syntheticHits.find(
+      (h) =>
+        h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
+        h.dmgType === "Damage",
+    )
+    const healCoord = result.syntheticHits.find(
+      (h) =>
+        h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
+        h.dmgType === "Heal",
+    )
+    expect(dmgCoord).toBeDefined()
+    expect(healCoord).toBeDefined()
+  })
+
+  it("no coord fires before Liberation — mark not yet active", () => {
+    const engine = makeTwoCharEngine()
+    const result = teammateHit(engine, 0)
+    expect(
+      result.syntheticHits.filter(
+        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      ),
+    ).toHaveLength(0)
+  })
+
+  it("synthetic hits do NOT trigger coord — no coord→coord chain", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    const result = teammateHit(engine, 10, true)
+    expect(
+      result.syntheticHits.filter(
+        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      ),
+    ).toHaveLength(0)
+  })
+
+  it("two teammate hits within 60 frames produce exactly one coord pair (ICD)", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    const r1 = teammateHit(engine, 10)
+    const r2 = teammateHit(engine, 30)
+    const coordsR1 = r1.syntheticHits.filter(
+      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+    ).length
+    const coordsR2 = r2.syntheticHits.filter(
+      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+    ).length
+    expect(coordsR1).toBe(2)
+    expect(coordsR2).toBe(0)
+  })
+
+  it("coord fires again after ICD window (60 frames)", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    teammateHit(engine, 10)
+    const r2 = teammateHit(engine, 71)
+    expect(
+      r2.syntheticHits.filter(
+        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      ).length,
+    ).toBe(2)
+  })
+
+  it("no coord fires after mark expires (12s = 720 frames)", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    engine.tickToFrame(721)
+    const result = teammateHit(engine, 721)
+    expect(
+      result.syntheticHits.filter(
+        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      ),
+    ).toHaveLength(0)
+  })
+
+  it("coord acting character is Verina even for teammate hit", () => {
+    const engine = makeTwoCharEngine()
+    libHitLanded(engine, 0)
+    const result = teammateHit(engine, 10)
+    const coord = result.syntheticHits.find(
+      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+    )
+    expect(coord?.characterId).toBe(1503)
+  })
+
+  it("S6 joyous-harvest-coord still fires independently when mark is active (sequence 6)", () => {
+    const engine = makeTwoCharEngine(6)
+    libHitLanded(engine, 0)
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1503,
+      skillType: "Forte Circuit",
+      stageId: "Starflower Blooms::Heavy Attack",
+      frame: 100,
+    })
+    const s6Coord = result.syntheticHits.find(
+      (h) => h.sourceBuffId === "char.verina.s6.joyous-harvest-coord",
+    )
+    expect(s6Coord).toBeDefined()
+  })
+})
