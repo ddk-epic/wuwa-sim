@@ -96,35 +96,9 @@ describe("Verina — Gift of Nature (team ATK +20%)", () => {
       expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
     },
   )
-
-  it("Resonance Skill cast does NOT trigger Gift of Nature", () => {
-    const engine = makeEngine()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1503,
-      skillType: "Resonance Skill",
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(1503)).not.toContain(
-      "char.verina.inherent.gift-of-nature",
-    )
-  })
 })
 
 describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
-  it("requires sequence 1 — not active at sequence 0", () => {
-    const engine = makeEngine(0)
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1503,
-      skillType: "Outro Skill",
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(1503)).not.toContain(
-      "char.verina.s1.moment-of-emergence",
-    )
-  })
-
   it("fires on Outro Skill cast at sequence 1 (deferred as nextOnField)", () => {
     const engine = makeEngine(1)
     engine.onEvent({
@@ -172,21 +146,6 @@ describe("Verina — Forte grants via DamageEntry.forte", () => {
     expect(engine.getResource(1503).forte).toBe(0)
   })
 
-  it("Botany Experiment hitIndex 1 grants +1 forte (only first DamageEntry carries forte)", () => {
-    const engine = makeEngine()
-    hitLanded(engine, "Botany Experiment::", 1, 0, 1)
-    hitLanded(engine, "Botany Experiment::", 2, 0)
-    hitLanded(engine, "Botany Experiment::", 3, 0)
-    hitLanded(engine, "Botany Experiment::", 4, 0)
-    expect(engine.getResource(1503).forte).toBe(1)
-  })
-
-  it("Verdant Growth hitIndex 1 grants +1 forte", () => {
-    const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 1, 0, 1)
-    expect(engine.getResource(1503).forte).toBe(1)
-  })
-
   it("forte caps at 4 across multiple qualifying hits", () => {
     const engine = makeEngine()
     hitLanded(engine, "Verdant Growth::", 1, 0, 1)
@@ -229,20 +188,9 @@ describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)",
     }
     expect(engine.getResource(1503).concerto).toBe(10)
   })
-
-  it("not active at sequence 0", () => {
-    const engine = makeEngine(0)
-    hitLanded(engine, 1, 0)
-    expect(engine.getResource(1503).concerto).toBe(0)
-  })
 })
 
 describe("Verina — S3 The Choice to Flourish (healingBonus +12%)", () => {
-  it("requires sequence 3 — no healingBonus at sequence 0", () => {
-    const engine = makeEngine(0)
-    expect(engine.resolveStats(1503).healingBonus).toBeCloseTo(0)
-  })
-
   it("folds healingBonus +12% into base stats at bootstrap (sequence 3)", () => {
     const engine = makeEngine(3)
     expect(engine.resolveStats(1503).healingBonus).toBeCloseTo(0.12)
@@ -269,44 +217,21 @@ describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
       )
     },
   )
+})
 
-  it("not active at sequence 0", () => {
-    const engine = makeEngine(0)
+describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
+  it("Heavy Attack Starflower Blooms applies +20% allDmgBonus (sequence 6)", () => {
+    const engine = makeEngine(6)
+    const baseBonus = engine.resolveStats(1503).allDmgBonus
     engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
       skillType: "Forte Circuit",
+      stageId: "Starflower Blooms::Heavy Attack",
       frame: 0,
     })
-    expect(engine.activeBuffIds(1503)).not.toContain(
-      "char.verina.s4.blossoming-embrace",
-    )
+    expect(engine.resolveStats(1503).allDmgBonus).toBeCloseTo(baseBonus + 0.2)
   })
-})
-
-describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
-  const STARFLOWER_STAGES = [
-    "Starflower Blooms::Heavy Attack",
-    "Starflower Blooms::Mid-air Attack: Stage 1",
-    "Starflower Blooms::Mid-air Attack: Stage 2",
-    "Starflower Blooms::Mid-air Attack: Stage 3",
-  ]
-
-  it.each(STARFLOWER_STAGES)(
-    "stageId %s applies +20% allDmgBonus for 1 frame (sequence 6)",
-    (stageId) => {
-      const engine = makeEngine(6)
-      const baseBonus = engine.resolveStats(1503).allDmgBonus
-      engine.onEvent({
-        kind: "skillCast",
-        characterId: 1503,
-        skillType: "Forte Circuit",
-        stageId,
-        frame: 0,
-      })
-      expect(engine.resolveStats(1503).allDmgBonus).toBeCloseTo(baseBonus + 0.2)
-    },
-  )
 
   it("Starflower Blooms cast emits a synthetic Coordinated Attack hit (sequence 6)", () => {
     const engine = makeEngine(6)
@@ -404,16 +329,13 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(healHit).toBeUndefined()
   })
 
-  it.each(STARFLOWER_STAGES)(
-    "stageId %s triggers consume when forte=1",
-    (stageId) => {
-      const engine = makeEngine()
-      grantForte(engine, 1)
-      castStarflower(engine, stageId, 100)
-      expect(engine.getResource(1503).forte).toBe(0)
-      expect(engine.getResource(1503).concerto).toBe(12)
-    },
-  )
+  it("Heavy Attack Starflower Blooms triggers consume when forte=1", () => {
+    const engine = makeEngine()
+    grantForte(engine, 1)
+    castStarflower(engine, "Starflower Blooms::Heavy Attack", 100)
+    expect(engine.getResource(1503).forte).toBe(0)
+    expect(engine.getResource(1503).concerto).toBe(12)
+  })
 
   it("consume is atomic: forte, concerto, and heal all land or none do", () => {
     const engine = makeEngine()

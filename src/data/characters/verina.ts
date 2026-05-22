@@ -269,7 +269,7 @@ export const verina = {
         ],
       },
       target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
+      duration: { kind: "seconds", v: 0.5 },
       effects: [
         {
           kind: "stat",
