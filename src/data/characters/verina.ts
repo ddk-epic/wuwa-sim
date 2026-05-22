@@ -140,6 +140,61 @@ export const verina = {
       ],
     },
     {
+      id: "char.verina.forte.starflower-consume",
+      name: "Forte: Starflower Blooms Consume",
+      description:
+        "Heavy/Mid-air Starflower Blooms consumes 1 Forte, restores 12 Concerto, and heals the team. Skipped when Forte = 0.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        stageId: [
+          "Starflower Blooms::Heavy Attack",
+          "Starflower Blooms::Mid-air Attack: Stage 1",
+          "Starflower Blooms::Mid-air Attack: Stage 2",
+          "Starflower Blooms::Mid-air Attack: Stage 3",
+        ],
+      },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 1,
+        on: "source",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 1 },
+      effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "sub",
+          value: { kind: "const", v: 1 },
+        },
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 12 },
+        },
+        {
+          kind: "emitHit",
+          damage: {
+            type: "Basic Attack",
+            dmgType: "Heal",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            flat: 1188,
+            value: 0.2975,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+            target: "team",
+          },
+          icdFrames: 1,
+        },
+      ],
+    },
+    {
       id: "char.verina.s2.concerto-grant",
       name: "S2: Concerto Restore",
       description:

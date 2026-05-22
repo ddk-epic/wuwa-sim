@@ -330,3 +330,98 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
     expect(result.syntheticHits).toHaveLength(0)
   })
 })
+
+describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
+  const STARFLOWER_STAGES = [
+    "Starflower Blooms::Heavy Attack",
+    "Starflower Blooms::Mid-air Attack: Stage 1",
+    "Starflower Blooms::Mid-air Attack: Stage 2",
+    "Starflower Blooms::Mid-air Attack: Stage 3",
+  ] as const
+
+  function grantForte(engine: ReturnType<typeof makeEngine>, amount: number) {
+    for (let i = 0; i < amount; i++) {
+      engine.onEvent({
+        kind: "hitLanded",
+        characterId: 1503,
+        skillType: "Basic Attack",
+        dmgType: "Damage",
+        stageId: "Cultivation::Stage 5",
+        hitIndex: 0,
+        frame: i,
+        energy: 0,
+        concerto: 0,
+      })
+    }
+  }
+
+  function castStarflower(
+    engine: ReturnType<typeof makeEngine>,
+    stageId: (typeof STARFLOWER_STAGES)[number],
+    frame: number,
+  ) {
+    return engine.onEvent({
+      kind: "skillCast",
+      characterId: 1503,
+      skillType: "Forte Circuit",
+      stageId,
+      frame,
+    })
+  }
+
+  it("forte=1 → Heavy Starflower consumes forte, adds concerto, emits heal", () => {
+    const engine = makeEngine()
+    grantForte(engine, 1)
+    expect(engine.getResource(1503).forte).toBe(1)
+    const result = castStarflower(
+      engine,
+      "Starflower Blooms::Heavy Attack",
+      100,
+    )
+    expect(engine.getResource(1503).forte).toBe(0)
+    expect(engine.getResource(1503).concerto).toBe(12)
+    const healHit = result.syntheticHits.find(
+      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+    )
+    expect(healHit).toBeDefined()
+  })
+
+  it("forte=0 → no consume, no concerto restore, no heal emit", () => {
+    const engine = makeEngine()
+    expect(engine.getResource(1503).forte).toBe(0)
+    const result = castStarflower(engine, "Starflower Blooms::Heavy Attack", 0)
+    expect(engine.getResource(1503).forte).toBe(0)
+    expect(engine.getResource(1503).concerto).toBe(0)
+    const healHit = result.syntheticHits.find(
+      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+    )
+    expect(healHit).toBeUndefined()
+  })
+
+  it.each(STARFLOWER_STAGES)(
+    "stageId %s triggers consume when forte=1",
+    (stageId) => {
+      const engine = makeEngine()
+      grantForte(engine, 1)
+      castStarflower(engine, stageId, 100)
+      expect(engine.getResource(1503).forte).toBe(0)
+      expect(engine.getResource(1503).concerto).toBe(12)
+    },
+  )
+
+  it("consume is atomic: forte, concerto, and heal all land or none do", () => {
+    const engine = makeEngine()
+    grantForte(engine, 1)
+    const result = castStarflower(
+      engine,
+      "Starflower Blooms::Heavy Attack",
+      100,
+    )
+    expect(engine.getResource(1503).forte).toBe(0)
+    expect(engine.getResource(1503).concerto).toBe(12)
+    const healCount = result.syntheticHits.filter(
+      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+    ).length
+    expect(healCount).toBe(1)
+  })
+})

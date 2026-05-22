@@ -351,12 +351,13 @@ export class BuffEngine {
         if (last !== undefined && event.frame - last < def.cooldown * 60)
           return false
       }
-      // emitHit-only defs: condition is evaluated at candidate-selection time
-      // because there is no persistent instance to re-evaluate lazily (ADR-0011).
+      // Defs whose effects are all "immediate" (resource or emitHit) have no
+      // persistent instance to re-evaluate lazily, so the condition is evaluated
+      // at candidate-selection time (ADR-0011).
       if (
         def.condition &&
         def.effects.length > 0 &&
-        def.effects.every((e) => e.kind === "emitHit")
+        def.effects.every((e) => e.kind === "emitHit" || e.kind === "resource")
       ) {
         return this.evaluator.evaluateUncached(
           def.condition,
