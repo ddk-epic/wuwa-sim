@@ -151,7 +151,7 @@ function fireSkillCast(
     resonanceCost: resolved.resonanceCost,
   })
   pushBuffEvents(log, result.lifecycleEvents)
-  for (const synth of result.syntheticHits) {
+  for (const synth of result.syntheticEvents) {
     synth.sourceEntryId = entry.id
     log.push(synth)
   }
@@ -262,7 +262,7 @@ function processHeal(
   }
   log.push(sustainEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticHits) {
+  for (const synth of dispatch.syntheticEvents) {
     synth.sourceEntryId = entry.id
     log.push(synth)
   }
@@ -319,7 +319,7 @@ function processDamageHit(
   }
   log.push(hitEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticHits) {
+  for (const synth of dispatch.syntheticEvents) {
     synth.sourceEntryId = entry.id
     log.push(synth)
   }

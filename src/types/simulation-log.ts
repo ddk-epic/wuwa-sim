@@ -56,6 +56,7 @@ export interface SustainEvent extends SimulationLogBase {
   passiveBuffs: ActiveBuff[]
   synthetic?: boolean
   sourceBuffId?: string
+  sourceEntryId?: string
 }
 
 export interface BuffEvent {

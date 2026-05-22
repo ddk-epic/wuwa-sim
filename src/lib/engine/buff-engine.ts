@@ -6,7 +6,12 @@ import type {
   ResourceState,
 } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
+import type {
+  ActiveBuff,
+  BuffEvent,
+  HitEvent,
+  SustainEvent,
+} from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
@@ -35,7 +40,7 @@ export interface ResolvedHit {
 
 export interface HitDispatch {
   lifecycleEvents: BuffEvent[]
-  syntheticHits: HitEvent[]
+  syntheticEvents: (HitEvent | SustainEvent)[]
   postState: ResourceState
 }
 
@@ -43,7 +48,7 @@ interface PhaseContext {
   event: EngineEvent
   candidates: readonly Candidate[]
   out: BuffEvent[]
-  hitsOut: HitEvent[]
+  hitsOut: (HitEvent | SustainEvent)[]
   depth: number
 }
 
@@ -88,6 +93,18 @@ export class BuffEngine {
     getResource: (id) => this.getResource(id),
     activeBuffs: (id) => this.activeBuffs(id),
     passiveBuffs: (id) => this.passiveBuffs(id),
+    resolveHealTargets: (target, sourceId) => {
+      switch (target) {
+        case "self":
+        case "source":
+        case "currentOnField":
+          return [sourceId]
+        case "team":
+          return this.store.getPartyCharacterIds()
+        case "nextOnField":
+          return []
+      }
+    },
   }
 
   /**
@@ -220,10 +237,10 @@ export class BuffEngine {
   /** Process a triggering event; returns lifecycle events from any apply/refresh. */
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
-    syntheticHits: HitEvent[]
+    syntheticEvents: (HitEvent | SustainEvent)[]
   } {
     const lifecycleEvents: BuffEvent[] = []
-    const syntheticHits: HitEvent[] = []
+    const syntheticEvents: (HitEvent | SustainEvent)[] = []
 
     // Implicit swap inference: an authored skillCast by a different character
     // than the current on-field implies swapOut(prev) → swapIn(next).
@@ -234,7 +251,7 @@ export class BuffEngine {
           this.dispatchEvent(
             { kind: "swapOut", characterId: swap.prev, frame: event.frame },
             lifecycleEvents,
-            syntheticHits,
+            syntheticEvents,
             0,
           )
         }
@@ -242,20 +259,20 @@ export class BuffEngine {
         this.dispatchEvent(
           { kind: "swapIn", characterId: swap.next, frame: event.frame },
           lifecycleEvents,
-          syntheticHits,
+          syntheticEvents,
           0,
         )
       }
     }
 
-    this.dispatchEvent(event, lifecycleEvents, syntheticHits, 0)
-    return { lifecycleEvents, syntheticHits }
+    this.dispatchEvent(event, lifecycleEvents, syntheticEvents, 0)
+    return { lifecycleEvents, syntheticEvents }
   }
 
   private dispatchEvent(
     event: EngineEvent,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     // Resource phase (implicit): hit-driven and skill-cast-driven accumulation
@@ -429,7 +446,7 @@ export class BuffEngine {
     sourceCharacterId: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     const hit = this.emitHitDispatcher.dispatch(
@@ -448,23 +465,37 @@ export class BuffEngine {
     if (!hit) return
     hitsOut.push(hit)
 
-    // Chain: each synthetic hit fires its own hitLanded event subject to
-    // per-instance ICDs. Energy/concerto already applied above; pass 0 so
-    // the recursive dispatch's resource phase does not double-count.
-    this.dispatchEvent(
-      {
-        kind: "hitLanded",
-        characterId: sourceCharacterId,
-        skillType: effect.skillType ?? "Basic Attack",
-        dmgType: effect.damage.dmgType,
-        synthetic: true,
-        sourceBuffId: def.id,
-        frame,
-      },
-      out,
-      hitsOut,
-      depth + 1,
-    )
+    if (effect.damage.dmgType === "Heal") {
+      this.dispatchEvent(
+        {
+          kind: "healLanded",
+          characterId: sourceCharacterId,
+          skillType: effect.skillType ?? "Basic Attack",
+          frame,
+        },
+        out,
+        hitsOut,
+        depth + 1,
+      )
+    } else {
+      // Chain: each synthetic hit fires its own hitLanded event subject to
+      // per-instance ICDs. Energy/concerto already applied above; pass 0 so
+      // the recursive dispatch's resource phase does not double-count.
+      this.dispatchEvent(
+        {
+          kind: "hitLanded",
+          characterId: sourceCharacterId,
+          skillType: effect.skillType ?? "Basic Attack",
+          dmgType: effect.damage.dmgType,
+          synthetic: true,
+          sourceBuffId: def.id,
+          frame,
+        },
+        out,
+        hitsOut,
+        depth + 1,
+      )
+    }
   }
 
   private applyResourceDelta(
@@ -473,7 +504,7 @@ export class BuffEngine {
     delta: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     const { before, after } = this.resources.applyDelta(
@@ -499,7 +530,7 @@ export class BuffEngine {
     value: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     const { before, after } = this.resources.setValue(
@@ -526,7 +557,7 @@ export class BuffEngine {
     after: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     if (before === after) return
@@ -562,7 +593,7 @@ export class BuffEngine {
     targetCharacterId: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
     if (effect.value.kind !== "const") return
@@ -685,15 +716,15 @@ export class BuffEngine {
    * events, synthetic hits, and the post-hit Resource State for the actor.
    */
   recordHit(event: HitLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticHits } = this.onEvent(event)
+    const { lifecycleEvents, syntheticEvents } = this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticHits, postState }
+    return { lifecycleEvents, syntheticEvents, postState }
   }
 
   recordHeal(event: HealLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticHits } = this.onEvent(event)
+    const { lifecycleEvents, syntheticEvents } = this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticHits, postState }
+    return { lifecycleEvents, syntheticEvents, postState }
   }
 }
 

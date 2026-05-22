@@ -315,8 +315,8 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
       stageId: "Starflower Blooms::Heavy Attack",
       frame: 0,
     })
-    expect(result.syntheticHits.length).toBeGreaterThan(0)
-    const synthHit = result.syntheticHits[0]
+    expect(result.syntheticEvents.length).toBeGreaterThan(0)
+    const synthHit = result.syntheticEvents[0]
     expect(synthHit.synthetic).toBe(true)
     expect(synthHit.sourceBuffId).toBe("char.verina.s6.joyous-harvest-coord")
   })
@@ -330,7 +330,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
       stageId: "Starflower Blooms::Heavy Attack",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(0)
+    expect(result.syntheticEvents).toHaveLength(0)
   })
 })
 
@@ -383,7 +383,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     )
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(12)
-    const healHit = result.syntheticHits.find(
+    const healHit = result.syntheticEvents.find(
       (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
     )
     expect(healHit).toBeDefined()
@@ -395,7 +395,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     const result = castStarflower(engine, "Starflower Blooms::Heavy Attack", 0)
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(0)
-    const healHit = result.syntheticHits.find(
+    const healHit = result.syntheticEvents.find(
       (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
     )
     expect(healHit).toBeUndefined()
@@ -422,7 +422,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     )
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(12)
-    const healCount = result.syntheticHits.filter(
+    const healCount = result.syntheticEvents.filter(
       (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
     ).length
     expect(healCount).toBe(1)
@@ -507,15 +507,15 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const engine = makeTwoCharEngine()
     libHitLanded(engine, 0)
     const result = teammateHit(engine, 10)
-    const dmgCoord = result.syntheticHits.find(
+    const dmgCoord = result.syntheticEvents.find(
       (h) =>
         h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
-        h.dmgType === "Damage",
+        h.kind === "hit",
     )
-    const healCoord = result.syntheticHits.find(
+    const healCoord = result.syntheticEvents.find(
       (h) =>
         h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
-        h.dmgType === "Heal",
+        h.kind === "sustain",
     )
     expect(dmgCoord).toBeDefined()
     expect(healCoord).toBeDefined()
@@ -525,7 +525,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const engine = makeTwoCharEngine()
     const result = teammateHit(engine, 0)
     expect(
-      result.syntheticHits.filter(
+      result.syntheticEvents.filter(
         (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
       ),
     ).toHaveLength(0)
@@ -536,7 +536,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     libHitLanded(engine, 0)
     const result = teammateHit(engine, 10, true)
     expect(
-      result.syntheticHits.filter(
+      result.syntheticEvents.filter(
         (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
       ),
     ).toHaveLength(0)
@@ -547,10 +547,10 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     libHitLanded(engine, 0)
     const r1 = teammateHit(engine, 10)
     const r2 = teammateHit(engine, 30)
-    const coordsR1 = r1.syntheticHits.filter(
+    const coordsR1 = r1.syntheticEvents.filter(
       (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
     ).length
-    const coordsR2 = r2.syntheticHits.filter(
+    const coordsR2 = r2.syntheticEvents.filter(
       (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
     ).length
     expect(coordsR1).toBe(2)
@@ -563,7 +563,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     teammateHit(engine, 10)
     const r2 = teammateHit(engine, 71)
     expect(
-      r2.syntheticHits.filter(
+      r2.syntheticEvents.filter(
         (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
       ).length,
     ).toBe(2)
@@ -575,7 +575,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     engine.tickToFrame(721)
     const result = teammateHit(engine, 721)
     expect(
-      result.syntheticHits.filter(
+      result.syntheticEvents.filter(
         (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
       ),
     ).toHaveLength(0)
@@ -585,7 +585,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const engine = makeTwoCharEngine()
     libHitLanded(engine, 0)
     const result = teammateHit(engine, 10)
-    const coord = result.syntheticHits.find(
+    const coord = result.syntheticEvents.find(
       (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
     )
     expect(coord?.characterId).toBe(1503)
@@ -601,7 +601,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       stageId: "Starflower Blooms::Heavy Attack",
       frame: 100,
     })
-    const s6Coord = result.syntheticHits.find(
+    const s6Coord = result.syntheticEvents.find(
       (h) => h.sourceBuffId === "char.verina.s6.joyous-harvest-coord",
     )
     expect(s6Coord).toBeDefined()

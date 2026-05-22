@@ -1599,8 +1599,8 @@ describe("BuffEngine — resource state (#58)", () => {
       skillType: "Basic Attack",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(1)
-    expect(result.syntheticHits[0]).toMatchObject({
+    expect(result.syntheticEvents).toHaveLength(1)
+    expect(result.syntheticEvents[0]).toMatchObject({
       kind: "hit",
       synthetic: true,
       sourceBuffId: "char.emit-on-concerto",
@@ -1699,7 +1699,7 @@ describe("BuffEngine — resource state (#58)", () => {
     // resourceCrossed fires chainer (synthetic #1, depth 1). That synthetic
     // hitLanded fires synthChain (synthetic #2, depth 2). And so on, capped
     // at depth 8.
-    expect(result.syntheticHits.length).toBeGreaterThan(1)
+    expect(result.syntheticEvents.length).toBeGreaterThan(1)
     expect(warn).toHaveBeenCalled()
     expect(warn.mock.calls[0][0]).toContain("emitHit chain depth exceeded")
     warn.mockRestore()
@@ -2173,8 +2173,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(1)
-    expect(result.syntheticHits[0]).toMatchObject({
+    expect(result.syntheticEvents).toHaveLength(1)
+    expect(result.syntheticEvents[0]).toMatchObject({
       kind: "hit",
       synthetic: true,
       sourceBuffId: "char.coord",
@@ -2182,7 +2182,9 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in)
-    expect(result.syntheticHits[0].damage).toBe(1164)
+    const synth0 = result.syntheticEvents[0]
+    if (synth0.kind !== "hit") throw new Error("expected HitEvent")
+    expect(synth0.damage).toBe(1164)
   })
 
   it("ICD prevents firing again before icdFrames elapse, then re-fires", () => {
@@ -2199,7 +2201,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(a.syntheticHits).toHaveLength(1)
+    expect(a.syntheticEvents).toHaveLength(1)
     const b = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
@@ -2207,7 +2209,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 30,
     })
-    expect(b.syntheticHits).toHaveLength(0)
+    expect(b.syntheticEvents).toHaveLength(0)
     const c = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
@@ -2215,7 +2217,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 60,
     })
-    expect(c.syntheticHits).toHaveLength(1)
+    expect(c.syntheticEvents).toHaveLength(1)
   })
 
   it("default hitLanded triggers ignore synthetic hits (no chain reaction)", () => {
@@ -2246,7 +2248,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     // Both a and b fire on the original hit (depth 0). Their synthetics fire
     // hitLanded(synthetic=true). Default `source: "self"` means neither matches
     // the synthetic hitLanded — so no chain.
-    expect(result.syntheticHits).toHaveLength(2)
+    expect(result.syntheticEvents).toHaveLength(2)
   })
 
   it("synthetic-opt-in triggers chain off synthetic hits up to depth cap of 8", () => {
@@ -2276,10 +2278,52 @@ describe("BuffEngine — emitHit (#60)", () => {
     // That synthetic fires a hitLanded(synthetic) which the buff also matches
     // (source: "any"), emitting again at depth 2, ... up to depth 8. Depth 9
     // is rejected with a warning. Total synthetics emitted = 8.
-    expect(result.syntheticHits).toHaveLength(8)
+    expect(result.syntheticEvents).toHaveLength(8)
     expect(warn).toHaveBeenCalled()
     expect(warn.mock.calls[0][0]).toContain("emitHit chain depth exceeded")
     warn.mockRestore()
+  })
+
+  it("emitHit with dmgType Heal produces a SustainEvent via computeHealing, not computeDamage", () => {
+    const healBuff: BuffDef = {
+      id: "char.heal-emit",
+      name: "Heal Emit",
+      trigger: { event: "hitLanded", characterId: 1, source: "self" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: dmg({ value: 0.3, dmgType: "Heal" }),
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [healBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const result = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillType: "Basic Attack",
+      dmgType: "Fusion",
+      frame: 0,
+    })
+    expect(result.syntheticEvents).toHaveLength(1)
+    const synth = result.syntheticEvents[0]
+    expect(synth.kind).toBe("sustain")
+    expect(synth.synthetic).toBe(true)
+    expect(synth.sourceBuffId).toBe("char.heal-emit")
+    expect(synth.characterId).toBe(1)
+    if (synth.kind !== "sustain") throw new Error("narrowing")
+    expect(synth.sub).toBe("heal")
+    expect(synth.targets).toEqual([1])
+    // 0.3 * ATK_effective (1000 base + echo atkPct substats) * (1 + healingBonus=0)
+    // ATK_effective matches the echo build in emptyLoadout; verified against runtime output.
+    expect(synth.amount).toBe(565)
   })
 
   it("synthetic hit does not change on-field state", () => {
@@ -2367,10 +2411,12 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(1)
+    expect(result.syntheticEvents).toHaveLength(1)
     // 1.0 * ATK * critFactor * 0.5 * 0.9 * (1 + 0.5 Fusion bonus) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in).
-    expect(result.syntheticHits[0].damage).toBe(3056)
-    expect(result.syntheticHits[0].characterId).toBe(1)
+    const synthEvt = result.syntheticEvents[0]
+    if (synthEvt.kind !== "hit") throw new Error("expected HitEvent")
+    expect(synthEvt.damage).toBe(3056)
+    expect(synthEvt.characterId).toBe(1)
   })
 
   it("phase pipeline: lex tiebreak by buffDef.id is deterministic", () => {
@@ -2404,7 +2450,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticHits.map((h) => h.sourceBuffId)).toEqual([
+    expect(result.syntheticEvents.map((h) => h.sourceBuffId)).toEqual([
       "a.coord",
       "z.coord",
     ])
@@ -2672,7 +2718,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(r.syntheticHits).toHaveLength(1)
+    expect(r.syntheticEvents).toHaveLength(1)
     expect(r.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(true)
   })
 })
@@ -2979,7 +3025,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
       oldActiveBuffIds,
     )
     expect(dispatch.lifecycleEvents).toEqual(oldDispatch.lifecycleEvents)
-    expect(dispatch.syntheticHits).toEqual(oldDispatch.syntheticHits)
+    expect(dispatch.syntheticEvents).toEqual(oldDispatch.syntheticEvents)
     expect(dispatch.postState).toEqual(oldPostState)
   })
 })
@@ -3658,7 +3704,7 @@ describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () 
       skillType: "Outro Skill",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(0)
+    expect(result.syntheticEvents).toHaveLength(0)
   })
 
   it("fires synthetic hit when condition buff is active", () => {
@@ -3685,8 +3731,8 @@ describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () 
       skillType: "Outro Skill",
       frame: 1,
     })
-    expect(result.syntheticHits).toHaveLength(1)
-    expect(result.syntheticHits[0].synthetic).toBe(true)
+    expect(result.syntheticEvents).toHaveLength(1)
+    expect(result.syntheticEvents[0].synthetic).toBe(true)
   })
 
   it("does not suppress emitHit defs without a condition", () => {
@@ -3711,7 +3757,7 @@ describe("BuffEngine — condition-at-trigger for emitHit-only defs (#116)", () 
       skillType: "Outro Skill",
       frame: 0,
     })
-    expect(result.syntheticHits).toHaveLength(1)
+    expect(result.syntheticEvents).toHaveLength(1)
   })
 })
 

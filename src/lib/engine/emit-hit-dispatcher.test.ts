@@ -26,6 +26,7 @@ function makeHost(): EmitHitHost & { resources: Map<number, ResourceState> } {
     },
     activeBuffs: () => [],
     passiveBuffs: () => [],
+    resolveHealTargets: (_target, sourceId) => [sourceId],
   }
 }
 
@@ -182,6 +183,7 @@ describe("EmitHitDispatcher", () => {
       getResource: () => emptyResourceState(),
       activeBuffs: () => [],
       passiveBuffs: () => [],
+      resolveHealTargets: (_target, sourceId) => [sourceId],
     }
     const hpEffect: EmitHitEffect = {
       ...effect,
@@ -221,8 +223,10 @@ describe("EmitHitDispatcher", () => {
     expect(atkHit).not.toBeNull()
     // HP base 5000 * 1.4 + 300 = 7300; ATK base 1000.
     const DEFRES = 0.5 * 0.9
-    expect(hpHit!.damage).toBe(Math.round(7300 * DEFRES))
-    expect(atkHit!.damage).toBe(Math.round(1000 * DEFRES))
+    if (!hpHit || hpHit.kind !== "hit") throw new Error("expected HitEvent")
+    if (!atkHit || atkHit.kind !== "hit") throw new Error("expected HitEvent")
+    expect(hpHit.damage).toBe(Math.round(7300 * DEFRES))
+    expect(atkHit.damage).toBe(Math.round(1000 * DEFRES))
   })
 
   it("reset clears ICD state", () => {

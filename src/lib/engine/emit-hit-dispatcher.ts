@@ -4,10 +4,17 @@ import type {
   ResourceKind,
   ResourceState,
 } from "#/types/buff"
-import type { ActiveBuff, BuffEvent, HitEvent } from "#/types/simulation-log"
+import type { HealTarget } from "#/types/character"
+import type {
+  ActiveBuff,
+  BuffEvent,
+  HitEvent,
+  SustainEvent,
+} from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { computeDamage } from "../damage/compute-damage"
+import { computeHealing } from "../damage/compute-healing"
 import { cloneStats } from "./stat-table-builder"
 
 declare const buffInstanceKeyBrand: unique symbol
@@ -41,12 +48,16 @@ export interface EmitHitHost {
     delta: number,
     frame: number,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ) => void
   getResource: (characterId: number) => ResourceState
   activeBuffs: (characterId: number) => ActiveBuff[]
   passiveBuffs: (characterId: number) => ActiveBuff[]
+  resolveHealTargets: (
+    target: HealTarget,
+    sourceCharacterId: number,
+  ) => number[]
 }
 
 export interface EmitHitDispatcherOptions {
@@ -65,14 +76,14 @@ export class EmitHitDispatcher {
     this.icd.clear()
   }
 
-  /** Returns the synthetic hit, or null when ICD blocks or chain depth cap is reached. */
+  /** Returns the synthetic event, or null when ICD blocks or chain depth cap is reached. */
   dispatch(
     input: EmitHitInput,
     ctx: EmitHitDispatchContext,
     host: EmitHitHost,
     out: BuffEvent[],
-    hitsOut: HitEvent[],
-  ): HitEvent | null {
+    hitsOut: (HitEvent | SustainEvent)[],
+  ): HitEvent | SustainEvent | null {
     const perEffect = this.icd.get(input.buffInstanceKey)
     const last = perEffect?.get(input.effectIndex)
     if (last !== undefined && ctx.frame - last < input.effect.icdFrames) {
@@ -97,18 +108,7 @@ export class EmitHitDispatcher {
 
     const stats = host.resolveStats(input.sourceCharacterId)
     const character = getCharacterById(input.sourceCharacterId)
-    const element = input.effect.element ?? character?.element ?? "Physical"
     const skillType = input.effect.skillType ?? input.effect.damage.type
-    const damage = computeDamage(
-      {
-        multiplier: input.effect.damage.value,
-        element,
-        skillType,
-        dmgType: input.effect.damage.dmgType,
-        scalingStat: input.effect.damage.scalingStat,
-      },
-      stats,
-    )
 
     if (input.effect.damage.energy) {
       host.applyResourceDelta(
@@ -133,6 +133,52 @@ export class EmitHitDispatcher {
       )
     }
     const post = host.getResource(input.sourceCharacterId)
+
+    if (input.effect.damage.dmgType === "Heal") {
+      const amount = computeHealing(
+        {
+          multiplier: input.effect.damage.value,
+          scalingStat: input.effect.damage.scalingStat,
+          flat: input.effect.damage.flat,
+        },
+        stats,
+      )
+      return {
+        kind: "sustain",
+        sub: "heal",
+        synthetic: true,
+        sourceBuffId: input.def.id,
+        characterId: input.sourceCharacterId,
+        skillType,
+        skillName: input.def.name,
+        frame: ctx.frame,
+        cumulativeEnergy: post.energy,
+        cumulativeConcerto: post.concerto,
+        amount,
+        targets: host.resolveHealTargets(
+          input.effect.damage.target ?? "self",
+          input.sourceCharacterId,
+        ),
+        scalingStat: input.effect.damage.scalingStat,
+        multiplier: input.effect.damage.value,
+        flat: input.effect.damage.flat,
+        statsSnapshot: cloneStats(stats),
+        activeBuffs: host.activeBuffs(input.sourceCharacterId),
+        passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
+      }
+    }
+
+    const element = input.effect.element ?? character?.element ?? "Physical"
+    const damage = computeDamage(
+      {
+        multiplier: input.effect.damage.value,
+        element,
+        skillType,
+        dmgType: input.effect.damage.dmgType,
+        scalingStat: input.effect.damage.scalingStat,
+      },
+      stats,
+    )
 
     return {
       kind: "hit",
