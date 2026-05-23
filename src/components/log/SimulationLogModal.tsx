@@ -20,7 +20,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-330 max-h-[95vh] bg-card rounded-2xl flex flex-col"
+        className="w-full h-full max-w-330 max-h-[95vh] bg-card rounded-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center px-5 pt-4 pb-5">
@@ -49,7 +49,7 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
             <XIcon className="w-6 h-6" />
           </button>
         </div>
-        <div className="flex-1 min-h-0 overflow-auto px-5 pb-5">
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-scroll px-5 pb-5">
           {log.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground text-sm">
               No simulation data. Click Simulate to generate.

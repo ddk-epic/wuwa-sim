@@ -125,7 +125,7 @@ export function TimelineView({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-scroll">
       <table className="w-full text-sm text-left table-fixed min-w-235">
         <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
           <tr className="text-muted-foreground text-xs font-mono tracking-[1px] uppercase">
