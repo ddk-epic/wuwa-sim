@@ -41,6 +41,19 @@ export function renderPoolValue(val: number | null, color: string): ReactNode {
   )
 }
 
+export function CharChip({ id }: { id: number }) {
+  const v = charVisual(id)
+  return (
+    <span
+      className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-xs font-black text-gray-900 shrink-0 ml-1"
+      style={{ backgroundColor: v.hex }}
+      title={v.name}
+    >
+      {v.letter}
+    </span>
+  )
+}
+
 export function CharCell({ id }: { id: number }) {
   const v = charVisual(id)
   return (
