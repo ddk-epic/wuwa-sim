@@ -48,7 +48,7 @@ export function Stepper<T extends string | number>({
         <ChevronLeftIcon className="w-3 h-3" />
       </button>
       <div
-        className="flex-1 flex items-center justify-center font-mono text-[16px] -mb-px"
+        className="flex-1 flex items-center justify-center font-mono text-[18px] -mb-px"
         style={{ color: disabled ? undefined : hex }}
       >
         {label ? label(value) : String(value)}
