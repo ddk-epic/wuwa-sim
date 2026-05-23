@@ -250,11 +250,11 @@ export function TimelineEntryRow({
           <span className="font-semibold text-gray-600">—</span>
         )}
       </td>
-      <td className="px-3 py-2">
-        <div className="flex justify-end">
+      <td className="px-1 py-2">
+        <div className="flex justify-end -my-1">
           <button
             onClick={() => onRemove(entry.id)}
-            className="p-1.5 -my-1.5 text-xs text-gray-500 hover:text-red-400 transition-colors"
+            className="p-1.5 text-xs text-gray-500 hover:text-red-400 transition-colors"
             aria-label="Remove"
           >
             ✕

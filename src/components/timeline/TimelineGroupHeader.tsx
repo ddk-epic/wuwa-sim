@@ -261,14 +261,14 @@ export function TimelineGroupHeader({
         )}
       </td>
       <td className="px-1 py-1.5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center -my-1.5">
+        <div className="flex items-center -my-1">
           <button
             onClick={(e) => {
               e.stopPropagation()
               onToggleGroupLock(groupId)
             }}
             className={[
-              "p-0.5 transition-colors",
+              "px-0.75 py-1.5 transition-colors",
               !locked
                 ? "text-blue-400 hover:text-blue-300"
                 : "text-gray-500 hover:text-gray-400",
@@ -287,7 +287,7 @@ export function TimelineGroupHeader({
               e.stopPropagation()
               onDuplicateGroup(groupId)
             }}
-            className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+            className="px-0.75 py-1.5 text-gray-500 hover:text-gray-300 transition-colors"
             title="Duplicate group"
             aria-label="Duplicate group"
           >
@@ -302,7 +302,7 @@ export function TimelineGroupHeader({
                 onDeleteGroup(groupId)
               }
             }}
-            className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+            className="px-0.75 py-1.5 text-gray-500 hover:text-red-400 transition-colors"
             title="Delete group and contents"
             aria-label="Delete group and contents"
           >
