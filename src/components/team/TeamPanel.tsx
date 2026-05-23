@@ -27,10 +27,13 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
 
   if (character === null) {
     return (
-      <div className="min-h-60 border border-dashed border-border rounded-sm bg-darkest flex items-center justify-center">
-        <span className="font-mono uppercase tracking-[1.5px] text-muted-foreground">
-          slot {slotIndex + 1} — empty
-        </span>
+      <div className="space-y-2 font-mono uppercase tracking-[1.5px] text-muted">
+        <div className="aspect-4/3 rounded-t-xl bg-darkest flex items-center justify-center">
+          slot {slotIndex + 1}
+        </div>
+        <div className="h-82 rounded-b-xl bg-darkest flex flex-1 items-center justify-center">
+          empty
+        </div>
       </div>
     )
   }

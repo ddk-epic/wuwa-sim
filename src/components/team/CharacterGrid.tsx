@@ -59,7 +59,7 @@ function CharacterCard({
       disabled={isBlocked}
       className={[
         "relative aspect-square w-full rounded-2xl overflow-hidden bg-darkest transition-all select-none border focus:outline-none",
-        isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
+        isBlocked ? "opacity-40" : "cursor-pointer",
         isFocused
           ? "ring-1 ring-foreground/60 ring-offset-1 ring-offset-card"
           : "",
