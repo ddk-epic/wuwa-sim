@@ -1037,4 +1037,35 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(result.invalidRowIds.has("launch")).toBe(false)
     expect(result.invalidRowIds.has("land")).toBe(false)
   })
+
+  it("soft warning: air cursor → ground stage emits fall-frames annotation", () => {
+    const result = validateTimeline(
+      [fEntry("Launch Move::_", "launch"), fEntry("Ground Move::_", "ground")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("ground")).toBe(false)
+    expect(result.rowErrors.has("ground")).toBe(false)
+    expect(
+      result.rowWarnings.get("ground")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
+  })
+
+  it("no warning: ground cursor → ground stage (normal grounded stage)", () => {
+    const result = validateTimeline(
+      [fEntry("Ground Move::_", "g1"), fEntry("Ground Move::_", "g2")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.rowWarnings.has("g2")).toBe(false)
+  })
+
+  it("no warning: air cursor → air stage", () => {
+    const result = validateTimeline(
+      [fEntry("Launch Move::_", "launch"), fEntry("Air Move::_", "air")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.rowWarnings.has("air")).toBe(false)
+  })
 })

@@ -49,6 +49,10 @@ export function useVariantFloor(): number {
   return useSettingsContext().settings.variantFloor
 }
 
+export function useFallFrames(): number {
+  return useSettingsContext().settings.fallFrames
+}
+
 export function useSettingsValue(): Settings {
   return useSettingsContext().settings
 }

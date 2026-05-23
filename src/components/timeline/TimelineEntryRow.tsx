@@ -78,7 +78,9 @@ export function TimelineEntryRow({
     timeFrames: 0,
     durationFrames: 0,
     reactFrames: 0,
+    floorFrames: 0,
     padFrames: 0,
+    fallFrames: 0,
     damage: null,
   }
   const isDragging = drag.draggedId === entry.id
@@ -96,7 +98,9 @@ export function TimelineEntryRow({
   const reactDelayFrames = row.reactFrames
   const floorFrames = row.floorFrames
   const padFrames = row.padFrames
-  const totalDelayFrames = reactDelayFrames + floorFrames + padFrames
+  const fallFrames = row.fallFrames
+  const totalDelayFrames =
+    reactDelayFrames + floorFrames + padFrames + fallFrames
 
   const conVal = actionEventAtIndex?.cumulativeConcerto ?? null
   const resVal = actionEventAtIndex?.cumulativeEnergy ?? null
@@ -213,6 +217,7 @@ export function TimelineEntryRow({
                     ? `react: ${formatFrames(reactDelayFrames)}`
                     : "",
                 padFrames > 0 ? `pad: ${formatFrames(padFrames)}` : "",
+                fallFrames > 0 ? `fall: ${formatFrames(fallFrames)}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}

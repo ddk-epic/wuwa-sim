@@ -29,6 +29,7 @@ export function validateTimeline(
 ): ValidationResult {
   const internalErrors = new Map<string, InternalError[]>()
   const invalidRowIds = new Set<string>()
+  const rowWarnings = new Map<string, ValidationWarning[]>()
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
@@ -142,7 +143,29 @@ export function validateTimeline(
     }
   }
 
-  // Pass 2: build public rowErrors — suppress consequence-only rows
+  // Footing-walk pass 2: air→ground soft warning
+  let footingCursorForWarn: "ground" | "air" = "ground"
+  for (const entry of entries) {
+    if (invalidRowIds.has(entry.id)) continue
+    const resolved = findStageByEntry(entry, slots, loadouts)
+    const footing = resolved?.stage.footing
+    if (footing) {
+      if (footingCursorForWarn === "air" && footing === "ground") {
+        const existing = rowWarnings.get(entry.id) ?? []
+        existing.push({
+          message: "Fall frames apply (airborne → ground stage)",
+        })
+        rowWarnings.set(entry.id, existing)
+      }
+      if (footing === "launch" || footing === "air") {
+        footingCursorForWarn = "air"
+      } else {
+        footingCursorForWarn = "ground"
+      }
+    }
+  }
+
+  // Pass 3: build public rowErrors — suppress consequence-only rows
   const rowErrors = new Map<string, ValidationError[]>()
   for (const [id, errs] of internalErrors) {
     const directErrors = errs
@@ -153,17 +176,18 @@ export function validateTimeline(
     }
   }
 
-  // Pass 3: swap → same-character warnings
-  const rowWarnings = new Map<string, ValidationWarning[]>()
+  // Pass 4: swap → same-character warnings
   for (let i = 0; i < entries.length - 1; i++) {
     const entry = entries[i]
     if (
       entry.variantKind === "swap" &&
       entries[i + 1].characterId === entry.characterId
     ) {
-      rowWarnings.set(entry.id, [
-        { message: "Swap forces the next entry to be a different character" },
-      ])
+      const existing = rowWarnings.get(entry.id) ?? []
+      existing.push({
+        message: "Swap forces the next entry to be a different character",
+      })
+      rowWarnings.set(entry.id, existing)
     }
   }
 

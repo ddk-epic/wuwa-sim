@@ -4,9 +4,11 @@ interface SettingsModalProps {
   reactionDelay: number
   swapFrames: number
   variantFloor: number
+  fallFrames: number
   onReactionDelayChange: (value: number) => void
   onSwapFramesChange: (value: number) => void
   onVariantFloorChange: (value: number) => void
+  onFallFramesChange: (value: number) => void
   onClose: () => void
 }
 
@@ -14,9 +16,11 @@ export function SettingsModal({
   reactionDelay,
   swapFrames,
   variantFloor,
+  fallFrames,
   onReactionDelayChange,
   onSwapFramesChange,
   onVariantFloorChange,
+  onFallFramesChange,
   onClose,
 }: SettingsModalProps) {
   return (
@@ -50,7 +54,7 @@ export function SettingsModal({
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
       </div>
-      <div className="grid grid-cols-2 gap-1 mb-6">
+      <div className="grid grid-cols-2 gap-1 mb-4">
         <label className="text-sm text-gray-400" htmlFor="variant-floor">
           Variant Floor (frames)
         </label>
@@ -61,6 +65,20 @@ export function SettingsModal({
           max={60}
           value={variantFloor}
           onChange={(e) => onVariantFloorChange(Number(e.target.value))}
+          className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-1 mb-6">
+        <label className="text-sm text-gray-400" htmlFor="fall-frames">
+          Fall Frames (frames)
+        </label>
+        <input
+          id="fall-frames"
+          type="number"
+          min={0}
+          max={60}
+          value={fallFrames}
+          onChange={(e) => onFallFramesChange(Number(e.target.value))}
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
       </div>

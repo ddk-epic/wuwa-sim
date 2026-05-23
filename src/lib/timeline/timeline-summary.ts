@@ -12,6 +12,7 @@ export interface TimelineSummaryRow {
   reactFrames: number
   floorFrames: number
   padFrames: number
+  fallFrames: number
   damage: number | null
 }
 
@@ -65,6 +66,7 @@ export function getTimelineSummary(
     let reactFrames: number
     let floorFrames: number
     let padFrames: number
+    let fallFrames: number
     let damage: number | null
 
     if (ae !== undefined) {
@@ -72,6 +74,7 @@ export function getTimelineSummary(
       reactFrames = ae.delayBreakdown?.react ?? 0
       floorFrames = ae.delayBreakdown?.floor ?? 0
       padFrames = ae.delayBreakdown?.pad ?? 0
+      fallFrames = ae.delayBreakdown?.fall ?? 0
 
       if (nextAe !== undefined) {
         durationFrames = nextAe.frame - ae.frame
@@ -108,6 +111,7 @@ export function getTimelineSummary(
       reactFrames = execution?.react ?? 0
       floorFrames = execution?.floor ?? 0
       padFrames = 0
+      fallFrames = 0
       damage = null
     }
 
@@ -119,6 +123,7 @@ export function getTimelineSummary(
       reactFrames,
       floorFrames,
       padFrames,
+      fallFrames,
       damage,
     })
   }

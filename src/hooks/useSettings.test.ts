@@ -14,6 +14,7 @@ describe("useSettings", () => {
       reactionDelay: 6,
       swapFrames: 6,
       variantFloor: 15,
+      fallFrames: 21,
     })
   })
 
@@ -27,6 +28,7 @@ describe("useSettings", () => {
       reactionDelay: 5,
       swapFrames: 10,
       variantFloor: 20,
+      fallFrames: 21,
     })
   })
 
@@ -47,6 +49,15 @@ describe("useSettings", () => {
     expect(result.current[0].variantFloor).toBe(15)
   })
 
+  it("merges legacy localStorage entry lacking fallFrames with default 21", () => {
+    localStorage.setItem(
+      "wuwa.settings",
+      JSON.stringify({ reactionDelay: 6, swapFrames: 6, variantFloor: 15 }),
+    )
+    const { result } = renderHook(() => useSettings())
+    expect(result.current[0].fallFrames).toBe(21)
+  })
+
   it("patch setter updates reactionDelay and persists", () => {
     const { result } = renderHook(() => useSettings())
     act(() => {
@@ -59,6 +70,7 @@ describe("useSettings", () => {
       reactionDelay: 15,
       swapFrames: 6,
       variantFloor: 15,
+      fallFrames: 21,
     })
   })
 

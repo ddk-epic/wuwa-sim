@@ -67,6 +67,7 @@ export function SimulatorPage() {
         settings.reactionDelay,
         settings.swapFrames,
         settings.variantFloor,
+        settings.fallFrames,
       ),
     )
   }

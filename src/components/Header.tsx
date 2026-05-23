@@ -11,6 +11,7 @@ import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import {
+  useFallFrames,
   useReactionDelay,
   useSettingsActions,
   useSwapFrames,
@@ -42,6 +43,7 @@ export function Header({
   const reactionDelay = useReactionDelay()
   const swapFrames = useSwapFrames()
   const variantFloor = useVariantFloor()
+  const fallFrames = useFallFrames()
   const { setSettings } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -129,11 +131,13 @@ export function Header({
           reactionDelay={reactionDelay}
           swapFrames={swapFrames}
           variantFloor={variantFloor}
+          fallFrames={fallFrames}
           onReactionDelayChange={(value) =>
             setSettings({ reactionDelay: value })
           }
           onSwapFramesChange={(value) => setSettings({ swapFrames: value })}
           onVariantFloorChange={(value) => setSettings({ variantFloor: value })}
+          onFallFramesChange={(value) => setSettings({ fallFrames: value })}
           onClose={() => setSettingsOpen(false)}
         />
       )}

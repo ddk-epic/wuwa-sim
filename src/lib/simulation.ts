@@ -1,4 +1,4 @@
-import type { DamageEntry, HealTarget } from "#/types/character"
+import type { DamageEntry, Footing, HealTarget } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
@@ -24,6 +24,7 @@ export function runSimulation(
   reactionDelay: number = 9,
   swapFrames: number = 6,
   variantFloor: number = 0,
+  fallFrames: number = 21,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
@@ -54,7 +55,11 @@ export function runSimulation(
       swapFrames,
       arrival.padFrames,
       variantFloor,
+      fallFrames,
     )
+    if (resolved?.stage.footing) {
+      engine.setFooting(footingExitState(resolved.stage.footing))
+    }
     if (resolved) {
       const sched = TrailingWindow.scheduleStage(state, {
         entry,
@@ -87,6 +92,7 @@ function processEntry(
   swapFrames: number,
   padFrames: number = 0,
   variantFloor: number = 0,
+  fallFrames: number = 21,
 ): {
   resolved: ResolvedStage | null
   allHits: DamageEntry[]
@@ -115,6 +121,12 @@ function processEntry(
     variantFloor,
   )
 
+  const fall = computeFall(
+    engine.currentFooting(),
+    resolved.stage.footing,
+    fallFrames,
+  )
+
   pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
 
   if (resolved.skillType !== "Movement") {
@@ -129,6 +141,7 @@ function processEntry(
     react,
     floor,
     padFrames,
+    fall,
   )
   log.push(actionEvent)
 
@@ -171,6 +184,7 @@ function buildActionEvent(
   react: number = 0,
   floor: number = 0,
   padFrames: number = 0,
+  fall: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
   const event: ActionEvent = {
@@ -184,10 +198,25 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
-  if (react > 0 || floor > 0 || padFrames > 0) {
-    event.delayBreakdown = { react, floor, pad: padFrames }
+  if (react > 0 || floor > 0 || padFrames > 0 || fall > 0) {
+    event.delayBreakdown = { react, floor, pad: padFrames, fall }
   }
   return event
+}
+
+function computeFall(
+  currentFooting: "ground" | "air",
+  stageFooting: Footing | undefined,
+  fallFrames: number,
+): number {
+  if (currentFooting !== "air") return 0
+  if (stageFooting !== "ground") return 0
+  return fallFrames
+}
+
+function footingExitState(footing: Footing): "ground" | "air" {
+  if (footing === "launch" || footing === "air") return "air"
+  return "ground"
 }
 
 function processHit(

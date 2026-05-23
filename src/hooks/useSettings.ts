@@ -4,9 +4,15 @@ export interface Settings {
   reactionDelay: number
   swapFrames: number
   variantFloor: number
+  fallFrames: number
 }
 
-const DEFAULTS: Settings = { reactionDelay: 6, swapFrames: 6, variantFloor: 15 }
+const DEFAULTS: Settings = {
+  reactionDelay: 6,
+  swapFrames: 6,
+  variantFloor: 15,
+  fallFrames: 21,
+}
 const STORAGE_KEY = "wuwa.settings"
 
 function clamp(value: number): number {
@@ -29,6 +35,10 @@ function mergeWithDefaults(stored: unknown): Settings {
       typeof partial.variantFloor === "number"
         ? partial.variantFloor
         : DEFAULTS.variantFloor,
+    fallFrames:
+      typeof partial.fallFrames === "number"
+        ? partial.fallFrames
+        : DEFAULTS.fallFrames,
   }
 }
 
@@ -49,6 +59,9 @@ export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
     }
     if (patch.variantFloor !== undefined) {
       next.variantFloor = clamp(patch.variantFloor)
+    }
+    if (patch.fallFrames !== undefined) {
+      next.fallFrames = clamp(patch.fallFrames)
     }
     setSettings(next)
   }

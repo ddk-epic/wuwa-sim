@@ -1594,7 +1594,12 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.delayBreakdown).toEqual({ react: 6, floor: 0, pad: 0 })
+    expect(action?.delayBreakdown).toEqual({
+      react: 6,
+      floor: 0,
+      pad: 0,
+      fall: 0,
+    })
   })
 
   it("no-delay: full stage has no delayBreakdown", () => {
@@ -1661,7 +1666,12 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.delayBreakdown).toEqual({ react: 6, floor: 0, pad: 0 })
+    expect(action?.delayBreakdown).toEqual({
+      react: 6,
+      floor: 0,
+      pad: 0,
+      fall: 0,
+    })
   })
 })
 
@@ -1720,5 +1730,267 @@ describe("runSimulation — sourceEntryId (#186)", () => {
     for (const hit of hits) {
       expect(hit.sourceEntryId).toBe("trigger-entry")
     }
+  })
+})
+
+// ── Fall frames (ADR-0022 slice 2) ────────────────────────────────────────────
+
+const charAerial: EnrichedCharacter = {
+  ...charA,
+  id: 50,
+  name: "Aerial Char",
+  skills: [
+    {
+      id: 100,
+      name: "Launch",
+      type: "Resonance Skill",
+      stages: [
+        {
+          name: "Launch Stage",
+          value: "100%",
+          actionTime: 30,
+          footing: "launch",
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 101,
+      name: "Aerial Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Aerial Stage",
+          value: "100%",
+          actionTime: 40,
+          footing: "air",
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 102,
+      name: "Ground Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Ground Stage",
+          value: "100%",
+          actionTime: 50,
+          footing: "ground",
+          damage: [],
+          variants: { cancel: { actionTime: 10 } },
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 103,
+      name: "Neutral",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Neutral Stage",
+          value: "100%",
+          actionTime: 45,
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
+
+const charAerialB: EnrichedCharacter = {
+  ...charAerial,
+  id: 51,
+  name: "Aerial Char B",
+}
+
+function aerialSlots(): Slots {
+  return [50, 51, null]
+}
+
+describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
+  it("same-character air→ground: fall fires on grounded stage after launch", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      tlEntry(50, "Ground Attack::_", "e2"),
+    ]
+    // reactionDelay=0, swapFrames=6, variantFloor=0, fallFrames=21
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const groundAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("same-character ground stage after ground stage: fall does not fire", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Ground Attack::_", "e1"),
+      tlEntry(50, "Ground Attack::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const second = actions.find((a) => a.sourceEntryId === "e2")
+    expect(second?.delayBreakdown?.fall ?? 0).toBe(0)
+  })
+
+  it("aerial stage after launch: fall does not fire (air→air)", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      tlEntry(50, "Aerial Attack::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const aerialAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(aerialAction?.delayBreakdown?.fall ?? 0).toBe(0)
+  })
+
+  it("cross-character air→ground via swap: fall fires on incoming character's row", () => {
+    testCharacters = [charAerial, charAerialB]
+    // charA launches (team → air), charB does ground stage (fall fires on charB)
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      tlEntry(51, "Ground Attack::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const charBAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("fall is additive with pad (both non-zero)", () => {
+    testCharacters = [charAerial, charAerialB]
+    // charA launches (swap variant to produce trailing hits), charB does ground stage
+    const entries: TimelineEntry[] = [
+      { id: "e1", characterId: 50, stageId: "Launch::_", variantKind: "swap" },
+      tlEntry(51, "Ground Attack::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const charBAction = actions.find((a) => a.sourceEntryId === "e2")
+    // fall should still be 21 regardless of pad
+    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("fall is NOT subject to variantFloor (fall accumulates independently)", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      {
+        id: "e2",
+        characterId: 50,
+        stageId: "Ground Attack::_",
+        variantKind: "cancel",
+      },
+    ]
+    // variantFloor=30, fallFrames=21 — fall should be 21 regardless of floor=30
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      30,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const groundAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("react/floor mutex preserved alongside fall", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      {
+        id: "e2",
+        characterId: 50,
+        stageId: "Ground Attack::_",
+        variantKind: "cancel",
+      },
+    ]
+    // reactionDelay=6, variantFloor=0 → react wins
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      6,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const groundAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(groundAction?.delayBreakdown?.react).toBe(6)
+    expect(groundAction?.delayBreakdown?.floor).toBe(0)
+    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("footing-transparent stage does not reset footing cursor", () => {
+    testCharacters = [charAerial]
+    // launch → neutral (transparent, no footing change) → ground → fall fires
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      tlEntry(50, "Neutral::_", "e2"),
+      tlEntry(50, "Ground Attack::_", "e3"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const groundAction = actions.find((a) => a.sourceEntryId === "e3")
+    expect(groundAction?.delayBreakdown?.fall).toBe(21)
   })
 })
