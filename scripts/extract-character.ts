@@ -126,7 +126,7 @@ function mapDamageEntries(damageList: ApiDamageEntry[]): DamageEntry[] {
     dmgType: entry.DmgType ?? "damage",
     scalingStat: entry.PropertyName,
     actionFrame: 0,
-    value: parseValue(entry.RateLv[9]),
+    value: parseValue(entry.RateLv[9] ?? entry.RateLv[entry.RateLv.length - 1]),
     energy: entry.Energy[0],
     concerto: entry.ElementPower[0],
     toughness: entry.ToughLv[0],
@@ -410,11 +410,17 @@ function buildReferenceMarkdown(data: ApiCharacter): string {
 export async function extractCharacter(id: string): Promise<void> {
   console.log(`Fetching character ${id}...`)
 
-  const res = await fetch(`${BASE_URL}/character/${id}`)
-  if (!res.ok)
-    throw new Error(`API responded with ${res.status}: ${res.statusText}`)
-
-  const data: ApiCharacter = await res.json()
+  let data: ApiCharacter
+  if (id.endsWith(".json") || id.includes("/") || id.includes("\\")) {
+    const filePath = path.isAbsolute(id) ? id : path.resolve(PROJECT_ROOT, id)
+    const raw = await fs.readFile(filePath, "utf-8")
+    data = JSON.parse(raw)
+  } else {
+    const res = await fetch(`${BASE_URL}/character/${id}`)
+    if (!res.ok)
+      throw new Error(`API responded with ${res.status}: ${res.statusText}`)
+    data = await res.json()
+  }
 
   const weaponType = WEAPON_TYPE_MAP[data.WeaponType]
 
