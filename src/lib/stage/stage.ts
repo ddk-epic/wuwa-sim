@@ -1,6 +1,7 @@
 import type { Element } from "#/data/elements"
 import type {
   DamageEntry,
+  Footing,
   MovementKind,
   SkillCategory,
   SkillType,
@@ -14,6 +15,7 @@ import { getCharacterById, getEchoById } from "../loadout/catalog"
 export interface ActionTimeStage {
   actionTime: number
   variants?: Partial<Record<VariantKind, StageVariant>>
+  footing?: Footing
 }
 
 export interface ResolvedStage {

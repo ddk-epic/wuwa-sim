@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -864,5 +864,177 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
     // swap variant on the preceding entry still satisfies requiresStageId
     expect(result.rowErrors.has("e2")).toBe(false)
     expect(result.invalidRowIds.has("e2")).toBe(false)
+  })
+})
+
+// ── Footing walk validation (ADR-0022 slice 1) ────────────────────────────────
+
+describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
+  const footingChar = (): EnrichedCharacter =>
+    baseChar({
+      id: 1,
+      skills: [
+        {
+          id: 1,
+          name: "Ground Move",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Ground",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "ground",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 2,
+          name: "Air Move",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Air",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "air",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 3,
+          name: "Launch Move",
+          type: "Movement",
+          stages: [
+            {
+              name: "Launch",
+              value: "",
+              actionTime: 18,
+              damage: [],
+              footing: "launch",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 4,
+          name: "Land Move",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Land",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "land",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 5,
+          name: "Neutral Move",
+          type: "Normal Attack",
+          stages: [{ name: "Neutral", value: "", actionTime: 20, damage: [] }],
+          damage: [],
+        },
+      ],
+    })
+
+  const fEntry = (stageId: string, id = stageId): TimelineEntry => ({
+    id,
+    characterId: 1,
+    stageId,
+  })
+
+  beforeEach(() => {
+    testCharacters = [footingChar()]
+  })
+
+  it("hard error: ground → air ('launch/jump required')", () => {
+    const result = validateTimeline(
+      [fEntry("Air Move::_", "air")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("air")).toBe(true)
+    expect(
+      result.rowErrors.get("air")?.some((e) => /launch|jump/i.test(e.message)),
+    ).toBe(true)
+  })
+
+  it("hard error: air → launch ('already airborne')", () => {
+    const result = validateTimeline(
+      [
+        fEntry("Launch Move::_", "launch1"),
+        fEntry("Launch Move::_", "launch2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("launch2")).toBe(true)
+    expect(
+      result.rowErrors.get("launch2")?.some((e) => /airborne/i.test(e.message)),
+    ).toBe(true)
+    expect(result.invalidRowIds.has("launch1")).toBe(false)
+  })
+
+  it("hard error: ground → land ('nothing to land from')", () => {
+    const result = validateTimeline(
+      [fEntry("Land Move::_", "land")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("land")).toBe(true)
+    expect(
+      result.rowErrors.get("land")?.some((e) => /land/i.test(e.message)),
+    ).toBe(true)
+  })
+
+  it("no error: air → ground (fall padding, not flagged in slice 1)", () => {
+    const result = validateTimeline(
+      [fEntry("Launch Move::_", "launch"), fEntry("Ground Move::_", "ground")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("launch")).toBe(false)
+    expect(result.invalidRowIds.has("ground")).toBe(false)
+  })
+
+  it("valid: Jump (launch) → air → land sequence", () => {
+    const result = validateTimeline(
+      [
+        fEntry("Launch Move::_", "launch"),
+        fEntry("Air Move::_", "air"),
+        fEntry("Land Move::_", "land"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.size).toBe(0)
+    expect(result.rowErrors.size).toBe(0)
+  })
+
+  it("footing-transparent stage does not change cursor", () => {
+    const result = validateTimeline(
+      [fEntry("Neutral Move::_", "neutral"), fEntry("Air Move::_", "air")],
+      [1, null, null],
+      loadouts,
+    )
+    // Cursor stays ground through the neutral move → air stage hard-errors
+    expect(result.invalidRowIds.has("air")).toBe(true)
+  })
+
+  it("footing cursor updates across entries: launch sets air, then land is valid", () => {
+    const result = validateTimeline(
+      [fEntry("Launch Move::_", "launch"), fEntry("Land Move::_", "land")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("launch")).toBe(false)
+    expect(result.invalidRowIds.has("land")).toBe(false)
   })
 })

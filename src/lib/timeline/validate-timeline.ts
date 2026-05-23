@@ -107,6 +107,41 @@ export function validateTimeline(
     }
   }
 
+  // Footing-walk pass: team-global cursor, hard-error cases from ADR-0022
+  let footingCursor: "ground" | "air" = "ground"
+  for (const entry of entries) {
+    if (invalidRowIds.has(entry.id)) {
+      // Skip footing check for already-invalid entries to avoid noise
+      continue
+    }
+    const resolved = findStageByEntry(entry, slots, loadouts)
+    const footing = resolved?.stage.footing
+    if (!footing) continue
+
+    let footingError: string | null = null
+    if (footingCursor === "ground" && footing === "air") {
+      footingError = "Launch/Jump required before an aerial stage"
+    } else if (footingCursor === "air" && footing === "launch") {
+      footingError = "Already airborne — cannot launch again"
+    } else if (footingCursor === "ground" && footing === "land") {
+      footingError = "Nothing to land from — not currently airborne"
+    }
+
+    if (footingError) {
+      const existing = internalErrors.get(entry.id) ?? []
+      existing.push({ message: footingError, isConsequence: false })
+      internalErrors.set(entry.id, existing)
+      invalidRowIds.add(entry.id)
+    }
+
+    // Advance cursor to exit footing of this stage
+    if (footing === "launch" || footing === "air") {
+      footingCursor = "air"
+    } else {
+      footingCursor = "ground"
+    }
+  }
+
   // Pass 2: build public rowErrors — suppress consequence-only rows
   const rowErrors = new Map<string, ValidationError[]>()
   for (const [id, errs] of internalErrors) {

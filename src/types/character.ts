@@ -99,12 +99,15 @@ export interface StageVariant {
 
 export type MovementKind = "Dodge" | "Jump"
 
+export type Footing = "ground" | "air" | "launch" | "land"
+
 type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   id?: string
   actionTime: number
   hidden?: boolean
   newName?: string
   variants?: Partial<Record<VariantKind, StageVariant>>
+  footing?: Footing
 }
 
 export type EnrichedSkillAttribute =
