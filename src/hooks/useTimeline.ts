@@ -95,7 +95,6 @@ export function useTimeline(onShapeChange?: () => void) {
         n.kind === "group" && n.id === groupId ? { ...n, locked: true } : n,
       )
     })
-    onShapeChange?.()
   }
 
   function deleteGroup(groupId: string) {

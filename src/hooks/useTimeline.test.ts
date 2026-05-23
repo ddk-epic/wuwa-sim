@@ -528,6 +528,20 @@ describe("useTimeline onShapeChange callback", () => {
     expect(onShapeChange).not.toHaveBeenCalled()
   })
 
+  it("toggleGroupLock does NOT call onShapeChange", () => {
+    const onShapeChange = vi.fn()
+    const { result } = renderHook(() => useTimeline(onShapeChange))
+    let groupId!: string
+    act(() => {
+      groupId = result.current.addGroup()
+    })
+    onShapeChange.mockClear()
+    act(() => {
+      result.current.toggleGroupLock(groupId)
+    })
+    expect(onShapeChange).not.toHaveBeenCalled()
+  })
+
   it("clearTimeline calls onShapeChange", () => {
     const onShapeChange = vi.fn()
     const { result } = renderHook(() => useTimeline(onShapeChange))
