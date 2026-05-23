@@ -70,11 +70,22 @@ export function runSimulation(
         stageDuration,
       })
       state = sched.stateAfter
+      if (
+        entry.variantKind === "swap" &&
+        resolved.stage.footing &&
+        (state.get(entry.characterId)?.length ?? 0) > 0
+      ) {
+        engine.snapshotFooting(
+          entry.characterId,
+          footingExitState(resolved.stage.footing),
+        )
+      }
       for (const h of sched.immediate) processHit(h, engine, log, slots)
     }
     frame = nextFrame
   }
 
+  for (const charId of state.keys()) engine.clearFootingSnapshot(charId)
   for (const h of TrailingWindow.drainAll(state))
     processHit(h, engine, log, slots)
 
@@ -121,11 +132,9 @@ function processEntry(
     variantFloor,
   )
 
-  const fall = computeFall(
-    engine.currentFooting(),
-    resolved.stage.footing,
-    fallFrames,
-  )
+  const effectiveFooting =
+    engine.consumeFootingSnapshot(entry.characterId) ?? engine.currentFooting()
+  const fall = computeFall(effectiveFooting, resolved.stage.footing, fallFrames)
 
   pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
 

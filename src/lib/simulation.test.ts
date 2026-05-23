@@ -1994,3 +1994,179 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     expect(groundAction?.delayBreakdown?.fall).toBe(21)
   })
 })
+
+// ── Trailing-window footing snapshot (ADR-0022 slice 3) ─────────────────────
+
+const snapDmg = (actionFrame: number): DamageEntry => ({
+  type: "Resonance Skill",
+  dmgType: "Fusion",
+  scalingStat: "atk",
+  actionFrame,
+  value: 1,
+  energy: 0,
+  concerto: 0,
+  toughness: 0,
+  weakness: 0,
+})
+
+const charSnapA: EnrichedCharacter = {
+  ...charA,
+  id: 52,
+  name: "Snap A",
+  skills: [
+    {
+      id: 300,
+      name: "Aerial Swap",
+      type: "Resonance Skill",
+      stages: [
+        {
+          name: "Aerial Swap Stage",
+          value: "",
+          actionTime: 30,
+          footing: "launch",
+          damage: [
+            snapDmg(3), // immediate (≤ swapFrames=6)
+            snapDmg(20), // trailing (> swapFrames=6) — activates window
+          ],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 301,
+      name: "Ground Stage",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Ground Stage",
+          value: "",
+          actionTime: 50,
+          footing: "ground",
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
+
+const charSnapB: EnrichedCharacter = { ...charSnapA, id: 53, name: "Snap B" }
+
+function snapSlots(): Slots {
+  return [52, 53, null]
+}
+
+describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)", () => {
+  it("load-bearing: aerial swap-variant → charB lands → charA swap-back pays fall via snapshot", () => {
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      // charA aerial swap (trailing hit at frame 20) → snapshot charA → "air"
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      // charB ground stage → team → "ground"; charA snapshot still "air"
+      tlEntry(53, "Ground Stage::_", "e2"),
+      // charA re-enters ground stage → snapshot override "air" → fall fires
+      tlEntry(52, "Ground Stage::_", "e3"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("snapshot-expiry: swap-variant with no trailing hits sets no snapshot, re-entry uses team footing", () => {
+    // charAerial (id=50) Launch has damage: [] → no trailing hits → no snapshot
+    testCharacters = [charAerial, charAerialB]
+    const entries: TimelineEntry[] = [
+      { id: "e1", characterId: 50, stageId: "Launch::_", variantKind: "swap" },
+      tlEntry(51, "Ground Attack::_", "e2"),
+      // charA re-enters: no snapshot → team footing "ground" → no fall
+      tlEntry(50, "Ground Attack::_", "e3"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.fall ?? 0).toBe(0)
+  })
+
+  it("different character inherits team footing, not the swapped-out character's snapshot", () => {
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      // charA aerial swap → team "air", snapshot charA → "air"
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      // charB ground stage → charB has no snapshot → uses team "air" → fall fires on charB
+      tlEntry(53, "Ground Stage::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const charBAction = actions.find((a) => a.sourceEntryId === "e2")
+    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+  })
+
+  it("consecutive aerial swap-variants layer per-character snapshots independently", () => {
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      {
+        id: "e2",
+        characterId: 53,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      tlEntry(52, "Ground Stage::_", "e3"),
+      tlEntry(53, "Ground Stage::_", "e4"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const charAReentry = actions.find((a) => a.sourceEntryId === "e3")
+    const charBReentry = actions.find((a) => a.sourceEntryId === "e4")
+    expect(charAReentry?.delayBreakdown?.fall).toBe(21)
+    expect(charBReentry?.delayBreakdown?.fall).toBe(21)
+  })
+})

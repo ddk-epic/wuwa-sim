@@ -731,6 +731,18 @@ export class BuffEngine {
     this.footing_.setCurrent(footing)
   }
 
+  snapshotFooting(characterId: number, footing: "ground" | "air"): void {
+    this.footing_.snapshotOnSwapOut(characterId, footing)
+  }
+
+  consumeFootingSnapshot(characterId: number): "ground" | "air" | null {
+    return this.footing_.consumeSnapshot(characterId)
+  }
+
+  clearFootingSnapshot(characterId: number): void {
+    this.footing_.clearSnapshot(characterId)
+  }
+
   /** Sorted ids of buff instances currently active on `characterId`. */
   activeBuffIds(characterId: number): string[] {
     return this.store.activeBuffIds(characterId)

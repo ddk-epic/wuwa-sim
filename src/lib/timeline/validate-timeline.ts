@@ -108,8 +108,9 @@ export function validateTimeline(
     }
   }
 
-  // Footing-walk pass: team-global cursor, hard-error cases from ADR-0022
+  // Footing-walk pass: team-global cursor + per-character snapshots (ADR-0022)
   let footingCursor: "ground" | "air" = "ground"
+  const footingSnapshots = new Map<number, "ground" | "air">()
   for (const entry of entries) {
     if (invalidRowIds.has(entry.id)) {
       // Skip footing check for already-invalid entries to avoid noise
@@ -119,12 +120,16 @@ export function validateTimeline(
     const footing = resolved?.stage.footing
     if (!footing) continue
 
+    const snap = footingSnapshots.get(entry.characterId) ?? null
+    const effectiveFooting = snap ?? footingCursor
+    if (snap !== null) footingSnapshots.delete(entry.characterId)
+
     let footingError: string | null = null
-    if (footingCursor === "ground" && footing === "air") {
+    if (effectiveFooting === "ground" && footing === "air") {
       footingError = "Launch/Jump required before an aerial stage"
-    } else if (footingCursor === "air" && footing === "launch") {
+    } else if (effectiveFooting === "air" && footing === "launch") {
       footingError = "Already airborne — cannot launch again"
-    } else if (footingCursor === "ground" && footing === "land") {
+    } else if (effectiveFooting === "ground" && footing === "land") {
       footingError = "Nothing to land from — not currently airborne"
     }
 
@@ -135,22 +140,34 @@ export function validateTimeline(
       invalidRowIds.add(entry.id)
     }
 
-    // Advance cursor to exit footing of this stage
+    // Advance team cursor to exit footing of this stage
     if (footing === "launch" || footing === "air") {
       footingCursor = "air"
     } else {
       footingCursor = "ground"
     }
+
+    // Record swap-variant footing snapshot for same-character re-entry override
+    if (entry.variantKind === "swap") {
+      const exitFooting: "ground" | "air" =
+        footing === "launch" || footing === "air" ? "air" : "ground"
+      footingSnapshots.set(entry.characterId, exitFooting)
+    }
   }
 
-  // Footing-walk pass 2: air→ground soft warning
+  // Footing-walk pass 2: air→ground soft warning (mirrors snapshot logic)
   let footingCursorForWarn: "ground" | "air" = "ground"
+  const footingSnapshotsForWarn = new Map<number, "ground" | "air">()
   for (const entry of entries) {
     if (invalidRowIds.has(entry.id)) continue
     const resolved = findStageByEntry(entry, slots, loadouts)
     const footing = resolved?.stage.footing
     if (footing) {
-      if (footingCursorForWarn === "air" && footing === "ground") {
+      const snap = footingSnapshotsForWarn.get(entry.characterId) ?? null
+      const effectiveFooting = snap ?? footingCursorForWarn
+      if (snap !== null) footingSnapshotsForWarn.delete(entry.characterId)
+
+      if (effectiveFooting === "air" && footing === "ground") {
         const existing = rowWarnings.get(entry.id) ?? []
         existing.push({
           message: "Fall frames apply (airborne → ground stage)",
@@ -161,6 +178,11 @@ export function validateTimeline(
         footingCursorForWarn = "air"
       } else {
         footingCursorForWarn = "ground"
+      }
+      if (entry.variantKind === "swap") {
+        const exitFooting: "ground" | "air" =
+          footing === "launch" || footing === "air" ? "air" : "ground"
+        footingSnapshotsForWarn.set(entry.characterId, exitFooting)
       }
     }
   }

@@ -1069,3 +1069,117 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(result.rowWarnings.has("air")).toBe(false)
   })
 })
+
+// ── Validator footing snapshot (ADR-0022 slice 3) ───────────────────────────
+
+describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
+  const snapChar = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: id * 10 + 1,
+          name: "Aerial Swap",
+          type: "Resonance Skill",
+          stages: [
+            {
+              name: "Aerial Swap Stage",
+              value: "",
+              actionTime: 30,
+              damage: [],
+              footing: "launch",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: id * 10 + 2,
+          name: "Ground Move",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Ground Stage",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "ground",
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  const twoSnapSlots: Slots = [1, 2, null]
+  const twoSnapLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
+    emptyLoadout,
+    emptyLoadout,
+    emptyLoadout,
+  ]
+
+  const fSnap = (
+    characterId: number,
+    stageId: string,
+    id = `${characterId}-${stageId}`,
+    variantKind?: "swap",
+  ): TimelineEntry => ({ id, characterId, stageId, variantKind })
+
+  beforeEach(() => {
+    testCharacters = [snapChar(1), snapChar(2)]
+  })
+
+  it("swap-variant footing snapshot: same-char re-entry gets fall warning after charB lands", () => {
+    // charA (1) aerial swap → team "air", snapshot charA → "air"
+    // charB (2) ground stage → team "ground"
+    // charA (1) re-enters ground stage → effective footing from snapshot "air" → fall warning
+    const result = validateTimeline(
+      [
+        fSnap(1, "Aerial Swap::_", "swap1", "swap"),
+        fSnap(2, "Ground Move::_", "ground2"),
+        fSnap(1, "Ground Move::_", "ground1"),
+      ],
+      twoSnapSlots,
+      twoSnapLoadouts,
+    )
+    expect(result.invalidRowIds.has("ground1")).toBe(false)
+    expect(
+      result.rowWarnings.get("ground1")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
+  })
+
+  it("swap-variant footing: different character uses team cursor, not charA snapshot", () => {
+    // charA aerial swap → team "air", snapshot charA → "air"
+    // charB ground stage → charB uses team cursor "air" → fall warning on charB
+    const result = validateTimeline(
+      [
+        fSnap(1, "Aerial Swap::_", "swap1", "swap"),
+        fSnap(2, "Ground Move::_", "ground2"),
+      ],
+      twoSnapSlots,
+      twoSnapLoadouts,
+    )
+    expect(result.invalidRowIds.has("ground2")).toBe(false)
+    expect(
+      result.rowWarnings.get("ground2")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
+  })
+
+  it("snapshot consumed on re-entry: second same-char ground stage does not warn again", () => {
+    // charA aerial swap → snapshot "air"
+    // charA ground re-entry → snapshot consumed → team footing now "ground"
+    // charA second ground stage → no snapshot, team footing "ground" → no fall warning
+    const result = validateTimeline(
+      [
+        fSnap(1, "Aerial Swap::_", "swap1", "swap"),
+        fSnap(1, "Ground Move::_", "ground1a"),
+        fSnap(1, "Ground Move::_", "ground1b"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(
+      result.rowWarnings.get("ground1a")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
+    expect(result.rowWarnings.has("ground1b")).toBe(false)
+  })
+})
