@@ -7,7 +7,6 @@ import {
   TrashIcon,
 } from "lucide-react"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
-import type { SimulationLogEntry } from "#/types/simulation-log"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { avatarFallbackSrc } from "#/lib/avatar-fallback"
@@ -56,8 +55,6 @@ interface TimelineGroupHeaderProps {
   item: GroupHeaderRenderItem
   isExpanded: boolean
   summary: TimelineSummary
-  actionEvents: SimulationLogEntry[]
-  logMatches: boolean
   drag: TimelineDrag
   hidden?: boolean
   onToggleExpand: (groupId: string) => void
@@ -72,8 +69,6 @@ export function TimelineGroupHeader({
   item,
   isExpanded,
   summary,
-  actionEvents,
-  logMatches,
   drag,
   hidden = false,
   onToggleExpand,
@@ -108,19 +103,10 @@ export function TimelineGroupHeader({
       ? formatFrames(summary.rows[startFlatIndex]?.timeFrames ?? 0)
       : "0.00s"
 
-  const lastConVal =
-    isExpanded || entryCount === 0 || !logMatches
-      ? null
-      : actionEvents[lastFlatIndex]?.kind === "action"
-        ? actionEvents[lastFlatIndex].cumulativeConcerto
-        : null
-
-  const lastResVal =
-    isExpanded || entryCount === 0 || !logMatches
-      ? null
-      : actionEvents[lastFlatIndex]?.kind === "action"
-        ? actionEvents[lastFlatIndex].cumulativeEnergy
-        : null
+  const lastRow =
+    !isExpanded && entryCount > 0 ? (summary.rows[lastFlatIndex] ?? null) : null
+  const lastConVal = lastRow?.cumulativeConcerto ?? null
+  const lastResVal = lastRow?.cumulativeEnergy ?? null
 
   let totalDmg = 0
   let hasDmg = false

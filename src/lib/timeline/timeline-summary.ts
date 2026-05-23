@@ -14,6 +14,8 @@ export interface TimelineSummaryRow {
   padFrames: number
   fallFrames: number
   damage: number | null
+  cumulativeConcerto: number | null
+  cumulativeEnergy: number | null
 }
 
 export interface TimelineSummary {
@@ -35,6 +37,8 @@ export function getTimelineSummary(
   const logActionEvents: ActionEvent[] = []
   const actionIdxByEntryId = new Map<string, number>()
   const hitDamageByEntryId = new Map<string, number>()
+  const lastHitConcertoByEntryId = new Map<string, number>()
+  const lastHitEnergyByEntryId = new Map<string, number>()
 
   if (log) {
     for (const e of log) {
@@ -47,6 +51,8 @@ export function getTimelineSummary(
           e.sourceEntryId,
           (hitDamageByEntryId.get(e.sourceEntryId) ?? 0) + e.damage,
         )
+        lastHitConcertoByEntryId.set(e.sourceEntryId, e.cumulativeConcerto)
+        lastHitEnergyByEntryId.set(e.sourceEntryId, e.cumulativeEnergy)
       }
     }
   }
@@ -68,6 +74,8 @@ export function getTimelineSummary(
     let padFrames: number
     let fallFrames: number
     let damage: number | null
+    let cumulativeConcerto: number | null
+    let cumulativeEnergy: number | null
 
     if (ae !== undefined) {
       timeFrames = ae.frame
@@ -93,6 +101,10 @@ export function getTimelineSummary(
 
       const dmg = hitDamageByEntryId.get(entry.id)
       damage = dmg !== undefined ? dmg : null
+      cumulativeConcerto =
+        lastHitConcertoByEntryId.get(entry.id) ?? ae.cumulativeConcerto
+      cumulativeEnergy =
+        lastHitEnergyByEntryId.get(entry.id) ?? ae.cumulativeEnergy
     } else {
       timeFrames = cumulativeFrames
 
@@ -113,6 +125,8 @@ export function getTimelineSummary(
       padFrames = 0
       fallFrames = 0
       damage = null
+      cumulativeConcerto = null
+      cumulativeEnergy = null
     }
 
     cumulativeFrames += durationFrames
@@ -125,6 +139,8 @@ export function getTimelineSummary(
       padFrames,
       fallFrames,
       damage,
+      cumulativeConcerto,
+      cumulativeEnergy,
     })
   }
 

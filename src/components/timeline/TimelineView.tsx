@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
-import type { SimulationLogEntry } from "#/types/simulation-log"
 import { validateTimeline } from "#/lib/timeline/validate-timeline"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import type { DropPosition } from "#/hooks/useTimelineDrag"
@@ -18,7 +17,6 @@ import { GhostGroupRow } from "./GhostGroupRow"
 interface TimelineViewProps {
   nodes: TimelineNode[]
   summary: TimelineSummary
-  log: SimulationLogEntry[]
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string, position: DropPosition) => void
   onReorderNodes: (fromId: string, toId: string, position: DropPosition) => void
@@ -38,7 +36,6 @@ interface TimelineViewProps {
 export function TimelineView({
   nodes,
   summary,
-  log,
   onRemove,
   onReorder,
   onReorderNodes,
@@ -118,9 +115,6 @@ export function TimelineView({
     )
   }
 
-  const actionEvents = log.filter((e) => e.kind === "action")
-  const logMatches = actionEvents.length === entries.length
-
   function toggleExpand(groupId: string) {
     setExpandedGroupIds((prev) => {
       const next = new Set(prev)
@@ -175,8 +169,6 @@ export function TimelineView({
                   hidden={item.hidden === true}
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   summary={summary}
-                  actionEvents={actionEvents}
-                  logMatches={logMatches}
                   drag={drag}
                   onToggleExpand={toggleExpand}
                   onToggleGroupLock={onToggleGroupLock}
@@ -188,8 +180,6 @@ export function TimelineView({
               )
             }
             const i = item.flatIndex
-            const ev = actionEvents[i]
-            const actionEventAtIndex = logMatches ? ev : undefined
             return (
               <TimelineEntryRow
                 key={item.entry.id}
@@ -197,7 +187,6 @@ export function TimelineView({
                 hidden={item.hidden === true}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
-                actionEventAtIndex={actionEventAtIndex}
                 drag={drag}
                 onRemove={onRemove}
                 onUpdateEntry={onUpdateEntry}

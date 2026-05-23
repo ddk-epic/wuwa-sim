@@ -1,7 +1,6 @@
 import type { TimelineEntry } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
-import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { ActionTimeStage } from "#/lib/stage/stage"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
@@ -34,9 +33,6 @@ interface TimelineEntryRowProps {
   item: EntryRenderItem
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
-  actionEventAtIndex:
-    | Extract<SimulationLogEntry, { kind: "action" }>
-    | undefined
   drag: TimelineDrag
   hidden?: boolean
   onRemove: (id: string) => void
@@ -47,7 +43,6 @@ export function TimelineEntryRow({
   item,
   prevEntry,
   summary,
-  actionEventAtIndex,
   drag,
   hidden = false,
   onRemove,
@@ -82,6 +77,8 @@ export function TimelineEntryRow({
     padFrames: 0,
     fallFrames: 0,
     damage: null,
+    cumulativeConcerto: null,
+    cumulativeEnergy: null,
   }
   const isDragging = drag.draggedId === entry.id
   const source = drag.entrySource(
@@ -102,8 +99,8 @@ export function TimelineEntryRow({
   const totalDelayFrames =
     reactDelayFrames + floorFrames + padFrames + fallFrames
 
-  const conVal = actionEventAtIndex?.cumulativeConcerto ?? null
-  const resVal = actionEventAtIndex?.cumulativeEnergy ?? null
+  const conVal = row.cumulativeConcerto
+  const resVal = row.cumulativeEnergy
 
   const charSwitched =
     prevEntry === null || prevEntry.characterId !== entry.characterId

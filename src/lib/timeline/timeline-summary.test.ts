@@ -149,6 +149,8 @@ describe("getTimelineSummary — single entry", () => {
         padFrames: 0,
         fallFrames: 0,
         damage: null,
+        cumulativeConcerto: null,
+        cumulativeEnergy: null,
       },
     ])
     expect(result.totalDamage).toBe(0)
@@ -242,6 +244,7 @@ function makeHitEvent(
   entryId: string,
   frame: number,
   damage: number,
+  cumulatives?: { cumulativeConcerto?: number; cumulativeEnergy?: number },
 ): Extract<SimulationLogEntry, { kind: "hit" }> {
   return {
     kind: "hit",
@@ -249,8 +252,8 @@ function makeHitEvent(
     skillType: "Basic Attack",
     skillName: "Normal Attack [hit 1]",
     frame,
-    cumulativeEnergy: 0,
-    cumulativeConcerto: 0,
+    cumulativeEnergy: cumulatives?.cumulativeEnergy ?? 0,
+    cumulativeConcerto: cumulatives?.cumulativeConcerto ?? 0,
     damage,
     element: "Fusion",
     dmgType: "Fusion",
@@ -357,6 +360,78 @@ describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
     // next-e: damage = 400
     expect(result.rows[1].damage).toBe(400)
     expect(result.totalDamage).toBe(900)
+  })
+})
+
+describe("getTimelineSummary — post-stage cumulatives", () => {
+  it("uses last hit event cumulatives when hits exist for the entry", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeHitEvent("e1", 5, 100, {
+        cumulativeConcerto: 20,
+        cumulativeEnergy: 10,
+      }),
+      makeHitEvent("e1", 10, 200, {
+        cumulativeConcerto: 40,
+        cumulativeEnergy: 20,
+      }),
+    ]
+    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log)
+    // last hit wins, not the action event (which has 0/0)
+    expect(result.rows[0].cumulativeConcerto).toBe(40)
+    expect(result.rows[0].cumulativeEnergy).toBe(20)
+  })
+
+  it("falls back to action event cumulatives when no hits exist for the entry", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const actionEvent = {
+      kind: "action" as const,
+      characterId: 1,
+      skillType: "Basic Attack" as const,
+      skillName: "Normal Attack",
+      frame: 0,
+      cumulativeConcerto: 15,
+      cumulativeEnergy: 8,
+      sourceEntryId: "e1",
+    }
+    const log: SimulationLogEntry[] = [actionEvent]
+    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log)
+    expect(result.rows[0].cumulativeConcerto).toBe(15)
+    expect(result.rows[0].cumulativeEnergy).toBe(8)
+  })
+
+  it("returns null cumulatives for entries with no action event in the log", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, [])
+    expect(result.rows[0].cumulativeConcerto).toBeNull()
+    expect(result.rows[0].cumulativeEnergy).toBeNull()
+  })
+
+  it("collapsed group header value equals last entry row value (post-stage)", () => {
+    // Verified at summary level: the same row the header would read from
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const e2 = normalAttack(1, "e2")
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeHitEvent("e1", 5, 100, {
+        cumulativeConcerto: 25,
+        cumulativeEnergy: 12,
+      }),
+      makeActionEvent("e2", 60),
+      makeHitEvent("e2", 65, 200, {
+        cumulativeConcerto: 50,
+        cumulativeEnergy: 24,
+      }),
+    ]
+    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
+    // last entry row (index 1) drives collapsed header display
+    expect(result.rows[1].cumulativeConcerto).toBe(50)
+    expect(result.rows[1].cumulativeEnergy).toBe(24)
   })
 })
 
