@@ -634,3 +634,32 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
     coordHeal.forEach((h) => expect(h.characterId).toBe(1503))
   })
 })
+
+describe("Verina — Skill.concerto grants on cast (via 'Skill DMG' stage)", () => {
+  function runSingleCast(stageId: string) {
+    const char = { ...verina } as unknown as EnrichedCharacter
+    testCharacters = [char]
+    const slots: Slots = [1503, null, null]
+    const loadouts: SlotLoadout[] = [emptyLoadout, emptyLoadout, emptyLoadout]
+    const entry: TimelineEntry = { id: "t1", characterId: 1503, stageId }
+    return runSimulation([entry], slots, loadouts)
+  }
+
+  it("Resonance Skill cast grants +30 concerto", () => {
+    const log = runSingleCast("Botany Experiment::")
+    const action = log.find((e) => e.kind === "action")
+    expect(action?.cumulativeConcerto).toBe(30)
+  })
+
+  it("Liberation cast grants +20 concerto", () => {
+    const log = runSingleCast("Arboreal Flourish::")
+    const action = log.find((e) => e.kind === "action")
+    expect(action?.cumulativeConcerto).toBe(20)
+  })
+
+  it("Intro Skill cast grants +10 concerto", () => {
+    const log = runSingleCast("Verdant Growth::")
+    const action = log.find((e) => e.kind === "action")
+    expect(action?.cumulativeConcerto).toBe(10)
+  })
+})

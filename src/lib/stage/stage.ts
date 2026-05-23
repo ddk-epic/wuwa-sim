@@ -12,6 +12,8 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "../loadout/catalog"
 
+export const STAGE_CAST_NAME = "Skill DMG"
+
 export interface ActionTimeStage {
   actionTime: number
   variants?: Partial<Record<VariantKind, StageVariant>>
@@ -74,16 +76,20 @@ export function findStageByEntry(
                   }
                 ).comboAllows
               : undefined
+          const isCastStage = s.name === STAGE_CAST_NAME
           return {
             stage: s,
             stageId: entry.stageId,
             stageName: s.name,
             element: character.element,
-            concerto: s.concerto ?? 0,
+            concerto:
+              (s.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
             resonanceCost: skill.resonanceCost,
             damage: s.damage ?? [],
             skillType: s.damage?.[0]?.type ?? categoryToSkillType(skill.type),
-            skillName: stageLabel(skill.name, s.newName),
+            skillName: isCastStage
+              ? skill.name
+              : stageLabel(skill.name, s.newName),
             requiresStageId: s.requiresStageId,
             comboAllows,
           }

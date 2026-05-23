@@ -212,7 +212,7 @@ describe("formatCharacter", () => {
     const out = formatCharacter(charWithSkills, "testHero")
     const libIdx = out.indexOf('"Resonance Liberation"')
     const libSection = out.slice(libIdx)
-    const castStageIdx = libSection.indexOf('name: "Cosmos Rave",')
+    const castStageIdx = libSection.indexOf('name: "Skill DMG",')
     const firstRawStageIdx = libSection.indexOf(
       'name: "Cosmos: Frolicking Stage 1 DMG",',
     )

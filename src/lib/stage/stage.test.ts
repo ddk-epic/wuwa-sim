@@ -6,7 +6,12 @@ import type {
 } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import { findStageByEntry, makeStageId, resolveStageExecution } from "./stage"
+import {
+  findStageByEntry,
+  makeStageId,
+  resolveStageExecution,
+  STAGE_CAST_NAME,
+} from "./stage"
 
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
@@ -214,6 +219,81 @@ describe("findStageByEntry — echo skill", () => {
       emptyLoadout,
     ])
     expect(result).toBeNull()
+  })
+})
+
+describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto inheritance`, () => {
+  function makeSkillChar(
+    skillConcerto: number | undefined,
+    stageConcerto: number | undefined,
+    stageName: string,
+    newName: string = "",
+  ): EnrichedCharacter {
+    return baseChar({
+      skills: [
+        {
+          id: 2,
+          name: "Resonance Skill",
+          type: "Resonance Skill",
+          concerto: skillConcerto,
+          stages: [
+            {
+              name: stageName,
+              newName,
+              value: "",
+              actionTime: 0,
+              concerto: stageConcerto,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+  }
+
+  it("'Skill DMG' stage with parent Skill.concerto=N yields ResolvedStage.concerto=N", () => {
+    testCharacters = [makeSkillChar(30, undefined, STAGE_CAST_NAME)]
+    const result = findStageByEntry(
+      { id: "e1", characterId: 1, stageId: "Resonance Skill::" },
+      slots,
+      [emptyLoadout, emptyLoadout, emptyLoadout],
+    )
+    expect(result?.concerto).toBe(30)
+  })
+
+  it("non-'Skill DMG' stage ignores parent Skill.concerto", () => {
+    testCharacters = [makeSkillChar(30, undefined, "Stage 2", "2nd")]
+    const result = findStageByEntry(
+      { id: "e2", characterId: 1, stageId: "Resonance Skill::2nd" },
+      slots,
+      [emptyLoadout, emptyLoadout, emptyLoadout],
+    )
+    expect(result?.concerto).toBe(0)
+  })
+
+  it("'Skill DMG' stage own concerto sums with parent Skill.concerto", () => {
+    testCharacters = [makeSkillChar(30, 5, STAGE_CAST_NAME)]
+    const result = findStageByEntry(
+      { id: "e3", characterId: 1, stageId: "Resonance Skill::" },
+      slots,
+      [emptyLoadout, emptyLoadout, emptyLoadout],
+    )
+    expect(result?.concerto).toBe(35)
+  })
+
+  it("'Skill DMG' stage skillName equals bare skill.name regardless of newName", () => {
+    testCharacters = [makeSkillChar(10, undefined, STAGE_CAST_NAME, "Custom")]
+    const result = findStageByEntry(
+      {
+        id: "e4",
+        characterId: 1,
+        stageId: "Resonance Skill::Custom",
+      },
+      slots,
+      [emptyLoadout, emptyLoadout, emptyLoadout],
+    )
+    expect(result?.skillName).toBe("Resonance Skill")
   })
 })
 

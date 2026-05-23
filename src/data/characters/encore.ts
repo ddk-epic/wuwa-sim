@@ -558,7 +558,7 @@ export const encore = {
       resonanceCost: 125,
       stages: [
         {
-          name: "Cosmos Rave",
+          name: "Skill DMG",
           newName: "Cosmos Rave",
           value: "",
           actionTime: 0,
@@ -936,8 +936,8 @@ export const encore = {
           name: "Cloudy Frenzy Damage",
           newName: "Cloudy Frenzy",
           value: "334.00%",
-          concerto: 206,
-          actionTime: 25,
+          concerto: 10,
+          actionTime: 206,
           variants: {
             swap: { actionTime: 0 },
           },

@@ -56,7 +56,7 @@ function formatLiberationCastStage(skillName: string, level: number): string {
   const l1 = ind(level + 1)
   return [
     `${l}{`,
-    `${l1}name: ${s(skillName)},`,
+    `${l1}name: "Skill DMG",`,
     `${l1}newName: ${s(skillName)},`,
     `${l1}value: "",`,
     `${l1}actionTime: 0,`,
