@@ -9,6 +9,13 @@ export interface ConditionWorld {
   hasActiveBuff(buffId: string, characterId: number): boolean
   isOnField(characterId: number): boolean
   getResourceValue(characterId: number, resource: ResourceKind): number
+  /**
+   * Returns a version tuple used by ConditionEvaluator as a cache-invalidation key.
+   * INVARIANT: every subsystem read by evaluateUncached must appear in this tuple.
+   * If you add a new Condition.kind that reads a new subsystem (e.g. footing, echoes),
+   * add that subsystem's version here — otherwise evaluateCached will stale-hit across
+   * changes to that subsystem and conditions will evaluate incorrectly.
+   */
   mutationVersions(): { store: number; resources: number; onField: number }
 }
 
