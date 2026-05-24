@@ -33,8 +33,8 @@ export function runSimulation(
   let state = TrailingWindow.empty()
 
   for (const entry of entries) {
-    const stagePreview = findStageByEntry(entry, slots, loadouts)
-    const incomingSkillType = stagePreview?.skillType ?? "Basic Attack"
+    const resolved = findStageByEntry(entry, slots, loadouts)
+    const incomingSkillType = resolved?.skillType ?? "Basic Attack"
     const arrival = TrailingWindow.onEntryArrival(state, {
       characterId: entry.characterId,
       skillType: incomingSkillType,
@@ -49,43 +49,41 @@ export function runSimulation(
       )
     }
     frame += arrival.padFrames
-    const animFrames = stagePreview?.stage.animationFrames ?? 0
+    const animFrames = resolved?.stage.animationFrames ?? 0
     if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
     const swapBack = engine.computeSwapBack(entry.characterId, frame)
 
-    const { resolved, allHits, stageDuration, stageStartFrame, nextFrame } =
-      processEntry(
-        entry,
-        frame,
-        engine,
-        log,
-        slots,
-        loadouts,
-        reactionDelay,
-        swapFrames,
-        arrival.padFrames,
-        variantFloor,
-        fallFrames,
-        swapBack,
-      )
-    if (resolved) {
-      onFootingEvent(
-        engine,
-        entry.characterId,
-        resolved.stage.footing,
-        stageDuration,
-      )
-      const sched = TrailingWindow.scheduleStage(state, {
-        entry,
-        resolved,
-        stageStartFrame,
-        hits: allHits,
-        variantKind: entry.variantKind,
-        stageDuration,
-      })
-      state = sched.stateAfter
-      for (const h of sched.immediate) processHit(h, engine, log, slots)
-    }
+    if (!resolved) continue
+
+    const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
+      entry,
+      frame,
+      resolved,
+      engine,
+      log,
+      reactionDelay,
+      swapFrames,
+      arrival.padFrames,
+      variantFloor,
+      fallFrames,
+      swapBack,
+    )
+    onFootingEvent(
+      engine,
+      entry.characterId,
+      resolved.stage.footing,
+      stageDuration,
+    )
+    const sched = TrailingWindow.scheduleStage(state, {
+      entry,
+      resolved,
+      stageStartFrame,
+      hits: allHits,
+      variantKind: entry.variantKind,
+      stageDuration,
+    })
+    state = sched.stateAfter
+    for (const h of sched.immediate) processHit(h, engine, log, slots)
     frame = nextFrame
   }
 
@@ -99,10 +97,9 @@ export function runSimulation(
 function processEntry(
   entry: TimelineEntry,
   stageStartFrame: number,
+  resolved: ResolvedStage,
   engine: BuffEngine,
   log: SimulationLogEntry[],
-  slots: Slots,
-  loadouts: SlotLoadout[],
   reactionDelay: number,
   swapFrames: number,
   padFrames: number = 0,
@@ -110,22 +107,11 @@ function processEntry(
   fallFrames: number = 21,
   swapBack: number = 0,
 ): {
-  resolved: ResolvedStage | null
   allHits: DamageEntry[]
   stageDuration: number
   stageStartFrame: number
   nextFrame: number
 } {
-  const resolved = findStageByEntry(entry, slots, loadouts)
-  if (!resolved)
-    return {
-      resolved: null,
-      allHits: [],
-      stageDuration: 0,
-      stageStartFrame,
-      nextFrame: stageStartFrame,
-    }
-
   const {
     advance: stageDuration,
     hits: allHits,
@@ -166,7 +152,6 @@ function processEntry(
   log.push(actionEvent)
 
   return {
-    resolved,
     allHits,
     stageDuration,
     stageStartFrame: effectiveStart,
