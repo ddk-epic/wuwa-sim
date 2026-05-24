@@ -20,7 +20,7 @@ import {
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
 import { SettingsModal } from "./SettingsModal"
-import { avatarFallbackSrc } from "#/lib/avatar-fallback"
+import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 interface HeaderProps {
   onEditTeam: () => void
@@ -175,17 +175,12 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
                 key={char!.id}
                 className="w-9 h-9 rounded-sm overflow-hidden"
               >
-                <img
+                <CharacterPortrait
                   src={`/portraits/${name}.png`}
                   alt={char!.name}
+                  initial={char!.name[0].toUpperCase()}
+                  hex={hex}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null
-                    e.currentTarget.src = avatarFallbackSrc(
-                      char!.name[0].toUpperCase(),
-                      hex,
-                    )
-                  }}
                 />
               </div>
             )

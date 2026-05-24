@@ -1,5 +1,5 @@
 import type { EnrichedCharacter } from "#/types/character"
-import { avatarFallbackSrc } from "#/lib/avatar-fallback"
+import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 interface TeamSlotPortraitProps {
   character: EnrichedCharacter
@@ -17,18 +17,13 @@ export function TeamSlotPortrait({
   const fileName = character.name.toLowerCase()
   return (
     <div className="relative aspect-4/3 w-full bg-darkest overflow-hidden">
-      <img
+      <CharacterPortrait
         src={`/portraits/${fileName}.png`}
         alt={character.name}
+        initial={character.name[0].toUpperCase()}
+        hex={hex}
         className="absolute inset-0 w-full h-full object-contain pt-2"
         style={{ objectPosition: "center 50%" }}
-        onError={(e) => {
-          e.currentTarget.onerror = null
-          e.currentTarget.src = avatarFallbackSrc(
-            character.name[0].toUpperCase(),
-            hex,
-          )
-        }}
       />
       <div className="absolute top-2 right-2 px-1.5 pb-0.5 bg-darkest/80 rounded-sm">
         <span className="font-mono uppercase tracking-[1.5px] text-muted-foreground/30">

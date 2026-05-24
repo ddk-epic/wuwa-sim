@@ -9,7 +9,7 @@ import {
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
-import { avatarFallbackSrc } from "#/lib/avatar-fallback"
+import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "../log/log-cells"
@@ -160,22 +160,17 @@ export function TimelineGroupHeader({
               const hex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
               const name = char?.name.toLowerCase() ?? ""
               return (
-                <img
+                <CharacterPortrait
                   key={charId}
                   src={`/portraits/${name}.png`}
                   alt={char?.name ?? ""}
+                  initial={char?.name[0].toUpperCase() ?? "?"}
+                  hex={hex}
                   className="w-5 h-5 rounded-full object-cover"
                   style={{
                     marginLeft: idx > 0 ? "-6px" : undefined,
                     outline: `1.5px solid ${hex}`,
                     outlineOffset: "0px",
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null
-                    e.currentTarget.src = avatarFallbackSrc(
-                      char?.name[0].toUpperCase() ?? "?",
-                      hex,
-                    )
                   }}
                 />
               )

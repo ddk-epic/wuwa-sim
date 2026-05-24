@@ -2,7 +2,7 @@ import type { Character } from "#/types/character"
 import { ELEMENT_HEX } from "#/data/elements"
 import { listCharacters } from "#/lib/loadout/catalog"
 import { useTeamContext } from "#/hooks/useTeamContext"
-import { avatarFallbackSrc } from "#/lib/avatar-fallback"
+import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 const RARITY_HEX: Record<string, string> = {
   SSR: "#f5cf4d",
@@ -66,18 +66,13 @@ function CharacterCard({
       ].join(" ")}
       style={{ borderColor: rarityHex }}
     >
-      <img
+      <CharacterPortrait
         src={`/portraits/${fileName}.png`}
         alt={character.name}
+        initial={character.name[0].toUpperCase()}
+        hex={elementHex}
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: "center 15%" }}
-        onError={(e) => {
-          e.currentTarget.onerror = null
-          e.currentTarget.src = avatarFallbackSrc(
-            character.name[0].toUpperCase(),
-            elementHex,
-          )
-        }}
       />
 
       {slotNumber !== null && (
