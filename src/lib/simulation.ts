@@ -53,20 +53,21 @@ export function runSimulation(
     if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
     const swapBack = engine.computeSwapBack(entry.characterId, frame)
 
-    const { resolved, allHits, stageDuration, nextFrame } = processEntry(
-      entry,
-      frame,
-      engine,
-      log,
-      slots,
-      loadouts,
-      reactionDelay,
-      swapFrames,
-      arrival.padFrames,
-      variantFloor,
-      fallFrames,
-      swapBack,
-    )
+    const { resolved, allHits, stageDuration, stageStartFrame, nextFrame } =
+      processEntry(
+        entry,
+        frame,
+        engine,
+        log,
+        slots,
+        loadouts,
+        reactionDelay,
+        swapFrames,
+        arrival.padFrames,
+        variantFloor,
+        fallFrames,
+        swapBack,
+      )
     if (resolved) {
       onFootingEvent(
         engine,
@@ -77,7 +78,7 @@ export function runSimulation(
       const sched = TrailingWindow.scheduleStage(state, {
         entry,
         resolved,
-        stageStartFrame: frame,
+        stageStartFrame,
         hits: allHits,
         variantKind: entry.variantKind,
         stageDuration,
@@ -112,6 +113,7 @@ function processEntry(
   resolved: ResolvedStage | null
   allHits: DamageEntry[]
   stageDuration: number
+  stageStartFrame: number
   nextFrame: number
 } {
   const resolved = findStageByEntry(entry, slots, loadouts)
@@ -120,6 +122,7 @@ function processEntry(
       resolved: null,
       allHits: [],
       stageDuration: 0,
+      stageStartFrame,
       nextFrame: stageStartFrame,
     }
 
@@ -141,17 +144,19 @@ function processEntry(
   const effectiveFooting = engine.currentFooting()
   const fall = computeFall(effectiveFooting, resolved.stage.footing, fallFrames)
 
-  pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
+  const effectiveStart = stageStartFrame + fall + swapBack
+
+  pushBuffEvents(log, engine.tickToFrame(effectiveStart).lifecycleEvents)
 
   if (resolved.skillType !== "Movement") {
-    fireSkillCast(entry, resolved, engine, log, stageStartFrame)
+    fireSkillCast(entry, resolved, engine, log, effectiveStart)
   }
 
   const actionEvent = buildActionEvent(
     entry,
     resolved,
     engine,
-    stageStartFrame,
+    effectiveStart,
     react,
     floor,
     padFrames,
@@ -164,7 +169,8 @@ function processEntry(
     resolved,
     allHits,
     stageDuration,
-    nextFrame: stageStartFrame + stageDuration,
+    stageStartFrame: effectiveStart,
+    nextFrame: effectiveStart + stageDuration,
   }
 }
 

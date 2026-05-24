@@ -1570,9 +1570,9 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
     const actions = result.filter((e) => e.kind === "action")
-    // t3 action should be at frame 30 (padded from 16)
+    // t3 action: trailing-window pad to 30 + swapBack 36 (char 30 off-field since frame 6) = 66
     const t3Action = actions.find((a) => a.characterId === 30 && !a.variantKind)
-    expect(t3Action?.frame).toBe(30)
+    expect(t3Action?.frame).toBe(66)
     // All trailing hits from t1 appear in log
     const hits = result.filter((e) => e.kind === "hit" && e.characterId === 30)
     const hitFrames = (hits as HitEvent[])
@@ -2410,6 +2410,8 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     expect(reentry?.delayBreakdown?.swapBack).toBe(40)
+    // swapBack must advance the engine frame — re-entry actually starts at 40 + 40 = 80
+    expect(reentry?.frame).toBe(80)
   })
 
   it("(b) trailing hits do not advance the clock: swapBack still reflects exit frame", () => {
