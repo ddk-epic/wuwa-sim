@@ -11,7 +11,7 @@ const DEFAULTS: Settings = {
   reactionDelay: 6,
   swapFrames: 6,
   variantFloor: 15,
-  fallFrames: 21,
+  fallFrames: 15,
 }
 const STORAGE_KEY = "wuwa.settings"
 
