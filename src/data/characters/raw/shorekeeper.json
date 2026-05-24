@@ -1,0 +1,573 @@
+{
+  "id": 1505,
+  "name": "Shorekeeper",
+  "element": "Spectro",
+  "weaponType": "Rectifier",
+  "rarity": "SSR",
+  "stats": {
+    "base": {
+      "hp": 1337,
+      "atk": 23,
+      "def": 90,
+      "undefined": 0
+    },
+    "max": {
+      "hp": 16712.5,
+      "atk": 287.5,
+      "def": 1099.998,
+      "undefined": 0
+    }
+  },
+  "skills": [
+    {
+      "id": 1002501,
+      "name": "Origin Calculus",
+      "type": "Normal Attack",
+      "stages": [
+        {
+          "name": "Stage 1 DMG",
+          "value": "31.78%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3178,
+              "energy": 0.5,
+              "concerto": 1.6,
+              "toughness": 0.1599,
+              "weakness": 0.2664
+            }
+          ]
+        },
+        {
+          "name": "Stage 2 DMG",
+          "value": "23.86%*2",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2386,
+              "energy": 0.38,
+              "concerto": 1.2,
+              "toughness": 0.12,
+              "weakness": 0.2
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2386,
+              "energy": 0.38,
+              "concerto": 1.2,
+              "toughness": 0.12,
+              "weakness": 0.2
+            }
+          ]
+        },
+        {
+          "name": "Stage 3 DMG",
+          "value": "23.32%*3",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2332,
+              "energy": 0.37,
+              "concerto": 1.18,
+              "toughness": 0.1173,
+              "weakness": 0.1955
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2332,
+              "energy": 0.37,
+              "concerto": 1.18,
+              "toughness": 0.1173,
+              "weakness": 0.1955
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.2332,
+              "energy": 0.37,
+              "concerto": 1.18,
+              "toughness": 0.1173,
+              "weakness": 0.1955
+            }
+          ]
+        },
+        {
+          "name": "Stage 4 DMG",
+          "value": "72.72%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.7272,
+              "energy": 1.15,
+              "concerto": 3.66,
+              "toughness": 0.3658,
+              "weakness": 0.6096
+            }
+          ]
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "value": "45.81%",
+          "staCost": 25,
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.4581,
+              "energy": 0.96,
+              "concerto": 3.08,
+              "toughness": 0.3072,
+              "weakness": 0.3072
+            }
+          ]
+        },
+        {
+          "name": "Plunging Attack DMG",
+          "value": "73.96%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.7396,
+              "energy": 1.55,
+              "concerto": 5,
+              "toughness": 0.496,
+              "weakness": 0.496
+            }
+          ]
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "value": "87.48%*2",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.8748,
+              "energy": 1.38,
+              "concerto": 4.4,
+              "toughness": 0.44,
+              "weakness": 0.44
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.8748,
+              "energy": 1.38,
+              "concerto": 4.4,
+              "toughness": 0.44,
+              "weakness": 0.44
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1002502,
+      "name": "Chaos Theory",
+      "type": "Resonance Skill",
+      "cooldown": 16,
+      "concerto": 20,
+      "stages": [
+        {
+          "name": "Dim Star Butterfly DMG",
+          "value": "31.31%",
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3131,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.4,
+              "weakness": 0.105
+            }
+          ]
+        },
+        {
+          "name": "Healing",
+          "value": "1313+5.97%",
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Heal",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0597,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0,
+              "flat": 1313
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1002503,
+      "name": "End Loop",
+      "type": "Resonance Liberation",
+      "cooldown": 25,
+      "duration": 30,
+      "concerto": 20,
+      "resonanceCost": 175,
+      "stages": [
+        {
+          "name": "Healing",
+          "value": "438+2.39%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Heal",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0239,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0,
+              "flat": 438
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1002504,
+      "name": "Life Entwined",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1002505,
+      "name": "Self Gravitation",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1002506,
+      "name": "Proof of Existence",
+      "type": "Intro Skill",
+      "stages": [
+        {
+          "name": "Enlightenment DMG",
+          "value": "45.30%*5",
+          "concerto": 10,
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.453,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.2848,
+              "weakness": 0.2279
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.453,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.2848,
+              "weakness": 0.2279
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.453,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.2848,
+              "weakness": 0.2279
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.453,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.2848,
+              "weakness": 0.2279
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.453,
+              "energy": 2,
+              "concerto": 2,
+              "toughness": 0.2848,
+              "weakness": 0.2279
+            }
+          ]
+        },
+        {
+          "name": "Discernment DMG",
+          "value": "19.64%*3",
+          "concerto": 20,
+          "damage": [
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1964,
+              "energy": 3.34,
+              "concerto": 0,
+              "toughness": 0.3334,
+              "weakness": 2.4414
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1964,
+              "energy": 3.34,
+              "concerto": 0,
+              "toughness": 0.3334,
+              "weakness": 2.4414
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1964,
+              "energy": 3.34,
+              "concerto": 0,
+              "toughness": 0.3334,
+              "weakness": 2.4414
+            }
+          ]
+        },
+        {
+          "name": "Enlightenment Healing",
+          "value": "259+1.20%",
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Heal",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.012,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0,
+              "flat": 259
+            }
+          ]
+        },
+        {
+          "name": "Discernment Healing",
+          "value": "289+1.32%",
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Heal",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0132,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0,
+              "weakness": 0,
+              "flat": 289
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.2789,
+          "energy": 3.34,
+          "concerto": 0,
+          "toughness": 0.3334,
+          "weakness": 2.4414
+        }
+      ]
+    },
+    {
+      "id": 1002507,
+      "name": "Astral Chord",
+      "type": "Forte Circuit",
+      "stages": [
+        {
+          "name": "Flare Star Butterfly DMG",
+          "value": "37.29%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.3729,
+              "energy": 0.59,
+              "concerto": 1,
+              "toughness": 0.1876,
+              "weakness": 0
+            }
+          ]
+        },
+        {
+          "name": "Illation DMG",
+          "value": "18.97%*5",
+          "staCost": 25,
+          "concerto": 6,
+          "damage": [
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1897,
+              "energy": 0.4,
+              "concerto": 0,
+              "toughness": 0.1272,
+              "weakness": 0.1272
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1897,
+              "energy": 0.4,
+              "concerto": 0,
+              "toughness": 0.1272,
+              "weakness": 0.1272
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1897,
+              "energy": 0.4,
+              "concerto": 0,
+              "toughness": 0.1272,
+              "weakness": 0.1272
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1897,
+              "energy": 0.4,
+              "concerto": 0,
+              "toughness": 0.1272,
+              "weakness": 0.1272
+            },
+            {
+              "type": "Heavy Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.1897,
+              "energy": 0.4,
+              "concerto": 0,
+              "toughness": 0.1272,
+              "weakness": 0.1272
+            }
+          ]
+        },
+        {
+          "name": "Transmutation DMG",
+          "value": "73.96%",
+          "staCost": 30,
+          "concerto": 6,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "ATK",
+              "actionFrame": 0,
+              "value": 0.7396,
+              "energy": 1.55,
+              "concerto": 0,
+              "toughness": 0.496,
+              "weakness": 0.496
+            }
+          ]
+        }
+      ],
+      "damage": []
+    },
+    {
+      "id": 1002508,
+      "name": "Skillful Cooking",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1002509,
+      "name": "Binary Butterfly",
+      "type": "Outro Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1002510,
+      "name": "",
+      "type": "Tune Break",
+      "stages": [],
+      "damage": []
+    }
+  ],
+  "skillTreeBonuses": ["Healing Bonus", "HP"],
+  "buffs": []
+}
