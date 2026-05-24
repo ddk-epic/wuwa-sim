@@ -18,7 +18,7 @@ export function TeamSlotPortrait({
   return (
     <div className="relative aspect-4/3 w-full bg-darkest overflow-hidden">
       <img
-        src={`/${fileName}.png`}
+        src={`/portraits/${fileName}.png`}
         alt={character.name}
         className="absolute inset-0 w-full h-full object-contain pt-2"
         style={{ objectPosition: "center 50%" }}

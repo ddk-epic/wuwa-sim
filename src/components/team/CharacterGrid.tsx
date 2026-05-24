@@ -67,7 +67,7 @@ function CharacterCard({
       style={{ borderColor: rarityHex }}
     >
       <img
-        src={`/${fileName}.png`}
+        src={`/portraits/${fileName}.png`}
         alt={character.name}
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: "center 15%" }}

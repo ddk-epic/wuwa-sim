@@ -162,7 +162,7 @@ export function TimelineGroupHeader({
               return (
                 <img
                   key={charId}
-                  src={`/${name}.png`}
+                  src={`/portraits/${name}.png`}
                   alt={char?.name ?? ""}
                   className="w-5 h-5 rounded-full object-cover"
                   style={{

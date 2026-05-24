@@ -176,7 +176,7 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
                 className="w-9 h-9 rounded-sm overflow-hidden"
               >
                 <img
-                  src={`/${name}.png`}
+                  src={`/portraits/${name}.png`}
                   alt={char!.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
