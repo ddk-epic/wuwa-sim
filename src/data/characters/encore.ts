@@ -562,6 +562,7 @@ export const encore = {
           newName: "Cosmos Rave",
           value: "",
           actionTime: 0,
+          animationFrames: 60,
           damage: [],
         },
         {

@@ -33,8 +33,8 @@ export function runSimulation(
   let state = TrailingWindow.empty()
 
   for (const entry of entries) {
-    const incomingSkillType =
-      findStageByEntry(entry, slots, loadouts)?.skillType ?? "Basic Attack"
+    const stagePreview = findStageByEntry(entry, slots, loadouts)
+    const incomingSkillType = stagePreview?.skillType ?? "Basic Attack"
     const arrival = TrailingWindow.onEntryArrival(state, {
       characterId: entry.characterId,
       skillType: incomingSkillType,
@@ -49,6 +49,8 @@ export function runSimulation(
       )
     }
     frame += arrival.padFrames
+    const animFrames = stagePreview?.stage.animationFrames ?? 0
+    if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
     const swapBack = engine.computeSwapBack(entry.characterId, frame)
 
     const { resolved, allHits, stageDuration, nextFrame } = processEntry(

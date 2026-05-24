@@ -60,6 +60,7 @@ function formatLiberationCastStage(skillName: string, level: number): string {
     `${l1}newName: ${s(skillName)},`,
     `${l1}value: "",`,
     `${l1}actionTime: 0,`,
+    `${l1}animationFrames: 60,`,
     `${l1}variants: {},`,
     `${l1}damage: [],`,
     `${l}}`,
@@ -98,6 +99,10 @@ function formatStage(stage: SkillAttribute, level: number): string {
   if (stage.concerto !== undefined)
     lines.push(`${l1}concerto: ${stage.concerto},`)
   lines.push(`${l1}actionTime: 0,`)
+  const animFrames =
+    stage.animationFrames ?? (stage.name === "Skill DMG" ? 60 : undefined)
+  if (animFrames !== undefined)
+    lines.push(`${l1}animationFrames: ${animFrames},`)
   lines.push(`${l1}variants: {},`)
   if (stage.damage && stage.damage.length > 0) {
     lines.push(`${l1}damage: [`)

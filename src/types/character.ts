@@ -37,6 +37,8 @@ export interface SkillAttribute {
   cooldown?: number
   concerto?: number
   damage?: DamageEntry[]
+  /** Wall-clock frames (at 60fps) for a cutscene animation. Engine clock does not advance. */
+  animationFrames?: number
 }
 
 export type HealTarget =

@@ -9,11 +9,13 @@ export class OnFieldTracker {
   private current_: number | null = null
   private version_ = 0
   private lastOffFieldFrame = new Map<number, number>()
+  private pendingAnimAdvance_ = 0
 
   clear(): void {
     this.current_ = null
     this.version_++
     this.lastOffFieldFrame.clear()
+    this.pendingAnimAdvance_ = 0
   }
 
   current(): number | null {
@@ -45,11 +47,26 @@ export class OnFieldTracker {
   }
 
   recordSwapOut(characterId: number, frame: number): void {
-    this.lastOffFieldFrame.set(characterId, frame)
+    // Subtract accumulated animation advance so future swap-back computation
+    // counts that animation wall-clock time as elapsed off-field time.
+    this.lastOffFieldFrame.set(characterId, frame - this.pendingAnimAdvance_)
   }
 
   recordSwapIn(characterId: number): void {
     this.lastOffFieldFrame.delete(characterId)
+  }
+
+  /**
+   * Advance every currently-tracked off-field character's clock by `frames`,
+   * and accumulate so that characters who go off-field AFTER this call also
+   * benefit. Used by cutscene animation stages whose wall-clock duration eats
+   * into swap-back CDs without advancing the engine clock.
+   */
+  advanceOffFieldClocks(frames: number): void {
+    for (const [id, lastFrame] of this.lastOffFieldFrame) {
+      this.lastOffFieldFrame.set(id, lastFrame - frames)
+    }
+    this.pendingAnimAdvance_ += frames
   }
 
   computeSwapBack(characterId: number, arrivalFrame: number): number {

@@ -2534,3 +2534,255 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
   })
 })
+
+describe("runSimulation — animationFrames: off-field clock advance", () => {
+  // Char 60 has a normal 20-frame stage and a Liberation cast stage with animationFrames: 60
+  const animCharA: EnrichedCharacter = {
+    id: 60,
+    name: "Anim A",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 601,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+        ],
+        damage: [],
+      },
+      {
+        id: 602,
+        name: "Liberation",
+        type: "Resonance Liberation",
+        resonanceCost: 125,
+        stages: [
+          {
+            name: "Skill DMG",
+            newName: "Liberation",
+            value: "",
+            actionTime: 0,
+            animationFrames: 60,
+            damage: [],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+  const animCharB: EnrichedCharacter = {
+    ...animCharA,
+    id: 61,
+    name: "Anim B",
+    skills: [
+      {
+        id: 611,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+        ],
+        damage: [],
+      },
+    ],
+  }
+  const slotsAB: Slots = [60, 61, null]
+
+  function actionsFrom(
+    log: import("#/types/simulation-log").SimulationLogEntry[],
+  ) {
+    return log.filter(
+      (e): e is import("#/types/simulation-log").ActionEvent =>
+        e.kind === "action",
+    )
+  }
+
+  it("(a) caster's own residual CD is eaten by animationFrames", () => {
+    // A swaps out at frame 20, B acts for 10 frames, A swaps back and casts Liberation
+    // Without animation: swapBack = 60 - (30 - 20) = 50
+    // With animation (60f): clock advances 60 before computing → swapBack = 0
+    testCharacters = [animCharA, animCharB]
+    const charBShort: EnrichedCharacter = {
+      ...animCharB,
+      skills: [
+        {
+          id: 611,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            { name: "Stage 1", value: "100%", actionTime: 10, damage: [] },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [animCharA, charBShort]
+    const entries = [
+      tlEntry(60, "Normal Attack::_", "e1"), // A 0–20, A exits at 20
+      tlEntry(61, "Normal Attack::_", "e2"), // B 20–30
+      tlEntry(60, "Liberation::Liberation", "e3"), // A at frame 30, animationFrames=60 advance → swapBack=0
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const liberation = actions.find((a) => a.sourceEntryId === "e3")
+    expect(liberation?.delayBreakdown?.swapBack ?? 0).toBe(0)
+  })
+
+  it("(b) off-field teammate CD is eaten when caster uses animationFrames stage", () => {
+    // B exits at frame 20, A casts Liberation at frame 20 (animationFrames=60)
+    // Without animation: B's CD = 60 when B returns at frame 20
+    // With animation: advance 60 → B's CD = 0 when B returns at frame 20
+    const charALib: EnrichedCharacter = {
+      ...animCharA,
+      skills: [
+        animCharA.skills[1], // only Liberation
+      ],
+    }
+    const charBNormal: EnrichedCharacter = {
+      ...animCharB,
+      skills: [
+        {
+          id: 611,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charALib, charBNormal]
+    const entries = [
+      tlEntry(61, "Normal Attack::_", "e1"), // B 0–20, B exits at 20
+      tlEntry(60, "Liberation::Liberation", "e2"), // A at frame 20, animationFrames=60
+      tlEntry(61, "Normal Attack::_", "e3"), // B returns: expects 0 swapBack
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
+  })
+
+  it("(c) sequential animations accumulate", () => {
+    // B exits at frame 0. A casts two Liberations (animationFrames=60 each) → total 120f advance
+    // B re-enters at frame 0 → swapBack = max(0, 60 - (0 - (0 - 120))) = 0
+    const charADoubleLib: EnrichedCharacter = {
+      ...animCharA,
+      skills: [
+        {
+          id: 602,
+          name: "Liberation",
+          type: "Resonance Liberation",
+          resonanceCost: 125,
+          stages: [
+            {
+              name: "Skill DMG",
+              newName: "Liberation",
+              value: "",
+              actionTime: 0,
+              animationFrames: 60,
+              damage: [],
+            },
+            {
+              name: "Skill DMG",
+              newName: "Liberation2",
+              value: "",
+              actionTime: 0,
+              animationFrames: 60,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charADoubleLib, animCharB]
+    const entries = [
+      tlEntry(61, "Normal Attack::_", "e1"), // B 0–20, B exits at 20
+      tlEntry(60, "Liberation::Liberation", "e2"), // A at frame 20, +60 advance
+      tlEntry(60, "Liberation::Liberation2", "e3"), // A at frame 20 still, +60 advance
+      tlEntry(61, "Normal Attack::_", "e4"), // B returns at frame 20, 120f advance total → 0
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e4")
+    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
+  })
+
+  it("(d) non-animation entries do not advance off-field clocks", () => {
+    // A exits at frame 20, B acts for 10 frames (no animationFrames), A returns at 30
+    // swapBack = 60 - (30 - 20) = 50
+    testCharacters = [animCharA, animCharB]
+    const charBShort: EnrichedCharacter = {
+      ...animCharB,
+      skills: [
+        {
+          id: 611,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            { name: "Stage 1", value: "100%", actionTime: 10, damage: [] },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [animCharA, charBShort]
+    const entries = [
+      tlEntry(60, "Normal Attack::_", "e1"), // A 0–20
+      tlEntry(61, "Normal Attack::_", "e2"), // B 20–30
+      tlEntry(60, "Normal Attack::_", "e3"), // A at 30, no animation
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(50)
+  })
+
+  it("(e) stage without animationFrames does not advance clocks", () => {
+    // Same as (d) but uses the Liberation stage with actionTime: 0 but NO animationFrames
+    const charANoAnim: EnrichedCharacter = {
+      ...animCharA,
+      skills: [
+        animCharA.skills[0],
+        {
+          id: 602,
+          name: "Liberation",
+          type: "Resonance Liberation",
+          resonanceCost: 125,
+          stages: [
+            {
+              name: "Skill DMG",
+              newName: "Liberation",
+              value: "",
+              actionTime: 0,
+              // no animationFrames
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charANoAnim, animCharB]
+    const entries = [
+      tlEntry(61, "Normal Attack::_", "e1"), // B 0–20, B exits at 20
+      tlEntry(60, "Liberation::Liberation", "e2"), // A at 20, NO animation advance
+      tlEntry(61, "Normal Attack::_", "e3"), // B at 20, swapBack = 60 - 0 = 60
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(60)
+  })
+})

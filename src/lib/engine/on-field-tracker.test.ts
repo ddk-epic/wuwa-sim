@@ -88,3 +88,50 @@ describe("OnFieldTracker — swap-back clock", () => {
     expect(t.computeSwapBack(2, 140)).toBe(40)
   })
 })
+
+describe("OnFieldTracker — advanceOffFieldClocks", () => {
+  it("fully clears CD when advance >= remaining CD", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.advanceOffFieldClocks(60)
+    expect(t.computeSwapBack(1, 100)).toBe(0)
+  })
+
+  it("partially reduces remaining CD", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.advanceOffFieldClocks(20)
+    expect(t.computeSwapBack(1, 100)).toBe(40)
+  })
+
+  it("advances all off-field characters uniformly", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.recordSwapOut(2, 100)
+    t.advanceOffFieldClocks(30)
+    expect(t.computeSwapBack(1, 100)).toBe(30)
+    expect(t.computeSwapBack(2, 100)).toBe(30)
+  })
+
+  it("sequential advances accumulate", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.advanceOffFieldClocks(20)
+    t.advanceOffFieldClocks(20)
+    expect(t.computeSwapBack(1, 100)).toBe(20)
+  })
+
+  it("does not affect characters with no off-field record", () => {
+    const t = new OnFieldTracker()
+    t.advanceOffFieldClocks(60)
+    expect(t.computeSwapBack(1, 100)).toBe(0)
+  })
+
+  it("advance does not affect character that subsequently recordSwapIn", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.advanceOffFieldClocks(60)
+    t.recordSwapIn(1)
+    expect(t.computeSwapBack(1, 100)).toBe(0)
+  })
+})

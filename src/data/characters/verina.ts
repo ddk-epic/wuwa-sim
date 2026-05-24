@@ -657,6 +657,7 @@ export const verina = {
           newName: "",
           value: "198.81%",
           actionTime: 0,
+          animationFrames: 60,
           variants: {},
           damage: [
             {

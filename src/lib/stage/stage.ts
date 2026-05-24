@@ -18,6 +18,8 @@ export interface ActionTimeStage {
   actionTime: number
   variants?: Partial<Record<VariantKind, StageVariant>>
   footing?: Footing
+  /** Wall-clock frames (at 60fps) for a cutscene animation. Engine clock does not advance. */
+  animationFrames?: number
 }
 
 export interface ResolvedStage {

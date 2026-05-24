@@ -239,6 +239,10 @@ export class BuffEngine {
     return this.resources.getResource(characterId)
   }
 
+  advanceOffFieldClocks(frames: number): void {
+    this.onField.advanceOffFieldClocks(frames)
+  }
+
   computeSwapBack(characterId: number, arrivalFrame: number): number {
     return this.onField.computeSwapBack(characterId, arrivalFrame)
   }
