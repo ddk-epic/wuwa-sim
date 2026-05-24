@@ -39,7 +39,7 @@ export function TeamSlotPortrait({
       >
         <div className="flex-1 min-w-0">
           <div
-            className="font-mono text-[10px] uppercase tracking-[2px] leading-tight"
+            className="font-mono text-micro uppercase tracking-[2px] leading-tight"
             style={{ color: hex }}
           >
             {character.element}

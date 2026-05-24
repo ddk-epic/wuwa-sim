@@ -56,7 +56,7 @@ export function Header({
           <span className="tracking-[0.5px] font-semibold text-2xl text-foreground">
             WUWA
           </span>
-          <span className="pr-2 tracking-[0.5px] font-semibold text-2xl text-[24px] text-yellow-400">
+          <span className="pr-2 tracking-[0.5px] font-semibold text-title text-yellow-400">
             Sim
           </span>
         </div>
@@ -192,7 +192,7 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
           {teamLabel}
         </span>
         {memberNames.length > 0 && (
-          <span className="mt-0.5 text-[13px] text-gray-400 tracking-tight">
+          <span className="mt-0.5 text-label text-gray-400 tracking-tight">
             {memberNames.join(" · ")}
           </span>
         )}

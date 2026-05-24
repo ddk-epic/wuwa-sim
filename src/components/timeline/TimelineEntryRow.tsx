@@ -149,7 +149,7 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-[16px] text-[#a3bfff]">
+      <td className="px-2 py-2 text-right font-mono text-value text-ui-damage">
         {formatFrames(row.timeFrames)}
       </td>
       <td className="px-2 py-2 text-white overflow-hidden">
@@ -199,8 +199,8 @@ export function TimelineEntryRow({
                   ),
                 })
               }}
-              className="text-[12px] px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border cursor-pointer"
-              style={{ color: "#a3bfff", letterSpacing: "0.4px" }}
+              className="text-detail text-ui-damage px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border cursor-pointer"
+              style={{ letterSpacing: "0.4px" }}
               title="Full / Cancel / Instant Cancel"
             >
               {formatVariantKind(entry.variantKind, "short")}
@@ -237,18 +237,18 @@ export function TimelineEntryRow({
           )}
         </div>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-[16px] text-gray-300">
+      <td className="px-2 py-2 text-right font-mono text-value text-gray-300">
         {formatFrames(row.durationFrames)}
       </td>
       <td className="px-2 py-2 text-right font-mono">
-        {renderPoolValue(conVal, "#f5d061")}
+        {renderPoolValue(conVal, "var(--ui-concerto)")}
       </td>
       <td className="px-2 py-2 text-right font-mono">
-        {renderPoolValue(resVal, "#9b6cf0")}
+        {renderPoolValue(resVal, "var(--ui-resonance)")}
       </td>
       <td className="px-2 py-2 text-right font-mono">
         {row.damage !== null ? (
-          <span className="font-semibold text-[19px] text-yellow-400">
+          <span className="font-semibold text-stat text-yellow-400">
             {row.damage.toLocaleString()}
           </span>
         ) : (

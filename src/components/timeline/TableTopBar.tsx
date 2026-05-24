@@ -63,14 +63,14 @@ export function TableTopBar({
         <Display
           label="dmg"
           value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
-          accent={totalDmg > 0 ? "text-[#f5cf4d]" : ""}
+          accent={totalDmg > 0 ? "text-spectro" : ""}
           big
         />
 
         <Display
           label="dps"
           value={dps > 0 ? dps.toLocaleString() : " — "}
-          accent={dps > 0 ? "text-[#5ad7f0]" : ""}
+          accent={dps > 0 ? "text-glacio" : ""}
         />
 
         <Display label="time" value={`${totalTimeSec.toFixed(2)}s`} />

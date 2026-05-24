@@ -90,7 +90,7 @@ export function ComboboxSelect({
   return (
     <div className="relative h-7">
       <select
-        className="w-full h-full appearance-none bg-darkest border border-border rounded-sm pl-2 pr-7 py-0 text-[16px] text-foreground cursor-pointer hover:border-foreground/40 transition-colors truncate"
+        className="w-full h-full appearance-none bg-darkest border border-border rounded-sm pl-2 pr-7 py-0 text-value text-foreground cursor-pointer hover:border-foreground/40 transition-colors truncate"
         value={value ?? ""}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{

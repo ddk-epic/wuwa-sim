@@ -39,13 +39,13 @@ export function BuffEventRow({
       <td className="px-2 py-1 font-mono text-xs text-right text-muted-foreground/60">
         {index + 1}
       </td>
-      <td className={`${numCell} text-[#a3bfff] text-xs`}>
+      <td className={`${numCell} text-ui-damage text-xs`}>
         {formatFrames(buff.frame)}
       </td>
       <td className="px-2 py-1">
         <CharCell id={buff.targetCharacterId} />
       </td>
-      <td className={`py-1 italic text-[12px] ${color}`}>buff {verb}</td>
+      <td className={`py-1 italic text-detail ${color}`}>buff {verb}</td>
       <td
         className="px-2 py-1 text-sm text-gray-300"
         colSpan={Math.max(1, COL_COUNT - 4)}

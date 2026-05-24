@@ -70,7 +70,7 @@ function StatCard({
           {resolved}
         </span>
       </div>
-      <span className="text-[12px] text-muted-foreground/60 truncate pl-10">
+      <span className="text-detail text-muted-foreground/60 truncate pl-10">
         {breakdown}
       </span>
     </div>
@@ -84,7 +84,7 @@ function FormulaBox({
 }) {
   const Term = ({ label, value }: { label: string; value: ReactNode }) => (
     <span className="inline-flex flex-col items-center leading-tight">
-      <span className="text-[11px] uppercase tracking-[1px] text-muted-foreground/60">
+      <span className="text-detail uppercase tracking-[1px] text-muted-foreground/60">
         {label}
       </span>
       <span>{value}</span>
@@ -92,7 +92,7 @@ function FormulaBox({
   )
   const Op = ({ s }: { s: string }) => (
     <span className="inline-flex flex-col items-center leading-tight text-muted-foreground/50">
-      <span className="text-[12px] tracking-[1px]">&nbsp;</span>
+      <span className="text-detail tracking-[1px]">&nbsp;</span>
       <span>{s}</span>
     </span>
   )
@@ -141,7 +141,7 @@ function BuffPills({
       : "bg-card border-border text-muted-foreground"
   return (
     <div className="flex items-baseline gap-2">
-      <span className="text-[12px] uppercase tracking-[1px] text-muted-foreground/60 w-14 shrink-0">
+      <span className="text-detail uppercase tracking-[1px] text-muted-foreground/60 w-14 shrink-0">
         {label}
       </span>
       <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">

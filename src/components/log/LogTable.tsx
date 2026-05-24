@@ -34,13 +34,13 @@ function GroupedBuffRow({ row, index }: { row: BuffGroupRow; index: number }) {
       <td className="px-2 py-1 font-mono text-xs text-right text-muted-foreground/60">
         {index + 1}
       </td>
-      <td className={`${numCell} text-[#a3bfff] text-xs`}>
+      <td className={`${numCell} text-ui-damage text-xs`}>
         {formatFrames(row.frame)}
       </td>
       <td className="px-2 py-1">
         {singleTarget !== null ? <CharCell id={singleTarget} /> : null}
       </td>
-      <td className={`py-1 italic text-[12px] ${color}`}>buff {verb}</td>
+      <td className={`py-1 italic text-detail ${color}`}>buff {verb}</td>
       <td
         className="px-2 py-1 text-sm text-gray-300 whitespace-normal break-words"
         colSpan={Math.max(1, COL_COUNT - 4)}

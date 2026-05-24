@@ -149,7 +149,7 @@ export function TimelineGroupHeader({
           }}
         />
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-[#a3bfff]">
+      <td className="px-2 py-1.5 text-right font-mono text-value text-ui-damage">
         {firstRowTime}
       </td>
       <td className="px-2 py-1.5">
@@ -231,23 +231,23 @@ export function TimelineGroupHeader({
           </span>
         </div>
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-[16px] text-gray-300">
+      <td className="px-2 py-1.5 text-right font-mono text-value text-gray-300">
         {formatFrames(totalDurFrames)}
       </td>
       <td className="px-2 py-1.5 text-right font-mono">
-        {renderPoolValue(lastConVal, "#f5cf4d")}
+        {renderPoolValue(lastConVal, "var(--ui-concerto)")}
       </td>
       <td className="px-2 py-1.5 text-right font-mono">
-        {renderPoolValue(lastResVal, "#9b6cf0")}
+        {renderPoolValue(lastResVal, "var(--ui-resonance)")}
       </td>
       <td className="px-2 py-1.5 font-semibold text-right font-mono">
         {hasDmg ? (
           isExpanded ? (
-            <span className="text-[19px] text-gray-600">
+            <span className="text-stat text-gray-600">
               {totalDmg.toLocaleString()}
             </span>
           ) : (
-            <span className="font-bold text-[19px] text-yellow-400">
+            <span className="font-bold text-stat text-yellow-400">
               {totalDmg.toLocaleString()}
             </span>
           )

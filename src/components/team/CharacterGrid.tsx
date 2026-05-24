@@ -5,8 +5,8 @@ import { useTeamContext } from "#/hooks/useTeamContext"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 const RARITY_HEX: Record<string, string> = {
-  SSR: "#f5cf4d",
-  SR: "#b67cff",
+  SSR: "var(--color-rarity-ssr)",
+  SR: "var(--color-rarity-sr)",
 }
 
 export function CharacterGrid() {
@@ -49,7 +49,8 @@ function CharacterCard({
   onClick,
 }: CharacterCardProps) {
   const elementHex = ELEMENT_HEX[character.element] ?? "#888"
-  const rarityHex = RARITY_HEX[character.rarity] ?? "#3a3a3a"
+  const rarityHex =
+    RARITY_HEX[character.rarity] ?? "var(--color-rarity-fallback)"
   const fileName = character.name.toLowerCase()
 
   return (

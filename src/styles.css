@@ -36,6 +36,38 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --darkest: oklch(0.1456 0.008 273.86);
+
+  /* Element colors */
+  --el-fusion: #ff7a3d;
+  --el-glacio: #5ad7f0;
+  --el-electro: #b67cff;
+  --el-aero: #5fd49a;
+  --el-havoc: #9b6cf0;
+  --el-spectro: #f5cf4d;
+
+  /* Rarity colors */
+  --rarity-ssr: #f5cf4d;
+  --rarity-sr: #b67cff;
+  --rarity-fallback: #3a3a3a;
+
+  /* UI semantic colors */
+  --ui-damage: #a3bfff;
+  --ui-resonance: #9b6cf0;
+  --ui-concerto: #f5d061;
+  --ui-heal: #4ade80;
+  --ui-zero: #42475a;
+
+  /* Fallback backgrounds */
+  --bg-fallback: #0b0b0b;
+  --bg-fallback-card: #181818;
+
+  /* Font size tokens */
+  --fs-micro: 10px;
+  --fs-detail: 12px;
+  --fs-label: 13px;
+  --fs-value: 16px;
+  --fs-stat: 19px;
+  --fs-title: 24px;
 }
 
 @theme inline {
@@ -80,6 +112,38 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-darkest: var(--darkest);
+
+  /* Element colors */
+  --color-fusion: var(--el-fusion);
+  --color-glacio: var(--el-glacio);
+  --color-electro: var(--el-electro);
+  --color-aero: var(--el-aero);
+  --color-havoc: var(--el-havoc);
+  --color-spectro: var(--el-spectro);
+
+  /* Rarity colors */
+  --color-rarity-ssr: var(--rarity-ssr);
+  --color-rarity-sr: var(--rarity-sr);
+  --color-rarity-fallback: var(--rarity-fallback);
+
+  /* UI semantic colors */
+  --color-ui-damage: var(--ui-damage);
+  --color-ui-resonance: var(--ui-resonance);
+  --color-ui-concerto: var(--ui-concerto);
+  --color-ui-heal: var(--ui-heal);
+  --color-ui-zero: var(--ui-zero);
+
+  /* Fallback backgrounds */
+  --color-bg-fallback: var(--bg-fallback);
+  --color-bg-fallback-card: var(--bg-fallback-card);
+
+  /* Font size tokens */
+  --text-micro: var(--fs-micro);
+  --text-detail: var(--fs-detail);
+  --text-label: var(--fs-label);
+  --text-value: var(--fs-value);
+  --text-stat: var(--fs-stat);
+  --text-title: var(--fs-title);
 }
 
 body {

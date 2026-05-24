@@ -114,7 +114,7 @@ function DomainSection({
     <div className="mt-2 mb-2 overflow-hidden bg-darkest">
       <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 text-muted-foreground">
         {icon}
-        <span className="font-mono text-[13px] uppercase tracking-[1.5px]">
+        <span className="font-mono text-label uppercase tracking-[1.5px]">
           {label}
         </span>
       </div>
@@ -122,7 +122,7 @@ function DomainSection({
         className="px-3 pb-1 pt-1"
         style={{
           background:
-            "linear-gradient(to bottom, var(--color-darkest, #0b0b0b) 0px, var(--color-card, #181818) 80%)",
+            "linear-gradient(to bottom, var(--color-darkest, var(--color-bg-fallback)) 0px, var(--color-card, var(--color-bg-fallback-card)) 80%)",
         }}
       >
         {children}

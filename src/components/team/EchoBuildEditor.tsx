@@ -162,7 +162,7 @@ function BuildToggle({
 
 function TabularHeader() {
   return (
-    <div className="flex bg-darkest px-2 py-1 font-mono text-[13px] uppercase tracking-[1.5px] text-muted-foreground/70">
+    <div className="flex bg-darkest px-2 py-1 font-mono text-label uppercase tracking-[1.5px] text-muted-foreground/70">
       <div className="w-14">cost</div>
       <div className="flex-1">mainstat</div>
     </div>
@@ -199,7 +199,7 @@ function TabularRow({
         >
           {cost}
         </span>
-        <span className="font-mono text-[13px] uppercase tracking-[1px] text-muted-foreground/50">
+        <span className="font-mono text-label uppercase tracking-[1px] text-muted-foreground/50">
           ×{capacity}
         </span>
       </div>

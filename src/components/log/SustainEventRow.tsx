@@ -14,7 +14,7 @@ export function SustainEventRow({
       <td className="px-2 py-2 font-mono text-xs text-right text-muted-foreground">
         {index + 1}
       </td>
-      <td className={`${numCell} text-[16px] text-[#a3bfff]`}>
+      <td className={`${numCell} text-value text-ui-damage`}>
         {formatFrames(ev.frame)}
       </td>
       <td className="px-2 py-2">
@@ -31,7 +31,7 @@ export function SustainEventRow({
         <span className="text-muted-foreground/40">—</span>
       </td>
       <td className={numCell}>
-        <span className="font-semibold text-sm" style={{ color: "#4ade80" }}>
+        <span className="font-semibold text-sm text-ui-heal">
           {ev.amount.toLocaleString()}
         </span>
       </td>

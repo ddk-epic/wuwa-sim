@@ -26,8 +26,8 @@ export function resolveCharName(id: number): string {
 }
 
 export function renderPoolValue(val: number | null, color: string): ReactNode {
-  if (val === null) return <span style={{ color: "#42475a" }}>—</span>
-  if (val === 0) return <span style={{ color: "#42475a" }}>0</span>
+  if (val === null) return <span className="text-ui-zero">—</span>
+  if (val === 0) return <span className="text-ui-zero">0</span>
   if (val >= 100)
     return (
       <span className="font-bold" style={{ color }}>
@@ -150,14 +150,7 @@ export function CoordPill({ element }: { element: Element }) {
 
 export function SustainPill({ sub: _sub }: { sub: SustainEvent["sub"] }) {
   return (
-    <span
-      className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
-      style={{
-        background: "#4ade8015",
-        border: "1px solid #4ade8033",
-        color: "#4ade80",
-      }}
-    >
+    <span className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase bg-ui-heal/8 border border-ui-heal/20 text-ui-heal">
       HEAL
     </span>
   )

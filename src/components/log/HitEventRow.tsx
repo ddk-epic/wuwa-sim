@@ -42,7 +42,7 @@ export function HitEventRow({
           </span>
           {index + 1}
         </td>
-        <td className={`${numCell} text-[16px] text-[#a3bfff]`}>
+        <td className={`${numCell} text-value text-ui-damage`}>
           {formatFrames(ev.frame)}
         </td>
         <td className="px-2 py-2">
@@ -56,10 +56,10 @@ export function HitEventRow({
           <SkillNameSuffix ev={ev} />
         </td>
         <td className={numCell}>
-          {renderPoolValue(ev.cumulativeConcerto, "#f5d061")}
+          {renderPoolValue(ev.cumulativeConcerto, "var(--ui-concerto)")}
         </td>
         <td className={numCell}>
-          {renderPoolValue(ev.cumulativeEnergy, "#9b6cf0")}
+          {renderPoolValue(ev.cumulativeEnergy, "var(--ui-resonance)")}
         </td>
         <td className={numCell}>
           <span className="font-semibold text-sm text-yellow-400">
