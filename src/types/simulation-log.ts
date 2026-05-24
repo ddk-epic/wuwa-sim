@@ -14,7 +14,13 @@ interface SimulationLogBase {
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
   variantKind?: VariantKind
-  delayBreakdown?: { react: number; floor: number; pad: number; fall: number }
+  delayBreakdown?: {
+    react: number
+    floor: number
+    pad: number
+    fall: number
+    swapBack: number
+  }
   sourceEntryId?: string
 }
 

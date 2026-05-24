@@ -76,6 +76,7 @@ export function TimelineEntryRow({
     floorFrames: 0,
     padFrames: 0,
     fallFrames: 0,
+    swapBackFrames: 0,
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,
@@ -96,8 +97,9 @@ export function TimelineEntryRow({
   const floorFrames = row.floorFrames
   const padFrames = row.padFrames
   const fallFrames = row.fallFrames
+  const swapBackFrames = row.swapBackFrames
   const totalDelayFrames =
-    reactDelayFrames + floorFrames + padFrames + fallFrames
+    reactDelayFrames + floorFrames + padFrames + fallFrames + swapBackFrames
 
   const conVal = row.cumulativeConcerto
   const resVal = row.cumulativeEnergy
@@ -215,6 +217,9 @@ export function TimelineEntryRow({
                     : "",
                 padFrames > 0 ? `pad: ${formatFrames(padFrames)}` : "",
                 fallFrames > 0 ? `fall: ${formatFrames(fallFrames)}` : "",
+                swapBackFrames > 0
+                  ? `swap-back: ${formatFrames(swapBackFrames)}`
+                  : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}

@@ -3,13 +3,17 @@ export interface InferredSwap {
   next: number
 }
 
+const SWAP_BACK_CD = 60
+
 export class OnFieldTracker {
   private current_: number | null = null
   private version_ = 0
+  private lastOffFieldFrame = new Map<number, number>()
 
   clear(): void {
     this.current_ = null
     this.version_++
+    this.lastOffFieldFrame.clear()
   }
 
   current(): number | null {
@@ -38,5 +42,19 @@ export class OnFieldTracker {
   inferSwap(next: number): InferredSwap | null {
     if (this.current_ === next) return null
     return { prev: this.current_, next }
+  }
+
+  recordSwapOut(characterId: number, frame: number): void {
+    this.lastOffFieldFrame.set(characterId, frame)
+  }
+
+  recordSwapIn(characterId: number): void {
+    this.lastOffFieldFrame.delete(characterId)
+  }
+
+  computeSwapBack(characterId: number, arrivalFrame: number): number {
+    const lastFrame = this.lastOffFieldFrame.get(characterId)
+    if (lastFrame === undefined) return 0
+    return Math.max(0, SWAP_BACK_CD - (arrivalFrame - lastFrame))
   }
 }

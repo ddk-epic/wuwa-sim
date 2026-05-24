@@ -40,3 +40,51 @@ describe("OnFieldTracker", () => {
     expect(t.current()).toBeNull()
   })
 })
+
+describe("OnFieldTracker — swap-back clock", () => {
+  it("computeSwapBack returns 0 when character has no off-field record", () => {
+    const t = new OnFieldTracker()
+    expect(t.computeSwapBack(1, 100)).toBe(0)
+  })
+
+  it("computeSwapBack returns full 60 when character just left the field", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    expect(t.computeSwapBack(1, 100)).toBe(60)
+  })
+
+  it("computeSwapBack returns remaining cooldown when partially elapsed", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    expect(t.computeSwapBack(1, 130)).toBe(30)
+  })
+
+  it("computeSwapBack returns 0 once 60+ frames have elapsed", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    expect(t.computeSwapBack(1, 160)).toBe(0)
+    expect(t.computeSwapBack(1, 200)).toBe(0)
+  })
+
+  it("recordSwapIn clears the off-field record so subsequent computeSwapBack returns 0", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.recordSwapIn(1)
+    expect(t.computeSwapBack(1, 110)).toBe(0)
+  })
+
+  it("clear resets the off-field clock map", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.clear()
+    expect(t.computeSwapBack(1, 110)).toBe(0)
+  })
+
+  it("tracks multiple characters independently", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    t.recordSwapOut(2, 120)
+    expect(t.computeSwapBack(1, 140)).toBe(20)
+    expect(t.computeSwapBack(2, 140)).toBe(40)
+  })
+})

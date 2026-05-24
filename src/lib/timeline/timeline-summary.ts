@@ -13,6 +13,7 @@ export interface TimelineSummaryRow {
   floorFrames: number
   padFrames: number
   fallFrames: number
+  swapBackFrames: number
   damage: number | null
   cumulativeConcerto: number | null
   cumulativeEnergy: number | null
@@ -73,6 +74,7 @@ export function getTimelineSummary(
     let floorFrames: number
     let padFrames: number
     let fallFrames: number
+    let swapBackFrames: number
     let damage: number | null
     let cumulativeConcerto: number | null
     let cumulativeEnergy: number | null
@@ -83,6 +85,7 @@ export function getTimelineSummary(
       floorFrames = ae.delayBreakdown?.floor ?? 0
       padFrames = ae.delayBreakdown?.pad ?? 0
       fallFrames = ae.delayBreakdown?.fall ?? 0
+      swapBackFrames = ae.delayBreakdown?.swapBack ?? 0
 
       if (nextAe !== undefined) {
         durationFrames = nextAe.frame - ae.frame
@@ -124,6 +127,7 @@ export function getTimelineSummary(
       floorFrames = execution?.floor ?? 0
       padFrames = 0
       fallFrames = 0
+      swapBackFrames = 0
       damage = null
       cumulativeConcerto = null
       cumulativeEnergy = null
@@ -138,6 +142,7 @@ export function getTimelineSummary(
       floorFrames,
       padFrames,
       fallFrames,
+      swapBackFrames,
       damage,
       cumulativeConcerto,
       cumulativeEnergy,

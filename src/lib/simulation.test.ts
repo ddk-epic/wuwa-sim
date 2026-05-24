@@ -1599,6 +1599,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       floor: 0,
       pad: 0,
       fall: 0,
+      swapBack: 0,
     })
   })
 
@@ -1671,6 +1672,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       floor: 0,
       pad: 0,
       fall: 0,
+      swapBack: 0,
     })
   })
 })
@@ -2337,5 +2339,198 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     // trailing hit from charA fires via drainAll (1 immediate + 1 trailing = 2 total)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
+  })
+})
+
+describe("runSimulation — Swap-back Cooldown (#241)", () => {
+  const swapBackCharA: EnrichedCharacter = {
+    id: 50,
+    name: "Swap A",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 501,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+        ],
+        damage: [],
+      },
+    ],
+  }
+  const swapBackCharB: EnrichedCharacter = {
+    ...swapBackCharA,
+    id: 51,
+    name: "Swap B",
+  }
+  const swapBackCharC: EnrichedCharacter = {
+    ...swapBackCharA,
+    id: 52,
+    name: "Swap C",
+    skills: [
+      {
+        id: 521,
+        name: "Dodge",
+        type: "Movement",
+        stages: [{ name: "Dodge", value: "", actionTime: 10, damage: [] }],
+        damage: [],
+      },
+    ],
+  }
+  const slots50_51: Slots = [50, 51, null]
+
+  function actionsFrom(
+    log: import("#/types/simulation-log").SimulationLogEntry[],
+  ) {
+    return log.filter(
+      (e): e is import("#/types/simulation-log").ActionEvent =>
+        e.kind === "action",
+    )
+  }
+
+  it("(a) clock starts at off-field-exit frame: full 60-frame cooldown on immediate swap-back", () => {
+    // A (20f) → B (20f) → A: A left at frame 20, arrives back at frame 40 → swapBack = 60 - 20 = 40
+    testCharacters = [swapBackCharA, swapBackCharB]
+    const entries = [
+      tlEntry(50, "Normal Attack::_", "e1"),
+      tlEntry(51, "Normal Attack::_", "e2"),
+      tlEntry(50, "Normal Attack::_", "e3"),
+    ]
+    const log = runSimulation(entries, slots50_51, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    expect(reentry?.delayBreakdown?.swapBack).toBe(40)
+  })
+
+  it("(b) trailing hits do not advance the clock: swapBack still reflects exit frame", () => {
+    // A with trailing hits (actionTime=20, hit at frame 15) → B (20f) → A
+    // A left at frame 20, B ends at frame 40, swapBack = 60 - 20 = 40
+    testCharacters = [swapBackCharA, swapBackCharB]
+    const charAWithTrailing: EnrichedCharacter = {
+      ...swapBackCharA,
+      skills: [
+        {
+          id: 501,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1",
+              value: "100%",
+              actionTime: 20,
+              damage: [{ ...dmgHit(1.0), actionFrame: 15 }],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charAWithTrailing, swapBackCharB]
+    const entries = [
+      tlEntry(50, "Normal Attack::_", "e1"),
+      tlEntry(51, "Normal Attack::_", "e2"),
+      tlEntry(50, "Normal Attack::_", "e3"),
+    ]
+    const log = runSimulation(entries, slots50_51, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    // A exited at frame 20, B ends at frame 40, swapBack = 60 - 20 = 40
+    expect(reentry?.delayBreakdown?.swapBack).toBe(40)
+  })
+
+  it("(c) first-ever entry on a character has no swapBack", () => {
+    testCharacters = [swapBackCharA]
+    const entries = [tlEntry(50, "Normal Attack::_", "e1")]
+    const log = runSimulation(entries, [50, null, null], emptyLoadouts)
+    const actions = actionsFrom(log)
+    expect(actions[0]?.delayBreakdown?.swapBack ?? 0).toBe(0)
+  })
+
+  it("(d) same-character successive entries skip swapBack (no swap fires)", () => {
+    testCharacters = [swapBackCharA]
+    const entries = [
+      tlEntry(50, "Normal Attack::_", "e1"),
+      tlEntry(50, "Normal Attack::_", "e2"),
+    ]
+    const log = runSimulation(entries, [50, null, null], emptyLoadouts)
+    const actions = actionsFrom(log)
+    expect(actions[1]?.delayBreakdown?.swapBack ?? 0).toBe(0)
+  })
+
+  it("(e) Movement stages do not affect the swap-back clock", () => {
+    // A (20f) → C:Dodge (10f) — no swap inferred for Movement → B (20f) → A
+    // Because Dodge doesn't fire skillCast, A stays "on-field" in tracker;
+    // B's arrival infers swap from A (sets lastOffFieldFrame[A] = 30), not C.
+    // When A comes back at frame 50: swapBack = 60 - (50 - 30) = 40
+    const charAMovement: EnrichedCharacter = { ...swapBackCharA, id: 50 }
+    const charBMovement: EnrichedCharacter = { ...swapBackCharB, id: 51 }
+    const charCMovement: EnrichedCharacter = { ...swapBackCharC, id: 52 }
+    testCharacters = [charAMovement, charBMovement, charCMovement]
+    const entries = [
+      tlEntry(50, "Normal Attack::_", "e1"), // A at frame 0, ends frame 20
+      tlEntry(52, "Dodge::_", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
+      tlEntry(51, "Normal Attack::_", "e3"), // B at frame 30, swap from A→B recorded (lastOffFieldFrame[A]=30)
+      tlEntry(50, "Normal Attack::_", "e4"), // A at frame 50, swapBack = 60 - 20 = 40
+    ]
+    const log = runSimulation(entries, [50, 51, 52], emptyLoadouts)
+    const actions = actionsFrom(log)
+    const aReentry = actions.find((a) => a.sourceEntryId === "e4")
+    expect(aReentry?.delayBreakdown?.swapBack).toBe(40)
+  })
+
+  it("(f) pad is 0 once 60+ frames have elapsed off-field", () => {
+    // A (80f) → B (20f) → A: A left at frame 80, arrives at frame 100 → 60 - 20 = 40; but if gap ≥ 60 → 0
+    // Use actionTime=70 for A so B starts at 70, then after B's 20f, A returns at 90 → 60-(90-70)=40 (still some CD)
+    // For gap ≥ 60: A's actionTime=80, B's actionTime=20 → A returns at 100, 60-(100-80)=40 still partial
+    // Use A actionTime=80, B actionTime=60: A exits at 80, B ends at 140 → 60-(140-80) = 60-60 = 0
+    const charALong: EnrichedCharacter = {
+      ...swapBackCharA,
+      skills: [
+        {
+          id: 501,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            { name: "Stage 1", value: "100%", actionTime: 80, damage: [] },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    const charBLong: EnrichedCharacter = {
+      ...swapBackCharB,
+      skills: [
+        {
+          id: 511,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            { name: "Stage 1", value: "100%", actionTime: 60, damage: [] },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charALong, charBLong]
+    const entries = [
+      tlEntry(50, "Normal Attack::_", "e1"),
+      tlEntry(51, "Normal Attack::_", "e2"),
+      tlEntry(50, "Normal Attack::_", "e3"),
+    ]
+    const log = runSimulation(entries, slots50_51, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e3")
+    // A exits at frame 80, returns at frame 140 → 60 - (140 - 80) = 0
+    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
   })
 })

@@ -239,6 +239,10 @@ export class BuffEngine {
     return this.resources.getResource(characterId)
   }
 
+  computeSwapBack(characterId: number, arrivalFrame: number): number {
+    return this.onField.computeSwapBack(characterId, arrivalFrame)
+  }
+
   /** Process a triggering event; returns lifecycle events from any apply/refresh. */
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
@@ -253,6 +257,7 @@ export class BuffEngine {
       const swap = this.onField.inferSwap(event.characterId)
       if (swap) {
         if (swap.prev !== null) {
+          this.onField.recordSwapOut(swap.prev, event.frame)
           this.dispatchEvent(
             { kind: "swapOut", characterId: swap.prev, frame: event.frame },
             lifecycleEvents,
@@ -261,6 +266,7 @@ export class BuffEngine {
           )
         }
         this.onField.setCurrent(swap.next)
+        this.onField.recordSwapIn(swap.next)
         this.dispatchEvent(
           { kind: "swapIn", characterId: swap.next, frame: event.frame },
           lifecycleEvents,

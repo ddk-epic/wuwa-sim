@@ -148,6 +148,7 @@ describe("getTimelineSummary — single entry", () => {
         floorFrames: 0,
         padFrames: 0,
         fallFrames: 0,
+        swapBackFrames: 0,
         damage: null,
         cumulativeConcerto: null,
         cumulativeEnergy: null,
@@ -225,7 +226,13 @@ describe("getTimelineSummary — missing character", () => {
 function makeActionEvent(
   entryId: string,
   frame: number,
-  delayBreakdown?: { react: number; floor: number; pad: number; fall: number },
+  delayBreakdown?: {
+    react: number
+    floor: number
+    pad: number
+    fall: number
+    swapBack: number
+  },
 ): Extract<SimulationLogEntry, { kind: "action" }> {
   return {
     kind: "action",
@@ -274,7 +281,13 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     const log: SimulationLogEntry[] = [
       makeActionEvent("e1", 0),
       makeHitEvent("e1", 0, 900),
-      makeActionEvent("e2", 60, { react: 9, floor: 0, pad: 0, fall: 0 }),
+      makeActionEvent("e2", 60, {
+        react: 9,
+        floor: 0,
+        pad: 0,
+        fall: 0,
+        swapBack: 0,
+      }),
       makeHitEvent("e2", 60, 1200),
     ]
 
@@ -440,7 +453,13 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     testCharacters = [charA]
     const e1 = normalAttack(1, "e1")
     const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0, { react: 9, floor: 0, pad: 0, fall: 0 }),
+      makeActionEvent("e1", 0, {
+        react: 9,
+        floor: 0,
+        pad: 0,
+        fall: 0,
+        swapBack: 0,
+      }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
     expect(result.rows[0].reactFrames).toBe(9)
@@ -451,7 +470,13 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     testCharacters = [charA]
     const e1 = normalAttack(1, "e1")
     const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0, { react: 0, floor: 15, pad: 0, fall: 0 }),
+      makeActionEvent("e1", 0, {
+        react: 0,
+        floor: 15,
+        pad: 0,
+        fall: 0,
+        swapBack: 0,
+      }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)
     expect(result.rows[0].reactFrames).toBe(0)

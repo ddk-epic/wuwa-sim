@@ -49,6 +49,7 @@ export function runSimulation(
       )
     }
     frame += arrival.padFrames
+    const swapBack = engine.computeSwapBack(entry.characterId, frame)
 
     const { resolved, allHits, stageDuration, nextFrame } = processEntry(
       entry,
@@ -62,6 +63,7 @@ export function runSimulation(
       arrival.padFrames,
       variantFloor,
       fallFrames,
+      swapBack,
     )
     if (resolved) {
       onFootingEvent(
@@ -103,6 +105,7 @@ function processEntry(
   padFrames: number = 0,
   variantFloor: number = 0,
   fallFrames: number = 21,
+  swapBack: number = 0,
 ): {
   resolved: ResolvedStage | null
   allHits: DamageEntry[]
@@ -151,6 +154,7 @@ function processEntry(
     floor,
     padFrames,
     fall,
+    swapBack,
   )
   log.push(actionEvent)
 
@@ -194,6 +198,7 @@ function buildActionEvent(
   floor: number = 0,
   padFrames: number = 0,
   fall: number = 0,
+  swapBack: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
   const event: ActionEvent = {
@@ -207,8 +212,8 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
-  if (react > 0 || floor > 0 || padFrames > 0 || fall > 0) {
-    event.delayBreakdown = { react, floor, pad: padFrames, fall }
+  if (react > 0 || floor > 0 || padFrames > 0 || fall > 0 || swapBack > 0) {
+    event.delayBreakdown = { react, floor, pad: padFrames, fall, swapBack }
   }
   return event
 }

@@ -169,7 +169,11 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
     const delay = ev.delayBreakdown
     const hasDelay =
       delay &&
-      (delay.react > 0 || delay.floor > 0 || delay.pad > 0 || delay.fall > 0)
+      (delay.react > 0 ||
+        delay.floor > 0 ||
+        delay.pad > 0 ||
+        delay.fall > 0 ||
+        delay.swapBack > 0)
     return (
       <>
         {label && <span className="ml-2 text-sm">{label}</span>}
@@ -184,11 +188,21 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
                   : "",
               delay.pad > 0 ? `pad: ${formatFrames(delay.pad)}` : "",
               delay.fall > 0 ? `fall: ${formatFrames(delay.fall)}` : "",
+              delay.swapBack > 0
+                ? `swap-back: ${formatFrames(delay.swapBack)}`
+                : "",
             ]
               .filter(Boolean)
               .join(" · ")}
           >
-            +{formatFrames(delay.react + delay.floor + delay.pad + delay.fall)}
+            +
+            {formatFrames(
+              delay.react +
+                delay.floor +
+                delay.pad +
+                delay.fall +
+                delay.swapBack,
+            )}
           </span>
         )}
       </>
