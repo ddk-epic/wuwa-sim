@@ -43,7 +43,7 @@ export function runSimulation(
     state = arrival.stateAfter
     for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
     if (arrival.pendingFootingToFire) {
-      engine.snapshotFooting(
+      engine.footing.snapshotTrailing(
         entry.characterId,
         arrival.pendingFootingToFire.exitFooting,
       )
@@ -68,8 +68,7 @@ export function runSimulation(
       fallFrames,
       swapBack,
     )
-    onFootingEvent(
-      engine,
+    engine.footing.applyStageFooting(
       entry.characterId,
       resolved.stage.footing,
       stageDuration,
@@ -87,7 +86,8 @@ export function runSimulation(
     frame = nextFrame
   }
 
-  for (const charId of state.keys()) engine.clearFootingSnapshot(charId)
+  for (const charId of state.keys())
+    engine.footing.clearTrailingSnapshot(charId)
   for (const h of TrailingWindow.drainAll(state))
     processHit(h, engine, log, slots)
 
@@ -125,9 +125,7 @@ function processEntry(
     variantFloor,
   )
 
-  const snap = engine.consumeFootingSnapshot(entry.characterId)
-  if (snap !== null) engine.setFooting(snap)
-  const effectiveFooting = engine.currentFooting()
+  const effectiveFooting = engine.footing.promoteOnSwapIn(entry.characterId)
   const fall = computeFall(effectiveFooting, resolved.stage.footing, fallFrames)
 
   const effectiveStart = stageStartFrame + fall + swapBack
@@ -219,22 +217,6 @@ function computeFall(
   if (currentFooting !== "air") return 0
   if (stageFooting !== "ground") return 0
   return fallFrames
-}
-
-function onFootingEvent(
-  engine: BuffEngine,
-  characterId: number,
-  footing: Footing | undefined,
-  stageDuration: number,
-): void {
-  if (!footing || typeof footing !== "object") return
-  if ("launch" in footing && footing.launch <= stageDuration) {
-    engine.setFooting("air")
-    engine.clearFootingSnapshot(characterId)
-  } else if ("land" in footing && footing.land <= stageDuration) {
-    engine.setFooting("ground")
-    engine.clearFootingSnapshot(characterId)
-  }
 }
 
 function processHit(

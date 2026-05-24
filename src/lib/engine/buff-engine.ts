@@ -22,7 +22,7 @@ import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
 import { InstanceStore } from "./instance-store"
 import type { Candidate, EngineEvent } from "./instance-store"
-import { FootingTracker } from "./footing-tracker"
+import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects } from "./stat-table-builder"
@@ -81,7 +81,7 @@ export class BuffEngine {
   private triggerIndex = new TriggerIndex([])
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
-  private footing_ = new FootingTracker()
+  readonly footing = new FootingModule()
   private cooldownLastFired = new Map<string, number>()
   private foldedBuffsMap = new Map<number, BuffDef[]>()
   private pendingOutroBuffs: PendingOutroBuff[] = []
@@ -203,7 +203,7 @@ export class BuffEngine {
     this.resources.clear()
     this.resources.clearCaps()
     this.onField.clear()
-    this.footing_.clear()
+    this.footing.clear()
     this.cooldownLastFired.clear()
     this.emitHitDispatcher.reset()
     this.foldedBuffsMap.clear()
@@ -731,26 +731,6 @@ export class BuffEngine {
   /** Test/inspection helper. */
   getOnFieldCharacterId(): number | null {
     return this.onField.current()
-  }
-
-  currentFooting(): "ground" | "air" {
-    return this.footing_.current()
-  }
-
-  setFooting(footing: "ground" | "air"): void {
-    this.footing_.setTeam(footing)
-  }
-
-  snapshotFooting(characterId: number, footing: "ground" | "air"): void {
-    this.footing_.snapshotFor(characterId, footing)
-  }
-
-  consumeFootingSnapshot(characterId: number): "ground" | "air" | null {
-    return this.footing_.consumeSnapshot(characterId)
-  }
-
-  clearFootingSnapshot(characterId: number): void {
-    this.footing_.clearSnapshot(characterId)
   }
 
   /** Sorted ids of buff instances currently active on `characterId`. */
