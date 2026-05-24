@@ -2,7 +2,7 @@ import type { Footing, VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { findStageByEntry } from "../stage/stage"
+import { findStageByEntry } from "../stage"
 
 function footingExitState(footing: Footing): "ground" | "air" {
   if (footing === "air") return "air"

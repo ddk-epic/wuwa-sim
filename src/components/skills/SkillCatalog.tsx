@@ -5,8 +5,8 @@ import { useTeamContext } from "#/hooks/useTeamContext"
 import { ELEMENT_HEX } from "#/data/elements"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/loadout/catalog"
-import { getFocusedStageCatalog } from "#/lib/stage/focused-stage-catalog"
-import type { FocusedStage } from "#/lib/stage/focused-stage-catalog"
+import { getFocusedStageCatalog } from "#/components/skills/focused-stage-catalog"
+import type { FocusedStage } from "#/components/skills/focused-stage-catalog"
 import { formatFrames } from "#/lib/format"
 
 type NewEntry = Omit<TimelineEntry, "id">

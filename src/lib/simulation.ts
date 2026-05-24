@@ -12,10 +12,10 @@ import { computeDamage } from "./damage/compute-damage"
 import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
-import { findStageByEntry, resolveStageExecution } from "./stage/stage"
-import type { ResolvedStage } from "./stage/stage"
-import * as TrailingWindow from "./stage/trailing-window"
-import type { TrailingHit } from "./stage/trailing-window"
+import { findStageByEntry, resolveStageExecution } from "./stage"
+import type { ResolvedStage } from "./stage"
+import * as TrailingWindow from "./trailing-window"
+import type { TrailingHit } from "./trailing-window"
 
 export function runSimulation(
   entries: TimelineEntry[],

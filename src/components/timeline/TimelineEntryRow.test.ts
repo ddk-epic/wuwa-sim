@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ActionTimeStage } from "#/lib/stage/stage"
+import type { ActionTimeStage } from "#/lib/stage"
 import { nextVariant } from "./TimelineEntryRow"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 

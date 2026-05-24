@@ -5,7 +5,7 @@ import type {
 } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import { getCharacterById } from "../loadout/catalog"
-import { makeStageId, stageLabel } from "../stage/stage"
+import { makeStageId, stageLabel } from "../stage"
 
 type LegacyEntry = {
   id?: string

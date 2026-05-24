@@ -16,7 +16,7 @@ import {
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
 
-vi.mock("../loadout/catalog", () => ({
+vi.mock("./loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
   getEchoById: (id: number) => testEchoes.find((e) => e.id === id) ?? null,

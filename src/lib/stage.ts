@@ -10,7 +10,7 @@ import type {
 } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "../loadout/catalog"
+import { getCharacterById, getEchoById } from "./loadout/catalog"
 
 export const STAGE_CAST_NAME = "Skill DMG"
 
