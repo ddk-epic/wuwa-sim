@@ -1897,15 +1897,22 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   })
 
   it("fall is additive with pad (both non-zero)", () => {
-    testCharacters = [charAerial, charAerialB]
-    // charA launches (swap variant to produce trailing hits), charB does ground stage
+    // charA full non-swap launch → team air; charB swap with trailing hit → window;
+    // charB re-enters ground stage: fall fires (team air) + pad fires (trailing hit)
+    testCharacters = [charAerial, charSnapA]
     const entries: TimelineEntry[] = [
-      { id: "e1", characterId: 50, stageId: "Launch::_", variantKind: "swap" },
-      tlEntry(51, "Ground Attack::_", "e2"),
+      tlEntry(50, "Launch::_", "e1"), // non-swap: {launch:15} ≤ advance=30 → on-field → team=air
+      {
+        id: "e2",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      }, // trailing hit at hitFrame=30+20=50; pendingFooting atFrame=30+15=45; swap advance=6
+      tlEntry(52, "Ground Stage::_", "e3"), // charB re-enters at frame 36
     ]
     const result = runSimulation(
       entries,
-      aerialSlots(),
+      [50, 52, null],
       emptyLoadouts,
       0,
       6,
@@ -1913,9 +1920,11 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
       21,
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
-    const charBAction = actions.find((a) => a.sourceEntryId === "e2")
-    // fall should still be 21 regardless of pad
-    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+    const charBReentry = actions.find((a) => a.sourceEntryId === "e3")
+    // fall=21 (team air from charA's launch + pending footing snapshot promotes)
+    expect(charBReentry?.delayBreakdown?.fall).toBe(21)
+    // pad is non-zero (trailing hit at frame 50 extends entry starting at 36)
+    expect(charBReentry?.delayBreakdown?.pad ?? 0).toBeGreaterThan(0)
   })
 
   it("fall is NOT subject to variantFloor (fall accumulates independently)", () => {
@@ -2086,13 +2095,14 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     expect(reentry?.delayBreakdown?.fall).toBe(21)
   })
 
-  it("snapshot-expiry: swap-variant with no trailing hits sets no snapshot, re-entry uses team footing", () => {
-    // charAerial (id=50) Launch has damage: [] → no trailing hits → no snapshot
+  it("swap-variant with {launch:N}: pendingFooting fires at re-entry → charA pays fall", () => {
+    // charA Launch swap (damage: [], {launch:15}, swap advance=6): launch frame > advance →
+    // pendingFooting created; fires as snapshot at charA re-entry → on-field invariant promotes →
+    // charA effectiveFooting = air → fall fires on re-entry
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
       { id: "e1", characterId: 50, stageId: "Launch::_", variantKind: "swap" },
       tlEntry(51, "Ground Attack::_", "e2"),
-      // charA re-enters: no snapshot → team footing "ground" → no fall
       tlEntry(50, "Ground Attack::_", "e3"),
     ]
     const result = runSimulation(
@@ -2106,21 +2116,22 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.fall).toBe(21)
   })
 
-  it("different character inherits team footing, not the swapped-out character's snapshot", () => {
+  it("different character enters while launch is pending: inherits ground (not yet-committed air)", () => {
+    // charA swap-cancel before launch frame: team stays ground when charB enters.
+    // charB sees ground footing → no fall. charA's pending footing fires off-field only
+    // on charA's re-entry, not when charB enters.
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
-      // charA aerial swap → team "air", snapshot charA → "air"
       {
         id: "e1",
         characterId: 52,
         stageId: "Aerial Swap::_",
         variantKind: "swap",
-      },
-      // charB ground stage → charB has no snapshot → uses team "air" → fall fires on charB
-      tlEntry(53, "Ground Stage::_", "e2"),
+      }, // {launch:15}, swap advance=6 < 15 → pending; team stays ground
+      tlEntry(53, "Ground Stage::_", "e2"), // charB enters: team=ground → no fall
     ]
     const result = runSimulation(
       entries,
@@ -2133,7 +2144,7 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+    expect(charBAction?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
   it("consecutive aerial swap-variants layer per-character snapshots independently", () => {
@@ -2168,5 +2179,163 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     const charBReentry = actions.find((a) => a.sourceEntryId === "e4")
     expect(charAReentry?.delayBreakdown?.fall).toBe(21)
     expect(charBReentry?.delayBreakdown?.fall).toBe(21)
+  })
+})
+
+// ── Footing commit as Trailing Window event (ADR-0022 slice 4) ───────────────
+
+describe("runSimulation — footing commit as trailing-window event (ADR-0022 slice 4)", () => {
+  it("early-cancel swap: incoming char inherits ground; charA swap-back pays fall via snapshot", () => {
+    // charA swap-cancel at frame 6 before launch frame 15 → team stays ground →
+    // charB inherits ground; charA's pending footing fires at re-entry as snapshot →
+    // on-field invariant promotes to air → charA pays fall
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      tlEntry(53, "Ground Stage::_", "e2"),
+      tlEntry(52, "Ground Stage::_", "e3"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
+    expect(
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall,
+    ).toBe(21)
+  })
+
+  it("late-cancel swap: launch fires on-field → team flips to air → incoming char inherits air", () => {
+    // charA non-swap Launch ({launch:15} ≤ advance=30) → on-field dispatch → team=air →
+    // charB enters after charA's full advance → team=air → charB pays fall
+    testCharacters = [charAerial, charAerialB]
+    const entries: TimelineEntry[] = [
+      tlEntry(50, "Launch::_", "e1"),
+      tlEntry(51, "Ground Attack::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+    ).toBe(21)
+  })
+
+  it("cancel-capable same-char re-entry before pending launch frame: drops footing (no team flip, no snapshot)", () => {
+    // charA swap at frame 0 → pending footing at frame 15
+    // charA Resonance Skill re-entry at frame 6 (< 15) → cancel-capable drop →
+    // no snapshot, no team flip; charA's new entry sees team=ground → no fall
+    testCharacters = [charSnapA]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      {
+        id: "e2",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
+  })
+
+  it("non-cancel-capable same-char re-entry: pads to cover launch frame; footing fires → fall on re-entry", () => {
+    // charA swap at frame 0 → pending footing at frame 15, trailing hit at frame 20
+    // charA Normal Attack re-entry at frame 6 → non-cancel-capable →
+    // pad = max(hitFrame=20, footingAtFrame=15) - 6 = 14; pendingFooting fires → snapshot →
+    // on-field invariant promotes to air → charA pays fall
+    testCharacters = [charSnapA]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      tlEntry(52, "Ground Stage::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    const reentry = actions.find((a) => a.sourceEntryId === "e2")
+    expect(reentry?.delayBreakdown?.fall).toBe(21)
+    expect(reentry?.delayBreakdown?.pad).toBe(14)
+  })
+
+  it("trailing-window natural expiry does not flip team footing (pending footing dropped, not dispatched)", () => {
+    // charA swap with pending footing, simulation ends without charA re-entering.
+    // drainAll fires trailing hits but pending footing is silently dropped.
+    // Team footing stays ground throughout.
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "Aerial Swap::_",
+        variantKind: "swap",
+      },
+      tlEntry(53, "Ground Stage::_", "e2"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    // charB enters while charA's pending footing is still in the window (not yet fired)
+    // → charB sees ground → no fall
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
+    // trailing hit from charA fires via drainAll (1 immediate + 1 trailing = 2 total)
+    const hits = result.filter((e) => e.kind === "hit")
+    expect(hits).toHaveLength(2)
   })
 })

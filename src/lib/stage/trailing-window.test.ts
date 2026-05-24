@@ -8,7 +8,11 @@ import {
   scheduleStage,
   drainAll,
 } from "./trailing-window"
-import type { TrailingHit, TrailingWindowState } from "./trailing-window"
+import type {
+  TrailingEntry,
+  TrailingHit,
+  TrailingWindowState,
+} from "./trailing-window"
 
 function makeDamageEntry(actionFrame: number): DamageEntry {
   return {
@@ -47,8 +51,12 @@ function makeHit(
   }
 }
 
-function makeState(entries: [number, TrailingHit[]][]): TrailingWindowState {
+function makeState(entries: [number, TrailingEntry][]): TrailingWindowState {
   return new Map(entries)
+}
+
+function hitsOnly(hits: TrailingHit[]): TrailingEntry {
+  return { hits }
 }
 
 describe("trailing-window — empty", () => {
@@ -77,7 +85,7 @@ describe("trailing-window — onEntryArrival: no collision", () => {
   it("returns all hits in fireBeforeEntry when all hitFrames < incoming.frame", () => {
     const h1 = makeHit(1, 2, 5)
     const h2 = makeHit(1, 4, 8)
-    const state = makeState([[1, [h1, h2]]])
+    const state = makeState([[1, hitsOnly([h1, h2])]])
     const result = onEntryArrival(state, {
       characterId: 1,
       skillType: "Basic Attack",
@@ -94,7 +102,7 @@ describe("trailing-window — onEntryArrival: cancel-capable drop", () => {
     const h1 = makeHit(1, 1, 3) // before frame 10 → fire
     const h2 = makeHit(1, 5, 12) // collides
     const h3 = makeHit(1, 7, 15) // collides
-    const state = makeState([[1, [h1, h2, h3]]])
+    const state = makeState([[1, hitsOnly([h1, h2, h3])]])
     const result = onEntryArrival(state, {
       characterId: 1,
       skillType: "Resonance Skill",
@@ -114,7 +122,7 @@ describe("trailing-window — onEntryArrival: cancel-capable drop", () => {
       "Echo Skill",
     ] as const) {
       const h = makeHit(1, 5, 15)
-      const state = makeState([[1, [h]]])
+      const state = makeState([[1, hitsOnly([h])]])
       const result = onEntryArrival(state, {
         characterId: 1,
         skillType,
@@ -130,7 +138,7 @@ describe("trailing-window — onEntryArrival: non-cancel-capable pad-extension",
   it("returns all hits and padFrames = lastHit.hitFrame - frame", () => {
     const h1 = makeHit(1, 2, 5)
     const h2 = makeHit(1, 8, 18)
-    const state = makeState([[1, [h1, h2]]])
+    const state = makeState([[1, hitsOnly([h1, h2])]])
     const result = onEntryArrival(state, {
       characterId: 1,
       skillType: "Basic Attack",
@@ -145,7 +153,7 @@ describe("trailing-window — onEntryArrival: non-cancel-capable pad-extension",
 describe("trailing-window — onEntryArrival: multi-character isolation", () => {
   it("pending for char A is unaffected by arrival of char B", () => {
     const h1 = makeHit(1, 2, 5)
-    const state = makeState([[1, [h1]]])
+    const state = makeState([[1, hitsOnly([h1])]])
     const result = onEntryArrival(state, {
       characterId: 2,
       skillType: "Basic Attack",
@@ -153,7 +161,111 @@ describe("trailing-window — onEntryArrival: multi-character isolation", () => 
     })
     expect(result.fireBeforeEntry).toEqual([])
     expect(result.padFrames).toBe(0)
-    expect(result.stateAfter.get(1)).toEqual([h1])
+    expect(result.stateAfter.get(1)?.hits).toEqual([h1])
+  })
+})
+
+describe("trailing-window — onEntryArrival: pendingFooting — no collision", () => {
+  it("fires pending footing when atFrame < incoming.frame", () => {
+    const h1 = makeHit(1, 2, 5)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 8, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 10,
+    })
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "air" })
+    expect(result.padFrames).toBe(0)
+    expect(result.stateAfter.has(1)).toBe(false)
+  })
+
+  it("fires pending footing even with no hits when atFrame < incoming.frame", () => {
+    const state = makeState([
+      [1, { hits: [], pendingFooting: { atFrame: 5, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 10,
+    })
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "air" })
+    expect(result.fireBeforeEntry).toEqual([])
+    expect(result.padFrames).toBe(0)
+  })
+})
+
+describe("trailing-window — onEntryArrival: pendingFooting — cancel-capable drop", () => {
+  it("drops pendingFooting when atFrame >= incoming.frame (cancel-capable)", () => {
+    const h1 = makeHit(1, 1, 3)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 15, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 10,
+    })
+    expect(result.pendingFootingToFire).toBeUndefined()
+    expect(result.fireBeforeEntry).toEqual([h1])
+  })
+
+  it("fires pendingFooting when atFrame < incoming.frame (cancel-capable)", () => {
+    const h1 = makeHit(1, 5, 15)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 8, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Resonance Skill",
+      frame: 10,
+    })
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "air" })
+    expect(result.fireBeforeEntry).toEqual([])
+  })
+})
+
+describe("trailing-window — onEntryArrival: pendingFooting — non-cancel-capable pad", () => {
+  it("pads to max(lastHitFrame, pendingFooting.atFrame) when footing is later", () => {
+    const h1 = makeHit(1, 2, 5)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 20, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 10,
+    })
+    expect(result.padFrames).toBe(10) // max(5, 20) - 10
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "air" })
+  })
+
+  it("pads to lastHitFrame when hit is later than pendingFooting.atFrame", () => {
+    const h1 = makeHit(1, 2, 18)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 12, exitFooting: "air" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 10,
+    })
+    expect(result.padFrames).toBe(8) // max(18, 12) - 10
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "air" })
+  })
+
+  it("pads footing-only entry (no hits) to pendingFooting.atFrame", () => {
+    const state = makeState([
+      [1, { hits: [], pendingFooting: { atFrame: 25, exitFooting: "ground" } }],
+    ])
+    const result = onEntryArrival(state, {
+      characterId: 1,
+      skillType: "Basic Attack",
+      frame: 10,
+    })
+    expect(result.padFrames).toBe(15) // 25 - 10
+    expect(result.pendingFootingToFire).toEqual({ exitFooting: "ground" })
   })
 })
 
@@ -172,7 +284,7 @@ describe("trailing-window — scheduleStage: swap partition cutoff", () => {
     })
     expect(result.immediate).toHaveLength(1)
     expect(result.immediate[0].hit.actionFrame).toBe(2)
-    const trailing = result.stateAfter.get(1)
+    const trailing = result.stateAfter.get(1)?.hits
     expect(trailing).toHaveLength(2)
     expect(trailing![0].hit.actionFrame).toBe(6)
     expect(trailing![1].hit.actionFrame).toBe(9)
@@ -213,14 +325,92 @@ describe("trailing-window — scheduleStage: non-swap partition", () => {
   })
 })
 
+describe("trailing-window — scheduleStage: pendingFooting", () => {
+  it("adds pendingFooting when swap stage has {launch:N} with N > stageDuration", () => {
+    const state = empty()
+    const entry = makeEntry(1)
+    const resolved = {
+      stage: { footing: { launch: 15 } },
+    } as unknown as ResolvedStage
+    const result = scheduleStage(state, {
+      entry,
+      resolved,
+      stageStartFrame: 10,
+      hits: [],
+      variantKind: "swap",
+      stageDuration: 6,
+    })
+    const trailingEntry = result.stateAfter.get(1)
+    expect(trailingEntry?.pendingFooting).toEqual({
+      atFrame: 25, // 10 + 15
+      exitFooting: "air",
+    })
+  })
+
+  it("no pendingFooting when swap stage has {launch:N} with N <= stageDuration (fires on-field)", () => {
+    const state = empty()
+    const entry = makeEntry(1)
+    const resolved = {
+      stage: { footing: { launch: 5 } },
+    } as unknown as ResolvedStage
+    const result = scheduleStage(state, {
+      entry,
+      resolved,
+      stageStartFrame: 0,
+      hits: [],
+      variantKind: "swap",
+      stageDuration: 6,
+    })
+    expect(result.stateAfter).toBe(state)
+  })
+
+  it("adds pendingFooting for {land:N} when N > stageDuration", () => {
+    const state = empty()
+    const entry = makeEntry(1)
+    const resolved = {
+      stage: { footing: { land: 20 } },
+    } as unknown as ResolvedStage
+    const result = scheduleStage(state, {
+      entry,
+      resolved,
+      stageStartFrame: 0,
+      hits: [],
+      variantKind: "swap",
+      stageDuration: 6,
+    })
+    const trailingEntry = result.stateAfter.get(1)
+    expect(trailingEntry?.pendingFooting).toEqual({
+      atFrame: 20,
+      exitFooting: "ground",
+    })
+  })
+
+  it("no pendingFooting for non-swap stages (even with {launch:N})", () => {
+    const state = empty()
+    const entry = makeEntry(1)
+    const resolved = {
+      stage: { footing: { launch: 15 } },
+    } as unknown as ResolvedStage
+    const result = scheduleStage(state, {
+      entry,
+      resolved,
+      stageStartFrame: 0,
+      hits: [makeDamageEntry(5)],
+      variantKind: undefined,
+      stageDuration: 30,
+    })
+    expect(result.stateAfter).toBe(state)
+  })
+})
+
 describe("trailing-window — drainAll", () => {
   it("returns all hits across all characters", () => {
     const h1 = makeHit(1, 1, 10)
     const h2 = makeHit(1, 2, 20)
     const h3 = makeHit(2, 3, 30)
     const state = makeState([
-      [1, [h1, h2]],
-      [2, [h3]],
+      [1, hitsOnly([h1, h2])],
+      [2, hitsOnly([h3])],
     ])
     const result = drainAll(state)
     expect(result).toHaveLength(3)
@@ -231,5 +421,15 @@ describe("trailing-window — drainAll", () => {
 
   it("returns empty array when state is empty", () => {
     expect(drainAll(empty())).toEqual([])
+  })
+
+  it("ignores pendingFooting (only drains hits)", () => {
+    const h1 = makeHit(1, 1, 10)
+    const state = makeState([
+      [1, { hits: [h1], pendingFooting: { atFrame: 15, exitFooting: "air" } }],
+    ])
+    const result = drainAll(state)
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual(h1)
   })
 })

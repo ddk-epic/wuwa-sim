@@ -13,7 +13,7 @@ export class FootingTracker {
     return this.current_
   }
 
-  setCurrent(footing: "ground" | "air"): void {
+  setTeam(footing: "ground" | "air"): void {
     if (this.current_ === footing) return
     this.current_ = footing
     this.version_++
@@ -23,7 +23,7 @@ export class FootingTracker {
     return this.version_
   }
 
-  snapshotOnSwapOut(characterId: number, footing: "ground" | "air"): void {
+  snapshotFor(characterId: number, footing: "ground" | "air"): void {
     this.snapshots_.set(characterId, footing)
   }
 

@@ -1,4 +1,9 @@
-import type { DamageEntry, SkillType, VariantKind } from "#/types/character"
+import type {
+  DamageEntry,
+  Footing,
+  SkillType,
+  VariantKind,
+} from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 import type { ResolvedStage } from "./stage"
 
@@ -11,7 +16,12 @@ export interface TrailingHit {
   hitFrame: number
 }
 
-export type TrailingWindowState = ReadonlyMap<number, readonly TrailingHit[]>
+export interface TrailingEntry {
+  hits: readonly TrailingHit[]
+  pendingFooting?: { atFrame: number; exitFooting: "ground" | "air" }
+}
+
+export type TrailingWindowState = ReadonlyMap<number, TrailingEntry>
 
 const CANCEL_CAPABLE = new Set<SkillType>([
   "Resonance Skill",
@@ -32,28 +42,67 @@ export function onEntryArrival(
   fireBeforeEntry: readonly TrailingHit[]
   padFrames: number
   stateAfter: TrailingWindowState
+  pendingFootingToFire?: { exitFooting: "ground" | "air" }
 } {
-  const charHits = state.get(incoming.characterId)
-  if (!charHits || charHits.length === 0) {
+  const charEntry = state.get(incoming.characterId)
+  if (!charEntry) {
+    return { fireBeforeEntry: [], padFrames: 0, stateAfter: state }
+  }
+
+  const { hits: charHits, pendingFooting } = charEntry
+
+  if (charHits.length === 0 && !pendingFooting) {
     return { fireBeforeEntry: [], padFrames: 0, stateAfter: state }
   }
 
   const newState = new Map(state)
   newState.delete(incoming.characterId)
 
-  const hasCollision = charHits.some((p) => p.hitFrame >= incoming.frame)
+  const hasHitCollision = charHits.some((p) => p.hitFrame >= incoming.frame)
+  const hasFootingCollision =
+    !!pendingFooting && pendingFooting.atFrame >= incoming.frame
+  const hasCollision = hasHitCollision || hasFootingCollision
+
   if (!hasCollision) {
-    return { fireBeforeEntry: charHits, padFrames: 0, stateAfter: newState }
+    const pendingFootingToFire = pendingFooting
+      ? { exitFooting: pendingFooting.exitFooting }
+      : undefined
+    return {
+      fireBeforeEntry: charHits,
+      padFrames: 0,
+      stateAfter: newState,
+      pendingFootingToFire,
+    }
   }
 
   if (CANCEL_CAPABLE.has(incoming.skillType)) {
     const fireBeforeEntry = charHits.filter((p) => p.hitFrame < incoming.frame)
-    return { fireBeforeEntry, padFrames: 0, stateAfter: newState }
+    const pendingFootingToFire =
+      pendingFooting && pendingFooting.atFrame < incoming.frame
+        ? { exitFooting: pendingFooting.exitFooting }
+        : undefined
+    return {
+      fireBeforeEntry,
+      padFrames: 0,
+      stateAfter: newState,
+      pendingFootingToFire,
+    }
   }
 
-  const lastHit = charHits[charHits.length - 1]
-  const padFrames = lastHit.hitFrame - incoming.frame
-  return { fireBeforeEntry: charHits, padFrames, stateAfter: newState }
+  const lastHitFrame =
+    charHits.length > 0 ? charHits[charHits.length - 1].hitFrame : -Infinity
+  const pendingFrame = pendingFooting?.atFrame ?? -Infinity
+  const latestFrame = Math.max(lastHitFrame, pendingFrame)
+  const padFrames = latestFrame - incoming.frame
+  const pendingFootingToFire = pendingFooting
+    ? { exitFooting: pendingFooting.exitFooting }
+    : undefined
+  return {
+    fireBeforeEntry: charHits,
+    padFrames,
+    stateAfter: newState,
+    pendingFootingToFire,
+  }
 }
 
 export function scheduleStage(
@@ -84,19 +133,42 @@ export function scheduleStage(
     ? allBundles.filter((b) => b.hit.actionFrame > ctx.stageDuration)
     : []
 
-  if (trailing.length === 0) {
+  const pendingFooting = isSwap
+    ? buildPendingFooting(
+        ctx.resolved.stage?.footing,
+        ctx.stageStartFrame,
+        ctx.stageDuration,
+      )
+    : undefined
+
+  if (trailing.length === 0 && !pendingFooting) {
     return { immediate, stateAfter: state }
   }
 
   const newState = new Map(state)
-  newState.set(ctx.entry.characterId, trailing)
+  newState.set(ctx.entry.characterId, { hits: trailing, pendingFooting })
   return { immediate, stateAfter: newState }
+}
+
+function buildPendingFooting(
+  footing: Footing | undefined,
+  stageStartFrame: number,
+  stageDuration: number,
+): { atFrame: number; exitFooting: "ground" | "air" } | undefined {
+  if (!footing || typeof footing !== "object") return undefined
+  if ("launch" in footing && footing.launch > stageDuration) {
+    return { atFrame: stageStartFrame + footing.launch, exitFooting: "air" }
+  }
+  if ("land" in footing && footing.land > stageDuration) {
+    return { atFrame: stageStartFrame + footing.land, exitFooting: "ground" }
+  }
+  return undefined
 }
 
 export function drainAll(state: TrailingWindowState): readonly TrailingHit[] {
   const result: TrailingHit[] = []
-  for (const hits of state.values()) {
-    result.push(...hits)
+  for (const entry of state.values()) {
+    result.push(...entry.hits)
   }
   return result
 }

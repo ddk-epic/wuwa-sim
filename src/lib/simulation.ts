@@ -42,6 +42,12 @@ export function runSimulation(
     })
     state = arrival.stateAfter
     for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
+    if (arrival.pendingFootingToFire) {
+      engine.snapshotFooting(
+        entry.characterId,
+        arrival.pendingFootingToFire.exitFooting,
+      )
+    }
     frame += arrival.padFrames
 
     const { resolved, allHits, stageDuration, nextFrame } = processEntry(
@@ -57,10 +63,13 @@ export function runSimulation(
       variantFloor,
       fallFrames,
     )
-    if (resolved?.stage.footing) {
-      engine.setFooting(footingExitState(resolved.stage.footing))
-    }
     if (resolved) {
+      onFootingEvent(
+        engine,
+        entry.characterId,
+        resolved.stage.footing,
+        stageDuration,
+      )
       const sched = TrailingWindow.scheduleStage(state, {
         entry,
         resolved,
@@ -70,16 +79,6 @@ export function runSimulation(
         stageDuration,
       })
       state = sched.stateAfter
-      if (
-        entry.variantKind === "swap" &&
-        resolved.stage.footing &&
-        (state.get(entry.characterId)?.length ?? 0) > 0
-      ) {
-        engine.snapshotFooting(
-          entry.characterId,
-          footingExitState(resolved.stage.footing),
-        )
-      }
       for (const h of sched.immediate) processHit(h, engine, log, slots)
     }
     frame = nextFrame
@@ -132,8 +131,9 @@ function processEntry(
     variantFloor,
   )
 
-  const effectiveFooting =
-    engine.consumeFootingSnapshot(entry.characterId) ?? engine.currentFooting()
+  const snap = engine.consumeFootingSnapshot(entry.characterId)
+  if (snap !== null) engine.setFooting(snap)
+  const effectiveFooting = engine.currentFooting()
   const fall = computeFall(effectiveFooting, resolved.stage.footing, fallFrames)
 
   pushBuffEvents(log, engine.tickToFrame(stageStartFrame).lifecycleEvents)
@@ -223,10 +223,20 @@ function computeFall(
   return fallFrames
 }
 
-function footingExitState(footing: Footing): "ground" | "air" {
-  if (footing === "air") return "air"
-  if (typeof footing === "object" && "launch" in footing) return "air"
-  return "ground"
+function onFootingEvent(
+  engine: BuffEngine,
+  characterId: number,
+  footing: Footing | undefined,
+  stageDuration: number,
+): void {
+  if (!footing || typeof footing !== "object") return
+  if ("launch" in footing && footing.launch <= stageDuration) {
+    engine.setFooting("air")
+    engine.clearFootingSnapshot(characterId)
+  } else if ("land" in footing && footing.land <= stageDuration) {
+    engine.setFooting("ground")
+    engine.clearFootingSnapshot(characterId)
+  }
 }
 
 function processHit(

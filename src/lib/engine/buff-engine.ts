@@ -728,11 +728,11 @@ export class BuffEngine {
   }
 
   setFooting(footing: "ground" | "air"): void {
-    this.footing_.setCurrent(footing)
+    this.footing_.setTeam(footing)
   }
 
   snapshotFooting(characterId: number, footing: "ground" | "air"): void {
-    this.footing_.snapshotOnSwapOut(characterId, footing)
+    this.footing_.snapshotFor(characterId, footing)
   }
 
   consumeFootingSnapshot(characterId: number): "ground" | "air" | null {
