@@ -1,4 +1,4 @@
-import type { Footing } from "#/types/character"
+import type { Footing, VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
@@ -16,6 +16,38 @@ function isLaunch(footing: Footing): boolean {
 
 function isLand(footing: Footing): boolean {
   return typeof footing === "object" && "land" in footing
+}
+
+// Variant-aware exit footing: for { launch } / { land } stages, the exit depends on whether
+// the variant's actionTime covers the commit frame (ADR-0022 amendment).
+function resolvedExitFooting(
+  footing: Footing,
+  entryFooting: "ground" | "air",
+  variantKind: VariantKind | undefined,
+  stage: {
+    actionTime: number
+    variants?: Partial<Record<VariantKind, { actionTime: number }>>
+  },
+): "ground" | "air" {
+  if (footing === "ground") return "ground"
+  if (footing === "air") return "air"
+
+  const commitFrame = "launch" in footing ? footing.launch : footing.land
+  const transitionTarget: "ground" | "air" =
+    "launch" in footing ? "air" : "ground"
+
+  // swap: transition fires later via trailing window; cursor stays at entry footing
+  if (variantKind === "swap") return entryFooting
+
+  // cancel/instantCancel: commit only if variant's actionTime covers the commit frame
+  if (variantKind === "cancel" || variantKind === "instantCancel") {
+    const variantActionTime =
+      stage.variants?.[variantKind]?.actionTime ?? stage.actionTime
+    return commitFrame <= variantActionTime ? transitionTarget : entryFooting
+  }
+
+  // Full / no variant: always exits at transition target
+  return transitionTarget
 }
 
 export interface ValidationError {
@@ -137,7 +169,11 @@ export function validateTimeline(
 
     const snap = footingSnapshots.get(entry.characterId) ?? null
     const effectiveFooting = snap ?? footingCursor
-    if (snap !== null) footingSnapshots.delete(entry.characterId)
+    if (snap !== null) {
+      footingSnapshots.delete(entry.characterId)
+      // On-field invariant: promote team cursor to snapshot value on re-entry
+      footingCursor = snap
+    }
 
     let footingError: string | null = null
     if (effectiveFooting === "ground" && footing === "air") {
@@ -155,10 +191,15 @@ export function validateTimeline(
       invalidRowIds.add(entry.id)
     }
 
-    // Advance team cursor to exit footing of this stage
-    footingCursor = footingExitState(footing)
+    // Advance team cursor to variant-aware exit footing
+    footingCursor = resolvedExitFooting(
+      footing,
+      effectiveFooting,
+      entry.variantKind,
+      resolved.stage,
+    )
 
-    // Record swap-variant footing snapshot for same-character re-entry override
+    // Swap: snapshot = transition target (trailing window fires it later)
     if (entry.variantKind === "swap") {
       footingSnapshots.set(entry.characterId, footingExitState(footing))
     }
@@ -174,7 +215,11 @@ export function validateTimeline(
     if (footing) {
       const snap = footingSnapshotsForWarn.get(entry.characterId) ?? null
       const effectiveFooting = snap ?? footingCursorForWarn
-      if (snap !== null) footingSnapshotsForWarn.delete(entry.characterId)
+      if (snap !== null) {
+        footingSnapshotsForWarn.delete(entry.characterId)
+        // On-field invariant: promote team cursor to snapshot value on re-entry
+        footingCursorForWarn = snap
+      }
 
       if (effectiveFooting === "air" && footing === "ground") {
         const existing = rowWarnings.get(entry.id) ?? []
@@ -183,7 +228,12 @@ export function validateTimeline(
         })
         rowWarnings.set(entry.id, existing)
       }
-      footingCursorForWarn = footingExitState(footing)
+      footingCursorForWarn = resolvedExitFooting(
+        footing,
+        effectiveFooting,
+        entry.variantKind,
+        resolved.stage,
+      )
       if (entry.variantKind === "swap") {
         footingSnapshotsForWarn.set(
           entry.characterId,

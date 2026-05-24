@@ -1128,9 +1128,9 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
     testCharacters = [snapChar(1), snapChar(2)]
   })
 
-  it("swap-variant footing snapshot: same-char re-entry gets fall warning after charB lands", () => {
-    // charA (1) aerial swap → team "air", snapshot charA → "air"
-    // charB (2) ground stage → team "ground"
+  it("swap-variant footing snapshot: same-char re-entry gets fall warning after charB ground stage", () => {
+    // charA (1) aerial swap → cursor stays "ground" (swap defers), snapshot charA → "air"
+    // charB (2) ground stage → team "ground" (no change)
     // charA (1) re-enters ground stage → effective footing from snapshot "air" → fall warning
     const result = validateTimeline(
       [
@@ -1147,9 +1147,9 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
     ).toBe(true)
   })
 
-  it("swap-variant footing: different character uses team cursor, not charA snapshot", () => {
-    // charA aerial swap → team "air", snapshot charA → "air"
-    // charB ground stage → charB uses team cursor "air" → fall warning on charB
+  it("swap-variant footing: different character sees entry footing (no fall warning from swap)", () => {
+    // charA aerial swap → cursor stays "ground" (swap does not advance team cursor)
+    // charB ground stage → charB uses team cursor "ground" → no fall warning
     const result = validateTimeline(
       [
         fSnap(1, "Aerial Swap::_", "swap1", "swap"),
@@ -1159,9 +1159,7 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
       twoSnapLoadouts,
     )
     expect(result.invalidRowIds.has("ground2")).toBe(false)
-    expect(
-      result.rowWarnings.get("ground2")?.some((w) => /fall/i.test(w.message)),
-    ).toBe(true)
+    expect(result.rowWarnings.has("ground2")).toBe(false)
   })
 
   it("snapshot consumed on re-entry: second same-char ground stage does not warn again", () => {
@@ -1181,5 +1179,223 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
       result.rowWarnings.get("ground1a")?.some((w) => /fall/i.test(w.message)),
     ).toBe(true)
     expect(result.rowWarnings.has("ground1b")).toBe(false)
+  })
+})
+
+// ── Variant-aware exit footing for launch/land stages (ADR-0022 amendment) ────
+
+describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)", () => {
+  // A character with:
+  //   LaunchCancel: { launch: 30 } stage, cancel.actionTime: 20, full actionTime: 40
+  //   LaunchFull:   { launch: 30 } stage, no explicit cancel variant
+  //   LandCancel:   { land: 25 }   stage, cancel.actionTime: 20, full actionTime: 40
+  //   AirStage:     footing: "air"  (requires air entry)
+  //   GroundStage:  footing: "ground" (requires ground entry)
+  const variantChar = (): EnrichedCharacter =>
+    baseChar({
+      id: 1,
+      skills: [
+        {
+          id: 1,
+          name: "Launch Cancel",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "",
+              actionTime: 40,
+              damage: [],
+              footing: { launch: 30 },
+              variants: { cancel: { actionTime: 20 }, swap: { actionTime: 6 } },
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 2,
+          name: "Land Cancel",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "",
+              actionTime: 40,
+              damage: [],
+              footing: { land: 25 },
+              variants: { cancel: { actionTime: 20 }, swap: { actionTime: 6 } },
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 3,
+          name: "Air Stage",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "air",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 4,
+          name: "Ground Stage",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "ground",
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  const cancelEntry = (
+    stageId: string,
+    id: string,
+    variantKind: "cancel" | "instantCancel" | "swap" = "cancel",
+  ): TimelineEntry => ({ id, characterId: 1, stageId, variantKind })
+
+  const vEntry = (stageId: string, id = stageId): TimelineEntry => ({
+    id,
+    characterId: 1,
+    stageId,
+  })
+
+  beforeEach(() => {
+    testCharacters = [variantChar()]
+  })
+
+  // cancel of { launch: 30 } with actionTime 20 < 30 → no launch, stays ground
+  it("cancel: { launch: N } with actionTime < N exits ground — next ground stage valid", () => {
+    const result = validateTimeline(
+      [
+        cancelEntry("Launch Cancel::_", "lc", "cancel"),
+        vEntry("Ground Stage::_", "gs"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("gs")).toBe(false)
+    expect(result.rowErrors.has("gs")).toBe(false)
+  })
+
+  it("cancel: { launch: N } with actionTime < N exits ground — next air stage hard-errors", () => {
+    const result = validateTimeline(
+      [
+        cancelEntry("Launch Cancel::_", "lc", "cancel"),
+        vEntry("Air Stage::_", "as"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("as")).toBe(true)
+    expect(
+      result.rowErrors.get("as")?.some((e) => /launch|jump/i.test(e.message)),
+    ).toBe(true)
+  })
+
+  // cancel of { land: 25 } with actionTime 20 < 25 → no land, stays air (entered from air)
+  it("cancel: { land: N } with actionTime < N exits air — next air stage valid", () => {
+    const result = validateTimeline(
+      [
+        // First get to air via a full launch (actionTime 40 ≥ launch frame 30)
+        vEntry("Launch Cancel::_", "launch"),
+        cancelEntry("Land Cancel::_", "lc", "cancel"),
+        vEntry("Air Stage::_", "as"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("as")).toBe(false)
+  })
+
+  it("cancel: { land: N } with actionTime < N exits air — next ground stage gets fall warning not hard error", () => {
+    const result = validateTimeline(
+      [
+        vEntry("Launch Cancel::_", "launch"),
+        cancelEntry("Land Cancel::_", "lc", "cancel"),
+        vEntry("Ground Stage::_", "gs"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("gs")).toBe(false)
+    expect(
+      result.rowWarnings.get("gs")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
+  })
+
+  // Full variant of { launch: 30 } with actionTime 40 ≥ 30 → launch commits, exits air
+  it("full: { launch: N } with actionTime >= N exits air — next air stage valid", () => {
+    const result = validateTimeline(
+      [vEntry("Launch Cancel::_", "launch"), vEntry("Air Stage::_", "as")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("as")).toBe(false)
+    expect(result.rowErrors.has("as")).toBe(false)
+  })
+
+  // swap of { launch: N } — cursor stays at entry footing; snapshot = "air"
+  it("swap: { launch: N } cursor exit is entry footing; next-character sees entry footing", () => {
+    const char2 = baseChar({
+      id: 2,
+      skills: [
+        {
+          id: 21,
+          name: "Ground Move",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "ground",
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+    testCharacters = [variantChar(), char2]
+    const result = validateTimeline(
+      [
+        cancelEntry("Launch Cancel::_", "lc", "swap"),
+        { id: "g2", characterId: 2, stageId: "Ground Move::_" },
+      ],
+      [1, 2, null],
+      [emptyLoadout, emptyLoadout, emptyLoadout],
+    )
+    // charB sees entry footing "ground" → no hard error, no fall warning
+    expect(result.invalidRowIds.has("g2")).toBe(false)
+    expect(result.rowWarnings.has("g2")).toBe(false)
+  })
+
+  it("swap: { launch: N } same-character re-entry reads snapshot (air)", () => {
+    const result = validateTimeline(
+      [
+        cancelEntry("Launch Cancel::_", "lc", "swap"),
+        vEntry("Ground Stage::_", "gs"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    // charA re-entry reads snapshot "air" → fall warning on ground stage
+    expect(result.invalidRowIds.has("gs")).toBe(false)
+    expect(
+      result.rowWarnings.get("gs")?.some((w) => /fall/i.test(w.message)),
+    ).toBe(true)
   })
 })
