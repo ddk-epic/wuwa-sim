@@ -656,8 +656,8 @@ export const verina = {
           name: "Skill DMG",
           newName: "",
           value: "198.81%",
-          actionTime: 0,
-          animationFrames: 60,
+          actionTime: 42,
+          animationFrames: 108,
           variants: {},
           damage: [
             {

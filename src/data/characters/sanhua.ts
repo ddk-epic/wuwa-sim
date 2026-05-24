@@ -732,7 +732,7 @@ export const sanhua = {
           newName: "",
           value: "809.48%",
           actionTime: 3,
-          animationFrames: 60,
+          animationFrames: 90,
           variants: {},
           damage: [
             {
