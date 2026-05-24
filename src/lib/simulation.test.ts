@@ -1749,7 +1749,7 @@ const charAerial: EnrichedCharacter = {
           name: "Launch Stage",
           value: "100%",
           actionTime: 30,
-          footing: "launch",
+          footing: { launch: 15 },
           damage: [],
         },
       ],
@@ -2023,7 +2023,7 @@ const charSnapA: EnrichedCharacter = {
           name: "Aerial Swap Stage",
           value: "",
           actionTime: 30,
-          footing: "launch",
+          footing: { launch: 15 },
           damage: [
             snapDmg(3), // immediate (≤ swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window

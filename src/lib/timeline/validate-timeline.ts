@@ -1,7 +1,22 @@
+import type { Footing } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
 import { findStageByEntry } from "../stage/stage"
+
+function footingExitState(footing: Footing): "ground" | "air" {
+  if (footing === "air") return "air"
+  if (typeof footing === "object" && "launch" in footing) return "air"
+  return "ground"
+}
+
+function isLaunch(footing: Footing): boolean {
+  return typeof footing === "object" && "launch" in footing
+}
+
+function isLand(footing: Footing): boolean {
+  return typeof footing === "object" && "land" in footing
+}
 
 export interface ValidationError {
   message: string
@@ -127,9 +142,9 @@ export function validateTimeline(
     let footingError: string | null = null
     if (effectiveFooting === "ground" && footing === "air") {
       footingError = "Launch/Jump required before an aerial stage"
-    } else if (effectiveFooting === "air" && footing === "launch") {
+    } else if (effectiveFooting === "air" && isLaunch(footing)) {
       footingError = "Already airborne — cannot launch again"
-    } else if (effectiveFooting === "ground" && footing === "land") {
+    } else if (effectiveFooting === "ground" && isLand(footing)) {
       footingError = "Nothing to land from — not currently airborne"
     }
 
@@ -141,17 +156,11 @@ export function validateTimeline(
     }
 
     // Advance team cursor to exit footing of this stage
-    if (footing === "launch" || footing === "air") {
-      footingCursor = "air"
-    } else {
-      footingCursor = "ground"
-    }
+    footingCursor = footingExitState(footing)
 
     // Record swap-variant footing snapshot for same-character re-entry override
     if (entry.variantKind === "swap") {
-      const exitFooting: "ground" | "air" =
-        footing === "launch" || footing === "air" ? "air" : "ground"
-      footingSnapshots.set(entry.characterId, exitFooting)
+      footingSnapshots.set(entry.characterId, footingExitState(footing))
     }
   }
 
@@ -174,15 +183,12 @@ export function validateTimeline(
         })
         rowWarnings.set(entry.id, existing)
       }
-      if (footing === "launch" || footing === "air") {
-        footingCursorForWarn = "air"
-      } else {
-        footingCursorForWarn = "ground"
-      }
+      footingCursorForWarn = footingExitState(footing)
       if (entry.variantKind === "swap") {
-        const exitFooting: "ground" | "air" =
-          footing === "launch" || footing === "air" ? "air" : "ground"
-        footingSnapshotsForWarn.set(entry.characterId, exitFooting)
+        footingSnapshotsForWarn.set(
+          entry.characterId,
+          footingExitState(footing),
+        )
       }
     }
   }

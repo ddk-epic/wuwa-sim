@@ -224,7 +224,8 @@ function computeFall(
 }
 
 function footingExitState(footing: Footing): "ground" | "air" {
-  if (footing === "launch" || footing === "air") return "air"
+  if (footing === "air") return "air"
+  if (typeof footing === "object" && "launch" in footing) return "air"
   return "ground"
 }
 

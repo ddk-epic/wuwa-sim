@@ -99,7 +99,7 @@ export interface StageVariant {
 
 export type MovementKind = "Dodge" | "Jump"
 
-export type Footing = "ground" | "air" | "launch" | "land"
+export type Footing = "ground" | "air" | { launch: number } | { land: number }
 
 type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   id?: string
