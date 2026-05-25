@@ -5,7 +5,6 @@ import {
   PlayIcon,
   RotateCcw,
   SettingsIcon,
-  UploadIcon,
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
@@ -19,6 +18,7 @@ import {
 } from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
+import { ImportExportModal } from "./ImportExportModal"
 import { SettingsModal } from "./SettingsModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
@@ -47,6 +47,7 @@ export function Header({
   const { setSettings } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [importExportOpen, setImportExportOpen] = useState(false)
 
   return (
     <div className="h-12 flex items-stretch shrink-0">
@@ -95,17 +96,11 @@ export function Header({
       <div className="w-100 flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
-          aria-label="Import"
-        >
-          <UploadIcon className="w-4 h-4" />
-          <span>Import</span>
-        </button>
-        <button
-          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
-          aria-label="Export"
+          aria-label="Import/Export"
+          onClick={() => setImportExportOpen(true)}
         >
           <DownloadIcon className="w-4 h-4" />
-          <span>Export</span>
+          <span>Import/Export</span>
         </button>
         <div className="ml-auto" />
         <button
@@ -124,6 +119,13 @@ export function Header({
             setConfirmOpen(false)
           }}
           onCancel={() => setConfirmOpen(false)}
+        />
+      )}
+      {importExportOpen && (
+        <ImportExportModal
+          exportString=""
+          onImport={() => {}}
+          onClose={() => setImportExportOpen(false)}
         />
       )}
       {settingsOpen && (
