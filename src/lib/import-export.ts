@@ -1,3 +1,4 @@
+import { compressToBase64, decompressFromBase64 } from "lz-string"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineNode } from "#/types/timeline"
 
@@ -11,15 +12,17 @@ export interface ImportExportPayload {
 }
 
 export function encodePayload(payload: ImportExportPayload): string {
-  return btoa(JSON.stringify(payload))
+  return compressToBase64(JSON.stringify(payload))
 }
 
 export function decodePayload(encoded: string): ImportExportPayload {
   let json: string
   try {
-    json = atob(encoded.trim())
+    const result = decompressFromBase64(encoded.trim())
+    if (result === null) throw new Error()
+    json = result
   } catch {
-    throw new Error("Invalid base64 string")
+    throw new Error("Invalid or corrupted export code")
   }
 
   let parsed: unknown
