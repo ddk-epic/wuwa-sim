@@ -1,4 +1,8 @@
-import * as base91 from "base91"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const base91 = require("base91") as {
+  encode: (data: Uint8Array) => string
+  decode: (data: string) => Buffer
+}
 import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
