@@ -177,6 +177,8 @@ export interface BuffDef {
   id: string
   name: string
   description?: string
+  /** Character ID that owns this buff (global buffs only). */
+  owner?: number
   trigger: Trigger
   /**
    * Absent on reactions (reaction-shaped BuffDef). Both `target` and `duration`

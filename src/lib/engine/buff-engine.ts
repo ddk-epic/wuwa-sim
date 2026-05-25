@@ -17,7 +17,8 @@ import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { EmitHitHost } from "./emit-hit-dispatcher"
-import { bootstrapSlot } from "../engine-bootstrap"
+import { globalBuffs } from "#/data/global-buffs"
+import { bootstrapSlot, validateBuffDef } from "../engine-bootstrap"
 import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
 import { InstanceStore } from "./instance-store"
@@ -231,6 +232,16 @@ export class BuffEngine {
       this.resources.ensureState(slot.charId)
     }
     this.store.setSlots(slots)
+
+    const partyIds = new Set(slots.filter((id) => id !== -1))
+    for (const def of globalBuffs) {
+      const owner = def.owner
+      if (owner === undefined || !partyIds.has(owner)) continue
+      validateBuffDef(def)
+      this.store.appendTriggerable(owner, [def])
+      allTriggerable.push(def)
+    }
+
     this.triggerIndex = new TriggerIndex(allTriggerable)
     return { lifecycleEvents: [] }
   }

@@ -3116,3 +3116,65 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
     expect(buffLogEvents).toHaveLength(0)
   })
 })
+
+describe("Global buffs — Binary Butterfly", () => {
+  const shorekeeperId = 1505
+  const teammateId = 2
+
+  it("grants team-wide allDeepen when Shorekeeper casts Outro Skill", () => {
+    testCharacters = [
+      baseChar({ id: shorekeeperId }),
+      baseChar({ id: teammateId }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [shorekeeperId, teammateId, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    expect(engine.resolveStats(shorekeeperId).allDeepen).toBe(0)
+    expect(engine.resolveStats(teammateId).allDeepen).toBe(0)
+
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: shorekeeperId,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+
+    const applied = lifecycleEvents.filter(
+      (e) =>
+        e.kind === "buffApplied" &&
+        "buffId" in e &&
+        e.buffId === "char.shorekeeper.outro.binary-butterfly",
+    )
+    expect(applied).toHaveLength(2)
+
+    expect(engine.resolveStats(shorekeeperId).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(teammateId).allDeepen).toBeCloseTo(0.15)
+  })
+
+  it("is not seeded when Shorekeeper is not in the party", () => {
+    testCharacters = [baseChar({ id: teammateId })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [teammateId, null, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: teammateId,
+      skillType: "Outro Skill",
+      frame: 0,
+    })
+
+    const applied = lifecycleEvents.filter(
+      (e) =>
+        e.kind === "buffApplied" &&
+        "buffId" in e &&
+        e.buffId === "char.shorekeeper.outro.binary-butterfly",
+    )
+    expect(applied).toHaveLength(0)
+  })
+})

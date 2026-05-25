@@ -110,6 +110,11 @@ export class InstanceStore {
     this.triggerableBySource.set(characterId, defs)
   }
 
+  appendTriggerable(characterId: number, defs: BuffDef[]): void {
+    const existing = this.triggerableBySource.get(characterId) ?? []
+    this.triggerableBySource.set(characterId, [...existing, ...defs])
+  }
+
   pushPermanentInstance(inst: BuffInstance): void {
     this.active.push(inst)
     this.version_++
