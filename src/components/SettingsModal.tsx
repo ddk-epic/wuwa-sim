@@ -24,8 +24,7 @@ export function SettingsModal({
   onClose,
 }: SettingsModalProps) {
   return (
-    <Modal onClose={onClose}>
-      <h2 className="text-white text-lg font-semibold mb-4">Settings</h2>
+    <Modal onClose={onClose} title="Settings">
       <div className="grid grid-cols-2 gap-1 mb-4">
         <label className="text-sm text-gray-400" htmlFor="reaction-delay">
           Reaction Delay (frames)
@@ -81,14 +80,6 @@ export function SettingsModal({
           onChange={(e) => onFallFramesChange(Number(e.target.value))}
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
-      </div>
-      <div className="flex justify-end">
-        <button
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
-          onClick={onClose}
-        >
-          Close
-        </button>
       </div>
     </Modal>
   )
