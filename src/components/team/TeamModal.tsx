@@ -19,7 +19,7 @@ export function TeamModal({ onClose }: TeamModalProps) {
           {selectedCount}/3 selected
         </span>
       }
-      panelClassName="w-full min-w-4xl max-w-7xl flex flex-col"
+      panelClassName="w-full min-w-5xl max-w-350 flex flex-col"
     >
       <div className="flex gap-3 min-h-0">
         <div className="w-1/4 shrink-0 overflow-y-auto">

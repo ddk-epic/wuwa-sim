@@ -55,7 +55,7 @@ export function Modal({
                 <p className="text-gray-400 text-sm mt-0.5">{subtitle}</p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {headerExtra}
               <button
                 className="text-muted-foreground hover:text-foreground transition-colors"
