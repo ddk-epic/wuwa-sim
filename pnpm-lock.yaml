@@ -32,6 +32,9 @@ importers:
       '@tanstack/router-plugin':
         specifier: ^1.132.0
         version: 1.167.22(@tanstack/react-router@1.168.23(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(vite@8.0.10(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      base91:
+        specifier: ^0.0.5
+        version: 0.0.5
       lucide-react:
         specifier: ^0.545.0
         version: 0.545.0(react@19.2.5)
@@ -1449,6 +1452,10 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
+  base91@0.0.5:
+    resolution: {integrity: sha512-uhaQrjTJ9DDcydbYVhKb/7Vc5EFTZSrXS9zLFbO5VZAz/cV4PF9Z7atKRXxSo9zOeHDRQqep7eNsJ0VXtELtTA==}
+    engines: {node: '>=0.8.0'}
+
   baseline-browser-mapping@2.10.21:
     resolution: {integrity: sha512-Q+rUQ7Uz8AHM7DEaNdwvfFCTq7a43lNTzuS94eiWqwyxfV/wJv+oUivef51T91mmRY4d4A1u9rcSvkeufCVXlA==}
     engines: {node: '>=6.0.0'}
@@ -2138,6 +2145,9 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  nan@2.27.0:
+    resolution: {integrity: sha512-hC+0LidcL3XE4rp1C4H54KujgXKzbfyTngZTwBByQxsOxCEKZT0MPQ4hOKUH2jU1OYstqdDH4onyHPDzcV0XdQ==}
 
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
@@ -4047,6 +4057,10 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
+  base91@0.0.5:
+    dependencies:
+      nan: 2.27.0
+
   baseline-browser-mapping@2.10.21: {}
 
   bidi-js@1.0.3:
@@ -4716,6 +4730,8 @@ snapshots:
       brace-expansion: 5.0.5
 
   ms@2.1.3: {}
+
+  nan@2.27.0: {}
 
   nanoid@3.3.11: {}
 

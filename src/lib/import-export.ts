@@ -1,3 +1,4 @@
+import * as base91 from "base91"
 import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
@@ -13,71 +14,6 @@ export interface ImportExportPayload {
     focusedId: number | null
   }
   timeline: TimelineNode[] | null
-}
-
-// ---- Base91 codec ----
-const B91 =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"'
-
-function b91encode(src: Uint8Array): string {
-  let o = "",
-    b = 0,
-    n = 0,
-    v = -1
-  for (const x of src) {
-    b |= x << n
-    n += 8
-    if (n > 13) {
-      let m = b & 8191
-      if (m > 88) {
-        b >>= 13
-        n -= 13
-      } else {
-        m = b & 16383
-        b >>= 14
-        n -= 14
-      }
-      if (v < 0) v = m
-      else {
-        v += m * 91
-        o += B91[v % 91] + B91[(v / 91) | 0]
-        v = -1
-      }
-    }
-  }
-  if (v > -1) o += B91[v % 91] + B91[(v / 91) | 0]
-  else if (n) {
-    o += B91[b % 91]
-    if (b > 90 || n > 7) o += B91[(b / 91) | 0]
-  }
-  return o
-}
-
-function b91decode(src: string): Uint8Array {
-  const idx = new Uint8Array(256).fill(255)
-  for (let i = 0; i < 91; i++) idx[B91.charCodeAt(i)] = i
-  const out: number[] = []
-  let v = -1,
-    b = 0,
-    n = 0
-  for (const ch of src) {
-    const c = idx[ch.charCodeAt(0)]
-    if (c === 255) continue
-    if (v < 0) v = c
-    else {
-      v += c * 91
-      b |= v << n
-      n += (v & 8191) > 88 ? 13 : 14
-      v = -1
-      do {
-        out.push(b & 0xff)
-        b >>= 8
-        n -= 8
-      } while (n > 7)
-    }
-  }
-  if (v > -1) out.push((b | (v << n)) & 0xff)
-  return new Uint8Array(out)
 }
 
 // ---- Static lookup tables ----
@@ -224,7 +160,7 @@ export function encodePayload(payload: ImportExportPayload): string {
     }
   }
 
-  return b91encode(w.bytes())
+  return base91.encode(w.bytes())
 }
 
 // ---- Decode ----
@@ -243,7 +179,7 @@ function readEntry(r: Reader): TimelineEntry {
 export function decodePayload(encoded: string): ImportExportPayload {
   let data: Uint8Array
   try {
-    data = b91decode(encoded.trim())
+    data = new Uint8Array(base91.decode(encoded.trim()))
   } catch {
     throw new Error("Invalid export code")
   }
