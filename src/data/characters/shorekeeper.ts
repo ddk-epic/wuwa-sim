@@ -18,6 +18,51 @@ export const shorekeeper = {
   skillTreeBonuses: ["Healing Bonus", "HP"],
   buffs: [
     {
+      id: "char.shorekeeper.inherent.self-gravitation",
+      name: "Self Gravitation",
+      description:
+        "Resonance Liberation grants Energy Regen +10% for Outer Stellarealm duration.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        skillType: "Resonance Liberation",
+      },
+      target: { kind: "self" },
+      duration: {
+        kind: "inherit",
+        buffId: "char.shorekeeper.lib.outer-stellarealm",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyRechargePct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
+      id: "char.shorekeeper.intro.discernment-consume",
+      name: "Discernment Consume",
+      description: "Discernment cast removes all Stellarealm buffs (S0 only).",
+      maxSequence: 0,
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        stageId: "Proof of Existence::Discernment",
+      },
+      effects: [
+        {
+          kind: "removeBuffs",
+          ids: [
+            "char.shorekeeper.lib.outer-stellarealm",
+            "char.shorekeeper.lib.inner-stellarealm",
+            "char.shorekeeper.lib.supernal-stellarealm",
+            "char.shorekeeper.inherent.self-gravitation",
+          ],
+        },
+      ],
+    },
+    {
       id: "char.shorekeeper.s3.infinity-awaits-me",
       name: "S3: Infinity Awaits Me",
       description: "End Loop cast restores 20 Concerto once per 25s.",

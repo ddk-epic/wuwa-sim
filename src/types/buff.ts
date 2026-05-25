@@ -75,11 +75,17 @@ export type ResourceEffect = {
   target?: "self" | "target" | "source"
 }
 
+export type RemoveBuffsEffect = {
+  kind: "removeBuffs"
+  ids: string[]
+}
+
 export type Effect =
   | StatEffect
   | ResourceEffect
   | EmitHitEffect
   | CoordHitEffect
+  | RemoveBuffsEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 
@@ -162,6 +168,7 @@ export type Duration =
   | { kind: "permanent" }
   | { kind: "frames"; v: number }
   | { kind: "seconds"; v: number }
+  | { kind: "inherit"; buffId: string }
 
 export type StackingPolicy = {
   max: number
@@ -195,6 +202,8 @@ export interface BuffDef {
   stacking?: StackingPolicy
   /** Resonance chain sequence required (1..6). v1 only filters at bootstrap. */
   requiresSequence?: number
+  /** Maximum sequence at which this buff is active (0 = base kit only). Opposite of requiresSequence. */
+  maxSequence?: number
   /** Echo set piece count required (2, 3, or 5). v1 only filters at bootstrap. */
   requiresPieces?: 2 | 3 | 5
   /**

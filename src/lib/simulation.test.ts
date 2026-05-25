@@ -2788,3 +2788,137 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(60)
   })
 })
+
+describe("runSimulation — inherit duration", () => {
+  const parentBuff: BuffDef = {
+    id: "test.parent",
+    name: "Parent",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 10 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.1 },
+      },
+    ],
+  }
+
+  const childBuff: BuffDef = {
+    id: "test.child",
+    name: "Child",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    target: { kind: "self" },
+    duration: { kind: "inherit", buffId: "test.parent" },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "critRate" },
+        value: { kind: "const", v: 0.2 },
+      },
+    ],
+  }
+
+  it("child buff inherits endTime from parent buff applied in the same event", () => {
+    testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
+    const entries = [tlEntry(1, "Normal Attack::_")]
+    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
+    const buffEvents = result.filter((e) => e.kind === "buffApplied")
+    expect(buffEvents).toHaveLength(2)
+    const parentApplied = buffEvents.find(
+      (e) => "buffId" in e && e.buffId === "test.parent",
+    )
+    const childApplied = buffEvents.find(
+      (e) => "buffId" in e && e.buffId === "test.child",
+    )
+    expect(parentApplied).toBeDefined()
+    expect(childApplied).toBeDefined()
+  })
+
+  it("child buff with inherit duration expires at the same time as parent", () => {
+    testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
+    const entries = [tlEntry(1, "Normal Attack::_")]
+    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
+    const hitEvent = result.find((e) => e.kind === "hit") as
+      | HitEvent
+      | undefined
+    expect(hitEvent?.activeBuffs.some((b) => b.id === "test.parent")).toBe(true)
+    expect(hitEvent?.activeBuffs.some((b) => b.id === "test.child")).toBe(true)
+  })
+})
+
+describe("runSimulation — removeBuffs effect", () => {
+  const markerBuff: BuffDef = {
+    id: "test.marker",
+    name: "Marker",
+    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 30 },
+    effects: [],
+  }
+
+  const removeReaction: BuffDef = {
+    id: "test.remove-reaction",
+    name: "Remove Reaction",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillType: "Resonance Skill",
+    },
+    effects: [{ kind: "removeBuffs", ids: ["test.marker"] }],
+  }
+
+  const charWithRemove: EnrichedCharacter = {
+    ...charA,
+    buffs: [markerBuff, removeReaction],
+    skills: [
+      charA.skills[0],
+      {
+        id: 200,
+        name: "Skill",
+        type: "Resonance Skill",
+        stages: [
+          {
+            name: "Skill",
+            value: "100%",
+            actionTime: 30,
+            damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("removeBuffs effect removes active instances of listed buff IDs", () => {
+    testCharacters = [charWithRemove]
+    const entries = [tlEntry(1, "Normal Attack::_"), tlEntry(1, "Skill::_")]
+    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
+    const applied = result.filter(
+      (e) =>
+        e.kind === "buffApplied" && "buffId" in e && e.buffId === "test.marker",
+    )
+    const consumed = result.filter(
+      (e) =>
+        e.kind === "buffConsumed" &&
+        "buffId" in e &&
+        e.buffId === "test.marker",
+    )
+    expect(applied).toHaveLength(1)
+    expect(consumed).toHaveLength(1)
+  })
+
+  it("removeBuffs is a no-op when referenced buff is not active", () => {
+    testCharacters = [charWithRemove]
+    const entries = [tlEntry(1, "Skill::_")]
+    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
+    const consumed = result.filter(
+      (e) =>
+        e.kind === "buffConsumed" &&
+        "buffId" in e &&
+        e.buffId === "test.marker",
+    )
+    expect(consumed).toHaveLength(0)
+  })
+})

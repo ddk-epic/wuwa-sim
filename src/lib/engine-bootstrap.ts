@@ -79,7 +79,11 @@ export function buildCharacterBuffDefs(
 ): BuffDef[] {
   const buffs: BuffDef[] = []
   for (const def of char.buffs) {
-    if ((def.requiresSequence ?? 0) <= sequence) buffs.push(def)
+    if (
+      (def.requiresSequence ?? 0) <= sequence &&
+      (def.maxSequence === undefined || sequence <= def.maxSequence)
+    )
+      buffs.push(def)
   }
   for (const nodeName of char.skillTreeBonuses) {
     const def = compileSkillTreeNode(nodeName, {

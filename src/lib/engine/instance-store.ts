@@ -298,7 +298,16 @@ export class InstanceStore {
         i.targetCharacterId === targetCharacterId &&
         (!def.perSource || i.sourceCharacterId === sourceCharacterId),
     )
-    const newEndTime = computeEndTime(def, frame)
+    const newEndTime = computeEndTime(
+      def,
+      frame,
+      targetCharacterId,
+      (buffId, targetId) => {
+        return this.active.find(
+          (i) => i.def.id === buffId && i.targetCharacterId === targetId,
+        )?.endTime
+      },
+    )
 
     if (!existing) {
       this.active.push({
@@ -419,6 +428,33 @@ export class InstanceStore {
     console.info(
       `[BuffEngine] nonStackingGroup "${group}" has multiple co-active buffs on character ${targetCharacterId}: ${ids.join(", ")} (informational; v1 does not enforce caps)`,
     )
+  }
+
+  /** Remove all active instances whose def.id is in `ids`. Emits buffConsumed for each. */
+  removeBuffsById(ids: string[], frame: number, out: BuffEvent[]): void {
+    const idSet = new Set(ids)
+    const remaining: BuffInstance[] = []
+    let mutated = false
+    for (const inst of this.active) {
+      if (idSet.has(inst.def.id)) {
+        out.push({
+          kind: "buffConsumed",
+          buffId: inst.def.id,
+          buffName: inst.def.name,
+          sourceCharacterId: inst.sourceCharacterId,
+          targetCharacterId: inst.targetCharacterId,
+          frame,
+          stacks: 0,
+        })
+        mutated = true
+      } else {
+        remaining.push(inst)
+      }
+    }
+    if (mutated) {
+      this.active = remaining
+      this.version_++
+    }
   }
 }
 
@@ -564,7 +600,12 @@ export function matchesTrigger(
   return false
 }
 
-function computeEndTime(def: BuffDef, frame: number): number {
+function computeEndTime(
+  def: BuffDef,
+  frame: number,
+  targetCharacterId: number,
+  getParentEndTime: (buffId: string, targetId: number) => number | undefined,
+): number {
   if (def.duration == null) return frame
   switch (def.duration.kind) {
     case "permanent":
@@ -573,5 +614,7 @@ function computeEndTime(def: BuffDef, frame: number): number {
       return frame + def.duration.v
     case "seconds":
       return frame + def.duration.v * 60
+    case "inherit":
+      return getParentEndTime(def.duration.buffId, targetCharacterId) ?? frame
   }
 }

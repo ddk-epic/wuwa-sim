@@ -125,6 +125,7 @@ export class BuffEngine {
       name: "consume",
       run: (ctx) => this.store.runConsumePhase(ctx.event, ctx.out),
     },
+    { name: "removeBuffs", run: (ctx) => this.runRemoveBuffsPhase(ctx) },
   ]
 
   /** Test/inspection helper exposing the dispatch phase order as a value. */
@@ -237,6 +238,14 @@ export class BuffEngine {
     for (const def of globalBuffs) {
       const owner = def.owner
       if (owner === undefined || !partyIds.has(owner)) continue
+      const ownerSlotIndex = slots.indexOf(owner)
+      const ownerSequence =
+        ownerSlotIndex >= 0
+          ? (input.loadouts[ownerSlotIndex]?.sequence ?? 0)
+          : 0
+      if ((def.requiresSequence ?? 0) > ownerSequence) continue
+      if (def.maxSequence !== undefined && ownerSequence > def.maxSequence)
+        continue
       validateBuffDef(def)
       this.store.appendTriggerable(owner, [def])
       allTriggerable.push(def)
@@ -448,9 +457,26 @@ export class BuffEngine {
   }
 
   private runStatPhase(ctx: PhaseContext): void {
+    const deferred: { def: BuffDef; sourceCharacterId: number }[] = []
     for (const { def, sourceCharacterId } of ctx.candidates) {
       if (def.duration == null) continue
+      if (def.duration.kind === "inherit") {
+        deferred.push({ def, sourceCharacterId })
+        continue
+      }
       this.applyOrDefer(def, sourceCharacterId, ctx.event.frame, ctx.out)
+    }
+    for (const { def, sourceCharacterId } of deferred) {
+      this.applyOrDefer(def, sourceCharacterId, ctx.event.frame, ctx.out)
+    }
+  }
+
+  private runRemoveBuffsPhase(ctx: PhaseContext): void {
+    for (const { def } of ctx.candidates) {
+      for (const effect of def.effects) {
+        if (effect.kind !== "removeBuffs") continue
+        this.store.removeBuffsById(effect.ids, ctx.event.frame, ctx.out)
+      }
     }
   }
 

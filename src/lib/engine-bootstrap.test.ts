@@ -115,6 +115,30 @@ describe("buildCharacterBuffDefs", () => {
     expect(buildCharacterBuffDefs(char, 2)).toHaveLength(1)
   })
 
+  it("excludes buffs with maxSequence below current sequence", () => {
+    const buff: BuffDef = {
+      ...simStartPermanentBuff("s0.buff"),
+      maxSequence: 0,
+    }
+    const char = baseChar({ buffs: [buff] })
+    expect(buildCharacterBuffDefs(char, 0)).toHaveLength(1)
+    expect(buildCharacterBuffDefs(char, 1)).toHaveLength(0)
+    expect(buildCharacterBuffDefs(char, 6)).toHaveLength(0)
+  })
+
+  it("includes buffs when requiresSequence and maxSequence both satisfied", () => {
+    const buff: BuffDef = {
+      ...simStartPermanentBuff("s1-only.buff"),
+      requiresSequence: 1,
+      maxSequence: 2,
+    }
+    const char = baseChar({ buffs: [buff] })
+    expect(buildCharacterBuffDefs(char, 0)).toHaveLength(0)
+    expect(buildCharacterBuffDefs(char, 1)).toHaveLength(1)
+    expect(buildCharacterBuffDefs(char, 2)).toHaveLength(1)
+    expect(buildCharacterBuffDefs(char, 3)).toHaveLength(0)
+  })
+
   it("compiles skill-tree Crit. Rate node into a buff def", () => {
     const char = baseChar({ skillTreeBonuses: ["Crit. Rate"] })
     const defs = buildCharacterBuffDefs(char, 0)
