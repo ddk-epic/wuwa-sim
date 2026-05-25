@@ -227,6 +227,11 @@ export function useTimeline(onShapeChange?: () => void) {
     onShapeChange?.()
   }
 
+  function loadNodes(incoming: TimelineNode[]) {
+    setNodes(incoming)
+    onShapeChange?.()
+  }
+
   return {
     nodes,
     entries,
@@ -246,5 +251,6 @@ export function useTimeline(onShapeChange?: () => void) {
     reorderNodes,
     reorderGroupEntries,
     clearTimeline,
+    loadNodes,
   }
 }

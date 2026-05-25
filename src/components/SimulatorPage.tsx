@@ -12,12 +12,15 @@ import { TableTopBar } from "#/components/timeline/TableTopBar"
 import { TeamModal } from "#/components/team/TeamModal"
 import { SimulationLogModal } from "#/components/log/SimulationLogModal"
 import { TimelineView } from "#/components/timeline/TimelineView"
+import { ConfirmModal } from "#/components/ui/ConfirmModal"
 import { getTimelineSummary } from "#/lib/timeline/timeline-summary"
 import { runSimulation } from "#/lib/simulation"
+import { encodePayload, decodePayload } from "#/lib/import-export"
+import type { ImportExportPayload } from "#/lib/import-export"
 
 export function SimulatorPage() {
   const team = useTeam()
-  const { slots, loadouts } = team
+  const { slots, loadouts, focusedId, loadTeam } = team
 
   const { log, setLog, clearLog } = useSimulationLog()
 
@@ -39,10 +42,19 @@ export function SimulatorPage() {
     deleteGroup,
     duplicateGroup,
     clearTimeline,
+    loadNodes,
   } = useTimeline(clearLog)
   const [settings, setSettings] = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
+  const [pendingImport, setPendingImport] =
+    useState<ImportExportPayload | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+
+  const exportString = encodePayload({
+    team: { slots, loadouts, focusedId },
+    timeline: nodes.length > 0 ? nodes : null,
+  })
 
   const summary = getTimelineSummary(
     entries,
@@ -53,6 +65,30 @@ export function SimulatorPage() {
     log.length > 0 ? log : undefined,
     settings.variantFloor,
   )
+
+  function applyImport(payload: ImportExportPayload) {
+    loadTeam(payload.team.slots, payload.team.loadouts, payload.team.focusedId)
+    loadNodes(payload.timeline ?? [])
+    clearLog()
+  }
+
+  function handleImport(value: string) {
+    setImportError(null)
+    let payload: ImportExportPayload
+    try {
+      payload = decodePayload(value)
+    } catch (err) {
+      setImportError(
+        err instanceof Error ? err.message : "Invalid import string",
+      )
+      return
+    }
+    if (nodes.length > 0 && payload.timeline !== null) {
+      setPendingImport(payload)
+    } else {
+      applyImport(payload)
+    }
+  }
 
   function handleResetTimeline() {
     clearTimeline()
@@ -86,6 +122,9 @@ export function SimulatorPage() {
               onOpenSimulationLog={() => setSimulationLogOpen(true)}
               timelineEmpty={entries.length === 0}
               logEmpty={log.length === 0}
+              exportString={exportString}
+              onImport={handleImport}
+              importError={importError}
             />
             <div className="flex flex-1 min-h-0">
               {/* left rail */}
@@ -129,6 +168,16 @@ export function SimulatorPage() {
               <SimulationLogModal
                 log={log}
                 onClose={() => setSimulationLogOpen(false)}
+              />
+            )}
+            {pendingImport !== null && (
+              <ConfirmModal
+                message="Import will overwrite your current timeline. Continue?"
+                onConfirm={() => {
+                  applyImport(pendingImport)
+                  setPendingImport(null)
+                }}
+                onCancel={() => setPendingImport(null)}
               />
             )}
           </main>

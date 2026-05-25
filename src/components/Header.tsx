@@ -29,6 +29,9 @@ interface HeaderProps {
   onOpenSimulationLog: () => void
   timelineEmpty: boolean
   logEmpty: boolean
+  exportString: string
+  onImport: (value: string) => void
+  importError: string | null
 }
 
 export function Header({
@@ -38,6 +41,9 @@ export function Header({
   onOpenSimulationLog,
   timelineEmpty,
   logEmpty,
+  exportString,
+  onImport,
+  importError,
 }: HeaderProps) {
   const { slots } = useTeamContext()
   const reactionDelay = useReactionDelay()
@@ -123,8 +129,9 @@ export function Header({
       )}
       {importExportOpen && (
         <ImportExportModal
-          exportString=""
-          onImport={() => {}}
+          exportString={exportString}
+          onImport={onImport}
+          importError={importError}
           onClose={() => setImportExportOpen(false)}
         />
       )}

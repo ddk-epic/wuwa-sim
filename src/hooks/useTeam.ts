@@ -137,6 +137,16 @@ export function useTeam() {
     }
   }
 
+  function loadTeam(
+    newSlots: Slots,
+    newLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout],
+    newFocusedId: number | null,
+  ) {
+    setSlots(newSlots)
+    setLoadouts(newLoadouts)
+    setFocusedId(newFocusedId)
+  }
+
   return {
     slots,
     loadouts,
@@ -145,5 +155,6 @@ export function useTeam() {
     toggleCharacter,
     focusCharacter,
     setSlotPatch,
+    loadTeam,
   }
 }
