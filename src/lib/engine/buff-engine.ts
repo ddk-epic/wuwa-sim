@@ -87,6 +87,8 @@ export class BuffEngine {
   private foldedBuffsMap = new Map<number, BuffDef[]>()
   private pendingOutroBuffs: PendingOutroBuff[] = []
   private evaluator = new ConditionEvaluator(this.buildConditionWorld())
+  /** Guards against circular resolveStats calls from scaledByStat value expressions. */
+  private resolvingStats = new Set<number>()
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -747,22 +749,34 @@ export class BuffEngine {
   }
 
   resolveStats(characterId: number): StatTable {
-    const base = this.store.cloneBaseStats(characterId)
-    const contributions = this.store.getActiveTargeting(characterId)
-    for (const inst of contributions) {
-      if (
-        inst.def.condition &&
-        !this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
-      ) {
-        continue
-      }
-      accumulateStatEffects(base, {
-        def: inst.def,
-        stacks: inst.stacks,
-        snapshots: inst.snapshots,
-      })
+    if (this.resolvingStats.has(characterId)) {
+      return this.store.cloneBaseStats(characterId)
     }
-    return base
+    this.resolvingStats.add(characterId)
+    try {
+      const base = this.store.cloneBaseStats(characterId)
+      const contributions = this.store.getActiveTargeting(characterId)
+      const getCharStat = (cid: number, stat: string): number => {
+        const s = this.resolveStats(cid) as unknown as Record<string, number>
+        return s[stat] ?? 0
+      }
+      for (const inst of contributions) {
+        if (
+          inst.def.condition &&
+          !this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
+        ) {
+          continue
+        }
+        accumulateStatEffects(
+          base,
+          { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
+          getCharStat,
+        )
+      }
+      return base
+    } finally {
+      this.resolvingStats.delete(characterId)
+    }
   }
 
   /** Test/inspection helper. */

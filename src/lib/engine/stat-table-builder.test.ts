@@ -120,6 +120,80 @@ describe("accumulateStatEffects", () => {
     accumulateStatEffects(stats, { def, stacks: 1 })
     expect(stats.elementBonus.Fusion).toBeCloseTo(0.3)
   })
+
+  it("scaledByStat reads from getCharStat and applies formula", () => {
+    const stats = emptyStatTable()
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: {
+            kind: "scaledByStat",
+            stat: "energyRechargePct",
+            characterId: 99,
+            base: 1,
+            per: 0.002,
+            scale: 0.0001,
+            max: 0.125,
+          },
+        },
+      ],
+    })
+    // energyRechargePct = 1.5 → total ER = 1 + 1.5 = 2.5 → min(2.5/0.002*0.0001, 0.125) = 0.125
+    const getCharStat = (_cid: number, _stat: string) => 1.5
+    accumulateStatEffects(stats, { def, stacks: 1 }, getCharStat)
+    expect(stats.critRate).toBeCloseTo(0.125)
+  })
+
+  it("scaledByStat caps at max", () => {
+    const stats = emptyStatTable()
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: {
+            kind: "scaledByStat",
+            stat: "energyRechargePct",
+            characterId: 99,
+            base: 1,
+            per: 0.002,
+            scale: 0.0001,
+            max: 0.125,
+          },
+        },
+      ],
+    })
+    // ER = 10.0 (very high) → without cap would exceed 0.125
+    const getCharStat = (_cid: number, _stat: string) => 10.0
+    accumulateStatEffects(stats, { def, stacks: 1 }, getCharStat)
+    expect(stats.critRate).toBeCloseTo(0.125)
+  })
+
+  it("scaledByStat returns 0 when getCharStat is not provided", () => {
+    const stats = emptyStatTable()
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: {
+            kind: "scaledByStat",
+            stat: "energyRechargePct",
+            characterId: 99,
+            base: 1,
+            per: 0.002,
+            scale: 0.0001,
+            max: 0.125,
+          },
+        },
+      ],
+    })
+    // raw = 0, base = 1 → min((1+0)/0.002*0.0001, 0.125) = min(0.05, 0.125) = 0.05
+    accumulateStatEffects(stats, { def, stacks: 1 })
+    expect(stats.critRate).toBeCloseTo(0.05)
+  })
 })
 
 describe("freezeSnapshots", () => {

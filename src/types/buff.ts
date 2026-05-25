@@ -29,6 +29,16 @@ export type StatPath =
 export type ValueExpr =
   | { kind: "const"; v: number; snapshot?: boolean }
   | { kind: "perStack"; v: number; snapshot?: boolean }
+  | {
+      kind: "scaledByStat"
+      stat: string
+      characterId: number
+      per: number
+      scale: number
+      max: number
+      /** Offset added to the stat value before computing (use 1.0 for ER/Pct stats that have an implicit 100% base). */
+      base?: number
+    }
 
 export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
 

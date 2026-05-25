@@ -3178,3 +3178,112 @@ describe("Global buffs — Binary Butterfly", () => {
     expect(applied).toHaveLength(0)
   })
 })
+
+describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
+  const shorekeeperId = 1505
+  const teammateId = 2
+  const shorekeeper = baseChar({ id: shorekeeperId })
+  const teammate = baseChar({ id: teammateId })
+
+  const setup = () => {
+    testCharacters = [shorekeeper, teammate]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [shorekeeperId, teammateId, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  it("Inner Stellarealm: Intro while Outer active grants critRate scaled by Shorekeeper ER", () => {
+    const engine = setup()
+    const preCritRate = engine.resolveStats(teammateId).critRate
+
+    // Shorekeeper casts Liberation → applies Outer Stellarealm (marker)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: shorekeeperId,
+      skillType: "Resonance Liberation",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(shorekeeperId)).toContain(
+      "char.shorekeeper.lib.outer-stellarealm",
+    )
+
+    // Teammate casts Intro Skill → triggers Inner Stellarealm
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: teammateId,
+      skillType: "Intro Skill",
+      frame: 60,
+    })
+    expect(engine.activeBuffIds(teammateId)).toContain(
+      "char.shorekeeper.lib.inner-stellarealm",
+    )
+
+    // Shorekeeper's energyRechargePct uses base ER (breaks self-cycle via guard)
+    const erPct = BASE_ER
+    // Inner Stellarealm adds critRate = min((1 + erPct) / 0.002 * 0.0001, 0.125)
+    const expectedCritRateBonus = Math.min(
+      ((1 + erPct) / 0.002) * 0.0001,
+      0.125,
+    )
+    expect(engine.resolveStats(teammateId).critRate).toBeCloseTo(
+      preCritRate + expectedCritRateBonus,
+    )
+  })
+
+  it("Supernal Stellarealm: second Intro while Inner active grants critDmg scaled by Shorekeeper ER", () => {
+    const engine = setup()
+    const preCritDmg = engine.resolveStats(teammateId).critDmg
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: shorekeeperId,
+      skillType: "Resonance Liberation",
+      frame: 0,
+    })
+    // First Intro → Inner Stellarealm
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: teammateId,
+      skillType: "Intro Skill",
+      frame: 60,
+    })
+    expect(engine.activeBuffIds(teammateId)).toContain(
+      "char.shorekeeper.lib.inner-stellarealm",
+    )
+    // Second Intro → Supernal Stellarealm
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: teammateId,
+      skillType: "Intro Skill",
+      frame: 120,
+    })
+    expect(engine.activeBuffIds(teammateId)).toContain(
+      "char.shorekeeper.lib.supernal-stellarealm",
+    )
+
+    const erPct = BASE_ER
+    const expectedCritDmgBonus = Math.min(((1 + erPct) / 0.001) * 0.0001, 0.25)
+    expect(engine.resolveStats(teammateId).critDmg).toBeCloseTo(
+      preCritDmg + expectedCritDmgBonus,
+    )
+  })
+
+  it("Inner Stellarealm does not apply without Outer Stellarealm active", () => {
+    const engine = setup()
+    // Intro without Liberation first → no Outer Stellarealm
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: teammateId,
+      skillType: "Intro Skill",
+      frame: 0,
+    })
+    // Inner may be applied but expires immediately (inherits Outer duration = none)
+    engine.tickToFrame(1)
+    expect(engine.activeBuffIds(teammateId)).not.toContain(
+      "char.shorekeeper.lib.inner-stellarealm",
+    )
+  })
+})

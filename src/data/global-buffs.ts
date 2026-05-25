@@ -59,6 +59,82 @@ export const globalBuffs: BuffDef[] = [
     ],
   },
   {
+    id: "char.shorekeeper.lib.inner-stellarealm",
+    name: "Inner Stellarealm",
+    description:
+      "Team Intro while Outer Stellarealm is active grants team Crit. Rate scaling with Shorekeeper's Energy Regen (max 12.5%), inheriting Outer Stellarealm's duration.",
+    owner: 1505,
+    maxSequence: 0,
+    trigger: {
+      event: "skillCast",
+      actor: "any",
+      skillType: "Intro Skill",
+    },
+    condition: {
+      kind: "buffActive",
+      buffId: "char.shorekeeper.lib.outer-stellarealm",
+      on: "source",
+    },
+    target: { kind: "team" },
+    duration: {
+      kind: "inherit",
+      buffId: "char.shorekeeper.lib.outer-stellarealm",
+    },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "critRate" },
+        value: {
+          kind: "scaledByStat",
+          stat: "energyRechargePct",
+          characterId: 1505,
+          base: 1,
+          per: 0.002,
+          scale: 0.0001,
+          max: 0.125,
+        },
+      },
+    ],
+  },
+  {
+    id: "char.shorekeeper.lib.supernal-stellarealm",
+    name: "Supernal Stellarealm",
+    description:
+      "Team Intro while Inner Stellarealm is active grants team Crit. DMG scaling with Shorekeeper's Energy Regen (max 25%), inheriting Inner Stellarealm's duration.",
+    owner: 1505,
+    maxSequence: 0,
+    trigger: {
+      event: "skillCast",
+      actor: "any",
+      skillType: "Intro Skill",
+    },
+    condition: {
+      kind: "buffActive",
+      buffId: "char.shorekeeper.lib.inner-stellarealm",
+      on: "source",
+    },
+    target: { kind: "team" },
+    duration: {
+      kind: "inherit",
+      buffId: "char.shorekeeper.lib.inner-stellarealm",
+    },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "critDmg" },
+        value: {
+          kind: "scaledByStat",
+          stat: "energyRechargePct",
+          characterId: 1505,
+          base: 1,
+          per: 0.001,
+          scale: 0.0001,
+          max: 0.25,
+        },
+      },
+    ],
+  },
+  {
     id: "char.shorekeeper.outro.binary-butterfly",
     name: "Binary Butterfly",
     description: "Outro Skill grants all team members allDeepen +15% for 30s.",

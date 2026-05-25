@@ -41,12 +41,13 @@ export type StatContribution = {
 export function accumulateStatEffects(
   stats: StatTable,
   contribution: StatContribution,
+  getCharStat?: (characterId: number, stat: string) => number,
 ): void {
   const { def, stacks, snapshots } = contribution
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
-    const v = resolveValue(effect.value, stacks, snapshots, i)
+    const v = resolveValue(effect.value, stacks, snapshots, i, getCharStat)
     applyToPath(stats, effect.path, v)
   }
 }
@@ -63,6 +64,7 @@ export function freezeSnapshots(
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
+    if (effect.value.kind === "scaledByStat") continue
     if (!effect.value.snapshot) continue
     const frozen =
       effect.value.kind === "perStack"
@@ -79,8 +81,9 @@ function resolveValue(
   stacks: number,
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
+  getCharStat?: (characterId: number, stat: string) => number,
 ): number {
-  if (value.snapshot && snapshots) {
+  if ("snapshot" in value && value.snapshot && snapshots) {
     return snapshots[effectIndex]
   }
   switch (value.kind) {
@@ -88,6 +91,11 @@ function resolveValue(
       return value.v
     case "perStack":
       return value.v * stacks
+    case "scaledByStat": {
+      const raw = getCharStat?.(value.characterId, value.stat) ?? 0
+      const statVal = (value.base ?? 0) + raw
+      return Math.min((statVal / value.per) * value.scale, value.max)
+    }
   }
 }
 
