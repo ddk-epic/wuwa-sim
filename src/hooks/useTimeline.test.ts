@@ -500,7 +500,7 @@ describe("useTimeline onShapeChange callback", () => {
     expect(onShapeChange).toHaveBeenCalledTimes(1)
   })
 
-  it("updateEntry with variantKind only does NOT call onShapeChange", () => {
+  it("updateEntry with variantKind calls onShapeChange", () => {
     const onShapeChange = vi.fn()
     const { result } = renderHook(() => useTimeline(onShapeChange))
     act(() => {
@@ -511,7 +511,7 @@ describe("useTimeline onShapeChange callback", () => {
     act(() => {
       result.current.updateEntry(id, { variantKind: "cancel" })
     })
-    expect(onShapeChange).not.toHaveBeenCalled()
+    expect(onShapeChange).toHaveBeenCalledTimes(1)
   })
 
   it("updateGroupLabel does NOT call onShapeChange", () => {

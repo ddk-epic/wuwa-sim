@@ -209,7 +209,11 @@ export function useTimeline(onShapeChange?: () => void) {
         }
       }),
     )
-    if ("characterId" in patch || "stageId" in patch) {
+    if (
+      "characterId" in patch ||
+      "stageId" in patch ||
+      "variantKind" in patch
+    ) {
       onShapeChange?.()
     }
   }
