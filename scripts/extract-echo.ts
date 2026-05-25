@@ -143,7 +143,10 @@ export async function extractEcho(id: string): Promise<void> {
     buffs: [],
   }
 
-  const echoSlug = data.MonsterName.toLowerCase().replace(/\s+/g, "-")
+  const echoSlug = data.MonsterName.toLowerCase()
+    .replace(/[<>:"/\\|?*]+/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-{2,}/g, "-")
 
   const echoDir = path.join(PROJECT_ROOT, "src/data/echoes/raw")
   const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets/raw")
@@ -162,7 +165,11 @@ export async function extractEcho(id: string): Promise<void> {
   console.log(`Written to src/data/echoes/raw/${echoSlug}.json`)
 
   for (const echoSet of echoSets) {
-    const setSlug = echoSet.name.toLowerCase().replace(/\s+/g, "-")
+    const setSlug = echoSet.name
+      .toLowerCase()
+      .replace(/[<>:"/\\|?*]+/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-{2,}/g, "-")
     const { buffs: _omitBuffs, ...rawSet } = echoSet
     const setPath = path.join(setDir, `${setSlug}.json`)
     try {
