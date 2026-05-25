@@ -135,7 +135,7 @@ function HBtn({
 }) {
   return (
     <button
-      className={`font-[inherit] text-[11px] px-[10px] py-[5px] pl-2 rounded-sm cursor-pointer whitespace-nowrap inline-flex items-center gap-[5px] border ${
+      className={`font-[inherit] text-[11px] px-2.5 py-1.25 pl-2 rounded-sm cursor-pointer whitespace-nowrap inline-flex items-center gap-1.25 border ${
         primary
           ? "bg-[#1a2c4a] text-ui-damage border-[#2a4575]"
           : "bg-transparent hover:bg-darkest text-muted hover:text-foreground border-border"
@@ -164,8 +164,8 @@ function Kpi({
   suffix?: string
 }) {
   return (
-    <div className="flex flex-col gap-[3px] min-w-0">
-      <span className="text-[9px] text-muted font-mono tracking-[1px] uppercase">
+    <div className="flex flex-col gap-0.75 min-w-0">
+      <span className="text-[9px] text-muted font-mono tracking-px uppercase">
         {label}
       </span>
       <span
@@ -180,7 +180,7 @@ function Kpi({
         {suffix && (
           <span
             style={{ fontSize: big ? 12 : 10 }}
-            className="text-muted ml-[3px] font-medium"
+            className="text-muted ml-0.75 font-medium"
           >
             {suffix}
           </span>
@@ -217,7 +217,7 @@ function ElementAvatar({
           boxShadow: ring,
           opacity: dim ? 0.4 : 1,
         }}
-        className="flex items-center justify-center flex-shrink-0 text-[#0a0b0d] font-bold text-[12px]"
+        className="flex items-center justify-center shrink-0 text-[#0a0b0d] font-bold text-[12px]"
       >
         {member.name[0]}
       </div>
@@ -235,7 +235,7 @@ function ElementAvatar({
         boxShadow: ring,
         opacity: dim ? 0.4 : 1,
       }}
-      className="flex-shrink-0 overflow-hidden relative"
+      className="shrink-0 overflow-hidden relative"
     >
       <img
         src={src}
@@ -262,7 +262,7 @@ function ElDot({ element, size = 6 }: { element: string; size?: number }) {
         background: hex,
         boxShadow: `0 0 6px ${hex}88`,
       }}
-      className="inline-block flex-shrink-0"
+      className="inline-block shrink-0"
     />
   )
 }
@@ -378,11 +378,8 @@ function Donut({
   })
 
   return (
-    <div className="flex gap-[18px] items-center py-[4px] px-[2px]">
-      <div
-        className="relative flex-shrink-0"
-        style={{ width: size, height: size }}
-      >
+    <div className="flex gap-4.5 items-center py-1 px-0.5">
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={cx}
@@ -407,7 +404,7 @@ function Donut({
             />
           ))}
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[2px]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="text-[9px] text-muted font-mono tracking-[1.2px] uppercase">
             {centerLabel}
           </span>
@@ -419,7 +416,7 @@ function Donut({
           </span>
         </div>
       </div>
-      <div className="flex-1 min-w-0 flex flex-col gap-[5px]">{legend}</div>
+      <div className="flex-1 min-w-0 flex flex-col gap-1.25">{legend}</div>
     </div>
   )
 }
@@ -436,20 +433,20 @@ function DmgDonut({ team }: { team: LibTeam }) {
     .map((s) => (
       <div
         key={s.key}
-        className="grid items-center gap-2 py-[2px]"
+        className="grid items-center gap-2 py-0.5"
         style={{ gridTemplateColumns: "10px 1fr auto auto" }}
       >
         <span
-          className="w-2 h-2 rounded-[1px] block"
+          className="w-2 h-2 rounded-px block"
           style={{ background: s.color }}
         />
         <span className="text-[11px] text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
           {s.key}
         </span>
-        <span className="text-[10px] text-muted font-mono tabular-nums">
+        <span className="text-2.5 text-muted font-mono tabular-nums">
           {(s.value / 1000).toFixed(1)}k
         </span>
-        <span className="text-[10px] text-foreground font-mono tabular-nums min-w-[40px] text-right">
+        <span className="text-2.5 text-foreground font-mono tabular-nums min-w-10 text-right">
           {((s.value / total) * 100).toFixed(1)}%
         </span>
       </div>
@@ -483,20 +480,20 @@ function TypeDistribution({ team }: { team: LibTeam }) {
     .map((s) => (
       <div
         key={s.key}
-        className="grid items-center gap-2 py-[2px]"
+        className="grid items-center gap-2 py-0.5"
         style={{ gridTemplateColumns: "10px 1fr auto auto" }}
       >
         <span
-          className="w-2 h-2 rounded-[1px] block"
+          className="w-2 h-2 rounded-px block"
           style={{ background: s.color }}
         />
         <span className="text-[10.5px] text-foreground font-mono tracking-[0.4px] uppercase">
           {s.key}
         </span>
-        <span className="text-[10px] text-muted font-mono tabular-nums">
+        <span className="text-2.5 text-muted font-mono tabular-nums">
           {s.count}×
         </span>
-        <span className="text-[10px] text-foreground font-mono tabular-nums min-w-[40px] text-right">
+        <span className="text-2.5 text-foreground font-mono tabular-nums min-w-10 text-right">
           {total > 0 ? ((s.dmg / total) * 100).toFixed(1) : "0.0"}%
         </span>
       </div>
@@ -532,7 +529,7 @@ function DetailHero({ team }: { team: LibTeam }) {
       className="relative"
     >
       {/* Portrait region */}
-      <div className="relative h-[160px] overflow-hidden">
+      <div className="relative h-40 overflow-hidden">
         <div
           style={{
             maskImage: "linear-gradient(180deg, black 35%, transparent 100%)",
@@ -577,15 +574,15 @@ function DetailHero({ team }: { team: LibTeam }) {
         />
 
         {/* Top badges */}
-        <div className="absolute top-[14px] left-[18px] right-[18px] flex items-center justify-between z-[2]">
+        <div className="absolute top-3.5 left-4.5 right-4.5 flex items-center justify-between z-2">
           <span
-            className="text-[9px] text-foreground font-mono tracking-[1.4px] uppercase px-2 py-[3px] border border-border rounded-[2px] backdrop-blur-sm"
+            className="text-[9px] text-foreground font-mono tracking-[1.4px] uppercase px-2 py-0.75 border border-border rounded-0.5 backdrop-blur-sm"
             style={{ background: "rgba(0,0,0,0.55)" }}
           >
             team · {team.id.slice(-6).toUpperCase()}
           </span>
           <span
-            className="text-[10px] text-foreground font-mono tracking-[0.4px] px-2 py-[3px] rounded-[2px] backdrop-blur-sm"
+            className="text-2.5 text-foreground font-mono tracking-[0.4px] px-2 py-0.75 rounded-0.5 backdrop-blur-sm"
             style={{ background: "rgba(0,0,0,0.45)" }}
           >
             updated {team.updated}
@@ -594,7 +591,7 @@ function DetailHero({ team }: { team: LibTeam }) {
       </div>
 
       {/* Info plate */}
-      <div className="px-[22px] pt-[18px] pb-5 flex flex-col gap-[14px]">
+      <div className="px-5.5 pt-4.5 pb-5 flex flex-col gap-3.5">
         <div className="flex items-baseline justify-between gap-4">
           <span
             className="text-[26px] font-bold text-foreground leading-none"
@@ -602,7 +599,7 @@ function DetailHero({ team }: { team: LibTeam }) {
           >
             {team.name}
           </span>
-          <span className="text-[10px] text-muted font-mono tracking-[0.8px] uppercase">
+          <span className="text-2.5 text-muted font-mono tracking-[0.8px] uppercase">
             {team.tag}
           </span>
         </div>
@@ -622,7 +619,7 @@ function DetailHero({ team }: { team: LibTeam }) {
           <Kpi label="time" value={team.totalTime.toFixed(2)} suffix="s" />
           <Kpi label="actions" value={team.actions} />
           <div className="flex-1" />
-          <div className="flex gap-[6px]">
+          <div className="flex gap-1.5">
             <HBtn icon={Play} label="Open in sim" primary />
             <HBtn icon={Copy} label="Duplicate" />
           </div>
@@ -636,7 +633,7 @@ function DetailHero({ team }: { team: LibTeam }) {
 
 function MemberCards({ team }: { team: LibTeam }) {
   return (
-    <div className="grid grid-cols-3 gap-[10px]">
+    <div className="grid grid-cols-3 gap-2.5">
       {team.members.map((m, i) => {
         const el = ELEMENT[m.element] ?? { hex: "#888" }
         const share = (team.dmgByChar[m.name] ?? 0) / team.totalDmg
@@ -652,8 +649,8 @@ function MemberCards({ team }: { team: LibTeam }) {
             className="p-[12px_14px] flex items-center gap-3"
           >
             <ElementAvatar member={m} size={40} />
-            <div className="flex-1 min-w-0 flex flex-col gap-[2px]">
-              <div className="flex items-center gap-[6px]">
+            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5">
                 <span className="text-[13px] font-semibold text-foreground">
                   {m.name}
                 </span>
@@ -663,25 +660,25 @@ function MemberCards({ team }: { team: LibTeam }) {
                     color: el.hex,
                     border: `1px solid ${el.hex}44`,
                   }}
-                  className="text-[9px] px-1 py-[1px] rounded-[2px] font-mono tracking-[0.4px]"
+                  className="text-[9px] px-1 py-px rounded-0.5 font-mono tracking-[0.4px]"
                 >
                   S{m.seq}
                 </span>
               </div>
-              <span className="text-[10px] text-muted font-mono tracking-[0.4px]">
+              <span className="text-2.5 text-muted font-mono tracking-[0.4px]">
                 {m.role}
               </span>
               <span className="text-[9.5px] text-ui-zero whitespace-nowrap overflow-hidden text-ellipsis">
                 {m.weapon}
               </span>
             </div>
-            <div className="text-right flex flex-col gap-[2px]">
+            <div className="text-right flex flex-col gap-0.5">
               <span
                 className="text-[13px] font-semibold font-mono tabular-nums"
                 style={{ color: "#f5cf4d" }}
               >
                 {(share * 100).toFixed(1)}
-                <span className="text-[9px] text-muted ml-[1px]">%</span>
+                <span className="text-[9px] text-muted ml-px">%</span>
               </span>
               <span className="text-[9.5px] text-muted font-mono tabular-nums">
                 {((team.dmgByChar[m.name] ?? 0) / 1000).toFixed(1)}k
@@ -707,7 +704,7 @@ function Card({
 }) {
   return (
     <div className="border border-border rounded-sm bg-card flex flex-col min-w-0">
-      <div className="px-[14px] py-[10px] border-b border-border flex items-baseline gap-2">
+      <div className="px-3.5 py-2.5 border-b border-border flex items-baseline gap-2">
         <span className="text-[11px] font-semibold text-foreground tracking-[0.2px]">
           {title}
         </span>
@@ -717,7 +714,7 @@ function Card({
           </span>
         )}
       </div>
-      <div className="p-[14px] min-w-0">{children}</div>
+      <div className="p-3.5 min-w-0">{children}</div>
     </div>
   )
 }
@@ -726,16 +723,16 @@ function Card({
 
 function EmptyMainPane() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-10 gap-[22px] min-h-0">
+    <div className="flex-1 flex flex-col items-center justify-center p-10 gap-5.5 min-h-0">
       <div className="w-24 h-24 rounded-full border border-dashed border-border bg-card flex items-center justify-center text-muted relative">
         <Layers size={42} strokeWidth={1.5} />
-        <div className="absolute -bottom-[6px] -right-[6px] w-[30px] h-[30px] rounded-full bg-[#1a2c4a] border border-[#2a4575] flex items-center justify-center text-ui-damage shadow-[0_4px_12px_rgba(0,0,0,.4)]">
+        <div className="absolute -bottom-1.5 -right-1.5 w-7.5 h-7.5 rounded-full bg-[#1a2c4a] border border-[#2a4575] flex items-center justify-center text-ui-damage shadow-[0_4px_12px_rgba(0,0,0,.4)]">
           <CirclePlus size={16} strokeWidth={1.5} />
         </div>
       </div>
-      <div className="flex flex-col gap-2 items-center text-center max-w-[440px]">
+      <div className="flex flex-col gap-2 items-center text-center max-w-110">
         <span
-          className="text-[18px] font-semibold text-foreground"
+          className="text-4.5 font-semibold text-foreground"
           style={{ letterSpacing: -0.2 }}
         >
           Your library is empty
@@ -750,9 +747,9 @@ function EmptyMainPane() {
         <HBtn icon={CirclePlus} label="Create a team" primary />
         <HBtn icon={Upload} label="Import roster" />
       </div>
-      <div className="text-[10px] text-ui-zero font-mono tracking-[1px] uppercase flex items-center gap-[6px]">
+      <div className="text-2.5 text-ui-zero font-mono tracking-px uppercase flex items-center gap-1.5">
         <span>or press</span>
-        <kbd className="text-[9px] px-[5px] py-[1px] bg-card border border-border rounded-[2px] text-ui-damage">
+        <kbd className="text-[9px] px-1.25 py-px bg-card border border-border rounded-0.5 text-ui-damage">
           N
         </kbd>
         <span>to start</span>
@@ -770,7 +767,7 @@ function LibraryEmptyList() {
       <span className="text-[12px] font-semibold text-foreground">
         No teams yet
       </span>
-      <span className="text-[11px] text-muted max-w-[240px] leading-[1.5]">
+      <span className="text-[11px] text-muted max-w-60 leading-normal">
         Saved teams from the simulator will appear here.
       </span>
       <div className="mt-1">
@@ -797,10 +794,10 @@ function DetailCard({
       </div>
     )
   return (
-    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-[14px]">
+    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
       <DetailHero team={team} />
       <MemberCards team={team} />
-      <div className="grid grid-cols-2 gap-[14px] min-h-0">
+      <div className="grid grid-cols-2 gap-3.5 min-h-0">
         <Card
           title="Damage attribution"
           sub="Per character · contribution share"
@@ -857,7 +854,7 @@ function TeamTab({
         borderBottom: "1px solid var(--border)",
         transition: "background .12s",
       }}
-      className="relative h-[128px] cursor-pointer overflow-hidden"
+      className="relative h-32 cursor-pointer overflow-hidden"
     >
       <PortraitStrip
         members={team.members}
@@ -874,7 +871,7 @@ function TeamTab({
 
       {/* KPI gradient backdrop */}
       <div
-        className="absolute top-0 right-0 bottom-0 w-[250px] z-[2] pointer-events-none"
+        className="absolute top-0 right-0 bottom-0 w-62.5 z-2 pointer-events-none"
         style={{
           background:
             "linear-gradient(to left, oklch(0.1456 0.008 273.86) 40%, transparent 100%)",
@@ -883,12 +880,12 @@ function TeamTab({
 
       {/* Foreground content */}
       <div
-        className="absolute inset-0 z-[3] flex"
+        className="absolute inset-0 z-3 flex"
         style={{ textShadow: TEXT_OVER_PORTRAIT }}
       >
         {/* Left: bottom-aligned text */}
-        <div className="flex-1 min-w-0 flex flex-col justify-end pb-3 pt-[14px] pl-5 gap-[7px]">
-          <div className="flex items-center gap-[10px] flex-wrap">
+        <div className="flex-1 min-w-0 flex flex-col justify-end pb-3 pt-3.5 pl-5 gap-1.75">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span
               className="text-[19px] font-bold text-foreground leading-[1.1]"
               style={{ letterSpacing: -0.3 }}
@@ -896,7 +893,7 @@ function TeamTab({
               {team.name}
             </span>
             <span className="text-ui-zero text-[11px]">·</span>
-            <div className="flex items-center gap-[7px] text-[10.5px] text-muted font-mono">
+            <div className="flex items-center gap-1.75 text-[10.5px] text-muted font-mono">
               {team.members.map((m, i) => (
                 <span key={i} className="flex items-center gap-1">
                   <ElDot element={m.element} size={5} />
@@ -908,21 +905,21 @@ function TeamTab({
               ))}
             </div>
             <span className="text-ui-zero text-[11px]">·</span>
-            <span className="text-[10px] text-ui-zero font-mono whitespace-nowrap">
+            <span className="text-2.5 text-ui-zero font-mono whitespace-nowrap">
               {team.updated}
             </span>
           </div>
         </div>
 
         {/* Right: vertically centered KPIs */}
-        <div className="flex flex-col justify-center items-end gap-[10px] pt-[14px] pb-3 pr-[18px] flex-shrink-0">
+        <div className="flex flex-col justify-center items-end gap-2.5 pt-3.5 pb-3 pr-4.5 shrink-0">
           <Kpi
             label="dmg"
             value={team.totalDmg.toLocaleString()}
             accent="#f5cf4d"
             big
           />
-          <div className="flex gap-[18px] items-end">
+          <div className="flex gap-4.5 items-end">
             <Kpi
               label="dps"
               value={team.dps.toLocaleString()}
@@ -981,11 +978,11 @@ function LibraryList({
   return (
     <div
       style={{ width: LIBRARY_W }}
-      className="flex-shrink-0 border-l border-border bg-darkest flex flex-col min-h-0"
+      className="shrink-0 border-l border-border bg-darkest flex flex-col min-h-0"
     >
       {/* Header */}
-      <div className="px-[14px] py-[10px] border-b border-border flex items-center gap-3">
-        <div className="flex items-baseline gap-[6px]">
+      <div className="px-3.5 py-2.5 border-b border-border flex items-center gap-3">
+        <div className="flex items-baseline gap-1.5">
           <span className="text-[12px] font-semibold">Library</span>
           <span className="text-[11px] text-muted font-mono">
             {isEmpty ? "0" : `${sorted.length}/${teams.length}`}
@@ -993,16 +990,16 @@ function LibraryList({
         </div>
 
         {isEmpty ? (
-          <span className="flex-1 text-right text-[10px] text-ui-zero font-mono tracking-[0.6px] uppercase">
+          <span className="flex-1 text-right text-2.5 text-ui-zero font-mono tracking-[0.6px] uppercase">
             empty
           </span>
         ) : (
           <>
-            <label className="flex-1 flex items-center gap-[6px] bg-background border border-border rounded-sm px-2 py-1">
+            <label className="flex-1 flex items-center gap-1.5 bg-background border border-border rounded-sm px-2 py-1">
               <Pencil
                 size={11}
                 strokeWidth={1.5}
-                className="text-ui-zero flex-shrink-0"
+                className="text-ui-zero shrink-0"
               />
               <input
                 value={query}
@@ -1022,7 +1019,7 @@ function LibraryList({
               )}
             </label>
             <div className="flex items-center gap-1">
-              <span className="text-[9px] text-muted font-mono tracking-[1px] uppercase mr-1">
+              <span className="text-[9px] text-muted font-mono tracking-px uppercase mr-1">
                 sort
               </span>
               {["recent", "dmg", "dps"].map((opt) => (
@@ -1034,7 +1031,7 @@ function LibraryList({
                       "1px solid " +
                       (sort === opt ? "var(--border)" : "transparent"),
                   }}
-                  className={`text-[9px] px-[7px] py-[3px] rounded-[2px] cursor-pointer font-mono tracking-[0.5px] uppercase ${
+                  className={`text-[9px] px-1.75 py-0.75 rounded-0.5 cursor-pointer font-mono tracking-[0.5px] uppercase ${
                     sort === opt
                       ? "bg-card text-foreground"
                       : "bg-transparent text-muted"
@@ -1068,13 +1065,13 @@ function LibraryList({
         </div>
       )}
 
-      <div className="px-3 py-[6px] border-t border-border text-[10px] text-muted font-mono flex items-center gap-[6px]">
-        <kbd className="text-[9px] px-1 py-[1px] bg-card border border-border rounded-[2px]">
+      <div className="px-3 py-1.5 border-t border-border text-2.5 text-muted font-mono flex items-center gap-1.5">
+        <kbd className="text-[9px] px-1 py-px bg-card border border-border rounded-0.5">
           ↑↓
         </kbd>
         <span>navigate</span>
         <span className="text-ui-zero">·</span>
-        <kbd className="text-[9px] px-1 py-[1px] bg-card border border-border rounded-[2px]">
+        <kbd className="text-[9px] px-1 py-px bg-card border border-border rounded-0.5">
           ⏎
         </kbd>
         <span>{isEmpty ? "create" : "load into sim"}</span>
@@ -1098,15 +1095,15 @@ export function LibraryPage() {
   return (
     <div className="w-full h-screen bg-background text-foreground font-sans text-[12px] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="h-[52px] flex-shrink-0 bg-card border-b border-border flex items-center px-4 gap-[18px]">
-        <div className="flex items-center gap-[10px]">
-          <div className="w-[22px] h-[22px] rounded-[5px] bg-[linear-gradient(135deg,#8fb4ff,#3b6fff)] flex items-center justify-center text-[12px] font-extrabold text-[#0a0b0d]">
+      <div className="h-13 shrink-0 bg-card border-b border-border flex items-center px-4 gap-4.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-5.5 h-5.5 rounded-1.25 bg-[linear-gradient(135deg,#8fb4ff,#3b6fff)] flex items-center justify-center text-[12px] font-extrabold text-[#0a0b0d]">
             S
           </div>
-          <span className="text-[14px] font-semibold tracking-[0.4px]">
+          <span className="text-3.5 font-semibold tracking-[0.4px]">
             SIM/DECK
           </span>
-          <span className="text-[9px] text-muted font-mono px-[7px] py-[2px] border border-border rounded-[2px] tracking-[1.2px]">
+          <span className="text-[9px] text-muted font-mono px-1.75 py-0.5 border border-border rounded-0.5 tracking-[1.2px]">
             LIBRARY
           </span>
         </div>
@@ -1126,7 +1123,7 @@ export function LibraryPage() {
       {/* Body */}
       <div className="flex-1 flex min-h-0">
         {/* Left rail */}
-        <div className="w-14 flex-shrink-0 bg-darkest border-r border-border flex flex-col items-center py-3 gap-2"></div>
+        <div className="w-14 shrink-0 bg-darkest border-r border-border flex flex-col items-center py-3 gap-2"></div>
 
         {/* Main pane */}
         <div className="flex-1 flex flex-col min-w-0">
