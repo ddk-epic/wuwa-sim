@@ -1,0 +1,29 @@
+{
+  "id": 21050036,
+  "name": "Stellar Symphony",
+  "rarity": "SSR",
+  "weaponType": "Rectifier",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 33,
+      "max": 412.5
+    },
+    "sub": {
+      "name": "Energy Regen",
+      "base": 0.1712,
+      "max": 0.7704
+    }
+  },
+  "passive": {
+    "name": "Astral Evolvement",
+    "description": "Increase HP by 12%/15%/18%/21%/24%. Restore 8/10/12/14/16 Concerto Energy when casting Resonance Liberation. This effect can be triggered 1/1/1/1/1 time(s) every 20/20/20/20/20s. When casting Resonance Skill that heals, increase nearby party members' ATK by 14%/17.5%/21%/24.5%/28% for 30/30/30/30/30s. Effects of the same name cannot be stacked.",
+    "params": [
+      [0.12, 8, 20, 1, 0.14, 30],
+      [0.15, 10, 20, 1, 0.175, 30],
+      [0.18, 12, 20, 1, 0.21, 30],
+      [0.21, 14, 20, 1, 0.245, 30],
+      [0.24, 16, 20, 1, 0.28, 30]
+    ]
+  }
+}
