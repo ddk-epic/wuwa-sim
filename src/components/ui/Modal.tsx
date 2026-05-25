@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import type { ReactNode } from "react"
+import { XIcon } from "lucide-react"
 
 interface ModalProps {
   onClose: () => void
@@ -11,11 +12,11 @@ interface ModalProps {
   children: ReactNode
 }
 
-const DEFAULT_PANEL = {
-  centered:
-    "bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-sm w-full mx-4",
-  fullscreen:
-    "w-full max-w-5xl bg-gray-900 rounded-lg border border-gray-700 flex flex-col",
+const BASE_PANEL = "bg-card rounded-2xl p-5"
+
+const DEFAULT_LAYOUT = {
+  centered: "max-w-sm w-full mx-4",
+  fullscreen: "w-full max-w-5xl flex flex-col",
 } as const
 
 const OVERLAY = {
@@ -41,15 +42,15 @@ export function Modal({
     return () => window.removeEventListener("keydown", onKey)
   }, [onClose])
 
-  const panel = panelClassName ?? DEFAULT_PANEL[variant]
+  const panel = `${BASE_PANEL} ${panelClassName ?? DEFAULT_LAYOUT[variant]}`
 
   return (
     <div className={OVERLAY[variant]} onClick={onClose}>
       <div className={panel} onClick={(e) => e.stopPropagation()}>
         {title !== undefined && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
+          <div className="flex items-center justify-between pb-5 shrink-0">
             <div>
-              <h2 className="text-xl font-bold">{title}</h2>
+              <h2 className="text-xl font-semibold text-foreground">{title}</h2>
               {subtitle !== undefined && (
                 <p className="text-gray-400 text-sm mt-0.5">{subtitle}</p>
               )}
@@ -57,11 +58,11 @@ export function Modal({
             <div className="flex items-center gap-3">
               {headerExtra}
               <button
-                className="text-gray-400 hover:text-white transition-colors text-xl leading-none"
+                className="text-muted-foreground hover:text-foreground transition-colors"
                 onClick={onClose}
                 aria-label="Close"
               >
-                ✕
+                <XIcon className="w-6 h-6" />
               </button>
             </div>
           </div>
