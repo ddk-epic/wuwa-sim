@@ -85,6 +85,7 @@ export function formatStatComponents(
 export interface FormulaBreakdown {
   scalingValue: number
   multiplier: number
+  bonusMultiplier: number
   dmgBonus: number
   deepen: number
   critFactor: number
@@ -130,9 +131,11 @@ export function computeFormulaBreakdown(
   const resMult =
     effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
 
+  const bonusMultiplier = snap.bonusMultiplier
   const result = Math.round(
     scalingValue *
       ev.multiplier *
+      (1 + bonusMultiplier) *
       (1 + dmgBonus) *
       (1 + deepen) *
       critFactor *
@@ -143,6 +146,7 @@ export function computeFormulaBreakdown(
   return {
     scalingValue,
     multiplier: ev.multiplier,
+    bonusMultiplier,
     dmgBonus,
     deepen,
     critFactor,

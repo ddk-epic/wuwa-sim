@@ -18,6 +18,7 @@ export type StatPath =
         | "energyRechargePct"
         | "forteRechargePct"
         | "healingBonus"
+        | "bonusMultiplier"
     }
   | { stat: "elementBonus"; key: Element }
   | { stat: "skillTypeBonus"; key: SkillType }

@@ -50,6 +50,7 @@ export interface StatTable {
   energyRechargePct: number
   forteRechargePct: number
   healingBonus: number
+  bonusMultiplier: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -76,5 +77,6 @@ export function emptyStatTable(): StatTable {
     energyRechargePct: 0,
     forteRechargePct: 0,
     healingBonus: 0,
+    bonusMultiplier: 0,
   }
 }

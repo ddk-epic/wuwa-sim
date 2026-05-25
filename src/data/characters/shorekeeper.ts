@@ -7,16 +7,116 @@ export const shorekeeper = {
   weaponType: "Rectifier",
   rarity: "SSR",
   template: {
-    weapon: "",
-    echo: "",
-    echoSet: "",
+    weapon: "Stellar Symphony",
+    echo: "Fallacy of No Return",
+    echoSet: "Rejuvenating Glow",
   },
   stats: {
     base: { hp: 1337, atk: 23, def: 90 },
     max: { hp: 16712.5, atk: 287.5, def: 1099.998 },
   },
   skillTreeBonuses: ["Healing Bonus", "HP"],
-  buffs: [],
+  buffs: [
+    {
+      id: "char.shorekeeper.s3.infinity-awaits-me",
+      name: "S3: Infinity Awaits Me",
+      description: "End Loop cast restores 20 Concerto once per 25s.",
+      requiresSequence: 3,
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        stageId: "End Loop::",
+      },
+      cooldown: 25,
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 20 },
+        },
+      ],
+    },
+    {
+      id: "char.shorekeeper.s4.overflowing-quietude",
+      name: "S4: Overflowing Quietude",
+      description: "Resonance Skill cast grants Healing Bonus +70% for 0.5s.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        skillType: "Resonance Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 0.5 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "healingBonus" },
+          value: { kind: "const", v: 0.7 },
+        },
+      ],
+    },
+    {
+      id: "char.shorekeeper.s6.discernment-dmg",
+      name: "S6: Discernment (DMG)",
+      description: "Discernment cast grants Bonus Multiplier +42% for 0.5s.",
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        stageId: "Proof of Existence::Discernment",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 0.5 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 0.42 },
+        },
+      ],
+    },
+    {
+      id: "char.shorekeeper.s6.discernment-critdmg",
+      name: "S6: Discernment (Crit DMG)",
+      description: "Discernment cast grants Crit DMG +500% for 0.5s.",
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        stageId: "Proof of Existence::Discernment",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 0.5 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critDmg" },
+          value: { kind: "const", v: 5.0 },
+        },
+      ],
+    },
+    {
+      id: "char.shorekeeper.intro.guaranteed-crit",
+      name: "Intro: Guaranteed Crit",
+      description: "Discernment cast grants Crit Rate +100% for 0.5s.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1505,
+        stageId: "Proof of Existence::Discernment",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 0.5 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: { kind: "const", v: 1.0 },
+        },
+      ],
+    },
+  ],
   skills: [
     {
       id: 1002501,

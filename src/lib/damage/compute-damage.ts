@@ -63,6 +63,7 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const raw =
     ctx.multiplier *
     base *
+    (1 + stats.bonusMultiplier) *
     (1 + dmgBonus) *
     (1 + deepen) *
     critFactor *

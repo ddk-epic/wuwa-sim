@@ -234,4 +234,18 @@ describe("computeDamage", () => {
       ),
     ).toBe(Math.round(1000 * DEF_MULT_CONST * 1.05))
   })
+
+  it("bonusMultiplier is a separate multiplicative layer between multiplier and dmgBonus", () => {
+    const s = stats({ bonusMultiplier: 0.42 })
+    expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
+      Math.round(1 * 1000 * 1.42 * DEFRES),
+    )
+  })
+
+  it("bonusMultiplier and dmgBonus are independent multiplicative factors", () => {
+    const s = stats({ bonusMultiplier: 0.5, allDmgBonus: 0.3 })
+    expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
+      Math.round(1 * 1000 * 1.5 * 1.3 * DEFRES),
+    )
+  })
 })
