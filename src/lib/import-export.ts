@@ -1,4 +1,4 @@
-import * as base91 from "base91"
+import { decode as base91Decode, encode as base91Encode } from "./base91"
 import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
@@ -160,7 +160,7 @@ export function encodePayload(payload: ImportExportPayload): string {
     }
   }
 
-  return base91.encode(w.bytes())
+  return base91Encode(w.bytes())
 }
 
 // ---- Decode ----
@@ -179,7 +179,7 @@ function readEntry(r: Reader): TimelineEntry {
 export function decodePayload(encoded: string): ImportExportPayload {
   let data: Uint8Array
   try {
-    data = new Uint8Array(base91.decode(encoded.trim()))
+    data = base91Decode(encoded.trim())
   } catch {
     throw new Error("Invalid export code")
   }
