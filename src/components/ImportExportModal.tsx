@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { DownloadIcon } from "lucide-react"
+import { useState, useRef } from "react"
+import { CopyIcon, CheckIcon } from "lucide-react"
 import { Modal } from "./ui/Modal"
 
 interface ImportExportModalProps {
@@ -16,14 +16,30 @@ export function ImportExportModal({
   importError,
 }: ImportExportModalProps) {
   const [importValue, setImportValue] = useState("")
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleCopy(e: React.MouseEvent<HTMLButtonElement>) {
+    navigator.clipboard.writeText(exportString)
+    const btn = e.currentTarget
+    btn.dataset.copied = "true"
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current)
+    copyTimeoutRef.current = setTimeout(() => {
+      btn.removeAttribute("data-copied")
+    }, 3000)
+  }
 
   return (
-    <Modal variant="centered" onClose={onClose} title="Import / Export">
+    <Modal
+      variant="centered"
+      onClose={onClose}
+      title="Import / Export"
+      panelClassName="w-full min-w-xl max-w-3xl"
+    >
       <div className="flex flex-col gap-6 pt-4">
         <section className="flex flex-col gap-2">
           <h3 className="text-sm font-semibold text-gray-300">Import</h3>
           <textarea
-            className="w-full h-24 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-100 resize-none focus:outline-none focus:border-gray-500 placeholder:text-gray-600"
+            className="w-full h-42 bg-darkest border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-300 resize-none focus:outline-none focus:border-gray-500 placeholder:text-gray-600"
             placeholder="Paste build code here…"
             spellCheck={false}
             value={importValue}
@@ -43,17 +59,19 @@ export function ImportExportModal({
         <section className="flex flex-col gap-2">
           <h3 className="text-sm font-semibold text-gray-300">Export</h3>
           <textarea
-            className="w-full h-24 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-100 resize-none focus:outline-none"
+            className="w-full h-42 bg-darkest border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-300 resize-none focus:outline-none"
             readOnly
             value={exportString}
             spellCheck={false}
           />
           <button
-            className="self-end flex items-center gap-1 px-3 py-1.5 text-sm font-mono rounded border border-border text-muted-foreground hover:text-foreground"
-            onClick={() => navigator.clipboard.writeText(exportString)}
+            className="self-end flex items-center gap-1 px-3 py-1.5 text-sm font-mono rounded border border-border text-muted-foreground hover:text-foreground "
+            onClick={handleCopy}
           >
-            <DownloadIcon className="w-4 h-4" />
-            Copy
+            <CopyIcon className="w-4 h-4 in-data-copied:hidden" />
+            <CheckIcon className="w-4 h-4 hidden in-data-copied:block text-green-400" />
+            <span className="in-data-copied:hidden">Copy</span>
+            <span className="hidden in-data-copied:block">Copied!</span>
           </button>
         </section>
       </div>
