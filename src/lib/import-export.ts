@@ -2,6 +2,7 @@ import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
 import { ALL_WEAPONS } from "#/data/weapons"
+import { makeStageId } from "#/lib/stage"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 
@@ -86,14 +87,19 @@ const COST4_MAINS = ["scaling", "cr", "cd"] as const
 const COST3_MAINS = ["scaling", "er", "elemDmg"] as const
 const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
 
-// Sorted list of all stageIds from character buff triggers — index is the encoded byte.
+// Sorted list of all stageIds produced by makeStageId across all character skills and echoes.
 const ALL_STAGE_IDS: readonly string[] = (() => {
   const ids = new Set<string>()
   for (const char of ALL_CHARACTERS) {
-    for (const buff of char.buffs) {
-      const sid = (buff.trigger as { stageId?: string | string[] }).stageId
-      if (!sid) continue
-      for (const s of Array.isArray(sid) ? sid : [sid]) ids.add(s)
+    for (const skill of char.skills) {
+      for (const stage of skill.stages) {
+        ids.add(makeStageId(skill.name, stage.newName))
+      }
+    }
+  }
+  for (const echo of ALL_ECHOES) {
+    for (const stage of echo.skill.stages) {
+      ids.add(makeStageId(echo.name, stage.newName))
     }
   }
   return [...ids].sort()
