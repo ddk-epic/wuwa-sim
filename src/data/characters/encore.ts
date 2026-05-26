@@ -559,7 +559,7 @@ export const encore = {
       stages: [
         {
           name: "Skill DMG",
-          newName: "Cosmos Rave",
+          newName: "",
           value: "",
           actionTime: 0,
           animationFrames: 136,
