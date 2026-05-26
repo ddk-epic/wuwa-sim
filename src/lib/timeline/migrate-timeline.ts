@@ -5,7 +5,7 @@ import type {
 } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import { getCharacterById } from "../loadout/catalog"
-import { makeStageId, stageLabel } from "../stage"
+import { makeCharStageId, stageLabel } from "../stage"
 
 type LegacyEntry = {
   id?: string
@@ -16,6 +16,31 @@ type LegacyEntry = {
   variantKind?: VariantKind
 }
 
+function migrateStageId(stageId: string, characterId: number): string {
+  if (stageId.startsWith("char.") || stageId.startsWith("echo.")) return stageId
+  if (!stageId.includes("::")) return stageId
+  const sep = stageId.indexOf("::")
+  const skillName = stageId.slice(0, sep)
+  const stageName = stageId.slice(sep + 2)
+  const character = getCharacterById(characterId)
+  if (character) {
+    for (const skill of character.skills) {
+      if (skill.name === skillName) {
+        const stage = skill.stages.find((s) => (s.newName ?? "_") === stageName)
+        if (stage) {
+          return makeCharStageId(
+            character.name,
+            skill.type,
+            skill.name,
+            stage.newName,
+          )
+        }
+      }
+    }
+  }
+  return ""
+}
+
 export function migrateEntries(raw: unknown[]): TimelineEntry[] {
   return raw.map((r) => {
     const legacy = r as LegacyEntry
@@ -24,8 +49,9 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
       typeof legacy.characterId === "number" ? legacy.characterId : 0
     const variantKind = legacy.variantKind
 
-    if (typeof legacy.stageId === "string") {
-      return { id, characterId, stageId: legacy.stageId, variantKind }
+    if (typeof legacy.stageId === "string" && legacy.stageId !== "") {
+      const stageId = migrateStageId(legacy.stageId, characterId)
+      return { id, characterId, stageId, variantKind }
     }
 
     const { skillType, skillName } = legacy
@@ -49,7 +75,12 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
           return {
             id,
             characterId,
-            stageId: makeStageId(skill.name, stage.newName),
+            stageId: makeCharStageId(
+              character.name,
+              skill.type,
+              skill.name,
+              stage.newName,
+            ),
             variantKind,
           }
         }

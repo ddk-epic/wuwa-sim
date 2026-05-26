@@ -66,7 +66,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "Frigid Light::Stage 5",
+        stageId: "char.sanhua.basic-attack.frigid-light.stage-5",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 8 },
@@ -143,7 +143,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       condition: {
@@ -177,7 +177,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       condition: {
@@ -211,7 +211,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       condition: {
@@ -246,7 +246,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "Frigid Light::Stage 5",
+        stageId: "char.sanhua.basic-attack.frigid-light.stage-5",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -288,7 +288,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -309,7 +309,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       target: { kind: "self" },
@@ -336,7 +336,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       target: { kind: "self" },
@@ -363,7 +363,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "Clarity of Mind::Detonate",
+        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
         source: "self",
       },
       target: { kind: "self" },

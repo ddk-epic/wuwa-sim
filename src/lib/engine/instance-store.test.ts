@@ -276,36 +276,44 @@ describe("matchesTrigger — synthetic source filtering", () => {
   })
 })
 
-describe("matchesTrigger — stageId + hitIndex filters (#94, #130)", () => {
+describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
+  const BASE_STAGE =
+    "char.encore.basic-attack.wooly-attack.stage-5-wooly-strike"
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
     skillType: "Basic Attack",
     dmgType: "Damage",
     frame: 0,
-    stageId: "Wooly Attack::Stage 5 - Wooly Strike",
-    hitIndex: 3,
+    stageId: `${BASE_STAGE}.3`,
   }
 
-  it("positive match: all filters match", () => {
+  it("positive match: trigger stageId is exact hit stageId", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: "Wooly Attack::Stage 5 - Wooly Strike",
-      hitIndex: 3,
+      stageId: `${BASE_STAGE}.3`,
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
   })
 
-  it("positive match: stageId array includes event stageId", () => {
+  it("positive match: trigger stageId is base (prefix) — matches any hit", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      stageId: BASE_STAGE,
+    }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
+  })
+
+  it("positive match: stageId array includes base stage prefix", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       stageId: [
-        "Wooly Attack::Stage 5 - Wooly Strike",
-        "Wooly Attack::Heavy Attack",
+        BASE_STAGE,
+        "char.encore.basic-attack.wooly-attack.heavy-attack",
       ],
-      hitIndex: 3,
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
   })
@@ -314,8 +322,7 @@ describe("matchesTrigger — stageId + hitIndex filters (#94, #130)", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: "Impermanence Heron::",
-      hitIndex: 3,
+      stageId: "echo.impermanence-heron._",
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
@@ -324,24 +331,23 @@ describe("matchesTrigger — stageId + hitIndex filters (#94, #130)", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: "Wooly Attack::Stage 5 - Wooly Strike",
+      stageId: BASE_STAGE,
     }
     expect(
       matchesTrigger(trigger, { ...baseEvent, stageId: undefined }, 1),
     ).toBe(false)
   })
 
-  it("negative match: wrong hitIndex", () => {
+  it("negative match: trigger requires specific hit index but event is different hit", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: "Wooly Attack::Stage 5 - Wooly Strike",
-      hitIndex: 2,
+      stageId: `${BASE_STAGE}.2`,
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
 
-  it("no-filter passthrough: absent stageId and hitIndex match any event", () => {
+  it("no-filter passthrough: absent stageId matches any event", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
@@ -350,19 +356,18 @@ describe("matchesTrigger — stageId + hitIndex filters (#94, #130)", () => {
     expect(
       matchesTrigger(
         trigger,
-        { ...baseEvent, stageId: "Inferno Rider::", hitIndex: 1 },
+        { ...baseEvent, stageId: "echo.inferno-rider._.1" },
         1,
       ),
     ).toBe(true)
   })
 
-  it("combined dmgType + stageId + hitIndex all must match", () => {
+  it("combined dmgType + stageId all must match", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       dmgType: "Damage",
-      stageId: "Wooly Attack::Stage 5 - Wooly Strike",
-      hitIndex: 3,
+      stageId: BASE_STAGE,
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
     expect(matchesTrigger(trigger, { ...baseEvent, dmgType: "Other" }, 1)).toBe(

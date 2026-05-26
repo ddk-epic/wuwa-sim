@@ -8,7 +8,8 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import {
   findStageByEntry,
-  makeStageId,
+  makeCharStageId,
+  makeEchoStageId,
   resolveStageExecution,
   STAGE_CAST_NAME,
 } from "./stage"
@@ -31,7 +32,7 @@ const baseChar = (
   overrides: Partial<EnrichedCharacter> = {},
 ): EnrichedCharacter => ({
   id: 1,
-  name: "TestChar",
+  name: "Test Char",
   element: "Fusion",
   weaponType: "Sword",
   rarity: "5",
@@ -62,7 +63,7 @@ const baseChar = (
 
 const baseEcho = (overrides: Partial<EnrichedEcho> = {}): EnrichedEcho => ({
   id: 10,
-  name: "EchoSkill",
+  name: "Echo Skill",
   cost: 3,
   element: "Glacio",
   sets: ["TestSet"],
@@ -99,20 +100,57 @@ function makeStage(
   return { name: "Stage", value: "100%", actionTime, damage, variants }
 }
 
-describe("makeStageId", () => {
-  it("returns baseName::_ when newName is undefined", () => {
-    expect(makeStageId("Normal Attack")).toBe("Normal Attack::_")
+describe("makeCharStageId", () => {
+  it("returns char.<charName>.<skillType>.<skillName>._ when stageName is undefined", () => {
+    expect(
+      makeCharStageId("TestChar", "Normal Attack", "Normal Attack", undefined),
+    ).toBe("char.test-char.basic-attack.normal-attack._")
   })
 
-  it("returns baseName::newName when newName is provided", () => {
-    expect(makeStageId("Normal Attack", "3rd")).toBe("Normal Attack::3rd")
+  it("returns char.<charName>.<skillType>.<skillName>.<stageName> when stageName is provided", () => {
+    expect(
+      makeCharStageId("TestChar", "Normal Attack", "Normal Attack", "3rd"),
+    ).toBe("char.test-char.basic-attack.normal-attack.3rd")
+  })
+
+  it("maps Normal Attack category to basic-attack skill type", () => {
+    expect(makeCharStageId("A", "Normal Attack", "Skill", "s")).toBe(
+      "char.a.basic-attack.skill.s",
+    )
+  })
+
+  it("kebab-cases names with spaces and special chars", () => {
+    expect(
+      makeCharStageId(
+        "Black & White",
+        "Forte Circuit",
+        "Mid Attack: Stage 1",
+        "Hit",
+      ),
+    ).toBe("char.black-white.forte-circuit.mid-attack-stage-1.hit")
+  })
+})
+
+describe("makeEchoStageId", () => {
+  it("returns echo.<echoName>._ when stageName is undefined", () => {
+    expect(makeEchoStageId("EchoSkill", undefined)).toBe("echo.echo-skill._")
+  })
+
+  it("returns echo.<echoName>.<stageName> when stageName is provided", () => {
+    expect(makeEchoStageId("EchoSkill", "active")).toBe(
+      "echo.echo-skill.active",
+    )
   })
 })
 
 describe("findStageByEntry — character skill", () => {
   it("resolves a stage with no newName (uses _ sentinel)", () => {
     testCharacters = [baseChar()]
-    const entry = { id: "e1", characterId: 1, stageId: "Normal Attack::_" }
+    const entry = {
+      id: "e1",
+      characterId: 1,
+      stageId: "char.test-char.basic-attack.normal-attack._",
+    }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
       emptyLoadout,
@@ -125,7 +163,11 @@ describe("findStageByEntry — character skill", () => {
 
   it("resolves a stage with an explicit newName", () => {
     testCharacters = [baseChar()]
-    const entry = { id: "e2", characterId: 1, stageId: "Normal Attack::3rd" }
+    const entry = {
+      id: "e2",
+      characterId: 1,
+      stageId: "char.test-char.basic-attack.normal-attack.3rd",
+    }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
       emptyLoadout,
@@ -140,7 +182,7 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e3",
       characterId: 1,
-      stageId: "Normal Attack::missing",
+      stageId: "char.test-char.basic-attack.normal-attack.missing",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -152,7 +194,11 @@ describe("findStageByEntry — character skill", () => {
 
   it("returns null when characterId is not in catalog", () => {
     testCharacters = []
-    const entry = { id: "e4", characterId: 99, stageId: "Normal Attack::_" }
+    const entry = {
+      id: "e4",
+      characterId: 99,
+      stageId: "char.test-char.basic-attack.normal-attack._",
+    }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
       emptyLoadout,
@@ -176,7 +222,7 @@ describe("findStageByEntry — character skill", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "2nd",
-                requiresStageId: "Normal Attack::_",
+                requiresStageId: "char.test-char.basic-attack.normal-attack._",
               },
             ],
             damage: [],
@@ -184,13 +230,19 @@ describe("findStageByEntry — character skill", () => {
         ],
       }),
     ]
-    const entry = { id: "e5", characterId: 1, stageId: "Normal Attack::2nd" }
+    const entry = {
+      id: "e5",
+      characterId: 1,
+      stageId: "char.test-char.basic-attack.normal-attack.2nd",
+    }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
       emptyLoadout,
       emptyLoadout,
     ])
-    expect(result?.requiresStageId).toBe("Normal Attack::_")
+    expect(result?.requiresStageId).toBe(
+      "char.test-char.basic-attack.normal-attack._",
+    )
   })
 })
 
@@ -203,7 +255,11 @@ describe("findStageByEntry — echo skill", () => {
       emptyLoadout,
       emptyLoadout,
     ]
-    const entry = { id: "e6", characterId: 1, stageId: "EchoSkill::active" }
+    const entry = {
+      id: "e6",
+      characterId: 1,
+      stageId: "echo.echo-skill.active",
+    }
     const result = findStageByEntry(entry, slots, loadouts)
     expect(result).not.toBeNull()
     expect(result?.skillType).toBe("Echo Skill")
@@ -212,7 +268,11 @@ describe("findStageByEntry — echo skill", () => {
 
   it("returns null when no echo is equipped", () => {
     testCharacters = [baseChar()]
-    const entry = { id: "e7", characterId: 1, stageId: "EchoSkill::active" }
+    const entry = {
+      id: "e7",
+      characterId: 1,
+      stageId: "echo.echo-skill.active",
+    }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
       emptyLoadout,
@@ -255,7 +315,11 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
   it("'Skill DMG' stage with parent Skill.concerto=N yields ResolvedStage.concerto=N", () => {
     testCharacters = [makeSkillChar(30, undefined, STAGE_CAST_NAME)]
     const result = findStageByEntry(
-      { id: "e1", characterId: 1, stageId: "Resonance Skill::" },
+      {
+        id: "e1",
+        characterId: 1,
+        stageId: "char.test-char.resonance-skill.resonance-skill._",
+      },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
     )
@@ -265,7 +329,11 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
   it("non-'Skill DMG' stage ignores parent Skill.concerto", () => {
     testCharacters = [makeSkillChar(30, undefined, "Stage 2", "2nd")]
     const result = findStageByEntry(
-      { id: "e2", characterId: 1, stageId: "Resonance Skill::2nd" },
+      {
+        id: "e2",
+        characterId: 1,
+        stageId: "char.test-char.resonance-skill.resonance-skill.2nd",
+      },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
     )
@@ -275,7 +343,11 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
   it("'Skill DMG' stage own concerto sums with parent Skill.concerto", () => {
     testCharacters = [makeSkillChar(30, 5, STAGE_CAST_NAME)]
     const result = findStageByEntry(
-      { id: "e3", characterId: 1, stageId: "Resonance Skill::" },
+      {
+        id: "e3",
+        characterId: 1,
+        stageId: "char.test-char.resonance-skill.resonance-skill._",
+      },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
     )
@@ -288,7 +360,7 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
       {
         id: "e4",
         characterId: 1,
-        stageId: "Resonance Skill::Custom",
+        stageId: "char.test-char.resonance-skill.resonance-skill.custom",
       },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],

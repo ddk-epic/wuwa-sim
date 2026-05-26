@@ -8,7 +8,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "../../lib/loadout/catalog"
-import { makeStageId } from "../../lib/stage"
+import { makeCharStageId, makeEchoStageId } from "../../lib/stage"
 
 export interface FocusedStage {
   key: string
@@ -67,7 +67,13 @@ export function getFocusedStageCatalog(
       skill.stages
         .filter((stage) => stage.name !== "" && !stage.hidden)
         .map((stage, i) =>
-          buildCharacterStage(skill, character.id, stage, `${skill.id}-${i}`),
+          buildCharacterStage(
+            character.name,
+            skill,
+            character.id,
+            stage,
+            `${skill.id}-${i}`,
+          ),
         ),
     )
 
@@ -101,12 +107,13 @@ function buildEchoStage(
     durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
-      stageId: makeStageId(echoName, stage.newName),
+      stageId: makeEchoStageId(echoName, stage.newName),
     },
   }
 }
 
 function buildCharacterStage(
+  charName: string,
   skill: { name: string; type: SkillCategory },
   characterId: number,
   stage: EnrichedSkillAttribute,
@@ -122,7 +129,7 @@ function buildCharacterStage(
     durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
-      stageId: makeStageId(skill.name, stage.newName),
+      stageId: makeCharStageId(charName, skill.type, skill.name, stage.newName),
     },
   }
 }

@@ -7,9 +7,9 @@ export const camellya = {
   weaponType: "Sword",
   rarity: "SSR",
   template: {
-    weapon: "",
-    echo: "",
-    echoSet: "",
+    weapon: "Red Spring",
+    echo: "Nightmare: Crownless",
+    echoSet: "Havoc Eclipse",
   },
   stats: {
     base: { hp: 826, atk: 36, def: 95 },

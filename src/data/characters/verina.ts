@@ -81,8 +81,7 @@ export const verina = {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId: "Arboreal Flourish::",
-        hitIndex: 1,
+        stageId: "char.verina.resonance-liberation.arboreal-flourish._.1",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 12 },
@@ -148,10 +147,10 @@ export const verina = {
         event: "skillCast",
         characterId: 1503,
         stageId: [
-          "Starflower Blooms::Heavy Attack",
-          "Starflower Blooms::Mid-air Attack: Stage 1",
-          "Starflower Blooms::Mid-air Attack: Stage 2",
-          "Starflower Blooms::Mid-air Attack: Stage 3",
+          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
         ],
       },
       condition: {
@@ -196,13 +195,12 @@ export const verina = {
       id: "char.verina.s2.concerto-grant",
       name: "S2: Concerto Restore",
       description:
-        "Botany Experiment landing restores 10 Concerto Energy once per cast (hitIndex 1).",
+        "Botany Experiment landing restores 10 Concerto Energy once per cast (hit 1).",
       requiresSequence: 2,
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId: "Botany Experiment::",
-        hitIndex: 1,
+        stageId: "char.verina.resonance-skill.botany-experiment._.1",
       },
       effects: [
         {
@@ -262,10 +260,10 @@ export const verina = {
         characterId: 1503,
         skillType: "Forte Circuit",
         stageId: [
-          "Starflower Blooms::Heavy Attack",
-          "Starflower Blooms::Mid-air Attack: Stage 1",
-          "Starflower Blooms::Mid-air Attack: Stage 2",
-          "Starflower Blooms::Mid-air Attack: Stage 3",
+          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
         ],
       },
       target: { kind: "self" },
@@ -289,10 +287,10 @@ export const verina = {
         characterId: 1503,
         skillType: "Forte Circuit",
         stageId: [
-          "Starflower Blooms::Heavy Attack",
-          "Starflower Blooms::Mid-air Attack: Stage 1",
-          "Starflower Blooms::Mid-air Attack: Stage 2",
-          "Starflower Blooms::Mid-air Attack: Stage 3",
+          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
+          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
         ],
       },
       effects: [

@@ -34,7 +34,6 @@ export type EngineEvent =
       synthetic?: boolean
       frame: number
       stageId?: string
-      hitIndex?: number
       /** Per-hit energy gained by the actor. Implicit `resource` effect. */
       energy?: number
       /** Per-hit concerto gained by the actor. Implicit `resource` effect. */
@@ -50,7 +49,6 @@ export type EngineEvent =
       skillType: SkillType
       frame: number
       stageId?: string
-      hitIndex?: number
     }
   | { kind: "swapIn"; characterId: number; frame: number }
   | { kind: "swapOut"; characterId: number; frame: number }
@@ -538,10 +536,7 @@ export function matchesTrigger(
       const ids = Array.isArray(trigger.stageId)
         ? trigger.stageId
         : [trigger.stageId]
-      if (!ids.includes(sid)) return false
-    }
-    if (trigger.hitIndex !== undefined && trigger.hitIndex !== event.hitIndex) {
-      return false
+      if (!ids.some((t) => sid === t || sid.startsWith(t + "."))) return false
     }
     if (trigger.sourceBuffId !== undefined) {
       const ids = Array.isArray(trigger.sourceBuffId)
@@ -574,10 +569,7 @@ export function matchesTrigger(
       const ids = Array.isArray(trigger.stageId)
         ? trigger.stageId
         : [trigger.stageId]
-      if (!ids.includes(sid)) return false
-    }
-    if (trigger.hitIndex !== undefined && trigger.hitIndex !== event.hitIndex) {
-      return false
+      if (!ids.some((t) => sid === t || sid.startsWith(t + "."))) return false
     }
     return true
   }

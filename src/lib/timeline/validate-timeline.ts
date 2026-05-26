@@ -125,10 +125,12 @@ export function validateTimeline(
         if (prev.characterId !== entry.characterId) continue
         if (comboAllows.length > 0) {
           const prevResolved = findStageByEntry(prev, slots, loadouts)
-          const skillBaseName = prev.stageId.split("::")[0]
+          const skillBaseName = prev.stageId.split(".")[3] ?? ""
           if (
             prevResolved?.skillType === "Movement" &&
-            (comboAllows as readonly string[]).includes(skillBaseName)
+            (comboAllows as readonly string[]).some(
+              (a) => a.toLowerCase() === skillBaseName,
+            )
           ) {
             continue
           }

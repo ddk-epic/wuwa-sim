@@ -14,6 +14,16 @@ import { getCharacterById, getEchoById } from "./loadout/catalog"
 
 export const STAGE_CAST_NAME = "Skill DMG"
 
+function toKebab(s: string | undefined): string {
+  if (!s) return "_"
+  const k = s
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+  return k || "_"
+}
+
 export interface ActionTimeStage {
   actionTime: number
   variants?: Partial<Record<VariantKind, StageVariant>>
@@ -36,8 +46,23 @@ export interface ResolvedStage {
   comboAllows?: readonly MovementKind[]
 }
 
-export function makeStageId(baseName: string, newName?: string): string {
-  return `${baseName}::${newName ?? "_"}`
+/** `char.<charName>.<skillType>.<skillName>.<stageName>` */
+export function makeCharStageId(
+  charName: string,
+  skillCategory: SkillCategory,
+  skillName: string,
+  stageName: string | undefined,
+): string {
+  const skillType = categoryToSkillType(skillCategory)
+  return `char.${toKebab(charName)}.${toKebab(skillType)}.${toKebab(skillName)}.${toKebab(stageName)}`
+}
+
+/** `echo.<echoName>.<stageName>` */
+export function makeEchoStageId(
+  echoName: string,
+  stageName: string | undefined,
+): string {
+  return `echo.${toKebab(echoName)}.${toKebab(stageName)}`
 }
 
 export function stageLabel(skillName: string, newName?: string): string {
@@ -68,7 +93,10 @@ export function findStageByEntry(
   if (character) {
     for (const skill of character.skills) {
       for (const s of skill.stages) {
-        if (makeStageId(skill.name, s.newName) === entry.stageId) {
+        if (
+          makeCharStageId(character.name, skill.type, skill.name, s.newName) ===
+          entry.stageId
+        ) {
           const comboAllows =
             s.requiresStageId !== undefined
               ? (
@@ -88,7 +116,7 @@ export function findStageByEntry(
               (s.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
             resonanceCost: skill.resonanceCost,
             damage: s.damage ?? [],
-            skillType: s.damage?.[0]?.type ?? categoryToSkillType(skill.type),
+            skillType: categoryToSkillType(skill.type),
             skillName: isCastStage
               ? skill.name
               : stageLabel(skill.name, s.newName),
@@ -105,7 +133,7 @@ export function findStageByEntry(
   const echo = echoId !== null ? getEchoById(echoId) : null
   if (echo) {
     for (const s of echo.skill.stages) {
-      if (makeStageId(echo.name, s.newName) === entry.stageId) {
+      if (makeEchoStageId(echo.name, s.newName) === entry.stageId) {
         return {
           stage: s,
           stageId: entry.stageId,

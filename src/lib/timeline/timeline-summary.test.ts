@@ -121,7 +121,12 @@ function tlEntry(
 }
 
 function normalAttack(characterId: number, id?: string): TimelineEntry {
-  return tlEntry(characterId, "Normal Attack::_", id)
+  const charName = characterId === 2 ? "test-b" : "test-a"
+  return tlEntry(
+    characterId,
+    `char.${charName}.basic-attack.normal-attack._`,
+    id,
+  )
 }
 
 describe("getTimelineSummary — empty", () => {
@@ -161,7 +166,9 @@ describe("getTimelineSummary — single entry", () => {
 
   it("damage is null when stage has no damage entries", () => {
     testCharacters = [charA]
-    const result = getTimelineSummary([tlEntry(1, "No Damage Skill::_")])
+    const result = getTimelineSummary([
+      tlEntry(1, "char.test-a.forte-circuit.no-damage-skill._"),
+    ])
     expect(result.rows[0].damage).toBeNull()
     expect(result.totalDamage).toBe(0)
   })
@@ -172,8 +179,8 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       normalAttack(1, "a"),
-      tlEntry(1, "Heavy Attack::_", "b"),
-      tlEntry(1, "Resonance Skill::_", "c"),
+      tlEntry(1, "char.test-a.heavy-attack.heavy-attack._", "b"),
+      tlEntry(1, "char.test-a.resonance-skill.resonance-skill._", "c"),
     ])
     // Normal Attack: 60f, Heavy Attack: 30f (starts at 60), Resonance Skill: 90f (starts at 90)
     expect(result.rows.map((r) => r.timeFrames)).toEqual([0, 60, 90])
@@ -192,7 +199,7 @@ describe("getTimelineSummary — zero-damage rule", () => {
   it("fallback rows have null damage and totalDamage stays 0, but time still advances", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "No Damage Skill::_", "a"),
+      tlEntry(1, "char.test-a.forte-circuit.no-damage-skill._", "a"),
       normalAttack(1, "b"),
     ])
     expect(result.rows[0].damage).toBeNull()
@@ -205,7 +212,9 @@ describe("getTimelineSummary — zero-damage rule", () => {
 describe("getTimelineSummary — dps", () => {
   it("dps is 0 without a simulation log", () => {
     testCharacters = [charA]
-    const result = getTimelineSummary([tlEntry(1, "Resonance Skill::_")])
+    const result = getTimelineSummary([
+      tlEntry(1, "char.test-a.resonance-skill.resonance-skill._"),
+    ])
     expect(result.totalTimeFrames).toBe(90)
     expect(result.totalDamage).toBe(0)
     expect(result.dps).toBe(0)
@@ -345,7 +354,7 @@ describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
     const swapEntry: TimelineEntry = {
       id: "swap-e",
       characterId: 1,
-      stageId: "Normal Attack::_",
+      stageId: "char.test-a.basic-attack.normal-attack._",
       variantKind: "swap",
     }
     const nextEntry = normalAttack(1, "next-e")
@@ -484,13 +493,13 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
   })
 
   it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
-    // charA has Normal Attack::_ with actionTime=60, no cancel variant
+    // charA has Normal Attack with actionTime=60, no cancel variant
     // With no log, fallback to resolveStageExecution with variantFloor=0 → react wins
     testCharacters = [charA]
     const entry: TimelineEntry = {
       id: "f1",
       characterId: 1,
-      stageId: "Normal Attack::_",
+      stageId: "char.test-a.basic-attack.normal-attack._",
       variantKind: undefined,
     }
     const result = getTimelineSummary(

@@ -169,7 +169,7 @@ describe("timeline encoding", () => {
           kind: "entry" as const,
           id: "original-id",
           characterId: CHAR_A.id,
-          stageId: "Normal Attack::Stage 1",
+          stageId: "char.sanhua._.normal-attack.stage-1",
           variantKind: undefined,
         },
       ],
@@ -180,7 +180,7 @@ describe("timeline encoding", () => {
     if (entry.kind === "entry") {
       expect(entry.id).not.toBe("original-id") // regenerated
       expect(entry.characterId).toBe(CHAR_A.id)
-      expect(entry.stageId).toBe("Normal Attack::Stage 1")
+      expect(entry.stageId).toBe("char.sanhua._.normal-attack.stage-1")
       expect(entry.variantKind).toBeUndefined()
     }
   })
@@ -194,7 +194,7 @@ describe("timeline encoding", () => {
             kind: "entry" as const,
             id: "x",
             characterId: CHAR_A.id,
-            stageId: "Normal Attack::Stage 2",
+            stageId: "char.sanhua._.normal-attack.stage-2",
             variantKind: vk,
           },
         ],
@@ -215,7 +215,7 @@ describe("timeline encoding", () => {
           kind: "entry" as const,
           id: "y",
           characterId: CHAR_A.id,
-          stageId: "Inferno Rider::_",
+          stageId: "echo.inferno-rider._",
           variantKind: undefined,
         },
       ],
@@ -223,7 +223,7 @@ describe("timeline encoding", () => {
     const decoded = decodePayload(encodePayload(payload))
     expect(
       decoded.timeline![0].kind === "entry" && decoded.timeline![0].stageId,
-    ).toBe("Inferno Rider::_")
+    ).toBe("echo.inferno-rider._")
   })
 
   it("roundtrips group node — regenerates ids, preserves entries", () => {
@@ -239,7 +239,7 @@ describe("timeline encoding", () => {
             {
               id: "entry-original",
               characterId: CHAR_B.id,
-              stageId: "Heavy Attack::Charge",
+              stageId: "char.encore._.heavy-attack.charge",
               variantKind: undefined,
             },
           ],
@@ -255,7 +255,7 @@ describe("timeline encoding", () => {
       expect(group.locked).toBe(true)
       expect(group.entries[0].id).not.toBe("entry-original")
       expect(group.entries[0].characterId).toBe(CHAR_B.id)
-      expect(group.entries[0].stageId).toBe("Heavy Attack::Charge")
+      expect(group.entries[0].stageId).toBe("char.encore._.heavy-attack.charge")
     }
   })
 
@@ -267,7 +267,7 @@ describe("timeline encoding", () => {
           kind: "entry" as const,
           id: "e1",
           characterId: CHAR_A.id,
-          stageId: "Normal Attack::_",
+          stageId: "char.sanhua._.normal-attack._",
           variantKind: undefined,
         },
         {
@@ -279,7 +279,7 @@ describe("timeline encoding", () => {
             {
               id: "e2",
               characterId: CHAR_B.id,
-              stageId: "Heavy Attack::Charge",
+              stageId: "char.encore._.heavy-attack.charge",
               variantKind: undefined,
             },
           ],

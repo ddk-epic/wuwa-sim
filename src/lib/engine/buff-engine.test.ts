@@ -3079,8 +3079,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId: "Botany Experiment::",
-        hitIndex: 1,
+        stageId: "char.verina.resonance-skill.botany-experiment._.1",
       },
       effects: [
         {
@@ -3102,8 +3101,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       characterId: 1503,
       skillType: "Resonance Skill",
       dmgType: "Physical",
-      stageId: "Botany Experiment::",
-      hitIndex: 1,
+      stageId: "char.verina.resonance-skill.botany-experiment._.1",
       frame: 0,
     })
     expect(engine.getResource(1503).forte).toBe(1)

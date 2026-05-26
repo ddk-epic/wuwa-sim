@@ -273,10 +273,9 @@ function processHeal(
   const dispatch = engine.recordHeal({
     kind: "healLanded",
     characterId: entry.characterId,
-    skillType: hit.type,
+    skillType: resolved.skillType,
     frame: hitFrame,
-    stageId: resolved.stageId,
-    hitIndex: hitIndex + 1,
+    stageId: `${resolved.stageId}.${hitIndex + 1}`,
   })
   const sustainEvent: SustainEvent = {
     kind: "sustain",
@@ -318,7 +317,7 @@ function processDamageHit(
     {
       multiplier: hit.value,
       element: resolved.element,
-      skillType: resolved.skillType,
+      skillType: hit.type,
       dmgType: hit.dmgType,
       scalingStat: hit.scalingStat,
     },
@@ -327,11 +326,10 @@ function processDamageHit(
   const dispatch = engine.recordHit({
     kind: "hitLanded",
     characterId: entry.characterId,
-    skillType: hit.type,
+    skillType: resolved.skillType,
     dmgType: hit.dmgType,
     frame: hitFrame,
-    stageId: resolved.stageId,
-    hitIndex: hitIndex + 1,
+    stageId: `${resolved.stageId}.${hitIndex + 1}`,
     energy: hit.energy,
     concerto: hit.concerto,
     forte: hit.forte,

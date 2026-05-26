@@ -295,7 +295,7 @@ describe("focused-stage-catalog — character stages", () => {
     const stage1 = result.characterStages[0]
     expect(stage1.clickPayload).toEqual({
       characterId: 1,
-      stageId: "Normal Attack::_",
+      stageId: "char.encore.basic-attack.normal-attack._",
     })
   })
 })
@@ -356,7 +356,7 @@ describe("focused-stage-catalog — labels", () => {
     ]
     const result = getFocusedStageCatalog([1, null, null], loadouts, 1)
     expect(result.echoStages[0].label).toBe("Test Echo (Tap)")
-    expect(result.echoStages[0].clickPayload.stageId).toBe("Test Echo::(Tap)")
+    expect(result.echoStages[0].clickPayload.stageId).toBe("echo.test-echo.tap")
   })
 })
 
@@ -422,7 +422,7 @@ describe("focused-stage-catalog — echo stages", () => {
     const result = getFocusedStageCatalog([1, null, null], loadoutsWithEcho, 1)
     expect(result.echoStages[0].clickPayload).toEqual({
       characterId: 1,
-      stageId: "Test Echo::Tap",
+      stageId: "echo.test-echo.tap",
     })
   })
 

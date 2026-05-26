@@ -116,7 +116,6 @@ export type Trigger =
       dmgType?: string
       source?: TriggerSource
       stageId?: string | string[]
-      hitIndex?: number
       sourceBuffId?: string | string[]
     }
   | {
@@ -135,7 +134,6 @@ export type Trigger =
       characterId?: number
       skillType?: SkillType | SkillType[]
       stageId?: string | string[]
-      hitIndex?: number
     }
   | {
       event: "resourceCrossed"

@@ -244,7 +244,7 @@ describe("SkillSidebar — stage rendering", () => {
     expect(onStageClick).toHaveBeenCalledWith(
       expect.objectContaining({
         characterId: 1,
-        stageId: "Normal Attack::_",
+        stageId: "char.encore.basic-attack.normal-attack._",
       }),
     )
   })

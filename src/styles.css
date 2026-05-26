@@ -152,7 +152,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-width: thin;
-  scrollbar-color: #555 #222;
+  scrollbar-color: #555 var(--darkest);
 
   /* background: radial-gradient(
     circle at 70% 0%,

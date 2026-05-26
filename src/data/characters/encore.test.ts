@@ -39,7 +39,7 @@ describe("Encore — Skill.concerto grant on Liberation cast", () => {
     const entry: TimelineEntry = {
       id: "t1",
       characterId: 1203,
-      stageId: "Cosmos Rave::Cosmos Rave",
+      stageId: "char.encore.resonance-liberation.cosmos-rave.cosmos-rave",
     }
     const log = runSimulation([entry], slots, loadouts)
     const action = log.find((e) => e.kind === "action")

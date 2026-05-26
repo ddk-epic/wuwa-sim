@@ -124,8 +124,7 @@ describe("Verina — Forte grants via DamageEntry.forte", () => {
       characterId: 1503,
       skillType: "Basic Attack",
       dmgType: "Damage",
-      stageId,
-      hitIndex,
+      stageId: `${stageId}.${hitIndex}`,
       frame,
       energy: 0,
       concerto: 0,
@@ -136,21 +135,21 @@ describe("Verina — Forte grants via DamageEntry.forte", () => {
   it("Cultivation Stage 5 hitIndex 1 grants +1 forte", () => {
     const engine = makeEngine()
     expect(engine.getResource(1503).forte).toBe(0)
-    hitLanded(engine, "Cultivation::Stage 5", 1, 0, 1)
+    hitLanded(engine, "char.verina.basic-attack.cultivation.stage-5", 1, 0, 1)
     expect(engine.getResource(1503).forte).toBe(1)
   })
 
   it("Cultivation Stage 5 hitIndex 2 does NOT grant forte (no forte on second hit)", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Cultivation::Stage 5", 2, 0)
+    hitLanded(engine, "char.verina.basic-attack.cultivation.stage-5", 2, 0)
     expect(engine.getResource(1503).forte).toBe(0)
   })
 
   it("forte caps at 4 across multiple qualifying hits", () => {
     const engine = makeEngine()
-    hitLanded(engine, "Verdant Growth::", 1, 0, 1)
+    hitLanded(engine, "char.verina.intro-skill.verdant-growth._", 1, 0, 1)
     for (let i = 1; i <= 5; i++) {
-      hitLanded(engine, "Cultivation::Stage 5", 1, i, 1)
+      hitLanded(engine, "char.verina.basic-attack.cultivation.stage-5", 1, i, 1)
     }
     expect(engine.getResource(1503).forte).toBe(4)
   })
@@ -167,8 +166,7 @@ describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)",
       characterId: 1503,
       skillType: "Resonance Skill",
       dmgType: "Damage",
-      stageId: "Botany Experiment::",
-      hitIndex,
+      stageId: `char.verina.resonance-skill.botany-experiment._.${hitIndex}`,
       frame,
       energy: 0,
       concerto: 0,
@@ -227,7 +225,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
       kind: "skillCast",
       characterId: 1503,
       skillType: "Forte Circuit",
-      stageId: "Starflower Blooms::Heavy Attack",
+      stageId: "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       frame: 0,
     })
     expect(engine.resolveStats(1503).allDmgBonus).toBeCloseTo(baseBonus + 0.2)
@@ -239,7 +237,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
       kind: "skillCast",
       characterId: 1503,
       skillType: "Forte Circuit",
-      stageId: "Starflower Blooms::Heavy Attack",
+      stageId: "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       frame: 0,
     })
     expect(result.syntheticEvents.length).toBeGreaterThan(0)
@@ -254,7 +252,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
       kind: "skillCast",
       characterId: 1503,
       skillType: "Forte Circuit",
-      stageId: "Starflower Blooms::Heavy Attack",
+      stageId: "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       frame: 0,
     })
     expect(result.syntheticEvents).toHaveLength(0)
@@ -263,10 +261,10 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
 
 describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
   const STARFLOWER_STAGES = [
-    "Starflower Blooms::Heavy Attack",
-    "Starflower Blooms::Mid-air Attack: Stage 1",
-    "Starflower Blooms::Mid-air Attack: Stage 2",
-    "Starflower Blooms::Mid-air Attack: Stage 3",
+    "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+    "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
+    "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
+    "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
   ] as const
 
   function grantForte(engine: ReturnType<typeof makeEngine>, amount: number) {
@@ -276,8 +274,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
         characterId: 1503,
         skillType: "Basic Attack",
         dmgType: "Damage",
-        stageId: "Cultivation::Stage 5",
-        hitIndex: 1,
+        stageId: "char.verina.basic-attack.cultivation.stage-5.1",
         frame: i,
         energy: 0,
         concerto: 0,
@@ -306,7 +303,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(engine.getResource(1503).forte).toBe(1)
     const result = castStarflower(
       engine,
-      "Starflower Blooms::Heavy Attack",
+      "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       100,
     )
     expect(engine.getResource(1503).forte).toBe(0)
@@ -320,7 +317,11 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
   it("forte=0 → no consume, no concerto restore, no heal emit", () => {
     const engine = makeEngine()
     expect(engine.getResource(1503).forte).toBe(0)
-    const result = castStarflower(engine, "Starflower Blooms::Heavy Attack", 0)
+    const result = castStarflower(
+      engine,
+      "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+      0,
+    )
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(0)
     const healHit = result.syntheticEvents.find(
@@ -332,7 +333,11 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
   it("Heavy Attack Starflower Blooms triggers consume when forte=1", () => {
     const engine = makeEngine()
     grantForte(engine, 1)
-    castStarflower(engine, "Starflower Blooms::Heavy Attack", 100)
+    castStarflower(
+      engine,
+      "char.verina.forte-circuit.starflower-blooms.heavy-attack",
+      100,
+    )
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(12)
   })
@@ -342,7 +347,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     grantForte(engine, 1)
     const result = castStarflower(
       engine,
-      "Starflower Blooms::Heavy Attack",
+      "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       100,
     )
     expect(engine.getResource(1503).forte).toBe(0)
@@ -395,8 +400,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       characterId: 1503,
       skillType: "Resonance Liberation",
       dmgType: "Damage",
-      stageId: "Arboreal Flourish::",
-      hitIndex: 1,
+      stageId: "char.verina.resonance-liberation.arboreal-flourish._.1",
       frame,
       energy: 0,
       concerto: 0,
@@ -523,7 +527,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       kind: "skillCast",
       characterId: 1503,
       skillType: "Forte Circuit",
-      stageId: "Starflower Blooms::Heavy Attack",
+      stageId: "char.verina.forte-circuit.starflower-blooms.heavy-attack",
       frame: 100,
     })
     const s6Coord = result.syntheticEvents.find(
@@ -594,11 +598,15 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
 
     const combo = ["S1", "S2", "S3"] as const
     const timeline: TimelineEntry[] = [
-      { id: "lib", characterId: 1503, stageId: "Arboreal Flourish::" },
+      {
+        id: "lib",
+        characterId: 1503,
+        stageId: "char.verina.resonance-liberation.arboreal-flourish._",
+      },
       ...Array.from({ length: 12 }, (_, i) => ({
         id: `na-${i}`,
         characterId: TEAMMATE_ID,
-        stageId: `Normal Attack::${combo[i % 3]}`,
+        stageId: `char.teammate.basic-attack.normal-attack.${combo[i % 3].toLowerCase()}`,
       })),
     ]
 
@@ -646,19 +654,21 @@ describe("Verina — Skill.concerto grants on cast (via 'Skill DMG' stage)", () 
   }
 
   it("Resonance Skill cast grants +30 concerto", () => {
-    const log = runSingleCast("Botany Experiment::")
+    const log = runSingleCast("char.verina.resonance-skill.botany-experiment._")
     const action = log.find((e) => e.kind === "action")
     expect(action?.cumulativeConcerto).toBe(30)
   })
 
   it("Liberation cast grants +20 concerto", () => {
-    const log = runSingleCast("Arboreal Flourish::")
+    const log = runSingleCast(
+      "char.verina.resonance-liberation.arboreal-flourish._",
+    )
     const action = log.find((e) => e.kind === "action")
     expect(action?.cumulativeConcerto).toBe(20)
   })
 
   it("Intro Skill cast grants +10 concerto", () => {
-    const log = runSingleCast("Verdant Growth::")
+    const log = runSingleCast("char.verina.intro-skill.verdant-growth._")
     const action = log.find((e) => e.kind === "action")
     expect(action?.cumulativeConcerto).toBe(10)
   })
