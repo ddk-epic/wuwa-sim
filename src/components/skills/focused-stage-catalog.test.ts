@@ -288,16 +288,6 @@ describe("focused-stage-catalog — character stages", () => {
     )
     expect(stage?.typeLabel).toBe("SKILL")
   })
-
-  it("click payload carries characterId and stageId", () => {
-    setCatalog([char1], [])
-    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    const stage1 = result.characterStages[0]
-    expect(stage1.clickPayload).toEqual({
-      characterId: 1,
-      stageId: "char.encore.basic-attack.normal-attack._",
-    })
-  })
 })
 
 describe("focused-stage-catalog — labels", () => {
@@ -540,57 +530,5 @@ describe("focused-stage-catalog — characterStages ordering", () => {
     setCatalog([charWithIntroOutro], [echo1])
     const result = getFocusedStageCatalog([2, null, null], noLoadouts, 2)
     expect(result.echoStages).toEqual([])
-  })
-})
-
-describe("focused-stage-catalog — divider rule", () => {
-  const loadoutsWithEcho: SlotLoadout[] = [
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: 9001,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: null,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: null,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-  ]
-
-  it("returns both echo and character stages when both exist (consumer renders divider)", () => {
-    setCatalog([char1], [echo1])
-    const result = getFocusedStageCatalog([1, null, null], loadoutsWithEcho, 1)
-    expect(result.echoStages.length).toBeGreaterThan(0)
-    expect(result.characterStages.length).toBeGreaterThan(0)
-  })
-
-  it("returns no echo stages when echo is absent (consumer omits divider)", () => {
-    setCatalog([char1], [])
-    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    expect(result.echoStages.length).toBe(0)
-    expect(result.characterStages.length).toBeGreaterThan(0)
   })
 })

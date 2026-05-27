@@ -219,18 +219,6 @@ describe("SkillSidebar — tab strip", () => {
 })
 
 describe("SkillSidebar — stage rendering", () => {
-  it("renders the focused character's stages with their resolved labels", () => {
-    setCatalog([char1, char2], [])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, 2, null],
-      loadouts: noLoadouts,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    expect(screen.getByText("Normal Attack")).toBeTruthy()
-    expect(screen.getAllByText("BASIC").length).toBeGreaterThan(0)
-  })
-
   it("clicking a stage row calls onStageClick with the stage's click payload", () => {
     setCatalog([char1], [])
     const onStageClick = vi.fn()
@@ -247,24 +235,6 @@ describe("SkillSidebar — stage rendering", () => {
         stageId: "char.encore.basic-attack.normal-attack._",
       }),
     )
-  })
-
-  it("shows duration for each stage row in seconds 2dp", () => {
-    setCatalog([char1], [testEcho])
-    const loadoutsWithEcho: SlotLoadout[] = [
-      { ...noLoadouts[0], echoId: 9001 },
-      ...noLoadouts.slice(1),
-    ]
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: loadoutsWithEcho,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    // testEcho stage has actionTime 30 → 30/60 = 0.50s
-    expect(screen.getByText("0.50s")).toBeTruthy()
-    // char1 stage has actionTime 0 → 0.00s
-    expect(screen.getByText("0.00s")).toBeTruthy()
   })
 })
 

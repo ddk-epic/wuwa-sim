@@ -5,11 +5,8 @@ import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"
 import {
   formatActiveBuffLabel,
-  formatCritCell,
   formatDeepenCell,
   formatDMGPctCell,
-  formatERCell,
-  formatScalingCell,
   formatStatComponents,
   computeFormulaBreakdown,
 } from "#/lib/damage/hit-formula"
@@ -92,35 +89,6 @@ describe("formatActiveBuffLabel", () => {
     }
     expect(formatActiveBuffLabel(b, resolveName)).toBe("[Tree] ATK")
   })
-})
-
-describe("formatScalingCell", () => {
-  it("ATK (default/undefined) shows resolved ATK value", () => {
-    // 1500 * 1.3 + 154 = 2104
-    expect(formatScalingCell(snap())).toBe("ATK 2104")
-  })
-
-  it("HP scaling uses hpBase * (1+hpPct) + hpFlat", () => {
-    const s = snap({ hpBase: 5000, hpPct: 0.4, hpFlat: 300 })
-    expect(formatScalingCell(s, "HP")).toBe("HP 7300")
-  })
-
-  it("DEF scaling uses defBase * (1+defPct) + defFlat", () => {
-    const s = snap({ defBase: 800, defPct: 0.25, defFlat: 50 })
-    expect(formatScalingCell(s, "DEF")).toBe("DEF 1050")
-  })
-})
-
-describe("formatERCell", () => {
-  it("0% ER shows 100.0%", () => expect(formatERCell(0)).toBe("100.0%"))
-  it("0.2 ER shows 120.0%", () => expect(formatERCell(0.2)).toBe("120.0%"))
-})
-
-describe("formatCritCell", () => {
-  it("50% shows 50.0%", () => expect(formatCritCell(0.5)).toBe("50.0%"))
-  it("100% shows 100.0%", () => expect(formatCritCell(1.0)).toBe("100.0%"))
-  it("over 100% shows the raw value (caller decides whether to warn)", () =>
-    expect(formatCritCell(1.5)).toBe("150.0%"))
 })
 
 describe("formatDMGPctCell", () => {

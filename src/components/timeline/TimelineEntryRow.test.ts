@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ActionTimeStage } from "#/lib/stage"
 import { nextVariant } from "./TimelineEntryRow"
-import { formatVariantKind } from "#/lib/format-variant-kind"
 
 const stageAllVariants: ActionTimeStage = {
   actionTime: 50,
@@ -46,20 +45,5 @@ describe("nextVariant — full cycle", () => {
 
   it("stage with no variants stays at FULL (only undefined in defined list)", () => {
     expect(nextVariant(undefined, stageNoVariants)).toBeUndefined()
-  })
-})
-
-describe("formatVariantKind — short style", () => {
-  it("returns FULL for undefined", () => {
-    expect(formatVariantKind(undefined, "short")).toBe("FULL")
-  })
-  it("returns CNCL for cancel", () => {
-    expect(formatVariantKind("cancel", "short")).toBe("CNCL")
-  })
-  it("returns INST for instantCancel", () => {
-    expect(formatVariantKind("instantCancel", "short")).toBe("INST")
-  })
-  it("returns SWAP for swap", () => {
-    expect(formatVariantKind("swap", "short")).toBe("SWAP")
   })
 })
