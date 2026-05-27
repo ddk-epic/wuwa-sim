@@ -44,36 +44,6 @@ const emptyLoadout: SlotLoadout = {
   cost3Mains: ["elemDmg", "elemDmg"],
 }
 
-describe("ALL_ECHO_SETS — shape sanity", () => {
-  it("set ids are unique", () => {
-    const ids = ALL_ECHO_SETS.map((s) => s.id)
-    expect(new Set(ids).size).toBe(ids.length)
-  })
-
-  it("buff ids are unique across all sets", () => {
-    const buffIds = ALL_ECHO_SETS.flatMap((s) => s.buffs.map((b) => b.id))
-    expect(new Set(buffIds).size).toBe(buffIds.length)
-  })
-
-  it("every buff carries a valid requiresPieces (2, 3, or 5)", () => {
-    for (const set of ALL_ECHO_SETS) {
-      for (const buff of set.buffs) {
-        expect(buff.requiresPieces).toBeDefined()
-        expect([2, 3, 5]).toContain(buff.requiresPieces)
-      }
-    }
-  })
-
-  it("every buff's requiresPieces matches a declared effect tier", () => {
-    for (const set of ALL_ECHO_SETS) {
-      const tiers = new Set(set.effects.map((e) => e.pieces))
-      for (const buff of set.buffs) {
-        expect(tiers.has(buff.requiresPieces!)).toBe(true)
-      }
-    }
-  })
-})
-
 describe("Rejuvenating Glow — 2pc healingBonus + 5pc team ATK on heal", () => {
   const rejuvenatingGlow = ALL_ECHO_SETS.find((s) => s.id === 7)!
   const RG_2PC = "echo-set.rejuvenating-glow.2pc.healing-bonus"

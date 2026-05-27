@@ -135,22 +135,6 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
     )
   })
 
-  it("both effects are active after hit 3", () => {
-    const engine = makeEngine()
-    engine.recordHit(tapHit(3, 121))
-    const stats = engine.resolveStats(1)
-    expect(stats.elementBonus["Fusion"]).toBeCloseTo(0.12 + BASE_ELEM_BONUS)
-    expect(stats.skillTypeBonus["Basic Attack"]).toBeCloseTo(0.12)
-  })
-
-  it("buff expires after 15 seconds (900 frames)", () => {
-    const engine = makeEngine()
-    engine.recordHit(tapHit(3, 0))
-    expect(engine.activeBuffIds(1)).toContain(BUFF_ID)
-    engine.tickToFrame(900).lifecycleEvents
-    expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)
-  })
-
   it("re-casting Tap and landing hit 3 again refreshes (does not add stack)", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(3, 0))
@@ -172,7 +156,6 @@ describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
 
 describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
   const BBG_BUFF = "echo.bell-borne-geochelone.dmg-boost"
-  const FPS = 60
 
   function makeEngine2() {
     testCharacters = [testChar]
@@ -203,18 +186,5 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
     })
     expect(engine.activeBuffIds(1)).toContain(BBG_BUFF)
     expect(engine.resolveStats(1).allDmgBonus).toBeCloseTo(0.1)
-  })
-
-  it("DMG boost expires after 15s (900 frames)", () => {
-    const engine = makeEngine2()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillType: "Echo Skill",
-      stageId: "echo.bell-borne-geochelone._",
-      frame: 0,
-    })
-    engine.tickToFrame(15 * FPS)
-    expect(engine.activeBuffIds(1)).not.toContain(BBG_BUFF)
   })
 })

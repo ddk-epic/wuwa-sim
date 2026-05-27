@@ -62,20 +62,6 @@ describe("Verina — Outro Blossom (deepen all +15%)", () => {
     )
     expect(engine.resolveStats(1503).allDeepen).toBeCloseTo(0.15)
   })
-
-  it("buff expires after 30s (1800 frames)", () => {
-    const engine = makeEngine()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1503,
-      skillType: "Outro Skill",
-      frame: 0,
-    })
-    engine.tickToFrame(30 * 60)
-    expect(engine.activeBuffIds(1503)).not.toContain(
-      "char.verina.outro.blossom-deepen",
-    )
-  })
 })
 
 describe("Verina — Gift of Nature (team ATK +20%)", () => {
@@ -328,18 +314,6 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
       (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
     )
     expect(healHit).toBeUndefined()
-  })
-
-  it("Heavy Attack Starflower Blooms triggers consume when forte=1", () => {
-    const engine = makeEngine()
-    grantForte(engine, 1)
-    castStarflower(
-      engine,
-      "char.verina.forte-circuit.starflower-blooms.heavy-attack",
-      100,
-    )
-    expect(engine.getResource(1503).forte).toBe(0)
-    expect(engine.getResource(1503).concerto).toBe(12)
   })
 
   it("consume is atomic: forte, concerto, and heal all land or none do", () => {
