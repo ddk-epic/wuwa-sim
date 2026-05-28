@@ -25,6 +25,7 @@ export const camellya = {
       stages: [
         {
           name: "Basic Attack 1 DMG",
+          category: "Basic Attack",
           newName: "Basic Attack 1",
           value: "62.53%",
           actionTime: 0,
@@ -45,6 +46,7 @@ export const camellya = {
         },
         {
           name: "Basic Attack 2 DMG",
+          category: "Basic Attack",
           newName: "Basic Attack 2",
           value: "46.48%*2",
           actionTime: 0,
@@ -76,6 +78,7 @@ export const camellya = {
         },
         {
           name: "Basic Attack 3 DMG",
+          category: "Basic Attack",
           newName: "Basic Attack 3",
           value: "50.70%*3",
           actionTime: 0,
@@ -118,6 +121,7 @@ export const camellya = {
         },
         {
           name: "Basic Attack 4 DMG",
+          category: "Basic Attack",
           newName: "Basic Attack 4",
           value: "24.70%*20",
           actionTime: 0,
@@ -347,6 +351,7 @@ export const camellya = {
         },
         {
           name: "Basic Attack 5 DMG",
+          category: "Basic Attack",
           newName: "Basic Attack 5",
           value: "48.17%*4",
           actionTime: 0,
@@ -400,6 +405,7 @@ export const camellya = {
         },
         {
           name: "Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "88.14%*3",
           actionTime: 0,
@@ -442,6 +448,7 @@ export const camellya = {
         },
         {
           name: "Mid-air Attack DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack",
           value: "65.61%*2",
           actionTime: 0,
@@ -473,6 +480,7 @@ export const camellya = {
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Dodge Counter",
           value: "99.40%*3",
           hidden: true,
@@ -516,6 +524,7 @@ export const camellya = {
         },
         {
           name: "Vining Waltz 1 DMG",
+          category: "Basic Attack",
           newName: "Vining Waltz 1",
           value: "96.33%",
           actionTime: 0,
@@ -536,6 +545,7 @@ export const camellya = {
         },
         {
           name: "Vining Waltz 2 DMG",
+          category: "Basic Attack",
           newName: "Vining Waltz 2",
           value: "45.63%*2",
           actionTime: 0,
@@ -567,6 +577,7 @@ export const camellya = {
         },
         {
           name: "Vining Waltz 3 DMG",
+          category: "Basic Attack",
           newName: "Vining Waltz 3",
           value: "21.95%*6",
           actionTime: 0,
@@ -642,6 +653,7 @@ export const camellya = {
         },
         {
           name: "Vining Waltz 4 DMG",
+          category: "Basic Attack",
           newName: "Vining Waltz 4",
           value: "67.59%*3",
           actionTime: 0,
@@ -684,6 +696,7 @@ export const camellya = {
         },
         {
           name: "Blazing Waltz DMG",
+          category: "Basic Attack",
           newName: "Blazing Waltz",
           value: "21.95%*19",
           actionTime: 0,
@@ -902,6 +915,7 @@ export const camellya = {
         },
         {
           name: "Vining Ronde DMG",
+          category: "Basic Attack",
           newName: "Vining Ronde",
           value: "52.95%*3",
           actionTime: 0,
@@ -944,6 +958,7 @@ export const camellya = {
         },
         {
           name: "Atonement DMG",
+          category: "Basic Attack",
           newName: "Atonement",
           value: "113.33%*2",
           hidden: true,
@@ -1019,6 +1034,7 @@ export const camellya = {
       stages: [
         {
           name: "Crimson Blossom DMG",
+          category: "Resonance Skill",
           newName: "Crimson Blossom",
           value: "113.62%*2",
           concerto: 7,
@@ -1051,6 +1067,7 @@ export const camellya = {
         },
         {
           name: "Floral Ravage DMG",
+          category: "Resonance Skill",
           newName: "Floral Ravage",
           value: "52.61%*5",
           concerto: 7,
@@ -1127,6 +1144,7 @@ export const camellya = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Liberation",
           newName: "",
           value: "1202.81%",
           actionTime: 0,
@@ -1185,6 +1203,7 @@ export const camellya = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Intro Skill",
           newName: "",
           value: "198.81%",
           actionTime: 0,
@@ -1226,6 +1245,7 @@ export const camellya = {
       stages: [
         {
           name: "Ephemeral DMG",
+          category: "Resonance Skill",
           newName: "Ephemeral",
           value: "1262.45%",
           cooldown: 25,
@@ -1275,6 +1295,7 @@ export const camellya = {
       stages: [
         {
           name: "Outro DMG",
+          category: "Outro Skill",
           newName: "",
           value: "0%",
           actionTime: 0,

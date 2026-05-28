@@ -416,6 +416,7 @@ export const sanhua = {
       stages: [
         {
           name: "Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Stage 1",
           value: "48.71%",
           actionTime: 21,
@@ -439,6 +440,7 @@ export const sanhua = {
         },
         {
           name: "Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Stage 2",
           value: "73.76%",
           actionTime: 31,
@@ -462,6 +464,7 @@ export const sanhua = {
         },
         {
           name: "Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Stage 3",
           value: "21.58%*4",
           actionTime: 39,
@@ -518,6 +521,7 @@ export const sanhua = {
         },
         {
           name: "Stage 4 DMG",
+          category: "Basic Attack",
           newName: "Stage 4",
           value: "39.67%*2",
           actionTime: 37,
@@ -552,6 +556,7 @@ export const sanhua = {
         },
         {
           name: "Stage 5 DMG",
+          category: "Basic Attack",
           newName: "Stage 5",
           value: "233.81%",
           actionTime: 108,
@@ -575,6 +580,7 @@ export const sanhua = {
         },
         {
           name: "Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "22.27%*5",
           actionTime: 50,
@@ -642,6 +648,7 @@ export const sanhua = {
         },
         {
           name: "Mid-air Attack DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack",
           value: "86.29%",
           actionTime: 56,
@@ -665,6 +672,7 @@ export const sanhua = {
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Dodge Counter",
           value: "167.01%",
           hidden: true,
@@ -696,6 +704,7 @@ export const sanhua = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Skill",
           newName: "",
           value: "359.85%",
           actionTime: 64,
@@ -729,6 +738,7 @@ export const sanhua = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Liberation",
           newName: "",
           value: "809.48%",
           actionTime: 3,
@@ -775,6 +785,7 @@ export const sanhua = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Intro Skill",
           newName: "",
           value: "139.17%",
           actionTime: 62,
@@ -804,6 +815,7 @@ export const sanhua = {
       stages: [
         {
           name: "Detonate Damage",
+          category: "Heavy Attack",
           newName: "Detonate",
           value: "186.29%*2",
           concerto: 15,
@@ -855,6 +867,7 @@ export const sanhua = {
       stages: [
         {
           name: "Outro DMG",
+          category: "Outro Skill",
           newName: "",
           value: "0%",
           actionTime: 0,

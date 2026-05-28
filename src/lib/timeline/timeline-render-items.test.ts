@@ -232,6 +232,8 @@ describe("buildTimelineRenderItems", () => {
       element: "Fusion",
       concerto: 0,
       damage: [],
+      skillGrouping: "Normal Attack" as const,
+      skillCategory: "Basic Attack" as const,
       skillType: "Basic Attack" as const,
       skillName: "Heavy Attack",
     } as ResolvedStage
@@ -277,6 +279,8 @@ describe("buildTimelineRenderItems", () => {
       element: "Fusion",
       concerto: 0,
       damage: [],
+      skillGrouping: "Normal Attack" as const,
+      skillCategory: "Basic Attack" as const,
       skillType: "Basic Attack" as const,
       skillName: "Test",
     } as ResolvedStage

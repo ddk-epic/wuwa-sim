@@ -1,6 +1,45 @@
 import type { Element } from "#/data/elements"
 import type { BuffDef } from "./buff"
 
+/**
+ * UI skill-tree section a skill belongs to. Populated from the game API on
+ * `Skill.type`. No engine presence — used only for sidebar filtering.
+ */
+export type SkillGrouping =
+  | "Normal Attack"
+  | "Forte Circuit"
+  | "Inherent Skill"
+  | "Resonance Skill"
+  | "Resonance Liberation"
+  | "Intro Skill"
+  | "Outro Skill"
+  | "Tune Break"
+  | "Echo Skill"
+  | "Movement"
+
+/**
+ * Player input/action that triggered a stage. Mandatory per-stage tag.
+ * Encoded in the stageId lineage and used for trigger matching.
+ */
+export type SkillCategory =
+  | "Basic Attack"
+  | "Heavy Attack"
+  | "Resonance Skill"
+  | "Resonance Liberation"
+  | "Intro Skill"
+  | "Outro Skill"
+  | "Tune Break"
+  | "Echo Skill"
+  | "Movement"
+
+/**
+ * Damage-calc type, derived from `damage[0].type`. Used for `skillTypeBonus`,
+ * `skillTypeDeepen`, `shred` lookups in the damage formula.
+ *
+ * NOTE: `"Forte Circuit"` remains here pending trigger migration (#272) and the
+ * Sanhua Avalanche rework (#274). Per ADR-0024 it is a `SkillGrouping`-only
+ * member and the long-term plan is to remove it from `SkillType`.
+ */
 export type SkillType =
   | "Basic Attack"
   | "Heavy Attack"
@@ -11,13 +50,6 @@ export type SkillType =
   | "Outro Skill"
   | "Echo Skill"
   | "Movement"
-
-/** UI grouping labels for skills — not engine types. */
-export type SkillCategory =
-  | SkillType
-  | "Normal Attack"
-  | "Inherent Skill"
-  | "Tune Break"
 
 export interface StatGroup {
   hp: number
@@ -32,6 +64,8 @@ export interface CharacterStats {
 
 export interface SkillAttribute {
   name: string
+  /** Player input/action that produces this stage. Encoded in the stageId lineage. */
+  category: SkillCategory
   value: string
   staCost?: number
   cooldown?: number
@@ -70,7 +104,7 @@ export interface DamageEntry {
 export interface Skill {
   id: number
   name: string
-  type: SkillCategory
+  type: SkillGrouping
   cooldown?: number
   duration?: number
   concerto?: number

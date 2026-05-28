@@ -176,6 +176,7 @@ export const encore = {
       stages: [
         {
           name: "Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Stage 1",
           value: "55.66%",
           actionTime: 17,
@@ -199,6 +200,7 @@ export const encore = {
         },
         {
           name: "Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Stage 2",
           value: "66.20%",
           actionTime: 28,
@@ -222,6 +224,7 @@ export const encore = {
         },
         {
           name: "Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Stage 3",
           value: "66.30%*2",
           actionTime: 39,
@@ -256,6 +259,7 @@ export const encore = {
         },
         {
           name: "Stage 4 DMG",
+          category: "Basic Attack",
           newName: "Stage 4",
           value: "38.27%*4",
           actionTime: 45,
@@ -312,6 +316,7 @@ export const encore = {
         },
         {
           name: "Stage 5 DMG",
+          category: "Basic Attack",
           newName: "Stage 5 - Wooly Strike",
           value: "238.57%",
           actionTime: 81,
@@ -335,6 +340,7 @@ export const encore = {
         },
         {
           name: "Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "187.08%",
           hidden: true,
@@ -359,6 +365,7 @@ export const encore = {
         },
         {
           name: "Mid-air Attack",
+          category: "Basic Attack",
           newName: "Mid-air Attack",
           value: "123.26%",
           actionTime: 56,
@@ -382,6 +389,7 @@ export const encore = {
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Dodge Counter",
           value: "125.94%*2",
           hidden: true,
@@ -423,6 +431,7 @@ export const encore = {
       stages: [
         {
           name: "Flaming Woolies Damage",
+          category: "Resonance Skill",
           newName: "Flaming Woolies",
           value: "76.61%*8",
           concerto: 15,
@@ -523,6 +532,7 @@ export const encore = {
         },
         {
           name: "Energetic Welcome Damage",
+          category: "Resonance Skill",
           newName: "Energetic Welcome",
           value: "339.16%",
           concerto: 5,
@@ -559,6 +569,7 @@ export const encore = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Liberation",
           newName: "",
           value: "",
           actionTime: 0,
@@ -567,6 +578,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Frolicking Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 1",
           value: "90.18%*2",
           actionTime: 22,
@@ -601,6 +613,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Frolicking Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 2",
           value: "56.40%*3",
           actionTime: 54,
@@ -646,6 +659,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Frolicking Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 3",
           value: "65.99%*4",
           actionTime: 48,
@@ -702,6 +716,7 @@ export const encore = {
         },
         {
           name: "Stage 4 DMG",
+          category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 4",
           value: "194.01%*3",
           actionTime: 107,
@@ -750,6 +765,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Cosmos: Heavy Attack",
           value: "217.58%",
           hidden: true,
@@ -771,6 +787,7 @@ export const encore = {
         },
         {
           name: "Cosmos Rampage Damage",
+          category: "Resonance Skill",
           newName: "Cosmos Rampage",
           value: "63.32%*4",
           cooldown: 4,
@@ -828,6 +845,7 @@ export const encore = {
         },
         {
           name: "Cosmos: Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Cosmos: Dodge Counter",
           value: "65.99%*4",
           hidden: true,
@@ -907,6 +925,7 @@ export const encore = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Intro Skill",
           newName: "",
           value: "198.81%",
           actionTime: 91,
@@ -935,6 +954,7 @@ export const encore = {
       stages: [
         {
           name: "Cloudy Frenzy Damage",
+          category: "Heavy Attack",
           newName: "Cloudy Frenzy",
           value: "334.00%",
           concerto: 10,
@@ -958,6 +978,7 @@ export const encore = {
         },
         {
           name: "Cosmos Rupture Damage",
+          category: "Heavy Attack",
           newName: "Cosmos Rupture",
           value: "46.42%*6+495.21%",
           concerto: 10,
@@ -1097,6 +1118,7 @@ export const encore = {
       stages: [
         {
           name: "Outro DMG",
+          category: "Outro Skill",
           newName: "",
           value: "176.76%*4",
           actionTime: 0,

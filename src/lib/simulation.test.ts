@@ -82,12 +82,14 @@ const charA: EnrichedCharacter = {
       stages: [
         {
           name: "Stage 1",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 60,
           damage: [dmgHit(1.5, 5, 2)],
         },
         {
           name: "Stage 2",
+          category: "Basic Attack",
           value: "80% + 60%",
           newName: "(Stage 2)",
           actionTime: 40,
@@ -114,10 +116,11 @@ const charD: EnrichedCharacter = {
     {
       id: 3,
       name: "Heavy Attack",
-      type: "Heavy Attack",
+      type: "Normal Attack",
       stages: [
         {
           name: "Heavy Attack",
+          category: "Basic Attack",
           value: "200%",
           actionTime: 30,
           concerto: 15,
@@ -450,7 +453,7 @@ describe("runSimulation — action event concerto", () => {
     const entry: TimelineEntry = {
       id: "d1",
       characterId: 4,
-      stageId: "char.char-d.heavy-attack.heavy-attack._",
+      stageId: "char.char-d.basic-attack.heavy-attack._",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -518,6 +521,7 @@ describe("runSimulation — buff lifecycle interleaving", () => {
           stages: [
             {
               name: "Skill",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 30,
               damage: [dmgHit(1.0, 0, 0, "Intro Skill")],
@@ -532,6 +536,7 @@ describe("runSimulation — buff lifecycle interleaving", () => {
           stages: [
             {
               name: "Skill",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 30,
               damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
@@ -596,6 +601,7 @@ const charVariant: EnrichedCharacter = {
       stages: [
         {
           name: "Stage 5",
+          category: "Basic Attack",
           value: "233.81%",
           actionTime: 50,
           variants: {
@@ -631,7 +637,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     expect(hits).toHaveLength(1)
   })
 
-  it("cancel variant: actionFrame 23 ≤ cutoff 42, damage lands", () => {
+  it("cancel variant: actionFrame 23 â‰¤ cutoff 42, damage lands", () => {
     testCharacters = [charVariant]
     const entry: TimelineEntry = {
       id: "v1",
@@ -692,6 +698,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
           stages: [
             {
               name: "Stage",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 50,
               variants: {
@@ -743,6 +750,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
           stages: [
             {
               name: "Stage",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 50,
               damage: [
@@ -812,6 +820,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
         stages: [
           {
             name: "Frolicking Stage",
+            category: "Basic Attack",
             newName: "Frolicking Stage",
             value: "100%",
             actionTime: 30,
@@ -819,6 +828,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
           },
           {
             name: "Rampage Stage",
+            category: "Basic Attack",
             newName: "Rampage Stage",
             value: "100%",
             actionTime: 30,
@@ -954,12 +964,14 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
           stages: [
             {
               name: "Stage 1",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 30,
               damage: [libHit("Basic Attack")],
             },
             {
               name: "Heavy Attack",
+              category: "Basic Attack",
               newName: "Heavy Attack",
               value: "200%",
               actionTime: 30,
@@ -1036,6 +1048,7 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
         stages: [
           {
             name: "Stage Alpha",
+            category: "Basic Attack",
             newName: "Stage Alpha",
             value: "100%",
             actionTime: 20,
@@ -1043,6 +1056,7 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
           },
           {
             name: "Stage Beta",
+            category: "Basic Attack",
             newName: "Stage Beta",
             value: "100%",
             actionTime: 20,
@@ -1262,6 +1276,7 @@ describe("runSimulation — Movement stages", () => {
         stages: [
           {
             name: "Stage 1",
+            category: "Basic Attack",
             value: "100%",
             actionTime: 60,
             damage: [dmgHit(1.5, 10, 5)],
@@ -1276,6 +1291,7 @@ describe("runSimulation — Movement stages", () => {
         stages: [
           {
             name: "Dodge",
+            category: "Basic Attack",
             value: "",
             actionTime: 21,
             damage: [],
@@ -1405,6 +1421,7 @@ describe("runSimulation — healing pipeline", () => {
         stages: [
           {
             name: "Heal Stage",
+            category: "Basic Attack",
             value: "23.8%+950",
             actionTime: 30,
             damage: [healHit(0.238, 950, "team")],
@@ -1428,7 +1445,7 @@ describe("runSimulation — healing pipeline", () => {
     expect(result.every((e) => e.kind !== "hit")).toBe(true)
   })
 
-  it("heal amount = (ATK × multiplier + flat) × (1 + healingBonus)", () => {
+  it("heal amount = (ATK Ã— multiplier + flat) Ã— (1 + healingBonus)", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
       [tlEntry(20, "char.healer.resonance-skill.heal-skill._")],
@@ -1486,7 +1503,7 @@ describe("runSimulation — healing pipeline", () => {
   })
 })
 
-// ── Trailing-window collision (ADR-0018 / issue #177) ───────────────────────
+// â”€â”€ Trailing-window collision (ADR-0018 / issue #177) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const trailingHit = (actionFrame: number): DamageEntry => ({
   type: "Basic Attack",
@@ -1518,6 +1535,7 @@ const charTrailingBase: EnrichedCharacter = {
       stages: [
         {
           name: "Stage",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 50,
           damage: [trailingHit(3), trailingHit(15), trailingHit(30)],
@@ -1529,14 +1547,30 @@ const charTrailingBase: EnrichedCharacter = {
       id: 201,
       name: "Resonance Skill",
       type: "Resonance Skill",
-      stages: [{ name: "Stage", value: "100%", actionTime: 40, damage: [] }],
+      stages: [
+        {
+          name: "Stage",
+          category: "Basic Attack",
+          value: "100%",
+          actionTime: 40,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
       id: 202,
       name: "Movement",
       type: "Movement",
-      stages: [{ name: "Stage", value: "0", actionTime: 5, damage: [] }],
+      stages: [
+        {
+          name: "Stage",
+          category: "Basic Attack",
+          value: "0",
+          actionTime: 5,
+          damage: [],
+        },
+      ],
       damage: [],
     },
   ],
@@ -1557,7 +1591,15 @@ const charOtherTrailing: EnrichedCharacter = {
       id: 210,
       name: "Normal Attack",
       type: "Normal Attack",
-      stages: [{ name: "Stage", value: "100%", actionTime: 10, damage: [] }],
+      stages: [
+        {
+          name: "Stage",
+          category: "Basic Attack",
+          value: "100%",
+          actionTime: 10,
+          damage: [],
+        },
+      ],
       damage: [],
     },
   ],
@@ -1573,7 +1615,7 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
         stageId: "char.trailing-char.basic-attack.normal-attack._",
         variantKind: "swap",
       },
-      // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 → dropped
+      // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 â†’ dropped
       {
         id: "t2",
         characterId: 30,
@@ -1596,13 +1638,13 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
         stageId: "char.trailing-char.basic-attack.normal-attack._",
         variantKind: "swap",
       },
-      // Char 31: advance=10, frame → 6+10=16
+      // Char 31: advance=10, frame â†’ 6+10=16
       {
         id: "t2",
         characterId: 31,
         stageId: "char.other-char.basic-attack.normal-attack._",
       },
-      // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 → pad to 30
+      // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 â†’ pad to 30
       {
         id: "t3",
         characterId: 30,
@@ -1666,7 +1708,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
         characterId: 31,
         stageId: "char.other-char.basic-attack.normal-attack._",
       },
-      // Char 30 Basic Attack starts at frame 16, trailing hit at 30 → padded to 30
+      // Char 30 Basic Attack starts at frame 16, trailing hit at 30 â†’ padded to 30
       {
         id: "db4",
         characterId: 30,
@@ -1697,6 +1739,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
           stages: [
             {
               name: "Stage",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 50,
               variants: { swap: { actionTime: 10 } },
@@ -1788,7 +1831,7 @@ describe("runSimulation — sourceEntryId (#186)", () => {
   })
 })
 
-// ── Fall frames (ADR-0022 slice 2) ────────────────────────────────────────────
+// â”€â”€ Fall frames (ADR-0022 slice 2) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const charAerial: EnrichedCharacter = {
   ...charA,
@@ -1802,6 +1845,7 @@ const charAerial: EnrichedCharacter = {
       stages: [
         {
           name: "Launch Stage",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 30,
           footing: { launch: 15 },
@@ -1817,6 +1861,7 @@ const charAerial: EnrichedCharacter = {
       stages: [
         {
           name: "Aerial Stage",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 40,
           footing: "air",
@@ -1832,6 +1877,7 @@ const charAerial: EnrichedCharacter = {
       stages: [
         {
           name: "Ground Stage",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 50,
           footing: "ground",
@@ -1848,6 +1894,7 @@ const charAerial: EnrichedCharacter = {
       stages: [
         {
           name: "Neutral Stage",
+          category: "Basic Attack",
           value: "100%",
           actionTime: 45,
           damage: [],
@@ -1869,7 +1916,7 @@ function aerialSlots(): Slots {
 }
 
 describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
-  it("same-character air→ground: fall fires on grounded stage after launch", () => {
+  it("same-character airâ†’ground: fall fires on grounded stage after launch", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
       tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
@@ -1910,7 +1957,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     expect(second?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
-  it("aerial stage after launch: fall does not fire (air→air)", () => {
+  it("aerial stage after launch: fall does not fire (airâ†’air)", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
       tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
@@ -1930,9 +1977,9 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     expect(aerialAction?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
-  it("cross-character air→ground via swap: fall fires on incoming character's row", () => {
+  it("cross-character airâ†’ground via swap: fall fires on incoming character's row", () => {
     testCharacters = [charAerial, charAerialB]
-    // charA launches (team → air), charB does ground stage (fall fires on charB)
+    // charA launches (team â†’ air), charB does ground stage (fall fires on charB)
     const entries: TimelineEntry[] = [
       tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
       tlEntry(51, "char.aerial-char-b.basic-attack.ground-attack._", "e2"),
@@ -1952,11 +1999,11 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   })
 
   it("fall is additive with pad (both non-zero)", () => {
-    // charA full non-swap launch → team air; charB swap with trailing hit → window;
+    // charA full non-swap launch â†’ team air; charB swap with trailing hit â†’ window;
     // charB re-enters ground stage: fall fires (team air) + pad fires (trailing hit)
     testCharacters = [charAerial, charSnapA]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"), // non-swap: {launch:15} ≤ advance=30 → on-field → team=air
+      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"), // non-swap: {launch:15} â‰¤ advance=30 â†’ on-field â†’ team=air
       {
         id: "e2",
         characterId: 52,
@@ -2019,7 +2066,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
         variantKind: "cancel",
       },
     ]
-    // reactionDelay=6, variantFloor=0 → react wins
+    // reactionDelay=6, variantFloor=0 â†’ react wins
     const result = runSimulation(
       entries,
       aerialSlots(),
@@ -2038,7 +2085,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
 
   it("footing-transparent stage does not reset footing cursor", () => {
     testCharacters = [charAerial]
-    // launch → neutral (transparent, no footing change) → ground → fall fires
+    // launch â†’ neutral (transparent, no footing change) â†’ ground â†’ fall fires
     const entries: TimelineEntry[] = [
       tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
       tlEntry(50, "char.aerial-char.basic-attack.neutral._", "e2"),
@@ -2059,7 +2106,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   })
 })
 
-// ── Trailing-window footing snapshot (ADR-0022 slice 3) ─────────────────────
+// â”€â”€ Trailing-window footing snapshot (ADR-0022 slice 3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const snapDmg = (actionFrame: number): DamageEntry => ({
   type: "Resonance Skill",
@@ -2085,11 +2132,12 @@ const charSnapA: EnrichedCharacter = {
       stages: [
         {
           name: "Aerial Swap Stage",
+          category: "Basic Attack",
           value: "",
           actionTime: 30,
           footing: { launch: 15 },
           damage: [
-            snapDmg(3), // immediate (≤ swapFrames=6)
+            snapDmg(3), // immediate (â‰¤ swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window
           ],
         },
@@ -2103,6 +2151,7 @@ const charSnapA: EnrichedCharacter = {
       stages: [
         {
           name: "Ground Stage",
+          category: "Basic Attack",
           value: "",
           actionTime: 50,
           footing: "ground",
@@ -2121,19 +2170,19 @@ function snapSlots(): Slots {
 }
 
 describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)", () => {
-  it("load-bearing: aerial swap-variant → charB lands → charA swap-back pays fall via snapshot", () => {
+  it("load-bearing: aerial swap-variant â†’ charB lands â†’ charA swap-back pays fall via snapshot", () => {
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
-      // charA aerial swap (trailing hit at frame 20) → snapshot charA → "air"
+      // charA aerial swap (trailing hit at frame 20) â†’ snapshot charA â†’ "air"
       {
         id: "e1",
         characterId: 52,
         stageId: "char.snap-a.resonance-skill.aerial-swap._",
         variantKind: "swap",
       },
-      // charB ground stage → team → "ground"; charA snapshot still "air"
+      // charB ground stage â†’ team â†’ "ground"; charA snapshot still "air"
       tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"),
-      // charA re-enters ground stage → snapshot override "air" → fall fires
+      // charA re-enters ground stage â†’ snapshot override "air" â†’ fall fires
       tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e3"),
     ]
     const result = runSimulation(
@@ -2150,10 +2199,10 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     expect(reentry?.delayBreakdown?.fall).toBe(21)
   })
 
-  it("swap-variant with {launch:N}: pendingFooting fires at re-entry → charA pays fall", () => {
-    // charA Launch swap (damage: [], {launch:15}, swap advance=6): launch frame > advance →
-    // pendingFooting created; fires as snapshot at charA re-entry → on-field invariant promotes →
-    // charA effectiveFooting = air → fall fires on re-entry
+  it("swap-variant with {launch:N}: pendingFooting fires at re-entry â†’ charA pays fall", () => {
+    // charA Launch swap (damage: [], {launch:15}, swap advance=6): launch frame > advance â†’
+    // pendingFooting created; fires as snapshot at charA re-entry â†’ on-field invariant promotes â†’
+    // charA effectiveFooting = air â†’ fall fires on re-entry
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
       {
@@ -2181,7 +2230,7 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
 
   it("different character enters while launch is pending: inherits ground (not yet-committed air)", () => {
     // charA swap-cancel before launch frame: team stays ground when charB enters.
-    // charB sees ground footing → no fall. charA's pending footing fires off-field only
+    // charB sees ground footing â†’ no fall. charA's pending footing fires off-field only
     // on charA's re-entry, not when charB enters.
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
@@ -2190,8 +2239,8 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
         characterId: 52,
         stageId: "char.snap-a.resonance-skill.aerial-swap._",
         variantKind: "swap",
-      }, // {launch:15}, swap advance=6 < 15 → pending; team stays ground
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"), // charB enters: team=ground → no fall
+      }, // {launch:15}, swap advance=6 < 15 â†’ pending; team stays ground
+      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"), // charB enters: team=ground â†’ no fall
     ]
     const result = runSimulation(
       entries,
@@ -2242,13 +2291,13 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
   })
 })
 
-// ── Footing commit as Trailing Window event (ADR-0022 slice 4) ───────────────
+// â”€â”€ Footing commit as Trailing Window event (ADR-0022 slice 4) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe("runSimulation — footing commit as trailing-window event (ADR-0022 slice 4)", () => {
   it("early-cancel swap: incoming char inherits ground; charA swap-back pays fall via snapshot", () => {
-    // charA swap-cancel at frame 6 before launch frame 15 → team stays ground →
-    // charB inherits ground; charA's pending footing fires at re-entry as snapshot →
-    // on-field invariant promotes to air → charA pays fall
+    // charA swap-cancel at frame 6 before launch frame 15 â†’ team stays ground â†’
+    // charB inherits ground; charA's pending footing fires at re-entry as snapshot â†’
+    // on-field invariant promotes to air â†’ charA pays fall
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
       {
@@ -2278,9 +2327,9 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     ).toBe(21)
   })
 
-  it("late-cancel swap: launch fires on-field → team flips to air → incoming char inherits air", () => {
-    // charA non-swap Launch ({launch:15} ≤ advance=30) → on-field dispatch → team=air →
-    // charB enters after charA's full advance → team=air → charB pays fall
+  it("late-cancel swap: launch fires on-field â†’ team flips to air â†’ incoming char inherits air", () => {
+    // charA non-swap Launch ({launch:15} â‰¤ advance=30) â†’ on-field dispatch â†’ team=air â†’
+    // charB enters after charA's full advance â†’ team=air â†’ charB pays fall
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
       tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
@@ -2302,9 +2351,9 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
   })
 
   it("cancel-capable same-char re-entry before pending launch frame: drops footing (no team flip, no snapshot)", () => {
-    // charA swap at frame 0 → pending footing at frame 15
-    // charA Resonance Skill re-entry at frame 6 (< 15) → cancel-capable drop →
-    // no snapshot, no team flip; charA's new entry sees team=ground → no fall
+    // charA swap at frame 0 â†’ pending footing at frame 15
+    // charA Resonance Skill re-entry at frame 6 (< 15) â†’ cancel-capable drop â†’
+    // no snapshot, no team flip; charA's new entry sees team=ground â†’ no fall
     testCharacters = [charSnapA]
     const entries: TimelineEntry[] = [
       {
@@ -2335,11 +2384,11 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     ).toBe(0)
   })
 
-  it("non-cancel-capable same-char re-entry: pads to cover launch frame; footing fires → fall on re-entry", () => {
-    // charA swap at frame 0 → pending footing at frame 15, trailing hit at frame 20
-    // charA Normal Attack re-entry at frame 6 → non-cancel-capable →
-    // pad = max(hitFrame=20, footingAtFrame=15) - 6 = 14; pendingFooting fires → snapshot →
-    // on-field invariant promotes to air → charA pays fall
+  it("non-cancel-capable same-char re-entry: pads to cover launch frame; footing fires â†’ fall on re-entry", () => {
+    // charA swap at frame 0 â†’ pending footing at frame 15, trailing hit at frame 20
+    // charA Normal Attack re-entry at frame 6 â†’ non-cancel-capable â†’
+    // pad = max(hitFrame=20, footingAtFrame=15) - 6 = 14; pendingFooting fires â†’ snapshot â†’
+    // on-field invariant promotes to air â†’ charA pays fall
     testCharacters = [charSnapA]
     const entries: TimelineEntry[] = [
       {
@@ -2390,7 +2439,7 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     // charB enters while charA's pending footing is still in the window (not yet fired)
-    // → charB sees ground → no fall
+    // â†’ charB sees ground â†’ no fall
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
     ).toBe(0)
@@ -2420,7 +2469,13 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
         name: "Normal Attack",
         type: "Normal Attack",
         stages: [
-          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+          {
+            name: "Stage 1",
+            category: "Basic Attack",
+            value: "100%",
+            actionTime: 20,
+            damage: [],
+          },
         ],
         damage: [],
       },
@@ -2440,7 +2495,15 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
         id: 521,
         name: "Dodge",
         type: "Movement",
-        stages: [{ name: "Dodge", value: "", actionTime: 10, damage: [] }],
+        stages: [
+          {
+            name: "Dodge",
+            category: "Basic Attack",
+            value: "",
+            actionTime: 10,
+            damage: [],
+          },
+        ],
         damage: [],
       },
     ],
@@ -2457,7 +2520,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   }
 
   it("(a) clock starts at off-field-exit frame: full 60-frame cooldown on immediate swap-back", () => {
-    // A (20f) → B (20f) → A: A left at frame 20, arrives back at frame 40 → swapBack = 60 - 20 = 40
+    // A (20f) â†’ B (20f) â†’ A: A left at frame 20, arrives back at frame 40 â†’ swapBack = 60 - 20 = 40
     testCharacters = [swapBackCharA, swapBackCharB]
     const entries = [
       tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
@@ -2473,7 +2536,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(b) trailing hits do not advance the clock: swapBack still reflects exit frame", () => {
-    // A with trailing hits (actionTime=20, hit at frame 15) → B (20f) → A
+    // A with trailing hits (actionTime=20, hit at frame 15) â†’ B (20f) â†’ A
     // A left at frame 20, B ends at frame 40, swapBack = 60 - 20 = 40
     testCharacters = [swapBackCharA, swapBackCharB]
     const charAWithTrailing: EnrichedCharacter = {
@@ -2486,6 +2549,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
           stages: [
             {
               name: "Stage 1",
+              category: "Basic Attack",
               value: "100%",
               actionTime: 20,
               damage: [{ ...dmgHit(1.0), actionFrame: 15 }],
@@ -2530,7 +2594,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(e) Movement stages do not affect the swap-back clock", () => {
-    // A (20f) → C:Dodge (10f) — no swap inferred for Movement → B (20f) → A
+    // A (20f) â†’ C:Dodge (10f) — no swap inferred for Movement â†’ B (20f) â†’ A
     // Because Dodge doesn't fire skillCast, A stays "on-field" in tracker;
     // B's arrival infers swap from A (sets lastOffFieldFrame[A] = 30), not C.
     // When A comes back at frame 50: swapBack = 60 - (50 - 30) = 40
@@ -2541,7 +2605,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"), // A at frame 0, ends frame 20
       tlEntry(52, "char.swap-c.movement.dodge._", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
-      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e3"), // B at frame 30, swap from A→B recorded (lastOffFieldFrame[A]=30)
+      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e3"), // B at frame 30, swap from Aâ†’B recorded (lastOffFieldFrame[A]=30)
       tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e4"), // A at frame 50, swapBack = 60 - 20 = 40
     ]
     const log = runSimulation(entries, [50, 51, 52], emptyLoadouts)
@@ -2551,10 +2615,10 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(f) pad is 0 once 60+ frames have elapsed off-field", () => {
-    // A (80f) → B (20f) → A: A left at frame 80, arrives at frame 100 → 60 - 20 = 40; but if gap ≥ 60 → 0
-    // Use actionTime=70 for A so B starts at 70, then after B's 20f, A returns at 90 → 60-(90-70)=40 (still some CD)
-    // For gap ≥ 60: A's actionTime=80, B's actionTime=20 → A returns at 100, 60-(100-80)=40 still partial
-    // Use A actionTime=80, B actionTime=60: A exits at 80, B ends at 140 → 60-(140-80) = 60-60 = 0
+    // A (80f) â†’ B (20f) â†’ A: A left at frame 80, arrives at frame 100 â†’ 60 - 20 = 40; but if gap â‰¥ 60 â†’ 0
+    // Use actionTime=70 for A so B starts at 70, then after B's 20f, A returns at 90 â†’ 60-(90-70)=40 (still some CD)
+    // For gap â‰¥ 60: A's actionTime=80, B's actionTime=20 â†’ A returns at 100, 60-(100-80)=40 still partial
+    // Use A actionTime=80, B actionTime=60: A exits at 80, B ends at 140 â†’ 60-(140-80) = 60-60 = 0
     const charALong: EnrichedCharacter = {
       ...swapBackCharA,
       skills: [
@@ -2563,7 +2627,13 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
           name: "Normal Attack",
           type: "Normal Attack",
           stages: [
-            { name: "Stage 1", value: "100%", actionTime: 80, damage: [] },
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              value: "100%",
+              actionTime: 80,
+              damage: [],
+            },
           ],
           damage: [],
         },
@@ -2577,7 +2647,13 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
           name: "Normal Attack",
           type: "Normal Attack",
           stages: [
-            { name: "Stage 1", value: "100%", actionTime: 60, damage: [] },
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              value: "100%",
+              actionTime: 60,
+              damage: [],
+            },
           ],
           damage: [],
         },
@@ -2592,7 +2668,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    // A exits at frame 80, returns at frame 140 → 60 - (140 - 80) = 0
+    // A exits at frame 80, returns at frame 140 â†’ 60 - (140 - 80) = 0
     expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
   })
 })
@@ -2618,7 +2694,13 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         name: "Normal Attack",
         type: "Normal Attack",
         stages: [
-          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+          {
+            name: "Stage 1",
+            category: "Basic Attack",
+            value: "100%",
+            actionTime: 20,
+            damage: [],
+          },
         ],
         damage: [],
       },
@@ -2630,6 +2712,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         stages: [
           {
             name: "Skill DMG",
+            category: "Basic Attack",
             newName: "Liberation",
             value: "",
             actionTime: 0,
@@ -2651,7 +2734,13 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         name: "Normal Attack",
         type: "Normal Attack",
         stages: [
-          { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+          {
+            name: "Stage 1",
+            category: "Basic Attack",
+            value: "100%",
+            actionTime: 20,
+            damage: [],
+          },
         ],
         damage: [],
       },
@@ -2671,7 +2760,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   it("(a) caster's own residual CD is eaten by animationFrames", () => {
     // A swaps out at frame 20, B acts for 10 frames, A swaps back and casts Liberation
     // Without animation: swapBack = 60 - (30 - 20) = 50
-    // With animation (60f): clock advances 60 before computing → swapBack = 0
+    // With animation (60f): clock advances 60 before computing â†’ swapBack = 0
     testCharacters = [animCharA, animCharB]
     const charBShort: EnrichedCharacter = {
       ...animCharB,
@@ -2681,7 +2770,13 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           name: "Normal Attack",
           type: "Normal Attack",
           stages: [
-            { name: "Stage 1", value: "100%", actionTime: 10, damage: [] },
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              value: "100%",
+              actionTime: 10,
+              damage: [],
+            },
           ],
           damage: [],
         },
@@ -2695,7 +2790,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         60,
         "char.anim-a.resonance-liberation.liberation.liberation",
         "e3",
-      ), // A at frame 30, animationFrames=60 advance → swapBack=0
+      ), // A at frame 30, animationFrames=60 advance â†’ swapBack=0
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2706,7 +2801,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   it("(b) off-field teammate CD is eaten when caster uses animationFrames stage", () => {
     // B exits at frame 20, A casts Liberation at frame 20 (animationFrames=60)
     // Without animation: B's CD = 60 when B returns at frame 20
-    // With animation: advance 60 → B's CD = 0 when B returns at frame 20
+    // With animation: advance 60 â†’ B's CD = 0 when B returns at frame 20
     const charALib: EnrichedCharacter = {
       ...animCharA,
       skills: [
@@ -2721,7 +2816,13 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           name: "Normal Attack",
           type: "Normal Attack",
           stages: [
-            { name: "Stage 1", value: "100%", actionTime: 20, damage: [] },
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              value: "100%",
+              actionTime: 20,
+              damage: [],
+            },
           ],
           damage: [],
         },
@@ -2744,8 +2845,8 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   })
 
   it("(c) sequential animations accumulate", () => {
-    // B exits at frame 0. A casts two Liberations (animationFrames=60 each) → total 120f advance
-    // B re-enters at frame 0 → swapBack = max(0, 60 - (0 - (0 - 120))) = 0
+    // B exits at frame 0. A casts two Liberations (animationFrames=60 each) â†’ total 120f advance
+    // B re-enters at frame 0 â†’ swapBack = max(0, 60 - (0 - (0 - 120))) = 0
     const charADoubleLib: EnrichedCharacter = {
       ...animCharA,
       skills: [
@@ -2757,6 +2858,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           stages: [
             {
               name: "Skill DMG",
+              category: "Basic Attack",
               newName: "Liberation",
               value: "",
               actionTime: 0,
@@ -2765,6 +2867,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
             },
             {
               name: "Skill DMG",
+              category: "Basic Attack",
               newName: "Liberation2",
               value: "",
               actionTime: 0,
@@ -2789,7 +2892,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         "char.anim-a.resonance-liberation.liberation.liberation2",
         "e3",
       ), // A at frame 20 still, +60 advance
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e4"), // B returns at frame 20, 120f advance total → 0
+      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e4"), // B returns at frame 20, 120f advance total â†’ 0
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2809,7 +2912,13 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           name: "Normal Attack",
           type: "Normal Attack",
           stages: [
-            { name: "Stage 1", value: "100%", actionTime: 10, damage: [] },
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              value: "100%",
+              actionTime: 10,
+              damage: [],
+            },
           ],
           damage: [],
         },
@@ -2841,6 +2950,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           stages: [
             {
               name: "Skill DMG",
+              category: "Basic Attack",
               newName: "Liberation",
               value: "",
               actionTime: 0,
@@ -2961,6 +3071,7 @@ describe("runSimulation — removeBuffs effect", () => {
         stages: [
           {
             name: "Skill",
+            category: "Basic Attack",
             value: "100%",
             actionTime: 30,
             damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],

@@ -38,16 +38,28 @@ const charA: EnrichedCharacter = {
       name: "Normal Attack",
       type: "Normal Attack",
       stages: [
-        { name: "", value: "1", actionTime: 60, damage: [dmgEntry(1.5)] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 60,
+          damage: [dmgEntry(1.5)],
+        },
       ],
       damage: [],
     },
     {
       id: 2,
       name: "Heavy Attack",
-      type: "Heavy Attack",
+      type: "Normal Attack",
       stages: [
-        { name: "", value: "1", actionTime: 30, damage: [dmgEntry(1.0)] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 30,
+          damage: [dmgEntry(1.0)],
+        },
       ],
       damage: [],
     },
@@ -56,7 +68,13 @@ const charA: EnrichedCharacter = {
       name: "Resonance Skill",
       type: "Resonance Skill",
       stages: [
-        { name: "", value: "1", actionTime: 90, damage: [dmgEntry(1.0)] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 90,
+          damage: [dmgEntry(1.0)],
+        },
       ],
       damage: [],
     },
@@ -64,7 +82,15 @@ const charA: EnrichedCharacter = {
       id: 4,
       name: "No Damage Skill",
       type: "Forte Circuit",
-      stages: [{ name: "", value: "0", actionTime: 60, damage: [] }],
+      stages: [
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "0",
+          actionTime: 60,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
@@ -72,7 +98,13 @@ const charA: EnrichedCharacter = {
       name: "Instant Skill",
       type: "Resonance Skill",
       stages: [
-        { name: "", value: "1", actionTime: 0, damage: [dmgEntry(1.0)] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 0,
+          damage: [dmgEntry(1.0)],
+        },
       ],
       damage: [],
     },
@@ -93,7 +125,13 @@ const charB: EnrichedCharacter = {
       name: "Normal Attack",
       type: "Normal Attack",
       stages: [
-        { name: "", value: "1", actionTime: 60, damage: [dmgEntry(1.5)] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 60,
+          damage: [dmgEntry(1.5)],
+        },
       ],
       damage: [],
     },
@@ -179,7 +217,7 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       normalAttack(1, "a"),
-      tlEntry(1, "char.test-a.heavy-attack.heavy-attack._", "b"),
+      tlEntry(1, "char.test-a.basic-attack.heavy-attack._", "b"),
       tlEntry(1, "char.test-a.resonance-skill.resonance-skill._", "c"),
     ])
     // Normal Attack: 60f, Heavy Attack: 30f (starts at 60), Resonance Skill: 90f (starts at 90)
@@ -230,7 +268,7 @@ describe("getTimelineSummary — missing character", () => {
   })
 })
 
-// ── Log ingestion (#187) ─────────────────────────────────────────────────────
+// â”€â”€ Log ingestion (#187) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeActionEvent(
   entryId: string,
@@ -494,7 +532,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
 
   it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
     // charA has Normal Attack with actionTime=60, no cancel variant
-    // With no log, fallback to resolveStageExecution with variantFloor=0 → react wins
+    // With no log, fallback to resolveStageExecution with variantFloor=0 â†’ react wins
     testCharacters = [charA]
     const entry: TimelineEntry = {
       id: "f1",

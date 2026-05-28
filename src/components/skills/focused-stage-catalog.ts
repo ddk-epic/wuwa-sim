@@ -1,6 +1,6 @@
 import type {
   EnrichedSkillAttribute,
-  SkillCategory,
+  SkillGrouping,
   SkillType,
 } from "#/types/character"
 import type { EnrichedEchoStage } from "#/types/echo"
@@ -25,18 +25,6 @@ export interface FocusedStageCatalog {
 }
 
 const EMPTY: FocusedStageCatalog = { echoStages: [], characterStages: [] }
-
-function categoryToSkillType(cat: SkillCategory): SkillType {
-  if (
-    cat === "Normal Attack" ||
-    cat === "Inherent Skill" ||
-    cat === "Tune Break"
-  ) {
-    return "Basic Attack"
-  }
-  // Movement self-routes — no roll-up
-  return cat
-}
 
 export function getFocusedStageCatalog(
   slots: Slots,
@@ -114,12 +102,14 @@ function buildEchoStage(
 
 function buildCharacterStage(
   charName: string,
-  skill: { name: string; type: SkillCategory },
+  skill: { name: string; type: SkillGrouping },
   characterId: number,
   stage: EnrichedSkillAttribute,
   key: string,
 ): FocusedStage {
-  const skillType = stage.damage?.[0]?.type ?? categoryToSkillType(skill.type)
+  const fallback: SkillType =
+    stage.category === "Tune Break" ? "Basic Attack" : stage.category
+  const skillType: SkillType = stage.damage?.[0]?.type ?? fallback
   const label = skillLabel(skill.name, stage.newName)
   return {
     key,

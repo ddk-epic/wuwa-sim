@@ -10,6 +10,7 @@ export const DODGE_SKILL: EnrichedSkill = {
   stages: [
     {
       name: "Dodge",
+      category: "Movement",
       value: "",
       damage: [],
       actionTime: DODGE_ACTION_TIME,
@@ -25,6 +26,7 @@ export const JUMP_SKILL: EnrichedSkill = {
   stages: [
     {
       name: "Jump",
+      category: "Movement",
       value: "",
       damage: [],
       actionTime: JUMP_ACTION_TIME,

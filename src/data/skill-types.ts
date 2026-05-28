@@ -1,6 +1,6 @@
-import type { SkillType } from "#/types/character"
+import type { SkillGrouping, SkillType } from "#/types/character"
 
-export const STAGE_TYPE_LABELS: Record<SkillType, string> = {
+export const STAGE_TYPE_LABELS: Record<SkillType | SkillGrouping, string> = {
   "Basic Attack": "BASIC",
   "Heavy Attack": "HEAVY",
   "Resonance Skill": "SKILL",
@@ -10,6 +10,9 @@ export const STAGE_TYPE_LABELS: Record<SkillType, string> = {
   "Outro Skill": "OUTRO",
   "Echo Skill": "ECHO",
   Movement: "MOVE",
+  "Normal Attack": "NORMAL",
+  "Inherent Skill": "INHERENT",
+  "Tune Break": "TUNE",
 }
 
 export function formatSkillType(raw: string): string {

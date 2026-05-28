@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -23,6 +23,7 @@ const char1: EnrichedCharacter = {
       stages: [
         {
           name: "Stage 1",
+          category: "Basic Attack",
           value: "1",
           actionTime: 12,
           damage: [
@@ -41,6 +42,7 @@ const char1: EnrichedCharacter = {
         },
         {
           name: "Stage 2",
+          category: "Basic Attack",
           value: "1",
           actionTime: 8,
           damage: [
@@ -76,7 +78,15 @@ const char1: EnrichedCharacter = {
       name: "Hidden Skill",
       type: "Normal Attack",
       hidden: true,
-      stages: [{ name: "Hidden Stage", value: "1", actionTime: 0, damage: [] }],
+      stages: [
+        {
+          name: "Hidden Stage",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 0,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
@@ -86,14 +96,22 @@ const char1: EnrichedCharacter = {
       stages: [
         {
           name: "Stage With Hidden",
+          category: "Basic Attack",
           value: "1",
           actionTime: 5,
           hidden: true,
           damage: [],
         },
-        { name: "", value: "1", actionTime: 5, damage: [] },
+        {
+          name: "",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 5,
+          damage: [],
+        },
         {
           name: "Visible",
+          category: "Resonance Skill",
           newName: "Override",
           value: "1",
           actionTime: 5,
@@ -471,6 +489,7 @@ describe("focused-stage-catalog — characterStages ordering", () => {
         stages: [
           {
             name: "Stage 1",
+            category: "Basic Attack",
             value: "1",
             actionTime: 10,
             damage: [
@@ -494,21 +513,45 @@ describe("focused-stage-catalog — characterStages ordering", () => {
         id: 202,
         name: "Intro Skill",
         type: "Intro Skill",
-        stages: [{ name: "Intro", value: "1", actionTime: 20, damage: [] }],
+        stages: [
+          {
+            name: "Intro",
+            category: "Intro Skill",
+            value: "1",
+            actionTime: 20,
+            damage: [],
+          },
+        ],
         damage: [],
       },
       {
         id: 203,
         name: "Resonance Skill",
         type: "Resonance Skill",
-        stages: [{ name: "Skill", value: "1", actionTime: 15, damage: [] }],
+        stages: [
+          {
+            name: "Skill",
+            category: "Resonance Skill",
+            value: "1",
+            actionTime: 15,
+            damage: [],
+          },
+        ],
         damage: [],
       },
       {
         id: 204,
         name: "Outro Skill",
         type: "Outro Skill",
-        stages: [{ name: "Outro", value: "1", actionTime: 25, damage: [] }],
+        stages: [
+          {
+            name: "Outro",
+            category: "Outro Skill",
+            value: "1",
+            actionTime: 25,
+            damage: [],
+          },
+        ],
         damage: [],
       },
     ],

@@ -321,6 +321,7 @@ export const verina = {
       stages: [
         {
           name: "Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Stage 1",
           value: "37.86%",
           actionTime: 27,
@@ -344,6 +345,7 @@ export const verina = {
         },
         {
           name: "Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Stage 2",
           value: "51.16%",
           actionTime: 44,
@@ -367,6 +369,7 @@ export const verina = {
         },
         {
           name: "Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Stage 3",
           value: "25.58%*2",
           actionTime: 31,
@@ -401,6 +404,7 @@ export const verina = {
         },
         {
           name: "Stage 4 DMG",
+          category: "Basic Attack",
           newName: "Stage 4",
           value: "67.32%",
           actionTime: 46,
@@ -424,6 +428,7 @@ export const verina = {
         },
         {
           name: "Stage 5 DMG",
+          category: "Basic Attack",
           newName: "Stage 5",
           value: "71.62%",
           actionTime: 60,
@@ -448,6 +453,7 @@ export const verina = {
         },
         {
           name: "Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "99.41%",
           actionTime: 60,
@@ -470,6 +476,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack Stage 1",
           value: "56.37%",
           actionTime: 22,
@@ -492,6 +499,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack Stage 2",
           value: "53.19%",
           actionTime: 14,
@@ -514,6 +522,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack Stage 3",
           value: "25.42%*3",
           actionTime: 46,
@@ -558,6 +567,7 @@ export const verina = {
         },
         {
           name: "Mid-air Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Mid-air Heavy Attack",
           value: "61.64%",
           hidden: true,
@@ -579,6 +589,7 @@ export const verina = {
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Dodge Counter",
           value: "129.23%",
           hidden: true,
@@ -610,6 +621,7 @@ export const verina = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Skill",
           newName: "",
           value: "35.79%*3+71.58%",
           actionTime: 88,
@@ -678,6 +690,7 @@ export const verina = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Liberation",
           newName: "",
           value: "198.81%",
           actionTime: 42,
@@ -699,6 +712,7 @@ export const verina = {
         },
         {
           name: "Arboreal Flourish Healing",
+          category: "Basic Attack",
           newName: "Arboreal Flourish Healing",
           value: "950+23.80%",
           hidden: true,
@@ -722,6 +736,7 @@ export const verina = {
         },
         {
           name: "Coordinated Attack DMG",
+          category: "Resonance Liberation",
           newName: "Coordinated Attack",
           value: "9.95%",
           hidden: true,
@@ -743,6 +758,7 @@ export const verina = {
         },
         {
           name: "Coordinated Attack Healing",
+          category: "Basic Attack",
           newName: "Coordinated Attack Healing",
           value: "428+10.71%",
           hidden: true,
@@ -803,6 +819,7 @@ export const verina = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Intro Skill",
           newName: "",
           value: "99.41%",
           actionTime: 76,
@@ -832,6 +849,7 @@ export const verina = {
       stages: [
         {
           name: "Heavy Attack: Starflower Blooms Damage",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "64.95%+97.42%",
           actionTime: 60,
@@ -865,6 +883,7 @@ export const verina = {
         },
         {
           name: "Starflower Blooms Healing",
+          category: "Basic Attack",
           newName: "Starflower Blooms Healing",
           value: "1188+29.75%",
           hidden: true,
@@ -888,6 +907,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack: Stage 1",
           value: "67.64%",
           actionTime: 22,
@@ -910,6 +930,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack: Stage 2",
           value: "63.82%",
           actionTime: 14,
@@ -932,6 +953,7 @@ export const verina = {
         },
         {
           name: "Mid-air Attack: Starflower Blooms Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Mid-air Attack: Stage 3",
           value: "30.50%*3",
           actionTime: 46,
@@ -992,6 +1014,7 @@ export const verina = {
       stages: [
         {
           name: "Outro DMG",
+          category: "Outro Skill",
           newName: "",
           value: "0%",
           actionTime: 0,

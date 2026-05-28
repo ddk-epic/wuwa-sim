@@ -32,26 +32,31 @@ const charWithSkills: Character = {
       stages: [
         {
           name: "Stage 1 DMG",
+          category: "Basic Attack",
           value: "50%",
           damage: [],
         },
         {
           name: "Woolies Damage",
+          category: "Basic Attack",
           value: "100%",
           damage: [],
         },
         {
           name: "Skill DMG",
+          category: "Basic Attack",
           value: "80%",
           damage: [],
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           value: "120%",
           damage: [],
         },
         {
           name: "Mid-air Attack",
+          category: "Basic Attack",
           value: "90%",
           damage: [],
         },
@@ -77,7 +82,12 @@ const charWithSkills: Character = {
       name: "Cosmos Rave",
       type: "Resonance Liberation",
       stages: [
-        { name: "Cosmos: Frolicking Stage 1 DMG", value: "90%", damage: [] },
+        {
+          name: "Cosmos: Frolicking Stage 1 DMG",
+          category: "Basic Attack",
+          value: "90%",
+          damage: [],
+        },
       ],
       damage: [],
     },
@@ -187,7 +197,14 @@ describe("formatCharacter", () => {
           id: 1,
           name: "Strike",
           type: "Normal Attack",
-          stages: [{ name: "Stage 1 DMG", value: "50%", damage: [] }],
+          stages: [
+            {
+              name: "Stage 1 DMG",
+              category: "Basic Attack",
+              value: "50%",
+              damage: [],
+            },
+          ],
           damage: [],
         },
       ],
@@ -230,9 +247,15 @@ describe("formatCharacter", () => {
           name: "Cosmos Rave",
           type: "Resonance Liberation",
           stages: [
-            { name: "Skill DMG", value: "100%", damage: [] },
+            {
+              name: "Skill DMG",
+              category: "Basic Attack",
+              value: "100%",
+              damage: [],
+            },
             {
               name: "Cosmos: Frolicking Stage 1 DMG",
+              category: "Basic Attack",
               value: "90%",
               damage: [],
             },
@@ -283,6 +306,7 @@ describe("formatCharacter", () => {
           stages: [
             {
               name: "Healing",
+              category: "Basic Attack",
               value: "950+23.80%",
               damage: [
                 {

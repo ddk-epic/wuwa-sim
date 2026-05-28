@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent, cleanup } from "@testing-library/react"
 import type { ReactElement } from "react"
@@ -57,6 +57,7 @@ const char1: EnrichedCharacter = {
       stages: [
         {
           name: "Stage 1",
+          category: "Basic Attack",
           value: "1",
           actionTime: 0,
           damage: [
@@ -94,7 +95,15 @@ const char2: EnrichedCharacter = {
       id: 201,
       name: "Normal Attack",
       type: "Normal Attack",
-      stages: [{ name: "Stage 1", value: "1", actionTime: 0, damage: [] }],
+      stages: [
+        {
+          name: "Stage 1",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 0,
+          damage: [],
+        },
+      ],
       damage: [],
     },
   ],
@@ -307,14 +316,30 @@ const charWithIntroOutro: EnrichedCharacter = {
       id: 301,
       name: "Intro Skill",
       type: "Intro Skill",
-      stages: [{ name: "Intro", value: "1", actionTime: 10, damage: [] }],
+      stages: [
+        {
+          name: "Intro",
+          category: "Intro Skill",
+          value: "1",
+          actionTime: 10,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
       id: 302,
       name: "Outro Skill",
       type: "Outro Skill",
-      stages: [{ name: "Outro", value: "1", actionTime: 15, damage: [] }],
+      stages: [
+        {
+          name: "Outro",
+          category: "Outro Skill",
+          value: "1",
+          actionTime: 15,
+          damage: [],
+        },
+      ],
       damage: [],
     },
     {
@@ -324,6 +349,7 @@ const charWithIntroOutro: EnrichedCharacter = {
       stages: [
         {
           name: "Stage 1",
+          category: "Basic Attack",
           value: "1",
           actionTime: 0,
           damage: [

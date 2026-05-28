@@ -7,7 +7,7 @@ import type {
   DamageEntry,
   Skill,
   SkillAttribute,
-  SkillCategory,
+  SkillGrouping,
   SkillType,
   StatGroup,
 } from "../src/types/character.js"
@@ -181,7 +181,7 @@ export function enrichSkill(
     const { flat, rates: parsedRates } = parseValuesFromValue(value)
 
     if (parsedRates.length === 0) {
-      return { name: attr.attributeName, value }
+      return { name: attr.attributeName, category: "Basic Attack", value }
     }
 
     const matched: DamageEntry[] = []
@@ -206,7 +206,7 @@ export function enrichSkill(
     }
 
     if (matched.length === 0) {
-      return { name: attr.attributeName, value }
+      return { name: attr.attributeName, category: "Basic Attack", value }
     }
 
     if (flat !== undefined) {
@@ -218,7 +218,12 @@ export function enrichSkill(
       matched[0] = { ...matched[0], flat }
     }
 
-    return { name: attr.attributeName, value, damage: matched }
+    return {
+      name: attr.attributeName,
+      category: "Basic Attack",
+      value,
+      damage: matched,
+    }
   })
 
   const STA_COST_SUFFIX = " STA Cost"
@@ -282,9 +287,10 @@ export function enrichSkill(
     return true
   })
 
-  const orderedAttributes = finalAttributes.map(
-    ({ name, value, staCost, cooldown, concerto, damage }) => ({
+  const orderedAttributes: SkillAttribute[] = finalAttributes.map(
+    ({ name, category, value, staCost, cooldown, concerto, damage }) => ({
       name,
+      category,
       value,
       ...(staCost !== undefined && { staCost }),
       ...(cooldown !== undefined && { cooldown }),
@@ -310,7 +316,7 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
     return {
       id: skill.SkillId,
       name: skill.SkillName,
-      type: skill.SkillType as SkillCategory,
+      type: skill.SkillType as SkillGrouping,
       ...(cooldown !== undefined && { cooldown }),
       ...(duration !== undefined && { duration }),
       ...(concerto !== undefined && { concerto }),

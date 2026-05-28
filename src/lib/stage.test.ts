@@ -46,9 +46,16 @@ const baseChar = (
       name: "Normal Attack",
       type: "Normal Attack",
       stages: [
-        { name: "Stage 1", value: "1", actionTime: 30, damage: [] },
+        {
+          name: "Stage 1",
+          category: "Basic Attack",
+          value: "1",
+          actionTime: 30,
+          damage: [],
+        },
         {
           name: "Named",
+          category: "Basic Attack",
           value: "1",
           actionTime: 20,
           damage: [],
@@ -97,7 +104,14 @@ function makeStage(
   variants?: EnrichedSkillAttribute["variants"],
   damage: EnrichedSkillAttribute["damage"] = [],
 ): EnrichedSkillAttribute {
-  return { name: "Stage", value: "100%", actionTime, damage, variants }
+  return {
+    name: "Stage",
+    category: "Basic Attack",
+    value: "100%",
+    actionTime,
+    damage,
+    variants,
+  }
 }
 
 describe("makeCharStageId", () => {
@@ -218,6 +232,7 @@ describe("findStageByEntry — character skill", () => {
             stages: [
               {
                 name: "S2",
+                category: "Basic Attack",
                 value: "1",
                 actionTime: 30,
                 damage: [],
@@ -299,6 +314,7 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
           stages: [
             {
               name: stageName,
+              category: "Resonance Skill",
               newName,
               value: "",
               actionTime: 0,
@@ -597,7 +613,7 @@ describe("resolveStageExecution — react value", () => {
 })
 
 describe("resolveStageExecution — variantFloor", () => {
-  it("floor wins: actionTime=0, react=6, floor=15 → advance=15, floor=15, react=0", () => {
+  it("floor wins: actionTime=0, react=6, floor=15 â†’ advance=15, floor=15, react=0", () => {
     const stage = makeStage(50, { cancel: { actionTime: 0 } })
     const result = resolveStageExecution(stage, "cancel", 6, 6, 15)
     expect(result.advance).toBe(15)
@@ -605,7 +621,7 @@ describe("resolveStageExecution — variantFloor", () => {
     expect(result.react).toBe(0)
   })
 
-  it("react wins: actionTime=30, react=6, floor=15 → advance=36, react=6, floor=0", () => {
+  it("react wins: actionTime=30, react=6, floor=15 â†’ advance=36, react=6, floor=0", () => {
     const stage = makeStage(50, { cancel: { actionTime: 30 } })
     const result = resolveStageExecution(stage, "cancel", 6, 6, 15)
     expect(result.advance).toBe(36)

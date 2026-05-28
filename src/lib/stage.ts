@@ -4,6 +4,7 @@ import type {
   Footing,
   MovementKind,
   SkillCategory,
+  SkillGrouping,
   SkillType,
   VariantKind,
   StageVariant,
@@ -40,21 +41,28 @@ export interface ResolvedStage {
   concerto: number
   resonanceCost?: number
   damage: DamageEntry[]
+  skillGrouping: SkillGrouping
+  skillCategory: SkillCategory
   skillType: SkillType
   skillName: string
   requiresStageId?: string
   comboAllows?: readonly MovementKind[]
 }
 
-/** `char.<charName>.<skillType>.<skillName>.<stageName>` */
+/** `char.<charName>.<skill-grouping>.<skillName>.<stageName>` (lineage rework lands in #270) */
 export function makeCharStageId(
   charName: string,
-  skillCategory: SkillCategory,
+  skillGrouping: SkillGrouping,
   skillName: string,
   stageName: string | undefined,
 ): string {
-  const skillType = categoryToSkillType(skillCategory)
-  return `char.${toKebab(charName)}.${toKebab(skillType)}.${toKebab(skillName)}.${toKebab(stageName)}`
+  const lineage =
+    skillGrouping === "Normal Attack" ||
+    skillGrouping === "Inherent Skill" ||
+    skillGrouping === "Tune Break"
+      ? "basic-attack"
+      : toKebab(skillGrouping)
+  return `char.${toKebab(charName)}.${lineage}.${toKebab(skillName)}.${toKebab(stageName)}`
 }
 
 /** `echo.<echoName>.<stageName>` */
@@ -69,18 +77,6 @@ export function stageLabel(skillName: string, newName?: string): string {
   if (!newName) return skillName
   if (newName.startsWith("(")) return `${skillName} ${newName}`
   return `${skillName} · ${newName}`
-}
-
-function categoryToSkillType(cat: SkillCategory): SkillType {
-  if (
-    cat === "Normal Attack" ||
-    cat === "Inherent Skill" ||
-    cat === "Tune Break"
-  ) {
-    return "Basic Attack"
-  }
-  // Movement self-routes — no roll-up
-  return cat
 }
 
 export function findStageByEntry(
@@ -107,6 +103,14 @@ export function findStageByEntry(
                 ).comboAllows
               : undefined
           const isCastStage = s.name === STAGE_CAST_NAME
+          // Preserve pre-#271 behavior: skillType reflects parent skill grouping (collapsed),
+          // not damage[0].type. The bug-fix migration happens in #271.
+          const skillType: SkillType =
+            skill.type === "Normal Attack" ||
+            skill.type === "Inherent Skill" ||
+            skill.type === "Tune Break"
+              ? "Basic Attack"
+              : skill.type
           return {
             stage: s,
             stageId: entry.stageId,
@@ -116,7 +120,9 @@ export function findStageByEntry(
               (s.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
             resonanceCost: skill.resonanceCost,
             damage: s.damage ?? [],
-            skillType: categoryToSkillType(skill.type),
+            skillGrouping: skill.type,
+            skillCategory: s.category,
+            skillType,
             skillName: isCastStage
               ? skill.name
               : stageLabel(skill.name, s.newName),
@@ -141,6 +147,8 @@ export function findStageByEntry(
           element: echo.element,
           concerto: 0,
           damage: s.damage,
+          skillGrouping: "Echo Skill",
+          skillCategory: "Echo Skill",
           skillType: "Echo Skill",
           skillName: stageLabel(echo.name, s.newName),
         }

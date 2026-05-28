@@ -170,6 +170,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Stage 1 DMG",
+          category: "Basic Attack",
           newName: "Stage 1",
           value: "31.78%",
           actionTime: 0,
@@ -190,6 +191,7 @@ export const shorekeeper = {
         },
         {
           name: "Stage 2 DMG",
+          category: "Basic Attack",
           newName: "Stage 2",
           value: "23.86%*2",
           actionTime: 0,
@@ -221,6 +223,7 @@ export const shorekeeper = {
         },
         {
           name: "Stage 3 DMG",
+          category: "Basic Attack",
           newName: "Stage 3",
           value: "23.32%*3",
           actionTime: 0,
@@ -263,6 +266,7 @@ export const shorekeeper = {
         },
         {
           name: "Stage 4 DMG",
+          category: "Basic Attack",
           newName: "Stage 4",
           value: "72.72%",
           actionTime: 0,
@@ -283,6 +287,7 @@ export const shorekeeper = {
         },
         {
           name: "Heavy Attack DMG",
+          category: "Heavy Attack",
           newName: "Heavy Attack",
           value: "45.81%",
           actionTime: 0,
@@ -303,6 +308,7 @@ export const shorekeeper = {
         },
         {
           name: "Plunging Attack DMG",
+          category: "Basic Attack",
           newName: "Plunging Attack",
           value: "73.96%",
           actionTime: 0,
@@ -323,6 +329,7 @@ export const shorekeeper = {
         },
         {
           name: "Dodge Counter DMG",
+          category: "Basic Attack",
           newName: "Dodge Counter",
           value: "87.48%*2",
           hidden: true,
@@ -365,6 +372,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Skill",
           newName: "",
           value: "31.31*5%",
           actionTime: 0,
@@ -429,6 +437,7 @@ export const shorekeeper = {
         },
         {
           name: "Healing",
+          category: "Resonance Skill",
           newName: "Healing",
           value: "1313+5.97%",
           actionTime: 0,
@@ -462,6 +471,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Skill DMG",
+          category: "Resonance Liberation",
           newName: "",
           value: "",
           actionTime: 0,
@@ -471,6 +481,7 @@ export const shorekeeper = {
         },
         {
           name: "Healing",
+          category: "Basic Attack",
           newName: "Healing",
           value: "438+2.39%",
           actionTime: 0,
@@ -516,6 +527,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Enlightenment DMG",
+          category: "Intro Skill",
           newName: "Enlightenment",
           value: "45.30%*5",
           concerto: 10,
@@ -581,6 +593,7 @@ export const shorekeeper = {
         },
         {
           name: "Discernment DMG",
+          category: "Intro Skill",
           newName: "Discernment",
           value: "19.64%*3",
           concerto: 20,
@@ -624,6 +637,7 @@ export const shorekeeper = {
         },
         {
           name: "Enlightenment Healing",
+          category: "Intro Skill",
           newName: "Enlightenment Healing",
           value: "259+1.20%",
           actionTime: 0,
@@ -645,6 +659,7 @@ export const shorekeeper = {
         },
         {
           name: "Discernment Healing",
+          category: "Intro Skill",
           newName: "Discernment Healing",
           value: "289+1.32%",
           actionTime: 0,
@@ -686,6 +701,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Flare Star Butterfly DMG",
+          category: "Basic Attack",
           newName: "Flare Star Butterfly",
           value: "37.29%",
           actionTime: 0,
@@ -706,6 +722,7 @@ export const shorekeeper = {
         },
         {
           name: "Illation DMG",
+          category: "Heavy Attack",
           newName: "Illation",
           value: "18.97%*5",
           concerto: 6,
@@ -771,6 +788,7 @@ export const shorekeeper = {
         },
         {
           name: "Transmutation DMG",
+          category: "Basic Attack",
           newName: "Transmutation",
           value: "73.96%",
           concerto: 6,
@@ -808,6 +826,7 @@ export const shorekeeper = {
       stages: [
         {
           name: "Outro DMG",
+          category: "Outro Skill",
           newName: "",
           value: "0%",
           actionTime: 0,
