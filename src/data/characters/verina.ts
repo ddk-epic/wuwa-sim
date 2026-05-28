@@ -81,7 +81,8 @@ export const verina = {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId: "char.verina.resonance-liberation.arboreal-flourish._.1",
+        stageId:
+          "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation.1",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 12 },
@@ -147,10 +148,10 @@ export const verina = {
         event: "skillCast",
         characterId: 1503,
         stageId: [
-          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
+          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
         ],
       },
       condition: {
@@ -200,7 +201,8 @@ export const verina = {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId: "char.verina.resonance-skill.botany-experiment._.1",
+        stageId:
+          "char.verina.resonance-skill.botany-experiment._::resonance-skill.1",
       },
       effects: [
         {
@@ -260,10 +262,10 @@ export const verina = {
         characterId: 1503,
         skillType: "Forte Circuit",
         stageId: [
-          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
+          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
         ],
       },
       target: { kind: "self" },
@@ -287,10 +289,10 @@ export const verina = {
         characterId: 1503,
         skillType: "Forte Circuit",
         stageId: [
-          "char.verina.forte-circuit.starflower-blooms.heavy-attack",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-1",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-2",
-          "char.verina.forte-circuit.starflower-blooms.mid-air-attack-stage-3",
+          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
+          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
         ],
       },
       effects: [

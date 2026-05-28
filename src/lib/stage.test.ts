@@ -115,21 +115,41 @@ function makeStage(
 }
 
 describe("makeCharStageId", () => {
-  it("returns char.<charName>.<skillType>.<skillName>._ when stageName is undefined", () => {
+  it("appends `::<skill-type>` and uses category as lineage; `_` sentinel for missing stageName", () => {
     expect(
-      makeCharStageId("TestChar", "Normal Attack", "Normal Attack", undefined),
-    ).toBe("char.test-char.basic-attack.normal-attack._")
+      makeCharStageId(
+        "TestChar",
+        "Basic Attack",
+        "Normal Attack",
+        undefined,
+        "Basic Attack",
+      ),
+    ).toBe("char.test-char.basic-attack.normal-attack._::basic-attack")
   })
 
-  it("returns char.<charName>.<skillType>.<skillName>.<stageName> when stageName is provided", () => {
+  it("includes stageName when provided", () => {
     expect(
-      makeCharStageId("TestChar", "Normal Attack", "Normal Attack", "3rd"),
-    ).toBe("char.test-char.basic-attack.normal-attack.3rd")
+      makeCharStageId(
+        "TestChar",
+        "Basic Attack",
+        "Normal Attack",
+        "3rd",
+        "Basic Attack",
+      ),
+    ).toBe("char.test-char.basic-attack.normal-attack.3rd::basic-attack")
   })
 
-  it("maps Normal Attack category to basic-attack skill type", () => {
-    expect(makeCharStageId("A", "Normal Attack", "Skill", "s")).toBe(
-      "char.a.basic-attack.skill.s",
+  it("supports category != skillType (e.g. Heavy Attack input deals Resonance Liberation damage)", () => {
+    expect(
+      makeCharStageId(
+        "Encore",
+        "Heavy Attack",
+        "Black White Woolies",
+        "Cloudy Frenzy",
+        "Resonance Liberation",
+      ),
+    ).toBe(
+      "char.encore.heavy-attack.black-white-woolies.cloudy-frenzy::resonance-liberation",
     )
   })
 
@@ -137,22 +157,25 @@ describe("makeCharStageId", () => {
     expect(
       makeCharStageId(
         "Black & White",
-        "Forte Circuit",
+        "Heavy Attack",
         "Mid Attack: Stage 1",
         "Hit",
+        "Heavy Attack",
       ),
-    ).toBe("char.black-white.forte-circuit.mid-attack-stage-1.hit")
+    ).toBe("char.black-white.heavy-attack.mid-attack-stage-1.hit::heavy-attack")
   })
 })
 
 describe("makeEchoStageId", () => {
-  it("returns echo.<echoName>._ when stageName is undefined", () => {
-    expect(makeEchoStageId("EchoSkill", undefined)).toBe("echo.echo-skill._")
+  it("appends `::echo-skill` and uses `_` sentinel for missing stageName", () => {
+    expect(makeEchoStageId("EchoSkill", undefined)).toBe(
+      "echo.echo-skill._::echo-skill",
+    )
   })
 
-  it("returns echo.<echoName>.<stageName> when stageName is provided", () => {
+  it("includes stageName when provided", () => {
     expect(makeEchoStageId("EchoSkill", "active")).toBe(
-      "echo.echo-skill.active",
+      "echo.echo-skill.active::echo-skill",
     )
   })
 })
@@ -163,7 +186,7 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e1",
       characterId: 1,
-      stageId: "char.test-char.basic-attack.normal-attack._",
+      stageId: "char.test-char.basic-attack.normal-attack._::basic-attack",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -180,7 +203,7 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e2",
       characterId: 1,
-      stageId: "char.test-char.basic-attack.normal-attack.3rd",
+      stageId: "char.test-char.basic-attack.normal-attack.3rd::basic-attack",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -196,7 +219,8 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e3",
       characterId: 1,
-      stageId: "char.test-char.basic-attack.normal-attack.missing",
+      stageId:
+        "char.test-char.basic-attack.normal-attack.missing::basic-attack",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -211,7 +235,7 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e4",
       characterId: 99,
-      stageId: "char.test-char.basic-attack.normal-attack._",
+      stageId: "char.test-char.basic-attack.normal-attack._::basic-attack",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -237,7 +261,8 @@ describe("findStageByEntry — character skill", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "2nd",
-                requiresStageId: "char.test-char.basic-attack.normal-attack._",
+                requiresStageId:
+                  "char.test-char.basic-attack.normal-attack._::basic-attack",
               },
             ],
             damage: [],
@@ -248,7 +273,7 @@ describe("findStageByEntry — character skill", () => {
     const entry = {
       id: "e5",
       characterId: 1,
-      stageId: "char.test-char.basic-attack.normal-attack.2nd",
+      stageId: "char.test-char.basic-attack.normal-attack.2nd::basic-attack",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -256,7 +281,7 @@ describe("findStageByEntry — character skill", () => {
       emptyLoadout,
     ])
     expect(result?.requiresStageId).toBe(
-      "char.test-char.basic-attack.normal-attack._",
+      "char.test-char.basic-attack.normal-attack._::basic-attack",
     )
   })
 })
@@ -273,7 +298,7 @@ describe("findStageByEntry — echo skill", () => {
     const entry = {
       id: "e6",
       characterId: 1,
-      stageId: "echo.echo-skill.active",
+      stageId: "echo.echo-skill.active::echo-skill",
     }
     const result = findStageByEntry(entry, slots, loadouts)
     expect(result).not.toBeNull()
@@ -286,7 +311,7 @@ describe("findStageByEntry — echo skill", () => {
     const entry = {
       id: "e7",
       characterId: 1,
-      stageId: "echo.echo-skill.active",
+      stageId: "echo.echo-skill.active::echo-skill",
     }
     const result = findStageByEntry(entry, slots, [
       emptyLoadout,
@@ -334,7 +359,8 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
       {
         id: "e1",
         characterId: 1,
-        stageId: "char.test-char.resonance-skill.resonance-skill._",
+        stageId:
+          "char.test-char.resonance-skill.resonance-skill._::resonance-skill",
       },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
@@ -348,7 +374,8 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
       {
         id: "e2",
         characterId: 1,
-        stageId: "char.test-char.resonance-skill.resonance-skill.2nd",
+        stageId:
+          "char.test-char.resonance-skill.resonance-skill.2nd::resonance-skill",
       },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
@@ -362,7 +389,8 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
       {
         id: "e3",
         characterId: 1,
-        stageId: "char.test-char.resonance-skill.resonance-skill._",
+        stageId:
+          "char.test-char.resonance-skill.resonance-skill._::resonance-skill",
       },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],
@@ -376,7 +404,8 @@ describe(`findStageByEntry — STAGE_CAST_NAME ("${STAGE_CAST_NAME}") concerto i
       {
         id: "e4",
         characterId: 1,
-        stageId: "char.test-char.resonance-skill.resonance-skill.custom",
+        stageId:
+          "char.test-char.resonance-skill.resonance-skill.custom::resonance-skill",
       },
       slots,
       [emptyLoadout, emptyLoadout, emptyLoadout],

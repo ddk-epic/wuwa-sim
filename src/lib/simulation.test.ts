@@ -221,7 +221,10 @@ describe("runSimulation — empty", () => {
 describe("runSimulation — single hit", () => {
   it("produces one action event and one hit event per timeline entry", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
     expect(result[0]).toMatchObject({
@@ -253,7 +256,10 @@ describe("runSimulation — single hit", () => {
     testCharacters = [
       { ...charA, stats: { ...charA.stats, max: { hp: 0, atk: 3, def: 0 } } },
     ]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
     expect(result[1]).toMatchObject({ kind: "hit", damage: 2 })
@@ -263,7 +269,10 @@ describe("runSimulation — single hit", () => {
 describe("runSimulation — multi-hit stage", () => {
   it("emits one action event then one hit event per DamageEntry with [hit N] suffix", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack.stage-2")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack.stage-2::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
@@ -284,7 +293,10 @@ describe("runSimulation — multi-hit stage", () => {
 
   it("accumulates energy and concerto across hits of the same stage", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack.stage-2")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack.stage-2::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result[1]).toMatchObject({
       cumulativeEnergy: 3,
@@ -301,9 +313,13 @@ describe("runSimulation — multi-character accumulation", () => {
   it("accumulates energy and concerto separately per character", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._"),
-      tlEntry(2, "char.char-b.basic-attack.normal-attack._"),
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._", "1-na-2"),
+      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(2, "char.char-b.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack._::basic-attack",
+        "1-na-2",
+      ),
     ]
     const result = runSimulation(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(6)
@@ -330,8 +346,8 @@ describe("runSimulation — multi-character accumulation", () => {
   it("computes damage using each character's own maxAtk", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._"),
-      tlEntry(2, "char.char-b.basic-attack.normal-attack._"),
+      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(2, "char.char-b.basic-attack.normal-attack._::basic-attack"),
     ]
     const result = runSimulation(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
@@ -380,7 +396,7 @@ describe("runSimulation — echo skill entries", () => {
         cost3Mains: ["elemDmg", "elemDmg"],
       },
     ]
-    const entry = tlEntry(1, "echo.echo-one.hit")
+    const entry = tlEntry(1, "echo.echo-one.hit::echo-skill")
     const result = runSimulation([entry], slots, loadouts)
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
@@ -407,7 +423,10 @@ describe("runSimulation — echo skill entries", () => {
 describe("runSimulation — missing character", () => {
   it("skips entries with unknown characterId", () => {
     testCharacters = []
-    const entry = tlEntry(99, "char.unknown.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      99,
+      "char.unknown.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
   })
@@ -418,7 +437,7 @@ describe("runSimulation — unmatched stage", () => {
     testCharacters = [charA]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack.nonexistent",
+      "char.char-a.basic-attack.normal-attack.nonexistent::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
@@ -431,12 +450,12 @@ describe("runSimulation — frame tracking", () => {
     const entry1: TimelineEntry = {
       id: "e1",
       characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack._",
+      stageId: "char.char-a.basic-attack.normal-attack._::basic-attack",
     }
     const entry2: TimelineEntry = {
       id: "e2",
       characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack._",
+      stageId: "char.char-a.basic-attack.normal-attack._::basic-attack",
     }
     const result = runSimulation([entry1, entry2], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
@@ -453,7 +472,7 @@ describe("runSimulation — action event concerto", () => {
     const entry: TimelineEntry = {
       id: "d1",
       characterId: 4,
-      stageId: "char.char-d.basic-attack.heavy-attack._",
+      stageId: "char.char-d.basic-attack.heavy-attack._::basic-attack",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -473,7 +492,10 @@ describe("runSimulation — action event concerto", () => {
 describe("runSimulation — stats snapshot", () => {
   it("populates statsSnapshot and empty activeBuffs on every HitEvent", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack.stage-2")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack.stage-2::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
@@ -521,7 +543,7 @@ describe("runSimulation — buff lifecycle interleaving", () => {
           stages: [
             {
               name: "Skill",
-              category: "Basic Attack",
+              category: "Intro Skill",
               value: "100%",
               actionTime: 30,
               damage: [dmgHit(1.0, 0, 0, "Intro Skill")],
@@ -536,7 +558,7 @@ describe("runSimulation — buff lifecycle interleaving", () => {
           stages: [
             {
               name: "Skill",
-              category: "Basic Attack",
+              category: "Resonance Skill",
               value: "100%",
               actionTime: 30,
               damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
@@ -548,8 +570,8 @@ describe("runSimulation — buff lifecycle interleaving", () => {
     }
     testCharacters = [charWithIntro]
     const entries: TimelineEntry[] = [
-      tlEntry(1, "char.char-a.intro-skill.intro._"),
-      tlEntry(1, "char.char-a.resonance-skill.resonance._"),
+      tlEntry(1, "char.char-a.intro-skill.intro._::intro-skill"),
+      tlEntry(1, "char.char-a.resonance-skill.resonance._::resonance-skill"),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const kinds = result.map((e) => e.kind)
@@ -574,7 +596,10 @@ describe("runSimulation — buff lifecycle interleaving", () => {
 describe("runSimulation — discriminated union", () => {
   it("action events do not have a damage property", () => {
     testCharacters = [charA]
-    const entry = tlEntry(1, "char.char-a.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result[0].kind).toBe("action")
     expect("damage" in result[0]).toBe(false)
@@ -631,7 +656,10 @@ const charVariant: EnrichedCharacter = {
 describe("runSimulation — stage variants (ADR 0008)", () => {
   it("full stage (no variantKind): damage entry lands", () => {
     testCharacters = [charVariant]
-    const entry = tlEntry(10, "char.variant-char.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      10,
+      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(1)
@@ -642,7 +670,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v1",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -655,7 +683,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v2",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "instantCancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -670,7 +698,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v3",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -680,7 +708,10 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
 
   it("ActionEvent has no variantKind for full stage", () => {
     testCharacters = [charVariant]
-    const entry = tlEntry(10, "char.variant-char.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      10,
+      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
@@ -727,7 +758,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "sw1",
       characterId: 11,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -776,7 +807,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "sw2",
       characterId: 12,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -820,7 +851,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
         stages: [
           {
             name: "Frolicking Stage",
-            category: "Basic Attack",
+            category: "Resonance Liberation",
             newName: "Frolicking Stage",
             value: "100%",
             actionTime: 30,
@@ -828,7 +859,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
           },
           {
             name: "Rampage Stage",
-            category: "Basic Attack",
+            category: "Resonance Liberation",
             newName: "Rampage Stage",
             value: "100%",
             actionTime: 30,
@@ -846,7 +877,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       [
         tlEntry(
           50,
-          "char.liberation-char.resonance-liberation.liberation.frolicking-stage",
+          "char.liberation-char.resonance-liberation.liberation.frolicking-stage::basic-attack",
         ),
       ],
       emptySlots,
@@ -862,7 +893,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       [
         tlEntry(
           50,
-          "char.liberation-char.resonance-liberation.liberation.rampage-stage",
+          "char.liberation-char.resonance-liberation.liberation.rampage-stage::resonance-skill",
         ),
       ],
       emptySlots,
@@ -900,11 +931,11 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       [
         tlEntry(
           50,
-          "char.liberation-char.resonance-liberation.liberation.frolicking-stage",
+          "char.liberation-char.resonance-liberation.liberation.frolicking-stage::basic-attack",
         ),
         tlEntry(
           50,
-          "char.liberation-char.resonance-liberation.liberation.rampage-stage",
+          "char.liberation-char.resonance-liberation.liberation.rampage-stage::resonance-skill",
         ),
       ],
       [50, null, null],
@@ -987,8 +1018,15 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
     // After a Basic Attack hit, S1 is applied. The NEXT hit sees S1 active.
     const basicThenBasicResult = runSimulation(
       [
-        tlEntry(51, "char.heavy-char.basic-attack.normal-attack._"),
-        tlEntry(51, "char.heavy-char.basic-attack.normal-attack._", "2"),
+        tlEntry(
+          51,
+          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+        ),
+        tlEntry(
+          51,
+          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+          "2",
+        ),
       ],
       [51, null, null],
       emptyLoadouts,
@@ -1003,8 +1041,14 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
     // Heavy Attack stage also fires S1 because parent skill type is "Basic Attack"
     const heavyResult = runSimulation(
       [
-        tlEntry(51, "char.heavy-char.basic-attack.normal-attack._"),
-        tlEntry(51, "char.heavy-char.basic-attack.normal-attack.heavy-attack"),
+        tlEntry(
+          51,
+          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+        ),
+        tlEntry(
+          51,
+          "char.heavy-char.basic-attack.normal-attack.heavy-attack::heavy-attack",
+        ),
       ],
       [51, null, null],
       emptyLoadouts,
@@ -1048,7 +1092,7 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
         stages: [
           {
             name: "Stage Alpha",
-            category: "Basic Attack",
+            category: "Resonance Liberation",
             newName: "Stage Alpha",
             value: "100%",
             actionTime: 20,
@@ -1056,7 +1100,7 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
           },
           {
             name: "Stage Beta",
-            category: "Basic Attack",
+            category: "Resonance Liberation",
             newName: "Stage Beta",
             value: "100%",
             actionTime: 20,
@@ -1075,7 +1119,8 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
       trigger: {
         event: "skillCast",
         characterId: 60,
-        stageId: "char.stage-char.resonance-liberation.skill-a.stage-alpha",
+        stageId:
+          "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -1090,7 +1135,12 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
     testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
 
     const alphaResult = runSimulation(
-      [tlEntry(60, "char.stage-char.resonance-liberation.skill-a.stage-alpha")],
+      [
+        tlEntry(
+          60,
+          "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
+        ),
+      ],
       [60, null, null],
       emptyLoadouts,
     )
@@ -1100,7 +1150,12 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
     ).toBe(true)
 
     const betaResult = runSimulation(
-      [tlEntry(60, "char.stage-char.resonance-liberation.skill-a.stage-beta")],
+      [
+        tlEntry(
+          60,
+          "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
+        ),
+      ],
       [60, null, null],
       emptyLoadouts,
     )
@@ -1118,8 +1173,8 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
         event: "skillCast",
         characterId: 60,
         stageId: [
-          "char.stage-char.resonance-liberation.skill-a.stage-alpha",
-          "char.stage-char.resonance-liberation.skill-a.stage-beta",
+          "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
+          "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
         ],
       },
       target: { kind: "self" },
@@ -1135,8 +1190,8 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
     testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
 
     for (const stageId of [
-      "char.stage-char.resonance-liberation.skill-a.stage-alpha",
-      "char.stage-char.resonance-liberation.skill-a.stage-beta",
+      "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
+      "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
     ]) {
       const result = runSimulation(
         [tlEntry(60, stageId)],
@@ -1166,8 +1221,8 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
     testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
 
     for (const stageId of [
-      "char.stage-char.resonance-liberation.skill-a.stage-alpha",
-      "char.stage-char.resonance-liberation.skill-a.stage-beta",
+      "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
+      "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
     ]) {
       const result = runSimulation(
         [tlEntry(60, stageId)],
@@ -1241,7 +1296,7 @@ describe("runSimulation — Energy Recharge (#98)", () => {
     }
     testCharacters = [charOnField, charOffField]
     const result = runSimulation(
-      [tlEntry(1, "char.char-a.basic-attack.normal-attack._")],
+      [tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack")],
       [1, 2, null],
       emptyLoadouts,
     )
@@ -1291,7 +1346,7 @@ describe("runSimulation — Movement stages", () => {
         stages: [
           {
             name: "Dodge",
-            category: "Basic Attack",
+            category: "Movement",
             value: "",
             actionTime: 21,
             damage: [],
@@ -1305,7 +1360,7 @@ describe("runSimulation — Movement stages", () => {
   it("Dodge produces an Action Event in the log", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._")],
+      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -1318,7 +1373,7 @@ describe("runSimulation — Movement stages", () => {
   it("Dodge produces only an Action Event — no hit events", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._")],
+      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -1330,8 +1385,11 @@ describe("runSimulation — Movement stages", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
       [
-        tlEntry(99, "char.movement-char.basic-attack.normal-attack._"), // gains concerto from hit
-        tlEntry(99, "char.movement-char.movement.dodge._"),
+        tlEntry(
+          99,
+          "char.movement-char.basic-attack.normal-attack._::basic-attack",
+        ), // gains concerto from hit
+        tlEntry(99, "char.movement-char.movement.dodge._::movement"),
       ],
       emptySlots,
       emptyLoadouts,
@@ -1352,8 +1410,11 @@ describe("runSimulation — Movement stages", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
       [
-        tlEntry(99, "char.movement-char.basic-attack.normal-attack._"), // accumulates energy via hit
-        tlEntry(99, "char.movement-char.movement.dodge._"),
+        tlEntry(
+          99,
+          "char.movement-char.basic-attack.normal-attack._::basic-attack",
+        ), // accumulates energy via hit
+        tlEntry(99, "char.movement-char.movement.dodge._::movement"),
       ],
       emptySlots,
       emptyLoadouts,
@@ -1388,7 +1449,7 @@ describe("runSimulation — Movement stages", () => {
     }
     testCharacters = [charWithBuff]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._")],
+      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -1421,7 +1482,7 @@ describe("runSimulation — healing pipeline", () => {
         stages: [
           {
             name: "Heal Stage",
-            category: "Basic Attack",
+            category: "Resonance Skill",
             value: "23.8%+950",
             actionTime: 30,
             damage: [healHit(0.238, 950, "team")],
@@ -1435,7 +1496,7 @@ describe("runSimulation — healing pipeline", () => {
   it("heal stage produces a SustainEvent instead of a HitEvent", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._")],
+      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
       emptySlots,
       emptyLoadouts,
     )
@@ -1448,7 +1509,7 @@ describe("runSimulation — healing pipeline", () => {
   it("heal amount = (ATK Ã— multiplier + flat) Ã— (1 + healingBonus)", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._")],
+      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
       emptySlots,
       emptyLoadouts,
     )
@@ -1461,7 +1522,7 @@ describe("runSimulation — healing pipeline", () => {
     testCharacters = [charHealer]
     const slots: Slots = [20, null, null]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._")],
+      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
       slots,
       emptyLoadouts,
     )
@@ -1491,7 +1552,7 @@ describe("runSimulation — healing pipeline", () => {
     testCharacters = [healerWithBuff]
     const slots: Slots = [20, null, null]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._")],
+      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
       slots,
       emptyLoadouts,
     )
@@ -1550,7 +1611,7 @@ const charTrailingBase: EnrichedCharacter = {
       stages: [
         {
           name: "Stage",
-          category: "Basic Attack",
+          category: "Resonance Skill",
           value: "100%",
           actionTime: 40,
           damage: [],
@@ -1565,7 +1626,7 @@ const charTrailingBase: EnrichedCharacter = {
       stages: [
         {
           name: "Stage",
-          category: "Basic Attack",
+          category: "Movement",
           value: "0",
           actionTime: 5,
           damage: [],
@@ -1612,14 +1673,16 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
       {
         id: "t1",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
       // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 â†’ dropped
       {
         id: "t2",
         characterId: 30,
-        stageId: "char.trailing-char.resonance-skill.resonance-skill._",
+        stageId:
+          "char.trailing-char.resonance-skill.resonance-skill._::resonance-skill",
       },
     ]
     const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
@@ -1635,20 +1698,22 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
       {
         id: "t1",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
       // Char 31: advance=10, frame â†’ 6+10=16
       {
         id: "t2",
         characterId: 31,
-        stageId: "char.other-char.basic-attack.normal-attack._",
+        stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
       },
       // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 â†’ pad to 30
       {
         id: "t3",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
       },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
@@ -1672,7 +1737,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const entry: TimelineEntry = {
       id: "db1",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -1688,7 +1753,10 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
 
   it("no-delay: full stage has no delayBreakdown", () => {
     testCharacters = [charVariant]
-    const entry = tlEntry(10, "char.variant-char.basic-attack.normal-attack._")
+    const entry = tlEntry(
+      10,
+      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+    )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toBeUndefined()
@@ -1700,19 +1768,21 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       {
         id: "db2",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
       {
         id: "db3",
         characterId: 31,
-        stageId: "char.other-char.basic-attack.normal-attack._",
+        stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
       },
       // Char 30 Basic Attack starts at frame 16, trailing hit at 30 â†’ padded to 30
       {
         id: "db4",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
       },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
@@ -1754,7 +1824,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const entry: TimelineEntry = {
       id: "db5",
       characterId: 13,
-      stageId: "char.variant-char.basic-attack.normal-attack._",
+      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -1772,8 +1842,16 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
 describe("runSimulation — sourceEntryId (#186)", () => {
   it("authored hits carry sourceEntryId of their timeline entry", () => {
     testCharacters = [charA]
-    const e1 = tlEntry(1, "char.char-a.basic-attack.normal-attack._", "entry-1")
-    const e2 = tlEntry(1, "char.char-a.basic-attack.normal-attack._", "entry-2")
+    const e1 = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "entry-1",
+    )
+    const e2 = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "entry-2",
+    )
     const result = runSimulation([e1, e2], emptySlots, emptyLoadouts)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
@@ -1787,7 +1865,8 @@ describe("runSimulation — sourceEntryId (#186)", () => {
       {
         id: "swap-entry",
         characterId: 30,
-        stageId: "char.trailing-char.basic-attack.normal-attack._",
+        stageId:
+          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
     ]
@@ -1819,7 +1898,7 @@ describe("runSimulation — sourceEntryId (#186)", () => {
     testCharacters = [charWithCoord]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._",
+      "char.char-a.basic-attack.normal-attack._::basic-attack",
       "trigger-entry",
     )
     const result = runSimulation([entry], [1, null, null], emptyLoadouts)
@@ -1845,7 +1924,7 @@ const charAerial: EnrichedCharacter = {
       stages: [
         {
           name: "Launch Stage",
-          category: "Basic Attack",
+          category: "Resonance Skill",
           value: "100%",
           actionTime: 30,
           footing: { launch: 15 },
@@ -1919,8 +1998,16 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   it("same-character airâ†’ground: fall fires on grounded stage after launch", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
-      tlEntry(50, "char.aerial-char.basic-attack.ground-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
     ]
     // reactionDelay=0, swapFrames=6, variantFloor=0, fallFrames=21
     const result = runSimulation(
@@ -1940,8 +2027,16 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   it("same-character ground stage after ground stage: fall does not fire", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.basic-attack.ground-attack._", "e1"),
-      tlEntry(50, "char.aerial-char.basic-attack.ground-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -1960,8 +2055,16 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   it("aerial stage after launch: fall does not fire (airâ†’air)", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
-      tlEntry(50, "char.aerial-char.basic-attack.aerial-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -1981,8 +2084,16 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     testCharacters = [charAerial, charAerialB]
     // charA launches (team â†’ air), charB does ground stage (fall fires on charB)
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
-      tlEntry(51, "char.aerial-char-b.basic-attack.ground-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2003,14 +2114,22 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     // charB re-enters ground stage: fall fires (team air) + pad fires (trailing hit)
     testCharacters = [charAerial, charSnapA]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"), // non-swap: {launch:15} â‰¤ advance=30 â†’ on-field â†’ team=air
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ), // non-swap: {launch:15} â‰¤ advance=30 â†’ on-field â†’ team=air
       {
         id: "e2",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       }, // trailing hit at hitFrame=30+20=50; pendingFooting atFrame=30+15=45; swap advance=6
-      tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e3"), // charB re-enters at frame 36
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ), // charB re-enters at frame 36
     ]
     const result = runSimulation(
       entries,
@@ -2032,11 +2151,15 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   it("fall is NOT subject to variantFloor (fall accumulates independently)", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
       {
         id: "e2",
         characterId: 50,
-        stageId: "char.aerial-char.basic-attack.ground-attack._",
+        stageId: "char.aerial-char.basic-attack.ground-attack._::basic-attack",
         variantKind: "cancel",
       },
     ]
@@ -2058,11 +2181,15 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   it("react/floor mutex preserved alongside fall", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
       {
         id: "e2",
         characterId: 50,
-        stageId: "char.aerial-char.basic-attack.ground-attack._",
+        stageId: "char.aerial-char.basic-attack.ground-attack._::basic-attack",
         variantKind: "cancel",
       },
     ]
@@ -2087,9 +2214,21 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     testCharacters = [charAerial]
     // launch â†’ neutral (transparent, no footing change) â†’ ground â†’ fall fires
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
-      tlEntry(50, "char.aerial-char.basic-attack.neutral._", "e2"),
-      tlEntry(50, "char.aerial-char.basic-attack.ground-attack._", "e3"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.neutral._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "e3",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2132,7 +2271,7 @@ const charSnapA: EnrichedCharacter = {
       stages: [
         {
           name: "Aerial Swap Stage",
-          category: "Basic Attack",
+          category: "Resonance Skill",
           value: "",
           actionTime: 30,
           footing: { launch: 15 },
@@ -2177,13 +2316,21 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
       // charB ground stage â†’ team â†’ "ground"; charA snapshot still "air"
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"),
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ),
       // charA re-enters ground stage â†’ snapshot override "air" â†’ fall fires
-      tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e3"),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2208,11 +2355,19 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
       {
         id: "e1",
         characterId: 50,
-        stageId: "char.aerial-char.resonance-skill.launch._",
+        stageId: "char.aerial-char.resonance-skill.launch._::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(51, "char.aerial-char-b.basic-attack.ground-attack._", "e2"),
-      tlEntry(50, "char.aerial-char.basic-attack.ground-attack._", "e3"),
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "e3",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2237,10 +2392,14 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       }, // {launch:15}, swap advance=6 < 15 â†’ pending; team stays ground
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"), // charB enters: team=ground â†’ no fall
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ), // charB enters: team=ground â†’ no fall
     ]
     const result = runSimulation(
       entries,
@@ -2262,17 +2421,25 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
       {
         id: "e2",
         characterId: 53,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e3"),
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e4"),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ),
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e4",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2303,11 +2470,19 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"),
-      tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e3"),
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2332,8 +2507,16 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     // charB enters after charA's full advance â†’ team=air â†’ charB pays fall
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
-      tlEntry(50, "char.aerial-char.resonance-skill.launch._", "e1"),
-      tlEntry(51, "char.aerial-char-b.basic-attack.ground-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2359,13 +2542,13 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
       {
         id: "e2",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
     ]
@@ -2394,10 +2577,14 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(52, "char.snap-a.basic-attack.ground-stage._", "e2"),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2423,10 +2610,14 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._",
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(53, "char.snap-b.basic-attack.ground-stage._", "e2"),
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -2498,7 +2689,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
         stages: [
           {
             name: "Dodge",
-            category: "Basic Attack",
+            category: "Movement",
             value: "",
             actionTime: 10,
             damage: [],
@@ -2523,9 +2714,21 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     // A (20f) â†’ B (20f) â†’ A: A left at frame 20, arrives back at frame 40 â†’ swapBack = 60 - 20 = 40
     testCharacters = [swapBackCharA, swapBackCharB]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
-      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e2"),
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e3"),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ),
     ]
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2561,9 +2764,21 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     }
     testCharacters = [charAWithTrailing, swapBackCharB]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
-      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e2"),
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e3"),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ),
     ]
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2575,7 +2790,11 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   it("(c) first-ever entry on a character has no swapBack", () => {
     testCharacters = [swapBackCharA]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ),
     ]
     const log = runSimulation(entries, [50, null, null], emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2585,8 +2804,16 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   it("(d) same-character successive entries skip swapBack (no swap fires)", () => {
     testCharacters = [swapBackCharA]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e2"),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ),
     ]
     const log = runSimulation(entries, [50, null, null], emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2603,10 +2830,22 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const charCMovement: EnrichedCharacter = { ...swapBackCharC, id: 52 }
     testCharacters = [charAMovement, charBMovement, charCMovement]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"), // A at frame 0, ends frame 20
-      tlEntry(52, "char.swap-c.movement.dodge._", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
-      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e3"), // B at frame 30, swap from Aâ†’B recorded (lastOffFieldFrame[A]=30)
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e4"), // A at frame 50, swapBack = 60 - 20 = 40
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // A at frame 0, ends frame 20
+      tlEntry(52, "char.swap-c.movement.dodge._::movement", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
+      tlEntry(
+        51,
+        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ), // B at frame 30, swap from Aâ†’B recorded (lastOffFieldFrame[A]=30)
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e4",
+      ), // A at frame 50, swapBack = 60 - 20 = 40
     ]
     const log = runSimulation(entries, [50, 51, 52], emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2661,9 +2900,21 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     }
     testCharacters = [charALong, charBLong]
     const entries = [
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e1"),
-      tlEntry(51, "char.swap-b.basic-attack.normal-attack._", "e2"),
-      tlEntry(50, "char.swap-a.basic-attack.normal-attack._", "e3"),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ),
     ]
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2712,7 +2963,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         stages: [
           {
             name: "Skill DMG",
-            category: "Basic Attack",
+            category: "Resonance Liberation",
             newName: "Liberation",
             value: "",
             actionTime: 0,
@@ -2784,11 +3035,19 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     }
     testCharacters = [animCharA, charBShort]
     const entries = [
-      tlEntry(60, "char.anim-a.basic-attack.normal-attack._", "e1"), // A 0–20, A exits at 20
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e2"), // B 20–30
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation",
+        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // A 0–20, A exits at 20
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ), // B 20–30
+      tlEntry(
+        60,
+        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
         "e3",
       ), // A at frame 30, animationFrames=60 advance â†’ swapBack=0
     ]
@@ -2830,13 +3089,21 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     }
     testCharacters = [charALib, charBNormal]
     const entries = [
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e1"), // B 0–20, B exits at 20
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation",
+        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
         "e2",
       ), // A at frame 20, animationFrames=60
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e3"), // B returns: expects 0 swapBack
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ), // B returns: expects 0 swapBack
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2858,7 +3125,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           stages: [
             {
               name: "Skill DMG",
-              category: "Basic Attack",
+              category: "Resonance Liberation",
               newName: "Liberation",
               value: "",
               actionTime: 0,
@@ -2867,7 +3134,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
             },
             {
               name: "Skill DMG",
-              category: "Basic Attack",
+              category: "Resonance Liberation",
               newName: "Liberation2",
               value: "",
               actionTime: 0,
@@ -2881,18 +3148,26 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     }
     testCharacters = [charADoubleLib, animCharB]
     const entries = [
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e1"), // B 0–20, B exits at 20
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation",
+        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
         "e2",
       ), // A at frame 20, +60 advance
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation2",
+        "char.anim-a.resonance-liberation.liberation.liberation2::resonance-liberation",
         "e3",
       ), // A at frame 20 still, +60 advance
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e4"), // B returns at frame 20, 120f advance total â†’ 0
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e4",
+      ), // B returns at frame 20, 120f advance total â†’ 0
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2926,9 +3201,21 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     }
     testCharacters = [animCharA, charBShort]
     const entries = [
-      tlEntry(60, "char.anim-a.basic-attack.normal-attack._", "e1"), // A 0–20
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e2"), // B 20–30
-      tlEntry(60, "char.anim-a.basic-attack.normal-attack._", "e3"), // A at 30, no animation
+      tlEntry(
+        60,
+        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // A 0–20
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e2",
+      ), // B 20–30
+      tlEntry(
+        60,
+        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ), // A at 30, no animation
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -2950,7 +3237,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
           stages: [
             {
               name: "Skill DMG",
-              category: "Basic Attack",
+              category: "Resonance Liberation",
               newName: "Liberation",
               value: "",
               actionTime: 0,
@@ -2964,13 +3251,21 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     }
     testCharacters = [charANoAnim, animCharB]
     const entries = [
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e1"), // B 0–20, B exits at 20
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e1",
+      ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation",
+        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
         "e2",
       ), // A at 20, NO animation advance
-      tlEntry(61, "char.anim-b.basic-attack.normal-attack._", "e3"), // B at 20, swapBack = 60 - 0 = 60
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "e3",
+      ), // B at 20, swapBack = 60 - 0 = 60
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -3012,7 +3307,9 @@ describe("runSimulation — inherit duration", () => {
 
   it("child buff inherits endTime from parent buff applied in the same event", () => {
     testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
-    const entries = [tlEntry(1, "char.char-a.basic-attack.normal-attack._")]
+    const entries = [
+      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+    ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const buffEvents = result.filter((e) => e.kind === "buffApplied")
     expect(buffEvents).toHaveLength(2)
@@ -3028,7 +3325,9 @@ describe("runSimulation — inherit duration", () => {
 
   it("child buff with inherit duration expires at the same time as parent", () => {
     testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
-    const entries = [tlEntry(1, "char.char-a.basic-attack.normal-attack._")]
+    const entries = [
+      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+    ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const hitEvent = result.find((e) => e.kind === "hit") as
       | HitEvent
@@ -3071,7 +3370,7 @@ describe("runSimulation — removeBuffs effect", () => {
         stages: [
           {
             name: "Skill",
-            category: "Basic Attack",
+            category: "Resonance Skill",
             value: "100%",
             actionTime: 30,
             damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
@@ -3085,8 +3384,8 @@ describe("runSimulation — removeBuffs effect", () => {
   it("removeBuffs effect removes active instances of listed buff IDs", () => {
     testCharacters = [charWithRemove]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._"),
-      tlEntry(1, "char.char-a.resonance-skill.skill._"),
+      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(1, "char.char-a.resonance-skill.skill._::resonance-skill"),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const applied = result.filter(
@@ -3105,7 +3404,9 @@ describe("runSimulation — removeBuffs effect", () => {
 
   it("removeBuffs is a no-op when referenced buff is not active", () => {
     testCharacters = [charWithRemove]
-    const entries = [tlEntry(1, "char.char-a.resonance-skill.skill._")]
+    const entries = [
+      tlEntry(1, "char.char-a.resonance-skill.skill._::resonance-skill"),
+    ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const consumed = result.filter(
       (e) =>

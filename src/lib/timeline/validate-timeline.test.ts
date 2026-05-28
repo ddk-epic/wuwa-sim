@@ -87,7 +87,7 @@ describe("validateTimeline — empty", () => {
 describe("validateTimeline — character in team", () => {
   it("marks entry invalid when characterId is not in any slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(99, "char.test.basic-attack.normal-attack._")
+    const e = entry(99, "char.test.basic-attack.normal-attack._::basic-attack")
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
     expect(result.rowErrors.get(e.id)?.length).toBeGreaterThan(0)
@@ -95,7 +95,7 @@ describe("validateTimeline — character in team", () => {
 
   it("does not mark entry invalid when characterId is in a slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "char.test.basic-attack.normal-attack._")
+    const e = entry(1, "char.test.basic-attack.normal-attack._::basic-attack")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
     expect(result.rowErrors.get(e.id)).toBeUndefined()
@@ -103,7 +103,7 @@ describe("validateTimeline — character in team", () => {
 
   it("accepts character in second or third slot", () => {
     testCharacters = [baseChar({ id: 2 })]
-    const e = entry(2, "char.test.basic-attack.normal-attack._")
+    const e = entry(2, "char.test.basic-attack.normal-attack._::basic-attack")
     const result = validateTimeline([e], [null, 2, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
@@ -112,7 +112,10 @@ describe("validateTimeline — character in team", () => {
 describe("validateTimeline — skill existence", () => {
   it("marks entry invalid when stageId does not match any stage", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "char.test.basic-attack.normal-attack.nonexistent")
+    const e = entry(
+      1,
+      "char.test.basic-attack.normal-attack.nonexistent::basic-attack",
+    )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
   })
@@ -140,7 +143,10 @@ describe("validateTimeline — skill existence", () => {
         ],
       }),
     ]
-    const e = entry(1, "char.test.basic-attack.heavy-attack.charged")
+    const e = entry(
+      1,
+      "char.test.basic-attack.heavy-attack.charged::basic-attack",
+    )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
@@ -168,7 +174,10 @@ describe("validateTimeline — skill existence", () => {
         ],
       }),
     ]
-    const e = entry(1, "char.test.basic-attack.normal-attack.stage-2")
+    const e = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+    )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
   })
@@ -192,7 +201,7 @@ describe("validateTimeline — echo skill", () => {
         },
       },
     ]
-    const e = entry(1, "echo.test-echo.tap")
+    const e = entry(1, "echo.test-echo.tap::echo-skill")
     const loadoutsWithEcho: [SlotLoadout, SlotLoadout, SlotLoadout] = [
       { ...emptyLoadout, echoId: 10 },
       emptyLoadout,
@@ -204,7 +213,7 @@ describe("validateTimeline — echo skill", () => {
 
   it("marks Echo Skill invalid when no echo is equipped", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "echo.test-echo.tap")
+    const e = entry(1, "echo.test-echo.tap::echo-skill")
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
   })
@@ -213,10 +222,14 @@ describe("validateTimeline — echo skill", () => {
 describe("validateTimeline — multiple entries", () => {
   it("validates each entry independently", () => {
     testCharacters = [baseChar()]
-    const valid = entry(1, "char.test.basic-attack.normal-attack._", "valid")
+    const valid = entry(
+      1,
+      "char.test.basic-attack.normal-attack._::basic-attack",
+      "valid",
+    )
     const invalid = entry(
       99,
-      "char.test.basic-attack.normal-attack._",
+      "char.test.basic-attack.normal-attack._::basic-attack",
       "invalid",
     )
     const result = validateTimeline([valid, invalid], slots, loadouts)
@@ -288,7 +301,11 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("flags Intro that opens the timeline (no preceding Outro)", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const intro = entry(1, "char.char1.intro-skill.intro-skill._", "intro")
+    const intro = entry(
+      1,
+      "char.char1.basic-attack.intro-skill._::basic-attack",
+      "intro",
+    )
     const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
     expect(result.invalidRowIds.has("intro")).toBe(true)
     expect(result.rowErrors.get("intro")?.length).toBeGreaterThan(0)
@@ -296,8 +313,16 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("flags Intro not immediately preceded by an Outro", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const normal = entry(1, "char.char1.basic-attack.normal-attack._", "normal")
-    const intro = entry(2, "char.char2.intro-skill.intro-skill._", "intro")
+    const normal = entry(
+      1,
+      "char.char1.basic-attack.normal-attack._::basic-attack",
+      "normal",
+    )
+    const intro = entry(
+      2,
+      "char.char2.basic-attack.intro-skill._::basic-attack",
+      "intro",
+    )
     const result = validateTimeline(
       [normal, intro],
       twoCharSlots,
@@ -309,8 +334,16 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("accepts Intro immediately preceded by an Outro", () => {
     testCharacters = [charWithAll(1), charWithAll(2)]
-    const outro = entry(1, "char.char1.outro-skill.outro-skill._", "outro")
-    const intro = entry(2, "char.char2.intro-skill.intro-skill._", "intro")
+    const outro = entry(
+      1,
+      "char.char1.basic-attack.outro-skill._::basic-attack",
+      "outro",
+    )
+    const intro = entry(
+      2,
+      "char.char2.basic-attack.intro-skill._::basic-attack",
+      "intro",
+    )
     const result = validateTimeline(
       [outro, intro],
       twoCharSlots,
@@ -322,15 +355,27 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
 
   it("does not flag Outro entries", () => {
     testCharacters = [charWithAll(1)]
-    const outro = entry(1, "char.char1.outro-skill.outro-skill._", "outro")
+    const outro = entry(
+      1,
+      "char.char1.basic-attack.outro-skill._::basic-attack",
+      "outro",
+    )
     const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
     expect(result.invalidRowIds.has("outro")).toBe(false)
   })
 
   it("accepts Intro preceded by Outro from the same character", () => {
     testCharacters = [charWithAll(1)]
-    const outro = entry(1, "char.char1.outro-skill.outro-skill._", "outro")
-    const intro = entry(1, "char.char1.intro-skill.intro-skill._", "intro")
+    const outro = entry(
+      1,
+      "char.char1.basic-attack.outro-skill._::basic-attack",
+      "outro",
+    )
+    const intro = entry(
+      1,
+      "char.char1.basic-attack.intro-skill._::basic-attack",
+      "intro",
+    )
     const result = validateTimeline(
       [outro, intro],
       [1, null, null],
@@ -365,7 +410,8 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-1",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
             },
           ],
           damage: [],
@@ -375,7 +421,11 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("flags Stage 2 when no prior entry exists for the character", () => {
     testCharacters = [charWithPrereq(1)]
-    const s2 = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2")
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
     const result = validateTimeline([s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(true)
     expect(
@@ -385,26 +435,58 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
-    const s2a = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2a")
-    const s2b = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2b")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
+    const s2a = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2a",
+    )
+    const s2b = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2b",
+    )
     const result = validateTimeline([s1, s2a, s2b], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2b")).toBe(true)
   })
 
   it("accepts Stage 2 immediately after Stage 1", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
-    const s2 = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
     const result = validateTimeline([s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(false)
   })
 
   it("accepts Stage 2 when Stage 1 is separated by a different character's entry", () => {
     testCharacters = [charWithPrereq(1), baseChar({ id: 2 })]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
-    const other = entry(2, "char.test.basic-attack.normal-attack._", "other")
-    const s2 = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
+    const other = entry(
+      2,
+      "char.test.basic-attack.normal-attack._::basic-attack",
+      "other",
+    )
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
     const result = validateTimeline([s1, other, s2], [1, 2, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(false)
     expect(result.invalidRowIds.has("other")).toBe(false)
@@ -413,7 +495,11 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
 
   it("does not flag stages with no requiresStageId", () => {
     testCharacters = [charWithPrereq(1)]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
     const result = validateTimeline([s1], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s1")).toBe(false)
   })
@@ -444,7 +530,8 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-1",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
               comboAllows: ["Dodge"],
             },
           ],
@@ -487,9 +574,17 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [movementChar(1)]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.movement.dodge._", "dodge"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -521,7 +616,8 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-1",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
               // comboAllows omitted â†’ opaque
             },
           ],
@@ -547,9 +643,17 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [opaqueChar]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.movement.dodge._", "dodge"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -574,10 +678,18 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [charWithBoth]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.movement.dodge._", "dodge"),
-        entry(1, "char.test.movement.jump._", "jump"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
+        entry(1, "char.test.basic-attack.jump._::basic-attack", "jump"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -589,9 +701,17 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [movementChar(1)]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.movement.jump._", "jump"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(1, "char.test.basic-attack.jump._::basic-attack", "jump"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -624,9 +744,21 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [charWithSkill]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.resonance-skill.resonance-skill._", "skill"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(
+          1,
+          "char.test.basic-attack.resonance-skill._::basic-attack",
+          "skill",
+        ),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -638,10 +770,18 @@ describe("validateTimeline — comboAllows (Movement transparency)", () => {
     testCharacters = [movementChar(1)]
     const result = validateTimeline(
       [
-        entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1"),
-        entry(1, "char.test.movement.dodge._", "d1"),
-        entry(1, "char.test.movement.dodge._", "d2"),
-        entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "s1",
+        ),
+        entry(1, "char.test.basic-attack.dodge._::basic-attack", "d1"),
+        entry(1, "char.test.basic-attack.dodge._::basic-attack", "d2"),
+        entry(
+          1,
+          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+          "s2",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -676,7 +816,8 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-0",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-0::basic-attack",
             },
             {
               name: "S2",
@@ -685,7 +826,8 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-1",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
             },
             {
               name: "S3",
@@ -694,7 +836,8 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId: "char.test.basic-attack.normal-attack.stage-2",
+              requiresStageId:
+                "char.test.basic-attack.normal-attack.stage-2::basic-attack",
             },
           ],
           damage: [],
@@ -705,9 +848,21 @@ describe("validateTimeline — cascade suppression", () => {
   it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowErrors", () => {
     // Stage 0 absent; Stage 1 â†’ direct error; Stage 2, Stage 3 â†’ cascade
     testCharacters = [chainChar()]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
-    const s2 = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2")
-    const s3 = entry(1, "char.test.basic-attack.normal-attack.stage-3", "s3")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
+    const s3 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-3::basic-attack",
+      "s3",
+    )
     const result = validateTimeline([s1, s2, s3], [1, null, null], loadouts)
 
     // Stage 1 has a direct error
@@ -725,11 +880,15 @@ describe("validateTimeline — cascade suppression", () => {
 
   it("an independent error on a later row is not suppressed", () => {
     testCharacters = [chainChar(), baseChar({ id: 2 })]
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
     // char 99 not in team â†’ independent error
     const independent = entry(
       99,
-      "char.test.basic-attack.normal-attack._",
+      "char.test.basic-attack.normal-attack._::basic-attack",
       "ind",
     )
     const result = validateTimeline(
@@ -746,9 +905,21 @@ describe("validateTimeline — cascade suppression", () => {
 
   it("accepts Stage 2 when Stage 1 is valid (no cascade)", () => {
     testCharacters = [chainChar()]
-    const s0 = entry(1, "char.test.basic-attack.normal-attack.stage-0", "s0")
-    const s1 = entry(1, "char.test.basic-attack.normal-attack.stage-1", "s1")
-    const s2 = entry(1, "char.test.basic-attack.normal-attack.stage-2", "s2")
+    const s0 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-0::basic-attack",
+      "s0",
+    )
+    const s1 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "s1",
+    )
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
     const result = validateTimeline([s0, s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.size).toBe(0)
     expect(result.rowErrors.size).toBe(0)
@@ -783,14 +954,14 @@ const swapChar = (): EnrichedCharacter =>
 const swapEntry = (id: string): TimelineEntry => ({
   id,
   characterId: 1,
-  stageId: "char.test.basic-attack.normal-attack._",
+  stageId: "char.test.basic-attack.normal-attack._::basic-attack",
   variantKind: "swap",
 })
 
 const fullEntry = (id: string, characterId = 1): TimelineEntry => ({
   id,
   characterId,
-  stageId: "char.test.basic-attack.normal-attack._",
+  stageId: "char.test.basic-attack.normal-attack._::basic-attack",
 })
 
 const emptyLoadoutsW: SlotLoadout[] = [
@@ -910,7 +1081,8 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "second",
-                requiresStageId: "char.test.basic-attack.normal-attack.first",
+                requiresStageId:
+                  "char.test.basic-attack.normal-attack.first::basic-attack",
               },
             ],
             damage: [],
@@ -921,13 +1093,13 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
     const e1: TimelineEntry = {
       id: "e1",
       characterId: 1,
-      stageId: "char.test.basic-attack.normal-attack.first",
+      stageId: "char.test.basic-attack.normal-attack.first::basic-attack",
       variantKind: "swap",
     }
     const e2: TimelineEntry = {
       id: "e2",
       characterId: 1,
-      stageId: "char.test.basic-attack.normal-attack.second",
+      stageId: "char.test.basic-attack.normal-attack.second::basic-attack",
     }
     const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
     // swap variant on the preceding entry still satisfies requiresStageId
@@ -1037,7 +1209,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
 
   it("hard error: ground â†’ air ('launch/jump required')", () => {
     const result = validateTimeline(
-      [fEntry("char.test.basic-attack.air-move._", "air")],
+      [fEntry("char.test.basic-attack.air-move._::basic-attack", "air")],
       [1, null, null],
       loadouts,
     )
@@ -1050,8 +1222,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("hard error: air â†’ launch ('already airborne')", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch1"),
-        fEntry("char.test.movement.launch-move._", "launch2"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch1"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch2"),
       ],
       [1, null, null],
       loadouts,
@@ -1065,7 +1237,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
 
   it("hard error: ground â†’ land ('nothing to land from')", () => {
     const result = validateTimeline(
-      [fEntry("char.test.basic-attack.land-move._", "land")],
+      [fEntry("char.test.basic-attack.land-move._::basic-attack", "land")],
       [1, null, null],
       loadouts,
     )
@@ -1078,8 +1250,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("no error: air â†’ ground (fall padding, not flagged in slice 1)", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch"),
-        fEntry("char.test.basic-attack.ground-move._", "ground"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.ground-move._::basic-attack", "ground"),
       ],
       [1, null, null],
       loadouts,
@@ -1091,9 +1263,9 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("valid: Jump (launch) â†’ air â†’ land sequence", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch"),
-        fEntry("char.test.basic-attack.air-move._", "air"),
-        fEntry("char.test.basic-attack.land-move._", "land"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.air-move._::basic-attack", "air"),
+        fEntry("char.test.basic-attack.land-move._::basic-attack", "land"),
       ],
       [1, null, null],
       loadouts,
@@ -1105,8 +1277,11 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("footing-transparent stage does not change cursor", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.basic-attack.neutral-move._", "neutral"),
-        fEntry("char.test.basic-attack.air-move._", "air"),
+        fEntry(
+          "char.test.basic-attack.neutral-move._::basic-attack",
+          "neutral",
+        ),
+        fEntry("char.test.basic-attack.air-move._::basic-attack", "air"),
       ],
       [1, null, null],
       loadouts,
@@ -1118,8 +1293,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("footing cursor updates across entries: launch sets air, then land is valid", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch"),
-        fEntry("char.test.basic-attack.land-move._", "land"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.land-move._::basic-attack", "land"),
       ],
       [1, null, null],
       loadouts,
@@ -1131,8 +1306,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("soft warning: air cursor â†’ ground stage emits fall-frames annotation", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch"),
-        fEntry("char.test.basic-attack.ground-move._", "ground"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.ground-move._::basic-attack", "ground"),
       ],
       [1, null, null],
       loadouts,
@@ -1147,8 +1322,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("no warning: ground cursor â†’ ground stage (normal grounded stage)", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.basic-attack.ground-move._", "g1"),
-        fEntry("char.test.basic-attack.ground-move._", "g2"),
+        fEntry("char.test.basic-attack.ground-move._::basic-attack", "g1"),
+        fEntry("char.test.basic-attack.ground-move._::basic-attack", "g2"),
       ],
       [1, null, null],
       loadouts,
@@ -1159,8 +1334,8 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   it("no warning: air cursor â†’ air stage", () => {
     const result = validateTimeline(
       [
-        fEntry("char.test.movement.launch-move._", "launch"),
-        fEntry("char.test.basic-attack.air-move._", "air"),
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.air-move._::basic-attack", "air"),
       ],
       [1, null, null],
       loadouts,
@@ -1235,9 +1410,22 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
     // charA (1) re-enters ground stage â†’ effective footing from snapshot "air" â†’ fall warning
     const result = validateTimeline(
       [
-        fSnap(1, "char.test.resonance-skill.aerial-swap._", "swap1", "swap"),
-        fSnap(2, "char.test.basic-attack.ground-move._", "ground2"),
-        fSnap(1, "char.test.basic-attack.ground-move._", "ground1"),
+        fSnap(
+          1,
+          "char.test.basic-attack.aerial-swap._::basic-attack",
+          "swap1",
+          "swap",
+        ),
+        fSnap(
+          2,
+          "char.test.basic-attack.ground-move._::basic-attack",
+          "ground2",
+        ),
+        fSnap(
+          1,
+          "char.test.basic-attack.ground-move._::basic-attack",
+          "ground1",
+        ),
       ],
       twoSnapSlots,
       twoSnapLoadouts,
@@ -1253,8 +1441,17 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
     // charB ground stage â†’ charB uses team cursor "ground" â†’ no fall warning
     const result = validateTimeline(
       [
-        fSnap(1, "char.test.resonance-skill.aerial-swap._", "swap1", "swap"),
-        fSnap(2, "char.test.basic-attack.ground-move._", "ground2"),
+        fSnap(
+          1,
+          "char.test.basic-attack.aerial-swap._::basic-attack",
+          "swap1",
+          "swap",
+        ),
+        fSnap(
+          2,
+          "char.test.basic-attack.ground-move._::basic-attack",
+          "ground2",
+        ),
       ],
       twoSnapSlots,
       twoSnapLoadouts,
@@ -1269,9 +1466,22 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
     // charA second ground stage â†’ no snapshot, team footing "ground" â†’ no fall warning
     const result = validateTimeline(
       [
-        fSnap(1, "char.test.resonance-skill.aerial-swap._", "swap1", "swap"),
-        fSnap(1, "char.test.basic-attack.ground-move._", "ground1a"),
-        fSnap(1, "char.test.basic-attack.ground-move._", "ground1b"),
+        fSnap(
+          1,
+          "char.test.basic-attack.aerial-swap._::basic-attack",
+          "swap1",
+          "swap",
+        ),
+        fSnap(
+          1,
+          "char.test.basic-attack.ground-move._::basic-attack",
+          "ground1a",
+        ),
+        fSnap(
+          1,
+          "char.test.basic-attack.ground-move._::basic-attack",
+          "ground1b",
+        ),
       ],
       [1, null, null],
       loadouts,
@@ -1385,8 +1595,12 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
   it("cancel: { launch: N } with actionTime < N exits ground — next ground stage valid", () => {
     const result = validateTimeline(
       [
-        cancelEntry("char.test.basic-attack.launch-cancel._", "lc", "cancel"),
-        vEntry("char.test.basic-attack.ground-stage._", "gs"),
+        cancelEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "lc",
+          "cancel",
+        ),
+        vEntry("char.test.basic-attack.ground-stage._::basic-attack", "gs"),
       ],
       [1, null, null],
       loadouts,
@@ -1398,8 +1612,12 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
   it("cancel: { launch: N } with actionTime < N exits ground — next air stage hard-errors", () => {
     const result = validateTimeline(
       [
-        cancelEntry("char.test.basic-attack.launch-cancel._", "lc", "cancel"),
-        vEntry("char.test.basic-attack.air-stage._", "as"),
+        cancelEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "lc",
+          "cancel",
+        ),
+        vEntry("char.test.basic-attack.air-stage._::basic-attack", "as"),
       ],
       [1, null, null],
       loadouts,
@@ -1415,9 +1633,16 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
     const result = validateTimeline(
       [
         // First get to air via a full launch (actionTime 40 â‰¥ launch frame 30)
-        vEntry("char.test.basic-attack.launch-cancel._", "launch"),
-        cancelEntry("char.test.basic-attack.land-cancel._", "lc", "cancel"),
-        vEntry("char.test.basic-attack.air-stage._", "as"),
+        vEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "launch",
+        ),
+        cancelEntry(
+          "char.test.basic-attack.land-cancel._::basic-attack",
+          "lc",
+          "cancel",
+        ),
+        vEntry("char.test.basic-attack.air-stage._::basic-attack", "as"),
       ],
       [1, null, null],
       loadouts,
@@ -1428,9 +1653,16 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
   it("cancel: { land: N } with actionTime < N exits air — next ground stage gets fall warning not hard error", () => {
     const result = validateTimeline(
       [
-        vEntry("char.test.basic-attack.launch-cancel._", "launch"),
-        cancelEntry("char.test.basic-attack.land-cancel._", "lc", "cancel"),
-        vEntry("char.test.basic-attack.ground-stage._", "gs"),
+        vEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "launch",
+        ),
+        cancelEntry(
+          "char.test.basic-attack.land-cancel._::basic-attack",
+          "lc",
+          "cancel",
+        ),
+        vEntry("char.test.basic-attack.ground-stage._::basic-attack", "gs"),
       ],
       [1, null, null],
       loadouts,
@@ -1445,8 +1677,11 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
   it("full: { launch: N } with actionTime >= N exits air — next air stage valid", () => {
     const result = validateTimeline(
       [
-        vEntry("char.test.basic-attack.launch-cancel._", "launch"),
-        vEntry("char.test.basic-attack.air-stage._", "as"),
+        vEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "launch",
+        ),
+        vEntry("char.test.basic-attack.air-stage._::basic-attack", "as"),
       ],
       [1, null, null],
       loadouts,
@@ -1481,11 +1716,15 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
     testCharacters = [variantChar(), char2]
     const result = validateTimeline(
       [
-        cancelEntry("char.test.basic-attack.launch-cancel._", "lc", "swap"),
+        cancelEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "lc",
+          "swap",
+        ),
         {
           id: "g2",
           characterId: 2,
-          stageId: "char.test.basic-attack.ground-move._",
+          stageId: "char.test.basic-attack.ground-move._::basic-attack",
         },
       ],
       [1, 2, null],
@@ -1499,8 +1738,12 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
   it("swap: { launch: N } same-character re-entry reads snapshot (air)", () => {
     const result = validateTimeline(
       [
-        cancelEntry("char.test.basic-attack.launch-cancel._", "lc", "swap"),
-        vEntry("char.test.basic-attack.ground-stage._", "gs"),
+        cancelEntry(
+          "char.test.basic-attack.launch-cancel._::basic-attack",
+          "lc",
+          "swap",
+        ),
+        vEntry("char.test.basic-attack.ground-stage._::basic-attack", "gs"),
       ],
       [1, null, null],
       loadouts,

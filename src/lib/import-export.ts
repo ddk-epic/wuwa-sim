@@ -3,7 +3,7 @@ import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
 import { ALL_WEAPONS } from "#/data/weapons"
-import { makeCharStageId, makeEchoStageId } from "#/lib/stage"
+import { makeCharStageId, makeEchoStageId, stageSkillType } from "#/lib/stage"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 
@@ -30,7 +30,13 @@ const ALL_STAGE_IDS: readonly string[] = (() => {
     for (const skill of char.skills) {
       for (const stage of skill.stages) {
         ids.add(
-          makeCharStageId(char.name, skill.type, skill.name, stage.newName),
+          makeCharStageId(
+            char.name,
+            stage.category,
+            skill.name,
+            stage.newName,
+            stageSkillType(stage.category, stage.damage),
+          ),
         )
       }
     }

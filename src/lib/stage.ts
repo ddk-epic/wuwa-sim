@@ -49,28 +49,33 @@ export interface ResolvedStage {
   comboAllows?: readonly MovementKind[]
 }
 
-/** `char.<charName>.<skill-grouping>.<skillName>.<stageName>` (lineage rework lands in #270) */
-export function makeCharStageId(
-  charName: string,
-  skillGrouping: SkillGrouping,
-  skillName: string,
-  stageName: string | undefined,
-): string {
-  const lineage =
-    skillGrouping === "Normal Attack" ||
-    skillGrouping === "Inherent Skill" ||
-    skillGrouping === "Tune Break"
-      ? "basic-attack"
-      : toKebab(skillGrouping)
-  return `char.${toKebab(charName)}.${lineage}.${toKebab(skillName)}.${toKebab(stageName)}`
+/** Derive the `::skill-type` segment of a character stageId. */
+export function stageSkillType(
+  category: SkillCategory,
+  damage: DamageEntry[] | undefined,
+): SkillType {
+  const fallback: SkillType =
+    category === "Tune Break" ? "Basic Attack" : category
+  return damage?.[0]?.type ?? fallback
 }
 
-/** `echo.<echoName>.<stageName>` */
+/** `char.<charName>.<skill-category>.<skillName>.<stageName>::<skill-type>` (ADR-0024) */
+export function makeCharStageId(
+  charName: string,
+  skillCategory: SkillCategory,
+  skillName: string,
+  stageName: string | undefined,
+  skillType: SkillType,
+): string {
+  return `char.${toKebab(charName)}.${toKebab(skillCategory)}.${toKebab(skillName)}.${toKebab(stageName)}::${toKebab(skillType)}`
+}
+
+/** `echo.<echoName>.<stageName>::echo-skill` (ADR-0024) */
 export function makeEchoStageId(
   echoName: string,
   stageName: string | undefined,
 ): string {
-  return `echo.${toKebab(echoName)}.${toKebab(stageName)}`
+  return `echo.${toKebab(echoName)}.${toKebab(stageName)}::echo-skill`
 }
 
 export function stageLabel(skillName: string, newName?: string): string {
@@ -89,9 +94,15 @@ export function findStageByEntry(
   if (character) {
     for (const skill of character.skills) {
       for (const s of skill.stages) {
+        const stageType = stageSkillType(s.category, s.damage)
         if (
-          makeCharStageId(character.name, skill.type, skill.name, s.newName) ===
-          entry.stageId
+          makeCharStageId(
+            character.name,
+            s.category,
+            skill.name,
+            s.newName,
+            stageType,
+          ) === entry.stageId
         ) {
           const comboAllows =
             s.requiresStageId !== undefined

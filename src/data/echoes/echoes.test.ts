@@ -76,7 +76,7 @@ const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
-  stageId: `echo.inferno-rider._.${hitIndex}`,
+  stageId: `echo.inferno-rider._::echo-skill.${hitIndex}`,
   frame,
 })
 
@@ -85,7 +85,7 @@ const holdHit = (frame: number): HitLandedEvent => ({
   characterId: 1,
   skillType: "Echo Skill",
   dmgType: "Damage",
-  stageId: "echo.inferno-rider.hold.1",
+  stageId: "echo.inferno-rider.hold::echo-skill.1",
   frame,
 })
 
@@ -181,7 +181,7 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
       kind: "skillCast",
       characterId: 1,
       skillType: "Echo Skill",
-      stageId: "echo.bell-borne-geochelone._",
+      stageId: "echo.bell-borne-geochelone._::echo-skill",
       frame: 0,
     })
     expect(engine.activeBuffIds(1)).toContain(BBG_BUFF)

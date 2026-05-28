@@ -8,7 +8,11 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "../../lib/loadout/catalog"
-import { makeCharStageId, makeEchoStageId } from "../../lib/stage"
+import {
+  makeCharStageId,
+  makeEchoStageId,
+  stageSkillType,
+} from "../../lib/stage"
 
 export interface FocusedStage {
   key: string
@@ -107,9 +111,7 @@ function buildCharacterStage(
   stage: EnrichedSkillAttribute,
   key: string,
 ): FocusedStage {
-  const fallback: SkillType =
-    stage.category === "Tune Break" ? "Basic Attack" : stage.category
-  const skillType: SkillType = stage.damage?.[0]?.type ?? fallback
+  const skillType = stageSkillType(stage.category, stage.damage)
   const label = skillLabel(skill.name, stage.newName)
   return {
     key,
@@ -119,7 +121,13 @@ function buildCharacterStage(
     durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
-      stageId: makeCharStageId(charName, skill.type, skill.name, stage.newName),
+      stageId: makeCharStageId(
+        charName,
+        stage.category,
+        skill.name,
+        stage.newName,
+        skillType,
+      ),
     },
   }
 }

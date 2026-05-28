@@ -68,7 +68,8 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId: "char.encore.resonance-liberation.cosmos-rave.cosmos-rave",
+        stageId:
+          "char.encore.resonance-liberation.cosmos-rave.cosmos-rave::resonance-liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -108,8 +109,8 @@ export const encore = {
         event: "skillCast",
         characterId: 1203,
         stageId: [
-          "char.encore.basic-attack.wooly-attack.stage-5-wooly-strike",
-          "char.encore.resonance-skill.flaming-woolies.energetic-welcome",
+          "char.encore.basic-attack.wooly-attack.stage-5-wooly-strike::basic-attack",
+          "char.encore.resonance-skill.flaming-woolies.energetic-welcome::resonance-skill",
         ],
       },
       cooldown: 10,
@@ -131,7 +132,8 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId: "char.encore.forte-circuit.black-white-woolies.cosmos-rupture",
+        stageId:
+          "char.encore.heavy-attack.black-white-woolies.cosmos-rupture::resonance-liberation",
       },
       target: { kind: "team" },
       duration: { kind: "seconds", v: 30 },

@@ -162,7 +162,7 @@ function normalAttack(characterId: number, id?: string): TimelineEntry {
   const charName = characterId === 2 ? "test-b" : "test-a"
   return tlEntry(
     characterId,
-    `char.${charName}.basic-attack.normal-attack._`,
+    `char.${charName}.basic-attack.normal-attack._::basic-attack`,
     id,
   )
 }
@@ -205,7 +205,7 @@ describe("getTimelineSummary — single entry", () => {
   it("damage is null when stage has no damage entries", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "char.test-a.forte-circuit.no-damage-skill._"),
+      tlEntry(1, "char.test-a.basic-attack.no-damage-skill._::basic-attack"),
     ])
     expect(result.rows[0].damage).toBeNull()
     expect(result.totalDamage).toBe(0)
@@ -217,8 +217,12 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       normalAttack(1, "a"),
-      tlEntry(1, "char.test-a.basic-attack.heavy-attack._", "b"),
-      tlEntry(1, "char.test-a.resonance-skill.resonance-skill._", "c"),
+      tlEntry(1, "char.test-a.basic-attack.heavy-attack._::basic-attack", "b"),
+      tlEntry(
+        1,
+        "char.test-a.basic-attack.resonance-skill._::basic-attack",
+        "c",
+      ),
     ])
     // Normal Attack: 60f, Heavy Attack: 30f (starts at 60), Resonance Skill: 90f (starts at 90)
     expect(result.rows.map((r) => r.timeFrames)).toEqual([0, 60, 90])
@@ -237,7 +241,11 @@ describe("getTimelineSummary — zero-damage rule", () => {
   it("fallback rows have null damage and totalDamage stays 0, but time still advances", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "char.test-a.forte-circuit.no-damage-skill._", "a"),
+      tlEntry(
+        1,
+        "char.test-a.basic-attack.no-damage-skill._::basic-attack",
+        "a",
+      ),
       normalAttack(1, "b"),
     ])
     expect(result.rows[0].damage).toBeNull()
@@ -251,7 +259,7 @@ describe("getTimelineSummary — dps", () => {
   it("dps is 0 without a simulation log", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "char.test-a.resonance-skill.resonance-skill._"),
+      tlEntry(1, "char.test-a.basic-attack.resonance-skill._::basic-attack"),
     ])
     expect(result.totalTimeFrames).toBe(90)
     expect(result.totalDamage).toBe(0)
@@ -392,7 +400,7 @@ describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
     const swapEntry: TimelineEntry = {
       id: "swap-e",
       characterId: 1,
-      stageId: "char.test-a.basic-attack.normal-attack._",
+      stageId: "char.test-a.basic-attack.normal-attack._::basic-attack",
       variantKind: "swap",
     }
     const nextEntry = normalAttack(1, "next-e")
@@ -537,7 +545,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     const entry: TimelineEntry = {
       id: "f1",
       characterId: 1,
-      stageId: "char.test-a.basic-attack.normal-attack._",
+      stageId: "char.test-a.basic-attack.normal-attack._::basic-attack",
       variantKind: undefined,
     }
     const result = getTimelineSummary(

@@ -66,7 +66,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "char.sanhua.basic-attack.frigid-light.stage-5",
+        stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 8 },
@@ -143,7 +143,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       condition: {
@@ -177,7 +178,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       condition: {
@@ -211,7 +213,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       condition: {
@@ -246,7 +249,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "char.sanhua.basic-attack.frigid-light.stage-5",
+        stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -288,7 +291,8 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -309,7 +313,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       target: { kind: "self" },
@@ -336,7 +341,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       target: { kind: "self" },
@@ -363,7 +369,8 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId: "char.sanhua.forte-circuit.clarity-of-mind.detonate",
+        stageId:
+          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
         source: "self",
       },
       target: { kind: "self" },

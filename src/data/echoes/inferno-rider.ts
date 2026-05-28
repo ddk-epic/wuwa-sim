@@ -16,7 +16,7 @@ export const infernoRider = {
         event: "hitLanded",
         actor: "self",
         source: "self",
-        stageId: "echo.inferno-rider._.3",
+        stageId: "echo.inferno-rider._::echo-skill.3",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },

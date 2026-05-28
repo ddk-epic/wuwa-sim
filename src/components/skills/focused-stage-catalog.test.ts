@@ -364,7 +364,9 @@ describe("focused-stage-catalog — labels", () => {
     ]
     const result = getFocusedStageCatalog([1, null, null], loadouts, 1)
     expect(result.echoStages[0].label).toBe("Test Echo (Tap)")
-    expect(result.echoStages[0].clickPayload.stageId).toBe("echo.test-echo.tap")
+    expect(result.echoStages[0].clickPayload.stageId).toBe(
+      "echo.test-echo.tap::echo-skill",
+    )
   })
 })
 
@@ -430,7 +432,7 @@ describe("focused-stage-catalog — echo stages", () => {
     const result = getFocusedStageCatalog([1, null, null], loadoutsWithEcho, 1)
     expect(result.echoStages[0].clickPayload).toEqual({
       characterId: 1,
-      stageId: "echo.test-echo.tap",
+      stageId: "echo.test-echo.tap::echo-skill",
     })
   })
 

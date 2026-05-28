@@ -5,7 +5,7 @@ import type {
 } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import { getCharacterById } from "../loadout/catalog"
-import { makeCharStageId, stageLabel } from "../stage"
+import { makeCharStageId, stageLabel, stageSkillType } from "../stage"
 
 type LegacyEntry = {
   id?: string
@@ -17,6 +17,39 @@ type LegacyEntry = {
 }
 
 function migrateStageId(stageId: string, characterId: number): string {
+  // Pre-#270 hierarchical format `char.<name>.<lineage>.<skill>.<stage>` (no `::`):
+  // re-derive lineage from the matching stage's category and append `::skill-type`.
+  if (stageId.startsWith("char.") && !stageId.includes("::")) {
+    const parts = stageId.split(".")
+    if (parts.length !== 5) return ""
+    const [, charSlug, , skillSlug, stageSlug] = parts
+    const character = getCharacterById(characterId)
+    if (character) {
+      for (const skill of character.skills) {
+        for (const s of skill.stages) {
+          const candidate = makeCharStageId(
+            character.name,
+            s.category,
+            skill.name,
+            s.newName,
+            stageSkillType(s.category, s.damage),
+          )
+          const lineageParts = candidate.split("::")[0].split(".")
+          if (
+            lineageParts[1] === charSlug &&
+            lineageParts[3] === skillSlug &&
+            lineageParts[4] === stageSlug
+          ) {
+            return candidate
+          }
+        }
+      }
+    }
+    return ""
+  }
+  if (stageId.startsWith("echo.") && !stageId.includes("::")) {
+    return `${stageId}::echo-skill`
+  }
   if (stageId.startsWith("char.") || stageId.startsWith("echo.")) return stageId
   if (!stageId.includes("::")) return stageId
   const sep = stageId.indexOf("::")
@@ -30,9 +63,10 @@ function migrateStageId(stageId: string, characterId: number): string {
         if (stage) {
           return makeCharStageId(
             character.name,
-            skill.type,
+            stage.category,
             skill.name,
             stage.newName,
+            stageSkillType(stage.category, stage.damage),
           )
         }
       }
@@ -77,9 +111,10 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
             characterId,
             stageId: makeCharStageId(
               character.name,
-              skill.type,
+              stage.category,
               skill.name,
               stage.newName,
+              stageSkillType(stage.category, stage.damage),
             ),
             variantKind,
           }

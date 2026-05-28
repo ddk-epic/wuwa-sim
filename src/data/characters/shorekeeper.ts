@@ -48,7 +48,8 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId: "char.shorekeeper.intro-skill.proof-of-existence.discernment",
+        stageId:
+          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
       },
       effects: [
         {
@@ -70,7 +71,8 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId: "char.shorekeeper.resonance-liberation.end-loop._",
+        stageId:
+          "char.shorekeeper.resonance-liberation.end-loop._::resonance-liberation",
       },
       cooldown: 25,
       effects: [
@@ -110,7 +112,8 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId: "char.shorekeeper.intro-skill.proof-of-existence.discernment",
+        stageId:
+          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -130,7 +133,8 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId: "char.shorekeeper.intro-skill.proof-of-existence.discernment",
+        stageId:
+          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -149,7 +153,8 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId: "char.shorekeeper.intro-skill.proof-of-existence.discernment",
+        stageId:
+          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
