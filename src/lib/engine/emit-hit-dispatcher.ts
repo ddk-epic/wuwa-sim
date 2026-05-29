@@ -25,6 +25,7 @@ export function buffInstanceKey(
   defId: string,
   sourceCharacterId: number,
 ): BuffInstanceKey {
+  // Sole construction site for the branded key; the cast applies the brand.
   return `${defId}|${sourceCharacterId}` as BuffInstanceKey
 }
 

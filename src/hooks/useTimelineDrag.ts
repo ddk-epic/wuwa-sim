@@ -90,7 +90,7 @@ export function decideDrop(src: DragSource, target: DropTarget): DropDecision {
 }
 
 function resolvePosition(ev: React.DragEvent): DropPosition {
-  const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect()
+  const rect = ev.currentTarget.getBoundingClientRect()
   return ev.clientY < rect.top + rect.height / 2 ? "above" : "below"
 }
 
