@@ -201,11 +201,13 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const focusedIdx = r.nullable()
   const focusedId = focusedIdx === null ? null : ALL_CHARACTERS[focusedIdx].id
 
-  const slots = [r.nullable(), r.nullable(), r.nullable()].map((i) =>
-    i === null ? null : ALL_CHARACTERS[i].id,
-  ) as Slots
+  const readSlot = (): number | null => {
+    const i = r.nullable()
+    return i === null ? null : ALL_CHARACTERS[i].id
+  }
+  const slots: Slots = [readSlot(), readSlot(), readSlot()]
 
-  const loadouts = [0, 1, 2].map((): SlotLoadout => {
+  const readLoadout = (): SlotLoadout => {
     const wIdx = r.nullable()
     const weaponRank = r.next()
     const eIdx = r.nullable()
@@ -227,7 +229,12 @@ export function decodePayload(encoded: string): ImportExportPayload {
       cost4Mains: Array.from({ length: c4 }, () => COST4_MAINS[r.next()]),
       cost3Mains: Array.from({ length: c3 }, () => COST3_MAINS[r.next()]),
     }
-  }) as [SlotLoadout, SlotLoadout, SlotLoadout]
+  }
+  const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
+    readLoadout(),
+    readLoadout(),
+    readLoadout(),
+  ]
 
   const timelineCount = r.next()
   let timeline: TimelineNode[] | null

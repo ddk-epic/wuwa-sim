@@ -77,6 +77,7 @@ function migrateStageId(stageId: string, characterId: number): string {
 
 export function migrateEntries(raw: unknown[]): TimelineEntry[] {
   return raw.map((r) => {
+    // Boundary: untyped legacy entry; every field is typeof-checked before use.
     const legacy = r as LegacyEntry
     const id = typeof legacy.id === "string" ? legacy.id : crypto.randomUUID()
     const characterId =
@@ -128,6 +129,7 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
 
 export function migrateNodes(raw: unknown[]): TimelineNode[] {
   return raw.map((r) => {
+    // Boundary: untyped legacy node; shape is probed via kind then field-checked.
     const item = r as { kind?: string }
     if (item.kind === "group") {
       const g = r as Partial<TimelineGroup>

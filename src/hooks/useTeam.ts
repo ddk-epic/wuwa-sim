@@ -33,6 +33,7 @@ export function useTeam() {
     "wuwa.team.loadouts",
     [emptyLoadout(), emptyLoadout(), emptyLoadout()],
     (stored) => {
+      // Boundary: stored localStorage is unknown; each slot is merged over defaults.
       const arr = stored as [unknown, unknown, unknown]
       return arr.map((s) => ({
         ...emptyLoadout(),

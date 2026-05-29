@@ -14,6 +14,7 @@ export function useLocalStorage<T>(
       const item = window.localStorage.getItem(key)
       if (item !== null) {
         const parsed: unknown = JSON.parse(item)
+        // Boundary: parsed JSON is unknown; trusted as T unless a transform validates.
         setStoredValue(transform ? transform(parsed) : (parsed as T))
       }
     } catch {
@@ -24,6 +25,7 @@ export function useLocalStorage<T>(
   function setValue(value: SetValue<T>) {
     setStoredValue((prev) => {
       const next =
+        // T may itself be callable, so typeof can't narrow the updater branch.
         typeof value === "function" ? (value as (prev: T) => T)(prev) : value
       try {
         window.localStorage.setItem(key, JSON.stringify(next))

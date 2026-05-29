@@ -21,6 +21,7 @@ function clamp(value: number): number {
 
 function mergeWithDefaults(stored: unknown): Settings {
   if (stored === null || typeof stored !== "object") return DEFAULTS
+  // Boundary: stored is unknown; every field is typeof-checked below.
   const partial = stored as Partial<Settings>
   return {
     reactionDelay:
