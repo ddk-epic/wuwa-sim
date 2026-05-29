@@ -15,6 +15,11 @@ export const STAGE_TYPE_LABELS: Record<SkillType | SkillGrouping, string> = {
   "Tune Break": "TUNE",
 }
 
+// Map view for lookups keyed by an arbitrary string; `.get` yields `| undefined`.
+const LABELS_BY_STRING = new Map<string, string>(
+  Object.entries(STAGE_TYPE_LABELS),
+)
+
 export function formatSkillType(raw: string): string {
-  return (STAGE_TYPE_LABELS as Record<string, string | undefined>)[raw] ?? raw
+  return LABELS_BY_STRING.get(raw) ?? raw
 }

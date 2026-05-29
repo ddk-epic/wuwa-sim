@@ -2,7 +2,7 @@ import type { TimelineEntry } from "#/types/timeline"
 import type { VariantKind } from "#/types/character"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import type { ActionTimeStage } from "#/lib/stage"
-import { STAGE_TYPE_LABELS } from "#/data/skill-types"
+import { formatSkillType } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { renderPoolValue } from "../log/log-cells"
@@ -173,9 +173,7 @@ export function TimelineEntryRow({
               color: charHex,
             }}
           >
-            {(STAGE_TYPE_LABELS as Record<string, string | undefined>)[
-              skillType
-            ] ?? skillType}
+            {formatSkillType(skillType)}
           </span>
         )}
       </td>
