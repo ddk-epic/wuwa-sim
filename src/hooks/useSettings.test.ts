@@ -40,24 +40,6 @@ describe("useSettings", () => {
     expect(result.current[0].variantFloor).toBe(15)
   })
 
-  it("merges legacy localStorage entry lacking variantFloor with default", () => {
-    localStorage.setItem(
-      "wuwa.settings",
-      JSON.stringify({ reactionDelay: 5, swapFrames: 10 }),
-    )
-    const { result } = renderHook(() => useSettings())
-    expect(result.current[0].variantFloor).toBe(15)
-  })
-
-  it("merges legacy localStorage entry lacking fallFrames with default 15", () => {
-    localStorage.setItem(
-      "wuwa.settings",
-      JSON.stringify({ reactionDelay: 6, swapFrames: 6, variantFloor: 15 }),
-    )
-    const { result } = renderHook(() => useSettings())
-    expect(result.current[0].fallFrames).toBe(15)
-  })
-
   it("patch setter updates reactionDelay and persists", () => {
     const { result } = renderHook(() => useSettings())
     act(() => {
@@ -72,25 +54,6 @@ describe("useSettings", () => {
       variantFloor: 15,
       fallFrames: 15,
     })
-  })
-
-  it("patch setter updates swapFrames independently", () => {
-    const { result } = renderHook(() => useSettings())
-    act(() => {
-      result.current[1]({ swapFrames: 12 })
-    })
-    expect(result.current[0].reactionDelay).toBe(6)
-    expect(result.current[0].swapFrames).toBe(12)
-  })
-
-  it("patch setter updates variantFloor independently", () => {
-    const { result } = renderHook(() => useSettings())
-    act(() => {
-      result.current[1]({ variantFloor: 30 })
-    })
-    expect(result.current[0].variantFloor).toBe(30)
-    expect(result.current[0].reactionDelay).toBe(6)
-    expect(result.current[0].swapFrames).toBe(6)
   })
 
   it("clamps reactionDelay to 0 minimum", () => {

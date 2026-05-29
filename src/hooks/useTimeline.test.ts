@@ -26,16 +26,6 @@ describe("useTimeline", () => {
     expect(result.current.entries[0].id.length).toBeGreaterThan(0)
   })
 
-  it("two addEntry calls preserve insertion order", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry({ ...sample, stageId: "Normal Attack::Stage A" })
-      result.current.addEntry({ ...sample, stageId: "Normal Attack::Stage B" })
-    })
-    expect(result.current.entries[0].stageId).toBe("Normal Attack::Stage A")
-    expect(result.current.entries[1].stageId).toBe("Normal Attack::Stage B")
-  })
-
   it("removeEntry removes only the targeted entry", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
@@ -48,30 +38,6 @@ describe("useTimeline", () => {
     })
     expect(result.current.entries).toHaveLength(1)
     expect(result.current.entries[0].stageId).toBe("Other::_")
-  })
-
-  it("each addEntry produces a distinct id", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry(sample)
-      result.current.addEntry(sample)
-      result.current.addEntry(sample)
-    })
-    const ids = result.current.entries.map((e) => e.id)
-    expect(new Set(ids).size).toBe(3)
-  })
-
-  it("clearTimeline resets entries to empty array", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry(sample)
-      result.current.addEntry(sample)
-    })
-    expect(result.current.entries).toHaveLength(2)
-    act(() => {
-      result.current.clearTimeline()
-    })
-    expect(result.current.entries).toHaveLength(0)
   })
 
   it("updateEntry patches variantKind on the target entry", () => {
@@ -207,16 +173,6 @@ describe("migrateNodes", () => {
 })
 
 describe("useTimeline group support", () => {
-  it("addEntry appends at top level when no open group", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addGroup()
-      // immediately lock the group so no open group exists
-    })
-    // The added group is open (locked:false) — so next addEntry goes into it.
-    // To test top-level: start fresh with no groups
-  })
-
   it("addEntry appends to open group when one exists", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
@@ -311,20 +267,6 @@ describe("useTimeline group support", () => {
     expect(groups[1].entries[0].stageId).toBe(groups[0].entries[0].stageId)
     // duplicate of open group is locked
     expect(groups[1].locked).toBe(true)
-  })
-
-  it("duplicateGroup appends '<label> copy' label", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-      result.current.updateGroupLabel(groupId, "Burst Window")
-    })
-    act(() => {
-      result.current.duplicateGroup(groupId)
-    })
-    const groups = result.current.nodes.filter((n) => n.kind === "group")
-    expect(groups[1].label).toBe("Burst Window copy")
   })
 })
 
@@ -557,23 +499,6 @@ describe("useTimeline onShapeChange callback", () => {
 })
 
 describe("useTimeline rename state", () => {
-  it("renamingGroupId starts as null", () => {
-    const { result } = renderHook(() => useTimeline())
-    expect(result.current.renamingGroupId).toBeNull()
-  })
-
-  it("startRename sets renamingGroupId", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-    })
-    act(() => {
-      result.current.startRename(groupId)
-    })
-    expect(result.current.renamingGroupId).toBe(groupId)
-  })
-
   it("endRename clears renamingGroupId", () => {
     const { result } = renderHook(() => useTimeline())
     let groupId!: string

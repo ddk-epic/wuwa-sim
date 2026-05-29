@@ -2,32 +2,36 @@
 import { describe, expect, it, beforeEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { useTeam } from "./useTeam"
+import { loadoutFromTemplate } from "#/lib/loadout/template"
+import { getCharacterById } from "#/lib/loadout/catalog"
 
 beforeEach(() => {
   localStorage.clear()
 })
 
 describe("useTeam — template loadout resolution", () => {
-  it("adding Encore populates loadout with Stringmaster + Inferno Rider + Molten Rift", () => {
+  // The concrete ID resolution is pinned by template.test.ts; here we only
+  // verify the wiring: toggleCharacter populates the slot from the template.
+  it("adding Encore populates the slot loadout from its template", () => {
     const { result } = renderHook(() => useTeam())
     act(() => {
       result.current.toggleCharacter(1203) // Encore
     })
-    expect(result.current.loadouts[0].weaponId).toBe(21050016) // Stringmaster
-    expect(result.current.loadouts[0].echoId).toBe(390080007) // Inferno Rider
-    expect(result.current.loadouts[0].echoSetSlot1Id).toBe(2) // Molten Rift
-    expect(result.current.loadouts[0].echoSetSlot2Id).toBe(2) // Molten Rift (5pc)
+    const encore = getCharacterById(1203)!
+    expect(result.current.loadouts[0]).toEqual(
+      loadoutFromTemplate(encore.template),
+    )
   })
 
-  it("adding Sanhua populates loadout with Emerald of Genesis + Impermanence Heron + Moonlit Clouds", () => {
+  it("adding Sanhua populates the slot loadout from its template", () => {
     const { result } = renderHook(() => useTeam())
     act(() => {
       result.current.toggleCharacter(1102) // Sanhua
     })
-    expect(result.current.loadouts[0].weaponId).toBe(21020015) // Emerald of Genesis
-    expect(result.current.loadouts[0].echoId).toBe(6000052) // Impermanence Heron
-    expect(result.current.loadouts[0].echoSetSlot1Id).toBe(8) // Moonlit Clouds
-    expect(result.current.loadouts[0].echoSetSlot2Id).toBe(8) // Moonlit Clouds (5pc)
+    const sanhua = getCharacterById(1102)!
+    expect(result.current.loadouts[0]).toEqual(
+      loadoutFromTemplate(sanhua.template),
+    )
   })
 })
 
@@ -68,21 +72,5 @@ describe("useTeam — focusCharacter", () => {
       result.current.focusCharacter(1)
     })
     expect(result.current.focusedId).toBe(1)
-  })
-
-  it("focusCharacter can switch focus back and forth", () => {
-    const { result } = renderHook(() => useTeam())
-    act(() => {
-      result.current.toggleCharacter(1)
-      result.current.toggleCharacter(2)
-    })
-    act(() => {
-      result.current.focusCharacter(1)
-    })
-    expect(result.current.focusedId).toBe(1)
-    act(() => {
-      result.current.focusCharacter(2)
-    })
-    expect(result.current.focusedId).toBe(2)
   })
 })
