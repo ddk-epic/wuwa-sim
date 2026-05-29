@@ -6,7 +6,46 @@ export const fallacyOfNoReturn = {
   cost: 4,
   element: "Spectro",
   sets: ["Rejuvenating Glow"],
-  buffs: [],
+  buffs: [
+    {
+      id: "echo.fallacy-of-no-return.energy-regen",
+      name: "Fallacy of No Return (ER)",
+      description: "On Echo Skill (Tap) cast, self +10% Energy Regen for 20s.",
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        skillCategory: "Echo Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 20 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyRechargePct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
+      id: "echo.fallacy-of-no-return.atk",
+      name: "Fallacy of No Return (ATK)",
+      description: "On Echo Skill (Tap) cast, team +10% ATK for 20s.",
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        skillCategory: "Echo Skill",
+      },
+      target: { kind: "team" },
+      duration: { kind: "seconds", v: 20 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+  ],
   skill: {
     cooldown: 20,
     description:

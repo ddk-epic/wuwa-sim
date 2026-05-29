@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { stellarSymphony } from "#/data/weapons/stellar-symphony"
 import { stringmaster } from "#/data/weapons/stringmaster"
 import { variation } from "#/data/weapons/variation"
+import { fallacyOfNoReturn } from "#/data/echoes/fallacy-of-no-return"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
@@ -3326,5 +3328,175 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     expect(engine.activeBuffIds(teammateId)).not.toContain(
       "char.shorekeeper.lib.inner-stellarealm",
     )
+  })
+})
+
+describe("Stellar Symphony weapon — Astral Evolvement buffs", () => {
+  const FPS = 60
+
+  function setupStellarSymphony(rank: number) {
+    const char = baseChar({ id: 20 })
+    testCharacters = [char]
+    testWeapons = [stellarSymphony]
+    const loadout: SlotLoadout = {
+      ...emptyLoadout,
+      weaponId: stellarSymphony.id,
+      weaponRank: rank,
+    }
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [20, null, null],
+      loadouts: [loadout, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  it.each([1, 2, 3, 4, 5])(
+    "rank %i: HP% passive folds into stats at sim start",
+    (rank) => {
+      const expected = [0.12, 0.15, 0.18, 0.21, 0.24][rank - 1]
+      const engine = setupStellarSymphony(rank)
+      expect(engine.resolveStats(20).hpPct).toBeCloseTo(expected)
+    },
+  )
+
+  it.each([1, 2, 3, 4, 5])(
+    "rank %i: Resonance Liberation cast restores correct concerto",
+    (rank) => {
+      const expected = [8, 10, 12, 14, 16][rank - 1]
+      const engine = setupStellarSymphony(rank)
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 20,
+        skillCategory: "Resonance Liberation",
+        frame: 0,
+      })
+      expect(engine.getResource(20).concerto).toBe(expected)
+    },
+  )
+
+  it("concerto cooldown: second Liberation within 20s does not restore again", () => {
+    const engine = setupStellarSymphony(1)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 20,
+      skillCategory: "Resonance Liberation",
+      frame: 0,
+    })
+    const afterFirst = engine.getResource(20).concerto
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 20,
+      skillCategory: "Resonance Liberation",
+      frame: 10 * FPS - 1,
+    })
+    expect(engine.getResource(20).concerto).toBe(afterFirst)
+  })
+
+  it("rank 1: healLanded on Resonance Skill applies +14% ATK to team for 30s", () => {
+    const engine = setupStellarSymphony(1)
+    const baseAtkPct = engine.resolveStats(20).atkPct
+    engine.recordHeal({
+      kind: "healLanded",
+      characterId: 20,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(20)).toContain(
+      "weapon.stellar-symphony.heal-atk",
+    )
+    expect(engine.resolveStats(20).atkPct).toBeCloseTo(baseAtkPct + 0.14)
+  })
+
+  it("heal-atk buff expires after 30s", () => {
+    const engine = setupStellarSymphony(1)
+    const baseAtkPct = engine.resolveStats(20).atkPct
+    engine.recordHeal({
+      kind: "healLanded",
+      characterId: 20,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+    })
+    engine.tickToFrame(30 * FPS + 1)
+    expect(engine.activeBuffIds(20)).not.toContain(
+      "weapon.stellar-symphony.heal-atk",
+    )
+    expect(engine.resolveStats(20).atkPct).toBeCloseTo(baseAtkPct)
+  })
+
+  it("non-Resonance-Skill heal does not trigger heal-atk buff", () => {
+    const engine = setupStellarSymphony(1)
+    engine.recordHeal({
+      kind: "healLanded",
+      characterId: 20,
+      skillCategory: "Resonance Liberation",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(20)).not.toContain(
+      "weapon.stellar-symphony.heal-atk",
+    )
+  })
+})
+
+describe("Fallacy of No Return echo — Echo Skill buffs", () => {
+  function setupFallacy() {
+    const char = baseChar({ id: 30 })
+    testCharacters = [char]
+    testEchoes = [fallacyOfNoReturn]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [30, null, null],
+      loadouts: [
+        { ...emptyLoadout, echoId: fallacyOfNoReturn.id },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    return engine
+  }
+
+  it("Echo Skill cast applies +10% Energy Regen to self for 20s", () => {
+    const engine = setupFallacy()
+    const baseER = engine.resolveStats(30).energyRechargePct
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 30,
+      skillCategory: "Echo Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(30)).toContain(
+      "echo.fallacy-of-no-return.energy-regen",
+    )
+    expect(engine.resolveStats(30).energyRechargePct).toBeCloseTo(baseER + 0.1)
+  })
+
+  it("Echo Skill cast applies +10% ATK to team for 20s", () => {
+    const engine = setupFallacy()
+    const baseAtkPct = engine.resolveStats(30).atkPct
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 30,
+      skillCategory: "Echo Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(30)).toContain("echo.fallacy-of-no-return.atk")
+    expect(engine.resolveStats(30).atkPct).toBeCloseTo(baseAtkPct + 0.1)
+  })
+
+  it("buffs expire after 20s", () => {
+    const FPS = 60
+    const engine = setupFallacy()
+    const baseER = engine.resolveStats(30).energyRechargePct
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 30,
+      skillCategory: "Echo Skill",
+      frame: 0,
+    })
+    engine.tickToFrame(20 * FPS + 1)
+    expect(engine.activeBuffIds(30)).not.toContain(
+      "echo.fallacy-of-no-return.energy-regen",
+    )
+    expect(engine.resolveStats(30).energyRechargePct).toBeCloseTo(baseER)
   })
 })
