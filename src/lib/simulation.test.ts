@@ -582,8 +582,9 @@ describe("runSimulation — buff lifecycle interleaving", () => {
     expect(kinds).toContain("action")
     expect(kinds).toContain("hit")
     const resHit = result.find(
-      (e) => e.kind === "hit" && e.skillType === "Resonance Skill",
-    ) as HitEvent | undefined
+      (e): e is HitEvent =>
+        e.kind === "hit" && e.skillType === "Resonance Skill",
+    )
     expect(resHit).toBeDefined()
     expect(resHit?.activeBuffs.some((b) => b.id === "char.intro.buff")).toBe(
       true,
@@ -1518,9 +1519,9 @@ describe("runSimulation — healing pipeline", () => {
       emptySlots,
       emptyLoadouts,
     )
-    const sustain = result.find((e) => e.kind === "sustain") as SustainEvent
+    const sustain = result.find((e): e is SustainEvent => e.kind === "sustain")
     const expected = Math.round(healerAtk * 0.238 + 950)
-    expect(sustain.amount).toBe(expected)
+    expect(sustain?.amount).toBe(expected)
   })
 
   it("team target resolves to all non-null slot character IDs", () => {
@@ -1531,8 +1532,8 @@ describe("runSimulation — healing pipeline", () => {
       slots,
       emptyLoadouts,
     )
-    const sustain = result.find((e) => e.kind === "sustain") as SustainEvent
-    expect(sustain.targets).toEqual([20])
+    const sustain = result.find((e): e is SustainEvent => e.kind === "sustain")
+    expect(sustain?.targets).toEqual([20])
   })
 
   it("healLanded trigger fires a buff in response to a heal", () => {
@@ -1727,10 +1728,10 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
     const t3Action = actions.find((a) => a.characterId === 30 && !a.variantKind)
     expect(t3Action?.frame).toBe(66)
     // All trailing hits from t1 appear in log
-    const hits = result.filter((e) => e.kind === "hit" && e.characterId === 30)
-    const hitFrames = (hits as HitEvent[])
-      .map((h) => h.frame)
-      .sort((a, b) => a - b)
+    const hits = result.filter(
+      (e): e is HitEvent => e.kind === "hit" && e.characterId === 30,
+    )
+    const hitFrames = hits.map((h) => h.frame).sort((a, b) => a - b)
     expect(hitFrames).toContain(15)
     expect(hitFrames).toContain(30)
   })

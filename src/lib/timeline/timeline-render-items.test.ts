@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
+import type { Element } from "#/data/elements"
 import type { TimelineNode } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { ValidationResult } from "./validate-timeline"
@@ -25,19 +26,18 @@ afterEach(() => {
   resolvedStages = new Map()
 })
 
-const makeChar = (id: number, element: string): EnrichedCharacter =>
-  ({
-    id,
-    name: `Char${id}`,
-    element,
-    weaponType: "Sword",
-    rarity: "5",
-    stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
-    template: { weapon: "", echo: "", echoSet: "" },
-    skillTreeBonuses: [],
-    buffs: [],
-    skills: [],
-  }) as EnrichedCharacter
+const makeChar = (id: number, element: Element): EnrichedCharacter => ({
+  id,
+  name: `Char${id}`,
+  element,
+  weaponType: "Sword",
+  rarity: "5",
+  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: [],
+  skills: [],
+})
 
 const topEntry = (
   id: string,
@@ -136,8 +136,8 @@ describe("buildTimelineRenderItems", () => {
     const items = call([g, topEntry("e4")])
     expect(items).toHaveLength(2)
     expect(items[0].type).toBe("groupHeader")
-    expect(items[1].type).toBe("entry")
-    const e = items[1] as Extract<(typeof items)[number], { type: "entry" }>
+    const e = items[1]
+    if (e.type !== "entry") throw new Error("expected entry render item")
     expect(e.flatIndex).toBe(3)
   })
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
+import type { Element } from "#/data/elements"
 import type { TimelineEntry } from "#/types/timeline"
 import type { Slots } from "#/types/loadout"
 import {
@@ -20,19 +21,18 @@ afterEach(() => {
   testCharacters = []
 })
 
-const makeChar = (id: number, element: string): EnrichedCharacter =>
-  ({
-    id,
-    name: `Char${id}`,
-    element,
-    weaponType: "Sword",
-    rarity: "5",
-    stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
-    template: { weapon: "", echo: "", echoSet: "" },
-    skillTreeBonuses: [],
-    buffs: [],
-    skills: [],
-  }) as EnrichedCharacter
+const makeChar = (id: number, element: Element): EnrichedCharacter => ({
+  id,
+  name: `Char${id}`,
+  element,
+  weaponType: "Sword",
+  rarity: "5",
+  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
+  template: { weapon: "", echo: "", echoSet: "" },
+  skillTreeBonuses: [],
+  buffs: [],
+  skills: [],
+})
 
 const entry = (id: string, characterId: number): TimelineEntry => ({
   id,

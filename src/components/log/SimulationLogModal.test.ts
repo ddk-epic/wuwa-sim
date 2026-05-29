@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest"
-import type { SkillType } from "#/types/character"
 import type { ActiveBuff } from "#/types/simulation-log"
 import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"
@@ -172,11 +171,10 @@ describe("formatStatComponents", () => {
 describe("computeFormulaBreakdown", () => {
   it("zero defShred gives DEF_MULT_CONST (0.5) as defMult", () => {
     const s = snap({ defShred: 0 })
-    const ev = {
-      damage: 0,
-      element: "Fusion" as const,
+    const ev: Parameters<typeof computeFormulaBreakdown>[0] = {
+      element: "Fusion",
       dmgType: "Damage",
-      skillType: "Basic Attack" as SkillType,
+      skillType: "Basic Attack",
       multiplier: 1,
       statsSnapshot: s,
     }
@@ -186,11 +184,10 @@ describe("computeFormulaBreakdown", () => {
 
   it("non-zero defShred increases defMult beyond 0.5", () => {
     const s = snap({ defShred: 0.2 })
-    const ev = {
-      damage: 0,
-      element: "Fusion" as const,
+    const ev: Parameters<typeof computeFormulaBreakdown>[0] = {
+      element: "Fusion",
       dmgType: "Damage",
-      skillType: "Basic Attack" as SkillType,
+      skillType: "Basic Attack",
       multiplier: 1,
       statsSnapshot: s,
     }

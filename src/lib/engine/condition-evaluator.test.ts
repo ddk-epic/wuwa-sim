@@ -23,11 +23,13 @@ function makeBuffInstance(
   targetId: number,
 ): BuffInstance {
   return {
-    def: { id },
+    def: { id, name: id, trigger: { event: "simStart" }, effects: [] },
     sourceCharacterId: sourceId,
     targetCharacterId: targetId,
+    endTime: 0,
     stacks: 1,
-  } as BuffInstance
+    appliedFrame: 0,
+  }
 }
 
 // ---------------------------------------------------------------------------
