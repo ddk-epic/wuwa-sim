@@ -360,14 +360,14 @@ SkillType short forms:
 
 ### Triggers
 
-| `event`           | When it fires                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| `simStart`        | Once at sim start. Used for permanent passives.                                                             |
-| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                         |
-| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `hitIndex`. |
-| `swapIn`          | A character swaps to on-field.                                                                              |
-| `swapOut`         | A character swaps off-field.                                                                                |
-| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                       |
+| `event`           | When it fires                                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| `simStart`        | Once at sim start. Used for permanent passives.                                                                 |
+| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                             |
+| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `sourceBuffId`. |
+| `swapIn`          | A character swaps to on-field.                                                                                  |
+| `swapOut`         | A character swaps off-field.                                                                                    |
+| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                           |
 
 Triggers filter on `skillCategory` — the **player action** (e.g. "when casting Heavy Attack"), see **SkillCategory values** below — **never** on the damage-calc `skillType`. The two are independent axes (ADR-0024): a stage's `skillCategory` and its damage `SkillType` can differ by design, and triggers always key on the action. `"Normal Attack"` is not a valid `skillCategory` (TypeScript will catch it).
 
@@ -375,9 +375,7 @@ Triggers filter on `skillCategory` — the **player action** (e.g. "when casting
 
 `source` on `hitLanded`: `"self"` = real hits the character performed, `"synthetic"` = injected via `emitHit`, `"any"` = both. Use `"self"` to avoid feedback loops where a buff-triggered synthetic hit re-triggers the same buff.
 
-`stageId` on `hitLanded`: narrows to hits from a specific stage, using the namespaced id `"<SkillOrEchoName>::<newName>"` (same format as `skillCast.stageId`). Accepts a single string or an array. Use this instead of a bare stage name to avoid cross-echo collisions — e.g., `stageId: "Inferno Rider::"` only matches the Inferno Rider Tap stage, not any other echo whose stage happens to share the same display name. Synthetic hits carry no `stageId`; a trigger with `stageId` set never matches synthetics.
-
-`hitIndex` on `hitLanded`: narrows to the Nth hit within the stage (1-based). Combine with `stageId` to target a specific hit in a specific stage (e.g., Inferno Rider 3rd Tap hit: `stageId: "Inferno Rider::", hitIndex: 3`). Mirrors `skillCast.stageId` authoring symmetry.
+`stageId` on `hitLanded`: narrows to hits from a specific stage, using the full lineage id (ADR-0024 format) — `char.<name>.<category>.<skill>.<stage>::<skill-type>.<n>` for character hits, `echo.<name>.<stage>::echo-skill.<n>` for echo hits. Accepts a single string or an array. `hitLanded`/`healLanded` match by **lineage prefix** (`stageIdMatches`): a trigger id _without_ a trailing `.<n>` matches every hit of that stage; with a `.<n>` suffix it pins the Nth hit (1-based). This is **not** symmetric with `skillCast`, which matches `stageId` by exact equality (cast events carry no hit-index suffix). Use the lineage id rather than a bare stage name to avoid cross-echo collisions — e.g. `stageId: "echo.inferno-rider._::echo-skill"` matches all Inferno Rider Tap hits, and `"echo.inferno-rider._::echo-skill.3"` only the 3rd. Synthetic hits carry no `stageId`; a trigger with `stageId` set never matches synthetics. (ADR-0014, superseded in part by ADR-0024.)
 
 ### Source-binding convention
 

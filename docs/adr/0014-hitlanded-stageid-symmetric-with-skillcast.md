@@ -1,5 +1,19 @@
 # hitLanded triggers use `stageId`, symmetric with skillCast
 
+> **Partially superseded by ADR-0024.** The core decision stands: `hitLanded` keys
+> on the namespaced `stageId`, not a bare stage name. Superseded by the
+> SkillCategory-lineage rework:
+>
+> - **stageId format** — examples below use the pre-ADR-0023 form (`"Inferno Rider::Tap"`,
+>   `makeStageId`); the current form is `echo.<name>.<stage>::echo-skill.<n>` produced by
+>   `makeEchoStageId` (e.g. `echo.inferno-rider._::echo-skill.3`).
+> - **"symmetric matcher" claim** — no longer holds. `hitLanded`/`healLanded` now match by
+>   lineage **prefix** (`stageIdMatches` in `instance-store.ts`), while `skillCast` stays
+>   **exact-equality**. The asymmetry is intentional: hit events carry a `.<n>` hit-index
+>   suffix that cast events don't.
+> - **`hitIndex` field** — removed. The hit index is now encoded in the stageId string
+>   itself (`...::echo-skill.3`); a trigger pins a specific hit by including the `.<n>` suffix.
+
 `Trigger.hitLanded` filters on the namespaced `stageId` (e.g. `"Inferno Rider::Tap"`), not the bare stage name. This matches `Trigger.skillCast`, which has used `stageId` since its introduction. The `stage` field — a free-form stage name without a skill namespace — is removed.
 
 ```ts
