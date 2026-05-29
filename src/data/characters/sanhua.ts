@@ -62,7 +62,7 @@ export const sanhua = {
       id: "char.sanhua.passive.avalanche",
       name: "Avalanche",
       description:
-        "After casting Frigid Light Stage 5, Forte Circuit DMG is increased by 20% for 8s.",
+        "After casting Frigid Light Stage 5, the next Forte Circuit Ice Burst (Ice Thorn, Ice Prism, or Ice Glacier detonation) deals 20% additional damage. Window lasts 8s.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
@@ -70,11 +70,107 @@ export const sanhua = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 8 },
+      effects: [],
+    },
+    {
+      id: "char.sanhua.passive.avalanche.bonus.thorn",
+      name: "Avalanche Bonus (Ice Thorn)",
+      description:
+        "While Avalanche is active, an Ice Thorn detonation deals an additional 20% damage.",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        source: "synthetic",
+        sourceBuffId: "char.sanhua.ice-thorn-burst",
+      },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.passive.avalanche",
+        on: "source",
+      },
       effects: [
         {
-          kind: "stat",
-          path: { stat: "skillTypeBonus", key: "Forte Circuit" },
-          value: { kind: "const", v: 0.2 },
+          kind: "coordHit",
+          icdFrames: 0,
+          damage: {
+            type: "Resonance Skill",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 0.1193,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.passive.avalanche.bonus.prism",
+      name: "Avalanche Bonus (Ice Prism)",
+      description:
+        "While Avalanche is active, an Ice Prism detonation deals an additional 20% damage.",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        source: "synthetic",
+        sourceBuffId: "char.sanhua.ice-prism-burst",
+      },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.passive.avalanche",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "coordHit",
+          icdFrames: 0,
+          damage: {
+            type: "Resonance Skill",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 0.15906,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+        },
+      ],
+    },
+    {
+      id: "char.sanhua.passive.avalanche.bonus.glacier",
+      name: "Avalanche Bonus (Ice Glacier)",
+      description:
+        "While Avalanche is active, an Ice Glacier detonation deals an additional 20% damage.",
+      trigger: {
+        event: "hitLanded",
+        characterId: 1102,
+        source: "synthetic",
+        sourceBuffId: "char.sanhua.ice-glacier-burst",
+      },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.sanhua.passive.avalanche",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "coordHit",
+          icdFrames: 0,
+          damage: {
+            type: "Resonance Skill",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 0.27834,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
         },
       ],
     },
