@@ -6,6 +6,7 @@ import type {
   ResourceKind,
   ResourceState,
 } from "#/types/buff"
+import type { SkillCategory, SkillType } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActiveBuff,
@@ -66,6 +67,12 @@ export interface BootstrapInput {
 }
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
+
+/** Synthetic emit-hit events have no SkillCategory source; map from effect skillType. */
+function skillTypeToCategory(skillType: SkillType | undefined): SkillCategory {
+  if (!skillType || skillType === "Forte Circuit") return "Basic Attack"
+  return skillType
+}
 
 function subjectAtTrigger(sourceCharacterId: number): ConditionSubject {
   return { sourceCharacterId, targetCharacterId: sourceCharacterId }
@@ -533,6 +540,7 @@ export class BuffEngine {
           kind: "healLanded",
           characterId: sourceCharacterId,
           skillType: effect.skillType ?? "Basic Attack",
+          skillCategory: skillTypeToCategory(effect.skillType),
           frame,
         },
         out,
@@ -548,6 +556,7 @@ export class BuffEngine {
           kind: "hitLanded",
           characterId: sourceCharacterId,
           skillType: effect.skillType ?? "Basic Attack",
+          skillCategory: skillTypeToCategory(effect.skillType),
           dmgType: effect.damage.dmgType,
           synthetic: true,
           sourceBuffId: def.id,

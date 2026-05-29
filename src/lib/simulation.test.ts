@@ -871,7 +871,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
     ],
   }
 
-  it("skillType on action event reflects parent skill category — Frolicking Stage reports Resonance Liberation", () => {
+  it("skillType on action event reflects damage[0].type — Frolicking Stage reports Basic Attack", () => {
     testCharacters = [charWithLiberation]
     const result = runSimulation(
       [
@@ -884,10 +884,10 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       emptyLoadouts,
     )
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.skillType).toBe("Resonance Liberation")
+    expect(action?.skillType).toBe("Basic Attack")
   })
 
-  it("skillType on action event reflects parent skill category — Rampage Stage also reports Resonance Liberation", () => {
+  it("skillType on action event reflects damage[0].type — Rampage Stage reports Resonance Skill", () => {
     testCharacters = [charWithLiberation]
     const result = runSimulation(
       [
@@ -900,7 +900,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       emptyLoadouts,
     )
     const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.skillType).toBe("Resonance Liberation")
+    expect(action?.skillType).toBe("Resonance Skill")
   })
 
   it("skillCast trigger fires on parent skill type (Resonance Liberation)", () => {

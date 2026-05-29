@@ -1,5 +1,5 @@
 import type { Element } from "#/data/elements"
-import type { DamageEntry, SkillType } from "./character"
+import type { DamageEntry, SkillCategory, SkillType } from "./character"
 
 export type StatPath =
   | {
@@ -106,6 +106,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillType?: SkillType | SkillType[]
+      skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
     }
   | {
@@ -113,6 +114,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillType?: SkillType | SkillType[]
+      skillCategory?: SkillCategory | SkillCategory[]
       dmgType?: string
       source?: TriggerSource
       stageId?: string | string[]
@@ -133,6 +135,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillType?: SkillType | SkillType[]
+      skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
     }
   | {
