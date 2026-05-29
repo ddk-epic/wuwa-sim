@@ -763,6 +763,9 @@ export class BuffEngine {
       const base = this.store.cloneBaseStats(characterId)
       const contributions = this.store.getActiveTargeting(characterId)
       const getCharStat = (cid: number, stat: string): number => {
+        // StatTable mixes scalar and nested-record fields, so it is not a
+        // uniform Record<string, number>. Removing this cast needs StatTable
+        // flattened to 1D — see tmp/stattable-1d-handoff.md.
         const s = this.resolveStats(cid) as unknown as Record<string, number>
         return s[stat] ?? 0
       }

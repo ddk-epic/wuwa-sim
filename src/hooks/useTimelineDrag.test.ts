@@ -252,6 +252,8 @@ function makeDragEvent(
       }),
     },
     clientY,
+    // Synthetic event exposing only the fields the handler reads; the full
+    // React.DragEvent surface is not practical to construct in a test.
   } as unknown as React.DragEvent
 }
 
@@ -261,6 +263,8 @@ const belowEv = makeDragEvent(20, 5, 20) // clientY(20) > top(5)+height/2(10) â†
 function dragStartEv(): React.DragEvent {
   return {
     dataTransfer: { effectAllowed: "move" },
+    // Synthetic event exposing only the fields the handler reads; the full
+    // React.DragEvent surface is not practical to construct in a test.
   } as unknown as React.DragEvent
 }
 

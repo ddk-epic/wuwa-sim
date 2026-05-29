@@ -10,6 +10,11 @@ import { verina } from "./verina"
 
 let testCharacters: EnrichedCharacter[] = []
 
+/** Fresh per-test copy of Verina (the engine mutates characters in place). */
+function makeVerinaChar(): EnrichedCharacter {
+  return { ...verina }
+}
+
 vi.mock("../../lib/loadout/catalog", () => ({
   getCharacterById: (id: number) =>
     testCharacters.find((c) => c.id === id) ?? null,
@@ -35,10 +40,7 @@ const emptyLoadout: SlotLoadout = {
 }
 
 function makeEngine(sequence = 0) {
-  const char = {
-    ...verina,
-    buffs: verina.buffs,
-  } as unknown as EnrichedCharacter
+  const char = makeVerinaChar()
   testCharacters = [char]
   const engine = new BuffEngine()
   engine.bootstrap({
@@ -399,10 +401,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
   const TEAMMATE_ID = 9999
 
   function makeTwoCharEngine(sequence = 0) {
-    const verinaChar = {
-      ...verina,
-      buffs: verina.buffs,
-    } as unknown as EnrichedCharacter
+    const verinaChar = makeVerinaChar()
     const teammate: EnrichedCharacter = {
       id: TEAMMATE_ID,
       name: "Teammate",
@@ -579,54 +578,51 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
   const TEAMMATE_ID = 9999
   const COORD_ID = "char.verina.lib.mark-coord-reaction"
 
-  const makeTeammate = (): EnrichedCharacter =>
-    ({
-      id: TEAMMATE_ID,
-      name: "Teammate",
-      element: "Fusion",
-      weaponType: "Sword",
-      rarity: "5",
-      stats: {
-        base: { hp: 0, atk: 0, def: 0 },
-        max: { hp: 0, atk: 1000, def: 0 },
+  const makeTeammate = (): EnrichedCharacter => ({
+    id: TEAMMATE_ID,
+    name: "Teammate",
+    element: "Fusion",
+    weaponType: "Sword",
+    rarity: "5",
+    stats: {
+      base: { hp: 0, atk: 0, def: 0 },
+      max: { hp: 0, atk: 1000, def: 0 },
+    },
+    template: { weapon: "", echo: "", echoSet: "" },
+    skillTreeBonuses: [],
+    buffs: [],
+    skills: [
+      {
+        id: 1,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: (["S1", "S2", "S3"] as const).map((label) => ({
+          name: label,
+          newName: label,
+          category: "Basic Attack" as const,
+          value: label,
+          actionTime: 62,
+          damage: [
+            {
+              type: "Basic Attack" as const,
+              dmgType: "Fusion",
+              scalingStat: "atk",
+              actionFrame: 15,
+              value: 1.0,
+              energy: 0,
+              concerto: 0,
+              toughness: 0,
+              weakness: 0,
+            },
+          ],
+        })),
+        damage: [],
       },
-      template: { weapon: "", echo: "", echoSet: "" },
-      skillTreeBonuses: [],
-      buffs: [],
-      skills: [
-        {
-          id: 1,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: (["S1", "S2", "S3"] as const).map((label) => ({
-            name: label,
-            newName: label,
-            category: "Basic Attack" as const,
-            actionTime: 62,
-            damage: [
-              {
-                type: "Basic Attack" as const,
-                dmgType: "Fusion",
-                scalingStat: "atk",
-                actionFrame: 15,
-                value: 1.0,
-                energy: 0,
-                concerto: 0,
-                toughness: 0,
-                weakness: 0,
-              },
-            ],
-          })),
-          damage: [],
-        },
-      ],
-    }) as unknown as EnrichedCharacter
+    ],
+  })
 
   it("teammate basic combo during 12s mark window triggers coord pairs (damage + heal) at ≈1s cadence", () => {
-    const verinaChar = {
-      ...verina,
-      buffs: verina.buffs,
-    } as unknown as EnrichedCharacter
+    const verinaChar = makeVerinaChar()
     testCharacters = [verinaChar, makeTeammate()]
     const slots: Slots = [1503, TEAMMATE_ID, null]
     const loadouts: SlotLoadout[] = [
@@ -685,7 +681,7 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
 
 describe("Verina — Skill.concerto grants on cast (via 'Skill DMG' stage)", () => {
   function runSingleCast(stageId: string) {
-    const char = { ...verina } as unknown as EnrichedCharacter
+    const char = makeVerinaChar()
     testCharacters = [char]
     const slots: Slots = [1503, null, null]
     const loadouts: SlotLoadout[] = [emptyLoadout, emptyLoadout, emptyLoadout]

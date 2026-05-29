@@ -5,6 +5,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { ValidationResult } from "./validate-timeline"
 import type { ResolvedStage } from "../stage"
 import { buildTimelineRenderItems } from "./timeline-render-items"
+import { makeResolvedStage } from "../stage.test-utils"
 
 let testCharacters: EnrichedCharacter[] = []
 let resolvedStages: Map<string, ResolvedStage | null> = new Map()
@@ -225,18 +226,11 @@ describe("buildTimelineRenderItems", () => {
 
   // Stage resolution
   it("resolves skillType and skillName from stage", () => {
-    const stage = {
-      stage: { actionTime: 30 },
+    const stage = makeResolvedStage({
       stageId: "s1",
-      stageName: "Test",
-      element: "Fusion",
-      concerto: 0,
-      damage: [],
-      skillGrouping: "Normal Attack" as const,
-      skillCategory: "Basic Attack" as const,
-      skillType: "Basic Attack" as const,
+      skillType: "Basic Attack",
       skillName: "Heavy Attack",
-    } as ResolvedStage
+    })
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     const e = entryItems(items)[0]
@@ -253,37 +247,20 @@ describe("buildTimelineRenderItems", () => {
   })
 
   it("stageWithVariants is set when stage has variants", () => {
-    const stage = {
-      stage: {
-        actionTime: 30,
-        variants: { cancel: { actionTime: 20 } },
-      },
+    const stage = makeResolvedStage({
+      stage: { actionTime: 30, variants: { cancel: { actionTime: 20 } } },
       stageId: "s1",
-      stageName: "Test",
-      element: "Fusion",
-      concerto: 0,
-      damage: [],
-      skillType: "Basic Attack" as const,
-      skillName: "Test",
-    } as unknown as ResolvedStage
+    })
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     expect(entryItems(items)[0].stageWithVariants).not.toBeNull()
   })
 
   it("stageWithVariants is null when stage has no variants", () => {
-    const stage = {
+    const stage = makeResolvedStage({
       stage: { actionTime: 30 },
       stageId: "s1",
-      stageName: "Test",
-      element: "Fusion",
-      concerto: 0,
-      damage: [],
-      skillGrouping: "Normal Attack" as const,
-      skillCategory: "Basic Attack" as const,
-      skillType: "Basic Attack" as const,
-      skillName: "Test",
-    } as ResolvedStage
+    })
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     expect(entryItems(items)[0].stageWithVariants).toBeNull()

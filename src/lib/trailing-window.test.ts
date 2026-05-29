@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest"
 import type { DamageEntry } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
-import type { ResolvedStage } from "./stage"
 import {
   empty,
   onEntryArrival,
   scheduleStage,
   drainAll,
 } from "./trailing-window"
+import { makeResolvedStage } from "./stage.test-utils"
 import type {
   TrailingEntry,
   TrailingHit,
@@ -32,9 +32,7 @@ function makeEntry(characterId: number): TimelineEntry {
   return { id: `e${characterId}`, characterId, stageId: "Normal Attack::_" }
 }
 
-// Production always resolves a `stage`; the stub mirrors that so footing
-// lookups (ctx.resolved.stage.footing) behave like real usage.
-const stubResolved = { stage: {} } as unknown as ResolvedStage
+const stubResolved = makeResolvedStage()
 
 function makeHit(
   charId: number,
@@ -331,9 +329,9 @@ describe("trailing-window — scheduleStage: pendingFooting", () => {
   it("adds pendingFooting when swap stage has {launch:N} with N > stageDuration", () => {
     const state = empty()
     const entry = makeEntry(1)
-    const resolved = {
-      stage: { footing: { launch: 15 } },
-    } as unknown as ResolvedStage
+    const resolved = makeResolvedStage({
+      stage: { actionTime: 0, footing: { launch: 15 } },
+    })
     const result = scheduleStage(state, {
       entry,
       resolved,
@@ -352,9 +350,9 @@ describe("trailing-window — scheduleStage: pendingFooting", () => {
   it("no pendingFooting when swap stage has {launch:N} with N <= stageDuration (fires on-field)", () => {
     const state = empty()
     const entry = makeEntry(1)
-    const resolved = {
-      stage: { footing: { launch: 5 } },
-    } as unknown as ResolvedStage
+    const resolved = makeResolvedStage({
+      stage: { actionTime: 0, footing: { launch: 5 } },
+    })
     const result = scheduleStage(state, {
       entry,
       resolved,
@@ -369,9 +367,9 @@ describe("trailing-window — scheduleStage: pendingFooting", () => {
   it("adds pendingFooting for {land:N} when N > stageDuration", () => {
     const state = empty()
     const entry = makeEntry(1)
-    const resolved = {
-      stage: { footing: { land: 20 } },
-    } as unknown as ResolvedStage
+    const resolved = makeResolvedStage({
+      stage: { actionTime: 0, footing: { land: 20 } },
+    })
     const result = scheduleStage(state, {
       entry,
       resolved,
@@ -390,9 +388,9 @@ describe("trailing-window — scheduleStage: pendingFooting", () => {
   it("no pendingFooting for non-swap stages (even with {launch:N})", () => {
     const state = empty()
     const entry = makeEntry(1)
-    const resolved = {
-      stage: { footing: { launch: 15 } },
-    } as unknown as ResolvedStage
+    const resolved = makeResolvedStage({
+      stage: { actionTime: 0, footing: { launch: 15 } },
+    })
     const result = scheduleStage(state, {
       entry,
       resolved,
