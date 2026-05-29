@@ -442,4 +442,130 @@ describe("SkillSidebar — filter chips", () => {
     expect(screen.getByText("Outro Skill")).toBeTruthy()
     expect(screen.queryByText("Normal Attack")).toBeNull()
   })
+
+  const charWithGroupings: EnrichedCharacter = {
+    ...char1,
+    id: 4,
+    name: "Grouped",
+    skills: [
+      {
+        id: 401,
+        name: "Normal Attack",
+        type: "Normal Attack",
+        stages: [
+          {
+            name: "Basic Stage",
+            newName: "Basic Stage",
+            category: "Basic Attack",
+            value: "1",
+            actionTime: 10,
+            damage: [
+              {
+                type: "Basic Attack",
+                dmgType: "Physical",
+                scalingStat: "ATK",
+                actionFrame: 0,
+                value: 1,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          },
+          {
+            name: "Heavy Stage",
+            newName: "Heavy Stage",
+            category: "Heavy Attack",
+            value: "1",
+            actionTime: 12,
+            damage: [
+              {
+                type: "Heavy Attack",
+                dmgType: "Physical",
+                scalingStat: "ATK",
+                actionFrame: 0,
+                value: 1,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          },
+        ],
+        damage: [],
+      },
+      {
+        id: 402,
+        name: "Forte Skill",
+        type: "Forte Circuit",
+        stages: [
+          {
+            name: "Forte Stage",
+            newName: "Forte Stage",
+            category: "Heavy Attack",
+            value: "1",
+            actionTime: 20,
+            damage: [
+              {
+                type: "Resonance Liberation",
+                dmgType: "Damage",
+                scalingStat: "ATK",
+                actionFrame: 0,
+                value: 1,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  it("FORTE chip shows stages from skills with grouping 'Forte Circuit', regardless of stage category or damage type", () => {
+    setCatalog([charWithGroupings], [])
+    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+      slots: [4, null, null],
+      loadouts: noLoadouts,
+      focusedId: 4,
+      onFocus: vi.fn(),
+    })
+    fireEvent.click(screen.getByRole("button", { name: "FORTE" }))
+    expect(screen.getByText("Forte Skill · Forte Stage")).toBeTruthy()
+    expect(screen.queryByText("Normal Attack · Basic Stage")).toBeNull()
+    expect(screen.queryByText("Normal Attack · Heavy Stage")).toBeNull()
+  })
+
+  it("BASIC chip shows only Basic Attack category stages under Normal Attack grouping", () => {
+    setCatalog([charWithGroupings], [])
+    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+      slots: [4, null, null],
+      loadouts: noLoadouts,
+      focusedId: 4,
+      onFocus: vi.fn(),
+    })
+    fireEvent.click(screen.getByRole("button", { name: "BASIC" }))
+    expect(screen.getByText("Normal Attack · Basic Stage")).toBeTruthy()
+    expect(screen.queryByText("Normal Attack · Heavy Stage")).toBeNull()
+    expect(screen.queryByText("Forte Skill · Forte Stage")).toBeNull()
+  })
+
+  it("HEAVY chip shows only Heavy Attack category stages under Normal Attack grouping (not Forte's Heavy-category stage)", () => {
+    setCatalog([charWithGroupings], [])
+    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+      slots: [4, null, null],
+      loadouts: noLoadouts,
+      focusedId: 4,
+      onFocus: vi.fn(),
+    })
+    fireEvent.click(screen.getByRole("button", { name: "HEAVY" }))
+    expect(screen.getByText("Normal Attack · Heavy Stage")).toBeTruthy()
+    expect(screen.queryByText("Normal Attack · Basic Stage")).toBeNull()
+    expect(screen.queryByText("Forte Skill · Forte Stage")).toBeNull()
+  })
 })

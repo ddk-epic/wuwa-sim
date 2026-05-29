@@ -306,6 +306,22 @@ describe("focused-stage-catalog — character stages", () => {
     )
     expect(stage?.typeLabel).toBe("SKILL")
   })
+
+  it("exposes skillGrouping from the parent Skill and skillCategory from the stage", () => {
+    setCatalog([char1], [])
+    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
+    const stage1 = result.characterStages.find(
+      (s) => s.label === "Normal Attack",
+    )
+    expect(stage1?.skillGrouping).toBe("Normal Attack")
+    expect(stage1?.skillCategory).toBe("Basic Attack")
+
+    const override = result.characterStages.find(
+      (s) => s.label === "Resonance Skill · Override",
+    )
+    expect(override?.skillGrouping).toBe("Resonance Skill")
+    expect(override?.skillCategory).toBe("Resonance Skill")
+  })
 })
 
 describe("focused-stage-catalog — labels", () => {

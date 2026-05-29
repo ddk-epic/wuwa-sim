@@ -1,5 +1,6 @@
 import type {
   EnrichedSkillAttribute,
+  SkillCategory,
   SkillGrouping,
   SkillType,
 } from "#/types/character"
@@ -19,6 +20,8 @@ export interface FocusedStage {
   label: string
   typeLabel: string
   skillType: SkillType
+  skillGrouping: SkillGrouping
+  skillCategory: SkillCategory
   durationFrames: number
   clickPayload: Omit<TimelineEntry, "id">
 }
@@ -96,6 +99,8 @@ function buildEchoStage(
     label,
     typeLabel: STAGE_TYPE_LABELS[skillType],
     skillType,
+    skillGrouping: "Echo Skill",
+    skillCategory: "Echo Skill",
     durationFrames: stage.actionTime,
     clickPayload: {
       characterId,
@@ -118,6 +123,8 @@ function buildCharacterStage(
     label,
     typeLabel: STAGE_TYPE_LABELS[skillType],
     skillType,
+    skillGrouping: skill.type,
+    skillCategory: stage.category,
     durationFrames: stage.actionTime,
     clickPayload: {
       characterId,

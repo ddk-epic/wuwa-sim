@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import type { SkillType, EnrichedCharacter } from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ELEMENT_HEX } from "#/data/elements"
@@ -21,15 +21,18 @@ type FilterKey =
   | "Echo Skill"
   | "Movement"
 
-const FILTER_KEY_TO_TYPES: Record<FilterKey, SkillType[]> = {
-  "Basic Attack": ["Basic Attack"],
-  "Heavy Attack": ["Heavy Attack"],
-  "Resonance Skill": ["Resonance Skill"],
-  "Resonance Liberation": ["Resonance Liberation"],
-  "Forte Circuit": ["Forte Circuit"],
-  "in-out": ["Intro Skill", "Outro Skill"],
-  "Echo Skill": ["Echo Skill"],
-  Movement: ["Movement"],
+const FILTER_PREDICATES: Record<FilterKey, (s: FocusedStage) => boolean> = {
+  "Basic Attack": (s) =>
+    s.skillGrouping === "Normal Attack" && s.skillCategory === "Basic Attack",
+  "Heavy Attack": (s) =>
+    s.skillGrouping === "Normal Attack" && s.skillCategory === "Heavy Attack",
+  "Resonance Skill": (s) => s.skillGrouping === "Resonance Skill",
+  "Resonance Liberation": (s) => s.skillGrouping === "Resonance Liberation",
+  "Forte Circuit": (s) => s.skillGrouping === "Forte Circuit",
+  "in-out": (s) =>
+    s.skillGrouping === "Intro Skill" || s.skillGrouping === "Outro Skill",
+  "Echo Skill": (s) => s.skillGrouping === "Echo Skill",
+  Movement: (s) => s.skillGrouping === "Movement",
 }
 
 const FILTER_CHIPS: Array<{ key: FilterKey; label: string }> = [
@@ -71,14 +74,10 @@ export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
   )
 
   const filteredEcho = filterKey
-    ? echoStages.filter((s) =>
-        FILTER_KEY_TO_TYPES[filterKey].includes(s.skillType),
-      )
+    ? echoStages.filter(FILTER_PREDICATES[filterKey])
     : echoStages
   const filteredChar = filterKey
-    ? characterStages.filter((s) =>
-        FILTER_KEY_TO_TYPES[filterKey].includes(s.skillType),
-      )
+    ? characterStages.filter(FILTER_PREDICATES[filterKey])
     : characterStages
 
   const showDivider = filteredEcho.length > 0 && filteredChar.length > 0
