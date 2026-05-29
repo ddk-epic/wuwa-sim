@@ -33,15 +33,15 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
   const set1 = echoSets.find((s) => s.id === loadout.echoSetSlot1Id) ?? null
   const set2 = echoSets.find((s) => s.id === loadout.echoSetSlot2Id) ?? null
 
-  const cost4Options = [
-    { value: "scaling" as Cost4Main, label: scalingLabel },
-    { value: "cr" as Cost4Main, label: "CR" },
-    { value: "cd" as Cost4Main, label: "CD" },
+  const cost4Options: { value: Cost4Main; label: string }[] = [
+    { value: "scaling", label: scalingLabel },
+    { value: "cr", label: "CR" },
+    { value: "cd", label: "CD" },
   ]
-  const cost3Options = [
-    { value: "scaling" as Cost3Main, label: scalingLabel },
-    { value: "er" as Cost3Main, label: "ER" },
-    { value: "elemDmg" as Cost3Main, label: "Ele DMG" },
+  const cost3Options: { value: Cost3Main; label: string }[] = [
+    { value: "scaling", label: scalingLabel },
+    { value: "er", label: "ER" },
+    { value: "elemDmg", label: "Ele DMG" },
   ]
   const cost1Options = [
     { value: "scaling", label: scalingLabel },
@@ -99,7 +99,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
           capacity={layout.cost4}
           options={cost4Options}
           mains={loadout.cost4Mains}
-          onChange={(m) => setPatch({ cost4Mains: m as Cost4Main[] })}
+          onChange={(m) => setPatch({ cost4Mains: m })}
           hex={hex}
         />
         {layout.cost3 > 0 && (
@@ -108,7 +108,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
             capacity={layout.cost3}
             options={cost3Options}
             mains={loadout.cost3Mains}
-            onChange={(m) => setPatch({ cost3Mains: m as Cost3Main[] })}
+            onChange={(m) => setPatch({ cost3Mains: m })}
             hex={hex}
           />
         )}
@@ -169,7 +169,7 @@ function TabularHeader() {
   )
 }
 
-function TabularRow({
+function TabularRow<T extends string>({
   cost,
   capacity,
   options,
@@ -180,13 +180,13 @@ function TabularRow({
 }: {
   cost: number
   capacity: number
-  options: { value: string; label: string }[]
-  mains: string[]
-  onChange: (mains: string[]) => void
+  options: { value: T; label: string }[]
+  mains: T[]
+  onChange: (mains: T[]) => void
   hex: string
   disabled?: boolean
 }) {
-  function click(v: string) {
+  function click(v: T) {
     if (disabled) return
     onChange(mains.length < capacity ? [...mains, v] : [...mains.slice(1), v])
   }
