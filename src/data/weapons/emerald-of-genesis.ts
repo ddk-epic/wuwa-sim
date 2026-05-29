@@ -26,7 +26,7 @@ export const emeraldOfGenesis = {
       ],
     },
     {
-      id: "weapon.emerald-of-genesis.passive.atk",
+      id: "weapon.emerald-of-genesis.atk",
       name: "Stormy Resolution (ATK)",
       description:
         "On Resonance Skill cast, ATK increases by 6–12% per stack, up to 2 stacks for 10s.",

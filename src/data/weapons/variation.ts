@@ -11,7 +11,7 @@ export const variation = {
   passive: { name: "Ceaseless Aria" },
   buffs: [
     {
-      id: "weapon.variation.passive.ceaseless-aria",
+      id: "weapon.variation.ceaseless-aria",
       name: "Ceaseless Aria",
       description:
         "On Resonance Skill cast, restores 8–16 Concerto Energy. Cooldown: 20s. (In-game shield + DMG reduction + 3-hits expiry not modeled.)",

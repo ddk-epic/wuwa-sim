@@ -26,7 +26,7 @@ export const stringmaster = {
       ],
     },
     {
-      id: "weapon.stringmaster.passive.skill-atk",
+      id: "weapon.stringmaster.skill-atk",
       name: "Electric Amplification (ATK)",
       description:
         "On Resonance Skill cast, increases ATK by 12–24% per stack, up to 2 stacks for 5s.",
@@ -47,7 +47,7 @@ export const stringmaster = {
       ],
     },
     {
-      id: "weapon.stringmaster.passive.off-field-atk",
+      id: "weapon.stringmaster.off-field-atk",
       name: "Electric Amplification (Off-field ATK)",
       description: "While the wielder is off-field, increases their ATK.",
       trigger: { event: "simStart" },
