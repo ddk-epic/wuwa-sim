@@ -105,14 +105,7 @@ export function findStageByEntry(
           ) === entry.stageId
         ) {
           const comboAllows =
-            s.requiresStageId !== undefined
-              ? (
-                  s as {
-                    requiresStageId: string
-                    comboAllows?: readonly MovementKind[]
-                  }
-                ).comboAllows
-              : undefined
+            s.requiresStageId !== undefined ? s.comboAllows : undefined
           const isCastStage = s.name === STAGE_CAST_NAME
           // Stage-level skillType, collapsed from the parent skill grouping.
           // Grouping-only labels that are not SkillTypes (Normal Attack,

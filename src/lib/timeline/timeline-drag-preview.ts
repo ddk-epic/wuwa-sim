@@ -28,10 +28,8 @@ export function applyDragPreview(
       (item) => item.type === "entry" && item.entry.id === draggedId,
     )
     if (sourceIdx !== -1) {
-      const sourceItem = items[sourceIdx] as Extract<
-        RenderItem,
-        { type: "entry" }
-      >
+      const sourceItem = items[sourceIdx]
+      if (sourceItem.type !== "entry") return items
       const targetIdx = items.findIndex(
         (item) => item.type === "entry" && item.entry.id === dropTarget.id,
       )

@@ -128,9 +128,7 @@ export function validateTimeline(
           const skillBaseName = prev.stageId.split(".")[3] ?? ""
           if (
             prevResolved?.skillType === "Movement" &&
-            (comboAllows as readonly string[]).some(
-              (a) => a.toLowerCase() === skillBaseName,
-            )
+            comboAllows.some((a) => a.toLowerCase() === skillBaseName)
           ) {
             continue
           }

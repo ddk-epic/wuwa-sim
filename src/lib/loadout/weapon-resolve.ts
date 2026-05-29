@@ -20,7 +20,9 @@ export function resolveWeaponBuffs(
 }
 
 function resolveValue(value: WeaponValueExpr, rank: number): ValueExpr {
-  if (!Array.isArray(value.v)) return value as ValueExpr
+  if (!Array.isArray(value.v)) {
+    return { kind: value.kind, v: value.v, snapshot: value.snapshot }
+  }
   if (value.v.length !== 5) {
     throw new Error(
       `Weapon value array must have exactly 5 entries, got ${value.v.length}`,
