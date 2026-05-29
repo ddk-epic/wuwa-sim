@@ -1,5 +1,21 @@
 import type { EnrichedCharacter } from "#/types/character"
 
+/**
+ * Cast stages that satisfy "Heavy/Mid-air Starflower Blooms, Resonance
+ * Liberation Arboreal Flourish, or Outro Skill Blossom" — the shared trigger
+ * surface for Gift of Nature and S4 Blossoming Embrace. Maintained inline
+ * because `SkillGrouping` is a UI-only taxonomy with no engine presence
+ * (per `src/types/character.ts`).
+ */
+const VERINA_FORTE_LIBERATION_OUTRO_STAGES = [
+  "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+  "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
+  "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
+  "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
+  "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation",
+  "char.verina.outro-skill.blossom._::outro-skill",
+]
+
 export const verina = {
   id: 1503,
   name: "Verina",
@@ -46,7 +62,7 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: ["Forte Circuit", "Resonance Liberation", "Outro Skill"],
+        stageId: VERINA_FORTE_LIBERATION_OUTRO_STAGES,
       },
       target: { kind: "team" },
       duration: { kind: "seconds", v: 20 },
@@ -239,7 +255,7 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: ["Forte Circuit", "Resonance Liberation", "Outro Skill"],
+        stageId: VERINA_FORTE_LIBERATION_OUTRO_STAGES,
       },
       target: { kind: "team" },
       duration: { kind: "seconds", v: 24 },
@@ -260,7 +276,6 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: "Forte Circuit",
         stageId: [
           "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
           "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
@@ -287,7 +302,6 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: "Forte Circuit",
         stageId: [
           "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
           "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",

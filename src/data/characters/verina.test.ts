@@ -65,23 +65,37 @@ describe("Verina — Outro Blossom (deepen all +15%)", () => {
 })
 
 describe("Verina — Gift of Nature (team ATK +20%)", () => {
-  it.each(["Forte Circuit", "Resonance Liberation", "Outro Skill"] as const)(
-    "%s cast grants team ATK +20% for 20s",
-    (skillType) => {
-      const engine = makeEngine()
-      const baseAtkPct = engine.resolveStats(1503).atkPct
-      engine.onEvent({
-        kind: "skillCast",
-        characterId: 1503,
-        skillType,
-        frame: 0,
-      })
-      expect(engine.activeBuffIds(1503)).toContain(
-        "char.verina.inherent.gift-of-nature",
-      )
-      expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
-    },
-  )
+  it.each([
+    [
+      "Forte Circuit (Starflower Blooms Heavy)",
+      "Forte Circuit" as const,
+      "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+    ],
+    [
+      "Resonance Liberation (Arboreal Flourish)",
+      "Resonance Liberation" as const,
+      "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation",
+    ],
+    [
+      "Outro Skill (Blossom)",
+      "Outro Skill" as const,
+      "char.verina.outro-skill.blossom._::outro-skill",
+    ],
+  ])("%s cast grants team ATK +20% for 20s", (_label, skillType, stageId) => {
+    const engine = makeEngine()
+    const baseAtkPct = engine.resolveStats(1503).atkPct
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1503,
+      skillType,
+      stageId,
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1503)).toContain(
+      "char.verina.inherent.gift-of-nature",
+    )
+    expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
+  })
 })
 
 describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
@@ -205,15 +219,32 @@ describe("Verina — S3 The Choice to Flourish (healingBonus +12%)", () => {
 })
 
 describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
-  it.each(["Forte Circuit", "Resonance Liberation", "Outro Skill"] as const)(
+  it.each([
+    [
+      "Forte Circuit (Starflower Blooms Heavy)",
+      "Forte Circuit" as const,
+      "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
+    ],
+    [
+      "Resonance Liberation (Arboreal Flourish)",
+      "Resonance Liberation" as const,
+      "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation",
+    ],
+    [
+      "Outro Skill (Blossom)",
+      "Outro Skill" as const,
+      "char.verina.outro-skill.blossom._::outro-skill",
+    ],
+  ])(
     "%s cast grants team Spectro DMG +15% for 24s (sequence 4)",
-    (skillType) => {
+    (_label, skillType, stageId) => {
       const engine = makeEngine(4)
       const baseSpectro = engine.resolveStats(1503).elementBonus["Spectro"]
       engine.onEvent({
         kind: "skillCast",
         characterId: 1503,
         skillType,
+        stageId,
         frame: 0,
       })
       expect(engine.activeBuffIds(1503)).toContain(
