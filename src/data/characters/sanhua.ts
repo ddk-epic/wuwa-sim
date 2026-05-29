@@ -26,7 +26,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 14 },
@@ -46,7 +46,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        skillType: "Intro Skill",
+        skillCategory: "Intro Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 8 },
@@ -181,14 +181,14 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        skillType: "Intro Skill",
+        skillCategory: "Intro Skill",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
-        skillType: "Heavy Attack",
+        skillCategory: "Heavy Attack",
         source: "self",
       },
       effects: [],
@@ -200,14 +200,14 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
-        skillType: "Heavy Attack",
+        skillCategory: "Heavy Attack",
         source: "self",
       },
       effects: [],
@@ -219,14 +219,14 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        skillType: "Resonance Liberation",
+        skillCategory: "Resonance Liberation",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
-        skillType: "Heavy Attack",
+        skillCategory: "Heavy Attack",
         source: "self",
       },
       effects: [],
@@ -366,7 +366,7 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        skillType: "Resonance Liberation",
+        skillCategory: "Resonance Liberation",
         source: "self",
       },
       effects: [

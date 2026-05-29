@@ -30,7 +30,7 @@ const moltenRift = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
@@ -72,7 +72,11 @@ const moonlitClouds = {
       name: "Moonlit Clouds 5pc",
       description:
         "Upon using Outro Skill, the next Resonator gains +22.5% ATK for 15s.",
-      trigger: { event: "skillCast", actor: "self", skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        skillCategory: "Outro Skill",
+      },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 1, onRetrigger: "refresh" },

@@ -33,7 +33,7 @@ export const stringmaster = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 5 },

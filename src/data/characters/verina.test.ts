@@ -54,7 +54,7 @@ describe("Verina — Outro Blossom (deepen all +15%)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     expect(engine.activeBuffIds(1503)).toContain(
@@ -68,7 +68,7 @@ describe("Verina — Gift of Nature (team ATK +20%)", () => {
   it.each([
     [
       "Forte Circuit (Starflower Blooms Heavy)",
-      "Forte Circuit" as const,
+      "Heavy Attack" as const,
       "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
     ],
     [
@@ -81,21 +81,24 @@ describe("Verina — Gift of Nature (team ATK +20%)", () => {
       "Outro Skill" as const,
       "char.verina.outro-skill.blossom._::outro-skill",
     ],
-  ])("%s cast grants team ATK +20% for 20s", (_label, skillType, stageId) => {
-    const engine = makeEngine()
-    const baseAtkPct = engine.resolveStats(1503).atkPct
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1503,
-      skillType,
-      stageId,
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(1503)).toContain(
-      "char.verina.inherent.gift-of-nature",
-    )
-    expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
-  })
+  ])(
+    "%s cast grants team ATK +20% for 20s",
+    (_label, skillCategory, stageId) => {
+      const engine = makeEngine()
+      const baseAtkPct = engine.resolveStats(1503).atkPct
+      engine.onEvent({
+        kind: "skillCast",
+        characterId: 1503,
+        skillCategory,
+        stageId,
+        frame: 0,
+      })
+      expect(engine.activeBuffIds(1503)).toContain(
+        "char.verina.inherent.gift-of-nature",
+      )
+      expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
+    },
+  )
 })
 
 describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
@@ -104,7 +107,7 @@ describe("Verina — S1 Moment of Emergence (HoT stub)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     expect(pendingNextOnFieldCount(engine)).toBeGreaterThan(0)
@@ -122,7 +125,7 @@ describe("Verina — Forte grants via DamageEntry.forte", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1503,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       stageId: `${stageId}.${hitIndex}`,
       frame,
@@ -187,7 +190,7 @@ describe("Verina — S2 Sprouting Reflections (Concerto restore via hitLanded)",
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1503,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       dmgType: "Damage",
       stageId: `char.verina.resonance-skill.botany-experiment._::resonance-skill.${hitIndex}`,
       frame,
@@ -222,7 +225,7 @@ describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
   it.each([
     [
       "Forte Circuit (Starflower Blooms Heavy)",
-      "Forte Circuit" as const,
+      "Heavy Attack" as const,
       "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
     ],
     [
@@ -237,13 +240,13 @@ describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
     ],
   ])(
     "%s cast grants team Spectro DMG +15% for 24s (sequence 4)",
-    (_label, skillType, stageId) => {
+    (_label, skillCategory, stageId) => {
       const engine = makeEngine(4)
       const baseSpectro = engine.resolveStats(1503).elementBonus["Spectro"]
       engine.onEvent({
         kind: "skillCast",
         characterId: 1503,
-        skillType,
+        skillCategory,
         stageId,
         frame: 0,
       })
@@ -264,7 +267,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Forte Circuit",
+      skillCategory: "Heavy Attack",
       stageId:
         "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
       frame: 0,
@@ -277,7 +280,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Forte Circuit",
+      skillCategory: "Heavy Attack",
       stageId:
         "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
       frame: 0,
@@ -293,7 +296,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Forte Circuit",
+      skillCategory: "Heavy Attack",
       stageId:
         "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
       frame: 0,
@@ -315,7 +318,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
       engine.onEvent({
         kind: "hitLanded",
         characterId: 1503,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         dmgType: "Damage",
         stageId: "char.verina.basic-attack.cultivation.stage-5.1",
         frame: i,
@@ -334,7 +337,9 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     return engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Forte Circuit",
+      skillCategory: stageId.includes("::heavy-attack")
+        ? "Heavy Attack"
+        : "Basic Attack",
       stageId,
       frame,
     })
@@ -429,7 +434,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1503,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       dmgType: "Damage",
       stageId:
         "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation.1",
@@ -447,7 +452,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     return engine.onEvent({
       kind: "hitLanded",
       characterId: TEAMMATE_ID,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame,
       energy: 0,
@@ -558,7 +563,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1503,
-      skillType: "Forte Circuit",
+      skillCategory: "Heavy Attack",
       stageId:
         "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
       frame: 100,

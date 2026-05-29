@@ -11,7 +11,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       characterId: 1505,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
     },
     target: { kind: "team" },
     duration: { kind: "seconds", v: 30 },
@@ -27,7 +27,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       characterId: 1505,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
     },
     target: { kind: "team" },
     duration: { kind: "seconds", v: 40 },
@@ -43,7 +43,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       characterId: 1505,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
     },
     target: { kind: "team" },
     duration: {
@@ -68,7 +68,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       actor: "any",
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
     },
     condition: {
       kind: "buffActive",
@@ -106,7 +106,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       actor: "any",
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
     },
     condition: {
       kind: "buffActive",
@@ -142,7 +142,7 @@ export const globalBuffs: BuffDef[] = [
     trigger: {
       event: "skillCast",
       characterId: 1505,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
     },
     target: { kind: "team" },
     duration: { kind: "seconds", v: 30 },

@@ -70,8 +70,7 @@ const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
 /** Synthetic emit-hit events have no SkillCategory source; map from effect skillType. */
 function skillTypeToCategory(skillType: SkillType | undefined): SkillCategory {
-  if (!skillType || skillType === "Forte Circuit") return "Basic Attack"
-  return skillType
+  return skillType ?? "Basic Attack"
 }
 
 function subjectAtTrigger(sourceCharacterId: number): ConditionSubject {
@@ -386,7 +385,7 @@ export class BuffEngine {
           depth,
         )
       }
-      if (event.skillType === "Resonance Liberation") {
+      if (event.skillCategory === "Resonance Liberation") {
         const cost = event.resonanceCost ?? 100
         const energy = this.getResource(event.characterId).energy
         if (energy < cost) {
@@ -539,7 +538,6 @@ export class BuffEngine {
         {
           kind: "healLanded",
           characterId: sourceCharacterId,
-          skillType: effect.skillType ?? "Basic Attack",
           skillCategory: skillTypeToCategory(effect.skillType),
           frame,
         },
@@ -555,7 +553,6 @@ export class BuffEngine {
         {
           kind: "hitLanded",
           characterId: sourceCharacterId,
-          skillType: effect.skillType ?? "Basic Attack",
           skillCategory: skillTypeToCategory(effect.skillType),
           dmgType: effect.damage.dmgType,
           synthetic: true,

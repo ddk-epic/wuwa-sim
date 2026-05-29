@@ -167,7 +167,6 @@ function fireSkillCast(
   const result = engine.onEvent({
     kind: "skillCast",
     characterId: entry.characterId,
-    skillType: resolved.skillType,
     skillCategory: resolved.skillCategory,
     stageId: resolved.stageId,
     frame,
@@ -274,7 +273,6 @@ function processHeal(
   const dispatch = engine.recordHeal({
     kind: "healLanded",
     characterId: entry.characterId,
-    skillType: resolved.skillType,
     skillCategory: resolved.skillCategory,
     frame: hitFrame,
     stageId: `${resolved.stageId}.${hitIndex + 1}`,
@@ -328,7 +326,6 @@ function processDamageHit(
   const dispatch = engine.recordHit({
     kind: "hitLanded",
     characterId: entry.characterId,
-    skillType: resolved.skillType,
     skillCategory: resolved.skillCategory,
     dmgType: hit.dmgType,
     frame: hitFrame,

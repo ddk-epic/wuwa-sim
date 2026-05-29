@@ -74,7 +74,7 @@ const emptyLoadout: SlotLoadout = {
 const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
   kind: "hitLanded",
   characterId: 1,
-  skillType: "Echo Skill",
+  skillCategory: "Echo Skill",
   dmgType: "Damage",
   stageId: `echo.inferno-rider._::echo-skill.${hitIndex}`,
   frame,
@@ -83,7 +83,7 @@ const tapHit = (hitIndex: number, frame: number): HitLandedEvent => ({
 const holdHit = (frame: number): HitLandedEvent => ({
   kind: "hitLanded",
   characterId: 1,
-  skillType: "Echo Skill",
+  skillCategory: "Echo Skill",
   dmgType: "Damage",
   stageId: "echo.inferno-rider.hold::echo-skill.1",
   frame,
@@ -180,7 +180,7 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Echo Skill",
+      skillCategory: "Echo Skill",
       stageId: "echo.bell-borne-geochelone._::echo-skill",
       frame: 0,
     })

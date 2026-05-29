@@ -520,7 +520,7 @@ describe("runSimulation — buff lifecycle interleaving", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Intro Skill",
+        skillCategory: "Intro Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 14 },
@@ -910,7 +910,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       trigger: {
         event: "skillCast",
         characterId: 50,
-        skillType: "Resonance Liberation",
+        skillCategory: "Resonance Liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -961,7 +961,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       trigger: {
         event: "hitLanded",
         actor: "self",
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 6 },
@@ -1432,7 +1432,11 @@ describe("runSimulation — Movement stages", () => {
     const skillCastBuff: BuffDef = {
       id: "test.on-cast",
       name: "On Cast Buff",
-      trigger: { event: "skillCast", characterId: 99, skillType: "Movement" },
+      trigger: {
+        event: "skillCast",
+        characterId: 99,
+        skillCategory: "Movement",
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
       effects: [
@@ -3278,7 +3282,11 @@ describe("runSimulation — inherit duration", () => {
   const parentBuff: BuffDef = {
     id: "test.parent",
     name: "Parent",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
     target: { kind: "self" },
     duration: { kind: "seconds", v: 10 },
     effects: [
@@ -3293,7 +3301,11 @@ describe("runSimulation — inherit duration", () => {
   const childBuff: BuffDef = {
     id: "test.child",
     name: "Child",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
     target: { kind: "self" },
     duration: { kind: "inherit", buffId: "test.parent" },
     effects: [
@@ -3341,7 +3353,11 @@ describe("runSimulation — removeBuffs effect", () => {
   const markerBuff: BuffDef = {
     id: "test.marker",
     name: "Marker",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
     target: { kind: "self" },
     duration: { kind: "seconds", v: 30 },
     effects: [],
@@ -3353,7 +3369,7 @@ describe("runSimulation — removeBuffs effect", () => {
     trigger: {
       event: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
     },
     effects: [{ kind: "removeBuffs", ids: ["test.marker"] }],
   }

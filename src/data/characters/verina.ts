@@ -42,7 +42,7 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       target: { kind: "team" },
       duration: { kind: "seconds", v: 30 },
@@ -83,7 +83,7 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       target: { kind: "nextOnField" },
       duration: { kind: "frames", v: 1 },

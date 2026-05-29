@@ -28,7 +28,7 @@ describe("InstanceStore — registry & candidate matching", () => {
     const event: EngineEvent = {
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     }
     const result = s.findCandidates(event)
@@ -42,7 +42,7 @@ describe("InstanceStore — registry & candidate matching", () => {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
     })
     s.setTriggerable(1, [onSkill])
@@ -50,7 +50,7 @@ describe("InstanceStore — registry & candidate matching", () => {
       s.findCandidates({
         kind: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         frame: 0,
       }),
     ).toEqual([])
@@ -59,7 +59,7 @@ describe("InstanceStore — registry & candidate matching", () => {
         .findCandidates({
           kind: "skillCast",
           characterId: 1,
-          skillType: "Resonance Skill",
+          skillCategory: "Resonance Skill",
           frame: 0,
         })
         .map((c) => c.def.id),
@@ -76,7 +76,7 @@ describe("InstanceStore — registry & candidate matching", () => {
     const result = s.findCandidates({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(result.map((c) => c.def.id)).toEqual(["b.any"])
@@ -174,7 +174,7 @@ describe("InstanceStore — runConsumePhase", () => {
     const event: EngineEvent = {
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Basic",
       frame: 5,
     }
@@ -249,7 +249,7 @@ describe("matchesTrigger — synthetic source filtering", () => {
     const event: EngineEvent = {
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Basic",
       frame: 0,
       synthetic: true,
@@ -266,7 +266,7 @@ describe("matchesTrigger — synthetic source filtering", () => {
     const real: EngineEvent = {
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Basic",
       frame: 0,
     }
@@ -282,7 +282,7 @@ describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
-    skillType: "Basic Attack",
+    skillCategory: "Basic Attack",
     dmgType: "Damage",
     frame: 0,
     stageId: `${BASE_STAGE}.3`,
@@ -380,7 +380,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
-    skillType: "Resonance Skill",
+    skillCategory: "Resonance Skill",
     dmgType: "Damage",
     synthetic: true,
     frame: 0,

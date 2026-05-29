@@ -15,7 +15,7 @@ export const bellBorneGeochelone = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Echo Skill",
+        skillCategory: "Echo Skill",
         stageId: "echo.bell-borne-geochelone._::echo-skill",
       },
       target: { kind: "team" },

@@ -34,18 +34,16 @@ export type SkillCategory =
 
 /**
  * Damage-calc type, derived from `damage[0].type`. Used for `skillTypeBonus`,
- * `skillTypeDeepen`, `shred` lookups in the damage formula.
+ * `skillTypeDeepen`, `shred` lookups in the damage formula. Independent of the
+ * trigger-matching `SkillCategory` axis — the two are orthogonal (see ADR-0024).
  *
- * NOTE: `"Forte Circuit"` remains here pending trigger migration (#272) and the
- * Sanhua Avalanche rework (#274). Per ADR-0024 it is a `SkillGrouping`-only
- * member and the long-term plan is to remove it from `SkillType`.
+ * `"Forte Circuit"` is **not** a `SkillType` — it is a `SkillGrouping` only.
  */
 export type SkillType =
   | "Basic Attack"
   | "Heavy Attack"
   | "Resonance Skill"
   | "Resonance Liberation"
-  | "Forte Circuit"
   | "Intro Skill"
   | "Outro Skill"
   | "Echo Skill"

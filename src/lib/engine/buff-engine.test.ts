@@ -83,7 +83,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     trigger: {
       event: "skillCast",
       characterId: 1,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
     },
     target: { kind: "self" },
     duration: { kind: "seconds", v: 14 },
@@ -107,7 +107,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 0,
     })
     expect(lifecycleEvents).toHaveLength(1)
@@ -132,7 +132,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(lifecycleEvents).toEqual([])
@@ -148,13 +148,13 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 0,
     })
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 60,
     })
     expect(lifecycleEvents).toHaveLength(1)
@@ -178,7 +178,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 0,
     })
     const beforeExpiry = engine.tickToFrame(839)
@@ -226,13 +226,13 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     const second = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 10,
     })
     // Second event re-triggers both buffs (one for each source) — both target=1, same id, so refresh.
@@ -265,7 +265,7 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 5,
     })
@@ -282,7 +282,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 14 },
@@ -305,14 +305,14 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     // Cast outro: trigger fires but nothing materializes yet.
     const outroFire = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 50,
     })
     expect(outroFire.lifecycleEvents).toEqual([])
@@ -323,7 +323,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     const swap = engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 60,
     })
     const applied = swap.lifecycleEvents.find(
@@ -338,7 +338,11 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     const outro: BuffDef = {
       id: "char.a.outro",
       name: "Outro",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Outro Skill",
+      },
       target: { kind: "nextOnField" },
       duration: { kind: "frames", v: 60 },
       effects: [
@@ -358,20 +362,20 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 10,
     })
     expect(pendingNextOnFieldCount(engine)).toBe(1)
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 20,
     })
     expect(pendingNextOnFieldCount(engine)).toBe(0)
@@ -383,7 +387,11 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     const outro: BuffDef = {
       id: "char.a.outro",
       name: "Outro",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Outro Skill",
+      },
       target: { kind: "nextOnField" },
       duration: { kind: "frames", v: 60 },
       effects: [
@@ -403,13 +411,13 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 10,
     })
     expect(pendingNextOnFieldCount(engine)).toBe(1)
@@ -445,7 +453,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
@@ -455,7 +463,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
     const swap = engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 100,
     })
     const expired = swap.lifecycleEvents.filter(
@@ -499,7 +507,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -537,7 +545,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const a = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       concerto: 50,
@@ -549,7 +557,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const b = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 10,
       concerto: 60,
@@ -562,7 +570,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const c = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 20,
       concerto: 10,
@@ -584,7 +592,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 0,
     })
     expect(warn).toHaveBeenCalledTimes(1)
@@ -604,7 +612,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -613,7 +621,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 100,
     })
@@ -632,7 +640,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 200,
@@ -641,7 +649,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 100,
     })
@@ -660,7 +668,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 100,
@@ -669,7 +677,7 @@ describe("BuffEngine — resource state (#58)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 125,
     })
@@ -737,7 +745,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(result.syntheticEvents).toHaveLength(1)
@@ -834,7 +842,7 @@ describe("BuffEngine — resource state (#58)", () => {
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     // resourceCrossed fires chainer (synthetic #1, depth 1). That synthetic
@@ -862,7 +870,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -885,7 +893,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -906,7 +914,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -926,7 +934,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       concerto: 8,
@@ -945,7 +953,7 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 10,
@@ -965,7 +973,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       forte: 20,
@@ -973,7 +981,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 10,
       forte: 10,
@@ -988,7 +996,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       effects: [
@@ -1009,13 +1017,13 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 1,
       forte: 20,
@@ -1033,7 +1041,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       forte: 100,
@@ -1054,7 +1062,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       forte: 15,
@@ -1073,7 +1081,7 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Damage",
       frame: 0,
       energy: 5,
@@ -1086,7 +1094,11 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
   const perStackBuff: BuffDef = {
     id: "char.frost-marks",
     name: "Frost Marks",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Basic Attack" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
     target: { kind: "self" },
     duration: { kind: "frames", v: 600 },
     stacking: { max: 4, onRetrigger: "addStack" },
@@ -1109,21 +1121,21 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 10,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 20,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.15 + BASE_ATK_PCT)
@@ -1151,7 +1163,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
@@ -1159,13 +1171,13 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 10,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 20,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
@@ -1195,7 +1207,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
@@ -1208,7 +1220,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 100 },
@@ -1230,14 +1242,14 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 50,
     })
     // Replace creates a fresh instance with stacks=1 → snapshot stays at 0.07.
@@ -1284,7 +1296,7 @@ describe("BuffEngine — coordHit (#219)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1316,7 +1328,7 @@ describe("BuffEngine — coordHit (#219)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1348,7 +1360,7 @@ describe("BuffEngine — coordHit (#219)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 42,
     })
@@ -1380,7 +1392,7 @@ describe("BuffEngine — coordHit (#219)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1442,7 +1454,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1481,7 +1493,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1515,7 +1527,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1551,14 +1563,14 @@ describe("BuffEngine — emitHit (#60)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.getOnFieldCharacterId()).toBe(1)
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 5,
     })
@@ -1614,7 +1626,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1653,7 +1665,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1687,7 +1699,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
       energy: 5,
@@ -1718,7 +1730,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     trigger: {
       event: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
     },
     target: { kind: "self" },
     duration: { kind: "frames", v: 600 },
@@ -1731,7 +1743,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     ],
     consumedBy: {
       event: "hitLanded",
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       source: "self",
     },
   }
@@ -1746,14 +1758,14 @@ describe("BuffEngine — consumedBy (#61)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     expect(engine.resolveStats(1).critRate).toBeCloseTo(1 + BASE_CR)
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
     })
@@ -1780,13 +1792,13 @@ describe("BuffEngine — consumedBy (#61)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     const result = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Heavy Attack",
+      skillCategory: "Heavy Attack",
       dmgType: "Fusion",
       frame: 30,
     })
@@ -1803,7 +1815,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
@@ -1817,7 +1829,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       ],
       consumedBy: {
         event: "hitLanded",
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         source: "self",
       },
     }
@@ -1830,19 +1842,19 @@ describe("BuffEngine — consumedBy (#61)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 1,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 2,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.3 + BASE_ATK_PCT)
@@ -1850,7 +1862,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     const r1 = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 10,
     })
@@ -1862,7 +1874,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 20,
     })
@@ -1871,7 +1883,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     const r3 = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
     })
@@ -1921,7 +1933,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
     const r = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -1934,7 +1946,11 @@ describe("BuffEngine — perSource (#61)", () => {
   const sharedBuff = (perSource: boolean): BuffDef => ({
     id: "team.shared",
     name: "Shared",
-    trigger: { event: "skillCast", actor: "any", skillType: "Resonance Skill" },
+    trigger: {
+      event: "skillCast",
+      actor: "any",
+      skillCategory: "Resonance Skill",
+    },
     target: { kind: "team" },
     duration: { kind: "frames", v: 300 },
     perSource,
@@ -1960,13 +1976,13 @@ describe("BuffEngine — perSource (#61)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 1,
     })
     // Single instance, only +0.2 contribution.
@@ -1987,13 +2003,13 @@ describe("BuffEngine — perSource (#61)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 1,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.4 + BASE_ATK_PCT)
@@ -2026,7 +2042,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       duration: { kind: "frames", v: 600 },
       condition: undefined,
@@ -2043,7 +2059,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       engine.onEvent({
         kind: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         frame: 0,
       })
       expect(info).toHaveBeenCalled()
@@ -2063,7 +2079,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 600 },
@@ -2087,7 +2103,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       engine.onEvent({
         kind: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         frame: 0,
       })
       expect(info).not.toHaveBeenCalled()
@@ -2114,7 +2130,7 @@ describe("BuffEngine — phase pipeline as data", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
@@ -2134,7 +2150,7 @@ describe("BuffEngine — phase pipeline as data", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -2164,7 +2180,7 @@ describe("BuffEngine — phase pipeline as data", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
 
@@ -2202,7 +2218,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
     const oldDispatch = oldEngine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
       energy: 5,
@@ -2219,7 +2235,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
     const dispatch = newEngine.recordHit({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 30,
       energy: 5,
@@ -2259,7 +2275,7 @@ describe("BuffEngine — cooldown (#90)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame,
     })
 
@@ -2364,7 +2380,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     const baseAtk = engine.resolveStats(1).atkPct
@@ -2373,7 +2389,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 10,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.12)
@@ -2382,7 +2398,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 20,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.24)
@@ -2391,7 +2407,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 30,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(baseAtk + 0.24)
@@ -2415,7 +2431,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
@@ -2424,7 +2440,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 60,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.12)
@@ -2439,13 +2455,13 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 2,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 60,
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.24)
@@ -2559,7 +2575,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Heavy Attack",
+        skillCategory: "Heavy Attack",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
@@ -2594,7 +2610,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Heavy Attack",
+      skillCategory: "Heavy Attack",
       frame: 0,
     })
 
@@ -2631,7 +2647,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
     engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
-      skillType: "Heavy Attack",
+      skillCategory: "Heavy Attack",
       dmgType: "Fusion",
       frame: 0,
     })
@@ -2656,7 +2672,11 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
   const windowBuff: BuffDef = {
     id: "test.window",
     name: "Window",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+    },
     target: { kind: "self" },
     duration: { kind: "seconds", v: 15 },
     effects: [
@@ -2671,7 +2691,11 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
   const emitHitWithCondition: BuffDef = {
     id: "test.conditional-emit",
     name: "Conditional Emit",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+    },
     condition: { kind: "buffActive", buffId: "test.window", on: "source" },
     effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
   }
@@ -2689,7 +2713,7 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     expect(result.syntheticEvents).toHaveLength(0)
@@ -2709,14 +2733,14 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Echo Skill",
+      skillCategory: "Echo Skill",
       frame: 0,
     })
 
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 1,
     })
     expect(result.syntheticEvents).toHaveLength(1)
@@ -2727,7 +2751,11 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
     const unconditionalEmit: BuffDef = {
       id: "test.unconditional-emit",
       name: "Unconditional Emit",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Outro Skill",
+      },
       effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
     }
     testCharacters = [baseChar({ id: 1, buffs: [unconditionalEmit] })]
@@ -2740,7 +2768,7 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
     const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     expect(result.syntheticEvents).toHaveLength(1)
@@ -2751,7 +2779,11 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
   const windowBuff: BuffDef = {
     id: "test.window",
     name: "Window",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+    },
     target: { kind: "self" },
     duration: { kind: "seconds", v: 15 },
     effects: [
@@ -2766,7 +2798,11 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
   const nextOnFieldWithCondition: BuffDef = {
     id: "test.conditional-nof",
     name: "Conditional NOF",
-    trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+    },
     target: { kind: "nextOnField" },
     duration: { kind: "seconds", v: 15 },
     condition: { kind: "buffActive", buffId: "test.window", on: "source" },
@@ -2794,7 +2830,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     // Swap in char 2 — buff should NOT be applied
@@ -2818,13 +2854,13 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Echo Skill",
+      skillCategory: "Echo Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 1,
     })
     // Swap in char 2 — buff SHOULD be applied
@@ -2862,7 +2898,7 @@ describe("Variation weapon — Ceaseless Aria concerto restore", () => {
       engine.onEvent({
         kind: "skillCast",
         characterId: 10,
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
         frame: 0,
       })
       expect(engine.getResource(10).concerto).toBe(expected)
@@ -2874,14 +2910,14 @@ describe("Variation weapon — Ceaseless Aria concerto restore", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 10,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     const afterFirst = engine.getResource(10).concerto
     engine.onEvent({
       kind: "skillCast",
       characterId: 10,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 10 * FPS - 1,
     })
     expect(engine.getResource(10).concerto).toBe(afterFirst)
@@ -2892,13 +2928,13 @@ describe("Variation weapon — Ceaseless Aria concerto restore", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 10,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 10,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       frame: 20 * FPS,
     })
     expect(engine.getResource(10).concerto).toBe(8 + 8)
@@ -2910,7 +2946,11 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     const windowBuff: BuffDef = {
       id: "test.window",
       name: "Window",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Echo Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Echo Skill",
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       effects: [],
@@ -2919,7 +2959,11 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     const nextOnFieldDef: BuffDef = {
       id: "test.nof-target-cond",
       name: "NOF target cond",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Outro Skill",
+      },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
       condition: { kind: "buffActive", buffId: "test.window", on: "target" },
@@ -2945,13 +2989,13 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Echo Skill",
+      skillCategory: "Echo Skill",
       frame: 0,
     })
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 1,
     })
     // Swap in char 2 — condition should pass because window is active on char 1 (source = target)
@@ -2964,7 +3008,11 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     const nextOnFieldDef: BuffDef = {
       id: "test.nof-target-absent",
       name: "NOF target absent",
-      trigger: { event: "skillCast", characterId: 1, skillType: "Outro Skill" },
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Outro Skill",
+      },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
       condition: { kind: "buffActive", buffId: "test.absent", on: "target" },
@@ -2989,7 +3037,7 @@ describe("BuffEngine — ADR-0011: target collapses to source at trigger time", 
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
     engine.onEvent({ kind: "swapIn", characterId: 2, frame: 1 })
@@ -3006,7 +3054,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       effects: [
         {
@@ -3026,7 +3074,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     expect(engine.getResource(1).forte).toBe(1)
@@ -3039,7 +3087,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       trigger: {
         event: "skillCast",
         characterId: 1,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
       },
       effects: [
         {
@@ -3059,7 +3107,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     })
     const buffEvents = lifecycleEvents.filter(
@@ -3099,7 +3147,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1503,
-      skillType: "Resonance Skill",
+      skillCategory: "Resonance Skill",
       dmgType: "Physical",
       stageId: "char.verina.resonance-skill.botany-experiment._.1",
       frame: 0,
@@ -3136,7 +3184,7 @@ describe("Global buffs — Binary Butterfly", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: shorekeeperId,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
 
@@ -3163,7 +3211,7 @@ describe("Global buffs — Binary Butterfly", () => {
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
       characterId: teammateId,
-      skillType: "Outro Skill",
+      skillCategory: "Outro Skill",
       frame: 0,
     })
 
@@ -3201,7 +3249,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: shorekeeperId,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 0,
     })
     expect(engine.activeBuffIds(shorekeeperId)).toContain(
@@ -3212,7 +3260,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: teammateId,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 60,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
@@ -3238,14 +3286,14 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: shorekeeperId,
-      skillType: "Resonance Liberation",
+      skillCategory: "Resonance Liberation",
       frame: 0,
     })
     // First Intro → Inner Stellarealm
     engine.onEvent({
       kind: "skillCast",
       characterId: teammateId,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 60,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
@@ -3255,7 +3303,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: teammateId,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 120,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
@@ -3275,7 +3323,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: teammateId,
-      skillType: "Intro Skill",
+      skillCategory: "Intro Skill",
       frame: 0,
     })
     // Inner may be applied but expires immediately (inherits Outer duration = none)

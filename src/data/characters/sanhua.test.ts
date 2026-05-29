@@ -46,7 +46,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1102,
-      skillType: "Basic Attack",
       skillCategory: "Basic Attack",
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
@@ -64,7 +63,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1102,
-      skillType: "Basic Attack",
       skillCategory: "Basic Attack",
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
@@ -72,7 +70,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     const { syntheticEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1102,
-      skillType: "Resonance Skill",
       skillCategory: "Resonance Skill",
       dmgType: "Damage",
       synthetic: true,
@@ -91,7 +88,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     const { syntheticEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1102,
-      skillType: "Resonance Skill",
       skillCategory: "Resonance Skill",
       dmgType: "Damage",
       synthetic: true,
@@ -109,7 +105,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1102,
-      skillType: "Basic Attack",
       skillCategory: "Basic Attack",
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
@@ -117,7 +112,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     const prismDispatch = engine.onEvent({
       kind: "hitLanded",
       characterId: 1102,
-      skillType: "Resonance Skill",
       skillCategory: "Resonance Skill",
       dmgType: "Damage",
       synthetic: true,
@@ -134,7 +128,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     const glacierDispatch = engine.onEvent({
       kind: "hitLanded",
       characterId: 1102,
-      skillType: "Resonance Skill",
       skillCategory: "Resonance Skill",
       dmgType: "Damage",
       synthetic: true,
@@ -154,7 +147,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     engine.onEvent({
       kind: "skillCast",
       characterId: 1102,
-      skillType: "Basic Attack",
       skillCategory: "Basic Attack",
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
@@ -162,7 +154,6 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     const { syntheticEvents } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1102,
-      skillType: "Resonance Skill",
       skillCategory: "Resonance Skill",
       dmgType: "Damage",
       frame: 30,

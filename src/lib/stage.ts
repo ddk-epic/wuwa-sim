@@ -114,12 +114,16 @@ export function findStageByEntry(
                 ).comboAllows
               : undefined
           const isCastStage = s.name === STAGE_CAST_NAME
-          // Preserve pre-#271 behavior: skillType reflects parent skill grouping (collapsed),
-          // not damage[0].type. The bug-fix migration happens in #271.
+          // Stage-level skillType, collapsed from the parent skill grouping.
+          // Grouping-only labels that are not SkillTypes (Normal Attack,
+          // Inherent Skill, Tune Break, Forte Circuit) collapse to "Basic Attack".
+          // Independent of skillCategory (the trigger axis); per-hit damage type
+          // lives on each DamageEntry.type. See ADR-0024.
           const skillType: SkillType =
             skill.type === "Normal Attack" ||
             skill.type === "Inherent Skill" ||
-            skill.type === "Tune Break"
+            skill.type === "Tune Break" ||
+            skill.type === "Forte Circuit"
               ? "Basic Attack"
               : skill.type
           return {

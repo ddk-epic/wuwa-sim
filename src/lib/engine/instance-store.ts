@@ -5,7 +5,7 @@ import type {
   StackingPolicy,
   Trigger,
 } from "#/types/buff"
-import type { SkillCategory, SkillType } from "#/types/character"
+import type { SkillCategory } from "#/types/character"
 import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
@@ -18,12 +18,8 @@ export type EngineEvent =
   | {
       kind: "skillCast"
       characterId: number
-      skillType: SkillType
-      /**
-       * Player input/action category. Optional during the #271 → #274 transition;
-       * post-transition this becomes mandatory and `skillType` is dropped.
-       */
-      skillCategory?: SkillCategory
+      /** Player input/action category — the sole skill axis for trigger matching. */
+      skillCategory: SkillCategory
       stageId?: string
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
@@ -34,8 +30,7 @@ export type EngineEvent =
   | {
       kind: "hitLanded"
       characterId: number
-      skillType: SkillType
-      skillCategory?: SkillCategory
+      skillCategory: SkillCategory
       dmgType: string
       synthetic?: boolean
       frame: number
@@ -52,8 +47,7 @@ export type EngineEvent =
   | {
       kind: "healLanded"
       characterId: number
-      skillType: SkillType
-      skillCategory?: SkillCategory
+      skillCategory: SkillCategory
       frame: number
       stageId?: string
     }
@@ -463,31 +457,6 @@ export class InstanceStore {
   }
 }
 
-const SKILL_TYPE_BY_KEBAB: Record<string, SkillType> = {
-  "basic-attack": "Basic Attack",
-  "heavy-attack": "Heavy Attack",
-  "resonance-skill": "Resonance Skill",
-  "resonance-liberation": "Resonance Liberation",
-  "forte-circuit": "Forte Circuit",
-  "intro-skill": "Intro Skill",
-  "outro-skill": "Outro Skill",
-  "echo-skill": "Echo Skill",
-  movement: "Movement",
-}
-
-/** Parse the `::skill-type` suffix of a stageId. Returns null when absent or unrecognized. */
-function skillTypeFromStageId(stageId: string | undefined): SkillType | null {
-  if (!stageId) return null
-  const idx = stageId.lastIndexOf("::")
-  if (idx === -1) return null
-  // Strip optional `.<hitIndex>` suffix added by simulation per-hit stageIds.
-  const tail = stageId
-    .slice(idx + 2)
-    .split(".")[0]
-    .trim()
-  return SKILL_TYPE_BY_KEBAB[tail] ?? null
-}
-
 /** Match `t` against `sid`. Lineage prefix match when `t` lacks a `.<hitIndex>` suffix. */
 function stageIdMatches(t: string, sid: string): boolean {
   if (sid === t) return true
@@ -529,17 +498,6 @@ export function matchesTrigger(
         event.skillCategory === undefined ||
         !cats.includes(event.skillCategory)
       )
-        return false
-    }
-    if (trigger.skillType !== undefined) {
-      const types = Array.isArray(trigger.skillType)
-        ? trigger.skillType
-        : [trigger.skillType]
-      // Prefer the event's `skillType` (parent skill grouping per pre-#271
-      // semantics — preserves Verina/Sanhua skillGrouping intent until #272's
-      // full trigger migration). Fall back to stageId-derived for completeness.
-      const derived = event.skillType ?? skillTypeFromStageId(event.stageId)
-      if (derived === undefined || derived === null || !types.includes(derived))
         return false
     }
     if (trigger.stageId !== undefined) {
@@ -593,17 +551,6 @@ export function matchesTrigger(
       )
         return false
     }
-    if (trigger.skillType !== undefined) {
-      const types = Array.isArray(trigger.skillType)
-        ? trigger.skillType
-        : [trigger.skillType]
-      // Prefer the event's `skillType` (parent skill grouping per pre-#271
-      // semantics — preserves Verina/Sanhua skillGrouping intent until #272's
-      // full trigger migration). Fall back to stageId-derived for completeness.
-      const derived = event.skillType ?? skillTypeFromStageId(event.stageId)
-      if (derived === undefined || derived === null || !types.includes(derived))
-        return false
-    }
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
       return false
     }
@@ -642,17 +589,6 @@ export function matchesTrigger(
         event.skillCategory === undefined ||
         !cats.includes(event.skillCategory)
       )
-        return false
-    }
-    if (trigger.skillType !== undefined) {
-      const types = Array.isArray(trigger.skillType)
-        ? trigger.skillType
-        : [trigger.skillType]
-      // Prefer the event's `skillType` (parent skill grouping per pre-#271
-      // semantics — preserves Verina/Sanhua skillGrouping intent until #272's
-      // full trigger migration). Fall back to stageId-derived for completeness.
-      const derived = event.skillType ?? skillTypeFromStageId(event.stageId)
-      if (derived === undefined || derived === null || !types.includes(derived))
         return false
     }
     if (trigger.stageId !== undefined) {

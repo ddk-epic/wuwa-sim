@@ -79,7 +79,7 @@ describe("Rejuvenating Glow — 2pc healingBonus + 5pc team ATK on heal", () => 
     const healEv: HealLandedEvent = {
       kind: "healLanded",
       characterId: 1,
-      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       frame: 0,
     }
     engine.recordHeal(healEv)

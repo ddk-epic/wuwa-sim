@@ -15,14 +15,14 @@ export const impermanenceHeron = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Echo Skill",
+        skillCategory: "Echo Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       consumedBy: {
         event: "skillCast",
         actor: "self",
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       effects: [],
     },
@@ -34,7 +34,7 @@ export const impermanenceHeron = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Outro Skill",
+        skillCategory: "Outro Skill",
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },

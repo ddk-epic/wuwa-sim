@@ -7,7 +7,6 @@ const SKILL_TYPES: SkillType[] = [
   "Heavy Attack",
   "Resonance Skill",
   "Resonance Liberation",
-  "Forte Circuit",
   "Intro Skill",
   "Outro Skill",
   "Echo Skill",

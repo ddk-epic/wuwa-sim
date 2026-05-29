@@ -25,7 +25,7 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        skillType: "Resonance Liberation",
+        skillCategory: "Resonance Liberation",
       },
       target: { kind: "self" },
       duration: {
@@ -92,7 +92,7 @@ export const shorekeeper = {
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },

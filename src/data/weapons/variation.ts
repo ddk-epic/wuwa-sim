@@ -18,7 +18,7 @@ export const variation = {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       cooldown: 20,
       effects: [

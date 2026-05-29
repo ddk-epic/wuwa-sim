@@ -157,7 +157,7 @@ describe("resolveWeaponBuffs", () => {
       trigger: {
         event: "skillCast",
         actor: "self",
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "frames", v: 1 },

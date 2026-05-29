@@ -105,7 +105,6 @@ export type Trigger =
       event: "skillCast"
       actor?: "self" | "any"
       characterId?: number
-      skillType?: SkillType | SkillType[]
       skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
     }
@@ -113,7 +112,6 @@ export type Trigger =
       event: "hitLanded"
       actor?: "self" | "any"
       characterId?: number
-      skillType?: SkillType | SkillType[]
       skillCategory?: SkillCategory | SkillCategory[]
       dmgType?: string
       source?: TriggerSource
@@ -134,7 +132,6 @@ export type Trigger =
       event: "healLanded"
       actor?: "self" | "any"
       characterId?: number
-      skillType?: SkillType | SkillType[]
       skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
     }

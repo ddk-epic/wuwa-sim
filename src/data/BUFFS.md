@@ -26,7 +26,7 @@ Every `BuffDef` answers the same five questions: when does it fire, who does it 
   trigger: {
     event: "skillCast",
     characterId: 1102,
-    skillType: "Outro Skill",
+    skillCategory: "Outro Skill",
   },
 
   // WHO: a BuffTarget. "nextOnField" arms the buff and lands it on whoever
@@ -86,7 +86,7 @@ See: skill-tree compilation in `src/lib/engine-bootstrap.ts` (`compileSkillTreeN
 
 **When to use**: an Outro that buffs whoever swaps in next.
 
-**Key fields**: `trigger.event = "skillCast"` with `skillType: "Outro Skill"` and the source character's `characterId`; `target: { kind: "nextOnField" }`; timed `duration`.
+**Key fields**: `trigger.event = "skillCast"` with `skillCategory: "Outro Skill"` and the source character's `characterId`; `target: { kind: "nextOnField" }`; timed `duration`.
 
 **Gotchas**: `nextOnField` arms the buff at trigger time and only lands it when the next swap-in actually happens. The buff sits dormant until then.
 
@@ -94,7 +94,7 @@ See: skill-tree compilation in `src/lib/engine-bootstrap.ts` (`compileSkillTreeN
 {
   id: "char.sanhua.outro.silversnow",
   name: "Silversnow",
-  trigger: { event: "skillCast", characterId: 1102, skillType: "Outro Skill" },
+  trigger: { event: "skillCast", characterId: 1102, skillCategory: "Outro Skill" },
   target: { kind: "nextOnField" },
   duration: { kind: "seconds", v: 14 },
   effects: [
@@ -113,7 +113,7 @@ See: `src/data/characters/sanhua.ts` — Silversnow.
 
 **When to use**: "after casting X, your next Y deals more" patterns where the buff lands on the caster.
 
-**Key fields**: `trigger.event = "skillCast"` filtered by `characterId` and `skillType`; `target: { kind: "self" }`; timed `duration`.
+**Key fields**: `trigger.event = "skillCast"` filtered by `characterId` and `skillCategory`; `target: { kind: "self" }`; timed `duration`.
 
 **Gotchas**: `target: { kind: "self" }` here means the trigger's source character — i.e. the caster — not the on-field character at trigger time. They're usually the same, but not always (synthetic casts, off-field triggers).
 
@@ -121,7 +121,7 @@ See: `src/data/characters/sanhua.ts` — Silversnow.
 {
   id: "char.sanhua.intro.freezing-thorns",
   name: "Freezing Thorns",
-  trigger: { event: "skillCast", characterId: 1102, skillType: "Intro Skill" },
+  trigger: { event: "skillCast", characterId: 1102, skillCategory: "Intro Skill" },
   target: { kind: "self" },
   duration: { kind: "seconds", v: 14 },
   effects: [
@@ -148,7 +148,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 {
   id: "char.example.lib.warcry",
   name: "Warcry",
-  trigger: { event: "skillCast", characterId: 9999, skillType: "Resonance Liberation" },
+  trigger: { event: "skillCast", characterId: 9999, skillCategory: "Resonance Liberation" },
   target: { kind: "team" },
   duration: { kind: "seconds", v: 20 },
   effects: [
@@ -161,7 +161,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **When to use**: "each hit grants a stack of X, up to N, lasts T seconds, refreshes/extends on retrigger".
 
-**Key fields**: `trigger.event = "hitLanded"` (filter by `actor`/`skillType`/`dmgType`/`source` as needed); `stacking: { max: N, onRetrigger: "addStack" | "addStackKeepTimer" | "refresh" }`; `value: { kind: "perStack", v: ... }` so the effect scales with stack count.
+**Key fields**: `trigger.event = "hitLanded"` (filter by `actor`/`skillCategory`/`dmgType`/`source` as needed); `stacking: { max: N, onRetrigger: "addStack" | "addStackKeepTimer" | "refresh" }`; `value: { kind: "perStack", v: ... }` so the effect scales with stack count.
 
 **Gotchas**: pick `onRetrigger` deliberately — `addStack` resets the timer each hit, `addStackKeepTimer` doesn't. Use `perStack` not `const` for the value, otherwise stacks do nothing. Set `snapshot: true` on the value if it should freeze the underlying stat at apply time (e.g. for snapshotted ATK scaling).
 
@@ -169,7 +169,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 {
   id: "char.example.passive.fervor",
   name: "Fervor",
-  trigger: { event: "hitLanded", actor: "self", skillType: "Basic Attack" },
+  trigger: { event: "hitLanded", actor: "self", skillCategory: "Basic Attack" },
   target: { kind: "self" },
   duration: { kind: "seconds", v: 8 },
   stacking: { max: 5, onRetrigger: "addStack" },
@@ -207,16 +207,16 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **Key fields**: `consumedBy` — a Trigger filter. After each event, instances whose `consumedBy` matches lose a stack; at 0 stacks they're removed and a `buffConsumed` lifecycle event fires.
 
-**Gotchas**: `consumedBy` matches the _just-fired event_, not the trigger that applied the buff. Filter it tightly (`skillType`, `actor`) or you'll consume on the wrong event.
+**Gotchas**: `consumedBy` matches the _just-fired event_, not the trigger that applied the buff. Filter it tightly (`skillCategory`, `actor`) or you'll consume on the wrong event.
 
 ```ts
 {
   id: "char.example.passive.loaded-shot",
   name: "Loaded Shot",
-  trigger: { event: "skillCast", characterId: 9999, skillType: "Resonance Skill" },
+  trigger: { event: "skillCast", characterId: 9999, skillCategory: "Resonance Skill" },
   target: { kind: "self" },
   duration: { kind: "seconds", v: 30 },
-  consumedBy: { event: "hitLanded", actor: "self", skillType: "Heavy Attack" },
+  consumedBy: { event: "hitLanded", actor: "self", skillCategory: "Heavy Attack" },
   effects: [
     {
       kind: "stat",
@@ -360,16 +360,16 @@ SkillType short forms:
 
 ### Triggers
 
-| `event`           | When it fires                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-| `simStart`        | Once at sim start. Used for permanent passives.                                                         |
-| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillType`.                                         |
-| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillType`, `dmgType`, `source`, `stageId`, `hitIndex`. |
-| `swapIn`          | A character swaps to on-field.                                                                          |
-| `swapOut`         | A character swaps off-field.                                                                            |
-| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                   |
+| `event`           | When it fires                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| `simStart`        | Once at sim start. Used for permanent passives.                                                             |
+| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                         |
+| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `hitIndex`. |
+| `swapIn`          | A character swaps to on-field.                                                                              |
+| `swapOut`         | A character swaps off-field.                                                                                |
+| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                       |
 
-`skillType` on `skillCast` and `hitLanded` must be one of the eight engine values — see **SkillType values** below. `"Normal Attack"` is not a valid value (TypeScript will catch it).
+Triggers filter on `skillCategory` — the **player action** (e.g. "when casting Heavy Attack"), see **SkillCategory values** below — **never** on the damage-calc `skillType`. The two are independent axes (ADR-0024): a stage's `skillCategory` and its damage `SkillType` can differ by design, and triggers always key on the action. `"Normal Attack"` is not a valid `skillCategory` (TypeScript will catch it).
 
 `actor`: `"self"` matches the _receiver_ of the buff (`target.kind: "self"`); `"any"` matches any character. Default behavior when omitted is type-defined.
 
@@ -467,9 +467,9 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 | `cooldown`               | Any                  | Minimum seconds between successive fires from the same source. Re-triggers within the window are suppressed.                                                                      |
 | `consumedBy`             | Any                  | After each event, instances whose `consumedBy` matches lose a stack; at 0 they're removed and `buffConsumed` fires.                                                               |
 
-### SkillType values
+### SkillType values (damage-calc axis)
 
-`SkillType` is a closed union. These are the only valid values for `Trigger.skillType`, `DamageEntry.type`, and `skillTypeBonus` / `skillTypeDeepen` / `shreds` keys:
+`SkillType` is the damage classification — a closed union used for `DamageEntry.type` and `skillTypeBonus` / `skillTypeDeepen` / `shreds` keys. It is **not** a trigger filter (triggers use `skillCategory`):
 
 | Value                    |
 | ------------------------ |
@@ -477,12 +477,30 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 | `"Heavy Attack"`         |
 | `"Resonance Skill"`      |
 | `"Resonance Liberation"` |
-| `"Forte Circuit"`        |
 | `"Intro Skill"`          |
 | `"Outro Skill"`          |
 | `"Echo Skill"`           |
+| `"Movement"`             |
 
-`"Normal Attack"` is **not** a `SkillType`. It is a UI grouping label (covering Basic Attack and Heavy Attack together) used only in the skill sidebar. A trigger with `skillType: "Normal Attack"` will never fire and TypeScript will surface the error at compile time. (ADR-0012)
+`"Forte Circuit"` is **not** a `SkillType` — it is a `SkillGrouping` (UI skill-tree section) only. Forte Circuit stages carry their own damage `SkillType` (from `damage[0].type`) and `skillCategory` (the action). (ADR-0024)
+
+### SkillCategory values (trigger axis)
+
+`skillCategory` is the **player action** that triggered a stage — the axis all triggers and `consumedBy` filters match on:
+
+| Value                    |
+| ------------------------ |
+| `"Basic Attack"`         |
+| `"Heavy Attack"`         |
+| `"Resonance Skill"`      |
+| `"Resonance Liberation"` |
+| `"Intro Skill"`          |
+| `"Outro Skill"`          |
+| `"Tune Break"`           |
+| `"Echo Skill"`           |
+| `"Movement"`             |
+
+`"Normal Attack"` is **not** a `skillCategory`. It is a UI grouping label (covering Basic Attack and Heavy Attack together) used only in the skill sidebar. A trigger with `skillCategory: "Normal Attack"` will never fire and TypeScript will surface the error at compile time. (ADR-0012, ADR-0024)
 
 ### Less common
 

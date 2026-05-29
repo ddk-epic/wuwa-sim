@@ -47,7 +47,7 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        skillType: "Resonance Skill",
+        skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -85,7 +85,7 @@ export const encore = {
       trigger: {
         event: "hitLanded",
         characterId: 1203,
-        skillType: "Basic Attack",
+        skillCategory: "Basic Attack",
         source: "self",
       },
       target: { kind: "self" },
