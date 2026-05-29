@@ -31,7 +31,7 @@ const emptyLoadout: SlotLoadout = {
 }
 
 function makeEngine() {
-  testCharacters = [sanhua as unknown as EnrichedCharacter]
+  testCharacters = [sanhua]
   const engine = new BuffEngine()
   engine.bootstrap({
     slots: [1102, null, null],

@@ -56,20 +56,20 @@ export function TableTopBar({
         className="items-center gap-1 px-1.5 py-0.75 font-mono text-sm rounded-sm border border-muted-foreground text-muted-foreground hover:text-foreground"
         onClick={onAddGroup}
       >
-        + Group
+        + Group
       </button>
 
       <div className="flex items-end gap-3">
         <Display
           label="dmg"
-          value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
+          value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
           accent={totalDmg > 0 ? "text-spectro" : ""}
           big
         />
 
         <Display
           label="dps"
-          value={dps > 0 ? dps.toLocaleString() : " — "}
+          value={dps > 0 ? dps.toLocaleString() : " — "}
           accent={dps > 0 ? "text-glacio" : ""}
         />
 

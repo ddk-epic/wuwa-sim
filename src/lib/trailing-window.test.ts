@@ -32,7 +32,9 @@ function makeEntry(characterId: number): TimelineEntry {
   return { id: `e${characterId}`, characterId, stageId: "Normal Attack::_" }
 }
 
-const stubResolved = {} as unknown as ResolvedStage
+// Production always resolves a `stage`; the stub mirrors that so footing
+// lookups (ctx.resolved.stage.footing) behave like real usage.
+const stubResolved = { stage: {} } as unknown as ResolvedStage
 
 function makeHit(
   charId: number,

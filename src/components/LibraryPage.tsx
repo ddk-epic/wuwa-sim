@@ -10,12 +10,12 @@ import {
   Pencil,
   X,
   Copy,
-  type LucideIcon,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 // ── Domain color maps ──────────────────────────────────────────────────────────
 
-const ELEMENT: Record<string, { hex: string; letter: string }> = {
+const ELEMENT: Record<string, { hex: string; letter: string } | undefined> = {
   Fusion: { hex: "#ff7a3d", letter: "F" },
   Glacio: { hex: "#5ad7f0", letter: "G" },
   Electro: { hex: "#b67cff", letter: "E" },

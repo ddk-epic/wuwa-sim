@@ -3110,14 +3110,9 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       skillCategory: "Basic Attack",
       frame: 0,
     })
-    const buffEvents = lifecycleEvents.filter(
-      (e) =>
-        e.kind === "buffApplied" ||
-        e.kind === "buffExpired" ||
-        e.kind === "buffRefreshed" ||
-        e.kind === "buffConsumed",
-    )
-    expect(buffEvents).toHaveLength(0)
+    // Every BuffEvent kind is a lifecycle event, so asserting none fired
+    // is equivalent to asserting the list is empty.
+    expect(lifecycleEvents).toHaveLength(0)
   })
 
   it("verina forte.grant-skill reaction: gains +1 forte on Botany Experiment hit (canary)", () => {

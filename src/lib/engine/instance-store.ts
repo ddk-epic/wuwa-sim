@@ -494,11 +494,7 @@ export function matchesTrigger(
       const cats = Array.isArray(trigger.skillCategory)
         ? trigger.skillCategory
         : [trigger.skillCategory]
-      if (
-        event.skillCategory === undefined ||
-        !cats.includes(event.skillCategory)
-      )
-        return false
+      if (!cats.includes(event.skillCategory)) return false
     }
     if (trigger.stageId !== undefined) {
       const sid = event.stageId
@@ -545,11 +541,7 @@ export function matchesTrigger(
       const cats = Array.isArray(trigger.skillCategory)
         ? trigger.skillCategory
         : [trigger.skillCategory]
-      if (
-        event.skillCategory === undefined ||
-        !cats.includes(event.skillCategory)
-      )
-        return false
+      if (!cats.includes(event.skillCategory)) return false
     }
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
       return false
@@ -585,11 +577,7 @@ export function matchesTrigger(
       const cats = Array.isArray(trigger.skillCategory)
         ? trigger.skillCategory
         : [trigger.skillCategory]
-      if (
-        event.skillCategory === undefined ||
-        !cats.includes(event.skillCategory)
-      )
-        return false
+      if (!cats.includes(event.skillCategory)) return false
     }
     if (trigger.stageId !== undefined) {
       const sid = event.stageId

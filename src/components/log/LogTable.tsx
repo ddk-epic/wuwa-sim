@@ -118,10 +118,7 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
           if (entry.kind === "action") {
             return <ActionEventRow key={i} ev={entry} index={i} />
           }
-          if (entry.kind === "sustain") {
-            return <SustainEventRow key={i} ev={entry} index={i} />
-          }
-          return null
+          return <SustainEventRow key={i} ev={entry} index={i} />
         })}
       </tbody>
     </table>

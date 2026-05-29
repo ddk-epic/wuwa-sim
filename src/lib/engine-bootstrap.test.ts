@@ -303,7 +303,7 @@ describe("validateBuffDef (#220)", () => {
         trigger: baseTrigger,
         target: { kind: "self" },
         effects: [],
-      } as BuffDef),
+      }),
     ).toThrow(/target and duration must both be present/)
   })
 
@@ -315,7 +315,7 @@ describe("validateBuffDef (#220)", () => {
         trigger: baseTrigger,
         duration: { kind: "frames", v: 1 },
         effects: [],
-      } as BuffDef),
+      }),
     ).toThrow(/target and duration must both be present/)
   })
 

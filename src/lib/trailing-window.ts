@@ -135,7 +135,7 @@ export function scheduleStage(
 
   const pendingFooting = isSwap
     ? buildPendingFooting(
-        ctx.resolved.stage?.footing,
+        ctx.resolved.stage.footing,
         ctx.stageStartFrame,
         ctx.stageDuration,
       )

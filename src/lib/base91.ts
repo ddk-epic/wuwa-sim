@@ -11,8 +11,8 @@ export function encode(data: Uint8Array): string {
   let en = 0
   let output = ""
 
-  for (let i = 0; i < data.length; i++) {
-    ebq |= (data[i] & 0xff) << en
+  for (const byte of data) {
+    ebq |= (byte & 0xff) << en
     en += 8
     if (en > 13) {
       let ev = ebq & 8191

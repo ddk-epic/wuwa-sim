@@ -13,6 +13,7 @@ import type {
   ActionEvent,
   HitEvent,
   SustainEvent,
+  SimulationLogEntry,
 } from "#/types/simulation-log"
 import {
   DEFAULT_SUBSTAT_ROLLS,
@@ -945,7 +946,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       (e) => e.kind === "buffApplied" && e.buffId === "test.cheer-dance",
     )
     expect(buffApplied).toBeDefined()
-    const hits = result.filter((e) => e.kind === "hit") as HitEvent[]
+    const hits = result.filter((e) => e.kind === "hit")
     expect(hits[0]?.statsSnapshot.elementBonus["Fusion"]).toBeCloseTo(
       0.1 + BASE_ELEM_BONUS,
     )
@@ -1400,9 +1401,9 @@ describe("runSimulation — Movement stages", () => {
     const hitAfterNormal = hits[0]
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const dodgeAction = actions.find((a) => a.skillType === "Movement")
-    expect(hitAfterNormal?.cumulativeConcerto).toBeGreaterThan(0)
+    expect(hitAfterNormal.cumulativeConcerto).toBeGreaterThan(0)
     expect(dodgeAction?.cumulativeConcerto).toBe(
-      hitAfterNormal?.cumulativeConcerto,
+      hitAfterNormal.cumulativeConcerto,
     )
   })
 
@@ -1424,8 +1425,8 @@ describe("runSimulation — Movement stages", () => {
     const hitAfterNormal = hits[0]
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const dodgeAction = actions.find((a) => a.skillType === "Movement")
-    expect(hitAfterNormal?.cumulativeEnergy).toBeGreaterThan(0)
-    expect(dodgeAction?.cumulativeEnergy).toBe(hitAfterNormal?.cumulativeEnergy)
+    expect(hitAfterNormal.cumulativeEnergy).toBeGreaterThan(0)
+    expect(dodgeAction?.cumulativeEnergy).toBe(hitAfterNormal.cumulativeEnergy)
   })
 
   it("skillCast-triggered buff does not promote when Dodge is cast", () => {
@@ -2705,13 +2706,8 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   }
   const slots50_51: Slots = [50, 51, null]
 
-  function actionsFrom(
-    log: import("#/types/simulation-log").SimulationLogEntry[],
-  ) {
-    return log.filter(
-      (e): e is import("#/types/simulation-log").ActionEvent =>
-        e.kind === "action",
-    )
+  function actionsFrom(log: SimulationLogEntry[]) {
+    return log.filter((e): e is ActionEvent => e.kind === "action")
   }
 
   it("(a) clock starts at off-field-exit frame: full 60-frame cooldown on immediate swap-back", () => {
@@ -3003,13 +2999,8 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   }
   const slotsAB: Slots = [60, 61, null]
 
-  function actionsFrom(
-    log: import("#/types/simulation-log").SimulationLogEntry[],
-  ) {
-    return log.filter(
-      (e): e is import("#/types/simulation-log").ActionEvent =>
-        e.kind === "action",
-    )
+  function actionsFrom(log: SimulationLogEntry[]) {
+    return log.filter((e): e is ActionEvent => e.kind === "action")
   }
 
   it("(a) caster's own residual CD is eaten by animationFrames", () => {
@@ -3341,9 +3332,7 @@ describe("runSimulation — inherit duration", () => {
       tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
-    const hitEvent = result.find((e) => e.kind === "hit") as
-      | HitEvent
-      | undefined
+    const hitEvent = result.find((e) => e.kind === "hit")
     expect(hitEvent?.activeBuffs.some((b) => b.id === "test.parent")).toBe(true)
     expect(hitEvent?.activeBuffs.some((b) => b.id === "test.child")).toBe(true)
   })
