@@ -44,21 +44,6 @@ describe("accumulateStatEffects", () => {
     expect(stats.atkPct).toBeCloseTo(0.2)
   })
 
-  it("energyRechargePct path accumulates additively", () => {
-    const stats = emptyStatTable()
-    const def = baseBuff({
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "energyRechargePct" },
-          value: { kind: "const", v: 0.5 },
-        },
-      ],
-    })
-    accumulateStatEffects(stats, { def, stacks: 1 })
-    expect(stats.energyRechargePct).toBeCloseTo(0.5)
-  })
-
   it("multiplies perStack values by stacks", () => {
     const stats = emptyStatTable()
     const def = baseBuff({

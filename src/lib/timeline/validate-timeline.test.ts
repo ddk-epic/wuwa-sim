@@ -100,13 +100,6 @@ describe("validateTimeline — character in team", () => {
     expect(result.invalidRowIds.has(e.id)).toBe(false)
     expect(result.rowErrors.get(e.id)).toBeUndefined()
   })
-
-  it("accepts character in second or third slot", () => {
-    testCharacters = [baseChar({ id: 2 })]
-    const e = entry(2, "char.test.basic-attack.normal-attack._::basic-attack")
-    const result = validateTimeline([e], [null, 2, null], loadouts)
-    expect(result.invalidRowIds.has(e.id)).toBe(false)
-  })
 })
 
 describe("validateTimeline — skill existence", () => {

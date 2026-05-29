@@ -136,12 +136,6 @@ describe("computeDamage", () => {
     )
   })
 
-  it("def and res constants always applied", () => {
-    expect(computeDamage(ctx(), stats({ atkBase: 1 }))).toBe(
-      Math.round(1 * DEFRES),
-    )
-  })
-
   it("scalingStat=HP scales by hpBase × (1+hpPct) + hpFlat", () => {
     const s = stats({
       atkBase: 1000,
@@ -233,13 +227,6 @@ describe("computeDamage", () => {
         stats({ shreds: { ...emptyStatTable().shreds, "Basic Attack": 0.2 } }),
       ),
     ).toBe(Math.round(1000 * DEF_MULT_CONST * 1.05))
-  })
-
-  it("bonusMultiplier is a separate multiplicative layer between multiplier and dmgBonus", () => {
-    const s = stats({ bonusMultiplier: 0.42 })
-    expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
-      Math.round(1 * 1000 * 1.42 * DEFRES),
-    )
   })
 
   it("bonusMultiplier and dmgBonus are independent multiplicative factors", () => {

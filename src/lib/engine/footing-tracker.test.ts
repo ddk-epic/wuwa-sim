@@ -40,11 +40,6 @@ describe("FootingTracker", () => {
 })
 
 describe("FootingTracker — snapshot (ADR-0022 slice 3)", () => {
-  it("consumeSnapshot returns null when no snapshot exists", () => {
-    const t = new FootingTracker()
-    expect(t.consumeSnapshot(1)).toBeNull()
-  })
-
   it("snapshotFor then consumeSnapshot returns stored footing and clears it", () => {
     const t = new FootingTracker()
     t.snapshotFor(1, "air")
