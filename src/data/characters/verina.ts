@@ -64,7 +64,7 @@ export const verina = {
         characterId: 1503,
         stageId: VERINA_FORTE_LIBERATION_OUTRO_STAGES,
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 20 },
       effects: [
         {
@@ -257,7 +257,7 @@ export const verina = {
         characterId: 1503,
         stageId: VERINA_FORTE_LIBERATION_OUTRO_STAGES,
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 24 },
       effects: [
         {

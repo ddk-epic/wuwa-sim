@@ -35,7 +35,7 @@ export const fallacyOfNoReturn = {
         actor: "self",
         skillCategory: "Echo Skill",
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 20 },
       effects: [
         {

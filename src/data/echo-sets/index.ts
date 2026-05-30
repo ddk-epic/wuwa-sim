@@ -118,7 +118,7 @@ const rejuvenatingGlow = {
       description:
         "Upon healing allies, increases ATK of all party members by 15% for 30s.",
       trigger: { event: "healLanded", actor: "self" },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 30 },
       stacking: { max: 1, onRetrigger: "refresh" },
       requiresPieces: 5,

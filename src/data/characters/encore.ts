@@ -135,7 +135,7 @@ export const encore = {
         stageId:
           "char.encore.heavy-attack.black-white-woolies.cosmos-rupture::resonance-liberation",
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 30 },
       stacking: { max: 1, onRetrigger: "refresh" },
       effects: [

@@ -18,7 +18,7 @@ export const bellBorneGeochelone = {
         skillCategory: "Echo Skill",
         stageId: "echo.bell-borne-geochelone._::echo-skill",
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 15 },
       effects: [
         {

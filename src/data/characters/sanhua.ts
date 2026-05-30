@@ -499,7 +499,7 @@ export const sanhua = {
           "char.sanhua.ice-glacier-burst",
         ],
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 20 },
       stacking: { max: 2, onRetrigger: "addStack" },
       effects: [
