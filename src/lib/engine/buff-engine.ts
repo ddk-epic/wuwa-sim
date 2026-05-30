@@ -15,7 +15,7 @@ import type {
   HitEvent,
   SustainEvent,
 } from "#/types/simulation-log"
-import type { StatTable } from "#/types/stat-table"
+import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { EmitHitHost } from "./emit-hit-dispatcher"
@@ -749,12 +749,8 @@ export class BuffEngine {
     try {
       const base = this.store.cloneBaseStats(characterId)
       const contributions = this.store.getActiveTargeting(characterId)
-      const getCharStat = (cid: number, stat: string): number => {
-        // StatTable mixes scalar and nested-record fields, so it is not a
-        // uniform Record<string, number>. Removing this cast needs StatTable
-        // flattened to 1D — see tmp/stattable-1d-handoff.md.
-        const s = this.resolveStats(cid) as unknown as Record<string, number>
-        return s[stat] ?? 0
+      const getCharStat = (cid: number, stat: ScalarStatKey): number => {
+        return this.resolveStats(cid)[stat]
       }
       for (const inst of contributions) {
         if (

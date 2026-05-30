@@ -1,25 +1,9 @@
 import type { Element } from "#/data/elements"
 import type { DamageEntry, SkillCategory, SkillType } from "./character"
+import type { ScalarStatKey } from "./stat-table"
 
 export type StatPath =
-  | {
-      stat:
-        | "atkPct"
-        | "atkFlat"
-        | "hpPct"
-        | "hpFlat"
-        | "defPct"
-        | "defFlat"
-        | "critRate"
-        | "critDmg"
-        | "defShred"
-        | "allDmgBonus"
-        | "allDeepen"
-        | "energyRechargePct"
-        | "forteRechargePct"
-        | "healingBonus"
-        | "bonusMultiplier"
-    }
+  | { stat: ScalarStatKey }
   | { stat: "elementBonus"; key: Element }
   | { stat: "skillTypeBonus"; key: SkillType }
   | { stat: "elementDeepen"; key: Element }
@@ -31,7 +15,7 @@ export type ValueExpr =
   | { kind: "perStack"; v: number; snapshot?: boolean }
   | {
       kind: "scaledByStat"
-      stat: string
+      stat: ScalarStatKey
       characterId: number
       per: number
       scale: number

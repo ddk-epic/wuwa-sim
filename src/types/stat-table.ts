@@ -26,6 +26,23 @@ function emptyElementMap(): Record<Element, number> {
   >
 }
 
+export type ScalarStatKey =
+  | "atkPct"
+  | "atkFlat"
+  | "hpPct"
+  | "hpFlat"
+  | "defPct"
+  | "defFlat"
+  | "critRate"
+  | "critDmg"
+  | "defShred"
+  | "allDmgBonus"
+  | "allDeepen"
+  | "energyRechargePct"
+  | "forteRechargePct"
+  | "healingBonus"
+  | "bonusMultiplier"
+
 export interface StatTable {
   atkBase: number
   atkPct: number

@@ -7,7 +7,7 @@ import type {
   EchoBuild,
   SlotLoadout,
 } from "#/types/loadout"
-import type { StatTable } from "#/types/stat-table"
+import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
 import {
@@ -41,7 +41,7 @@ export type StatContribution = {
 export function accumulateStatEffects(
   stats: StatTable,
   contribution: StatContribution,
-  getCharStat?: (characterId: number, stat: string) => number,
+  getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
 ): void {
   const { def, stacks, snapshots } = contribution
   for (let i = 0; i < def.effects.length; i++) {
@@ -81,7 +81,7 @@ function resolveValue(
   stacks: number,
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
-  getCharStat?: (characterId: number, stat: string) => number,
+  getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
 ): number {
   if ("snapshot" in value && value.snapshot && snapshots) {
     return snapshots[effectIndex]
