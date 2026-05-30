@@ -17,6 +17,7 @@ import { GhostGroupRow } from "./GhostGroupRow"
 interface TimelineViewProps {
   nodes: TimelineNode[]
   summary: TimelineSummary
+  stale?: boolean
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string, position: DropPosition) => void
   onReorderNodes: (fromId: string, toId: string, position: DropPosition) => void
@@ -36,6 +37,7 @@ interface TimelineViewProps {
 export function TimelineView({
   nodes,
   summary,
+  stale,
   onRemove,
   onReorder,
   onReorderNodes,
@@ -187,6 +189,7 @@ export function TimelineView({
                 hidden={item.hidden === true}
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
+                stale={stale}
                 drag={drag}
                 onRemove={onRemove}
                 onUpdateEntry={onUpdateEntry}

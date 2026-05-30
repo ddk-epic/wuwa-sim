@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTeam } from "#/hooks/useTeam"
 import { useTimeline } from "#/hooks/useTimeline"
-import { useSimulationLog } from "#/hooks/useSimulationLog"
+import { useSimulationLog, computeSignature } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
 import { RenamingGroupProvider } from "#/hooks/useRenamingGroup"
 import { SettingsProvider } from "#/hooks/useSettingsContext"
@@ -22,7 +22,7 @@ export function SimulatorPage() {
   const team = useTeam()
   const { slots, loadouts, focusedId, loadTeam } = team
 
-  const { log, setLog, clearLog } = useSimulationLog()
+  const { log, storedSignature, setLog, clearLog } = useSimulationLog()
 
   const {
     nodes,
@@ -43,8 +43,15 @@ export function SimulatorPage() {
     duplicateGroup,
     clearTimeline,
     loadNodes,
-  } = useTimeline(clearLog)
+  } = useTimeline()
   const [settings, setSettings] = useSettings()
+  const currentSignature = computeSignature(entries, slots, loadouts, settings)
+  const stale = log.length > 0 && storedSignature !== currentSignature
+
+  useEffect(() => {
+    if (entries.length === 0) clearLog()
+  }, [entries.length])
+
   const [modalOpen, setModalOpen] = useState(false)
   const [simulationLogOpen, setSimulationLogOpen] = useState(false)
   const [pendingImport, setPendingImport] =
@@ -105,6 +112,7 @@ export function SimulatorPage() {
         settings.variantFloor,
         settings.fallFrames,
       ),
+      currentSignature,
     )
   }
 
@@ -136,11 +144,13 @@ export function SimulatorPage() {
                   totalDmg={summary.totalDamage}
                   dps={summary.dps}
                   totalTimeSec={summary.totalTimeFrames / 60}
+                  stale={stale}
                   onAddGroup={addGroupAndRename}
                 />
                 <TimelineView
                   nodes={nodes}
                   summary={summary}
+                  stale={stale}
                   onRemove={removeEntry}
                   onReorder={reorderEntries}
                   onReorderNodes={reorderNodes}

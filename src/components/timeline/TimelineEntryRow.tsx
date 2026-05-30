@@ -33,6 +33,7 @@ interface TimelineEntryRowProps {
   item: EntryRenderItem
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
+  stale?: boolean
   drag: TimelineDrag
   hidden?: boolean
   onRemove: (id: string) => void
@@ -43,6 +44,7 @@ export function TimelineEntryRow({
   item,
   prevEntry,
   summary,
+  stale,
   drag,
   hidden = false,
   onRemove,
@@ -238,13 +240,19 @@ export function TimelineEntryRow({
       <td className="px-2 py-2 text-right font-mono text-value text-gray-300">
         {formatFrames(row.durationFrames)}
       </td>
-      <td className="px-2 py-2 text-right font-mono">
+      <td
+        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
+      >
         {renderPoolValue(conVal, "var(--ui-concerto)")}
       </td>
-      <td className="px-2 py-2 text-right font-mono">
+      <td
+        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
+      >
         {renderPoolValue(resVal, "var(--ui-resonance)")}
       </td>
-      <td className="px-2 py-2 text-right font-mono">
+      <td
+        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
+      >
         {row.damage !== null ? (
           <span className="font-semibold text-stat text-yellow-400">
             {row.damage.toLocaleString()}

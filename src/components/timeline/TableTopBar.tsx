@@ -29,6 +29,7 @@ interface TableTopBarProps {
   totalDmg: number
   dps: number
   totalTimeSec: number
+  stale?: boolean
   onAddGroup: () => void
 }
 
@@ -37,6 +38,7 @@ export function TableTopBar({
   totalDmg,
   dps,
   totalTimeSec,
+  stale,
   onAddGroup,
 }: TableTopBarProps) {
   return (
@@ -46,7 +48,13 @@ export function TableTopBar({
 
         <span className="space-x-2 text-muted-foreground font-mono">
           <span>·</span>
-          <span>{entriesNumber}</span> actions
+          {stale ? (
+            <span>outdated</span>
+          ) : (
+            <>
+              <span>{entriesNumber}</span> actions
+            </>
+          )}
         </span>
       </div>
 
@@ -63,14 +71,16 @@ export function TableTopBar({
         <Display
           label="dmg"
           value={totalDmg > 0 ? totalDmg.toLocaleString() : " — "}
-          accent={totalDmg > 0 ? "text-spectro" : ""}
+          accent={
+            !stale && totalDmg > 0 ? "text-spectro" : "text-muted-foreground"
+          }
           big
         />
 
         <Display
           label="dps"
           value={dps > 0 ? dps.toLocaleString() : " — "}
-          accent={dps > 0 ? "text-glacio" : ""}
+          accent={!stale && dps > 0 ? "text-glacio" : "text-muted-foreground"}
         />
 
         <Display label="time" value={`${totalTimeSec.toFixed(2)}s`} />
