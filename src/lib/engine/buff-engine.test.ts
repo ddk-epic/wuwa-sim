@@ -8,6 +8,7 @@ import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
+import { GLOBAL_TARGET_ID } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
 import { BuffEngine } from "./buff-engine"
@@ -3498,5 +3499,155 @@ describe("Fallacy of No Return echo — Echo Skill buffs", () => {
       "echo.fallacy-of-no-return.energy-regen",
     )
     expect(engine.resolveStats(30).energyRechargePct).toBeCloseTo(baseER)
+  })
+})
+
+describe("BuffEngine — global target kind (#276)", () => {
+  const globalBuff: BuffDef = {
+    id: "test.global-amp",
+    name: "Global AMP",
+    trigger: { event: "skillCast", actor: "self", characterId: 1 },
+    target: { kind: "global" },
+    duration: { kind: "seconds", v: 10 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "allDeepen" },
+        value: { kind: "const", v: 0.15 },
+      },
+    ],
+  }
+
+  const setup = () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [globalBuff] }),
+      baseChar({ id: 2 }),
+      baseChar({ id: 3 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, 3],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  it("produces a single buffApplied event with GLOBAL_TARGET_ID sentinel", () => {
+    const engine = setup()
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(lifecycleEvents).toHaveLength(1)
+    expect(lifecycleEvents[0]).toMatchObject({
+      kind: "buffApplied",
+      buffId: "test.global-amp",
+      targetCharacterId: GLOBAL_TARGET_ID,
+    })
+  })
+
+  it("all party members read the global instance via resolveStats", () => {
+    const engine = setup()
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(engine.resolveStats(1).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(2).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(3).allDeepen).toBeCloseTo(0.15)
+  })
+
+  it("all party members see the buff in activeBuffIds", () => {
+    const engine = setup()
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1)).toContain("test.global-amp")
+    expect(engine.activeBuffIds(2)).toContain("test.global-amp")
+    expect(engine.activeBuffIds(3)).toContain("test.global-amp")
+  })
+
+  it("re-trigger produces buffRefreshed, not a second instance", () => {
+    const engine = setup()
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 60,
+    })
+    expect(lifecycleEvents).toHaveLength(1)
+    expect(lifecycleEvents[0].kind).toBe("buffRefreshed")
+    // Only one instance in the store (all characters still read the same one)
+    expect(
+      engine.activeBuffIds(1).filter((id) => id === "test.global-amp"),
+    ).toHaveLength(1)
+    expect(
+      engine.activeBuffIds(2).filter((id) => id === "test.global-amp"),
+    ).toHaveLength(1)
+  })
+
+  it("expiry removes the buff for all party members", () => {
+    const FPS = 60
+    const engine = setup()
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    engine.tickToFrame(10 * FPS + 1)
+    expect(engine.activeBuffIds(1)).not.toContain("test.global-amp")
+    expect(engine.activeBuffIds(2)).not.toContain("test.global-amp")
+    expect(engine.activeBuffIds(3)).not.toContain("test.global-amp")
+    expect(engine.resolveStats(1).allDeepen).toBeCloseTo(0)
+    expect(engine.resolveStats(2).allDeepen).toBeCloseTo(0)
+    expect(engine.resolveStats(3).allDeepen).toBeCloseTo(0)
+  })
+
+  it("expiresOnSourceSwapOut removes the global instance when source swaps out", () => {
+    const swapOutBuff: BuffDef = {
+      ...globalBuff,
+      id: "test.global-swapout",
+      expiresOnSourceSwapOut: true,
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [swapOutBuff] }),
+      baseChar({ id: 2 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    // Apply the buff from char 1
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(2)).toContain("test.global-swapout")
+    // Swap to char 2 → char 1 swaps out → buff expires
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 2,
+      skillCategory: "Basic Attack",
+      frame: 60,
+    })
+    expect(engine.activeBuffIds(1)).not.toContain("test.global-swapout")
+    expect(engine.activeBuffIds(2)).not.toContain("test.global-swapout")
   })
 })

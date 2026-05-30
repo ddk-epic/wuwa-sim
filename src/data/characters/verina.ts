@@ -44,7 +44,7 @@ export const verina = {
         characterId: 1503,
         skillCategory: "Outro Skill",
       },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "seconds", v: 30 },
       effects: [
         {

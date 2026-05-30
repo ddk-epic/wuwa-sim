@@ -157,6 +157,20 @@ export function validateBuffDef(def: BuffDef): void {
       )
     }
   }
+  if (def.target?.kind === "global") {
+    if (def.condition != null) {
+      const c = def.condition
+      if (
+        (c.kind === "buffActive" && c.on === "target") ||
+        c.kind === "onField" ||
+        (c.kind === "resourceAtLeast" && c.on === "target")
+      ) {
+        throw new Error(
+          `BuffDef "${def.id}": global buff condition must not reference the reader (on:"target" or onField).`,
+        )
+      }
+    }
+  }
 }
 
 /**

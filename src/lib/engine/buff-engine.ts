@@ -6,6 +6,7 @@ import type {
   ResourceKind,
   ResourceState,
 } from "#/types/buff"
+import { GLOBAL_TARGET_ID } from "#/types/buff"
 import type { SkillCategory, SkillType } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
@@ -200,6 +201,10 @@ export class BuffEngine {
         return
       }
       this.deferOutroBuff(def, sourceCharacterId, frame)
+      return
+    }
+    if (def.target?.kind === "global") {
+      this.store.applyBuff(def, sourceCharacterId, GLOBAL_TARGET_ID, frame, out)
       return
     }
     const targetIds = this.store.resolveTargetIds(def, sourceCharacterId)

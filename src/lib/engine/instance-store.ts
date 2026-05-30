@@ -5,6 +5,7 @@ import type {
   StackingPolicy,
   Trigger,
 } from "#/types/buff"
+import { GLOBAL_TARGET_ID } from "#/types/buff"
 import type { SkillCategory } from "#/types/character"
 import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
@@ -134,20 +135,20 @@ export class InstanceStore {
   /** Sorted (by def.id) instances targeting `characterId` for stat resolution. */
   getActiveTargeting(characterId: number): BuffInstance[] {
     return this.active
-      .filter((inst) => inst.targetCharacterId === characterId)
+      .filter((inst) => inst.global || inst.targetCharacterId === characterId)
       .sort((a, b) => (a.def.id < b.def.id ? -1 : a.def.id > b.def.id ? 1 : 0))
   }
 
   activeBuffIds(characterId: number): string[] {
     return this.active
-      .filter((inst) => inst.targetCharacterId === characterId)
+      .filter((inst) => inst.global || inst.targetCharacterId === characterId)
       .map((inst) => inst.def.id)
       .sort()
   }
 
   activeBuffs(characterId: number): ActiveBuff[] {
     return this.active
-      .filter((inst) => inst.targetCharacterId === characterId)
+      .filter((inst) => inst.global || inst.targetCharacterId === characterId)
       .map((inst) => ({
         id: inst.def.id,
         name: inst.def.name,
@@ -157,10 +158,12 @@ export class InstanceStore {
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   }
 
-  /** Returns true when any active instance with the given def.id targets `characterId`. */
+  /** Returns true when any active instance with the given def.id targets `characterId` or is global. */
   hasActiveOnTarget(buffId: string, targetCharacterId: number): boolean {
     return this.active.some(
-      (i) => i.def.id === buffId && i.targetCharacterId === targetCharacterId,
+      (i) =>
+        i.def.id === buffId &&
+        (i.global || i.targetCharacterId === targetCharacterId),
     )
   }
 
@@ -174,6 +177,10 @@ export class InstanceStore {
       case "nextOnField":
         throw new Error(
           `resolveTargetIds called with nextOnField buff "${def.id}" — use applyOrDefer`,
+        )
+      case "global":
+        throw new Error(
+          `resolveTargetIds called with global buff "${def.id}" — use applyOrDefer`,
         )
     }
   }
@@ -309,6 +316,7 @@ export class InstanceStore {
     )
 
     if (!existing) {
+      const isGlobal = targetCharacterId === GLOBAL_TARGET_ID
       this.active.push({
         def,
         sourceCharacterId,
@@ -317,6 +325,7 @@ export class InstanceStore {
         stacks: 1,
         appliedFrame: frame,
         snapshots: freezeSnapshots(def, 1),
+        ...(isGlobal ? { global: true as const } : {}),
       })
       this.version_++
       out.push({

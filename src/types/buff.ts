@@ -148,6 +148,10 @@ export type BuffTarget =
   | { kind: "self" }
   | { kind: "team" }
   | { kind: "nextOnField" }
+  | { kind: "global" }
+
+/** Sentinel `targetCharacterId` stamped on global (team-wide shared) instances. */
+export const GLOBAL_TARGET_ID = 0
 
 export type Condition =
   | { kind: "buffActive"; buffId: string; on: "target" | "source" }
@@ -250,4 +254,6 @@ export interface BuffInstance {
   appliedFrame: number
   /** Frozen values per effect index, populated when a ValueExpr has `snapshot: true`. */
   snapshots?: Record<number, number>
+  /** True for global (team-wide shared) instances; every character reads this instance. */
+  global?: true
 }
