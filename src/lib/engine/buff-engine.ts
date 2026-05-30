@@ -19,8 +19,7 @@ import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { EmitHitHost } from "./emit-hit-dispatcher"
-import { globalBuffs } from "#/data/global-buffs"
-import { bootstrapSlot, validateBuffDef } from "../engine-bootstrap"
+import { bootstrapSlot } from "../engine-bootstrap"
 import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
 import { InstanceStore } from "./instance-store"
@@ -246,23 +245,6 @@ export class BuffEngine {
       this.resources.ensureState(slot.charId)
     }
     this.store.setSlots(slots)
-
-    const partyIds = new Set(slots.filter((id) => id !== -1))
-    for (const def of globalBuffs) {
-      const owner = def.owner
-      if (owner === undefined || !partyIds.has(owner)) continue
-      const ownerSlotIndex = slots.indexOf(owner)
-      const ownerSequence =
-        ownerSlotIndex >= 0
-          ? (input.loadouts[ownerSlotIndex]?.sequence ?? 0)
-          : 0
-      if ((def.requiresSequence ?? 0) > ownerSequence) continue
-      if (def.maxSequence !== undefined && ownerSequence > def.maxSequence)
-        continue
-      validateBuffDef(def)
-      this.store.appendTriggerable(owner, [def])
-      allTriggerable.push(def)
-    }
 
     this.triggerIndex = new TriggerIndex(allTriggerable)
     return { lifecycleEvents: [] }

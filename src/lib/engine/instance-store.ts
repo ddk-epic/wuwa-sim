@@ -172,8 +172,6 @@ export class InstanceStore {
     switch (def.target.kind) {
       case "self":
         return [sourceCharacterId]
-      case "team":
-        return this.slotsBySlotIndex.filter((id) => id !== -1)
       case "nextOnField":
         throw new Error(
           `resolveTargetIds called with nextOnField buff "${def.id}" — use applyOrDefer`,

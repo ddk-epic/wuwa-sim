@@ -227,14 +227,6 @@ describe("InstanceStore — resolveTargetIds", () => {
     ])
   })
 
-  it("returns all populated slots for team-target", () => {
-    const s = new InstanceStore()
-    s.setSlots([1, -1, 3])
-    expect(s.resolveTargetIds(def({ target: { kind: "team" } }), 1)).toEqual([
-      1, 3,
-    ])
-  })
-
   it("throws when called with nextOnField — must go through applyOrDefer", () => {
     const s = new InstanceStore()
     expect(() =>

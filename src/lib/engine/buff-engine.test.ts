@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { shorekeeper } from "#/data/characters/shorekeeper"
 import { stellarSymphony } from "#/data/weapons/stellar-symphony"
 import { stringmaster } from "#/data/weapons/stringmaster"
 import { variation } from "#/data/weapons/variation"
@@ -435,7 +436,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
       id: "char.a.tied-to-source",
       name: "Tied",
       trigger: { event: "skillCast", characterId: 1 },
-      target: { kind: "team" },
+      target: { kind: "global" },
       duration: { kind: "frames", v: 1000 },
       expiresOnSourceSwapOut: true,
       effects: [
@@ -472,7 +473,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
     const expired = swap.lifecycleEvents.filter(
       (e) => e.kind === "buffExpired" && e.buffId === "char.a.tied-to-source",
     )
-    expect(expired.length).toBe(2)
+    expect(expired.length).toBe(1)
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
     expect(engine.resolveStats(2).atkPct).toBeCloseTo(BASE_ATK_PCT)
   })
@@ -1954,7 +1955,7 @@ describe("BuffEngine — perSource (#61)", () => {
       actor: "any",
       skillCategory: "Resonance Skill",
     },
-    target: { kind: "team" },
+    target: { kind: "global" },
     duration: { kind: "frames", v: 300 },
     perSource,
     effects: [
@@ -3166,10 +3167,7 @@ describe("Global buffs — Binary Butterfly", () => {
   const teammateId = 2
 
   it("grants team-wide allDeepen when Shorekeeper casts Outro Skill", () => {
-    testCharacters = [
-      baseChar({ id: shorekeeperId }),
-      baseChar({ id: teammateId }),
-    ]
+    testCharacters = [shorekeeper, baseChar({ id: teammateId })]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: [shorekeeperId, teammateId, null],
@@ -3192,7 +3190,7 @@ describe("Global buffs — Binary Butterfly", () => {
         "buffId" in e &&
         e.buffId === "char.shorekeeper.outro.binary-butterfly",
     )
-    expect(applied).toHaveLength(2)
+    expect(applied).toHaveLength(1)
 
     expect(engine.resolveStats(shorekeeperId).allDeepen).toBeCloseTo(0.15)
     expect(engine.resolveStats(teammateId).allDeepen).toBeCloseTo(0.15)
@@ -3226,7 +3224,6 @@ describe("Global buffs — Binary Butterfly", () => {
 describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
   const shorekeeperId = 1505
   const teammateId = 2
-  const shorekeeper = baseChar({ id: shorekeeperId })
   const teammate = baseChar({ id: teammateId })
 
   const setup = () => {
@@ -3265,8 +3262,8 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       "char.shorekeeper.lib.inner-stellarealm",
     )
 
-    // Shorekeeper's energyRechargePct uses base ER (breaks self-cycle via guard)
-    const erPct = BASE_ER
+    // Self Gravitation fires with Liberation and adds +10% ER to Shorekeeper
+    const erPct = BASE_ER + 0.1
     // Inner Stellarealm adds critRate = min((1 + erPct) / 0.002 * 0.0001, 0.125)
     const expectedCritRateBonus = Math.min(
       ((1 + erPct) / 0.002) * 0.0001,
@@ -3308,7 +3305,8 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       "char.shorekeeper.lib.supernal-stellarealm",
     )
 
-    const erPct = BASE_ER
+    // Self Gravitation fires with Liberation and adds +10% ER to Shorekeeper
+    const erPct = BASE_ER + 0.1
     const expectedCritDmgBonus = Math.min(((1 + erPct) / 0.001) * 0.0001, 0.25)
     expect(engine.resolveStats(teammateId).critDmg).toBeCloseTo(
       preCritDmg + expectedCritDmgBonus,
