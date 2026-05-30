@@ -2,6 +2,18 @@
 
 Per-decision history. Newest first.
 
+## 2026-05-30 — StatTable stays nested; 1D flatten deferred
+
+Considered flattening `StatTable` from its current heterogeneous shape (scalar `number` fields + five nested `Record<Element|SkillType, number>` groups) into a uniform `Record<StatKey, number>` with template-literal composite keys. Rejected for now: the flatten does not eliminate special-casing, it relocates it — nested keeps reads clean (`snap.elementBonus[el]`) at the cost of branchy writes/clone; 1D cleans writes/clone/serialization at the cost of construction loops and key-construction at every read. The one capability the flatten uniquely unlocks (`scaledByStat` over a nested key) has zero current usage. A spelled-out flat enum was also rejected: not indexable by a runtime `Element`/`SkillType` without a cast or lookup map. Cheap interim win kept instead: extract the curated scalar union from `StatPath` into `ScalarStatKey` and reuse it in `StatPath`, `ValueExpr.scaledByStat.stat`, and `getCharStat`, removing the `buff-engine.ts` double-cast.
+
+Pages touched: ADR-0026 (new), index.md (Decisions pointer).
+
+## 2026-05-30 — Global buffs as single shared instances
+
+Replaced the per-target `team` target kind (which fanned a buff out to N per-member instances) with `target: { kind: "global" }` — one shared Buff Instance every character reads. Soundness rests on a data restriction enforced by `validateBuffDef`: global effect values must be target-independent (`const`, or `scaledByStat` pinned to an explicit `characterId`) and conditions may reference only the source (`on:"source"`); reader-referencing conditions are validate-rejected. Storage is a tagged subset of `InstanceStore.active` (`global: true` + `GLOBAL` sentinel target), not a standalone store — expiry, consume, stacking, swap-out all work unchanged. Reverses the prior "engine owns no globals" invariant. The 6 Stellarealm/Butterfly defs fold into `shorekeeper.ts`; `global-buffs.ts`, the bootstrap loop, and the `owner` field are deleted. Ownerless level buffs (permanent global instances seeded at bootstrap) are envisioned but not built.
+
+Pages touched: ADR-0025 (new), CONTEXT.md (Global Buff Store, global target kind).
+
 ## 2026-05-26 — StageId with SkillCategory lineage and three-layer type model
 
 Reworked stageId to `char.<name>.<skill-category>.<skill-name>.<stage-name>::<skill-type>.<hit-index>`. Introduced three-layer type model: `SkillGrouping` (UI only, on `Skill.type`), `SkillCategory` (player input/action, mandatory per-stage, in stageId lineage + `EngineEvent`), `SkillType` (damage calc, from `damage[0].type`, after `::`). Key correction: lineage encodes `SkillCategory` (trigger matching axis), not `SkillGrouping` (UI concern). `SkillCategory` is mandatory on every stage — no derivation fallback. `skillType` dropped from all `EngineEvent` variants; `skillCategory` carried as explicit field. `"Forte Circuit"` removed from `SkillType`. Supersedes ADR-0023, ADR-0012.
