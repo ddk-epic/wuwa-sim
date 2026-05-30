@@ -9,17 +9,9 @@ import {
 import type { Slots } from "#/types/loadout"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
-import {
-  useFallFrames,
-  useReactionDelay,
-  useSettingsActions,
-  useSwapFrames,
-  useVariantFloor,
-} from "#/hooks/useSettingsContext"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
 import { ImportExportModal } from "./ImportExportModal"
-import { SettingsModal } from "./SettingsModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 interface HeaderProps {
@@ -27,8 +19,11 @@ interface HeaderProps {
   onResetTimeline: () => void
   onSimulate: () => void
   onOpenSimulationLog: () => void
+  onOpenSettings: () => void
   timelineEmpty: boolean
   logEmpty: boolean
+  autoRun: boolean
+  needsRun: boolean
   exportString: string
   onImport: (value: string) => void
   importError: string | null
@@ -39,21 +34,20 @@ export function Header({
   onResetTimeline,
   onSimulate,
   onOpenSimulationLog,
+  onOpenSettings,
   timelineEmpty,
   logEmpty,
+  autoRun,
+  needsRun,
   exportString,
   onImport,
   importError,
 }: HeaderProps) {
   const { slots } = useTeamContext()
-  const reactionDelay = useReactionDelay()
-  const swapFrames = useSwapFrames()
-  const variantFloor = useVariantFloor()
-  const fallFrames = useFallFrames()
-  const { setSettings } = useSettingsActions()
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [importExportOpen, setImportExportOpen] = useState(false)
+
+  const simulateDisabled = autoRun ? !needsRun : timelineEmpty
 
   return (
     <div className="h-12 flex items-stretch shrink-0">
@@ -71,7 +65,7 @@ export function Header({
         <div className="ml-auto flex items-center gap-2">
           <button
             className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
-            disabled={timelineEmpty}
+            disabled={simulateDisabled}
             onClick={onSimulate}
             aria-label="Run simulate"
           >
@@ -111,7 +105,7 @@ export function Header({
         <div className="ml-auto" />
         <button
           className="flex items-center gap-1 p-1.25 font-mono text-sm rounded-sm text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
-          onClick={() => setSettingsOpen(true)}
+          onClick={onOpenSettings}
           aria-label="Open settings"
         >
           <SettingsIcon className="w-5 h-5" />
@@ -133,21 +127,6 @@ export function Header({
           onImport={onImport}
           importError={importError}
           onClose={() => setImportExportOpen(false)}
-        />
-      )}
-      {settingsOpen && (
-        <SettingsModal
-          reactionDelay={reactionDelay}
-          swapFrames={swapFrames}
-          variantFloor={variantFloor}
-          fallFrames={fallFrames}
-          onReactionDelayChange={(value) =>
-            setSettings({ reactionDelay: value })
-          }
-          onSwapFramesChange={(value) => setSettings({ swapFrames: value })}
-          onVariantFloorChange={(value) => setSettings({ variantFloor: value })}
-          onFallFramesChange={(value) => setSettings({ fallFrames: value })}
-          onClose={() => setSettingsOpen(false)}
         />
       )}
     </div>

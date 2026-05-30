@@ -5,10 +5,12 @@ interface SettingsModalProps {
   swapFrames: number
   variantFloor: number
   fallFrames: number
+  autoRun: boolean
   onReactionDelayChange: (value: number) => void
   onSwapFramesChange: (value: number) => void
   onVariantFloorChange: (value: number) => void
   onFallFramesChange: (value: number) => void
+  onAutoRunChange: (value: boolean) => void
   onClose: () => void
 }
 
@@ -17,10 +19,12 @@ export function SettingsModal({
   swapFrames,
   variantFloor,
   fallFrames,
+  autoRun,
   onReactionDelayChange,
   onSwapFramesChange,
   onVariantFloorChange,
   onFallFramesChange,
+  onAutoRunChange,
   onClose,
 }: SettingsModalProps) {
   return (
@@ -67,7 +71,7 @@ export function SettingsModal({
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
       </div>
-      <div className="grid grid-cols-2 gap-1 mb-6">
+      <div className="grid grid-cols-2 gap-1 mb-4">
         <label className="text-sm text-gray-400" htmlFor="fall-frames">
           Fall Frames (frames)
         </label>
@@ -80,6 +84,38 @@ export function SettingsModal({
           onChange={(e) => onFallFramesChange(Number(e.target.value))}
           className="w-full px-3 py-1.5 rounded bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-gray-500"
         />
+      </div>
+      <div className="border-t border-border my-4" />
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-400">Run mode</span>
+        <div
+          className="flex rounded-sm border border-gray-700 overflow-hidden font-mono text-sm"
+          role="group"
+          aria-label="Run mode"
+        >
+          <button
+            className={`px-3 py-1 transition-colors ${
+              !autoRun
+                ? "bg-gray-700 text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => onAutoRunChange(false)}
+            aria-pressed={!autoRun}
+          >
+            Manual
+          </button>
+          <button
+            className={`px-3 py-1 transition-colors ${
+              autoRun
+                ? "bg-gray-700 text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => onAutoRunChange(true)}
+            aria-pressed={autoRun}
+          >
+            Auto
+          </button>
+        </div>
       </div>
     </Modal>
   )
