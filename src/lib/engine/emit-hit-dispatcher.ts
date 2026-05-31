@@ -109,8 +109,6 @@ export class EmitHitDispatcher {
     }
 
     const stats = host.resolveStats(input.sourceCharacterId)
-    const character = getCharacterById(input.sourceCharacterId)
-    const skillType = input.effect.skillType ?? input.effect.damage.type
 
     if (input.effect.damage.energy) {
       host.applyResourceDelta(
@@ -136,74 +134,93 @@ export class EmitHitDispatcher {
     }
     const post = host.getResource(input.sourceCharacterId)
 
-    const isCoord = input.effect.kind === "coordHit"
+    return buildSyntheticEvent(input, ctx.frame, stats, post, host)
+  }
+}
 
-    if (input.effect.damage.dmgType === "Heal") {
-      const amount = computeHealing(
-        {
-          multiplier: input.effect.damage.value,
-          scalingStat: input.effect.damage.scalingStat,
-          flat: input.effect.damage.flat,
-        },
-        stats,
-      )
-      return {
-        kind: "sustain",
-        sub: "heal",
-        synthetic: true,
-        ...(isCoord && { coord: true as const }),
-        sourceBuffId: input.def.id,
-        characterId: input.sourceCharacterId,
-        skillType,
-        skillName: input.def.name,
-        frame: ctx.frame,
-        cumulativeEnergy: post.energy,
-        cumulativeConcerto: post.concerto,
-        amount,
-        targets: host.resolveHealTargets(
-          input.effect.damage.target ?? "self",
-          input.sourceCharacterId,
-        ),
-        scalingStat: input.effect.damage.scalingStat,
-        multiplier: input.effect.damage.value,
-        flat: input.effect.damage.flat,
-        statsSnapshot: cloneStats(stats),
-        activeBuffs: host.activeBuffs(input.sourceCharacterId),
-        passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
-      }
-    }
+/**
+ * Construct the synthetic Hit/Sustain event from already-resolved `stats` and
+ * post-delta `post` resources. Frame-sensitive *only* through its inputs — the
+ * caller decides at which frame to read `stats`/`post`, so the same builder
+ * serves both eager resolution (dispatcher, at the trigger frame) and the
+ * deferred path (resolution at the synthetic's landing frame, ADR-0028).
+ */
+export function buildSyntheticEvent(
+  input: EmitHitInput,
+  frame: number,
+  stats: StatTable,
+  post: ResourceState,
+  host: EmitHitHost,
+): HitEvent | SustainEvent {
+  const character = getCharacterById(input.sourceCharacterId)
+  const skillType = input.effect.skillType ?? input.effect.damage.type
+  const isCoord = input.effect.kind === "coordHit"
 
-    const element = input.effect.element ?? character?.element ?? "Physical"
-    const damage = computeDamage(
+  if (input.effect.damage.dmgType === "Heal") {
+    const amount = computeHealing(
       {
         multiplier: input.effect.damage.value,
-        element,
-        skillType,
-        dmgType: input.effect.damage.dmgType,
         scalingStat: input.effect.damage.scalingStat,
+        flat: input.effect.damage.flat,
       },
       stats,
     )
-
     return {
-      kind: "hit",
+      kind: "sustain",
+      sub: "heal",
       synthetic: true,
       ...(isCoord && { coord: true as const }),
       sourceBuffId: input.def.id,
       characterId: input.sourceCharacterId,
       skillType,
       skillName: input.def.name,
-      frame: ctx.frame,
+      frame,
       cumulativeEnergy: post.energy,
       cumulativeConcerto: post.concerto,
-      damage,
-      element,
-      dmgType: input.effect.damage.dmgType,
+      amount,
+      targets: host.resolveHealTargets(
+        input.effect.damage.target ?? "self",
+        input.sourceCharacterId,
+      ),
       scalingStat: input.effect.damage.scalingStat,
       multiplier: input.effect.damage.value,
+      flat: input.effect.damage.flat,
       statsSnapshot: cloneStats(stats),
       activeBuffs: host.activeBuffs(input.sourceCharacterId),
       passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
     }
+  }
+
+  const element = input.effect.element ?? character?.element ?? "Physical"
+  const damage = computeDamage(
+    {
+      multiplier: input.effect.damage.value,
+      element,
+      skillType,
+      dmgType: input.effect.damage.dmgType,
+      scalingStat: input.effect.damage.scalingStat,
+    },
+    stats,
+  )
+
+  return {
+    kind: "hit",
+    synthetic: true,
+    ...(isCoord && { coord: true as const }),
+    sourceBuffId: input.def.id,
+    characterId: input.sourceCharacterId,
+    skillType,
+    skillName: input.def.name,
+    frame,
+    cumulativeEnergy: post.energy,
+    cumulativeConcerto: post.concerto,
+    damage,
+    element,
+    dmgType: input.effect.damage.dmgType,
+    scalingStat: input.effect.damage.scalingStat,
+    multiplier: input.effect.damage.value,
+    statsSnapshot: cloneStats(stats),
+    activeBuffs: host.activeBuffs(input.sourceCharacterId),
+    passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
   }
 }
