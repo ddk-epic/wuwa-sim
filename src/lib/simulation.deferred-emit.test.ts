@@ -14,12 +14,12 @@ import { runSimulation } from "./simulation"
 /**
  * Honor-`actionFrame` (the β flip) for deferred emitHits (ADR-0028).
  *
- * With `honorEmitOffset` on, an `emitHit` whose `damage.actionFrame > 0` lands
- * at `triggerFrame + actionFrame` and interleaves into the log in frame order —
- * after its trigger but before a later authored entry it now precedes. With the
- * flag off (default, exercised everywhere else) it stays glued to the trigger
- * frame. Both paths are asserted here so the behavior change is pinned to the
- * flag.
+ * With `honorEmitOffset` on (the default after the flip), an `emitHit` whose
+ * `damage.actionFrame > 0` lands at `triggerFrame + actionFrame` and interleaves
+ * into the log in frame order — after its trigger but before a later authored
+ * entry it now precedes. Passing `honorEmitOffset: false` restores the legacy
+ * land-at-trigger-frame behavior. Both paths are asserted here so the behavior
+ * change is pinned to the flag.
  */
 
 const dmgHit = (
