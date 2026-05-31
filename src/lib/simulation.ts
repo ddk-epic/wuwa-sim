@@ -43,10 +43,9 @@ export function runSimulation(
     state = arrival.stateAfter
     for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
     if (arrival.pendingFootingToFire) {
-      engine.footing.snapshotTrailing(
-        entry.characterId,
-        arrival.pendingFootingToFire.exitFooting,
-      )
+      // A swap-tail launch/land survived re-entry; the owner is on-field now,
+      // so the deferred commit becomes team footing directly.
+      engine.footing.commit(arrival.pendingFootingToFire.exitFooting)
     }
     frame += arrival.padFrames
     const animFrames = resolved?.stage.animationFrames ?? 0
@@ -68,11 +67,7 @@ export function runSimulation(
       fallFrames,
       swapBack,
     )
-    engine.footing.applyStageFooting(
-      entry.characterId,
-      resolved.stage.footing,
-      stageDuration,
-    )
+    engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
     const sched = TrailingWindow.scheduleStage(state, {
       entry,
       resolved,
@@ -86,8 +81,6 @@ export function runSimulation(
     frame = nextFrame
   }
 
-  for (const charId of state.keys())
-    engine.footing.clearTrailingSnapshot(charId)
   for (const h of TrailingWindow.drainAll(state))
     processHit(h, engine, log, slots)
 
@@ -125,7 +118,7 @@ function processEntry(
     variantFloor,
   )
 
-  const effectiveFooting = engine.footing.promoteOnSwapIn(entry.characterId)
+  const effectiveFooting = engine.footing.current()
   const fall = computeFall(effectiveFooting, resolved.stage.footing, fallFrames)
 
   const effectiveStart = stageStartFrame + fall + swapBack

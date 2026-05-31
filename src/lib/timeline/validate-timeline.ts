@@ -155,9 +155,11 @@ export function validateTimeline(
     }
   }
 
-  // Footing-walk pass: team-global cursor + per-character snapshots (ADR-0022)
+  // Footing-walk pass: team-global cursor + per-character swap-deferred footing.
+  // Statically mirrors the Trailing Window's pendingFooting: a swap stage's
+  // launch/land exit is deferred until the same character re-enters (ADR-0022).
   let footingCursor: "ground" | "air" = "ground"
-  const footingSnapshots = new Map<number, "ground" | "air">()
+  const deferredFooting = new Map<number, "ground" | "air">()
   for (const entry of entries) {
     if (invalidRowIds.has(entry.id)) {
       // Skip footing check for already-invalid entries to avoid noise
@@ -167,12 +169,12 @@ export function validateTimeline(
     const footing = resolved?.stage.footing
     if (!footing) continue
 
-    const snap = footingSnapshots.get(entry.characterId) ?? null
-    const effectiveFooting = snap ?? footingCursor
-    if (snap !== null) {
-      footingSnapshots.delete(entry.characterId)
-      // On-field invariant: promote team cursor to snapshot value on re-entry
-      footingCursor = snap
+    const deferred = deferredFooting.get(entry.characterId) ?? null
+    const effectiveFooting = deferred ?? footingCursor
+    if (deferred !== null) {
+      deferredFooting.delete(entry.characterId)
+      // On-field invariant: the deferred exit commits to team footing on re-entry
+      footingCursor = deferred
     }
 
     let footingError: string | null = null
@@ -199,26 +201,26 @@ export function validateTimeline(
       resolved.stage,
     )
 
-    // Swap: snapshot = transition target (trailing window fires it later)
+    // Swap: exit footing is deferred to the trailing window, applied on re-entry
     if (entry.variantKind === "swap") {
-      footingSnapshots.set(entry.characterId, footingExitState(footing))
+      deferredFooting.set(entry.characterId, footingExitState(footing))
     }
   }
 
-  // Footing-walk pass 2: air→ground soft warning (mirrors snapshot logic)
+  // Footing-walk pass 2: air→ground soft warning (mirrors the deferral logic)
   let footingCursorForWarn: "ground" | "air" = "ground"
-  const footingSnapshotsForWarn = new Map<number, "ground" | "air">()
+  const deferredFootingForWarn = new Map<number, "ground" | "air">()
   for (const entry of entries) {
     if (invalidRowIds.has(entry.id)) continue
     const resolved = findStageByEntry(entry, slots, loadouts)
     const footing = resolved?.stage.footing
     if (footing) {
-      const snap = footingSnapshotsForWarn.get(entry.characterId) ?? null
-      const effectiveFooting = snap ?? footingCursorForWarn
-      if (snap !== null) {
-        footingSnapshotsForWarn.delete(entry.characterId)
-        // On-field invariant: promote team cursor to snapshot value on re-entry
-        footingCursorForWarn = snap
+      const deferred = deferredFootingForWarn.get(entry.characterId) ?? null
+      const effectiveFooting = deferred ?? footingCursorForWarn
+      if (deferred !== null) {
+        deferredFootingForWarn.delete(entry.characterId)
+        // On-field invariant: the deferred exit commits to team footing on re-entry
+        footingCursorForWarn = deferred
       }
 
       if (effectiveFooting === "air" && footing === "ground") {
@@ -235,10 +237,7 @@ export function validateTimeline(
         resolved.stage,
       )
       if (entry.variantKind === "swap") {
-        footingSnapshotsForWarn.set(
-          entry.characterId,
-          footingExitState(footing),
-        )
+        deferredFootingForWarn.set(entry.characterId, footingExitState(footing))
       }
     }
   }

@@ -8,36 +8,24 @@ export class FootingModule {
     this.tracker.clear()
   }
 
-  // (1) Off-field trailing commit: record that `characterId` will carry `exitFooting` into the next swap-in.
-  snapshotTrailing(characterId: number, exitFooting: "ground" | "air"): void {
-    this.tracker.snapshotFor(characterId, exitFooting)
-  }
-
-  // (2) Swap-in promotion: consume any pending snapshot, apply it to team footing, return effective footing.
-  promoteOnSwapIn(characterId: number): "ground" | "air" {
-    const snap = this.tracker.consumeSnapshot(characterId)
-    if (snap !== null) this.tracker.setTeam(snap)
+  // Current team footing — the on-field character's vertical state.
+  current(): "ground" | "air" {
     return this.tracker.current()
   }
 
-  // (3) On-field stage commit: if a launch/land event lands within stageDuration, update team footing and discard any pending snapshot.
-  applyStageFooting(
-    characterId: number,
-    footing: Footing | undefined,
-    stageDuration: number,
-  ): void {
+  // Trailing-window deferred commit: a launch/land that fell in a swap tail and
+  // survived re-entry. Called by the Trailing Window when the owner is on-field.
+  commit(exitFooting: "ground" | "air"): void {
+    this.tracker.setTeam(exitFooting)
+  }
+
+  // On-field stage commit: if a launch/land event lands within stageDuration, update team footing.
+  applyStageFooting(footing: Footing | undefined, stageDuration: number): void {
     if (!footing || typeof footing !== "object") return
     if ("launch" in footing && footing.launch <= stageDuration) {
       this.tracker.setTeam("air")
-      this.tracker.clearSnapshot(characterId)
     } else if ("land" in footing && footing.land <= stageDuration) {
       this.tracker.setTeam("ground")
-      this.tracker.clearSnapshot(characterId)
     }
-  }
-
-  // (4) End-of-timeline cleanup: discard a pending snapshot that will never be promoted.
-  clearTrailingSnapshot(characterId: number): void {
-    this.tracker.clearSnapshot(characterId)
   }
 }

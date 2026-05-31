@@ -38,34 +38,3 @@ describe("FootingTracker", () => {
     expect(t.current()).toBe("ground")
   })
 })
-
-describe("FootingTracker — snapshot (ADR-0022 slice 3)", () => {
-  it("snapshotFor then consumeSnapshot returns stored footing and clears it", () => {
-    const t = new FootingTracker()
-    t.snapshotFor(1, "air")
-    expect(t.consumeSnapshot(1)).toBe("air")
-    expect(t.consumeSnapshot(1)).toBeNull()
-  })
-
-  it("clearSnapshot removes the snapshot without returning it", () => {
-    const t = new FootingTracker()
-    t.snapshotFor(1, "air")
-    t.clearSnapshot(1)
-    expect(t.consumeSnapshot(1)).toBeNull()
-  })
-
-  it("snapshots are per-character and do not interfere", () => {
-    const t = new FootingTracker()
-    t.snapshotFor(1, "air")
-    t.snapshotFor(2, "ground")
-    expect(t.consumeSnapshot(1)).toBe("air")
-    expect(t.consumeSnapshot(2)).toBe("ground")
-  })
-
-  it("clear() also clears all snapshots", () => {
-    const t = new FootingTracker()
-    t.snapshotFor(1, "air")
-    t.clear()
-    expect(t.consumeSnapshot(1)).toBeNull()
-  })
-})
