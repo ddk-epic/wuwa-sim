@@ -17,6 +17,34 @@ import type { ResolvedStage } from "./stage"
 import * as TrailingWindow from "./trailing-window"
 import type { TrailingHit } from "./trailing-window"
 
+/**
+ * A unit of work drained by the simulation worklist. Today the only kind is an
+ * authored Timeline Entry; synthetic and trailing hits join as new kinds in a
+ * later step (ADR-0028). Authored entries are a sequential FIFO — an entry's
+ * landing frame is a running cursor computed *during* processing, not known up
+ * front — so they are never frame-keyed.
+ */
+type WorkItem = { kind: "entry"; entry: TimelineEntry }
+
+/** The running position of the simulation: clock frame + trailing-window state. */
+interface SimCursor {
+  frame: number
+  state: TrailingWindow.TrailingWindowState
+}
+
+/** Everything an entry/drain step needs, threaded through the worklist. */
+interface SimContext {
+  engine: BuffEngine
+  log: SimulationLogEntry[]
+  slots: Slots
+  loadouts: SlotLoadout[]
+  reactionDelay: number
+  swapFrames: number
+  variantFloor: number
+  fallFrames: number
+  cursor: SimCursor
+}
+
 export function runSimulation(
   entries: TimelineEntry[],
   slots: Slots,
@@ -25,66 +53,107 @@ export function runSimulation(
   swapFrames: number = 6,
   variantFloor: number = 0,
   fallFrames: number = 21,
+  opts: { useWorklist?: boolean } = {},
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
-  let frame = 0
-  let state = TrailingWindow.empty()
 
-  for (const entry of entries) {
-    const resolved = findStageByEntry(entry, slots, loadouts)
-    const incomingSkillType = resolved?.skillType ?? "Basic Attack"
-    const arrival = TrailingWindow.onEntryArrival(state, {
-      characterId: entry.characterId,
-      skillType: incomingSkillType,
-      frame,
-    })
-    state = arrival.stateAfter
-    for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
-    if (arrival.pendingFootingToFire) {
-      // A swap-tail launch/land survived re-entry; the owner is on-field now,
-      // so the deferred commit becomes team footing directly.
-      engine.footing.commit(arrival.pendingFootingToFire.exitFooting)
-    }
-    frame += arrival.padFrames
-    const animFrames = resolved?.stage.animationFrames ?? 0
-    if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
-    const swapBack = engine.computeSwapBack(entry.characterId, frame)
-
-    if (!resolved) continue
-
-    const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
-      entry,
-      frame,
-      resolved,
-      engine,
-      log,
-      reactionDelay,
-      swapFrames,
-      arrival.padFrames,
-      variantFloor,
-      fallFrames,
-      swapBack,
-    )
-    engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
-    const sched = TrailingWindow.scheduleStage(state, {
-      entry,
-      resolved,
-      stageStartFrame,
-      hits: allHits,
-      variantKind: entry.variantKind,
-      stageDuration,
-    })
-    state = sched.stateAfter
-    for (const h of sched.immediate) processHit(h, engine, log, slots)
-    frame = nextFrame
+  const ctx: SimContext = {
+    engine,
+    log,
+    slots,
+    loadouts,
+    reactionDelay,
+    swapFrames,
+    variantFloor,
+    fallFrames,
+    cursor: { frame: 0, state: TrailingWindow.empty() },
   }
 
-  for (const h of TrailingWindow.drainAll(state))
-    processHit(h, engine, log, slots)
+  // α-oracle seam (ADR-0028): the worklist path drains authored entries in
+  // FIFO order through the *same* per-entry step as the plain walk, so its log
+  // is byte-identical. Synthetic/trailing emission moves onto it in later steps.
+  if (opts.useWorklist) {
+    drainWorklist(
+      entries.map((entry): WorkItem => ({ kind: "entry", entry })),
+      ctx,
+    )
+  } else {
+    for (const entry of entries) processAuthoredEntry(entry, ctx)
+  }
+
+  for (const h of TrailingWindow.drainAll(ctx.cursor.state))
+    processHit(h, ctx.engine, ctx.log, ctx.slots)
 
   return log
+}
+
+/**
+ * Drain the worklist in order. The array iterator re-reads `length` each step,
+ * so items a later step enqueues mid-drain are picked up in the same pass.
+ */
+function drainWorklist(queue: WorkItem[], ctx: SimContext): void {
+  for (const item of queue) processWorkItem(item, ctx)
+}
+
+/**
+ * Dispatch one work item by kind. Only authored entries exist today (ADR-0028
+ * step 2); synthetic/trailing kinds reintroduce a `switch` here when added.
+ */
+function processWorkItem(item: WorkItem, ctx: SimContext): void {
+  processAuthoredEntry(item.entry, ctx)
+}
+
+/** Process one authored Timeline Entry, advancing the cursor in place. */
+function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
+  const { engine, log, slots, loadouts, cursor } = ctx
+  const resolved = findStageByEntry(entry, slots, loadouts)
+  const incomingSkillType = resolved?.skillType ?? "Basic Attack"
+  const arrival = TrailingWindow.onEntryArrival(cursor.state, {
+    characterId: entry.characterId,
+    skillType: incomingSkillType,
+    frame: cursor.frame,
+  })
+  cursor.state = arrival.stateAfter
+  for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
+  if (arrival.pendingFootingToFire) {
+    // A swap-tail launch/land survived re-entry; the owner is on-field now,
+    // so the deferred commit becomes team footing directly.
+    engine.footing.commit(arrival.pendingFootingToFire.exitFooting)
+  }
+  cursor.frame += arrival.padFrames
+  const animFrames = resolved?.stage.animationFrames ?? 0
+  if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
+  const swapBack = engine.computeSwapBack(entry.characterId, cursor.frame)
+
+  if (!resolved) return
+
+  const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
+    entry,
+    cursor.frame,
+    resolved,
+    engine,
+    log,
+    ctx.reactionDelay,
+    ctx.swapFrames,
+    arrival.padFrames,
+    ctx.variantFloor,
+    ctx.fallFrames,
+    swapBack,
+  )
+  engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
+  const sched = TrailingWindow.scheduleStage(cursor.state, {
+    entry,
+    resolved,
+    stageStartFrame,
+    hits: allHits,
+    variantKind: entry.variantKind,
+    stageDuration,
+  })
+  cursor.state = sched.stateAfter
+  for (const h of sched.immediate) processHit(h, engine, log, slots)
+  cursor.frame = nextFrame
 }
 
 function processEntry(
