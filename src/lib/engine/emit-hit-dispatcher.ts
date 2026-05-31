@@ -42,6 +42,18 @@ export interface EmitHitInput {
   sourceCharacterId: number
 }
 
+/**
+ * An emit whose decision (ICD/chain) was taken at the trigger frame but whose
+ * damage resolves later, at `landingFrame` (= trigger + `actionFrame`). Surfaced
+ * by the engine so the simulation can schedule and resolve it in frame order
+ * (ADR-0028). `depth` carries the chain depth for the resolution's own chain.
+ */
+export interface DeferredEmit {
+  input: EmitHitInput
+  landingFrame: number
+  depth: number
+}
+
 export interface EmitHitHost {
   resolveStats: (characterId: number) => StatTable
   applyResourceDelta: (
@@ -86,17 +98,28 @@ export class EmitHitDispatcher {
     out: BuffEvent[],
     hitsOut: (HitEvent | SustainEvent)[],
   ): HitEvent | SustainEvent | null {
+    if (!this.tryEmit(input, ctx)) return null
+    return this.resolve(input, ctx.frame, ctx.depth, host, out, hitsOut)
+  }
+
+  /**
+   * The *emit decision*, taken at the trigger frame: ICD interval + chain depth
+   * cap, recording the ICD on success. Returns false when the emit is blocked.
+   * Split from {@link resolve} so a deferred emit can take its decision now and
+   * resolve its damage later, at the landing frame (ADR-0028).
+   */
+  tryEmit(input: EmitHitInput, ctx: EmitHitDispatchContext): boolean {
     const perEffect = this.icd.get(input.buffInstanceKey)
     const last = perEffect?.get(input.effectIndex)
     if (last !== undefined && ctx.frame - last < input.effect.icdFrames) {
-      return null
+      return false
     }
 
     if (ctx.depth + 1 > this.chainDepthCap) {
       console.warn(
         `[BuffEngine] emitHit chain depth exceeded ${this.chainDepthCap} (buff: ${input.def.id}, source: ${input.sourceCharacterId}); stopping chain`,
       )
-      return null
+      return false
     }
 
     if (perEffect) {
@@ -107,7 +130,23 @@ export class EmitHitDispatcher {
         new Map([[input.effectIndex, ctx.frame]]),
       )
     }
+    return true
+  }
 
+  /**
+   * Resolve an already-decided emit into its synthetic event at `frame`: apply
+   * its resource gains and snapshot via {@link buildSyntheticEvent}. The caller
+   * supplies the frame — the trigger frame for an immediate emit, the landing
+   * frame for a deferred one — and must have advanced engine state to it first.
+   */
+  resolve(
+    input: EmitHitInput,
+    frame: number,
+    depth: number,
+    host: EmitHitHost,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+  ): HitEvent | SustainEvent {
     const stats = host.resolveStats(input.sourceCharacterId)
 
     if (input.effect.damage.energy) {
@@ -115,10 +154,10 @@ export class EmitHitDispatcher {
         input.sourceCharacterId,
         "energy",
         input.effect.damage.energy * (1 + stats.energyRechargePct),
-        ctx.frame,
+        frame,
         out,
         hitsOut,
-        ctx.depth,
+        depth,
       )
     }
     if (input.effect.damage.concerto) {
@@ -126,15 +165,15 @@ export class EmitHitDispatcher {
         input.sourceCharacterId,
         "concerto",
         input.effect.damage.concerto,
-        ctx.frame,
+        frame,
         out,
         hitsOut,
-        ctx.depth,
+        depth,
       )
     }
     const post = host.getResource(input.sourceCharacterId)
 
-    return buildSyntheticEvent(input, ctx.frame, stats, post, host)
+    return buildSyntheticEvent(input, frame, stats, post, host)
   }
 }
 

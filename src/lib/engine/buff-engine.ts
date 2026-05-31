@@ -18,7 +18,7 @@ import type {
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
-import type { EmitHitHost } from "./emit-hit-dispatcher"
+import type { DeferredEmit, EmitHitHost } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "../engine-bootstrap"
 import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
@@ -45,6 +45,7 @@ export interface ResolvedHit {
 export interface HitDispatch {
   lifecycleEvents: BuffEvent[]
   syntheticEvents: (HitEvent | SustainEvent)[]
+  deferredEmits: DeferredEmit[]
   postState: ResourceState
 }
 
@@ -98,6 +99,15 @@ export class BuffEngine {
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
+  /**
+   * When true, an `emitHit` with `actionFrame > 0` defers: its decision is taken
+   * now but its damage resolves at the landing frame (`trigger + actionFrame`),
+   * surfaced as a {@link DeferredEmit}. Off (default) reproduces the legacy
+   * land-at-trigger-frame behavior byte-for-byte (ADR-0028, the "flip").
+   */
+  private honorEmitOffset = false
+  /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
+  private deferredEmits: DeferredEmit[] = []
   private emitHitHost: EmitHitHost = {
     resolveStats: (id) => this.resolveStats(id),
     applyResourceDelta: (id, resource, delta, frame, out, hitsOut, depth) =>
@@ -262,13 +272,20 @@ export class BuffEngine {
     return this.onField.computeSwapBack(characterId, arrivalFrame)
   }
 
+  /** Enable/disable honoring `emitHit.actionFrame` as a landing offset (ADR-0028). */
+  setHonorEmitOffset(value: boolean): void {
+    this.honorEmitOffset = value
+  }
+
   /** Process a triggering event; returns lifecycle events from any apply/refresh. */
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
     syntheticEvents: (HitEvent | SustainEvent)[]
+    deferredEmits: DeferredEmit[]
   } {
     const lifecycleEvents: BuffEvent[] = []
     const syntheticEvents: (HitEvent | SustainEvent)[] = []
+    this.deferredEmits = []
 
     // Implicit swap inference: an authored skillCast by a different character
     // than the current on-field implies swapOut(prev) → swapIn(next).
@@ -296,7 +313,11 @@ export class BuffEngine {
     }
 
     this.dispatchEvent(event, lifecycleEvents, syntheticEvents, 0)
-    return { lifecycleEvents, syntheticEvents }
+    return {
+      lifecycleEvents,
+      syntheticEvents,
+      deferredEmits: this.deferredEmits,
+    }
   }
 
   private dispatchEvent(
@@ -504,22 +525,56 @@ export class BuffEngine {
     hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
-    const hit = this.emitHitDispatcher.dispatch(
-      {
-        buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
-        def,
-        effect,
-        effectIndex,
-        sourceCharacterId,
-      },
-      { frame, depth },
+    const input = {
+      buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
+      def,
+      effect,
+      effectIndex,
+      sourceCharacterId,
+    }
+    // The emit decision (ICD + chain cap) is taken now, at the trigger frame.
+    if (!this.emitHitDispatcher.tryEmit(input, { frame, depth })) return
+
+    const landingFrame = this.honorEmitOffset
+      ? frame + effect.damage.actionFrame
+      : frame
+    if (landingFrame > frame) {
+      // Defer: damage + chain resolve later, at the landing frame, in frame
+      // order against intervening authored entries. The simulation drains these.
+      this.deferredEmits.push({ input, landingFrame, depth })
+      return
+    }
+
+    const hit = this.emitHitDispatcher.resolve(
+      input,
+      frame,
+      depth,
       this.emitHitHost,
       out,
       hitsOut,
     )
-    if (!hit) return
     hitsOut.push(hit)
+    this.fireEmitChain(
+      effect,
+      sourceCharacterId,
+      def.id,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
+  }
 
+  /** Fire the synthetic hit's own `hitLanded`/`healLanded` so source-synthetic buffs chain. */
+  private fireEmitChain(
+    effect: EmitHitEffect,
+    sourceCharacterId: number,
+    sourceBuffId: string,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
     if (effect.damage.dmgType === "Heal") {
       this.dispatchEvent(
         {
@@ -543,13 +598,54 @@ export class BuffEngine {
           skillCategory: skillTypeToCategory(effect.skillType),
           dmgType: effect.damage.dmgType,
           synthetic: true,
-          sourceBuffId: def.id,
+          sourceBuffId,
           frame,
         },
         out,
         hitsOut,
         depth + 1,
       )
+    }
+  }
+
+  /**
+   * Resolve a deferred emit at its landing frame (ADR-0028). The caller must
+   * have advanced engine state to `d.landingFrame` first (e.g. via `resolveHit`)
+   * so the snapshot and resource reads are frame-honest. Returns the synthetic
+   * event plus any lifecycle/synthetic/deferred output its chain produced.
+   */
+  resolveDeferredEmit(d: DeferredEmit): {
+    event: HitEvent | SustainEvent
+    lifecycleEvents: BuffEvent[]
+    syntheticEvents: (HitEvent | SustainEvent)[]
+    deferredEmits: DeferredEmit[]
+  } {
+    const lifecycleEvents: BuffEvent[] = []
+    const syntheticEvents: (HitEvent | SustainEvent)[] = []
+    this.deferredEmits = []
+    const event = this.emitHitDispatcher.resolve(
+      d.input,
+      d.landingFrame,
+      d.depth,
+      this.emitHitHost,
+      lifecycleEvents,
+      syntheticEvents,
+    )
+    // effect is EmitHitEffect on the deferred path (coordHit never defers).
+    this.fireEmitChain(
+      d.input.effect as EmitHitEffect,
+      d.input.sourceCharacterId,
+      d.input.def.id,
+      d.landingFrame,
+      lifecycleEvents,
+      syntheticEvents,
+      d.depth,
+    )
+    return {
+      event,
+      lifecycleEvents,
+      syntheticEvents,
+      deferredEmits: this.deferredEmits,
     }
   }
 
@@ -825,15 +921,17 @@ export class BuffEngine {
    * events, synthetic hits, and the post-hit Resource State for the actor.
    */
   recordHit(event: HitLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticEvents } = this.onEvent(event)
+    const { lifecycleEvents, syntheticEvents, deferredEmits } =
+      this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticEvents, postState }
+    return { lifecycleEvents, syntheticEvents, deferredEmits, postState }
   }
 
   recordHeal(event: HealLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticEvents } = this.onEvent(event)
+    const { lifecycleEvents, syntheticEvents, deferredEmits } =
+      this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticEvents, postState }
+    return { lifecycleEvents, syntheticEvents, deferredEmits, postState }
   }
 }
 

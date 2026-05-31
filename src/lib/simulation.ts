@@ -12,6 +12,7 @@ import { computeDamage } from "./damage/compute-damage"
 import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
+import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 import type { ResolvedStage } from "./stage"
 import * as TrailingWindow from "./trailing-window"
@@ -32,6 +33,13 @@ interface SimCursor {
   state: TrailingWindow.TrailingWindowState
 }
 
+/** A deferred synthetic awaiting resolution at its landing frame (ADR-0028). */
+interface SimDeferred {
+  emit: DeferredEmit
+  /** The authored entry whose hit emitted this synthetic, for log attribution. */
+  sourceEntryId: string
+}
+
 /** Everything an entry/drain step needs, threaded through the worklist. */
 interface SimContext {
   engine: BuffEngine
@@ -43,6 +51,8 @@ interface SimContext {
   variantFloor: number
   fallFrames: number
   cursor: SimCursor
+  /** Frame-keyed pending synthetics; empty unless `honorEmitOffset` is on. */
+  deferred: SimDeferred[]
 }
 
 export function runSimulation(
@@ -53,11 +63,12 @@ export function runSimulation(
   swapFrames: number = 6,
   variantFloor: number = 0,
   fallFrames: number = 21,
-  opts: { useWorklist?: boolean } = {},
+  opts: { useWorklist?: boolean; honorEmitOffset?: boolean } = {},
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
+  engine.setHonorEmitOffset(opts.honorEmitOffset ?? false)
 
   const ctx: SimContext = {
     engine,
@@ -69,6 +80,7 @@ export function runSimulation(
     variantFloor,
     fallFrames,
     cursor: { frame: 0, state: TrailingWindow.empty() },
+    deferred: [],
   }
 
   // α-oracle seam (ADR-0028): the worklist path drains authored entries in
@@ -84,7 +96,9 @@ export function runSimulation(
   }
 
   for (const h of TrailingWindow.drainAll(ctx.cursor.state))
-    processHit(h, ctx.engine, ctx.log, ctx.slots)
+    processHit(h, ctx.engine, ctx.log, ctx.slots, ctx.deferred)
+
+  drainDeferred(ctx, Infinity)
 
   return log
 }
@@ -108,6 +122,9 @@ function processWorkItem(item: WorkItem, ctx: SimContext): void {
 /** Process one authored Timeline Entry, advancing the cursor in place. */
 function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   const { engine, log, slots, loadouts, cursor } = ctx
+  // Resolve any deferred synthetics that land before this entry begins, so they
+  // interleave into the log in frame order ahead of it (no-op when honor off).
+  drainDeferred(ctx, cursor.frame)
   const resolved = findStageByEntry(entry, slots, loadouts)
   const incomingSkillType = resolved?.skillType ?? "Basic Attack"
   const arrival = TrailingWindow.onEntryArrival(cursor.state, {
@@ -116,7 +133,8 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     frame: cursor.frame,
   })
   cursor.state = arrival.stateAfter
-  for (const h of arrival.fireBeforeEntry) processHit(h, engine, log, slots)
+  for (const h of arrival.fireBeforeEntry)
+    processHit(h, engine, log, slots, ctx.deferred)
   if (arrival.pendingFootingToFire) {
     // A swap-tail launch/land survived re-entry; the owner is on-field now,
     // so the deferred commit becomes team footing directly.
@@ -141,6 +159,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     ctx.variantFloor,
     ctx.fallFrames,
     swapBack,
+    ctx.deferred,
   )
   engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
   const sched = TrailingWindow.scheduleStage(cursor.state, {
@@ -152,8 +171,45 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     stageDuration,
   })
   cursor.state = sched.stateAfter
-  for (const h of sched.immediate) processHit(h, engine, log, slots)
+  for (const h of sched.immediate)
+    processHit(h, engine, log, slots, ctx.deferred)
   cursor.frame = nextFrame
+}
+
+/**
+ * Resolve deferred synthetics whose landing frame is ≤ `uptoFrame`, in frame
+ * order, appending each to the log at its landing frame. Chains may enqueue
+ * further deferred synthetics, which are picked up in the same drain. No-op
+ * while `honorEmitOffset` is off (nothing ever defers).
+ */
+function drainDeferred(ctx: SimContext, uptoFrame: number): void {
+  for (;;) {
+    ctx.deferred.sort((a, b) => a.emit.landingFrame - b.emit.landingFrame)
+    if (
+      ctx.deferred.length === 0 ||
+      ctx.deferred[0].emit.landingFrame > uptoFrame
+    )
+      return
+    resolveOneDeferred(ctx.deferred.shift() as SimDeferred, ctx)
+  }
+}
+
+/** Resolve a single deferred synthetic at its landing frame and log it. */
+function resolveOneDeferred(sd: SimDeferred, ctx: SimContext): void {
+  const { engine, log } = ctx
+  // Mirror the authored-hit path: advance to the landing frame so the snapshot
+  // and resource reads are frame-honest, then resolve + run the synthetic chain.
+  pushBuffEvents(log, engine.tickToFrame(sd.emit.landingFrame).lifecycleEvents)
+  const r = engine.resolveDeferredEmit(sd.emit)
+  r.event.sourceEntryId = sd.sourceEntryId
+  log.push(r.event)
+  pushBuffEvents(log, r.lifecycleEvents)
+  for (const synth of r.syntheticEvents) {
+    synth.sourceEntryId = sd.sourceEntryId
+    log.push(synth)
+  }
+  for (const emit of r.deferredEmits)
+    ctx.deferred.push({ emit, sourceEntryId: sd.sourceEntryId })
 }
 
 function processEntry(
@@ -168,6 +224,7 @@ function processEntry(
   variantFloor: number = 0,
   fallFrames: number = 21,
   swapBack: number = 0,
+  deferred: SimDeferred[] = [],
 ): {
   allHits: DamageEntry[]
   stageDuration: number
@@ -195,7 +252,7 @@ function processEntry(
   pushBuffEvents(log, engine.tickToFrame(effectiveStart).lifecycleEvents)
 
   if (resolved.skillType !== "Movement") {
-    fireSkillCast(entry, resolved, engine, log, effectiveStart)
+    fireSkillCast(entry, resolved, engine, log, effectiveStart, deferred)
   }
 
   const actionEvent = buildActionEvent(
@@ -225,6 +282,7 @@ function fireSkillCast(
   engine: BuffEngine,
   log: SimulationLogEntry[],
   frame: number,
+  deferred: SimDeferred[],
 ): void {
   const result = engine.onEvent({
     kind: "skillCast",
@@ -240,6 +298,8 @@ function fireSkillCast(
     synth.sourceEntryId = entry.id
     log.push(synth)
   }
+  for (const emit of result.deferredEmits)
+    deferred.push({ emit, sourceEntryId: entry.id })
 }
 
 function buildActionEvent(
@@ -286,6 +346,7 @@ function processHit(
   engine: BuffEngine,
   log: SimulationLogEntry[],
   slots: Slots,
+  deferred: SimDeferred[],
 ): void {
   const { hit, hitIndex, entry, resolved, hitFrame } = bundle
   const hitResolved = engine.resolveHit(entry.characterId, hitFrame)
@@ -302,6 +363,7 @@ function processHit(
       engine,
       log,
       slots,
+      deferred,
     )
   } else {
     processDamageHit(
@@ -313,6 +375,7 @@ function processHit(
       hitResolved,
       engine,
       log,
+      deferred,
     )
   }
 }
@@ -327,6 +390,7 @@ function processHeal(
   engine: BuffEngine,
   log: SimulationLogEntry[],
   slots: Slots,
+  deferred: SimDeferred[],
 ): void {
   const amount = computeHealing(
     { multiplier: hit.value, scalingStat: hit.scalingStat, flat: hit.flat },
@@ -363,6 +427,8 @@ function processHeal(
     synth.sourceEntryId = entry.id
     log.push(synth)
   }
+  for (const emit of dispatch.deferredEmits)
+    deferred.push({ emit, sourceEntryId: entry.id })
 }
 
 function processDamageHit(
@@ -374,6 +440,7 @@ function processDamageHit(
   hitResolved: ResolvedHit,
   engine: BuffEngine,
   log: SimulationLogEntry[],
+  deferred: SimDeferred[],
 ): void {
   const dmg = computeDamage(
     {
@@ -420,6 +487,8 @@ function processDamageHit(
     synth.sourceEntryId = entry.id
     log.push(synth)
   }
+  for (const emit of dispatch.deferredEmits)
+    deferred.push({ emit, sourceEntryId: entry.id })
 }
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
