@@ -23,14 +23,15 @@ export const encore = {
       name: "Angry Cosmos",
       description:
         "During Cosmos Rave, Encore's All DMG Bonus increases by 10%. (HP > 70% condition omitted — HP tracking not yet implemented.)",
-      trigger: { event: "simStart" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      condition: {
-        kind: "buffActive",
-        buffId: "char.encore.liberation.cosmos-rave",
-        on: "target",
+      trigger: {
+        event: "skillCast",
+        characterId: 1203,
+        stageId:
+          "char.encore.resonance-liberation.cosmos-rave._::resonance-liberation",
       },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 10 },
+      stacking: { max: 1, onRetrigger: "refresh" },
       effects: [
         {
           kind: "stat",
@@ -69,7 +70,7 @@ export const encore = {
         event: "skillCast",
         characterId: 1203,
         stageId:
-          "char.encore.resonance-liberation.cosmos-rave.cosmos-rave::resonance-liberation",
+          "char.encore.resonance-liberation.cosmos-rave._::resonance-liberation",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },

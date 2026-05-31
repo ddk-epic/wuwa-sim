@@ -187,6 +187,8 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **Gotchas**: a `condition` on a permanent simStart buff prevents it from being pre-folded into base stats; it becomes a permanent _instance_. That's fine and expected. The four kinds are `buffActive`, `onField`, `actorIsOnField`, `resourceAtLeast`.
 
+A conditional permanent simStart instance is injected at bootstrap and **never emits `buffApplied`/`buffExpired` log rows** — it contributes whenever its condition passes, but the Simulation Log shows no row marking when it switched on/off (lifecycle rows come only from triggered `applyBuff`). If the buff really models a discrete, time-boxed window (e.g. a 10s liberation window), author it as a triggered buff instead — fire off the event that opens the window with a matching `duration`, and drop the condition — so it produces proper lifecycle rows. Keep this conditional-permanent shape only for genuinely continuous predicates with no natural trigger+duration (e.g. an `actorIsOffField` off-field stat).
+
 ```ts
 {
   id: "char.example.passive.vanguard",
