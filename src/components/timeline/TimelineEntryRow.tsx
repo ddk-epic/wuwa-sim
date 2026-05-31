@@ -1,31 +1,12 @@
 import type { TimelineEntry } from "#/types/timeline"
-import type { VariantKind } from "#/types/character"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
-import type { ActionTimeStage } from "#/lib/stage"
+import { nextVariant } from "#/lib/stage"
 import { formatSkillType } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { renderPoolValue } from "../log/log-cells"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
-
-const VARIANT_ORDER: (VariantKind | undefined)[] = [
-  undefined,
-  "cancel",
-  "instantCancel",
-  "swap",
-]
-
-export function nextVariant(
-  current: VariantKind | undefined,
-  stage: ActionTimeStage,
-): VariantKind | undefined {
-  const defined = VARIANT_ORDER.filter(
-    (v) => v === undefined || stage.variants?.[v] !== undefined,
-  )
-  const idx = defined.indexOf(current)
-  return defined[(idx + 1) % defined.length]
-}
 
 type EntryRenderItem = Extract<RenderItem, { type: "entry" }>
 

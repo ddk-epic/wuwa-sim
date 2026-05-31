@@ -10,9 +10,11 @@ import {
   findStageByEntry,
   makeCharStageId,
   makeEchoStageId,
+  nextVariant,
   resolveStageExecution,
   STAGE_CAST_NAME,
 } from "./stage"
+import type { ActionTimeStage } from "./stage"
 
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
@@ -711,5 +713,48 @@ describe("resolveStageExecution — variantFloor", () => {
     expect(withFloor.hits).toHaveLength(1)
     const withoutFloor = resolveStageExecution(stage, "cancel", 6, 6, 0)
     expect(withoutFloor.hits).toHaveLength(0)
+  })
+})
+
+describe("nextVariant — full cycle", () => {
+  const stageAllVariants: ActionTimeStage = {
+    actionTime: 50,
+    variants: {
+      cancel: { actionTime: 33 },
+      instantCancel: { actionTime: 7 },
+      swap: { actionTime: 10 },
+    },
+  }
+  const stageCancelOnly: ActionTimeStage = {
+    actionTime: 50,
+    variants: { cancel: { actionTime: 33 } },
+  }
+  const stageSwapOnly: ActionTimeStage = {
+    actionTime: 50,
+    variants: { swap: { actionTime: 10 } },
+  }
+  const stageNoVariants: ActionTimeStage = {
+    actionTime: 50,
+  }
+
+  it("cycles FULL → CNCL → INST → SWAP → FULL when all variants present", () => {
+    expect(nextVariant(undefined, stageAllVariants)).toBe("cancel")
+    expect(nextVariant("cancel", stageAllVariants)).toBe("instantCancel")
+    expect(nextVariant("instantCancel", stageAllVariants)).toBe("swap")
+    expect(nextVariant("swap", stageAllVariants)).toBeUndefined()
+  })
+
+  it("skips undefined variants: cancel-only cycles FULL → CNCL → FULL", () => {
+    expect(nextVariant(undefined, stageCancelOnly)).toBe("cancel")
+    expect(nextVariant("cancel", stageCancelOnly)).toBeUndefined()
+  })
+
+  it("skips undefined variants: swap-only cycles FULL → SWAP → FULL", () => {
+    expect(nextVariant(undefined, stageSwapOnly)).toBe("swap")
+    expect(nextVariant("swap", stageSwapOnly)).toBeUndefined()
+  })
+
+  it("stage with no variants stays at FULL (only undefined in defined list)", () => {
+    expect(nextVariant(undefined, stageNoVariants)).toBeUndefined()
   })
 })

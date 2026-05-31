@@ -209,3 +209,26 @@ export function resolveStageExecution(
     floor: floorWon ? variantFloor : 0,
   }
 }
+
+/** Cycle order for the Variant Kind toggle: FULL → CNCL → INST → SWAP → FULL. */
+const VARIANT_ORDER: (VariantKind | undefined)[] = [
+  undefined,
+  "cancel",
+  "instantCancel",
+  "swap",
+]
+
+/**
+ * The next Variant Kind in the toggle cycle, skipping kinds the stage does not
+ * author. `undefined` (FULL) is always offered.
+ */
+export function nextVariant(
+  current: VariantKind | undefined,
+  stage: ActionTimeStage,
+): VariantKind | undefined {
+  const defined = VARIANT_ORDER.filter(
+    (v) => v === undefined || stage.variants?.[v] !== undefined,
+  )
+  const idx = defined.indexOf(current)
+  return defined[(idx + 1) % defined.length]
+}
