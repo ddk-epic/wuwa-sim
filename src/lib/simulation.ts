@@ -68,7 +68,10 @@ export function runSimulation(
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
-  engine.setHonorEmitOffset(opts.honorEmitOffset ?? false)
+  // The flip (ADR-0028): synthetics honor their `actionFrame` landing offset by
+  // default. Callers may still pass `honorEmitOffset: false` for the legacy
+  // land-at-trigger-frame behavior while the old splice path is being retired.
+  engine.setHonorEmitOffset(opts.honorEmitOffset ?? true)
 
   const ctx: SimContext = {
     engine,

@@ -130,7 +130,7 @@ const isSynth = (e: SimulationLogEntry): e is HitEvent =>
   e.kind === "hit" && e.sourceBuffId === "gold.deferred-emit"
 
 describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
-  it("off (default): synthetic lands at the trigger frame, glued to its trigger", () => {
+  it("explicit legacy (honorEmitOffset: false): synthetic glued to its trigger frame", () => {
     testCharacters = [
       makeChar(1, "Gold A", [emitBuff(30)]),
       makeChar(2, "Gold B"),
@@ -153,7 +153,7 @@ describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
     expect(synthIdx).toBeLessThan(e2Action)
   })
 
-  it("on: synthetic lands at trigger + actionFrame and interleaves before the later entry", () => {
+  it("default (flipped on): synthetic lands at trigger + actionFrame and interleaves before the later entry", () => {
     testCharacters = [
       makeChar(1, "Gold A", [emitBuff(30)]),
       makeChar(2, "Gold B"),
@@ -163,9 +163,8 @@ describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
       tlEntry(1, stageOf("gold-a"), "e1"),
       tlEntry(2, stageOf("gold-b"), "e2"),
     ]
-    const log = runSimulation(entries, slots, loadouts, 9, 6, 0, 21, {
-      honorEmitOffset: true,
-    })
+    // No honorEmitOffset opt — relies on the flipped default (ADR-0028).
+    const log = runSimulation(entries, slots, loadouts)
     const synth = log.find(isSynth)
     // e1 hits at frame 0; the synthetic is authored +30 → lands at frame 30.
     expect(synth?.frame).toBe(30)
@@ -183,18 +182,13 @@ describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
     expect(synthIdx).toBeLessThan(e2Action)
   })
 
-  it("on, no later entry: deferred synthetic still resolves at the end", () => {
+  it("no later entry: deferred synthetic still resolves at the end", () => {
     testCharacters = [makeChar(1, "Gold A", [emitBuff(30)])]
     const slots: Slots = [1, null, null]
     const log = runSimulation(
       [tlEntry(1, stageOf("gold-a"), "e1")],
       slots,
       loadouts,
-      9,
-      6,
-      0,
-      21,
-      { honorEmitOffset: true },
     )
     const synth = log.find(isSynth)
     expect(synth?.frame).toBe(30)
