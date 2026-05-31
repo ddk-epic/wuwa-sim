@@ -12,8 +12,7 @@ import { formatFrames } from "#/lib/format"
 type NewEntry = Omit<TimelineEntry, "id">
 
 type FilterKey =
-  | "Basic Attack"
-  | "Heavy Attack"
+  | "Normal Attack"
   | "Resonance Skill"
   | "Resonance Liberation"
   | "Forte Circuit"
@@ -22,10 +21,7 @@ type FilterKey =
   | "Movement"
 
 const FILTER_PREDICATES: Record<FilterKey, (s: FocusedStage) => boolean> = {
-  "Basic Attack": (s) =>
-    s.skillGrouping === "Normal Attack" && s.skillCategory === "Basic Attack",
-  "Heavy Attack": (s) =>
-    s.skillGrouping === "Normal Attack" && s.skillCategory === "Heavy Attack",
+  "Normal Attack": (s) => s.skillGrouping === "Normal Attack",
   "Resonance Skill": (s) => s.skillGrouping === "Resonance Skill",
   "Resonance Liberation": (s) => s.skillGrouping === "Resonance Liberation",
   "Forte Circuit": (s) => s.skillGrouping === "Forte Circuit",
@@ -37,8 +33,7 @@ const FILTER_PREDICATES: Record<FilterKey, (s: FocusedStage) => boolean> = {
 
 const FILTER_CHIPS: Array<{ key: FilterKey; label: string }> = [
   { key: "in-out", label: "IN/OUT" },
-  { key: "Basic Attack", label: STAGE_TYPE_LABELS["Basic Attack"] },
-  { key: "Heavy Attack", label: STAGE_TYPE_LABELS["Heavy Attack"] },
+  { key: "Normal Attack", label: STAGE_TYPE_LABELS["Normal Attack"] },
   { key: "Resonance Skill", label: STAGE_TYPE_LABELS["Resonance Skill"] },
   {
     key: "Resonance Liberation",

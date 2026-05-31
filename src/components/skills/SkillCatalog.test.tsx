@@ -373,7 +373,7 @@ const charWithIntroOutro: EnrichedCharacter = {
 }
 
 describe("SkillSidebar — filter chips", () => {
-  it("renders filter chips including 'all' and 'BASIC' but no separate INTRO or OUTRO chips", () => {
+  it("renders filter chips including 'all' and 'NORMAL' but no separate BASIC, HEAVY, INTRO or OUTRO chips", () => {
     setCatalog([char1], [])
     renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
       slots: [1, null, null],
@@ -382,8 +382,10 @@ describe("SkillSidebar — filter chips", () => {
       onFocus: vi.fn(),
     })
     expect(screen.getByRole("button", { name: "all" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "BASIC" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "NORMAL" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "IN/OUT" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "BASIC" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "HEAVY" })).toBeNull()
     expect(screen.queryByRole("button", { name: "INTRO" })).toBeNull()
     expect(screen.queryByRole("button", { name: "OUTRO" })).toBeNull()
   })
@@ -541,7 +543,7 @@ describe("SkillSidebar — filter chips", () => {
     expect(screen.queryByText("Normal Attack · Heavy Stage")).toBeNull()
   })
 
-  it("BASIC chip shows only Basic Attack category stages under Normal Attack grouping", () => {
+  it("NORMAL chip shows all stages under Normal Attack grouping regardless of category, hiding Forte's Heavy-category stage", () => {
     setCatalog([charWithGroupings], [])
     renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
       slots: [4, null, null],
@@ -549,23 +551,9 @@ describe("SkillSidebar — filter chips", () => {
       focusedId: 4,
       onFocus: vi.fn(),
     })
-    fireEvent.click(screen.getByRole("button", { name: "BASIC" }))
+    fireEvent.click(screen.getByRole("button", { name: "NORMAL" }))
     expect(screen.getByText("Normal Attack · Basic Stage")).toBeTruthy()
-    expect(screen.queryByText("Normal Attack · Heavy Stage")).toBeNull()
-    expect(screen.queryByText("Forte Skill · Forte Stage")).toBeNull()
-  })
-
-  it("HEAVY chip shows only Heavy Attack category stages under Normal Attack grouping (not Forte's Heavy-category stage)", () => {
-    setCatalog([charWithGroupings], [])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [4, null, null],
-      loadouts: noLoadouts,
-      focusedId: 4,
-      onFocus: vi.fn(),
-    })
-    fireEvent.click(screen.getByRole("button", { name: "HEAVY" }))
     expect(screen.getByText("Normal Attack · Heavy Stage")).toBeTruthy()
-    expect(screen.queryByText("Normal Attack · Basic Stage")).toBeNull()
     expect(screen.queryByText("Forte Skill · Forte Stage")).toBeNull()
   })
 })
