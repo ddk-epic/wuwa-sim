@@ -6,7 +6,7 @@ import {
   LockOpenIcon,
   TrashIcon,
 } from "lucide-react"
-import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
+import type { GroupSummary } from "#/lib/timeline/timeline-group-summary"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
@@ -54,7 +54,7 @@ type GroupHeaderRenderItem = Extract<RenderItem, { type: "groupHeader" }>
 interface TimelineGroupHeaderProps {
   item: GroupHeaderRenderItem
   isExpanded: boolean
-  summary: TimelineSummary
+  groupSummaries: Map<string, GroupSummary>
   drag: TimelineDrag
   hidden?: boolean
   onToggleExpand: (groupId: string) => void
@@ -68,7 +68,7 @@ interface TimelineGroupHeaderProps {
 export function TimelineGroupHeader({
   item,
   isExpanded,
-  summary,
+  groupSummaries,
   drag,
   hidden = false,
   onToggleExpand,
@@ -85,38 +85,21 @@ export function TimelineGroupHeader({
     entryCount,
     dominantHex,
     distinctCharIds,
-    startFlatIndex,
     gradient,
     containerIndex,
   } = item
   const { renamingGroupId, startRename, endRename } = useRenamingGroup()
   const isRenaming = renamingGroupId === groupId
   const isDraggingThisGroup = drag.draggedId === groupId
-  const lastFlatIndex = startFlatIndex + entryCount - 1
 
-  let totalDurFrames = 0
-  for (let i = 0; i < entryCount; i++) {
-    totalDurFrames += summary.rows[startFlatIndex + i]?.durationFrames ?? 0
-  }
-  const firstRowTime =
-    entryCount > 0
-      ? formatFrames(summary.rows[startFlatIndex]?.timeFrames ?? 0)
-      : "0.00s"
-
-  const lastRow =
-    !isExpanded && entryCount > 0 ? (summary.rows[lastFlatIndex] ?? null) : null
-  const lastConVal = lastRow?.cumulativeConcerto ?? null
-  const lastResVal = lastRow?.cumulativeEnergy ?? null
-
-  let totalDmg = 0
-  let hasDmg = false
-  for (let i = startFlatIndex; i <= lastFlatIndex; i++) {
-    const d = summary.rows[i].damage
-    if (d !== null) {
-      totalDmg += d
-      hasDmg = true
-    }
-  }
+  const gs = groupSummaries.get(groupId)
+  const firstRowTime = formatFrames(gs?.startTimeFrames ?? 0)
+  const totalDurFrames = gs?.totalDurationFrames ?? 0
+  const totalDamage = gs?.totalDamage ?? null
+  // Group-end concerto/energy are shown only while the group is collapsed; when
+  // expanded, the member rows carry their own cumulative values.
+  const lastConVal = isExpanded ? null : (gs?.endConcerto ?? null)
+  const lastResVal = isExpanded ? null : (gs?.endEnergy ?? null)
 
   function handleToggleExpand(e: React.MouseEvent) {
     e.stopPropagation()
@@ -241,14 +224,14 @@ export function TimelineGroupHeader({
         {renderPoolValue(lastResVal, "var(--ui-resonance)")}
       </td>
       <td className="px-2 py-1.5 font-semibold text-right font-mono">
-        {hasDmg ? (
+        {totalDamage !== null ? (
           isExpanded ? (
             <span className="text-stat text-gray-600">
-              {totalDmg.toLocaleString()}
+              {totalDamage.toLocaleString()}
             </span>
           ) : (
             <span className="font-bold text-stat text-yellow-400">
-              {totalDmg.toLocaleString()}
+              {totalDamage.toLocaleString()}
             </span>
           )
         ) : (

@@ -7,6 +7,8 @@ import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import type { DropPosition } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { buildTimelineRenderItems } from "#/lib/timeline/timeline-render-items"
+import type { RenderItem } from "#/lib/timeline/timeline-render-items"
+import { summarizeGroups } from "#/lib/timeline/timeline-group-summary"
 import { applyDragPreview } from "#/lib/timeline/timeline-drag-preview"
 import { ConfirmModal } from "../ui/ConfirmModal"
 import { TimelineEntryRow } from "./TimelineEntryRow"
@@ -109,6 +111,20 @@ export function TimelineView({
     dropTarget: drag.dropTarget,
   })
 
+  const groupSummaries = useMemo(() => {
+    const spans = baseRenderItems
+      .filter(
+        (it): it is Extract<RenderItem, { type: "groupHeader" }> =>
+          it.type === "groupHeader",
+      )
+      .map((it) => ({
+        groupId: it.groupId,
+        startFlatIndex: it.startFlatIndex,
+        entryCount: it.entryCount,
+      }))
+    return summarizeGroups(summary.rows, spans)
+  }, [baseRenderItems, summary])
+
   if (entries.length === 0 && nodes.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
@@ -170,7 +186,7 @@ export function TimelineView({
                   item={item}
                   hidden={item.hidden === true}
                   isExpanded={expandedGroupIds.has(item.groupId)}
-                  summary={summary}
+                  groupSummaries={groupSummaries}
                   drag={drag}
                   onToggleExpand={toggleExpand}
                   onToggleGroupLock={onToggleGroupLock}
