@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react"
-import { Link } from "@tanstack/react-router"
 import {
   CirclePlus,
   Play,
@@ -1108,12 +1107,6 @@ export function LibraryPage() {
           </span>
         </div>
         <div className="flex-1" />
-        <Link
-          to="/"
-          className="text-muted text-[11px] no-underline flex items-center gap-1 hover:text-foreground"
-        >
-          ← Simulator
-        </Link>
         <HBtn icon={Upload} label="import" />
         <HBtn icon={Download} label="export" />
         <HBtn icon={CirclePlus} label="New team" primary />
