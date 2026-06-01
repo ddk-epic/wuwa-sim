@@ -12,6 +12,7 @@ import type { BuffDef } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 
 import { BuffEngine } from "./buff-engine"
+import { drainSynthetics } from "./buff-engine.test-utils"
 import {
   BASE_ATK_PCT,
   BASE_ER,
@@ -226,13 +227,13 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(0)
+    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(0)
   })
 
   it("fires synthetic hit when condition buff is active", () => {
@@ -253,14 +254,15 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
       frame: 0,
     })
 
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
       frame: 1,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    expect(result.syntheticEvents[0].synthetic).toBe(true)
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0].synthetic).toBe(true)
   })
 
   it("does not suppress reaction defs without a condition", () => {
@@ -281,13 +283,13 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
+    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(1)
   })
 })
 

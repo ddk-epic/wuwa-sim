@@ -44,7 +44,6 @@ export interface ResolvedHit {
 
 export interface HitDispatch {
   lifecycleEvents: BuffEvent[]
-  syntheticEvents: (HitEvent | SustainEvent)[]
   deferredEmits: DeferredEmit[]
   postState: ResourceState
 }
@@ -99,13 +98,6 @@ export class BuffEngine {
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
-  /**
-   * When true, an `emitHit` with `actionFrame > 0` defers: its decision is taken
-   * now but its damage resolves at the landing frame (`trigger + actionFrame`),
-   * surfaced as a {@link DeferredEmit}. Off (default) reproduces the legacy
-   * land-at-trigger-frame behavior byte-for-byte (ADR-0028, the "flip").
-   */
-  private honorEmitOffset = false
   /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
   private deferredEmits: DeferredEmit[] = []
   private emitHitHost: EmitHitHost = {
@@ -272,15 +264,16 @@ export class BuffEngine {
     return this.onField.computeSwapBack(characterId, arrivalFrame)
   }
 
-  /** Enable/disable honoring `emitHit.actionFrame` as a landing offset (ADR-0028). */
-  setHonorEmitOffset(value: boolean): void {
-    this.honorEmitOffset = value
-  }
-
-  /** Process a triggering event; returns lifecycle events from any apply/refresh. */
+  /**
+   * Process a triggering event. Returns lifecycle events from any apply/refresh
+   * plus the *emit decisions* taken this event (`deferredEmits`) — never resolved
+   * synthetic events. Every emit (immediate or offset, emitHit or coord) defers
+   * onto the simulation's frame-ordered stream, which resolves it at its landing
+   * frame (ADR-0028 first-class events). The local `syntheticEvents` sink stays
+   * empty at depth 0 and exists only to thread the in-frame chain path.
+   */
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
-    syntheticEvents: (HitEvent | SustainEvent)[]
     deferredEmits: DeferredEmit[]
   } {
     const lifecycleEvents: BuffEvent[] = []
@@ -315,7 +308,6 @@ export class BuffEngine {
     this.dispatchEvent(event, lifecycleEvents, syntheticEvents, 0)
     return {
       lifecycleEvents,
-      syntheticEvents,
       deferredEmits: this.deferredEmits,
     }
   }
@@ -535,12 +527,16 @@ export class BuffEngine {
     // The emit decision (ICD + chain cap) is taken now, at the trigger frame.
     if (!this.emitHitDispatcher.tryEmit(input, { frame, depth })) return
 
-    const landingFrame = this.honorEmitOffset
-      ? frame + effect.damage.actionFrame
-      : frame
-    if (landingFrame > frame) {
-      // Defer: damage + chain resolve later, at the landing frame, in frame
-      // order against intervening authored entries. The simulation drains these.
+    // The emit lands `actionFrame` frames after its trigger (ADR-0028); offset 0
+    // lands at the trigger frame. The landing offset is honored unconditionally.
+    const landingFrame = frame + effect.damage.actionFrame
+    // A top-level emit (depth 0) always defers onto the simulation's frame-ordered
+    // stream — that is the first-class-events contract: `onEvent` surfaces emit
+    // *decisions*, never resolved events (ADR-0028). An offset emit (landingFrame
+    // > frame) defers too. Only an in-frame chain emit (depth >= 1, offset 0)
+    // resolves inline below, so a chain keeps its DFS emission order *within* a
+    // frame — `resolveDeferredEmit` runs that chain when it drains the parent.
+    if (depth === 0 || landingFrame > frame) {
       this.deferredEmits.push({ input, landingFrame, depth })
       return
     }
@@ -631,16 +627,19 @@ export class BuffEngine {
       lifecycleEvents,
       syntheticEvents,
     )
-    // effect is EmitHitEffect on the deferred path (coordHit never defers).
-    this.fireEmitChain(
-      d.input.effect as EmitHitEffect,
-      d.input.sourceCharacterId,
-      d.input.def.id,
-      d.landingFrame,
-      lifecycleEvents,
-      syntheticEvents,
-      d.depth,
-    )
+    // A coord emit never re-enters the trigger matcher (coordHit→coord is
+    // structurally impossible); only an emitHit fires its own hitLanded chain.
+    if (d.input.effect.kind !== "coordHit") {
+      this.fireEmitChain(
+        d.input.effect,
+        d.input.sourceCharacterId,
+        d.input.def.id,
+        d.landingFrame,
+        lifecycleEvents,
+        syntheticEvents,
+        d.depth,
+      )
+    }
     return {
       event,
       lifecycleEvents,
@@ -678,14 +677,23 @@ export class BuffEngine {
     hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
   ): void {
+    const input = {
+      buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
+      def,
+      effect,
+      effectIndex,
+      sourceCharacterId,
+    }
+    if (depth === 0) {
+      // A top-level coord emit defers onto the stream like emitHit (ADR-0028
+      // first-class events). coordHit carries no landing offset and never chains,
+      // so it lands at the trigger frame and `resolveDeferredEmit` skips the chain.
+      if (!this.emitHitDispatcher.tryEmit(input, { frame, depth })) return
+      this.deferredEmits.push({ input, landingFrame: frame, depth })
+      return
+    }
     const hit = this.emitHitDispatcher.dispatch(
-      {
-        buffInstanceKey: buffInstanceKey(def.id, sourceCharacterId),
-        def,
-        effect,
-        effectIndex,
-        sourceCharacterId,
-      },
+      input,
       { frame, depth },
       this.emitHitHost,
       out,
@@ -921,17 +929,15 @@ export class BuffEngine {
    * events, synthetic hits, and the post-hit Resource State for the actor.
    */
   recordHit(event: HitLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticEvents, deferredEmits } =
-      this.onEvent(event)
+    const { lifecycleEvents, deferredEmits } = this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticEvents, deferredEmits, postState }
+    return { lifecycleEvents, deferredEmits, postState }
   }
 
   recordHeal(event: HealLandedEvent): HitDispatch {
-    const { lifecycleEvents, syntheticEvents, deferredEmits } =
-      this.onEvent(event)
+    const { lifecycleEvents, deferredEmits } = this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, syntheticEvents, deferredEmits, postState }
+    return { lifecycleEvents, deferredEmits, postState }
   }
 }
 

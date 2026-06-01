@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/engine/buff-engine"
+import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
 import { sanhua } from "./sanhua"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -67,7 +68,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    const { syntheticEvents } = engine.onEvent({
+    const { syntheticEvents } = onEventResolved(engine, {
       kind: "hitLanded",
       characterId: 1102,
       skillCategory: "Resonance Skill",
@@ -85,7 +86,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
 
   it("does not fire bonus when Avalanche flag is absent", () => {
     const engine = makeEngine()
-    const { syntheticEvents } = engine.onEvent({
+    const { syntheticEvents } = onEventResolved(engine, {
       kind: "hitLanded",
       characterId: 1102,
       skillCategory: "Resonance Skill",
@@ -109,7 +110,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    const prismDispatch = engine.onEvent({
+    const prismDispatch = onEventResolved(engine, {
       kind: "hitLanded",
       characterId: 1102,
       skillCategory: "Resonance Skill",
@@ -125,7 +126,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       0.15906,
     )
 
-    const glacierDispatch = engine.onEvent({
+    const glacierDispatch = onEventResolved(engine, {
       kind: "hitLanded",
       characterId: 1102,
       skillCategory: "Resonance Skill",
@@ -151,7 +152,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    const { syntheticEvents } = engine.onEvent({
+    const { syntheticEvents } = onEventResolved(engine, {
       kind: "hitLanded",
       characterId: 1102,
       skillCategory: "Resonance Skill",
@@ -187,28 +188,12 @@ describe("Sanhua — Detonate burst honors its actionFrame offset (ADR-0028)", (
     })
   }
 
-  it("legacy (honor off): burst resolves eagerly at the detonate frame", () => {
+  it("burst defers to detonate + 14 and resolves there", () => {
     const engine = makeEngine()
     const dispatch = detonate(engine, 100)
-    const burst = dispatch.syntheticEvents.find(
-      (e) => e.sourceBuffId === "char.sanhua.ice-thorn-burst",
-    )
-    expect(burst?.frame).toBe(100)
-    expect(dispatch.deferredEmits).toHaveLength(0)
-  })
 
-  it("honor on: burst defers to detonate + 14 and resolves there", () => {
-    const engine = makeEngine()
-    engine.setHonorEmitOffset(true)
-    const dispatch = detonate(engine, 100)
-
-    // The burst no longer resolves eagerly...
-    expect(
-      dispatch.syntheticEvents.find(
-        (e) => e.sourceBuffId === "char.sanhua.ice-thorn-burst",
-      ),
-    ).toBeUndefined()
-    // ...it is surfaced as a deferred emit landing 14 frames later.
+    // The burst is surfaced as a deferred emit landing 14 frames later (its
+    // `actionFrame` offset is honored unconditionally), never resolved inline.
     expect(dispatch.deferredEmits).toHaveLength(1)
     const deferred = dispatch.deferredEmits[0]
     expect(deferred.landingFrame).toBe(114)

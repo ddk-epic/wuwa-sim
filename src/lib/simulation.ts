@@ -114,15 +114,11 @@ export function runSimulation(
   swapFrames: number = 6,
   variantFloor: number = 0,
   fallFrames: number = 21,
-  opts: { useWorklist?: boolean; honorEmitOffset?: boolean } = {},
+  opts: { useWorklist?: boolean } = {},
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts })
-  // The flip (ADR-0028): synthetics honor their `actionFrame` landing offset by
-  // default. Callers may still pass `honorEmitOffset: false` for the legacy
-  // land-at-trigger-frame behavior while the old splice path is being retired.
-  engine.setHonorEmitOffset(opts.honorEmitOffset ?? true)
 
   const ctx: SimContext = {
     engine,
@@ -318,8 +314,7 @@ function resolveArrival(
  * Drain the pending-event stream up to `uptoFrame`, resolving members in
  * nondecreasing frame order and appending each to the log at its frame. Chains
  * may enqueue further pending members, picked up in the same drain. Tombstoned
- * (invalidated) trailing hits are skipped. No-op for synthetics while
- * `honorEmitOffset` is off (nothing ever defers).
+ * (invalidated) trailing hits are skipped.
  */
 function drainPending(ctx: SimContext, uptoFrame: number): void {
   for (;;) {
@@ -482,11 +477,13 @@ function fireSkillCast(
     resonanceCost: resolved.resonanceCost,
   })
   pushBuffEvents(log, result.lifecycleEvents)
-  for (const synth of result.syntheticEvents) {
-    synth.sourceEntryId = entry.id
-    log.push(synth)
-  }
   for (const emit of result.deferredEmits) enqueueSynthetic(ctx, emit, entry.id)
+  // Flush this cast's immediate (offset-0) synthetics in place: they must log
+  // before the action event and apply their resource gains before the action's
+  // cumulativeEnergy snapshot, matching the eager path. The clock is already at
+  // `frame`, so this drain only resolves the just-enqueued same-frame emits;
+  // offset emits (landingFrame > frame) stay pending for a later drain.
+  drainPending(ctx, frame)
 }
 
 function buildActionEvent(
@@ -595,10 +592,6 @@ function processHeal(
   }
   log.push(sustainEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticEvents) {
-    synth.sourceEntryId = entry.id
-    log.push(synth)
-  }
   for (const emit of dispatch.deferredEmits)
     enqueueSynthetic(ctx, emit, entry.id)
 }
@@ -654,10 +647,6 @@ function processDamageHit(
   }
   log.push(hitEvent)
   pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const synth of dispatch.syntheticEvents) {
-    synth.sourceEntryId = entry.id
-    log.push(synth)
-  }
   for (const emit of dispatch.deferredEmits)
     enqueueSynthetic(ctx, emit, entry.id)
 }

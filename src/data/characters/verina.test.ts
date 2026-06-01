@@ -4,7 +4,10 @@ import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { HitEvent, SustainEvent } from "#/types/simulation-log"
 import { BuffEngine } from "#/lib/engine/buff-engine"
-import { pendingNextOnFieldCount } from "#/lib/engine/buff-engine.test-utils"
+import {
+  onEventResolved,
+  pendingNextOnFieldCount,
+} from "#/lib/engine/buff-engine.test-utils"
 import { runSimulation } from "#/lib/simulation"
 import { verina } from "./verina"
 
@@ -279,7 +282,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
 
   it("Starflower Blooms cast emits a synthetic Coordinated Attack hit (sequence 6)", () => {
     const engine = makeEngine(6)
-    const result = engine.onEvent({
+    const result = onEventResolved(engine, {
       kind: "skillCast",
       characterId: 1503,
       skillCategory: "Heavy Attack",
@@ -295,7 +298,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
 
   it("Coord. Attack not emitted at sequence 0", () => {
     const engine = makeEngine(0)
-    const result = engine.onEvent({
+    const result = onEventResolved(engine, {
       kind: "skillCast",
       characterId: 1503,
       skillCategory: "Heavy Attack",
@@ -336,7 +339,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     stageId: (typeof STARFLOWER_STAGES)[number],
     frame: number,
   ) {
-    return engine.onEvent({
+    return onEventResolved(engine, {
       kind: "skillCast",
       characterId: 1503,
       skillCategory: stageId.includes("::heavy-attack")
@@ -448,7 +451,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     frame: number,
     synthetic = false,
   ) {
-    return engine.onEvent({
+    return onEventResolved(engine, {
       kind: "hitLanded",
       characterId: TEAMMATE_ID,
       skillCategory: "Basic Attack",
@@ -559,7 +562,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
   it("S6 joyous-harvest-coord still fires independently when mark is active (sequence 6)", () => {
     const engine = makeTwoCharEngine(6)
     libHitLanded(engine, 0)
-    const result = engine.onEvent({
+    const result = onEventResolved(engine, {
       kind: "skillCast",
       characterId: 1503,
       skillCategory: "Heavy Attack",

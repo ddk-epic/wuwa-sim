@@ -101,3 +101,17 @@ The **only** same-frame ordering that survives is inside the authored/trailing/f
 - **Pre-resolve all authored frames, then walk a fully frame-sorted list (option A).** Rejected: pad depends on trailing hits, which are emissions, so a pre-pass that assigns authored frames before emissions exist is circular. The lazy walk (B) avoids the circularity.
 - **A "mutations-before-damage" two-phase rule per frame.** Rejected as unnecessary once emissions are confirmed footing-blind and independent — the only surviving same-frame ordering lives entirely inside the authored/trailing/footing domain and is already deterministic.
 - **Dissolve cancel/pad into a mutable priority queue with item deletion.** Rejected in favor of tombstone-at-pop — simpler, and the causality proof (cancel always precedes the cancelled hit's frame) means a validity check suffices.
+
+## Amendment — Unification complete: one stream, no eager path, no flag
+
+Work items 4 & 5 shipped; the hybrid's divergence list above is fully closed and the "Shipped state (hybrid)" amendment is now **historical**. The success criterion — _one queue produces the whole log_ — holds.
+
+**What changed.** Every emission now defers onto `ctx.pending` and resolves through the same frame-ordered drain, immediate (`actionFrame: 0`) and offset alike, emitHit **and** coordHit:
+
+- **`onEvent`/`recordHit`/`recordHeal` narrowed to emit-_decisions_** — they return `{ lifecycleEvents, deferredEmits }`, never resolved `syntheticEvents`. The three eager-splice sites in `simulation.ts` (`fireSkillCast`/`processHeal`/`processDamageHit`) are deleted; synthetics arrive only via `enqueueSynthetic`.
+- **DFS emission order is preserved by deferring only at `depth === 0`.** A top-level emit always defers; an in-frame chain emit (`depth ≥ 1`, offset 0) still resolves inline inside `resolveDeferredEmit`, so a chain keeps its depth-first order _within_ a frame. `fireSkillCast` drains at its own frame after enqueuing, so a cast's immediate synthetics still log before — and apply resources before — the action event's snapshot. Goldens stayed byte-identical.
+- **`coordHit` defers too** (`fireCoordHit` at depth 0); `resolveDeferredEmit` skips the chain for a coord emit (`coordHit→coord` is structurally impossible). coordHit carries no landing offset.
+- **`honorEmitOffset` retired.** The flag, `setHonorEmitOffset`, and the `opts.honorEmitOffset` plumbing are gone; `landingFrame = triggerFrame + effect.damage.actionFrame` is unconditional. The engine-off / simulation-on default split is reconciled by deletion.
+- **Test migration done** — the ~46 reader assertions across 7 files moved to a `drainSynthetics` / `onEventResolved` harness (`buff-engine.test-utils.ts`) that resolves emit-decisions the way the simulation's drain does. The two legacy-only cases (the `honorEmitOffset: false` simulation case and Sanhua's "honor off" burst) were deleted.
+
+**Still deferred (unchanged from the endgame amendment):** In-trailing hits remain footing-blind — lifting that (footing-conditional buffs reading the acting character's live footing) is a separate follow-up — and the Trailing-Window-duration override is out of scope.

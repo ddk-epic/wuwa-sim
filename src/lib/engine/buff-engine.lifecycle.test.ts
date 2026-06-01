@@ -6,7 +6,10 @@ import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
 import { GLOBAL_TARGET_ID } from "#/types/buff"
 import { BuffEngine } from "./buff-engine"
-import { pendingNextOnFieldCount } from "./buff-engine.test-utils"
+import {
+  drainSynthetics,
+  pendingNextOnFieldCount,
+} from "./buff-engine.test-utils"
 import {
   BASE_ATK_PCT,
   BASE_CR,
@@ -450,7 +453,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(r.syntheticEvents).toHaveLength(1)
+    expect(drainSynthetics(engine, r.deferredEmits)).toHaveLength(1)
     expect(r.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(true)
   })
 })

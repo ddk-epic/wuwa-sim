@@ -6,6 +6,7 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
 import { BuffEngine } from "./buff-engine"
+import { drainSynthetics } from "./buff-engine.test-utils"
 import {
   BASE_ATK_PCT,
   BASE_ER,
@@ -238,15 +239,16 @@ describe("BuffEngine — coordHit (#219)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    const ev = result.syntheticEvents[0]
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    const ev = synthetics[0]
     expect(ev.kind).toBe("hit")
     expect(ev.coord).toBe(true)
     expect(ev.synthetic).toBe(true)
@@ -270,7 +272,7 @@ describe("BuffEngine — coordHit (#219)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
@@ -280,8 +282,9 @@ describe("BuffEngine — coordHit (#219)", () => {
     // coordBuff fires on original (non-synthetic) hit → 1 coord event, no hitLanded emitted.
     // synthTrap requires source: "synthetic" — original hit is not synthetic, so it does not fire.
     // Because coordHit fires no hitLanded, synthTrap NEVER fires.
-    expect(result.syntheticEvents).toHaveLength(1)
-    expect(result.syntheticEvents[0].coord).toBe(true)
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0].coord).toBe(true)
   })
 
   it("(c) coord damage + heal fire on the same frame", () => {
@@ -302,15 +305,16 @@ describe("BuffEngine — coordHit (#219)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 42,
     })
-    expect(result.syntheticEvents).toHaveLength(2)
-    const [dmgEvt, healEvt] = result.syntheticEvents
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(2)
+    const [dmgEvt, healEvt] = synthetics
     expect(dmgEvt.kind).toBe("hit")
     expect(healEvt.kind).toBe("sustain")
     expect(dmgEvt.frame).toBe(42)
@@ -334,15 +338,16 @@ describe("BuffEngine — coordHit (#219)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    const ev = result.syntheticEvents[0]
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    const ev = synthetics[0]
     expect(ev.kind).toBe("sustain")
     expect(ev.coord).toBe(true)
     expect(ev.synthetic).toBe(true)
@@ -376,15 +381,16 @@ describe("BuffEngine — emitHit (#60)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    expect(result.syntheticEvents[0]).toMatchObject({
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0]).toMatchObject({
       kind: "hit",
       synthetic: true,
       sourceBuffId: "char.coord",
@@ -392,7 +398,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     // damage = 0.5 * ATK * critFactor * DEF_MULT(0.5) * RES_MULT(0.9) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in)
-    const synth0 = result.syntheticEvents[0]
+    const synth0 = synthetics[0]
     if (synth0.kind !== "hit") throw new Error("expected HitEvent")
     expect(synth0.damage).toBe(1164)
   })
@@ -415,7 +421,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
@@ -425,7 +431,7 @@ describe("BuffEngine — emitHit (#60)", () => {
     // Both a and b fire on the original hit (depth 0). Their synthetics fire
     // hitLanded(synthetic=true). Default `source: "self"` means neither matches
     // the synthetic hitLanded — so no chain.
-    expect(result.syntheticEvents).toHaveLength(2)
+    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(2)
   })
 
   it("emitHit with dmgType Heal produces a SustainEvent via computeHealing, not computeDamage", () => {
@@ -449,15 +455,16 @@ describe("BuffEngine — emitHit (#60)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    const synth = result.syntheticEvents[0]
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    const synth = synthetics[0]
     expect(synth.kind).toBe("sustain")
     expect(synth.synthetic).toBe(true)
     expect(synth.sourceBuffId).toBe("char.heal-emit")
@@ -492,13 +499,14 @@ describe("BuffEngine — emitHit (#60)", () => {
       frame: 0,
     })
     expect(engine.getOnFieldCharacterId()).toBe(1)
-    engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 5,
     })
+    drainSynthetics(engine, deferredEmits)
     // Synthetic hit attributed to 1 (acting). On-field stays 1 (not flipped).
     expect(engine.getOnFieldCharacterId()).toBe(1)
   })
@@ -548,16 +556,17 @@ describe("BuffEngine — emitHit (#60)", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     // 2 lands a hit; 1 (off-field) emits a synthetic.
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 2,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
     // 1.0 * ATK * critFactor * 0.5 * 0.9 * (1 + 0.5 Fusion bonus) (substat + echo main stats applied, with intrinsic 5%/150% base crit folded in).
-    const synthEvt = result.syntheticEvents[0]
+    const synthEvt = synthetics[0]
     if (synthEvt.kind !== "hit") throw new Error("expected HitEvent")
     expect(synthEvt.damage).toBe(3056)
     expect(synthEvt.characterId).toBe(1)
@@ -587,14 +596,15 @@ describe("BuffEngine — emitHit (#60)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
       dmgType: "Fusion",
       frame: 0,
     })
-    expect(result.syntheticEvents.map((h) => h.sourceBuffId)).toEqual([
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics.map((h) => h.sourceBuffId)).toEqual([
       "a.coord",
       "z.coord",
     ])
@@ -621,7 +631,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "hitLanded",
       characterId: 1,
       skillCategory: "Basic Attack",
@@ -630,6 +640,8 @@ describe("BuffEngine — emitHit (#60)", () => {
       energy: 5,
       concerto: 2,
     })
+    // The synthetic's energy/concerto apply when its emit decision is drained.
+    drainSynthetics(engine, deferredEmits)
     // Authored: +5 energy / +2 concerto. Synthetic: +4 energy / +3 concerto. Both scaled by ER.
     expect(engine.getResource(1).energy).toBeCloseTo(9 * (1 + BASE_ER))
     expect(engine.getResource(1).concerto).toBe(5)
@@ -688,12 +700,15 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Heavy Attack",
       frame: 0,
     })
+    // The emitter's synthetic hitLanded — which char.chain triggers on — fires
+    // when the emit decision is drained, so resolve it before asserting.
+    drainSynthetics(engine, deferredEmits)
 
     expect(engine.activeBuffIds(1)).toContain("char.chain")
   })

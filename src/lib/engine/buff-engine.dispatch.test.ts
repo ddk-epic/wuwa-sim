@@ -377,7 +377,7 @@ describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
       oldActiveBuffIds,
     )
     expect(dispatch.lifecycleEvents).toEqual(oldDispatch.lifecycleEvents)
-    expect(dispatch.syntheticEvents).toEqual(oldDispatch.syntheticEvents)
+    expect(dispatch.deferredEmits).toEqual(oldDispatch.deferredEmits)
     expect(dispatch.postState).toEqual(oldPostState)
   })
 })

@@ -5,6 +5,7 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
 import type { BuffDef } from "#/types/buff"
 import { BuffEngine } from "./buff-engine"
+import { drainSynthetics } from "./buff-engine.test-utils"
 import {
   BASE_ATK_PCT,
   BASE_ER,
@@ -300,14 +301,15 @@ describe("BuffEngine — resource state (#58)", () => {
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Basic Attack",
       frame: 0,
     })
-    expect(result.syntheticEvents).toHaveLength(1)
-    expect(result.syntheticEvents[0]).toMatchObject({
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0]).toMatchObject({
       kind: "hit",
       synthetic: true,
       sourceBuffId: "char.emit-on-concerto",
@@ -397,7 +399,7 @@ describe("BuffEngine — resource state (#58)", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const result = engine.onEvent({
+    const { deferredEmits } = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Basic Attack",
@@ -405,8 +407,8 @@ describe("BuffEngine — resource state (#58)", () => {
     })
     // resourceCrossed fires chainer (synthetic #1, depth 1). That synthetic
     // hitLanded fires synthChain (synthetic #2, depth 2). And so on, capped
-    // at depth 8.
-    expect(result.syntheticEvents.length).toBeGreaterThan(1)
+    // at depth 8 — the whole chain resolves when the top-level decision drains.
+    expect(drainSynthetics(engine, deferredEmits).length).toBeGreaterThan(1)
     expect(warn).toHaveBeenCalled()
     expect(warn.mock.calls[0][0]).toContain("emitHit chain depth exceeded")
     warn.mockRestore()

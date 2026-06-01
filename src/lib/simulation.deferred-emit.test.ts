@@ -12,14 +12,12 @@ import type { HitEvent, SimulationLogEntry } from "#/types/simulation-log"
 import { runSimulation } from "./simulation"
 
 /**
- * Honor-`actionFrame` (the β flip) for deferred emitHits (ADR-0028).
+ * Honor-`actionFrame` for deferred emitHits (ADR-0028).
  *
- * With `honorEmitOffset` on (the default after the flip), an `emitHit` whose
- * `damage.actionFrame > 0` lands at `triggerFrame + actionFrame` and interleaves
- * into the log in frame order — after its trigger but before a later authored
- * entry it now precedes. Passing `honorEmitOffset: false` restores the legacy
- * land-at-trigger-frame behavior. Both paths are asserted here so the behavior
- * change is pinned to the flag.
+ * An `emitHit` whose `damage.actionFrame > 0` lands at `triggerFrame +
+ * actionFrame` and interleaves into the log in frame order — after its trigger
+ * but before a later authored entry it now precedes. The landing offset is
+ * honored unconditionally (the `honorEmitOffset` migration flag has been retired).
  */
 
 const dmgHit = (
@@ -129,8 +127,8 @@ const loadouts: SlotLoadout[] = [loadout, loadout, loadout]
 const isSynth = (e: SimulationLogEntry): e is HitEvent =>
   e.kind === "hit" && e.sourceBuffId === "gold.deferred-emit"
 
-describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
-  it("explicit legacy (honorEmitOffset: false): synthetic glued to its trigger frame", () => {
+describe("deferred emitHit — honor actionFrame (ADR-0028)", () => {
+  it("synthetic lands at trigger + actionFrame and interleaves before the later entry", () => {
     testCharacters = [
       makeChar(1, "Gold A", [emitBuff(30)]),
       makeChar(2, "Gold B"),
@@ -140,30 +138,6 @@ describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
       tlEntry(1, stageOf("gold-a"), "e1"),
       tlEntry(2, stageOf("gold-b"), "e2"),
     ]
-    const log = runSimulation(entries, slots, loadouts, 9, 6, 0, 21, {
-      honorEmitOffset: false,
-    })
-    const synth = log.find(isSynth)
-    expect(synth?.frame).toBe(0)
-    // glued to its trigger (e1's hit), before e2's action
-    const synthIdx = log.findIndex(isSynth)
-    const e2Action = log.findIndex(
-      (e) => e.kind === "action" && e.sourceEntryId === "e2",
-    )
-    expect(synthIdx).toBeLessThan(e2Action)
-  })
-
-  it("default (flipped on): synthetic lands at trigger + actionFrame and interleaves before the later entry", () => {
-    testCharacters = [
-      makeChar(1, "Gold A", [emitBuff(30)]),
-      makeChar(2, "Gold B"),
-    ]
-    const slots: Slots = [1, 2, null]
-    const entries = [
-      tlEntry(1, stageOf("gold-a"), "e1"),
-      tlEntry(2, stageOf("gold-b"), "e2"),
-    ]
-    // No honorEmitOffset opt — relies on the flipped default (ADR-0028).
     const log = runSimulation(entries, slots, loadouts)
     const synth = log.find(isSynth)
     // e1 hits at frame 0; the synthetic is authored +30 → lands at frame 30.
