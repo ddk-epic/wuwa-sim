@@ -132,7 +132,7 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-value text-ui-damage">
+      <td className="px-2 py-2 text-right font-mono text-label text-ui-damage">
         {formatFrames(row.timeFrames)}
       </td>
       <td className="px-2 py-2 text-white overflow-hidden">
@@ -180,7 +180,7 @@ export function TimelineEntryRow({
                   ),
                 })
               }}
-              className="text-detail text-ui-damage px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border cursor-pointer"
+              className="text-micro text-ui-damage px-1 py-0.5 rounded font-mono shrink-0 bg-card border border-border cursor-pointer"
               style={{ letterSpacing: "0.4px" }}
               title="Full / Cancel / Instant Cancel"
             >
@@ -218,7 +218,7 @@ export function TimelineEntryRow({
           )}
         </div>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-value text-gray-300">
+      <td className="px-2 py-2 text-right font-mono text-label text-gray-300">
         {formatFrames(row.durationFrames)}
       </td>
       <td
@@ -235,7 +235,7 @@ export function TimelineEntryRow({
         className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
       >
         {row.damage !== null ? (
-          <span className="font-semibold text-stat text-yellow-400">
+          <span className="font-semibold text-value text-yellow-400">
             {row.damage.toLocaleString()}
           </span>
         ) : (

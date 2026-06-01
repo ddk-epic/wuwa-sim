@@ -14,7 +14,7 @@ export function SustainEventRow({
       <td className="px-2 py-2 font-mono text-xs text-right text-muted-foreground">
         {index + 1}
       </td>
-      <td className={`${numCell} text-value text-ui-damage`}>
+      <td className={`${numCell} text-label text-ui-damage`}>
         {formatFrames(ev.frame)}
       </td>
       <td className="px-2 py-2">

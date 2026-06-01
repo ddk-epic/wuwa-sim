@@ -34,7 +34,7 @@ function GroupedBuffRow({ row, index }: { row: BuffGroupRow; index: number }) {
       <td className="px-2 py-1 font-mono text-xs text-right text-muted-foreground/60">
         {index + 1}
       </td>
-      <td className={`${numCell} text-ui-damage text-xs`}>
+      <td className={`${numCell} text-ui-damage text-label`}>
         {formatFrames(row.frame)}
       </td>
       <td className="px-2 py-1">
@@ -42,7 +42,7 @@ function GroupedBuffRow({ row, index }: { row: BuffGroupRow; index: number }) {
       </td>
       <td className={`py-1 italic text-detail ${color}`}>buff {verb}</td>
       <td
-        className="px-2 py-1 text-sm text-gray-300 whitespace-normal break-words"
+        className="px-2 py-1 text-sm text-gray-300 whitespace-normal wrap-break-word"
         colSpan={Math.max(1, COL_COUNT - 4)}
       >
         {row.entries.map((e, j) => (

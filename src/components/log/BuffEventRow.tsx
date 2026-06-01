@@ -39,7 +39,7 @@ export function BuffEventRow({
       <td className="px-2 py-1 font-mono text-xs text-right text-muted-foreground/60">
         {index + 1}
       </td>
-      <td className={`${numCell} text-ui-damage text-xs`}>
+      <td className={`${numCell} text-ui-damage text-label`}>
         {formatFrames(buff.frame)}
       </td>
       <td className="px-2 py-1">

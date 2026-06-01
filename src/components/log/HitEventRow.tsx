@@ -42,7 +42,7 @@ export function HitEventRow({
           </span>
           {index + 1}
         </td>
-        <td className={`${numCell} text-value text-ui-damage`}>
+        <td className={`${numCell} text-label text-ui-damage`}>
           {formatFrames(ev.frame)}
         </td>
         <td className="px-2 py-2">

@@ -102,7 +102,7 @@ export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
                 {character.name}
               </div>
               <div
-                className="text-detail font-mono uppercase tracking-[1px] leading-none mt-1"
+                className="text-micro font-mono uppercase tracking-[1px] leading-none mt-1"
                 style={{ color: hex }}
               >
                 {character.element}
@@ -176,7 +176,7 @@ function StageRow({ stage, onStageClick }: StageRowProps) {
         {stage.typeLabel}
       </span>
       <span className="flex-1 text-sm text-gray-200">{stage.label}</span>
-      <span className="font-mono text-value text-gray-500 ml-2">
+      <span className="font-mono text-label text-gray-500 ml-2">
         {durationSec}
       </span>
     </button>

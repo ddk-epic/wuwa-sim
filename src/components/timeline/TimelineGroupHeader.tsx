@@ -132,7 +132,7 @@ export function TimelineGroupHeader({
           }}
         />
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-value text-ui-damage">
+      <td className="px-2 py-1.5 text-right font-mono text-label text-ui-damage">
         {firstRowTime}
       </td>
       <td className="px-2 py-1.5">
@@ -214,7 +214,7 @@ export function TimelineGroupHeader({
           </span>
         </div>
       </td>
-      <td className="px-2 py-1.5 text-right font-mono text-value text-gray-300">
+      <td className="px-2 py-1.5 text-right font-mono text-label text-gray-300">
         {formatFrames(totalDurFrames)}
       </td>
       <td className="px-2 py-1.5 text-right font-mono">
@@ -226,11 +226,11 @@ export function TimelineGroupHeader({
       <td className="px-2 py-1.5 font-semibold text-right font-mono">
         {totalDamage !== null ? (
           isExpanded ? (
-            <span className="text-stat text-gray-600">
+            <span className="text-value text-gray-600">
               {totalDamage.toLocaleString()}
             </span>
           ) : (
-            <span className="font-bold text-stat text-yellow-400">
+            <span className="font-bold text-value text-yellow-400">
               {totalDamage.toLocaleString()}
             </span>
           )

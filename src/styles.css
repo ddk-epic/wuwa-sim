@@ -61,18 +61,28 @@
   --bg-fallback: #0b0b0b;
   --bg-fallback-card: #181818;
 
-  /* Font size tokens */
-  --fs-micro: 10px;
-  --fs-detail: 12px;
-  --fs-label: 13px;
-  --fs-value: 16px;
-  --fs-stat: 19px;
-  --fs-title: 24px;
+  /* Font size tokens (rem, scaled to 0.9x of original px @ 16px root) */
+  --fs-micro: 0.5625rem; /* was 10px */
+  --fs-detail: 0.675rem; /* was 12px */
+  --fs-label: 0.73125rem; /* was 13px */
+  --fs-value: 0.9rem; /* was 16px */
+  --fs-stat: 1.0125rem; /* was 18px */
+  --fs-title: 1.35rem; /* was 24px */
 }
 
 @theme inline {
   --font-family-sans: "Manrope", -apple-system, system-ui, sans-serif;
   --font-family-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Uniform 0.9x base: affects (p-*, m-*, gap-*, w-*, h-*, size-*) */
+  --spacing: 0.225rem; /* default: 0.25rem */
+  --text-xs: 0.675rem; /* 0.75 */
+  --text-sm: 0.7875rem; /* 0.875 */
+  --text-base: 0.9rem; /* 1 */
+  --text-lg: 1.0125rem; /* 1.125 */
+  --text-xl: 1.125rem; /* 1.25 */
+  --text-2xl: 1.35rem; /* 1.5 */
+  --text-3xl: 1.6875rem; /* 1.875 */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
