@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type {
   TimelineEntry,
   TimelineGroup,
@@ -24,7 +24,7 @@ export function useTimeline(onShapeChange?: () => void) {
 
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null)
 
-  const entries = flattenNodes(nodes)
+  const entries = useMemo(() => flattenNodes(nodes), [nodes])
 
   function startRename(groupId: string) {
     setRenamingGroupId(groupId)

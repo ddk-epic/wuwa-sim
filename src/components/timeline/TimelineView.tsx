@@ -87,7 +87,7 @@ export function TimelineView({
     knownGroupIds.current = currentGroupIds
   }, [nodes])
 
-  const entries = flattenNodes(nodes)
+  const entries = useMemo(() => flattenNodes(nodes), [nodes])
 
   const validation = useMemo(
     () => validateTimeline(entries, slots, loadouts),
