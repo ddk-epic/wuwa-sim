@@ -4,6 +4,7 @@ import type {
   HealTarget,
   SkillType,
 } from "#/types/character"
+import type { HitContext } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
@@ -541,7 +542,16 @@ function processHit(bundle: TrailingHit, ctx: SimContext): void {
 function resolveTrailingBundle(bundle: TrailingHit, ctx: SimContext): void {
   const { hit, hitIndex, entry, resolved, hitFrame } = bundle
   const { engine, log } = ctx
-  const hitResolved = engine.resolveHit(entry.characterId, hitFrame)
+  // Authored hit identity (ADR-0029): thread the same axes the hitLanded event
+  // carries so a `stageId`-scoped `appliesToHits` bonus folds into this hit's own
+  // snapshot, and non-matching hit-scoped buffs drop out of its `activeBuffs`.
+  const hitContext: HitContext = {
+    stageId: `${resolved.stageId}.${hitIndex + 1}`,
+    skillCategory: resolved.skillCategory,
+    skillType: hit.type,
+    element: resolved.element,
+  }
+  const hitResolved = engine.resolveHit(entry.characterId, hitFrame, hitContext)
   pushBuffEvents(log, hitResolved.lifecycleEvents)
 
   if (hit.dmgType === "Heal") {
