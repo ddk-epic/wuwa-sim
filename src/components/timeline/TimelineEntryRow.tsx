@@ -235,7 +235,7 @@ export function TimelineEntryRow({
         className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
       >
         {row.damage !== null ? (
-          <span className="font-semibold text-value text-yellow-400">
+          <span className="font-semibold text-base text-yellow-400">
             {row.damage.toLocaleString()}
           </span>
         ) : (
