@@ -194,3 +194,42 @@ describe("deferred emitHit — honor actionFrame (ADR-0028 flip)", () => {
     expect(synth?.frame).toBe(30)
   })
 })
+
+describe("deferred emitHit — no overshoot (ADR-0028 endgame item 1)", () => {
+  // A self stat buff applied on Gold A's hit (frame 0) that expires at frame 135.
+  const tempAtk: BuffDef = {
+    id: "gold.temp-atk",
+    name: "Temp ATK",
+    trigger: { event: "hitLanded", characterId: 1, source: "self" },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 135 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 1.0 },
+      },
+    ],
+  }
+
+  it("snapshots at the landing frame even when a later authored hit overshoots it", () => {
+    const charA = makeChar(1, "Gold A", [emitBuff(130), tempAtk])
+    // Gold B's authored hit lands at frame 260 (e2 start 60 + actionFrame 200),
+    // ticking the monotonic clock well past the synthetic's landing frame of 130.
+    const charB = makeChar(2, "Gold B")
+    charB.skills[0].stages[0].damage = [{ ...dmgHit(1.0), actionFrame: 200 }]
+    testCharacters = [charA, charB]
+    const slots: Slots = [1, 2, null]
+    const entries = [
+      tlEntry(1, stageOf("gold-a"), "e1"),
+      tlEntry(2, stageOf("gold-b"), "e2"),
+    ]
+    const log = runSimulation(entries, slots, loadouts)
+    const synth = log.find(isSynth)
+    expect(synth?.frame).toBe(130)
+    // `tempAtk` (endTime 135) is active at frame 130, expired by 260. A
+    // landing-frame snapshot sees it; an overshot (frame-260) snapshot would not.
+    // This fails without `advanceTo` pre-draining before the overshooting hit.
+    expect(synth?.activeBuffs.map((b) => b.id)).toContain("gold.temp-atk")
+  })
+})

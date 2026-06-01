@@ -86,3 +86,28 @@ The per-character footing snapshot is removed. `FootingTracker` keeps **only** t
 - `pendingFooting` on `TrailingEntry` is unchanged; it remains the sole per-character carrier of an in-flight launch/land. Its cancel-capable drop / non-cancel-capable pad rules (this ADR's "Trailing Window event scheduling" section) are unchanged.
 
 **Scope deliberately cut.** This removes the generality of applying a footing commit _while its owner is off-field_. That generality is only needed if a future feature **reads an off-field character's footing at an arbitrary frame** — the forward-looking off-field-damage projection mentioned in the `animationFrames` glossary entry is the candidate. If that feature lands and genuinely needs per-character footing reads, it reopens this in a new ADR and re-introduces per-character state then — paid for by a real consumer, not speculatively.
+
+## Amendment — Per-character footing on the event stream; In-trailing characters carry live footing
+
+The consumer the "snapshot removed" amendment deferred to has arrived: characters that **act while off-field** — the [[In-trailing]] state, where a swapped-out character's last stage is still resolving on the one frame-ordered event stream (see [ADR-0028](0028-emithits-as-frame-honest-worklist.md)'s endgame). Per-character footing is re-introduced, but realized on that stream rather than via the original parallel snapshot dict.
+
+**Deployment State.** A character is in exactly one of: **On-field** (deployed/controlled), **In-trailing** (swapped out, its last stage's Trailing Window still open — duration = the stage's `actionTime`), or **In-reserve** (window passed; inert). Footing is _live_ while On-field or In-trailing; an In-reserve character is `ground`.
+
+**Two footing values on `FootingTracker`:**
+
+1. **Team footing** — the field's vertical state = the On-field character's footing. A _fresh_ swap-in inherits it (swapping while airborne keeps the incoming character airborne — the case the "Team-global is wrong" rejection above was really protecting, and it still holds). On-field launch/land commits set it via `applyStageFooting`.
+2. **Carried footing** — `Map<characterId, "ground" | "air">`, a per-character override. Set by a launch/land commit firing while the owner is In-trailing (off-field), and by the window-end reset. Consumed at the owner's next swap-in: if present it is used **and promoted to team footing**; otherwise team footing is inherited.
+
+**Footing commits are stream events (instant, no easing).** A swap stage whose launch/land commit frame falls past its `advance` enqueues a footing commit at that frame onto the event stream; on resolve it sets the owner's **carried** footing (the owner is off-field, so team footing is untouched). It obeys the same drop/pad as trailing hits: a same-character cancel-capable re-entry before the commit frame tombstones it (the launch never happened); a non-cancel re-entry pads past it so it fires.
+
+**In-trailing → In-reserve reset.** An airborne In-trailing character returns to `ground` when its Trailing Window passes without a swap-back — a **window-end reset** stream event at `stageStart + actionTime` setting carried `ground`. A re-entry _within_ the window cancels it (carried `air` survives → the swap-back enters airborne and pays fall); a re-entry _at or after_ window-end lets it fire first (the character is benched to `ground` before it takes the field again). Carried footing is read only at the owner's own swap-in, and every entry drains the stream to its arrival frame before reading, so the lazy reset is never observed stale.
+
+**Why this reverses "snapshot removed" without restoring its mechanism.** The prior amendment was right that the _old snapshot dict_ was redundant — its producer fired at re-entry, never off-field. The new design genuinely fires commits off-field (the generality that amendment cut), but via the unified event stream, so carried footing is the live _result_ of stream commits, not a second copy of `pendingFooting`. `TrailingEntry.pendingFooting` itself dissolves: the Trailing Window's per-character map is gone (ADR-0028), and footing commits/resets are first-class stream members alongside trailing hits.
+
+**Resulting shape.**
+
+- `FootingTracker`: `teamFooting()`, `setTeam(f)`, `carriedFor(id)`, `setCarried(id, f)`, `takeCarried(id)`, `mutationVersion()`. The single-team-value surface is replaced by team + a carried map.
+- `FootingModule`: `team()`, `applyStageFooting(footing, stageDuration)` (on-field, unchanged), `commitFor(id, exitFooting)` (a stream commit/reset sets the owner's carried footing), `resolveEntry(id)` (the swap-in read: carried override if any — promoted to team and consumed — else inherited team footing).
+- The simulation enqueues the footing commit and the window-end reset onto the pending stream; `resolveArrival` tombstones the commit on a cancel-capable collision, cancels the reset on a within-window re-entry, and pads on a non-cancel collision; `drainPending` applies both via `commitFor`.
+
+**Consequence on the swap-back-pays-fall feature.** The within-window case is unchanged (re-entry before `actionTime` enters airborne and pays fall). A swap-back _after_ `actionTime` now benches to `ground` (no fall) — the deliberately corrected model: a character whose trailing window has passed has "landed in the background." Tests whose intervening teammate action outlasts the launcher's `actionTime` were updated from "pays fall" to "no fall" accordingly.

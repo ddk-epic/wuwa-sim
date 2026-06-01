@@ -7,6 +7,14 @@ import type {
 import type { TimelineEntry } from "#/types/timeline"
 import type { ResolvedStage } from "./stage"
 
+/**
+ * One scheduled hit of a stage, carrying everything needed to resolve it at its
+ * `hitFrame`. A swap stage's hits whose `actionFrame` exceeds the stage's
+ * `advance` become trailing members of the frame-ordered pending stream
+ * (ADR-0018, relocated off a per-character map onto the stream in ADR-0028's
+ * endgame); other hits resolve immediately. The Acting Character is always the
+ * bundle's `entry.characterId`.
+ */
 export interface TrailingHit {
   hit: DamageEntry
   hitIndex: number
@@ -16,13 +24,6 @@ export interface TrailingHit {
   hitFrame: number
 }
 
-export interface TrailingEntry {
-  hits: readonly TrailingHit[]
-  pendingFooting?: { atFrame: number; exitFooting: "ground" | "air" }
-}
-
-export type TrailingWindowState = ReadonlyMap<number, TrailingEntry>
-
 const CANCEL_CAPABLE = new Set<SkillType>([
   "Resonance Skill",
   "Resonance Liberation",
@@ -31,91 +32,37 @@ const CANCEL_CAPABLE = new Set<SkillType>([
   "Echo Skill",
 ])
 
-export function empty(): TrailingWindowState {
-  return new Map()
+/**
+ * Whether a re-entry of this Skill Type cancels a same-character stage's
+ * residual trailing hits (drop) versus padding to let them all land (ADR-0018).
+ */
+export function isCancelCapable(skillType: SkillType): boolean {
+  return CANCEL_CAPABLE.has(skillType)
 }
 
-export function onEntryArrival(
-  state: TrailingWindowState,
-  incoming: { characterId: number; skillType: SkillType; frame: number },
-): {
-  fireBeforeEntry: readonly TrailingHit[]
-  padFrames: number
-  stateAfter: TrailingWindowState
-  pendingFootingToFire?: { exitFooting: "ground" | "air" }
-} {
-  const charEntry = state.get(incoming.characterId)
-  if (!charEntry) {
-    return { fireBeforeEntry: [], padFrames: 0, stateAfter: state }
-  }
-
-  const { hits: charHits, pendingFooting } = charEntry
-
-  if (charHits.length === 0 && !pendingFooting) {
-    return { fireBeforeEntry: [], padFrames: 0, stateAfter: state }
-  }
-
-  const newState = new Map(state)
-  newState.delete(incoming.characterId)
-
-  const hasHitCollision = charHits.some((p) => p.hitFrame >= incoming.frame)
-  const hasFootingCollision =
-    !!pendingFooting && pendingFooting.atFrame >= incoming.frame
-  const hasCollision = hasHitCollision || hasFootingCollision
-
-  if (!hasCollision) {
-    const pendingFootingToFire = pendingFooting
-      ? { exitFooting: pendingFooting.exitFooting }
-      : undefined
-    return {
-      fireBeforeEntry: charHits,
-      padFrames: 0,
-      stateAfter: newState,
-      pendingFootingToFire,
-    }
-  }
-
-  if (CANCEL_CAPABLE.has(incoming.skillType)) {
-    const fireBeforeEntry = charHits.filter((p) => p.hitFrame < incoming.frame)
-    const pendingFootingToFire =
-      pendingFooting && pendingFooting.atFrame < incoming.frame
-        ? { exitFooting: pendingFooting.exitFooting }
-        : undefined
-    return {
-      fireBeforeEntry,
-      padFrames: 0,
-      stateAfter: newState,
-      pendingFootingToFire,
-    }
-  }
-
-  const lastHitFrame =
-    charHits.length > 0 ? charHits[charHits.length - 1].hitFrame : -Infinity
-  const pendingFrame = pendingFooting?.atFrame ?? -Infinity
-  const latestFrame = Math.max(lastHitFrame, pendingFrame)
-  const padFrames = latestFrame - incoming.frame
-  const pendingFootingToFire = pendingFooting
-    ? { exitFooting: pendingFooting.exitFooting }
-    : undefined
-  return {
-    fireBeforeEntry: charHits,
-    padFrames,
-    stateAfter: newState,
-    pendingFootingToFire,
-  }
+export interface StagePartition {
+  /** Hits that resolve within the cursor advance — fired now, in order. */
+  immediate: readonly TrailingHit[]
+  /** Swap-stage hits landing after the advance — enqueued onto the stream. */
+  trailing: readonly TrailingHit[]
+  /** A swap-stage launch/land whose commit frame falls after the advance. */
+  pendingFooting?: { atFrame: number; exitFooting: "ground" | "air" }
 }
 
-export function scheduleStage(
-  state: TrailingWindowState,
-  ctx: {
-    entry: TimelineEntry
-    resolved: ResolvedStage
-    stageStartFrame: number
-    hits: readonly DamageEntry[]
-    variantKind: VariantKind | undefined
-    stageDuration: number
-  },
-): { immediate: readonly TrailingHit[]; stateAfter: TrailingWindowState } {
+/**
+ * Partition a stage's hits into immediate vs trailing and surface any deferred
+ * footing commit. Pure: it computes frames from the stage's own data, holding no
+ * state — the caller enqueues the trailing hits and parks the footing commit.
+ * For a non-swap stage every hit is immediate (no trailing window opens).
+ */
+export function partitionStage(ctx: {
+  entry: TimelineEntry
+  resolved: ResolvedStage
+  stageStartFrame: number
+  hits: readonly DamageEntry[]
+  variantKind: VariantKind | undefined
+  stageDuration: number
+}): StagePartition {
   const allBundles: TrailingHit[] = ctx.hits.map((h, i) => ({
     hit: h,
     hitIndex: i,
@@ -141,13 +88,7 @@ export function scheduleStage(
       )
     : undefined
 
-  if (trailing.length === 0 && !pendingFooting) {
-    return { immediate, stateAfter: state }
-  }
-
-  const newState = new Map(state)
-  newState.set(ctx.entry.characterId, { hits: trailing, pendingFooting })
-  return { immediate, stateAfter: newState }
+  return { immediate, trailing, pendingFooting }
 }
 
 function buildPendingFooting(
@@ -163,12 +104,4 @@ function buildPendingFooting(
     return { atFrame: stageStartFrame + footing.land, exitFooting: "ground" }
   }
   return undefined
-}
-
-export function drainAll(state: TrailingWindowState): readonly TrailingHit[] {
-  const result: TrailingHit[] = []
-  for (const entry of state.values()) {
-    result.push(...entry.hits)
-  }
-  return result
 }

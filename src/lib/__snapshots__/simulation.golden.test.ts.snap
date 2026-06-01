@@ -27,3 +27,11 @@ exports[`golden: simulation log ordering (ADR-0028 oracle) > swap + energy share
 @  60 ACTION c2 "Normal Attack" [Basic Attack] E=11.840 C=0
 @  60 HIT   c2 "Normal Attack [hit 1]" [Basic Attack/Fusion] dmg=1863 E=16.576 C=2 buffs=[]"
 `;
+
+exports[`golden: simulation log ordering (ADR-0028 oracle) > trailing hit interleaves frame-honestly with a later entry's hit (ADR-0028 endgame) 1`] = `
+"@   0 ACTION c1 "Normal Attack" [Basic Attack] E=0 C=0 var=swap
+@   0 HIT   c1 "Normal Attack [hit 1]" [Basic Attack/Fusion] dmg=3492 E=0 C=0 buffs=[]
+@   6 ACTION c2 "Normal Attack" [Basic Attack] E=0 C=0
+@  30 HIT   c1 "Normal Attack [hit 2]" [Basic Attack/Fusion] dmg=4657 E=0 C=0 buffs=[]
+@  46 HIT   c2 "Normal Attack [hit 1]" [Basic Attack/Fusion] dmg=1863 E=0 C=0 buffs=[]"
+`;

@@ -194,4 +194,22 @@ describe("golden: simulation log ordering (ADR-0028 oracle)", () => {
     )
     expect(serializeLog(log)).toMatchSnapshot()
   })
+
+  it("trailing hit interleaves frame-honestly with a later entry's hit (ADR-0028 endgame)", () => {
+    // Gold A swaps out; its actionFrame-30 hit trails (advance = swapFrames 6).
+    // Gold B then hits at frame 6 + 40 = 46. The trailing hit at frame 30 must
+    // land *between* Gold B's action (frame 6) and Gold B's hit (frame 46) — the
+    // unified stream resolves it in frame order, not flushed at the end.
+    testCharacters = [
+      makeChar(1, "Gold A", [dmgHit(1.5, 0, 0, 0), dmgHit(2.0, 0, 0, 30)]),
+      makeChar(2, "Gold B", [dmgHit(0.8, 0, 0, 40)]),
+    ]
+    const slots: Slots = [1, 2, null]
+    const entries: TimelineEntry[] = [
+      { ...tlEntry(1, stageOf("gold-a"), "e1"), variantKind: "swap" },
+      tlEntry(2, stageOf("gold-b"), "e2"),
+    ]
+    const log = runSimulation(entries, slots, loadouts)
+    expect(serializeLog(log)).toMatchSnapshot()
+  })
 })

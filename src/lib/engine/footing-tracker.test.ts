@@ -2,25 +2,28 @@ import { describe, expect, it } from "vitest"
 import { FootingTracker } from "./footing-tracker"
 
 describe("FootingTracker", () => {
-  it("starts at ground", () => {
+  it("starts with ground team footing and no carried overrides", () => {
     const t = new FootingTracker()
-    expect(t.current()).toBe("ground")
+    expect(t.teamFooting()).toBe("ground")
+    expect(t.carriedFor(1)).toBeUndefined()
   })
 
-  it("clear resets to ground and increments version", () => {
+  it("clear resets team to ground, drops carried, and increments version", () => {
     const t = new FootingTracker()
     t.setTeam("air")
+    t.setCarried(1, "air")
     const v = t.mutationVersion()
     t.clear()
-    expect(t.current()).toBe("ground")
+    expect(t.teamFooting()).toBe("ground")
+    expect(t.carriedFor(1)).toBeUndefined()
     expect(t.mutationVersion()).toBeGreaterThan(v)
   })
 
-  it("setTeam updates value and increments version", () => {
+  it("setTeam updates team footing and increments version", () => {
     const t = new FootingTracker()
     const v0 = t.mutationVersion()
     t.setTeam("air")
-    expect(t.current()).toBe("air")
+    expect(t.teamFooting()).toBe("air")
     expect(t.mutationVersion()).toBeGreaterThan(v0)
   })
 
@@ -31,10 +34,18 @@ describe("FootingTracker", () => {
     expect(t.mutationVersion()).toBe(v)
   })
 
-  it("round-trip ground → air → ground", () => {
+  it("carried footing is per-character and independent of team footing", () => {
     const t = new FootingTracker()
-    t.setTeam("air")
-    t.setTeam("ground")
-    expect(t.current()).toBe("ground")
+    t.setCarried(1, "air")
+    expect(t.carriedFor(1)).toBe("air")
+    expect(t.carriedFor(2)).toBeUndefined()
+    expect(t.teamFooting()).toBe("ground")
+  })
+
+  it("takeCarried removes the override", () => {
+    const t = new FootingTracker()
+    t.setCarried(1, "air")
+    t.takeCarried(1)
+    expect(t.carriedFor(1)).toBeUndefined()
   })
 })

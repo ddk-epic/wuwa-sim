@@ -8,18 +8,16 @@ export class FootingModule {
     this.tracker.clear()
   }
 
-  // Current team footing — the on-field character's vertical state.
-  current(): "ground" | "air" {
-    return this.tracker.current()
+  /** Team footing — the field's vertical state (the On-field character's). */
+  team(): "ground" | "air" {
+    return this.tracker.teamFooting()
   }
 
-  // Trailing-window deferred commit: a launch/land that fell in a swap tail and
-  // survived re-entry. Called by the Trailing Window when the owner is on-field.
-  commit(exitFooting: "ground" | "air"): void {
-    this.tracker.setTeam(exitFooting)
-  }
-
-  // On-field stage commit: if a launch/land event lands within stageDuration, update team footing.
+  /**
+   * On-field stage commit: a launch/land whose commit frame falls within the
+   * stage's own duration updates team footing immediately (the character never
+   * leaves the field, so it is not a stream event).
+   */
   applyStageFooting(footing: Footing | undefined, stageDuration: number): void {
     if (!footing || typeof footing !== "object") return
     if ("launch" in footing && footing.launch <= stageDuration) {
@@ -27,5 +25,33 @@ export class FootingModule {
     } else if ("land" in footing && footing.land <= stageDuration) {
       this.tracker.setTeam("ground")
     }
+  }
+
+  /**
+   * Set a character's carried footing — the effect of a footing stream event: a
+   * launch/land commit (`air`/`ground`) fired while the owner is [[In-trailing]],
+   * or the window-end reset to `ground`. Instant: a single-frame flip. It does
+   * not touch team footing (the owner is off-field), only what that character
+   * will take the field on at its next swap-in.
+   */
+  commitFor(characterId: number, exitFooting: "ground" | "air"): void {
+    this.tracker.setCarried(characterId, exitFooting)
+  }
+
+  /**
+   * The footing a character takes the field on as it begins an entry: its
+   * carried override if it has one (a swap-back during its trailing window, or a
+   * benched character carrying `ground`), otherwise team footing (a fresh
+   * swap-in inherits the field). Consumes the override and promotes the result
+   * to team footing — the field now reflects whoever is On-field.
+   */
+  resolveEntry(characterId: number): "ground" | "air" {
+    const carried = this.tracker.carriedFor(characterId)
+    if (carried !== undefined) {
+      this.tracker.setTeam(carried)
+      this.tracker.takeCarried(characterId)
+      return carried
+    }
+    return this.tracker.teamFooting()
   }
 }
