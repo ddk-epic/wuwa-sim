@@ -42,7 +42,7 @@ function makeEngine() {
 }
 
 describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
-  it("applies Avalanche flag (no stat effect) on Frigid Light Stage 5 cast", () => {
+  it("applies Avalanche on Frigid Light Stage 5 cast; hit-agnostic stats unchanged", () => {
     const engine = makeEngine()
     engine.onEvent({
       kind: "skillCast",
@@ -54,12 +54,129 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
     expect(engine.activeBuffIds(1102)).toContain(
       "char.sanhua.passive.avalanche",
     )
+    // Avalanche is appliesToHits — hit-agnostic pass must not see it
     const stats = engine.resolveStats(1102)
-    expect(stats.skillTypeBonus["Resonance Skill"]).toBe(0)
-    expect(stats.skillTypeBonus["Basic Attack"]).toBe(0)
+    expect(stats.allDmgBonus).toBeCloseTo(0)
   })
 
-  it("fires Ice Thorn bonus coordHit when Avalanche is active", () => {
+  it("Ice Thorn burst statsSnapshot includes +0.2 allDmgBonus when Avalanche is active", () => {
+    const engine = makeEngine()
+    // Arm Avalanche (BA5) and Ice Thorn flag (Intro Skill)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Basic Attack",
+      stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Intro Skill",
+      frame: 1,
+    })
+    // Dispatch Detonate — produces deferred ice-thorn-burst emit at detonate+14
+    const { deferredEmits } = onEventResolved(engine, {
+      kind: "hitLanded",
+      characterId: 1102,
+      skillCategory: "Heavy Attack",
+      stageId:
+        "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+      dmgType: "Damage",
+      frame: 100,
+    })
+    const burstEmit = deferredEmits.find(
+      (d) => d.input.def.id === "char.sanhua.ice-thorn-burst",
+    )
+    expect(burstEmit).toBeDefined()
+
+    // Resolve the ice burst at its landing frame — stats must include Avalanche +0.2
+    const resolved = engine.resolveDeferredEmit(burstEmit!)
+    expect(resolved.event.kind).toBe("hit")
+    const hit = resolved.event
+    expect(hit.kind === "hit" && hit.statsSnapshot.allDmgBonus).toBeCloseTo(0.2)
+  })
+
+  it("Ice Thorn burst statsSnapshot has no allDmgBonus when Avalanche is absent", () => {
+    const engine = makeEngine()
+    // Arm Ice Thorn flag only — no BA5 cast, so Avalanche is NOT active
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Intro Skill",
+      frame: 0,
+    })
+    const { deferredEmits } = onEventResolved(engine, {
+      kind: "hitLanded",
+      characterId: 1102,
+      skillCategory: "Heavy Attack",
+      stageId:
+        "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+      dmgType: "Damage",
+      frame: 10,
+    })
+    const burstEmit = deferredEmits.find(
+      (d) => d.input.def.id === "char.sanhua.ice-thorn-burst",
+    )
+    expect(burstEmit).toBeDefined()
+    const resolved = engine.resolveDeferredEmit(burstEmit!)
+    expect(resolved.event.kind).toBe("hit")
+    const allDmgBonus =
+      resolved.event.kind === "hit" && resolved.event.statsSnapshot.allDmgBonus
+    expect(allDmgBonus).toBeCloseTo(0)
+  })
+
+  it("Ice Prism and Ice Glacier burst statsSnapshots each include +0.2 allDmgBonus when Avalanche is active", () => {
+    const engine = makeEngine()
+    // Arm Avalanche, Ice Prism flag (Resonance Skill), Ice Glacier flag (Resonance Liberation)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Basic Attack",
+      stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Resonance Skill",
+      frame: 1,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Resonance Liberation",
+      resonanceCost: 100,
+      frame: 2,
+    })
+
+    // Detonate → deferred prism + glacier emits
+    const { deferredEmits } = onEventResolved(engine, {
+      kind: "hitLanded",
+      characterId: 1102,
+      skillCategory: "Heavy Attack",
+      stageId:
+        "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+      dmgType: "Damage",
+      frame: 100,
+    })
+
+    for (const id of [
+      "char.sanhua.ice-prism-burst",
+      "char.sanhua.ice-glacier-burst",
+    ]) {
+      const emit = deferredEmits.find((d) => d.input.def.id === id)
+      expect(emit, `deferred emit for ${id}`).toBeDefined()
+      const resolved = engine.resolveDeferredEmit(emit!)
+      expect(resolved.event.kind, `${id} kind`).toBe("hit")
+      const allDmgBonus =
+        resolved.event.kind === "hit" &&
+        resolved.event.statsSnapshot.allDmgBonus
+      expect(allDmgBonus, `${id} allDmgBonus`).toBeCloseTo(0.2)
+    }
+  })
+
+  it("resolveStats without hit context does not include Avalanche +0.2 even when active", () => {
     const engine = makeEngine()
     engine.onEvent({
       kind: "skillCast",
@@ -68,101 +185,12 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    const { syntheticEvents } = onEventResolved(engine, {
-      kind: "hitLanded",
-      characterId: 1102,
-      skillCategory: "Resonance Skill",
-      dmgType: "Damage",
-      synthetic: true,
-      sourceBuffId: "char.sanhua.ice-thorn-burst",
-      frame: 30,
-    })
-    const bonus = syntheticEvents.find(
-      (e) => e.sourceBuffId === "char.sanhua.passive.avalanche.bonus.thorn",
+    expect(engine.activeBuffIds(1102)).toContain(
+      "char.sanhua.passive.avalanche",
     )
-    expect(bonus).toBeDefined()
-    expect(bonus?.kind).toBe("hit")
-  })
-
-  it("does not fire bonus when Avalanche flag is absent", () => {
-    const engine = makeEngine()
-    const { syntheticEvents } = onEventResolved(engine, {
-      kind: "hitLanded",
-      characterId: 1102,
-      skillCategory: "Resonance Skill",
-      dmgType: "Damage",
-      synthetic: true,
-      sourceBuffId: "char.sanhua.ice-thorn-burst",
-      frame: 0,
-    })
-    const bonus = syntheticEvents.find((e) =>
-      e.sourceBuffId?.startsWith("char.sanhua.passive.avalanche.bonus"),
-    )
-    expect(bonus).toBeUndefined()
-  })
-
-  it("fires Ice Prism and Ice Glacier bonuses with their own multipliers", () => {
-    const engine = makeEngine()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1102,
-      skillCategory: "Basic Attack",
-      stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
-      frame: 0,
-    })
-    const prismDispatch = onEventResolved(engine, {
-      kind: "hitLanded",
-      characterId: 1102,
-      skillCategory: "Resonance Skill",
-      dmgType: "Damage",
-      synthetic: true,
-      sourceBuffId: "char.sanhua.ice-prism-burst",
-      frame: 30,
-    })
-    const prismBonus = prismDispatch.syntheticEvents.find(
-      (e) => e.sourceBuffId === "char.sanhua.passive.avalanche.bonus.prism",
-    )
-    expect(prismBonus?.kind === "hit" && prismBonus.multiplier).toBeCloseTo(
-      0.15906,
-    )
-
-    const glacierDispatch = onEventResolved(engine, {
-      kind: "hitLanded",
-      characterId: 1102,
-      skillCategory: "Resonance Skill",
-      dmgType: "Damage",
-      synthetic: true,
-      sourceBuffId: "char.sanhua.ice-glacier-burst",
-      frame: 31,
-    })
-    const glacierBonus = glacierDispatch.syntheticEvents.find(
-      (e) => e.sourceBuffId === "char.sanhua.passive.avalanche.bonus.glacier",
-    )
-    expect(glacierBonus?.kind === "hit" && glacierBonus.multiplier).toBeCloseTo(
-      0.27834,
-    )
-  })
-
-  it("does not fire bonus from non-burst Resonance Skill hits while Avalanche is active", () => {
-    const engine = makeEngine()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1102,
-      skillCategory: "Basic Attack",
-      stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
-      frame: 0,
-    })
-    const { syntheticEvents } = onEventResolved(engine, {
-      kind: "hitLanded",
-      characterId: 1102,
-      skillCategory: "Resonance Skill",
-      dmgType: "Damage",
-      frame: 30,
-    })
-    const bonus = syntheticEvents.find((e) =>
-      e.sourceBuffId?.startsWith("char.sanhua.passive.avalanche.bonus"),
-    )
-    expect(bonus).toBeUndefined()
+    // Hit-agnostic pass must NOT fold the appliesToHits buff
+    const stats = engine.resolveStats(1102)
+    expect(stats.allDmgBonus).toBeCloseTo(0)
   })
 })
 

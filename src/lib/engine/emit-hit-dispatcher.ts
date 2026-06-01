@@ -2,6 +2,7 @@ import type {
   BuffDef,
   CoordHitEffect,
   EmitHitEffect,
+  HitContext,
   ResourceKind,
   ResourceState,
 } from "#/types/buff"
@@ -55,7 +56,7 @@ export interface DeferredEmit {
 }
 
 export interface EmitHitHost {
-  resolveStats: (characterId: number) => StatTable
+  resolveStats: (characterId: number, hit?: HitContext) => StatTable
   applyResourceDelta: (
     characterId: number,
     resource: ResourceKind,
@@ -66,7 +67,7 @@ export interface EmitHitHost {
     depth: number,
   ) => void
   getResource: (characterId: number) => ResourceState
-  activeBuffs: (characterId: number) => ActiveBuff[]
+  activeBuffs: (characterId: number, hit?: HitContext) => ActiveBuff[]
   passiveBuffs: (characterId: number) => ActiveBuff[]
   resolveHealTargets: (
     target: HealTarget,
@@ -147,7 +148,14 @@ export class EmitHitDispatcher {
     out: BuffEvent[],
     hitsOut: (HitEvent | SustainEvent)[],
   ): HitEvent | SustainEvent {
-    const stats = host.resolveStats(input.sourceCharacterId)
+    const character = getCharacterById(input.sourceCharacterId)
+    const hitCtx: HitContext = {
+      sourceBuffId: input.def.id,
+      skillType: input.effect.skillType ?? input.effect.damage.type,
+      element: input.effect.element ?? character?.element,
+    }
+
+    const stats = host.resolveStats(input.sourceCharacterId, hitCtx)
 
     if (input.effect.damage.energy) {
       host.applyResourceDelta(
@@ -173,7 +181,7 @@ export class EmitHitDispatcher {
     }
     const post = host.getResource(input.sourceCharacterId)
 
-    return buildSyntheticEvent(input, frame, stats, post, host)
+    return buildSyntheticEvent(input, frame, stats, post, host, hitCtx)
   }
 }
 
@@ -190,6 +198,7 @@ export function buildSyntheticEvent(
   stats: StatTable,
   post: ResourceState,
   host: EmitHitHost,
+  hitCtx?: HitContext,
 ): HitEvent | SustainEvent {
   const character = getCharacterById(input.sourceCharacterId)
   const skillType = input.effect.skillType ?? input.effect.damage.type
@@ -225,7 +234,7 @@ export function buildSyntheticEvent(
       multiplier: input.effect.damage.value,
       flat: input.effect.damage.flat,
       statsSnapshot: cloneStats(stats),
-      activeBuffs: host.activeBuffs(input.sourceCharacterId),
+      activeBuffs: host.activeBuffs(input.sourceCharacterId, hitCtx),
       passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
     }
   }
@@ -259,7 +268,7 @@ export function buildSyntheticEvent(
     scalingStat: input.effect.damage.scalingStat,
     multiplier: input.effect.damage.value,
     statsSnapshot: cloneStats(stats),
-    activeBuffs: host.activeBuffs(input.sourceCharacterId),
+    activeBuffs: host.activeBuffs(input.sourceCharacterId, hitCtx),
     passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
   }
 }

@@ -66,3 +66,49 @@ Fires once per heal entry (not once per recipient). No `source` filter (no synth
 - `targets` — resolved recipient characterIds
 - `statsSnapshot` — healer's full StatTable at fire time
 - `multiplier`, `flat`, `scalingStat` — raw inputs for inspection
+
+## Hit-scoped DMG Bonus (`appliesToHits`)
+
+Some buffs should boost only specific hits rather than every hit from the character. `BuffDef.appliesToHits?: HitFilter` marks a buff as hit-scoped (ADR-0029).
+
+### How it works
+
+A hit-scoped buff is **excluded from the normal stat-table fold** (both bootstrap and `resolveStats` without a hit context). It contributes only when `resolveStats(charId, hit)` is called with a matching `HitContext`:
+
+1. Normal pass: buffs with `appliesToHits` are skipped.
+2. Second pass (only when `hit` is provided): buffs whose `appliesToHits` filter matches the hit are folded in — their stat effects (typically `allDmgBonus`) are added to the snapshot.
+
+Damage computed from that snapshot therefore reflects the per-hit bonus. The log's `statsSnapshot` and `activeBuffs` list both reflect the second-pass result, so the Hit Drawer shows exactly which buffs contributed.
+
+### `HitFilter` axes (conjunction)
+
+All present axes must match; absent = unconstrained. An axis the hit lacks (e.g. `sourceBuffId` on an authored hit) never matches a constrained filter.
+
+| Axis            | Type                       | Notes                          |
+| --------------- | -------------------------- | ------------------------------ |
+| `sourceBuffId`  | `string \| string[]`       | Only synthetic hits carry this |
+| `stageId`       | `string \| string[]`       | Only authored hits carry this  |
+| `skillType`     | `SkillType \| SkillType[]` |                                |
+| `skillCategory` | `SkillCategory \| ...`     |                                |
+| `element`       | `Element \| Element[]`     |                                |
+
+### Example — Sanhua Avalanche
+
+```ts
+{
+  id: "char.sanhua.passive.avalanche",
+  trigger: { event: "skillCast", stageId: "...frigid-light.stage-5::basic-attack" },
+  target: { kind: "self" },
+  duration: { kind: "seconds", v: 8 },
+  appliesToHits: {
+    sourceBuffId: [
+      "char.sanhua.ice-thorn-burst",
+      "char.sanhua.ice-prism-burst",
+      "char.sanhua.ice-glacier-burst",
+    ],
+  },
+  effects: [{ kind: "stat", path: { stat: "allDmgBonus" }, value: { kind: "const", v: 0.2 } }],
+}
+```
+
+The +20% folds into the snapshot only when one of the three ice burst emits is resolved within the 8-second window. Authored hits and other synthetics are unaffected.

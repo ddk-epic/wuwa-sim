@@ -1,5 +1,11 @@
 import type { Element } from "#/data/elements"
-import type { BuffDef, StatPath, ValueExpr } from "#/types/buff"
+import type {
+  BuffDef,
+  HitContext,
+  HitFilter,
+  StatPath,
+  ValueExpr,
+} from "#/types/buff"
 import type { EnrichedCharacter, SkillType } from "#/types/character"
 import type {
   Cost3Main,
@@ -31,6 +37,28 @@ export type StatContribution = {
   def: BuffDef
   stacks: number
   snapshots?: Record<number, number>
+}
+
+function matchesAxis<T>(
+  filterVal: T | T[] | undefined,
+  ctxVal: T | undefined,
+): boolean {
+  if (filterVal === undefined) return true
+  if (ctxVal === undefined) return false
+  return Array.isArray(filterVal)
+    ? filterVal.includes(ctxVal)
+    : filterVal === ctxVal
+}
+
+/** Returns true when every present axis in `filter` matches `ctx`. */
+export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
+  return (
+    matchesAxis(filter.sourceBuffId, ctx.sourceBuffId) &&
+    matchesAxis(filter.stageId, ctx.stageId) &&
+    matchesAxis(filter.skillType, ctx.skillType) &&
+    matchesAxis(filter.skillCategory, ctx.skillCategory) &&
+    matchesAxis(filter.element, ctx.element)
+  )
 }
 
 /**

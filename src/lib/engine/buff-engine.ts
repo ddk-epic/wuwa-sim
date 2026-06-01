@@ -2,6 +2,7 @@ import type {
   BuffDef,
   CoordHitEffect,
   EmitHitEffect,
+  HitContext,
   ResourceEffect,
   ResourceKind,
   ResourceState,
@@ -27,7 +28,7 @@ import type { Candidate, EngineEvent } from "./instance-store"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
-import { accumulateStatEffects } from "./stat-table-builder"
+import { accumulateStatEffects, matchesHit } from "./stat-table-builder"
 import { TriggerIndex } from "./trigger-index"
 
 export type { EngineEvent } from "./instance-store"
@@ -101,11 +102,11 @@ export class BuffEngine {
   /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
   private deferredEmits: DeferredEmit[] = []
   private emitHitHost: EmitHitHost = {
-    resolveStats: (id) => this.resolveStats(id),
+    resolveStats: (id, hit) => this.resolveStats(id, hit),
     applyResourceDelta: (id, resource, delta, frame, out, hitsOut, depth) =>
       this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
     getResource: (id) => this.getResource(id),
-    activeBuffs: (id) => this.activeBuffs(id),
+    activeBuffs: (id, hit) => this.activeBuffs(id, hit),
     passiveBuffs: (id) => this.passiveBuffs(id),
     resolveHealTargets: (target, sourceId) => {
       switch (target) {
@@ -845,7 +846,7 @@ export class BuffEngine {
     return this.store.tickToFrame(frame)
   }
 
-  resolveStats(characterId: number): StatTable {
+  resolveStats(characterId: number, hit?: HitContext): StatTable {
     if (this.resolvingStats.has(characterId)) {
       return this.store.cloneBaseStats(characterId)
     }
@@ -857,6 +858,7 @@ export class BuffEngine {
         return this.resolveStats(cid)[stat]
       }
       for (const inst of contributions) {
+        if (inst.def.appliesToHits) continue
         if (
           inst.def.condition &&
           !this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
@@ -868,6 +870,27 @@ export class BuffEngine {
           { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
           getCharStat,
         )
+      }
+      if (hit) {
+        for (const inst of contributions) {
+          if (!inst.def.appliesToHits) continue
+          if (!matchesHit(inst.def.appliesToHits, hit)) continue
+          if (
+            inst.def.condition &&
+            !this.evaluator.evaluateCached(
+              inst.def.condition,
+              inst,
+              characterId,
+            )
+          ) {
+            continue
+          }
+          accumulateStatEffects(
+            base,
+            { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
+            getCharStat,
+          )
+        }
       }
       return base
     } finally {
@@ -885,15 +908,19 @@ export class BuffEngine {
     return this.store.activeBuffIds(characterId)
   }
 
-  /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. */
-  activeBuffs(characterId: number): ActiveBuff[] {
+  /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. When `hit` is provided, `appliesToHits` buffs that do not match the hit are also excluded. */
+  activeBuffs(characterId: number, hit?: HitContext): ActiveBuff[] {
     return this.store
       .getActiveTargeting(characterId)
-      .filter(
-        (inst) =>
+      .filter((inst) => {
+        if (inst.def.appliesToHits) {
+          if (!hit || !matchesHit(inst.def.appliesToHits, hit)) return false
+        }
+        return (
           !inst.def.condition ||
-          this.evaluator.evaluateCached(inst.def.condition, inst, characterId),
-      )
+          this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
+        )
+      })
       .map((inst) => ({
         id: inst.def.id,
         name: inst.def.name,
@@ -916,10 +943,14 @@ export class BuffEngine {
    * Deep seam: advance to `frame`, resolve the actor's stat table, and snapshot
    * the active buffs — the inputs every per-hit damage computation needs.
    */
-  resolveHit(actingCharacterId: number, frame: number): ResolvedHit {
+  resolveHit(
+    actingCharacterId: number,
+    frame: number,
+    hit?: HitContext,
+  ): ResolvedHit {
     const { lifecycleEvents } = this.tickToFrame(frame)
-    const stats = this.resolveStats(actingCharacterId)
-    const activeBuffs = this.activeBuffs(actingCharacterId)
+    const stats = this.resolveStats(actingCharacterId, hit)
+    const activeBuffs = this.activeBuffs(actingCharacterId, hit)
     const passiveBuffs = this.passiveBuffs(actingCharacterId)
     return { stats, activeBuffs, passiveBuffs, lifecycleEvents }
   }

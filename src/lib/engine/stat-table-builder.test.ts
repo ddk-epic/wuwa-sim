@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { BuffDef } from "#/types/buff"
+import type { BuffDef, HitContext, HitFilter } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
 import type { WeaponData } from "#/types/weapon"
@@ -8,6 +8,7 @@ import {
   accumulateStatEffects,
   compileBaseStats,
   freezeSnapshots,
+  matchesHit,
 } from "./stat-table-builder"
 import {
   DEFAULT_SUBSTAT_ROLLS,
@@ -328,5 +329,57 @@ describe("compileBaseStats", () => {
     const stats = compileBaseStats(char, null, null)
     expect(stats.skillTypeBonus["Resonance Skill"]).toBeGreaterThan(0)
     expect(stats.skillTypeBonus["Resonance Liberation"]).toBe(0)
+  })
+})
+
+describe("matchesHit", () => {
+  const ctx: HitContext = {
+    sourceBuffId: "buff.a",
+    stageId: "stage.b",
+    skillType: "Basic Attack",
+    skillCategory: "Basic Attack",
+    element: "Glacio",
+  }
+
+  it("empty filter matches any hit", () => {
+    expect(matchesHit({}, ctx)).toBe(true)
+  })
+
+  it("matches when every specified axis matches — scalar form", () => {
+    const f: HitFilter = { sourceBuffId: "buff.a", element: "Glacio" }
+    expect(matchesHit(f, ctx)).toBe(true)
+  })
+
+  it("matches when axis value is in array form", () => {
+    const f: HitFilter = { sourceBuffId: ["buff.x", "buff.a"] }
+    expect(matchesHit(f, ctx)).toBe(true)
+  })
+
+  it("fails when scalar axis does not match", () => {
+    const f: HitFilter = { sourceBuffId: "buff.other" }
+    expect(matchesHit(f, ctx)).toBe(false)
+  })
+
+  it("fails when array axis does not contain value", () => {
+    const f: HitFilter = { sourceBuffId: ["buff.x", "buff.y"] }
+    expect(matchesHit(f, ctx)).toBe(false)
+  })
+
+  it("fails when constrained axis is absent from hit", () => {
+    const noSource: HitContext = { skillType: "Basic Attack" }
+    const f: HitFilter = { sourceBuffId: "buff.a" }
+    expect(matchesHit(f, noSource)).toBe(false)
+  })
+
+  it("matches all axes independently", () => {
+    expect(matchesHit({ stageId: "stage.b" }, ctx)).toBe(true)
+    expect(matchesHit({ skillType: "Basic Attack" }, ctx)).toBe(true)
+    expect(matchesHit({ skillCategory: "Basic Attack" }, ctx)).toBe(true)
+    expect(matchesHit({ element: "Glacio" }, ctx)).toBe(true)
+  })
+
+  it("fails on any mismatched axis even if others match", () => {
+    const f: HitFilter = { sourceBuffId: "buff.a", element: "Fusion" }
+    expect(matchesHit(f, ctx)).toBe(false)
   })
 })

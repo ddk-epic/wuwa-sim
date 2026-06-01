@@ -2,6 +2,33 @@ import type { Element } from "#/data/elements"
 import type { DamageEntry, SkillCategory, SkillType } from "./character"
 import type { ScalarStatKey } from "./stat-table"
 
+/**
+ * Conjunction of narrowing axes that a HitContext must satisfy for an
+ * `appliesToHits` buff to fold into that hit's stats. An absent axis is
+ * unconstrained; an axis the hit lacks (e.g. `sourceBuffId` on an authored
+ * hit) never matches a constrained filter.
+ */
+export interface HitFilter {
+  sourceBuffId?: string | string[]
+  stageId?: string | string[]
+  skillType?: SkillType | SkillType[]
+  skillCategory?: SkillCategory | SkillCategory[]
+  element?: Element | Element[]
+}
+
+/**
+ * Per-hit identity box built at call sites (authored or synthetic) and
+ * threaded through resolveStats/resolveHit. Fields absent on a given path
+ * remain undefined.
+ */
+export interface HitContext {
+  sourceBuffId?: string
+  stageId?: string
+  skillType?: SkillType
+  skillCategory?: SkillCategory
+  element?: Element
+}
+
 export type StatPath =
   | { stat: ScalarStatKey }
   | { stat: "elementBonus"; key: Element }
@@ -224,6 +251,13 @@ export interface BuffDef {
   perSource?: boolean
   /** Minimum seconds between successive fires from the same source. Re-triggers within the window are suppressed. */
   cooldown?: number
+  /**
+   * When set, this buff's stat effects are excluded from the hit-agnostic
+   * resolveStats pass and instead fold into a matching hit's snapshot via a
+   * second sub-pass (ADR-0029). The filter is a conjunction: every present
+   * axis must match the HitContext; absent = unconstrained.
+   */
+  appliesToHits?: HitFilter
 }
 
 export interface BuffInstance {
