@@ -22,10 +22,12 @@ export function ImportExportModal({
     navigator.clipboard.writeText(exportString)
     const btn = e.currentTarget
     btn.dataset.copied = "true"
+    btn.disabled = true
     if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current)
     copyTimeoutRef.current = setTimeout(() => {
       btn.removeAttribute("data-copied")
-    }, 3000)
+      btn.disabled = false
+    }, 1500)
   }
 
   return (
@@ -65,13 +67,12 @@ export function ImportExportModal({
             spellCheck={false}
           />
           <button
-            className="self-end flex items-center gap-1 px-3 py-1.5 text-sm font-mono rounded border border-border text-muted-foreground hover:text-foreground "
+            className="self-end flex items-center gap-1 px-3 py-1.5 text-sm font-mono rounded border border-border text-muted-foreground enabled:hover:text-foreground disabled:text-muted-foreground/40"
             onClick={handleCopy}
           >
             <CopyIcon className="w-4 h-4 in-data-copied:hidden" />
             <CheckIcon className="w-4 h-4 hidden in-data-copied:block text-green-400" />
-            <span className="in-data-copied:hidden">Copy</span>
-            <span className="hidden in-data-copied:block">Copied!</span>
+            <span>Copy</span>
           </button>
         </section>
       </div>
