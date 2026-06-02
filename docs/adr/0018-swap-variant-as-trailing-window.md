@@ -81,7 +81,7 @@ Two sections of this ADR are superseded:
 
 The `TrailingWindowState` Map and its `onEntryArrival` / `scheduleStage` / `drainAll` operations are removed (see [ADR-0028](0028-emithits-as-frame-honest-worklist.md)'s endgame). Trailing hits are no longer stored in a per-character map; they become members of the one frame-ordered **pending event stream** the simulation drains, resolving frame-honestly at their `hitFrame` interleaved with synthetics and footing commits. The behavioral rules of this ADR survive, relocated:
 
-- **Drop-on-cancel → tombstone.** A same-character cancel-capable re-entry at frame `F` marks the character's pending trailing hits with `frame ≥ F` invalid (skipped at pop) instead of deleting them from a map. Sound by causality: a cancel only drops `hitFrame ≥ F`, so it can never arrive after the hit it cancels.
+- **Drop-on-cancel → mark invalid at pop.** A same-character cancel-capable re-entry at frame `F` marks the character's pending trailing hits with `frame ≥ F` invalid (skipped at pop) instead of deleting them from a map. Sound by causality: a cancel only drops `hitFrame ≥ F`, so it can never arrive after the hit it cancels.
 - **Pad-on-collision → cursor rule.** The non-cancel-capable pad stays an arrival-time `nextStart = max(cursor, latestPendingSameCharFrame)` computation on the authored walk.
 - **Immediate/trailing partition** survives as the pure helper `partitionStage` in `trailing-window.ts` (the only thing left in that file, alongside `isCancelCapable`); the simulation enqueues the trailing partition onto the stream.
 
