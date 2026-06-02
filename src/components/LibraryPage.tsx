@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { CirclePlus, Download, Settings, Upload } from "lucide-react"
 import { HBtn } from "#/components/ui/HBtn"
+import { IconBtn } from "#/components/ui/IconBtn"
 import { DetailCard } from "#/components/library/DetailPane"
 import { LibraryList } from "#/components/library/LibraryList"
 import { savedTeamToLibTeam } from "#/components/library/savedTeamToLibTeam"
@@ -116,12 +117,7 @@ export function LibraryPage() {
             primary
             onClick={handleCreate}
           />
-          <button
-            className="flex items-center gap-1 p-1.25 font-mono text-sm rounded-sm text-muted-foreground hover:text-foreground"
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <IconBtn icon={Settings} label="Settings" size={22} w={30} h={30} />
         </div>
       </div>
 

@@ -179,6 +179,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
             <IconBtn
               icon={Trash2}
               label="Delete"
+              variant="destructive"
               onClick={() => actions.onDelete(team.id)}
             />
             <HBtn
@@ -210,12 +211,12 @@ function MemberCards({ team }: { team: LibTeam }) {
               borderRadius: 3,
               background: "var(--card)",
             }}
-            className="p-[12px_14px] flex items-center gap-3"
+            className="p-3 flex items-center gap-3"
           >
-            <ElementAvatar member={m} size={40} />
+            <ElementAvatar member={m} size={52} />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-base font-semibold text-foreground">
                   {m.name}
                 </span>
                 <span
@@ -224,24 +225,24 @@ function MemberCards({ team }: { team: LibTeam }) {
                     color: hex,
                     border: `1px solid ${hex}44`,
                   }}
-                  className="text-micro px-1 py-px rounded-sm font-mono tracking-[0.4px]"
+                  className="text-detail px-1 py-px rounded-sm font-mono tracking-[0.4px]"
                 >
                   S{m.seq}
                 </span>
               </div>
-              <span className="text-micro text-ui-zero whitespace-nowrap overflow-hidden text-ellipsis">
+              <span className="text-detail text-muted whitespace-nowrap overflow-hidden text-ellipsis">
                 {m.weapon}
               </span>
             </div>
             <div className="text-right flex flex-col gap-0.5">
               <span
-                className="text-sm font-semibold font-mono tabular-nums"
+                className="text-base font-semibold font-mono tabular-nums"
                 style={{ color: "#f5cf4d" }}
               >
                 {(share * 100).toFixed(1)}
-                <span className="text-micro text-muted ml-px">%</span>
+                <span className="text-base text-muted ml-px">%</span>
               </span>
-              <span className="text-micro text-muted font-mono tabular-nums">
+              <span className="text-detail text-muted font-mono tabular-nums">
                 {((team.dmgByChar[m.name] ?? 0) / 1000).toFixed(1)}k
               </span>
             </div>

@@ -170,6 +170,7 @@ function TeamTab({
           <IconBtn
             icon={Trash2}
             label="Delete"
+            variant="destructive"
             w={20}
             h={20}
             size={12}

@@ -4,12 +4,13 @@ import {
   CopyIcon,
   LockIcon,
   LockOpenIcon,
-  TrashIcon,
+  Trash2,
 } from "lucide-react"
 import type { GroupSummary } from "#/lib/timeline/timeline-group-summary"
 import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
+import { IconBtn } from "#/components/ui/IconBtn"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "../log/log-cells"
@@ -96,8 +97,6 @@ export function TimelineGroupHeader({
   const firstRowTime = formatFrames(gs?.startTimeFrames ?? 0)
   const totalDurFrames = gs?.totalDurationFrames ?? 0
   const totalDamage = gs?.totalDamage ?? null
-  // Group-end concerto/energy are shown only while the group is collapsed; when
-  // expanded, the member rows carry their own cumulative values.
   const lastConVal = isExpanded ? null : (gs?.endConcerto ?? null)
   const lastResVal = isExpanded ? null : (gs?.endEnergy ?? null)
 
@@ -223,7 +222,7 @@ export function TimelineGroupHeader({
       <td className="px-2 py-1.5 text-right font-mono">
         {renderPoolValue(lastResVal, "var(--ui-resonance)")}
       </td>
-      <td className="px-2 py-1.5 font-semibold text-right font-mono">
+      <td className="px-1 py-1.5 font-semibold text-right font-mono">
         {totalDamage !== null ? (
           isExpanded ? (
             <span className="text-base text-gray-600">
@@ -239,53 +238,38 @@ export function TimelineGroupHeader({
         )}
       </td>
       <td className="px-1 py-1.5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center -my-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleGroupLock(groupId)
-            }}
-            className={[
-              "px-0.75 py-1.5 transition-colors",
-              !locked
-                ? "text-blue-400 hover:text-blue-300"
-                : "text-gray-500 hover:text-gray-400",
-            ].join(" ")}
-            title={!locked ? "Open — click to lock" : "Locked — click to open"}
-            aria-label={!locked ? "Lock group" : "Unlock group"}
-          >
-            {!locked ? (
-              <LockOpenIcon className="w-4 h-4" />
-            ) : (
-              <LockIcon className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onDuplicateGroup(groupId)
-            }}
-            className="px-0.75 py-1.5 text-gray-500 hover:text-gray-300 transition-colors"
-            title="Duplicate group"
-            aria-label="Duplicate group"
-          >
-            <CopyIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
+        <div className="flex items-center justify-end pr-px -my-1">
+          <IconBtn
+            icon={locked ? LockIcon : LockOpenIcon}
+            label={locked ? "Unlock group" : "Lock group"}
+            title={locked ? "Locked — click to open" : "Open — click to lock"}
+            variant={locked ? "default" : "accent"}
+            w={24}
+            h={30}
+            onClick={() => onToggleGroupLock(groupId)}
+          />
+          <IconBtn
+            icon={CopyIcon}
+            label="Duplicate group"
+            variant="default"
+            w={24}
+            h={30}
+            onClick={() => onDuplicateGroup(groupId)}
+          />
+          <IconBtn
+            icon={Trash2}
+            label="Delete group and contents"
+            variant="destructive"
+            w={24}
+            h={30}
+            onClick={() => {
               if (entryCount >= 2) {
                 onRequestDeleteConfirm(groupId)
               } else {
                 onDeleteGroup(groupId)
               }
             }}
-            className="px-0.75 py-1.5 text-gray-500 hover:text-red-400 transition-colors"
-            title="Delete group and contents"
-            aria-label="Delete group and contents"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          />
         </div>
       </td>
     </tr>

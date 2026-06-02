@@ -15,6 +15,7 @@ import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
 import { ImportExportModal } from "./ImportExportModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
+import { IconBtn } from "#/components/ui/IconBtn"
 
 interface HeaderProps {
   onEditTeam: () => void
@@ -132,13 +133,14 @@ export function Header({
           <span>Import/Export</span>
         </button>
         <div className="ml-auto" />
-        <button
-          className="flex items-center gap-1 p-1.25 font-mono text-sm rounded-sm text-muted-foreground disabled:opacity-40 enabled:hover:text-foreground"
+        <IconBtn
+          icon={SettingsIcon}
+          label="Open settings"
+          size={22}
+          w={35}
+          h={35}
           onClick={onOpenSettings}
-          aria-label="Open settings"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
+        />
       </div>
       {confirmOpen && (
         <ConfirmModal
