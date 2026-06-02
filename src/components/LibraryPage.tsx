@@ -7,6 +7,7 @@ import { LibraryList } from "#/components/library/LibraryList"
 import { savedTeamToLibTeam } from "#/components/library/savedTeamToLibTeam"
 import type { RowActions } from "#/components/library/types"
 import { CreateTeamModal } from "#/components/team/CreateTeamModal"
+import { ConfirmModal } from "#/components/ui/ConfirmModal"
 import { useLibrary } from "#/hooks/useLibrary"
 import { encodePayload } from "#/lib/import-export"
 
@@ -28,14 +29,13 @@ export function LibraryPage() {
   const [query, setQuery] = useState("")
   const [sort, setSort] = useState("recent")
   const [createOpen, setCreateOpen] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   const selectedTeam =
     teams.find((t) => t.id === selectedId) ?? teams[0] ?? null
   const isEmpty = teams.length === 0
 
   function handleCreate() {
-    // "New team" authors a fresh draft and launches it via the create modal;
-    // a team only enters the Library through a simulator Save.
     setCreateOpen(true)
   }
 
@@ -68,11 +68,11 @@ export function LibraryPage() {
     onTogglePin: togglePin,
     onDuplicate: duplicate,
     onExport: handleExport,
-    onDelete: (id) => {
-      const name = savedTeams.find((t) => t.id === id)?.name ?? "this team"
-      if (window.confirm(`Delete "${name}"? This cannot be undone.`)) remove(id)
-    },
+    onDelete: setPendingDeleteId,
   }
+
+  const pendingDeleteName =
+    savedTeams.find((t) => t.id === pendingDeleteId)?.name ?? "this team"
 
   return (
     <div className="w-full h-screen bg-background text-foreground font-sans text-sm flex flex-col overflow-hidden">
@@ -120,7 +120,7 @@ export function LibraryPage() {
         <div className="w-10 shrink-0 bg-darkest border-r border-border flex flex-col items-center py-3 gap-2"></div>
 
         {/* Main pane */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-200">
           <DetailCard
             team={selectedTeam}
             isEmpty={isEmpty}
@@ -130,7 +130,6 @@ export function LibraryPage() {
           />
         </div>
 
-        {/* Library list */}
         <LibraryList
           teams={teams}
           selectedId={selectedId}
@@ -145,6 +144,17 @@ export function LibraryPage() {
       </div>
 
       {createOpen && <CreateTeamModal onClose={() => setCreateOpen(false)} />}
+
+      {pendingDeleteId !== null && (
+        <ConfirmModal
+          message={`Delete "${pendingDeleteName}"? This cannot be undone.`}
+          onConfirm={() => {
+            remove(pendingDeleteId)
+            setPendingDeleteId(null)
+          }}
+          onCancel={() => setPendingDeleteId(null)}
+        />
+      )}
     </div>
   )
 }
