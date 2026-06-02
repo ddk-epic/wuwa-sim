@@ -1,14 +1,26 @@
-import { CirclePlus, Copy, Layers, Play, Upload } from "lucide-react"
+import {
+  CirclePlus,
+  Copy,
+  Download,
+  Layers,
+  Pencil,
+  Pin,
+  PinOff,
+  Play,
+  Trash2,
+  Upload,
+} from "lucide-react"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { Card } from "#/components/ui/Card"
 import { HBtn } from "#/components/ui/HBtn"
+import { IconBtn } from "#/components/ui/IconBtn"
 import { Kpi } from "#/components/ui/Kpi"
 import { DmgDonut, TypeDistribution } from "./charts"
 import { ElementAvatar } from "./portraits"
 import { blendGradient, elementHex, portraitSrc } from "./theme"
-import type { LibTeam } from "./types"
+import type { LibTeam, RowActions } from "./types"
 
-function DetailHero({ team }: { team: LibTeam }) {
+function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
   const dominant = elementHex(
     team.members[team.members.length - 1]?.element ?? "",
   )
@@ -102,9 +114,38 @@ function DetailHero({ team }: { team: LibTeam }) {
           <Kpi label="time" value={team.totalTime.toFixed(2)} suffix="s" />
           <Kpi label="actions" value={team.actions} />
           <div className="flex-1" />
-          <div className="flex gap-1.5">
-            <HBtn icon={Play} label="Open in sim" primary />
-            <HBtn icon={Copy} label="Duplicate" />
+          <div className="flex items-center gap-1.5">
+            <IconBtn
+              icon={Pencil}
+              label="Rename"
+              onClick={() => actions.onRename(team.id)}
+            />
+            <IconBtn
+              icon={team.pinned ? PinOff : Pin}
+              label={team.pinned ? "Unpin" : "Pin"}
+              onClick={() => actions.onTogglePin(team.id)}
+            />
+            <IconBtn
+              icon={Download}
+              label="Export"
+              onClick={() => actions.onExport(team.id)}
+            />
+            <IconBtn
+              icon={Trash2}
+              label="Delete"
+              onClick={() => actions.onDelete(team.id)}
+            />
+            <HBtn
+              icon={Play}
+              label="Open in sim"
+              primary
+              onClick={() => actions.onOpen(team.id)}
+            />
+            <HBtn
+              icon={Copy}
+              label="Duplicate"
+              onClick={() => actions.onDuplicate(team.id)}
+            />
           </div>
         </div>
       </div>
@@ -170,7 +211,13 @@ function MemberCards({ team }: { team: LibTeam }) {
   )
 }
 
-function EmptyMainPane() {
+function EmptyMainPane({
+  onCreate,
+  onImport,
+}: {
+  onCreate: () => void
+  onImport: () => void
+}) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-10 gap-5.5 min-h-0">
       <div className="w-24 h-24 rounded-full border border-dashed border-border bg-card flex items-center justify-center text-muted relative">
@@ -193,8 +240,13 @@ function EmptyMainPane() {
         </span>
       </div>
       <div className="flex gap-2">
-        <HBtn icon={CirclePlus} label="Create a team" primary />
-        <HBtn icon={Upload} label="Import roster" />
+        <HBtn
+          icon={CirclePlus}
+          label="Create a team"
+          primary
+          onClick={onCreate}
+        />
+        <HBtn icon={Upload} label="Import roster" onClick={onImport} />
       </div>
       <div className="text-2.5 text-ui-zero font-mono tracking-px uppercase flex items-center gap-1.5">
         <span>or press</span>
@@ -210,11 +262,17 @@ function EmptyMainPane() {
 export function DetailCard({
   team,
   isEmpty,
+  actions,
+  onCreate,
+  onImport,
 }: {
   team: LibTeam | null
   isEmpty: boolean
+  actions: RowActions
+  onCreate: () => void
+  onImport: () => void
 }) {
-  if (isEmpty) return <EmptyMainPane />
+  if (isEmpty) return <EmptyMainPane onCreate={onCreate} onImport={onImport} />
   if (!team)
     return (
       <div className="flex-1 flex items-center justify-center text-muted text-[12px] italic">
@@ -223,7 +281,7 @@ export function DetailCard({
     )
   return (
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
-      <DetailHero team={team} />
+      <DetailHero team={team} actions={actions} />
       <MemberCards team={team} />
       <div className="grid grid-cols-2 gap-3.5 min-h-0">
         <Card

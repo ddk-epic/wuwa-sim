@@ -1,12 +1,22 @@
 import { useMemo, useState } from "react"
-import { CirclePlus, Layers, Pencil, X } from "lucide-react"
+import {
+  CirclePlus,
+  Copy,
+  Layers,
+  Pencil,
+  Pin,
+  PinOff,
+  Play,
+  Trash2,
+  X,
+} from "lucide-react"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { HBtn } from "#/components/ui/HBtn"
 import { Kpi } from "#/components/ui/Kpi"
 import { ElDot } from "#/components/ui/ElDot"
 import { PortraitStrip } from "./portraits"
 import { blendGradient, elementHex, TEXT_OVER_PORTRAIT } from "./theme"
-import type { LibTeam } from "./types"
+import type { LibTeam, RowActions } from "./types"
 
 export const LIBRARY_W = 692
 
@@ -14,10 +24,12 @@ function TeamTab({
   team,
   selected,
   onClick,
+  actions,
 }: {
   team: LibTeam
   selected: boolean
   onClick: () => void
+  actions: RowActions
 }) {
   const [hov, setHov] = useState(false)
   const dominant = elementHex(
@@ -124,11 +136,60 @@ function TeamTab({
           </div>
         </div>
       </div>
+
+      {/* Action cluster — revealed on hover/selection */}
+      {(hov || selected) && (
+        <div
+          className="absolute top-2 right-2.5 z-4 flex items-center gap-0.5 rounded-sm bg-darkest/80 border border-border px-1 py-0.5 backdrop-blur-sm"
+          style={{ textShadow: "none" }}
+        >
+          <IconBtn
+            icon={Play}
+            label="Open in sim"
+            w={20}
+            h={20}
+            size={12}
+            onClick={() => actions.onOpen(team.id)}
+          />
+          <IconBtn
+            icon={Pencil}
+            label="Rename"
+            w={20}
+            h={20}
+            size={12}
+            onClick={() => actions.onRename(team.id)}
+          />
+          <IconBtn
+            icon={team.pinned ? PinOff : Pin}
+            label={team.pinned ? "Unpin" : "Pin"}
+            w={20}
+            h={20}
+            size={12}
+            onClick={() => actions.onTogglePin(team.id)}
+          />
+          <IconBtn
+            icon={Copy}
+            label="Duplicate"
+            w={20}
+            h={20}
+            size={12}
+            onClick={() => actions.onDuplicate(team.id)}
+          />
+          <IconBtn
+            icon={Trash2}
+            label="Delete"
+            w={20}
+            h={20}
+            size={12}
+            onClick={() => actions.onDelete(team.id)}
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-function LibraryEmptyList() {
+function LibraryEmptyList({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-3 text-center">
       <div className="w-12 h-12 rounded-full border border-dashed border-border flex items-center justify-center text-ui-zero">
@@ -141,7 +202,7 @@ function LibraryEmptyList() {
         Saved teams from the simulator will appear here.
       </span>
       <div className="mt-1">
-        <HBtn icon={CirclePlus} label="New team" primary />
+        <HBtn icon={CirclePlus} label="New team" primary onClick={onCreate} />
       </div>
     </div>
   )
@@ -155,6 +216,8 @@ export function LibraryList({
   setQuery,
   sort,
   setSort,
+  actions,
+  onCreate,
 }: {
   teams: LibTeam[]
   selectedId: string | null
@@ -163,6 +226,8 @@ export function LibraryList({
   setQuery: (q: string) => void
   sort: string
   setSort: (s: string) => void
+  actions: RowActions
+  onCreate: () => void
 }) {
   const isEmpty = teams.length === 0
   const filtered = useMemo(
@@ -180,9 +245,11 @@ export function LibraryList({
   const sorted = useMemo(
     () =>
       [...filtered].sort((a, b) => {
+        // Pinned teams always sort first, then by the chosen criterion.
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
         if (sort === "dmg") return b.totalDmg - a.totalDmg
         if (sort === "dps") return b.dps - a.dps
-        return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)
+        return 0
       }),
     [filtered, sort],
   )
@@ -258,7 +325,7 @@ export function LibraryList({
       </div>
 
       {isEmpty ? (
-        <LibraryEmptyList />
+        <LibraryEmptyList onCreate={onCreate} />
       ) : (
         <div className="flex-1 overflow-y-auto">
           {sorted.map((team) => (
@@ -267,6 +334,7 @@ export function LibraryList({
               team={team}
               selected={team.id === selectedId}
               onClick={() => onSelect(team.id)}
+              actions={actions}
             />
           ))}
           {sorted.length === 0 && (

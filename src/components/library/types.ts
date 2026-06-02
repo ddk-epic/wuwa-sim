@@ -12,6 +12,17 @@ export interface TypeEntry {
   dmg: number
 }
 
+/** Per-team action handlers, threaded into rows and the detail pane. */
+export interface RowActions {
+  /** Load the team into the live stores and navigate to /sim. */
+  onOpen: (id: string) => void
+  onRename: (id: string) => void
+  onTogglePin: (id: string) => void
+  onDuplicate: (id: string) => void
+  onExport: (id: string) => void
+  onDelete: (id: string) => void
+}
+
 /**
  * The view model the Library renders. Built from a `SavedTeam` by
  * `savedTeamToLibTeam`: identity + resolved members + projected stats.

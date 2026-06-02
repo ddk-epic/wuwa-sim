@@ -1,14 +1,28 @@
 import { useMemo, useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import { CirclePlus, Download, Settings, Upload } from "lucide-react"
 import { HBtn } from "#/components/ui/HBtn"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { DetailCard } from "#/components/library/DetailPane"
 import { LibraryList } from "#/components/library/LibraryList"
 import { savedTeamToLibTeam } from "#/components/library/savedTeamToLibTeam"
+import type { RowActions } from "#/components/library/types"
 import { useLibrary } from "#/hooks/useLibrary"
+import { encodePayload } from "#/lib/import-export"
 
 export function LibraryPage() {
-  const { teams: savedTeams } = useLibrary()
+  const {
+    teams: savedTeams,
+    saveCurrent,
+    load,
+    rename,
+    togglePin,
+    duplicate,
+    remove,
+    importBundle,
+  } = useLibrary()
+  const navigate = useNavigate()
+
   const teams = useMemo(() => savedTeams.map(savedTeamToLibTeam), [savedTeams])
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -18,6 +32,46 @@ export function LibraryPage() {
   const selectedTeam =
     teams.find((t) => t.id === selectedId) ?? teams[0] ?? null
   const isEmpty = teams.length === 0
+
+  function handleSaveNew() {
+    const name = window.prompt("Name this team", "New team")?.trim()
+    if (name) saveCurrent(name)
+  }
+
+  function handleImport() {
+    const code = window.prompt("Paste a team export code")?.trim()
+    if (!code) return
+    if (!importBundle(code)) window.alert("That export code could not be read.")
+  }
+
+  function handleExport(id: string) {
+    const saved = savedTeams.find((t) => t.id === id)
+    if (!saved) return
+    try {
+      navigator.clipboard.writeText(encodePayload(saved.payload))
+    } catch {
+      window.alert("Could not export this team.")
+    }
+  }
+
+  const actions: RowActions = {
+    onOpen: (id) => {
+      load(id)
+      navigate({ to: "/sim" })
+    },
+    onRename: (id) => {
+      const current = savedTeams.find((t) => t.id === id)?.name ?? ""
+      const name = window.prompt("Rename team", current)?.trim()
+      if (name) rename(id, name)
+    },
+    onTogglePin: togglePin,
+    onDuplicate: duplicate,
+    onExport: handleExport,
+    onDelete: (id) => {
+      const name = savedTeams.find((t) => t.id === id)?.name ?? "this team"
+      if (window.confirm(`Delete "${name}"? This cannot be undone.`)) remove(id)
+    },
+  }
 
   return (
     <div className="w-full h-screen bg-background text-foreground font-sans text-[12px] flex flex-col overflow-hidden">
@@ -35,9 +89,18 @@ export function LibraryPage() {
           </span>
         </div>
         <div className="flex-1" />
-        <HBtn icon={Upload} label="import" />
-        <HBtn icon={Download} label="export" />
-        <HBtn icon={CirclePlus} label="New team" primary />
+        <HBtn icon={Upload} label="import" onClick={handleImport} />
+        <HBtn
+          icon={Download}
+          label="export"
+          onClick={() => selectedTeam && handleExport(selectedTeam.id)}
+        />
+        <HBtn
+          icon={CirclePlus}
+          label="New team"
+          primary
+          onClick={handleSaveNew}
+        />
         <IconBtn icon={Settings} label="Settings" />
       </div>
 
@@ -48,7 +111,13 @@ export function LibraryPage() {
 
         {/* Main pane */}
         <div className="flex-1 flex flex-col min-w-0">
-          <DetailCard team={selectedTeam} isEmpty={isEmpty} />
+          <DetailCard
+            team={selectedTeam}
+            isEmpty={isEmpty}
+            actions={actions}
+            onCreate={handleSaveNew}
+            onImport={handleImport}
+          />
         </div>
 
         {/* Library list */}
@@ -60,6 +129,8 @@ export function LibraryPage() {
           setQuery={setQuery}
           sort={sort}
           setSort={setSort}
+          actions={actions}
+          onCreate={handleSaveNew}
         />
       </div>
     </div>
