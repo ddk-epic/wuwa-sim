@@ -7,6 +7,7 @@ import { LibraryList } from "#/components/library/LibraryList"
 import { savedTeamToLibTeam } from "#/components/library/savedTeamToLibTeam"
 import type { RowActions } from "#/components/library/types"
 import { CreateTeamModal } from "#/components/team/CreateTeamModal"
+import { ImportModal } from "#/components/ImportExportModal"
 import { ConfirmModal } from "#/components/ui/ConfirmModal"
 import { useLibrary } from "#/hooks/useLibrary"
 import { encodePayload } from "#/lib/import-export"
@@ -30,6 +31,8 @@ export function LibraryPage() {
   const [sort, setSort] = useState("recent")
   const [createOpen, setCreateOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   const selectedTeam =
     teams.find((t) => t.id === selectedId) ?? teams[0] ?? null
@@ -40,9 +43,21 @@ export function LibraryPage() {
   }
 
   function handleImport() {
-    const code = window.prompt("Paste a team export code")?.trim()
-    if (!code) return
-    if (!importBundle(code)) window.alert("That export code could not be read.")
+    setImportError(null)
+    setImportOpen(true)
+  }
+
+  function closeImport() {
+    setImportOpen(false)
+    setImportError(null)
+  }
+
+  function submitImport(code: string) {
+    if (importBundle(code)) {
+      closeImport()
+    } else {
+      setImportError("That export code could not be read.")
+    }
   }
 
   function handleExport(id: string) {
@@ -140,6 +155,15 @@ export function LibraryPage() {
       </div>
 
       {createOpen && <CreateTeamModal onClose={() => setCreateOpen(false)} />}
+
+      {importOpen && (
+        <ImportModal
+          onImport={submitImport}
+          importError={importError}
+          onChange={() => setImportError(null)}
+          onClose={closeImport}
+        />
+      )}
 
       {pendingDeleteId !== null && (
         <ConfirmModal
