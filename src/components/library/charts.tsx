@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { formatSkillType } from "#/data/skill-types"
+import { compactDamage } from "#/lib/format"
 import { elementHex, TYPE_COLORS } from "./theme"
 import type { LibTeam } from "./types"
 
@@ -100,7 +101,7 @@ export function DmgDonut({ team }: { team: LibTeam }) {
           {s.key}
         </span>
         <span className="text-detail text-muted font-mono tabular-nums">
-          {(s.value / 1000).toFixed(1)}k
+          {compactDamage(s.value)}
         </span>
         <span className="text-detail text-foreground font-mono tabular-nums min-w-10 text-right">
           {total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0"}%
@@ -112,7 +113,7 @@ export function DmgDonut({ team }: { team: LibTeam }) {
       slices={slices}
       total={total}
       centerLabel="dmg"
-      centerValue={`${(total / 1000).toFixed(0)}k`}
+      centerValue={compactDamage(total)}
       legend={legend}
     />
   )
@@ -132,6 +133,10 @@ export function TypeDistribution({ team }: { team: LibTeam }) {
     ...v,
     color: TYPE_COLORS[k] ?? "var(--muted)",
   }))
+  const dominant = withMeta.reduce<(typeof withMeta)[number] | null>(
+    (top, x) => (top === null || x.dmg > top.dmg ? x : top),
+    null,
+  )
   const legend = [...withMeta]
     .sort((a, b) => b.dmg - a.dmg)
     .map((s) => (
@@ -159,8 +164,8 @@ export function TypeDistribution({ team }: { team: LibTeam }) {
     <Donut
       slices={slices}
       total={total}
-      centerLabel="dmg"
-      centerValue={`${(total / 1000).toFixed(0)}k`}
+      centerLabel={dominant ? formatSkillType(dominant.key) : "dmg"}
+      centerValue={dominant ? compactDamage(dominant.dmg) : 0}
       legend={legend}
     />
   )
