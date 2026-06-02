@@ -38,22 +38,31 @@ function emptyPayload(): ImportExportPayload {
 
 /** Seed the live `wuwa.*` keys that `saveCurrent` snapshots. */
 function seedLive(opts: {
+  name?: string
   slots?: unknown
   loadouts?: unknown
   focusedId?: unknown
+  originId?: unknown
   timeline?: unknown
   log?: unknown
 }) {
-  if (opts.slots !== undefined)
-    localStorage.setItem("wuwa.team.slots", JSON.stringify(opts.slots))
-  if (opts.loadouts !== undefined)
-    localStorage.setItem("wuwa.team.loadouts", JSON.stringify(opts.loadouts))
-  if (opts.focusedId !== undefined)
-    localStorage.setItem("wuwa.team.focusedId", JSON.stringify(opts.focusedId))
+  const team = {
+    name: opts.name ?? "New team",
+    slots: opts.slots ?? [null, null, null],
+    loadouts: opts.loadouts ?? [emptyLoadout(), emptyLoadout(), emptyLoadout()],
+    focusedId: opts.focusedId ?? null,
+    originId: opts.originId ?? null,
+  }
+  localStorage.setItem("wuwa.team", JSON.stringify(team))
   if (opts.timeline !== undefined)
     localStorage.setItem("wuwa.timeline.entries", JSON.stringify(opts.timeline))
   if (opts.log !== undefined)
     localStorage.setItem("wuwa.simulation-log", JSON.stringify(opts.log))
+}
+
+/** Read back the consolidated live team object. */
+function readLiveTeam() {
+  return JSON.parse(localStorage.getItem("wuwa.team")!)
 }
 
 const aHit = (characterId: number, skillType: string, damage: number) => ({
@@ -89,8 +98,9 @@ describe("useLibrary", () => {
     expect(result.current.teams.map((t) => t.name)).toEqual(["Stored"])
   })
 
-  it("saveCurrent snapshots the live keys into a new SavedTeam with computed stats", () => {
+  it("saveCurrent snapshots the live keys (incl. name) into a new SavedTeam with computed stats", () => {
     seedLive({
+      name: "My Team",
       slots: [1102, null, null],
       loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
       focusedId: 1102,
@@ -98,10 +108,11 @@ describe("useLibrary", () => {
       log: [aHit(1102, "Basic Attack", 500), aHit(1102, "Heavy Attack", 300)],
     })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("My Team"))
+    act(() => result.current.saveCurrent())
 
     expect(result.current.teams).toHaveLength(1)
     const team = result.current.teams[0]
+    // The save path captures the live team name.
     expect(team.name).toBe("My Team")
     expect(team.pinned).toBe(false)
     expect(team.id).toBeTruthy()
@@ -114,27 +125,27 @@ describe("useLibrary", () => {
   })
 
   it("saveCurrent always creates a new entry (never updates in place)", () => {
-    seedLive({ slots: [null, null, null] })
+    seedLive({ name: "A" })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("A"))
-    act(() => result.current.saveCurrent("A"))
+    act(() => result.current.saveCurrent())
+    act(() => result.current.saveCurrent())
     expect(result.current.teams).toHaveLength(2)
     expect(result.current.teams[0].id).not.toBe(result.current.teams[1].id)
   })
 
   it("rename changes a team's name", () => {
-    seedLive({ slots: [null, null, null] })
+    seedLive({ name: "Old" })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("Old"))
+    act(() => result.current.saveCurrent())
     const id = result.current.teams[0].id
     act(() => result.current.rename(id, "New"))
     expect(result.current.teams[0].name).toBe("New")
   })
 
   it("togglePin flips the pinned flag", () => {
-    seedLive({ slots: [null, null, null] })
+    seedLive({ name: "T" })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("T"))
+    act(() => result.current.saveCurrent())
     const id = result.current.teams[0].id
     act(() => result.current.togglePin(id))
     expect(result.current.teams[0].pinned).toBe(true)
@@ -143,9 +154,9 @@ describe("useLibrary", () => {
   })
 
   it("duplicate appends a detached copy with a new id", () => {
-    seedLive({ slots: [null, null, null] })
+    seedLive({ name: "Base" })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("Base"))
+    act(() => result.current.saveCurrent())
     const id = result.current.teams[0].id
     act(() => result.current.duplicate(id))
     expect(result.current.teams).toHaveLength(2)
@@ -153,9 +164,9 @@ describe("useLibrary", () => {
   })
 
   it("remove deletes a team by id", () => {
-    seedLive({ slots: [null, null, null] })
+    seedLive({ name: "Gone" })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("Gone"))
+    act(() => result.current.saveCurrent())
     const id = result.current.teams[0].id
     act(() => result.current.remove(id))
     expect(result.current.teams).toEqual([])
@@ -182,8 +193,9 @@ describe("useLibrary", () => {
     expect(result.current.teams).toEqual([])
   })
 
-  it("load writes the saved payload into the live keys and clears the log", () => {
+  it("load writes the saved payload + name into the live team object and clears the log", () => {
     seedLive({
+      name: "Saved",
       slots: [1102, null, null],
       loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
       focusedId: 1102,
@@ -191,11 +203,12 @@ describe("useLibrary", () => {
       log: [aHit(1102, "Basic Attack", 500)],
     })
     const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent("Saved"))
+    act(() => result.current.saveCurrent())
     const id = result.current.teams[0].id
 
     // Mutate the live state away from the saved snapshot.
     seedLive({
+      name: "Different",
       slots: [9999, 8888, null],
       timeline: [],
       log: [aHit(9999, "Basic Attack", 1)],
@@ -203,16 +216,30 @@ describe("useLibrary", () => {
 
     act(() => result.current.load(id))
 
-    expect(JSON.parse(localStorage.getItem("wuwa.team.slots")!)).toEqual([
-      1102,
-      null,
-      null,
-    ])
-    expect(JSON.parse(localStorage.getItem("wuwa.team.focusedId")!)).toBe(1102)
+    const live = readLiveTeam()
+    expect(live.slots).toEqual([1102, null, null])
+    expect(live.focusedId).toBe(1102)
+    // The saved name round-trips back into the live team.
+    expect(live.name).toBe("Saved")
+    // originId is reset to null in this slice (wired for behavior later).
+    expect(live.originId).toBeNull()
     expect(
       JSON.parse(localStorage.getItem("wuwa.timeline.entries")!),
     ).toHaveLength(1)
     // Log is cleared so /sim re-simulates the loaded team fresh.
     expect(JSON.parse(localStorage.getItem("wuwa.simulation-log")!)).toEqual([])
+  })
+
+  it("round-trips the team name through snapshotLive/writeLive (save then load)", () => {
+    seedLive({ name: "Hypercarry", slots: [1102, null, null] })
+    const { result } = renderHook(() => useLibrary())
+    act(() => result.current.saveCurrent())
+    const id = result.current.teams[0].id
+    expect(result.current.teams[0].name).toBe("Hypercarry")
+
+    // Live name drifts; loading restores the saved one.
+    seedLive({ name: "Scratch", slots: [null, null, null] })
+    act(() => result.current.load(id))
+    expect(readLiveTeam().name).toBe("Hypercarry")
   })
 })

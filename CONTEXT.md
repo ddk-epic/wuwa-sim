@@ -218,17 +218,27 @@ The skills that fire on swap-in / swap-out respectively. Outros consume Concerto
 
 ### Team Library
 
+**Session**:
+The single live working state of the simulator — the [[Active Team]], the [[Timeline]], and the [[Simulation Log]] it produced, held in the `wuwa.team` / `wuwa.timeline.entries` / `wuwa.simulation-log` keys. Exactly one at a time. A [[Saved Team]] is a persisted snapshot of a Session (team + timeline + the log folded to [[Team Stats]]); `load` rehydrates a Session from a Saved Team, and Save snapshots the current Session back into one. Global [[Settings]] and UI preferences are **not** part of a Session — they span every session.
+_Avoid_: the browser/login sense of "session" — there is no auth or per-visit lifecycle here. A Session is the loaded working state, and it persists across reloads.
+
 **Active Team**:
-The single team currently in the simulator — the live `wuwa.team.*` / `wuwa.timeline` / `wuwa.simulation-log` state. Exactly one. Distinct from a [[Saved Team]]: edits never write back to the Library without an explicit save.
+The team slice of the live [[Session]] — characters, loadouts, and identity (`name`, [[Origin]]). Exactly one. Persisted as one consolidated `wuwa.team` object (`{ name, slots, loadouts, focusedId, originId }`), alongside the separate `wuwa.timeline.entries` / `wuwa.simulation-log` keys (different lifecycles — kept out of the team object). Carries a **name** (its Library label, editable in the [[Team Builder]]) and an **[[Origin]]** (`originId`) — the [[Saved Team]] it was loaded from, or `null` when unsaved (started via "New team" or import). Distinct from a [[Saved Team]]: edits never write back to the Library without an explicit Save.
 
 **Saved Team**:
-A named member of the [[Library]]: an `ImportExportPayload` bundle (`{ team, timeline }`, reused from `import-export.ts`) plus a [[Team Stats]] snapshot. `load(id)` copies it into the [[Active Team]] as a detached copy; `saveCurrent(name)` always creates a new one (no in-place update in v1).
+A named member of the [[Library]]: an `ImportExportPayload` bundle (`{ team, timeline }`, reused from `import-export.ts`) plus a [[Team Stats]] snapshot. The bundle's `team.name` mirrors `SavedTeam.name` (the authoritative Library label) so exported codes round-trip the name (wire `VERSION 2`; `decode` stays back-compatible with v1 codes, defaulting the name to `""`). `load(id)` copies it into the [[Active Team]] as a detached copy and records its id as the Active Team's [[Origin]]. Saving from the simulator is **update-or-create**: when [[Origin]] points at a still-existing entry it is updated in place (payload + stats + `updated`); otherwise (Origin `null`, or a dangling id whose entry was deleted) a new entry is created and Origin is re-stamped. Editing a Saved Team's composition happens **only in the simulator** — the [[Team Stats]] snapshot can only be refreshed by a re-run, so the Library has no in-place composition editor.
 
 **Library**:
 The collection of [[Saved Team]]s, persisted at `wuwa.library`. Lives at `/library`; `/` is a landing scaffold.
 
 **Team Stats**:
 Per-team aggregate folded from a [[Simulation Log]] by `computeTeamStats(log)`: `dmgByChar`, per-[[Skill Type]] `typeMix` (`{count, dmg}`), ending concerto/energy. Snapshotted at save time; not restaled in v1 (refresh is manual).
+
+**Origin** (`originId`):
+The live-only `wuwa.team.originId` — the [[Saved Team]] the current [[Session]] was loaded from, or `null` for an unsaved team. Set by `load(id)`, left `null` by "New team" / import, and **dropped** when building an `ImportExportPayload` (not portable — it names a Library slot, not a property of the composition). Drives the simulator's update-or-create Save: a Save against a dangling Origin (entry since deleted) falls back to create rather than silently no-op'ing.
+
+**Team Builder**:
+The shared modal (`TeamModal`) for composing a team — a name field above the [[Loadout]] character grid and per-slot details. Runs in two contexts over one presentational body: in the simulator it edits the live [[Active Team]] (footer = Close, edits auto-persist); in the [[Library]] it edits an in-memory **draft** (`useDraftTeam`/`DraftTeamProvider` — same interface as `useTeam` but `useState`-backed, never touching live state) whose only commit is **Move to sim** (`writeLive(draft)` with [[Origin]] `null`, then navigate to `/sim`). The Library create flow deliberately cannot save directly to the Library — that would produce stub entries with no [[Team Stats]]; a new team enters the Library only via a simulator Save.
 
 ## External references
 

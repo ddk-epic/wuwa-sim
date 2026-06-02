@@ -17,3 +17,17 @@ export interface SlotLoadout {
   cost4Mains: Cost4Main[]
   cost3Mains: Cost3Main[]
 }
+
+/**
+ * The live working team — one consolidated `wuwa.team` object. Carries its
+ * Library label (`name`) and its Origin (`originId`: the Saved Team it was
+ * loaded from, or `null` when unsaved). `wuwa.timeline.entries` /
+ * `wuwa.simulation-log` stay separate keys (different lifecycles).
+ */
+export interface ActiveTeam {
+  name: string
+  slots: Slots
+  loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
+  focusedId: number | null
+  originId: string | null
+}

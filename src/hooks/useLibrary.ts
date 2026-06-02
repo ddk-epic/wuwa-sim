@@ -3,8 +3,8 @@ import { decodePayload } from "#/lib/import-export"
 import type { ImportExportPayload } from "#/lib/import-export"
 import { computeTeamStats } from "#/lib/team-stats"
 import type { TeamStats } from "#/lib/team-stats"
-import { emptyLoadout } from "#/lib/loadout/template"
-import type { Slots, SlotLoadout } from "#/types/loadout"
+import { defaultActiveTeam, reviveActiveTeam, TEAM_KEY } from "./useTeam"
+import type { ActiveTeam } from "#/types/loadout"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineNode } from "#/types/timeline"
 
@@ -27,9 +27,7 @@ const LIBRARY_KEY = "wuwa.library"
 
 /** The live simulator keys a save snapshots from / a load writes back to. */
 const LIVE = {
-  slots: "wuwa.team.slots",
-  loadouts: "wuwa.team.loadouts",
-  focusedId: "wuwa.team.focusedId",
+  team: TEAM_KEY,
   timeline: "wuwa.timeline.entries",
   log: "wuwa.simulation-log",
 } as const
@@ -52,30 +50,49 @@ function writeJSON(key: string, value: unknown): void {
   }
 }
 
-/** Snapshot the live `wuwa.*` keys into a payload + stats (read-only on the live state). */
-function snapshotLive(): { payload: ImportExportPayload; stats: TeamStats } {
-  const slots = readJSON<Slots>(LIVE.slots, [null, null, null])
-  const loadouts = readJSON<[SlotLoadout, SlotLoadout, SlotLoadout]>(
-    LIVE.loadouts,
-    [emptyLoadout(), emptyLoadout(), emptyLoadout()],
+/**
+ * Snapshot the live `wuwa.*` keys into a payload + stats + name (read-only on
+ * the live state). `originId` is live-only identity and does not travel in the
+ * portable payload.
+ */
+function snapshotLive(): {
+  payload: ImportExportPayload
+  stats: TeamStats
+  name: string
+} {
+  const team = reviveActiveTeam(
+    readJSON<unknown>(LIVE.team, defaultActiveTeam()),
   )
-  const focusedId = readJSON<number | null>(LIVE.focusedId, null)
   const nodes = readJSON<TimelineNode[]>(LIVE.timeline, [])
   const log = readJSON<SimulationLogEntry[]>(LIVE.log, [])
   return {
     payload: {
-      team: { slots, loadouts, focusedId },
+      team: {
+        slots: team.slots,
+        loadouts: team.loadouts,
+        focusedId: team.focusedId,
+      },
       timeline: nodes.length > 0 ? nodes : null,
     },
     stats: computeTeamStats(log),
+    name: team.name,
   }
 }
 
-/** Write a payload back into the live keys, clearing the stale log so /sim re-simulates. */
-function writeLive(payload: ImportExportPayload): void {
-  writeJSON(LIVE.slots, payload.team.slots)
-  writeJSON(LIVE.loadouts, payload.team.loadouts)
-  writeJSON(LIVE.focusedId, payload.team.focusedId)
+/**
+ * Write a payload + name back into the consolidated live team object, clearing
+ * the stale log so /sim re-simulates. `originId` resets to `null` here (wired
+ * for behavior in a later slice).
+ */
+function writeLive(payload: ImportExportPayload, name: string): void {
+  const team: ActiveTeam = {
+    name,
+    slots: payload.team.slots,
+    loadouts: payload.team.loadouts,
+    focusedId: payload.team.focusedId,
+    originId: null,
+  }
+  writeJSON(LIVE.team, team)
   writeJSON(LIVE.timeline, payload.timeline ?? [])
   writeJSON(LIVE.log, [])
 }
@@ -103,16 +120,19 @@ function newTeam(
 export function useLibrary() {
   const [teams, setTeams] = useLocalStorage<SavedTeam[]>(LIBRARY_KEY, [])
 
-  /** Snapshot the live active team into a NEW SavedTeam (always creates, never updates). */
-  function saveCurrent(name: string): void {
-    const { payload, stats } = snapshotLive()
+  /**
+   * Snapshot the live active team (including its name) into a NEW SavedTeam
+   * (always creates, never updates in v1).
+   */
+  function saveCurrent(): void {
+    const { payload, stats, name } = snapshotLive()
     setTeams((prev) => [...prev, newTeam(name, payload, stats)])
   }
 
-  /** Write a saved team's payload into the live keys (caller navigates to /sim). */
+  /** Write a saved team's payload + name into the live keys (caller navigates to /sim). */
   function load(id: string): void {
     const team = teams.find((t) => t.id === id)
-    if (team) writeLive(team.payload)
+    if (team) writeLive(team.payload, team.name)
   }
 
   function rename(id: string, name: string): void {

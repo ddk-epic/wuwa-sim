@@ -1,4 +1,4 @@
-import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { ActiveTeam, Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
 import { getCharacterById, getEchoSetById } from "#/lib/loadout/catalog"
 import {
@@ -6,6 +6,39 @@ import {
   inferEchoSetForEcho,
   loadoutFromTemplate,
 } from "#/lib/loadout/template"
+
+export const TEAM_KEY = "wuwa.team"
+
+/** A fresh, empty Active Team — the default before anything is composed. */
+export function defaultActiveTeam(): ActiveTeam {
+  return {
+    name: "New team",
+    slots: [null, null, null],
+    loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
+    focusedId: null,
+    originId: null,
+  }
+}
+
+/**
+ * Coerce unknown stored JSON into an ActiveTeam, merging each loadout slot over
+ * defaults (the storage boundary — older/partial objects must not crash).
+ */
+export function reviveActiveTeam(stored: unknown): ActiveTeam {
+  const base = defaultActiveTeam()
+  const t = (stored ?? {}) as Partial<ActiveTeam>
+  const loadouts = Array.isArray(t.loadouts) ? t.loadouts : []
+  return {
+    name: typeof t.name === "string" ? t.name : base.name,
+    slots: Array.isArray(t.slots) ? t.slots : base.slots,
+    loadouts: base.loadouts.map((def, i) => ({
+      ...def,
+      ...(loadouts[i] as object | undefined),
+    })) as [SlotLoadout, SlotLoadout, SlotLoadout],
+    focusedId: typeof t.focusedId === "number" ? t.focusedId : base.focusedId,
+    originId: typeof t.originId === "string" ? t.originId : base.originId,
+  }
+}
 
 function updateSlot(
   prev: [SlotLoadout, SlotLoadout, SlotLoadout],
@@ -22,29 +55,30 @@ function updateSlot(
 }
 
 export function useTeam() {
-  const [slots, setSlots] = useLocalStorage<Slots>("wuwa.team.slots", [
-    null,
-    null,
-    null,
-  ])
-  const [loadouts, setLoadouts] = useLocalStorage<
-    [SlotLoadout, SlotLoadout, SlotLoadout]
-  >(
-    "wuwa.team.loadouts",
-    [emptyLoadout(), emptyLoadout(), emptyLoadout()],
-    (stored) => {
-      // Boundary: stored localStorage is unknown; each slot is merged over defaults.
-      const arr = stored as [unknown, unknown, unknown]
-      return arr.map((s) => ({
-        ...emptyLoadout(),
-        ...(s as object),
-      })) as [SlotLoadout, SlotLoadout, SlotLoadout]
-    },
+  const [team, setTeam] = useLocalStorage<ActiveTeam>(
+    TEAM_KEY,
+    defaultActiveTeam(),
+    reviveActiveTeam,
   )
-  const [focusedId, setFocusedId] = useLocalStorage<number | null>(
-    "wuwa.team.focusedId",
-    null,
-  )
+  const { name, slots, loadouts, focusedId } = team
+
+  // Per-field setters patch the single consolidated object.
+  function setSlots(next: Slots) {
+    setTeam((prev) => ({ ...prev, slots: next }))
+  }
+  function setLoadouts(
+    updater: (
+      prev: [SlotLoadout, SlotLoadout, SlotLoadout],
+    ) => [SlotLoadout, SlotLoadout, SlotLoadout],
+  ) {
+    setTeam((prev) => ({ ...prev, loadouts: updater(prev.loadouts) }))
+  }
+  function setFocusedId(next: number | null) {
+    setTeam((prev) => ({ ...prev, focusedId: next }))
+  }
+  function setName(next: string) {
+    setTeam((prev) => ({ ...prev, name: next }))
+  }
 
   function toggleCharacter(characterId: number) {
     const slotIndex = slots.indexOf(characterId)
@@ -143,16 +177,21 @@ export function useTeam() {
     newLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout],
     newFocusedId: number | null,
   ) {
-    setSlots(newSlots)
-    setLoadouts(newLoadouts)
-    setFocusedId(newFocusedId)
+    setTeam((prev) => ({
+      ...prev,
+      slots: newSlots,
+      loadouts: newLoadouts,
+      focusedId: newFocusedId,
+    }))
   }
 
   return {
+    name,
     slots,
     loadouts,
     focusedId,
     selectedCount: slots.filter((s) => s !== null).length,
+    setName,
     toggleCharacter,
     focusCharacter,
     setSlotPatch,

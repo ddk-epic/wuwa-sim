@@ -33,8 +33,7 @@ export function LibraryPage() {
   const isEmpty = teams.length === 0
 
   function handleSaveNew() {
-    const name = window.prompt("Name this team", "New team")?.trim()
-    if (name) saveCurrent(name)
+    saveCurrent()
   }
 
   function handleImport() {

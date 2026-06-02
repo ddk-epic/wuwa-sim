@@ -5,10 +5,12 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import { getCharacterById } from "#/lib/loadout/catalog"
 
 export interface TeamContextValue {
+  name: string
   slots: Slots
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
   focusedId: number | null
   selectedCount: number
+  setName: (name: string) => void
   toggleCharacter: (characterId: number) => void
   focusCharacter: (id: number) => void
   setSlotPatch: (slotIndex: number, patch: Partial<SlotLoadout>) => void

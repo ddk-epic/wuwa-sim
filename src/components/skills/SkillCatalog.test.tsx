@@ -24,6 +24,7 @@ function renderWithTeam(
   },
 ) {
   const value = {
+    name: "New team",
     slots,
     loadouts: [loadouts[0], loadouts[1], loadouts[2]] as [
       SlotLoadout,
@@ -32,6 +33,7 @@ function renderWithTeam(
     ],
     focusedId,
     selectedCount: slots.filter((s) => s !== null).length,
+    setName: vi.fn(),
     toggleCharacter: vi.fn(),
     focusCharacter: onFocus ?? vi.fn(),
     setSlotPatch: vi.fn(),

@@ -74,3 +74,50 @@ describe("useTeam — focusCharacter", () => {
     expect(result.current.focusedId).toBe(1)
   })
 })
+
+describe("useTeam — consolidated wuwa.team object", () => {
+  it("defaults to an empty 'New team' and writes one consolidated key", () => {
+    const { result } = renderHook(() => useTeam())
+    act(() => {
+      result.current.toggleCharacter(1102)
+    })
+    const stored = JSON.parse(localStorage.getItem("wuwa.team")!)
+    expect(stored.name).toBe("New team")
+    expect(stored.slots).toEqual([1102, null, null])
+    expect(stored.focusedId).toBe(1102)
+    expect(stored.originId).toBeNull()
+    // The old loose keys are no longer written.
+    expect(localStorage.getItem("wuwa.team.slots")).toBeNull()
+  })
+
+  it("setName persists the team name across a reload", () => {
+    const { result, unmount } = renderHook(() => useTeam())
+    act(() => {
+      result.current.setName("Rover Hypercarry")
+    })
+    expect(result.current.name).toBe("Rover Hypercarry")
+    unmount()
+
+    // Remounting hydrates the name from localStorage.
+    const { result: reloaded } = renderHook(() => useTeam())
+    expect(reloaded.current.name).toBe("Rover Hypercarry")
+  })
+
+  it("hydrates loadouts merged over defaults from a partial stored object", () => {
+    localStorage.setItem(
+      "wuwa.team",
+      JSON.stringify({
+        name: "Partial",
+        slots: [1203, null, null],
+        loadouts: [{ sequence: 6 }],
+        focusedId: 1203,
+      }),
+    )
+    const { result } = renderHook(() => useTeam())
+    expect(result.current.name).toBe("Partial")
+    expect(result.current.loadouts[0].sequence).toBe(6)
+    // Missing fields fall back to defaults.
+    expect(result.current.loadouts[0].weaponId).toBeNull()
+    expect(result.current.loadouts[1].sequence).toBe(0)
+  })
+})
