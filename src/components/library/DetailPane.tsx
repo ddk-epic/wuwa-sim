@@ -124,6 +124,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
             <IconBtn
               icon={team.pinned ? PinOff : Pin}
               label={team.pinned ? "Unpin" : "Pin"}
+              variant={team.pinned ? "accent" : "default"}
               onClick={() => actions.onTogglePin(team.id)}
             />
             <IconBtn

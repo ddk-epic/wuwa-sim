@@ -154,6 +154,7 @@ function TeamTab({
           <IconBtn
             icon={team.pinned ? PinOff : Pin}
             label={team.pinned ? "Unpin" : "Pin"}
+            variant={team.pinned ? "accent" : "default"}
             w={20}
             h={20}
             size={12}
@@ -266,11 +267,11 @@ export function LibraryList({
           </span>
         ) : (
           <>
-            <label className="flex-1 flex items-center gap-1.5 bg-background border border-border rounded-sm px-2 py-1">
+            <label className="flex-1 flex items-center gap-1.5 bg-background border border-border rounded-sm pl-2 pr-1.25 py-1">
               <Pencil
-                size={11}
+                size={13}
                 strokeWidth={1.5}
-                className="text-ui-zero shrink-0"
+                className="text-muted shrink-0"
               />
               <input
                 value={query}
@@ -282,9 +283,9 @@ export function LibraryList({
                 <IconBtn
                   icon={X}
                   label="Clear"
-                  w={16}
-                  h={16}
-                  size={10}
+                  w={18}
+                  h={18}
+                  size={18}
                   onClick={() => setQuery("")}
                 />
               )}
@@ -336,18 +337,6 @@ export function LibraryList({
           )}
         </div>
       )}
-
-      <div className="px-3 py-1.5 border-t border-border text-detail text-muted font-mono flex items-center gap-1.5">
-        <kbd className="text-micro px-1 py-px bg-card border border-border rounded-sm">
-          ↑↓
-        </kbd>
-        <span>navigate</span>
-        <span className="text-ui-zero">·</span>
-        <kbd className="text-micro px-1 py-px bg-card border border-border rounded-sm">
-          ⏎
-        </kbd>
-        <span>{isEmpty ? "create" : "load into sim"}</span>
-      </div>
     </div>
   )
 }
