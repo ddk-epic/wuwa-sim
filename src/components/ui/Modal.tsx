@@ -8,6 +8,9 @@ interface ModalProps {
   panelClassName?: string
   title?: string
   subtitle?: string
+  /** Status text rendered baseline-aligned beside the title (left side). */
+  titleAside?: ReactNode
+  /** Controls rendered on the right of the header, next to the close button. */
   headerExtra?: ReactNode
   children: ReactNode
 }
@@ -31,6 +34,7 @@ export function Modal({
   panelClassName,
   title,
   subtitle,
+  titleAside,
   headerExtra,
   children,
 }: ModalProps) {
@@ -50,7 +54,12 @@ export function Modal({
         {title !== undefined && (
           <div className="flex items-center justify-between pb-5 shrink-0">
             <div>
-              <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {title}
+                </h2>
+                {titleAside}
+              </div>
               {subtitle !== undefined && (
                 <p className="text-gray-400 text-sm mt-0.5">{subtitle}</p>
               )}

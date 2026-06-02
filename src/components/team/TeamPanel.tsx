@@ -4,7 +4,8 @@ import { ELEMENT_HEX } from "#/data/elements"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
 import { EchoBuildEditor } from "#/components/team/EchoBuildEditor"
 import { TeamSlotPortrait } from "#/components/team/TeamSlotPortrait"
-import { ComboboxSelect, Stepper } from "#/components/team/TeamSlotControls"
+import { ComboboxSelect } from "#/components/team/TeamSlotControls"
+import { Stepper } from "#/components/ui/Stepper"
 
 const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]

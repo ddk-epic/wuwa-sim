@@ -22,7 +22,7 @@ export function TeamBuilderModal({
       onClose={onClose}
       variant="fullscreen"
       title="Team Builder"
-      headerExtra={
+      titleAside={
         <span className="font-mono text-xs text-muted-foreground/70">
           {selectedCount}/3 selected
         </span>

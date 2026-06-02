@@ -289,31 +289,7 @@ export function SimulatorPage() {
                   onClose={handleCloseSimulationLog}
                 />
               )}
-              {settingsOpen && (
-                <SettingsModal
-                  reactionDelay={settings.reactionDelay}
-                  swapFrames={settings.swapFrames}
-                  variantFloor={settings.variantFloor}
-                  fallFrames={settings.fallFrames}
-                  autoRun={autoRun}
-                  onReactionDelayChange={(value) =>
-                    setSettings({ reactionDelay: value })
-                  }
-                  onSwapFramesChange={(value) =>
-                    setSettings({ swapFrames: value })
-                  }
-                  onVariantFloorChange={(value) =>
-                    setSettings({ variantFloor: value })
-                  }
-                  onFallFramesChange={(value) =>
-                    setSettings({ fallFrames: value })
-                  }
-                  onAutoRunChange={(value) =>
-                    setPreferences({ autoRun: value })
-                  }
-                  onClose={handleCloseSettings}
-                />
-              )}
+              {settingsOpen && <SettingsModal onClose={handleCloseSettings} />}
               {pendingImport !== null && (
                 <ConfirmModal
                   message="Import will overwrite your current timeline. Continue?"
