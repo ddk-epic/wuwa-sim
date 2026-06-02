@@ -12,12 +12,12 @@ export function Card({
 }) {
   return (
     <div className="border border-border rounded-sm bg-card flex flex-col min-w-0">
-      <div className="px-3.5 py-2.5 border-b border-border flex items-baseline gap-2">
-        <span className="text-label font-semibold text-foreground tracking-[0.2px]">
+      <div className="px-3.5 py-2.5 border-b border-border flex items-baseline gap-3">
+        <span className="text-base font-semibold text-foreground tracking-[0.2px]">
           {title}
         </span>
         {sub && (
-          <span className="text-micro text-muted font-mono tracking-[0.4px]">
+          <span className="text-detail text-muted font-mono tracking-[0.4px]">
             {sub}
           </span>
         )}

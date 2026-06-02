@@ -38,7 +38,7 @@ export function ElementAvatar({
             ? "grayscale(1) contrast(1.05) brightness(1.05)"
             : "none",
         }}
-        className="absolute left-[-8%] top-[-4%] w-[116%] h-[116%] object-cover object-center"
+        className="absolute left-[4%] top-[-4%] w-[116%] h-[116%] object-cover object-center"
       />
     </div>
   )

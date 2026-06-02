@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react"
 import {
   CirclePlus,
   Copy,
@@ -14,46 +13,14 @@ import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { Card } from "#/components/ui/Card"
 import { HBtn } from "#/components/ui/HBtn"
 import { IconBtn } from "#/components/ui/IconBtn"
+import { InlineRename } from "#/components/ui/InlineRename"
 import { Kpi } from "#/components/ui/Kpi"
 import { DmgDonut, TypeDistribution } from "./charts"
 import { ElementAvatar } from "./portraits"
 import { blendGradient, elementHex, portraitSrc } from "./theme"
 import type { LibTeam, RowActions } from "./types"
 
-function HeroNameInput({
-  initial,
-  onCommit,
-}: {
-  initial: string
-  onCommit: (name: string) => void
-}) {
-  const ref = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    ref.current?.focus()
-    ref.current?.select()
-  }, [])
-
-  return (
-    <input
-      ref={ref}
-      defaultValue={initial}
-      aria-label="Team name"
-      className="bg-transparent border-b border-gray-600 text-3xl font-bold text-foreground leading-none focus:outline-none focus:border-blue-400"
-      style={{ letterSpacing: -0.5 }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onCommit(e.currentTarget.value)
-        if (e.key === "Escape") {
-          e.currentTarget.value = initial
-          onCommit(initial)
-        }
-      }}
-      onBlur={(e) => onCommit(e.currentTarget.value)}
-    />
-  )
-}
-
 function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
-  const [editing, setEditing] = useState(false)
   const dominant = elementHex(
     team.members[team.members.length - 1]?.element ?? "",
   )
@@ -123,26 +90,19 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
 
       {/* Info plate */}
       <div className="px-5.5 pt-4.5 pb-5 flex flex-col gap-3.5">
-        <div className="flex items-baseline justify-between gap-4">
-          {editing ? (
-            <HeroNameInput
-              initial={team.name}
-              onCommit={(name) => {
-                const trimmed = name.trim()
-                if (trimmed) actions.onRename(team.id, trimmed)
-                setEditing(false)
-              }}
-            />
-          ) : (
-            <span
-              onClick={() => setEditing(true)}
-              title="Rename"
-              className="text-3xl font-bold text-foreground leading-none cursor-pointer rounded-sm border border-transparent hover:border-muted px-1 -mx-1"
-              style={{ letterSpacing: -0.5 }}
-            >
-              {team.name}
-            </span>
-          )}
+        <div className="flex items-baseline justify-between gap-4 -my-3">
+          <InlineRename
+            value={team.name}
+            accentColor={dominant}
+            ariaLabel="Team name"
+            title="Rename"
+            wrapperClassName="rounded-3xl px-3 pb-1 -mx-3 w-96"
+            className="text-3xl font-bold text-foreground leading-normal w-full"
+            onCommit={(name) => {
+              const trimmed = name.trim()
+              if (trimmed) actions.onRename(team.id, trimmed)
+            }}
+          />
         </div>
         <div className="flex items-end gap-7">
           <Kpi

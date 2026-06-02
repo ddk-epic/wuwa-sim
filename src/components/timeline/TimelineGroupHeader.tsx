@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react"
 import {
   ChevronRightIcon,
   CopyIcon,
@@ -11,44 +10,12 @@ import { ELEMENT_HEX } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
+import { InlineRename } from "#/components/ui/InlineRename"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "../log/log-cells"
 import { formatFrames } from "#/lib/format"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
-
-function GroupLabelInput({
-  groupId,
-  initialLabel,
-  autoFocus,
-  onCommit,
-}: {
-  groupId: string
-  initialLabel: string
-  autoFocus: boolean
-  onCommit: (groupId: string, label: string) => void
-}) {
-  const ref = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (autoFocus) ref.current?.focus()
-  }, [autoFocus])
-
-  return (
-    <input
-      ref={ref}
-      defaultValue={initialLabel}
-      placeholder="Group name"
-      className="bg-transparent border-b border-gray-600 text-white text-sm font-bold focus:outline-none focus:border-blue-400 w-40"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          onCommit(groupId, e.currentTarget.value)
-          e.currentTarget.blur()
-        }
-      }}
-      onBlur={(e) => onCommit(groupId, e.currentTarget.value)}
-    />
-  )
-}
 
 type GroupHeaderRenderItem = Extract<RenderItem, { type: "groupHeader" }>
 
@@ -182,32 +149,20 @@ export function TimelineGroupHeader({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 min-w-0">
-          {!locked || isRenaming ? (
-            <GroupLabelInput
-              groupId={groupId}
-              initialLabel={label}
-              autoFocus={isRenaming}
-              onCommit={(gid, l) => {
-                onGroupLabelCommit(gid, l)
-                endRename()
-              }}
-            />
-          ) : (
-            <span
-              onClick={(e) => {
-                e.stopPropagation()
-                startRename(groupId)
-              }}
-              className="cursor-text hover:text-white transition-colors text-sm font-bold inline-block border-b border-transparent truncate min-w-0"
-              title="Click to rename"
-            >
-              {label || (
-                <span className="italic text-gray-600 font-normal pr-0.5">
-                  unnamed
-                </span>
-              )}
-            </span>
-          )}
+          <InlineRename
+            value={label}
+            editing={!locked || isRenaming}
+            autoFocus={isRenaming}
+            onEditingChange={(next) => {
+              if (next) startRename(groupId)
+              else endRename()
+            }}
+            onCommit={(l) => onGroupLabelCommit(groupId, l)}
+            placeholder="unnamed"
+            title="Click to rename"
+            wrapperClassName="rounded-xl px-2 py-0.75 -m-2 w-44"
+            className="text-sm font-bold w-40"
+          />
           <span className="text-gray-500 text-xs font-mono ml-1 shrink-0">
             {entryCount} actions
           </span>

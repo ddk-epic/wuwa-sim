@@ -232,7 +232,7 @@ export function TimelineEntryRow({
         {renderPoolValue(resVal, "var(--ui-resonance)")}
       </td>
       <td
-        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
+        className={`px-1 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
       >
         {row.damage !== null ? (
           <span className="font-semibold text-base text-yellow-400">

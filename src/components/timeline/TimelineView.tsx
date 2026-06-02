@@ -155,8 +155,8 @@ export function TimelineView({
             <th className="px-2 py-2 text-right w-16">dur</th>
             <th className="px-2 py-2 text-right w-16">con</th>
             <th className="px-2 py-2 text-right w-16">res</th>
-            <th className="px-2 py-2 text-right w-22">dmg</th>
-            <th className="px-2 py-2 w-18.75"></th>
+            <th className="px-1 py-2 text-right w-22">dmg</th>
+            <th className="px-2 py-2 w-18"></th>
           </tr>
         </thead>
         <tbody>
