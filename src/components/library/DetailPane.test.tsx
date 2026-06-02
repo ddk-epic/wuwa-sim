@@ -36,13 +36,7 @@ function spyActions(): RowActions {
 
 function renderCard(actions: RowActions) {
   return render(
-    <DetailCard
-      team={libTeam()}
-      isEmpty={false}
-      actions={actions}
-      onCreate={() => {}}
-      onImport={() => {}}
-    />,
+    <DetailCard team={libTeam()} isEmpty={false} actions={actions} />,
   )
 }
 

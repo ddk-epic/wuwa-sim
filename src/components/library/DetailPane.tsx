@@ -1,14 +1,4 @@
-import {
-  CirclePlus,
-  Copy,
-  Download,
-  Layers,
-  Pin,
-  PinOff,
-  Play,
-  Trash2,
-  Upload,
-} from "lucide-react"
+import { Copy, Download, Pin, PinOff, Play, Trash2 } from "lucide-react"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { Card } from "#/components/ui/Card"
 import { HBtn } from "#/components/ui/HBtn"
@@ -214,37 +204,16 @@ function MemberCards({ team }: { team: LibTeam }) {
   )
 }
 
-function EmptyMainPane({
-  onCreate,
-  onImport,
-}: {
-  onCreate: () => void
-  onImport: () => void
-}) {
+function EmptyMainPane() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-10 gap-5.5 min-h-0">
-      <div className="w-24 h-24 rounded-full border border-dashed border-border bg-card flex items-center justify-center text-muted relative">
-        <Layers size={42} strokeWidth={1.5} />
-      </div>
       <div className="flex flex-col gap-2 items-center text-center max-w-110">
-        <span
-          className="text-stat font-semibold text-foreground"
-          style={{ letterSpacing: -0.2 }}
-        >
+        <span className="text-stat font-semibold text-foreground">
           Your library is empty
         </span>
-        <span className="text-sm text-muted leading-[1.55]">
+        <span className="text-sm text-muted">
           Build a team in the simulator and save it here.
         </span>
-      </div>
-      <div className="flex gap-2">
-        <HBtn
-          icon={CirclePlus}
-          label="Create a team"
-          primary
-          onClick={onCreate}
-        />
-        <HBtn icon={Upload} label="Import roster" onClick={onImport} />
       </div>
     </div>
   )
@@ -254,16 +223,12 @@ export function DetailCard({
   team,
   isEmpty,
   actions,
-  onCreate,
-  onImport,
 }: {
   team: LibTeam | null
   isEmpty: boolean
   actions: RowActions
-  onCreate: () => void
-  onImport: () => void
 }) {
-  if (isEmpty) return <EmptyMainPane onCreate={onCreate} onImport={onImport} />
+  if (isEmpty) return <EmptyMainPane />
   if (!team)
     return (
       <div className="flex-1 flex items-center justify-center text-muted text-sm italic">

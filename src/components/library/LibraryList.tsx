@@ -1,17 +1,6 @@
 import { useMemo, useState } from "react"
-import {
-  CirclePlus,
-  Copy,
-  Layers,
-  Pencil,
-  Pin,
-  PinOff,
-  Play,
-  Trash2,
-  X,
-} from "lucide-react"
+import { Copy, Pencil, Pin, PinOff, Play, Trash2, X } from "lucide-react"
 import { IconBtn } from "#/components/ui/IconBtn"
-import { HBtn } from "#/components/ui/HBtn"
 import { Kpi } from "#/components/ui/Kpi"
 import { ElDot } from "#/components/ui/ElDot"
 import { PortraitStrip } from "./portraits"
@@ -183,21 +172,15 @@ function TeamTab({
   )
 }
 
-function LibraryEmptyList({ onCreate }: { onCreate: () => void }) {
+function LibraryEmptyList() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-3 text-center">
-      <div className="w-12 h-12 rounded-full border border-dashed border-border flex items-center justify-center text-ui-zero">
-        <Layers size={20} strokeWidth={1.5} />
-      </div>
-      <span className="text-sm font-semibold text-foreground">
+      <span className="text-stat font-semibold text-foreground">
         No teams yet
       </span>
-      <span className="text-label text-muted max-w-60 leading-normal">
+      <span className="text-sm text-muted max-w-60">
         Saved teams from the simulator will appear here.
       </span>
-      <div className="mt-1">
-        <HBtn icon={CirclePlus} label="New team" primary onClick={onCreate} />
-      </div>
     </div>
   )
 }
@@ -211,7 +194,6 @@ export function LibraryList({
   sort,
   setSort,
   actions,
-  onCreate,
 }: {
   teams: LibTeam[]
   selectedId: string | null
@@ -221,7 +203,6 @@ export function LibraryList({
   sort: string
   setSort: (s: string) => void
   actions: RowActions
-  onCreate: () => void
 }) {
   const isEmpty = teams.length === 0
   const filtered = useMemo(
@@ -318,7 +299,7 @@ export function LibraryList({
       </div>
 
       {isEmpty ? (
-        <LibraryEmptyList onCreate={onCreate} />
+        <LibraryEmptyList />
       ) : (
         <div className="flex-1 overflow-y-auto">
           {sorted.map((team) => (

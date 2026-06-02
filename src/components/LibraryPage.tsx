@@ -87,7 +87,7 @@ export function LibraryPage() {
     savedTeams.find((t) => t.id === pendingDeleteId)?.name ?? "this team"
 
   return (
-    <div className="w-full h-screen bg-background text-foreground font-sans text-sm flex flex-col overflow-hidden">
+    <div className="w-full h-screen bg-background text-foreground font-sans text-sm flex flex-col overflow">
       {/* Header */}
       <div className="h-12 shrink-0 bg-card border-b border-border flex items-center px-4 gap-4">
         <div className="flex items-center gap-2.5">
@@ -128,13 +128,7 @@ export function LibraryPage() {
 
         {/* Main pane */}
         <div className="flex-1 flex flex-col min-w-200">
-          <DetailCard
-            team={selectedTeam}
-            isEmpty={isEmpty}
-            actions={actions}
-            onCreate={handleCreate}
-            onImport={handleImport}
-          />
+          <DetailCard team={selectedTeam} isEmpty={isEmpty} actions={actions} />
         </div>
 
         <LibraryList
@@ -146,7 +140,6 @@ export function LibraryPage() {
           sort={sort}
           setSort={setSort}
           actions={actions}
-          onCreate={handleCreate}
         />
       </div>
 

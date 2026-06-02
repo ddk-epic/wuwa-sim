@@ -48,7 +48,6 @@ describe("LibraryList — row selection", () => {
         sort="recent"
         setSort={() => {}}
         actions={actions}
-        onCreate={() => {}}
       />,
     )
     // Click the row body (the name bubbles to the row's onClick).
