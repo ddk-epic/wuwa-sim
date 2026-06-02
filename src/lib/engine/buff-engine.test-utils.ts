@@ -11,18 +11,11 @@ export function pendingNextOnFieldCount(engine: BuffEngine): number {
 }
 
 /**
- * Drain emit *decisions* into their resolved synthetic events, the way the
- * simulation's frame-ordered stream does (ADR-0028 first-class events). After the
- * narrowing, `onEvent`/`recordHit`/`recordHeal` return only `deferredEmits` (the
- * decision to emit), never resolved events — so engine-level tests resolve them
- * here and assert on the result, exactly as they once read `.syntheticEvents`.
- *
- * Each decision resolves to its synthetic event plus the in-frame DFS chain it
- * spawns (`resolveDeferredEmit` runs that chain inline); the flattened order
- * `[event, ...chain]` matches the old eager emission order. Resolving also applies
- * the synthetic's energy/concerto, so callers asserting on post-emit resources
- * must drain too. The FIFO queue mirrors emission order for the offset-0 emits
- * these tests use; offset emits (which the simulation frame-sorts) do not appear.
+ * Drain emit decisions into their resolved synthetic events, the way the
+ * simulation's frame-ordered stream does. Each decision resolves to its synthetic
+ * event plus the in-frame DFS chain it spawns, flattened as `[event, ...chain]`.
+ * Resolving also applies the synthetic's energy/concerto, so callers asserting on
+ * post-emit resources must drain too.
  */
 export function drainSynthetics(
   engine: BuffEngine,
@@ -40,12 +33,10 @@ export function drainSynthetics(
 }
 
 /**
- * `engine.onEvent` followed by an immediate drain of its emit decisions —
- * reproducing the pre-narrowing shape where `onEvent` returned resolved
- * `syntheticEvents` inline (ADR-0028). Resolving applies the synthetics' resource
- * gains too, so post-event resource assertions see them, matching the old eager
- * path. Use this in tests that fire a single event and inspect its synthetics;
- * the simulation itself drains the stream in frame order across entries instead.
+ * `engine.onEvent` followed by an immediate drain of its emit decisions, returning
+ * the resolved `syntheticEvents` inline. Resolving applies the synthetics' resource
+ * gains too, so post-event resource assertions see them. For tests that fire a
+ * single event and inspect its synthetics.
  */
 export function onEventResolved(
   engine: BuffEngine,

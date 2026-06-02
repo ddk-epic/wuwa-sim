@@ -12,12 +12,11 @@ import type { HitEvent, SimulationLogEntry } from "#/types/simulation-log"
 import { runSimulation } from "./simulation"
 
 /**
- * Honor-`actionFrame` for deferred emitHits (ADR-0028).
+ * Honor-`actionFrame` for deferred emitHits.
  *
  * An `emitHit` whose `damage.actionFrame > 0` lands at `triggerFrame +
  * actionFrame` and interleaves into the log in frame order — after its trigger
- * but before a later authored entry it now precedes. The landing offset is
- * honored unconditionally (the `honorEmitOffset` migration flag has been retired).
+ * but before a later authored entry it now precedes.
  */
 
 const dmgHit = (

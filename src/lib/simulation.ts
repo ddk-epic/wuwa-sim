@@ -24,24 +24,12 @@ import type { ResolvedStage } from "./stage"
 import { isCancelCapable, partitionStage } from "./trailing-window"
 import type { TrailingHit } from "./trailing-window"
 
-/**
- * A unit of work drained by the simulation worklist. Today the only kind is an
- * authored Timeline Entry; synthetic and trailing hits join as new kinds in a
- * later step (ADR-0028). Authored entries are a sequential FIFO — an entry's
- * landing frame is a running cursor computed *during* processing, not known up
- * front — so they are never frame-keyed.
- */
-type WorkItem = { kind: "entry"; entry: TimelineEntry }
-
 /** The running position of the simulation: the engine clock frame. */
 interface SimCursor {
   frame: number
 }
 
-/**
- * A synthetic emit (emitHit/coordHit) awaiting resolution at its landing frame
- * (ADR-0028). Footing-blind and fire-and-forget — never tombstoned.
- */
+/** A synthetic emit (emitHit/coordHit) awaiting resolution at its landing frame. */
 interface PendingSynthetic {
   kind: "synthetic"
   frame: number
@@ -51,10 +39,9 @@ interface PendingSynthetic {
 }
 
 /**
- * A swap-stage trailing hit awaiting resolution at its `hitFrame` (ADR-0018,
- * relocated onto the unified queue in ADR-0028's endgame). Unlike synthetics it
- * is **tombstonable** (`valid`): a same-character cancel-capable re-entry marks
- * trailing hits with `hitFrame ≥ entryStart` invalid instead of resolving them.
+ * A swap-stage trailing hit awaiting resolution at its `hitFrame`. A
+ * same-character cancel-capable re-entry sets `valid: false` on trailing hits
+ * with `hitFrame ≥ entryStart`, and the drain skips them instead of resolving.
  */
 interface PendingTrailing {
   kind: "trailing"
@@ -65,13 +52,11 @@ interface PendingTrailing {
 }
 
 /**
- * A footing change for one character on the stream (ADR-0022 per-character
- * footing amendment): a launch/land **commit** (`resetIfOffField: false`) that
- * sets the owner's footing at its commit frame, or the **window-end reset**
- * (`resetIfOffField: true`) that returns the owner to `ground` on the
- * [[In-trailing]] → [[In-reserve]] transition — but only if it is still
- * off-field at that frame. Commits are tombstonable like trailing hits; resets
- * are cancelled when the owner re-enters.
+ * A footing change for one character on the stream: a launch/land commit
+ * (`resetIfOffField: false`) that sets the owner's footing at its commit frame,
+ * or a window-end reset (`resetIfOffField: true`) that returns the owner to
+ * `ground` if still off-field at that frame. A cancelling re-entry sets
+ * `valid: false`, and the drain skips it.
  */
 interface PendingFooting {
   kind: "footing"
@@ -82,14 +67,10 @@ interface PendingFooting {
   resetIfOffField: boolean
 }
 
-/**
- * One member of the single frame-ordered event stream the walk drains lazily
- * (ADR-0028 endgame). Drained in nondecreasing `frame` order before every engine
- * advance, so the monotonic clock never overshoots a member's frame.
- */
+/** One member of the frame-ordered event stream, drained in nondecreasing frame order. */
 type PendingEvent = PendingSynthetic | PendingTrailing | PendingFooting
 
-/** Everything an entry/drain step needs, threaded through the worklist. */
+/** Everything an entry/drain step needs. */
 interface SimContext {
   engine: BuffEngine
   log: SimulationLogEntry[]
@@ -100,10 +81,7 @@ interface SimContext {
   variantFloor: number
   fallFrames: number
   cursor: SimCursor
-  /**
-   * The single frame-ordered pending-event stream: synthetics, trailing hits,
-   * and footing commits/resets, all drained in nondecreasing frame order.
-   */
+  /** The frame-ordered pending-event stream: synthetics, trailing hits, footing commits/resets. */
   pending: PendingEvent[]
 }
 
@@ -115,7 +93,6 @@ export function runSimulation(
   swapFrames: number = 6,
   variantFloor: number = 0,
   fallFrames: number = 21,
-  opts: { useWorklist?: boolean } = {},
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
@@ -134,40 +111,13 @@ export function runSimulation(
     pending: [],
   }
 
-  // α-oracle seam (ADR-0028): the worklist path drains authored entries in
-  // FIFO order through the *same* per-entry step as the plain walk, so its log
-  // is byte-identical. Synthetic/trailing emission moves onto it in later steps.
-  if (opts.useWorklist) {
-    drainWorklist(
-      entries.map((entry): WorkItem => ({ kind: "entry", entry })),
-      ctx,
-    )
-  } else {
-    for (const entry of entries) processAuthoredEntry(entry, ctx)
-  }
+  for (const entry of entries) processAuthoredEntry(entry, ctx)
 
-  // The stream's tail: any trailing hits / synthetics that never re-entered.
-  // Parked footing commits with no re-entry are intentionally dropped (the owner
-  // stayed off-field, so the launch/land never became team footing).
+  // Drain the stream's tail: trailing hits / synthetics that never re-entered.
+  // Parked footing commits with no re-entry are dropped.
   drainPending(ctx, Infinity)
 
   return log
-}
-
-/**
- * Drain the worklist in order. The array iterator re-reads `length` each step,
- * so items a later step enqueues mid-drain are picked up in the same pass.
- */
-function drainWorklist(queue: WorkItem[], ctx: SimContext): void {
-  for (const item of queue) processWorkItem(item, ctx)
-}
-
-/**
- * Dispatch one work item by kind. Only authored entries exist today (ADR-0028
- * step 2); synthetic/trailing kinds reintroduce a `switch` here when added.
- */
-function processWorkItem(item: WorkItem, ctx: SimContext): void {
-  processAuthoredEntry(item.entry, ctx)
 }
 
 /** Process one authored Timeline Entry, advancing the cursor in place. */
@@ -175,9 +125,8 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   const { engine, slots, loadouts, cursor } = ctx
   const resolved = findStageByEntry(entry, slots, loadouts)
   const incomingSkillType = resolved?.skillType ?? "Basic Attack"
-  // Decide this entry's collision with the same character's in-flight trailing
-  // hits / parked footing *before* draining: a cancel-capable re-entry tombstones
-  // them, so they must not resolve first (ADR-0018 drop, now a tombstone).
+  // Resolve this entry's collision with the same character's in-flight trailing
+  // hits / parked footing before draining: a cancel-capable re-entry invalidates them.
   const arrival = resolveArrival(
     ctx,
     entry.characterId,
@@ -185,10 +134,9 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     cursor.frame,
   )
   cursor.frame += arrival.padFrames
-  // Now drain surviving members that land at/before this entry begins, so they
-  // interleave into the log in frame order ahead of it (no-op when honor off and
-  // nothing pending). A surviving footing commit fires here, setting this
-  // character's footing before its stage reads it for Fall Frames.
+  // Drain surviving members landing at/before this entry begins so they interleave
+  // ahead of it in frame order. A surviving footing commit sets this character's
+  // footing before its stage reads it for Fall Frames.
   drainPending(ctx, cursor.frame)
   const animFrames = resolved?.stage.animationFrames ?? 0
   if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
@@ -223,8 +171,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     })
   }
   if (part.pendingFooting) {
-    // The launch/land commit is a stream event at its commit frame, updating the
-    // owner's own footing (it is In-trailing — off-field, footing still live).
+    // The launch/land commit sets the owner's footing at its commit frame.
     ctx.pending.push({
       kind: "footing",
       frame: part.pendingFooting.atFrame,
@@ -233,9 +180,9 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
       exitFooting: part.pendingFooting.exitFooting,
       resetIfOffField: false,
     })
-    // An airborne owner returns to ground when its Trailing Window passes without
-    // a swap-back (In-trailing → In-reserve); the window ends at stageStart +
-    // actionTime. A re-entry before then cancels this reset.
+    // An airborne owner returns to ground when its Trailing Window passes without a
+    // swap-back; the window ends at stageStart + actionTime. A re-entry before then
+    // cancels this reset.
     if (part.pendingFooting.exitFooting === "air") {
       ctx.pending.push({
         kind: "footing",
@@ -252,19 +199,13 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 }
 
 /**
- * The same-character re-entry decision (ADR-0018, relocated onto the pending
- * stream). Reads the character's in-flight trailing hits and footing commit
- * (still on `ctx.pending`) and resolves the collision exactly as the dissolved
- * `TrailingWindow` did:
- *  - **no collision** (all land before this entry): nothing to do — surviving
- *    members drain ahead of the entry;
- *  - **cancel-capable collision**: *tombstone* trailing hits and the footing
- *    commit at/after the entry start (they never resolve — the launch never
- *    happened);
- *  - **non-cancel-capable collision**: pad to the latest pending frame so every
- *    trailing hit and the footing commit land.
- * The window-end footing reset is always cancelled here: the owner is back
- * On-field, so its footing is driven by play, not by a stale reset.
+ * Resolve a same-character re-entry against its in-flight trailing hits and
+ * footing commit on `ctx.pending`:
+ *  - no collision (all land before this entry): nothing to do;
+ *  - cancel-capable collision: invalidate trailing hits and the footing commit
+ *    at/after the entry start so the drain skips them;
+ *  - non-cancel-capable collision: pad to the latest pending frame so they land.
+ * The window-end footing reset is cancelled here when the owner re-enters.
  */
 function resolveArrival(
   ctx: SimContext,
@@ -282,9 +223,8 @@ function resolveArrival(
   )
   const commit = sameFooting.find((f) => !f.resetIfOffField)
   const reset = sameFooting.find((f) => f.resetIfOffField)
-  // Re-entry within the Trailing Window (before window-end) keeps the carried
-  // footing — cancel the reset. A re-entry at/after window-end lets the reset
-  // fire first, so the character takes the field benched to ground.
+  // Re-entry before window-end keeps the carried footing — cancel the reset.
+  // A re-entry at/after window-end lets the reset fire first (back to ground).
   if (reset && frame < reset.frame) reset.valid = false
 
   if (sameTrailing.length === 0 && !commit) return { padFrames: 0 }
@@ -300,8 +240,8 @@ function resolveArrival(
     return { padFrames: 0 }
   }
 
-  // Non-cancel-capable: pad past the latest pending same-character frame so every
-  // trailing hit and the footing commit land.
+  // Pad past the latest pending same-character frame so every trailing hit and
+  // the footing commit land.
   const lastHitFrame = sameTrailing.reduce(
     (m, p) => Math.max(m, p.frame),
     -Infinity,
@@ -313,14 +253,12 @@ function resolveArrival(
 
 /**
  * Drain the pending-event stream up to `uptoFrame`, resolving members in
- * nondecreasing frame order and appending each to the log at its frame. Chains
- * may enqueue further pending members, picked up in the same drain. Tombstoned
- * (invalidated) trailing hits are skipped.
+ * nondecreasing frame order and logging each at its frame. Chains may enqueue
+ * further members, picked up in the same drain. Invalidated trailing hits are skipped.
  */
 function drainPending(ctx: SimContext, uptoFrame: number): void {
   for (;;) {
-    // Stable within a frame: synthetics keep emission order; a same-frame
-    // trailing hit and synthetic keep their relative insertion order.
+    // Stable within a frame: members keep their relative insertion order.
     ctx.pending.sort((a, b) => a.frame - b.frame)
     if (ctx.pending.length === 0 || ctx.pending[0].frame > uptoFrame) return
     const next = ctx.pending.shift() as PendingEvent
@@ -329,10 +267,7 @@ function drainPending(ctx: SimContext, uptoFrame: number): void {
       resolveTrailingBundle(next.bundle, ctx)
     } else if (next.kind === "footing") {
       if (!next.valid) continue
-      // Commit (air/ground) or window-end reset (ground) — set the owner's
-      // carried footing. A re-entry within the window cancels the reset in
-      // `resolveArrival`; a re-entry past window-end lets it fire first (the
-      // owner is benched to ground before it takes the field again).
+      // Commit or window-end reset — set the owner's carried footing.
       ctx.engine.footing.commitFor(next.characterId, next.exitFooting)
     } else {
       resolvePendingSynthetic(next, ctx)
@@ -341,13 +276,8 @@ function drainPending(ctx: SimContext, uptoFrame: number): void {
 }
 
 /**
- * Advance the engine clock to `frame`, resolving any pending stream member at or
- * before it *first* (ADR-0028 endgame, item 1). The engine clock is monotonic —
- * `tickToFrame` only moves forward — so a pending member must be drained before
- * the clock ticks past its frame, or its snapshot would be taken at the overshot
- * frame instead. Every engine-advance the authored walk performs funnels through
- * here so nothing is overshot. Members at exactly `frame` resolve before the
- * advancing hit, preserving today's emission order (trigger-causality tie-break).
+ * Advance the engine clock to `frame`, draining any pending stream member at or
+ * before it first so the monotonic clock never snapshots past a member's frame.
  * Returns the tick's lifecycle events for the caller to log.
  */
 function advanceTo(
@@ -361,10 +291,8 @@ function advanceTo(
 /** Resolve a single deferred synthetic at its landing frame and log it. */
 function resolvePendingSynthetic(sd: PendingSynthetic, ctx: SimContext): void {
   const { engine, log } = ctx
-  // Mirror the authored-hit path: advance to the landing frame so the snapshot
-  // and resource reads are frame-honest, then resolve + run the synthetic chain.
-  // The drain loop has already resolved everything at an earlier frame, so a raw
-  // tick here cannot overshoot another pending member.
+  // Advance to the landing frame for a frame-honest snapshot, then resolve and
+  // run the synthetic chain.
   pushBuffEvents(log, engine.tickToFrame(sd.emit.landingFrame).lifecycleEvents)
   const r = engine.resolveDeferredEmit(sd.emit)
   r.event.sourceEntryId = sd.sourceEntryId
@@ -431,9 +359,8 @@ function processEntry(
 
   const effectiveStart = stageStartFrame + fall + swapBack
 
-  // Pre-drain to effectiveStart so a deferred synthetic landing before this
-  // stage starts resolves (and snapshots) ahead of it — the clock must not
-  // overshoot it (ADR-0028 endgame, item 1).
+  // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
+  // starts resolves ahead of it.
   pushBuffEvents(log, advanceTo(ctx, effectiveStart).lifecycleEvents)
 
   if (resolved.skillType !== "Movement") {
@@ -479,11 +406,9 @@ function fireSkillCast(
   })
   pushBuffEvents(log, result.lifecycleEvents)
   for (const emit of result.deferredEmits) enqueueSynthetic(ctx, emit, entry.id)
-  // Flush this cast's immediate (offset-0) synthetics in place: they must log
-  // before the action event and apply their resource gains before the action's
-  // cumulativeEnergy snapshot, matching the eager path. The clock is already at
-  // `frame`, so this drain only resolves the just-enqueued same-frame emits;
-  // offset emits (landingFrame > frame) stay pending for a later drain.
+  // Flush this cast's immediate (offset-0) synthetics in place so they log before
+  // the action event and apply their resource gains before its cumulativeEnergy
+  // snapshot. Offset emits (landingFrame > frame) stay pending for a later drain.
   drainPending(ctx, frame)
 }
 
@@ -528,10 +453,7 @@ function computeFall(
 
 /**
  * Resolve a hit bundle at its `hitFrame`, pre-draining the pending stream first
- * so anything landing at/before it resolves (and snapshots) ahead of it
- * (ADR-0028). Used by the authored walk for immediate and fire-before-entry
- * hits. The drain itself calls {@link resolveTrailingBundle} directly to avoid
- * re-entering the pre-drain.
+ * so anything landing at/before it resolves ahead of it.
  */
 function processHit(bundle: TrailingHit, ctx: SimContext): void {
   drainPending(ctx, bundle.hitFrame)
@@ -542,9 +464,9 @@ function processHit(bundle: TrailingHit, ctx: SimContext): void {
 function resolveTrailingBundle(bundle: TrailingHit, ctx: SimContext): void {
   const { hit, hitIndex, entry, resolved, hitFrame } = bundle
   const { engine, log } = ctx
-  // Authored hit identity (ADR-0029): thread the same axes the hitLanded event
-  // carries so a `stageId`-scoped `appliesToHits` bonus folds into this hit's own
-  // snapshot, and non-matching hit-scoped buffs drop out of its `activeBuffs`.
+  // Thread the same axes the hitLanded event carries so a `stageId`-scoped
+  // `appliesToHits` bonus folds into this hit's snapshot and non-matching
+  // hit-scoped buffs drop from its `activeBuffs`.
   const hitContext: HitContext = {
     stageId: `${resolved.stageId}.${hitIndex + 1}`,
     skillCategory: resolved.skillCategory,

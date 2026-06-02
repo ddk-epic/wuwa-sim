@@ -10,10 +10,8 @@ import type { ResolvedStage } from "./stage"
 /**
  * One scheduled hit of a stage, carrying everything needed to resolve it at its
  * `hitFrame`. A swap stage's hits whose `actionFrame` exceeds the stage's
- * `advance` become trailing members of the frame-ordered pending stream
- * (ADR-0018, relocated off a per-character map onto the stream in ADR-0028's
- * endgame); other hits resolve immediately. The Acting Character is always the
- * bundle's `entry.characterId`.
+ * `advance` become trailing members of the pending stream; other hits resolve
+ * immediately. The Acting Character is always the bundle's `entry.characterId`.
  */
 export interface TrailingHit {
   hit: DamageEntry
@@ -33,8 +31,8 @@ const CANCEL_CAPABLE = new Set<SkillType>([
 ])
 
 /**
- * Whether a re-entry of this Skill Type cancels a same-character stage's
- * residual trailing hits (drop) versus padding to let them all land (ADR-0018).
+ * Whether a re-entry of this Skill Type cancels a same-character stage's residual
+ * trailing hits (drop) versus padding to let them all land.
  */
 export function isCancelCapable(skillType: SkillType): boolean {
   return CANCEL_CAPABLE.has(skillType)
@@ -51,9 +49,8 @@ export interface StagePartition {
 
 /**
  * Partition a stage's hits into immediate vs trailing and surface any deferred
- * footing commit. Pure: it computes frames from the stage's own data, holding no
- * state — the caller enqueues the trailing hits and parks the footing commit.
- * For a non-swap stage every hit is immediate (no trailing window opens).
+ * footing commit. For a non-swap stage every hit is immediate (no trailing window
+ * opens).
  */
 export function partitionStage(ctx: {
   entry: TimelineEntry

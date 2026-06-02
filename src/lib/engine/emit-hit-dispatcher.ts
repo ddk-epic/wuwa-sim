@@ -45,9 +45,8 @@ export interface EmitHitInput {
 
 /**
  * An emit whose decision (ICD/chain) was taken at the trigger frame but whose
- * damage resolves later, at `landingFrame` (= trigger + `actionFrame`). Surfaced
- * by the engine so the simulation can schedule and resolve it in frame order
- * (ADR-0028). `depth` carries the chain depth for the resolution's own chain.
+ * damage resolves later, at `landingFrame` (= trigger + `actionFrame`). `depth`
+ * carries the chain depth for the resolution's own chain.
  */
 export interface DeferredEmit {
   input: EmitHitInput
@@ -104,10 +103,8 @@ export class EmitHitDispatcher {
   }
 
   /**
-   * The *emit decision*, taken at the trigger frame: ICD interval + chain depth
-   * cap, recording the ICD on success. Returns false when the emit is blocked.
-   * Split from {@link resolve} so a deferred emit can take its decision now and
-   * resolve its damage later, at the landing frame (ADR-0028).
+   * The emit decision, taken at the trigger frame: ICD interval + chain depth cap,
+   * recording the ICD on success. Returns false when the emit is blocked.
    */
   tryEmit(input: EmitHitInput, ctx: EmitHitDispatchContext): boolean {
     const perEffect = this.icd.get(input.buffInstanceKey)
@@ -187,10 +184,8 @@ export class EmitHitDispatcher {
 
 /**
  * Construct the synthetic Hit/Sustain event from already-resolved `stats` and
- * post-delta `post` resources. Frame-sensitive *only* through its inputs — the
- * caller decides at which frame to read `stats`/`post`, so the same builder
- * serves both eager resolution (dispatcher, at the trigger frame) and the
- * deferred path (resolution at the synthetic's landing frame, ADR-0028).
+ * post-delta `post` resources. The caller decides at which frame to read
+ * `stats`/`post`.
  */
 export function buildSyntheticEvent(
   input: EmitHitInput,
