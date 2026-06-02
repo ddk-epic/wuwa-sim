@@ -125,6 +125,27 @@ describe("useLibrary", () => {
     expect(JSON.parse(localStorage.getItem("wuwa.library")!)).toHaveLength(1)
   })
 
+  it("saveCurrent reads the wrapped { log, signature } simulation-log shape", () => {
+    // After a simulation runs, wuwa.simulation-log is an object, not a bare
+    // array — snapshotLive must normalize it before computing stats.
+    seedLive({ name: "Ran", slots: [1102, null, null] })
+    localStorage.setItem(
+      "wuwa.simulation-log",
+      JSON.stringify({
+        log: [aHit(1102, "Basic Attack", 250), aHit(1102, "Heavy Attack", 150)],
+        signature: "abc123",
+      }),
+    )
+    const { result } = renderHook(() => useLibrary())
+    let savedId = ""
+    act(() => {
+      savedId = result.current.saveCurrent(null)
+    })
+    expect(savedId).toBeTruthy()
+    expect(result.current.teams).toHaveLength(1)
+    expect(result.current.teams[0].stats.dmgByChar).toEqual({ 1102: 400 })
+  })
+
   it("saveCurrent(null) always creates a fresh entry (new team / import path)", () => {
     seedLive({ name: "A" })
     const { result } = renderHook(() => useLibrary())

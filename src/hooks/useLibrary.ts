@@ -4,8 +4,8 @@ import type { ImportExportPayload } from "#/lib/import-export"
 import { computeTeamStats } from "#/lib/team-stats"
 import type { TeamStats } from "#/lib/team-stats"
 import { defaultActiveTeam, reviveActiveTeam, TEAM_KEY } from "./useTeam"
+import { LOG_KEY, normalizeStoredLog } from "./useSimulationLog"
 import type { ActiveTeam } from "#/types/loadout"
-import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineNode } from "#/types/timeline"
 
 /**
@@ -29,7 +29,7 @@ const LIBRARY_KEY = "wuwa.library"
 const LIVE = {
   team: TEAM_KEY,
   timeline: "wuwa.timeline.entries",
-  log: "wuwa.simulation-log",
+  log: LOG_KEY,
 } as const
 
 function readJSON<T>(key: string, fallback: T): T {
@@ -64,7 +64,9 @@ function snapshotLive(): {
     readJSON<unknown>(LIVE.team, defaultActiveTeam()),
   )
   const nodes = readJSON<TimelineNode[]>(LIVE.timeline, [])
-  const log = readJSON<SimulationLogEntry[]>(LIVE.log, [])
+  // wuwa.simulation-log holds a { log, signature } object (a bare array only on
+  // a cleared/legacy write) — normalize before computing stats.
+  const { log } = normalizeStoredLog(readJSON<unknown>(LIVE.log, []))
   return {
     payload: {
       team: {

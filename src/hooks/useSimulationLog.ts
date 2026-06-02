@@ -1,12 +1,19 @@
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { useLocalStorage } from "./useLocalStorage"
 
-interface StoredLog {
+export const LOG_KEY = "wuwa.simulation-log"
+
+export interface StoredLog {
   log: SimulationLogEntry[]
   signature: string
 }
 
-function normalize(raw: unknown): StoredLog {
+/**
+ * Coerce the persisted `wuwa.simulation-log` value into a `StoredLog`. The key
+ * holds a `{ log, signature }` object, but older writes (and `writeLive`'s
+ * clear) leave a bare array — both must read back safely.
+ */
+export function normalizeStoredLog(raw: unknown): StoredLog {
   if (Array.isArray(raw))
     return { log: raw as SimulationLogEntry[], signature: "" }
   if (
@@ -33,9 +40,9 @@ export function computeSignature(...args: unknown[]): string {
 
 export function useSimulationLog() {
   const [stored, setStored] = useLocalStorage<StoredLog>(
-    "wuwa.simulation-log",
+    LOG_KEY,
     { log: [], signature: "" },
-    normalize,
+    normalizeStoredLog,
   )
 
   function setLog(log: SimulationLogEntry[], signature: string) {
