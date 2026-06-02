@@ -152,14 +152,6 @@ function TeamTab({
             onClick={() => actions.onOpen(team.id)}
           />
           <IconBtn
-            icon={Pencil}
-            label="Rename"
-            w={20}
-            h={20}
-            size={12}
-            onClick={() => actions.onRename(team.id)}
-          />
-          <IconBtn
             icon={team.pinned ? PinOff : Pin}
             label={team.pinned ? "Unpin" : "Pin"}
             w={20}

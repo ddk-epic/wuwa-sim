@@ -60,11 +60,7 @@ export function LibraryPage() {
       load(id)
       navigate({ to: "/sim" })
     },
-    onRename: (id) => {
-      const current = savedTeams.find((t) => t.id === id)?.name ?? ""
-      const name = window.prompt("Rename team", current)?.trim()
-      if (name) rename(id, name)
-    },
+    onRename: rename,
     onTogglePin: togglePin,
     onDuplicate: duplicate,
     onExport: handleExport,

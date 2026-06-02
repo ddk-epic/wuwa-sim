@@ -16,7 +16,7 @@ export interface TypeEntry {
 export interface RowActions {
   /** Load the team into the live stores and navigate to /sim. */
   onOpen: (id: string) => void
-  onRename: (id: string) => void
+  onRename: (id: string, name: string) => void
   onTogglePin: (id: string) => void
   onDuplicate: (id: string) => void
   onExport: (id: string) => void
