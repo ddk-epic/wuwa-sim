@@ -20,7 +20,6 @@ import { ElementAvatar } from "./portraits"
 import { blendGradient, elementHex, portraitSrc } from "./theme"
 import type { LibTeam, RowActions } from "./types"
 
-/** Click-to-rename input for the hero team name; commits on Enter/blur. */
 function HeroNameInput({
   initial,
   onCommit,
@@ -173,20 +172,20 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
               onClick={() => actions.onExport(team.id)}
             />
             <IconBtn
+              icon={Copy}
+              label="Duplicate"
+              onClick={() => actions.onDuplicate(team.id)}
+            />
+            <IconBtn
               icon={Trash2}
               label="Delete"
               onClick={() => actions.onDelete(team.id)}
             />
             <HBtn
               icon={Play}
-              label="Open in sim"
+              label="Open to edit"
               primary
               onClick={() => actions.onOpen(team.id)}
-            />
-            <HBtn
-              icon={Copy}
-              label="Duplicate"
-              onClick={() => actions.onDuplicate(team.id)}
             />
           </div>
         </div>
@@ -264,9 +263,6 @@ function EmptyMainPane({
     <div className="flex-1 flex flex-col items-center justify-center p-10 gap-5.5 min-h-0">
       <div className="w-24 h-24 rounded-full border border-dashed border-border bg-card flex items-center justify-center text-muted relative">
         <Layers size={42} strokeWidth={1.5} />
-        <div className="absolute -bottom-1.5 -right-1.5 w-7.5 h-7.5 rounded-full bg-[#1a2c4a] border border-[#2a4575] flex items-center justify-center text-ui-damage shadow-[0_4px_12px_rgba(0,0,0,.4)]">
-          <CirclePlus size={16} strokeWidth={1.5} />
-        </div>
       </div>
       <div className="flex flex-col gap-2 items-center text-center max-w-110">
         <span
@@ -276,9 +272,7 @@ function EmptyMainPane({
           Your library is empty
         </span>
         <span className="text-sm text-muted leading-[1.55]">
-          Build a team in the simulator and save it here. The library shows
-          damage breakdowns, skill-type distributions, and per-character
-          contribution for every saved comp.
+          Build a team in the simulator and save it here.
         </span>
       </div>
       <div className="flex gap-2">
@@ -289,13 +283,6 @@ function EmptyMainPane({
           onClick={onCreate}
         />
         <HBtn icon={Upload} label="Import roster" onClick={onImport} />
-      </div>
-      <div className="text-detail text-ui-zero font-mono tracking-[1px] uppercase flex items-center gap-1.5">
-        <span>or press</span>
-        <kbd className="text-micro px-1.25 py-px bg-card border border-border rounded-sm text-ui-damage">
-          N
-        </kbd>
-        <span>to start</span>
       </div>
     </div>
   )

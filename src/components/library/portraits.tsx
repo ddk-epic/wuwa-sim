@@ -2,7 +2,6 @@ import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { elementHex, portraitSrc } from "./theme"
 import type { Member } from "./types"
 
-/** A round character portrait ringed in its element color. */
 export function ElementAvatar({
   member,
   size = 26,
@@ -45,7 +44,6 @@ export function ElementAvatar({
   )
 }
 
-/** A masked, faded horizontal band of full-body portraits behind list/detail content. */
 export function PortraitStrip({
   members,
   fade = 0.4,

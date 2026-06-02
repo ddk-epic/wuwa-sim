@@ -137,7 +137,7 @@ function TeamTab({
         </div>
       </div>
 
-      {/* Action cluster — revealed on hover/selection */}
+      {/* Actions menu (on hover) */}
       {(hov || selected) && (
         <div
           className="absolute top-2 right-2.5 z-4 flex items-center gap-0.5 rounded-sm bg-darkest/80 border border-border px-1 py-0.5 backdrop-blur-sm"
@@ -145,7 +145,7 @@ function TeamTab({
         >
           <IconBtn
             icon={Play}
-            label="Open in sim"
+            label="Open to edit"
             w={20}
             h={20}
             size={12}
@@ -237,7 +237,6 @@ export function LibraryList({
   const sorted = useMemo(
     () =>
       [...filtered].sort((a, b) => {
-        // Pinned teams always sort first, then by the chosen criterion.
         if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
         if (sort === "dmg") return b.totalDmg - a.totalDmg
         if (sort === "dps") return b.dps - a.dps
