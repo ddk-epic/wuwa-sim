@@ -216,6 +216,20 @@ Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain 
 **Intro Skill / Outro Skill**:
 The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free.
 
+### Team Library
+
+**Active Team**:
+The single team currently in the simulator — the live `wuwa.team.*` / `wuwa.timeline` / `wuwa.simulation-log` state. Exactly one. Distinct from a [[Saved Team]]: edits never write back to the Library without an explicit save.
+
+**Saved Team**:
+A named member of the [[Library]]: an `ImportExportPayload` bundle (`{ team, timeline }`, reused from `import-export.ts`) plus a [[Team Stats]] snapshot. `load(id)` copies it into the [[Active Team]] as a detached copy; `saveCurrent(name)` always creates a new one (no in-place update in v1).
+
+**Library**:
+The collection of [[Saved Team]]s, persisted at `wuwa.library`. Lives at `/library`; `/` is a landing scaffold.
+
+**Team Stats**:
+Per-team aggregate folded from a [[Simulation Log]] by `computeTeamStats(log)`: `dmgByChar`, per-[[Skill Type]] `typeMix` (`{count, dmg}`), ending concerto/energy. Snapshotted at save time; not restaled in v1 (refresh is manual).
+
 ## External references
 
 - [`damage-calculation.md`](./damage-calculation.md) — authoritative damage formula reference (mirrors the Wuthering Waves Wiki). Use this as the source of truth for the formula in `computeDamage`, including ATK scaling, MV, Deepen, Damage Bonus, Crit (`totalCritDamage` used directly — do **not** add 1), defense, and resist multipliers.

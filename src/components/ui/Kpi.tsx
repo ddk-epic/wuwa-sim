@@ -14,22 +14,24 @@ export function Kpi({
 }) {
   return (
     <div className="flex flex-col gap-0.75 min-w-0">
-      <span className="text-[9px] text-muted font-mono tracking-px uppercase">
+      <span className="text-micro text-muted font-mono tracking-[1px] uppercase">
         {label}
       </span>
       <span
         style={{
-          fontSize: big ? 22 : 14,
           color: accent ?? "var(--foreground)",
           letterSpacing: -0.4,
         }}
-        className="font-semibold font-mono tabular-nums leading-none"
+        className={`font-semibold font-mono tabular-nums leading-none ${
+          big ? "text-title" : "text-base"
+        }`}
       >
         {value}
         {suffix && (
           <span
-            style={{ fontSize: big ? 12 : 10 }}
-            className="text-muted ml-0.75 font-medium"
+            className={`text-muted ml-0.75 font-medium ${
+              big ? "text-sm" : "text-detail"
+            }`}
           >
             {suffix}
           </span>

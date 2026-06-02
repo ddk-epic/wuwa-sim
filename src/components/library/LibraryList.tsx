@@ -94,13 +94,13 @@ function TeamTab({
         <div className="flex-1 min-w-0 flex flex-col justify-end pb-3 pt-3.5 pl-5 gap-1.75">
           <div className="flex items-center gap-2.5 flex-wrap">
             <span
-              className="text-[19px] font-bold text-foreground leading-[1.1]"
+              className="text-stat font-bold text-foreground leading-[1.1]"
               style={{ letterSpacing: -0.3 }}
             >
               {team.name}
             </span>
-            <span className="text-ui-zero text-[11px]">·</span>
-            <div className="flex items-center gap-1.75 text-[10.5px] text-muted font-mono">
+            <span className="text-ui-zero text-label">·</span>
+            <div className="flex items-center gap-1.75 text-detail text-muted font-mono">
               {team.members.map((m, i) => (
                 <span key={i} className="flex items-center gap-1">
                   <ElDot element={m.element} size={5} />
@@ -111,8 +111,8 @@ function TeamTab({
                 </span>
               ))}
             </div>
-            <span className="text-ui-zero text-[11px]">·</span>
-            <span className="text-2.5 text-ui-zero font-mono whitespace-nowrap">
+            <span className="text-ui-zero text-label">·</span>
+            <span className="text-detail text-ui-zero font-mono whitespace-nowrap">
               {team.updated}
             </span>
           </div>
@@ -195,10 +195,10 @@ function LibraryEmptyList({ onCreate }: { onCreate: () => void }) {
       <div className="w-12 h-12 rounded-full border border-dashed border-border flex items-center justify-center text-ui-zero">
         <Layers size={20} strokeWidth={1.5} />
       </div>
-      <span className="text-[12px] font-semibold text-foreground">
+      <span className="text-sm font-semibold text-foreground">
         No teams yet
       </span>
-      <span className="text-[11px] text-muted max-w-60 leading-normal">
+      <span className="text-label text-muted max-w-60 leading-normal">
         Saved teams from the simulator will appear here.
       </span>
       <div className="mt-1">
@@ -262,14 +262,14 @@ export function LibraryList({
       {/* Header */}
       <div className="px-3.5 py-2.5 border-b border-border flex items-center gap-3">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[12px] font-semibold">Library</span>
-          <span className="text-[11px] text-muted font-mono">
+          <span className="text-sm font-semibold">Library</span>
+          <span className="text-label text-muted font-mono">
             {isEmpty ? "0" : `${sorted.length}/${teams.length}`}
           </span>
         </div>
 
         {isEmpty ? (
-          <span className="flex-1 text-right text-2.5 text-ui-zero font-mono tracking-[0.6px] uppercase">
+          <span className="flex-1 text-right text-detail text-ui-zero font-mono tracking-[0.6px] uppercase">
             empty
           </span>
         ) : (
@@ -284,7 +284,7 @@ export function LibraryList({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Filter teams or members…"
-                className="flex-1 bg-transparent border-0 outline-none text-foreground font-[inherit] text-[11px] p-0"
+                className="flex-1 bg-transparent border-0 outline-none text-foreground font-[inherit] text-label p-0"
               />
               {query && (
                 <IconBtn
@@ -298,7 +298,7 @@ export function LibraryList({
               )}
             </label>
             <div className="flex items-center gap-1">
-              <span className="text-[9px] text-muted font-mono tracking-px uppercase mr-1">
+              <span className="text-micro text-muted font-mono tracking-[1px] uppercase mr-1">
                 sort
               </span>
               {["recent", "dmg", "dps"].map((opt) => (
@@ -310,7 +310,7 @@ export function LibraryList({
                       "1px solid " +
                       (sort === opt ? "var(--border)" : "transparent"),
                   }}
-                  className={`text-[9px] px-1.75 py-0.75 rounded-0.5 cursor-pointer font-mono tracking-[0.5px] uppercase ${
+                  className={`text-micro px-1.75 py-0.75 rounded-sm cursor-pointer font-mono tracking-[0.5px] uppercase ${
                     sort === opt
                       ? "bg-card text-foreground"
                       : "bg-transparent text-muted"
@@ -338,20 +338,20 @@ export function LibraryList({
             />
           ))}
           {sorted.length === 0 && (
-            <div className="p-6 text-center text-muted text-[11px]">
+            <div className="p-6 text-center text-muted text-label">
               No teams match "{query}"
             </div>
           )}
         </div>
       )}
 
-      <div className="px-3 py-1.5 border-t border-border text-2.5 text-muted font-mono flex items-center gap-1.5">
-        <kbd className="text-[9px] px-1 py-px bg-card border border-border rounded-0.5">
+      <div className="px-3 py-1.5 border-t border-border text-detail text-muted font-mono flex items-center gap-1.5">
+        <kbd className="text-micro px-1 py-px bg-card border border-border rounded-sm">
           ↑↓
         </kbd>
         <span>navigate</span>
         <span className="text-ui-zero">·</span>
-        <kbd className="text-[9px] px-1 py-px bg-card border border-border rounded-0.5">
+        <kbd className="text-micro px-1 py-px bg-card border border-border rounded-sm">
           ⏎
         </kbd>
         <span>{isEmpty ? "create" : "load into sim"}</span>

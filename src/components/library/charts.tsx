@@ -59,11 +59,11 @@ function Donut({
           ))}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-          <span className="text-[9px] text-muted font-mono tracking-[1.2px] uppercase">
+          <span className="text-micro text-muted font-mono tracking-[1.2px] uppercase">
             {centerLabel}
           </span>
           <span
-            className="text-[17px] text-foreground font-semibold font-mono tabular-nums"
+            className="text-stat text-foreground font-semibold font-mono tabular-nums"
             style={{ letterSpacing: -0.4 }}
           >
             {centerValue}
@@ -95,13 +95,13 @@ export function DmgDonut({ team }: { team: LibTeam }) {
           className="w-2 h-2 rounded-px block"
           style={{ background: s.color }}
         />
-        <span className="text-[11px] text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className="text-label text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
           {s.key}
         </span>
-        <span className="text-2.5 text-muted font-mono tabular-nums">
+        <span className="text-detail text-muted font-mono tabular-nums">
           {(s.value / 1000).toFixed(1)}k
         </span>
-        <span className="text-2.5 text-foreground font-mono tabular-nums min-w-10 text-right">
+        <span className="text-detail text-foreground font-mono tabular-nums min-w-10 text-right">
           {total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0"}%
         </span>
       </div>
@@ -143,13 +143,13 @@ export function TypeDistribution({ team }: { team: LibTeam }) {
           className="w-2 h-2 rounded-px block"
           style={{ background: s.color }}
         />
-        <span className="text-[10.5px] text-foreground font-mono tracking-[0.4px] uppercase">
+        <span className="text-detail text-foreground font-mono tracking-[0.4px] uppercase">
           {s.key}
         </span>
-        <span className="text-2.5 text-muted font-mono tabular-nums">
+        <span className="text-detail text-muted font-mono tabular-nums">
           {s.count}×
         </span>
-        <span className="text-2.5 text-foreground font-mono tabular-nums min-w-10 text-right">
+        <span className="text-detail text-foreground font-mono tabular-nums min-w-10 text-right">
           {total > 0 ? ((s.dmg / total) * 100).toFixed(1) : "0.0"}%
         </span>
       </div>

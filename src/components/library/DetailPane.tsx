@@ -74,13 +74,13 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
         {/* Top badges */}
         <div className="absolute top-3.5 left-4.5 right-4.5 flex items-center justify-between z-2">
           <span
-            className="text-[9px] text-foreground font-mono tracking-[1.4px] uppercase px-2 py-0.75 border border-border rounded-0.5 backdrop-blur-sm"
+            className="text-micro text-foreground font-mono tracking-[1.4px] uppercase px-2 py-0.75 border border-border rounded-sm backdrop-blur-sm"
             style={{ background: "rgba(0,0,0,0.55)" }}
           >
             team · {team.id.slice(-6).toUpperCase()}
           </span>
           <span
-            className="text-2.5 text-foreground font-mono tracking-[0.4px] px-2 py-0.75 rounded-0.5 backdrop-blur-sm"
+            className="text-detail text-foreground font-mono tracking-[0.4px] px-2 py-0.75 rounded-sm backdrop-blur-sm"
             style={{ background: "rgba(0,0,0,0.45)" }}
           >
             updated {team.updated}
@@ -92,7 +92,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
       <div className="px-5.5 pt-4.5 pb-5 flex flex-col gap-3.5">
         <div className="flex items-baseline justify-between gap-4">
           <span
-            className="text-[26px] font-bold text-foreground leading-none"
+            className="text-3xl font-bold text-foreground leading-none"
             style={{ letterSpacing: -0.5 }}
           >
             {team.name}
@@ -174,7 +174,7 @@ function MemberCards({ team }: { team: LibTeam }) {
             <ElementAvatar member={m} size={40} />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-[13px] font-semibold text-foreground">
+                <span className="text-sm font-semibold text-foreground">
                   {m.name}
                 </span>
                 <span
@@ -183,24 +183,24 @@ function MemberCards({ team }: { team: LibTeam }) {
                     color: hex,
                     border: `1px solid ${hex}44`,
                   }}
-                  className="text-[9px] px-1 py-px rounded-0.5 font-mono tracking-[0.4px]"
+                  className="text-micro px-1 py-px rounded-sm font-mono tracking-[0.4px]"
                 >
                   S{m.seq}
                 </span>
               </div>
-              <span className="text-[9.5px] text-ui-zero whitespace-nowrap overflow-hidden text-ellipsis">
+              <span className="text-micro text-ui-zero whitespace-nowrap overflow-hidden text-ellipsis">
                 {m.weapon}
               </span>
             </div>
             <div className="text-right flex flex-col gap-0.5">
               <span
-                className="text-[13px] font-semibold font-mono tabular-nums"
+                className="text-sm font-semibold font-mono tabular-nums"
                 style={{ color: "#f5cf4d" }}
               >
                 {(share * 100).toFixed(1)}
-                <span className="text-[9px] text-muted ml-px">%</span>
+                <span className="text-micro text-muted ml-px">%</span>
               </span>
-              <span className="text-[9.5px] text-muted font-mono tabular-nums">
+              <span className="text-micro text-muted font-mono tabular-nums">
                 {((team.dmgByChar[m.name] ?? 0) / 1000).toFixed(1)}k
               </span>
             </div>
@@ -228,12 +228,12 @@ function EmptyMainPane({
       </div>
       <div className="flex flex-col gap-2 items-center text-center max-w-110">
         <span
-          className="text-4.5 font-semibold text-foreground"
+          className="text-stat font-semibold text-foreground"
           style={{ letterSpacing: -0.2 }}
         >
           Your library is empty
         </span>
-        <span className="text-[12px] text-muted leading-[1.55]">
+        <span className="text-sm text-muted leading-[1.55]">
           Build a team in the simulator and save it here. The library shows
           damage breakdowns, skill-type distributions, and per-character
           contribution for every saved comp.
@@ -248,9 +248,9 @@ function EmptyMainPane({
         />
         <HBtn icon={Upload} label="Import roster" onClick={onImport} />
       </div>
-      <div className="text-2.5 text-ui-zero font-mono tracking-px uppercase flex items-center gap-1.5">
+      <div className="text-detail text-ui-zero font-mono tracking-[1px] uppercase flex items-center gap-1.5">
         <span>or press</span>
-        <kbd className="text-[9px] px-1.25 py-px bg-card border border-border rounded-0.5 text-ui-damage">
+        <kbd className="text-micro px-1.25 py-px bg-card border border-border rounded-sm text-ui-damage">
           N
         </kbd>
         <span>to start</span>
@@ -275,7 +275,7 @@ export function DetailCard({
   if (isEmpty) return <EmptyMainPane onCreate={onCreate} onImport={onImport} />
   if (!team)
     return (
-      <div className="flex-1 flex items-center justify-center text-muted text-[12px] italic">
+      <div className="flex-1 flex items-center justify-center text-muted text-sm italic">
         Select a team from the library
       </div>
     )
