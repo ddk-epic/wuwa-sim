@@ -6,13 +6,13 @@ import { DetailCard } from "#/components/library/DetailPane"
 import { LibraryList } from "#/components/library/LibraryList"
 import { savedTeamToLibTeam } from "#/components/library/savedTeamToLibTeam"
 import type { RowActions } from "#/components/library/types"
+import { CreateTeamModal } from "#/components/team/CreateTeamModal"
 import { useLibrary } from "#/hooks/useLibrary"
 import { encodePayload } from "#/lib/import-export"
 
 export function LibraryPage() {
   const {
     teams: savedTeams,
-    saveCurrent,
     load,
     rename,
     togglePin,
@@ -27,14 +27,16 @@ export function LibraryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [sort, setSort] = useState("recent")
+  const [createOpen, setCreateOpen] = useState(false)
 
   const selectedTeam =
     teams.find((t) => t.id === selectedId) ?? teams[0] ?? null
   const isEmpty = teams.length === 0
 
-  function handleSaveNew() {
-    // No live Origin from the Library shell → always creates a fresh entry.
-    saveCurrent(null)
+  function handleCreate() {
+    // "New team" authors a fresh draft and launches it via the create modal;
+    // a team only enters the Library through a simulator Save.
+    setCreateOpen(true)
   }
 
   function handleImport() {
@@ -101,7 +103,7 @@ export function LibraryPage() {
             icon={CirclePlus}
             label="New team"
             primary
-            onClick={handleSaveNew}
+            onClick={handleCreate}
           />
           <button
             className="flex items-center gap-1 p-1.25 font-mono text-sm rounded-sm text-muted-foreground hover:text-foreground"
@@ -123,7 +125,7 @@ export function LibraryPage() {
             team={selectedTeam}
             isEmpty={isEmpty}
             actions={actions}
-            onCreate={handleSaveNew}
+            onCreate={handleCreate}
             onImport={handleImport}
           />
         </div>
@@ -138,9 +140,11 @@ export function LibraryPage() {
           sort={sort}
           setSort={setSort}
           actions={actions}
-          onCreate={handleSaveNew}
+          onCreate={handleCreate}
         />
       </div>
+
+      {createOpen && <CreateTeamModal onClose={() => setCreateOpen(false)} />}
     </div>
   )
 }

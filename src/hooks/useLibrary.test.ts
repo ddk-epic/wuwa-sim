@@ -4,7 +4,7 @@ import { renderHook, act } from "@testing-library/react"
 import type { SlotLoadout } from "#/types/loadout"
 import { encodePayload } from "#/lib/import-export"
 import type { ImportExportPayload } from "#/lib/import-export"
-import { useLibrary } from "./useLibrary"
+import { moveDraftToLive, useLibrary } from "./useLibrary"
 
 beforeEach(() => {
   localStorage.clear()
@@ -337,6 +337,38 @@ describe("useLibrary", () => {
     expect(team.payload.team.slots).toEqual([1203, null, null])
     expect(team.stats.dmgByChar).toEqual({ 1203: 42 })
     expect(team.updated).toBeGreaterThanOrEqual(before)
+  })
+
+  it("moveDraftToLive lands the draft composition + name in the live Session with null Origin", () => {
+    // A pre-existing live Session that the draft should overwrite.
+    seedLive({
+      name: "Old live",
+      slots: [9999, null, null],
+      originId: "some-origin",
+      timeline: [{ kind: "entry", id: "e", characterId: 9999, stageId: "s" }],
+      log: [aHit(9999, "Basic Attack", 5)],
+    })
+
+    moveDraftToLive({
+      name: "Drafted",
+      slots: [1102, 1203, null],
+      loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
+      focusedId: 1102,
+    })
+
+    const live = readLiveTeam()
+    expect(live.name).toBe("Drafted")
+    expect(live.slots).toEqual([1102, 1203, null])
+    expect(live.focusedId).toBe(1102)
+    // A drafted team is unsaved — it has no Origin.
+    expect(live.originId).toBeNull()
+    // The new composition starts with a clean timeline + log.
+    expect(JSON.parse(localStorage.getItem("wuwa.timeline.entries")!)).toEqual(
+      [],
+    )
+    expect(JSON.parse(localStorage.getItem("wuwa.simulation-log")!)).toEqual([])
+    // Nothing is written to the Library.
+    expect(localStorage.getItem("wuwa.library")).toBeNull()
   })
 
   it("updateTeam falls back to create when the id is unknown", () => {

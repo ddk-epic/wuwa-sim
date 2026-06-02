@@ -13,7 +13,7 @@ import { UiPreferencesProvider } from "#/hooks/useUiPreferencesContext"
 import { SkillCatalog } from "#/components/skills/SkillCatalog"
 import { Header } from "#/components/Header"
 import { TableTopBar } from "#/components/timeline/TableTopBar"
-import { TeamModal } from "#/components/team/TeamModal"
+import { EditTeamModal } from "#/components/team/EditTeamModal"
 import { SimulationLogModal } from "#/components/log/SimulationLogModal"
 import { SettingsModal } from "#/components/SettingsModal"
 import { TimelineView } from "#/components/timeline/TimelineView"
@@ -280,7 +280,9 @@ export function SimulatorPage() {
                   )}
                 </div>
               </div>
-              {teamModalOpen && <TeamModal onClose={handleCloseTeamModal} />}
+              {teamModalOpen && (
+                <EditTeamModal onClose={handleCloseTeamModal} />
+              )}
               {simulationLogOpen && (
                 <SimulationLogModal
                   log={log}

@@ -102,6 +102,32 @@ function writeLive(
   writeJSON(LIVE.log, [])
 }
 
+/**
+ * Push an in-memory draft (the Library create flow) into the live Session with a
+ * `null` Origin and a cleared timeline/log. Not a hook — it only writes the live
+ * keys, which the simulator re-reads on mount; the caller then navigates to /sim.
+ */
+export function moveDraftToLive(draft: {
+  name: string
+  slots: ActiveTeam["slots"]
+  loadouts: ActiveTeam["loadouts"]
+  focusedId: ActiveTeam["focusedId"]
+}): void {
+  writeLive(
+    {
+      team: {
+        name: draft.name,
+        slots: draft.slots,
+        loadouts: draft.loadouts,
+        focusedId: draft.focusedId,
+      },
+      timeline: null,
+    },
+    draft.name,
+    null,
+  )
+}
+
 function newTeam(
   name: string,
   payload: ImportExportPayload,

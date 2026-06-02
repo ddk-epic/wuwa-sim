@@ -1,11 +1,7 @@
 import type { ActiveTeam, Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
-import { getCharacterById, getEchoSetById } from "#/lib/loadout/catalog"
-import {
-  emptyLoadout,
-  inferEchoSetForEcho,
-  loadoutFromTemplate,
-} from "#/lib/loadout/template"
+import { emptyLoadout } from "#/lib/loadout/template"
+import { applySlotPatch, toggleCharacter } from "#/lib/loadout/team-ops"
 
 export const TEAM_KEY = "wuwa.team"
 
@@ -40,20 +36,6 @@ export function reviveActiveTeam(stored: unknown): ActiveTeam {
   }
 }
 
-function updateSlot(
-  prev: [SlotLoadout, SlotLoadout, SlotLoadout],
-  index: number,
-  updater: (slot: SlotLoadout) => SlotLoadout,
-): [SlotLoadout, SlotLoadout, SlotLoadout] {
-  const next: [SlotLoadout, SlotLoadout, SlotLoadout] = [
-    prev[0],
-    prev[1],
-    prev[2],
-  ]
-  next[index] = updater(next[index])
-  return next
-}
-
 export function useTeam() {
   const [team, setTeam] = useLocalStorage<ActiveTeam>(
     TEAM_KEY,
@@ -62,117 +44,22 @@ export function useTeam() {
   )
   const { name, slots, loadouts, focusedId, originId } = team
 
-  // Per-field setters patch the single consolidated object.
-  function setSlots(next: Slots) {
-    setTeam((prev) => ({ ...prev, slots: next }))
-  }
-  function setLoadouts(
-    updater: (
-      prev: [SlotLoadout, SlotLoadout, SlotLoadout],
-    ) => [SlotLoadout, SlotLoadout, SlotLoadout],
-  ) {
-    setTeam((prev) => ({ ...prev, loadouts: updater(prev.loadouts) }))
-  }
-  function setFocusedId(next: number | null) {
-    setTeam((prev) => ({ ...prev, focusedId: next }))
-  }
+  // Per-field setters patch the single consolidated object; the composition
+  // rules live in the shared team-ops transforms.
   function setName(next: string) {
     setTeam((prev) => ({ ...prev, name: next }))
   }
   function setOriginId(next: string | null) {
     setTeam((prev) => ({ ...prev, originId: next }))
   }
-
-  function toggleCharacter(characterId: number) {
-    const slotIndex = slots.indexOf(characterId)
-    if (slotIndex !== -1) {
-      const newSlots: Slots = [slots[0], slots[1], slots[2]]
-      newSlots[slotIndex] = null
-      setSlots(newSlots)
-      setLoadouts((prev) => updateSlot(prev, slotIndex, emptyLoadout))
-      if (focusedId === characterId) {
-        const others = newSlots.filter((id): id is number => id !== null)
-        setFocusedId(others.length > 0 ? others[others.length - 1] : null)
-      }
-    } else {
-      const nullSlot = slots.indexOf(null)
-      if (nullSlot === -1) return
-      const newSlots: Slots = [slots[0], slots[1], slots[2]]
-      newSlots[nullSlot] = characterId
-      setSlots(newSlots)
-      const character = getCharacterById(characterId)
-      const newLoadout = character
-        ? loadoutFromTemplate(character.template)
-        : emptyLoadout()
-      setLoadouts((prev) => updateSlot(prev, nullSlot, () => newLoadout))
-      setFocusedId(characterId)
-    }
+  function toggleCharacterFn(characterId: number) {
+    setTeam((prev) => toggleCharacter(prev, characterId))
   }
-
   function focusCharacter(id: number) {
-    setFocusedId(id)
+    setTeam((prev) => ({ ...prev, focusedId: id }))
   }
-
   function setSlotPatch(slotIndex: number, patch: Partial<SlotLoadout>) {
-    if ("echoId" in patch && patch.echoId != null) {
-      const matchingSet = inferEchoSetForEcho(patch.echoId)
-      const setId = matchingSet?.id ?? null
-      setLoadouts((prev) => {
-        const slot = prev[slotIndex]
-        const autoFillSlot2 =
-          setId !== null &&
-          matchingSet?.type === "two-five" &&
-          slot.echoSetSlot2Id === null
-        return updateSlot(prev, slotIndex, (s) => ({
-          ...s,
-          ...patch,
-          echoSetSlot1Id: setId ?? s.echoSetSlot1Id,
-          echoSetSlot2Id: autoFillSlot2 ? setId : s.echoSetSlot2Id,
-        }))
-      })
-    } else if ("echoSetSlot1Id" in patch) {
-      const newId = patch.echoSetSlot1Id ?? null
-      setLoadouts((prev) => {
-        const slot = prev[slotIndex]
-        const set = newId !== null ? getEchoSetById(newId) : null
-        const autoFill =
-          newId !== null &&
-          set?.type === "two-five" &&
-          slot.echoSetSlot2Id === null
-        return updateSlot(prev, slotIndex, (s) => ({
-          ...s,
-          ...patch,
-          echoSetSlot2Id: autoFill ? newId : s.echoSetSlot2Id,
-        }))
-      })
-    } else if ("echoSetSlot2Id" in patch) {
-      const newId = patch.echoSetSlot2Id ?? null
-      setLoadouts((prev) => {
-        const slot = prev[slotIndex]
-        const set = newId !== null ? getEchoSetById(newId) : null
-        const autoFill =
-          newId !== null &&
-          set?.type === "two-five" &&
-          slot.echoSetSlot1Id === null
-        return updateSlot(prev, slotIndex, (s) => ({
-          ...s,
-          ...patch,
-          echoSetSlot1Id: autoFill ? newId : s.echoSetSlot1Id,
-        }))
-      })
-    } else if ("weaponId" in patch) {
-      setLoadouts((prev) =>
-        updateSlot(prev, slotIndex, (slot) => ({
-          ...slot,
-          ...patch,
-          weaponRank: 1,
-        })),
-      )
-    } else {
-      setLoadouts((prev) =>
-        updateSlot(prev, slotIndex, (slot) => ({ ...slot, ...patch })),
-      )
-    }
+    setTeam((prev) => applySlotPatch(prev, slotIndex, patch))
   }
 
   function loadTeam(
@@ -199,7 +86,7 @@ export function useTeam() {
     selectedCount: slots.filter((s) => s !== null).length,
     setName,
     setOriginId,
-    toggleCharacter,
+    toggleCharacter: toggleCharacterFn,
     focusCharacter,
     setSlotPatch,
     loadTeam,
