@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { formatSkillType } from "#/data/skill-types"
 import { elementHex, TYPE_COLORS } from "./theme"
 import type { LibTeam } from "./types"
 
@@ -144,7 +145,7 @@ export function TypeDistribution({ team }: { team: LibTeam }) {
           style={{ background: s.color }}
         />
         <span className="text-detail text-foreground font-mono tracking-[0.4px] uppercase">
-          {s.key}
+          {formatSkillType(s.key)}
         </span>
         <span className="text-detail text-muted font-mono tabular-nums">
           {s.count}×
