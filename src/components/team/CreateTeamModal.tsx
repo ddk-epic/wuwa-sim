@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react"
 import { DraftTeamProvider } from "#/hooks/useDraftTeam"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { moveDraftToLive } from "#/hooks/useLibrary"
+import { suggestedTeamName } from "#/lib/loadout/team-ops"
 import { HBtn } from "#/components/ui/HBtn"
 import { TeamBuilderModal } from "./TeamBuilderModal"
 
@@ -16,7 +17,8 @@ function MoveToSimButton() {
       label="Move to sim"
       primary
       onClick={() => {
-        moveDraftToLive({ name, slots, loadouts, focusedId })
+        const finalName = name.trim() || suggestedTeamName(slots)
+        moveDraftToLive({ name: finalName, slots, loadouts, focusedId })
         navigate({ to: "/sim" })
       }}
     />

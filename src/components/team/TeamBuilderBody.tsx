@@ -1,4 +1,5 @@
 import { useTeamContext } from "#/hooks/useTeamContext"
+import { suggestedTeamName } from "#/lib/loadout/team-ops"
 import { CharacterGrid } from "#/components/team/CharacterGrid"
 import { TeamPanel } from "#/components/team/TeamPanel"
 
@@ -9,7 +10,7 @@ import { TeamPanel } from "#/components/team/TeamPanel"
  * (Library create flow).
  */
 export function TeamBuilderBody() {
-  const { name, setName } = useTeamContext()
+  const { name, setName, slots } = useTeamContext()
   return (
     <div className="flex flex-col gap-3 min-h-0">
       <label className="flex items-center gap-2 text-label text-muted-foreground/70">
@@ -17,7 +18,7 @@ export function TeamBuilderBody() {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="New team"
+          placeholder={suggestedTeamName(slots)}
           aria-label="Team name"
           className="flex-1 min-w-0 bg-transparent border-b border-border outline-none text-foreground font-[inherit] py-1 focus:border-foreground/40"
         />

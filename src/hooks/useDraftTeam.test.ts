@@ -10,9 +10,9 @@ beforeEach(() => {
 })
 
 describe("useDraftTeam", () => {
-  it("defaults to an empty 'New team' draft", () => {
+  it("defaults to an empty-named draft so the dynamic placeholder shows", () => {
     const { result } = renderHook(() => useDraftTeam())
-    expect(result.current.name).toBe("New team")
+    expect(result.current.name).toBe("")
     expect(result.current.slots).toEqual([null, null, null])
     expect(result.current.selectedCount).toBe(0)
   })

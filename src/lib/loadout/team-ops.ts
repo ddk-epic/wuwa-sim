@@ -18,6 +18,13 @@ export interface TeamComposition {
   focusedId: number | null
 }
 
+/** The suggested team name from the first occupied slot — the create modal's placeholder + commit fallback. */
+export function suggestedTeamName(slots: Slots): string {
+  const firstId = slots.find((id): id is number => id !== null)
+  const char = firstId != null ? getCharacterById(firstId) : null
+  return char ? `${char.name}'s Team` : "New team"
+}
+
 function updateSlot(
   prev: [SlotLoadout, SlotLoadout, SlotLoadout],
   index: number,

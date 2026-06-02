@@ -13,7 +13,7 @@ interface DraftTeam extends TeamComposition {
 
 function emptyDraft(): DraftTeam {
   return {
-    name: "New team",
+    name: "",
     slots: [null, null, null],
     loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
     focusedId: null,
