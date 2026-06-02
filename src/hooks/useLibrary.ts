@@ -11,7 +11,7 @@ import type { TimelineNode } from "#/types/timeline"
 /**
  * One saved team in the Library. `payload` reuses the import/export bundle as the
  * per-entry unit; `stats` is a snapshot taken at save time (no signature / no
- * re-stale in v1 — refresh is manual).
+ * auto-refresh — a fresh snapshot only lands on the next simulator Save).
  */
 export interface SavedTeam {
   id: string
@@ -82,16 +82,20 @@ function snapshotLive(): {
 
 /**
  * Write a payload + name back into the consolidated live team object, clearing
- * the stale log so /sim re-simulates. `originId` resets to `null` here (wired
- * for behavior in a later slice).
+ * the stale log so /sim re-simulates. `originId` records which Saved Team this
+ * Session was loaded from (`null` for a fresh/imported team).
  */
-function writeLive(payload: ImportExportPayload, name: string): void {
+function writeLive(
+  payload: ImportExportPayload,
+  name: string,
+  originId: string | null,
+): void {
   const team: ActiveTeam = {
     name,
     slots: payload.team.slots,
     loadouts: payload.team.loadouts,
     focusedId: payload.team.focusedId,
-    originId: null,
+    originId,
   }
   writeJSON(LIVE.team, team)
   writeJSON(LIVE.timeline, payload.timeline ?? [])
@@ -122,18 +126,51 @@ export function useLibrary() {
   const [teams, setTeams] = useLocalStorage<SavedTeam[]>(LIBRARY_KEY, [])
 
   /**
-   * Snapshot the live active team (including its name) into a NEW SavedTeam
-   * (always creates, never updates in v1).
+   * Overwrite an existing entry's payload + stats + name + `updated`, keeping its
+   * `id` and `pinned` flag. Falls back to creating a fresh entry when `id` is not
+   * found (so a Save against a dangling Origin can never silently no-op).
    */
-  function saveCurrent(): void {
-    const { payload, stats, name } = snapshotLive()
-    setTeams((prev) => [...prev, newTeam(name, payload, stats)])
+  function updateTeam(
+    id: string,
+    name: string,
+    payload: ImportExportPayload,
+    stats: TeamStats,
+  ): void {
+    setTeams((prev) => {
+      if (!prev.some((t) => t.id === id)) {
+        return [...prev, newTeam(name, payload, stats)]
+      }
+      return prev.map((t) =>
+        t.id === id ? { ...t, name, payload, stats, updated: Date.now() } : t,
+      )
+    })
   }
 
-  /** Write a saved team's payload + name into the live keys (caller navigates to /sim). */
+  /**
+   * Save the live active team back to the Library — **update-or-create** keyed on
+   * the Session's `originId`. When `originId` names a still-existing entry it is
+   * updated in place; otherwise (null Origin, or a dangling id) a fresh entry is
+   * created. Returns the id the team was saved to, so the caller can re-stamp the
+   * live `originId` after a create.
+   */
+  function saveCurrent(originId: string | null): string {
+    const { payload, stats, name } = snapshotLive()
+    if (originId !== null && teams.some((t) => t.id === originId)) {
+      updateTeam(originId, name, payload, stats)
+      return originId
+    }
+    const created = newTeam(name, payload, stats)
+    setTeams((prev) => [...prev, created])
+    return created.id
+  }
+
+  /**
+   * Write a saved team's payload + name into the live keys and stamp its id as
+   * the live Session's Origin (caller navigates to /sim).
+   */
   function load(id: string): void {
     const team = teams.find((t) => t.id === id)
-    if (team) writeLive(team.payload, team.name)
+    if (team) writeLive(team.payload, team.name, id)
   }
 
   function rename(id: string, name: string): void {
@@ -188,6 +225,7 @@ export function useLibrary() {
   return {
     teams,
     saveCurrent,
+    updateTeam,
     load,
     rename,
     togglePin,

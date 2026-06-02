@@ -33,7 +33,8 @@ export function LibraryPage() {
   const isEmpty = teams.length === 0
 
   function handleSaveNew() {
-    saveCurrent()
+    // No live Origin from the Library shell → always creates a fresh entry.
+    saveCurrent(null)
   }
 
   function handleImport() {

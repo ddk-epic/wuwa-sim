@@ -60,7 +60,7 @@ export function useTeam() {
     defaultActiveTeam(),
     reviveActiveTeam,
   )
-  const { name, slots, loadouts, focusedId } = team
+  const { name, slots, loadouts, focusedId, originId } = team
 
   // Per-field setters patch the single consolidated object.
   function setSlots(next: Slots) {
@@ -78,6 +78,9 @@ export function useTeam() {
   }
   function setName(next: string) {
     setTeam((prev) => ({ ...prev, name: next }))
+  }
+  function setOriginId(next: string | null) {
+    setTeam((prev) => ({ ...prev, originId: next }))
   }
 
   function toggleCharacter(characterId: number) {
@@ -177,11 +180,13 @@ export function useTeam() {
     newLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout],
     newFocusedId: number | null,
   ) {
+    // An imported team is unsaved — it has no Library Origin until a Save.
     setTeam((prev) => ({
       ...prev,
       slots: newSlots,
       loadouts: newLoadouts,
       focusedId: newFocusedId,
+      originId: null,
     }))
   }
 
@@ -190,8 +195,10 @@ export function useTeam() {
     slots,
     loadouts,
     focusedId,
+    originId,
     selectedCount: slots.filter((s) => s !== null).length,
     setName,
+    setOriginId,
     toggleCharacter,
     focusCharacter,
     setSlotPatch,

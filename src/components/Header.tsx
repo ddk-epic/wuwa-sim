@@ -4,6 +4,7 @@ import {
   ListCheckIcon,
   PlayIcon,
   RotateCcw,
+  SaveIcon,
   SettingsIcon,
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
@@ -18,10 +19,12 @@ interface HeaderProps {
   onEditTeam: () => void
   onResetTimeline: () => void
   onSimulate: () => void
+  onSaveTeam: () => void
   onOpenSimulationLog: () => void
   onOpenSettings: () => void
   timelineEmpty: boolean
   logEmpty: boolean
+  saveDisabled: boolean
   autoRun: boolean
   needsRun: boolean
   exportString: string
@@ -33,10 +36,12 @@ export function Header({
   onEditTeam,
   onResetTimeline,
   onSimulate,
+  onSaveTeam,
   onOpenSimulationLog,
   onOpenSettings,
   timelineEmpty,
   logEmpty,
+  saveDisabled,
   autoRun,
   needsRun,
   exportString,
@@ -94,6 +99,15 @@ export function Header({
       </div>
       {/* Right zone */}
       <div className="w-100 flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
+        <button
+          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
+          disabled={saveDisabled}
+          onClick={onSaveTeam}
+          aria-label="Save team to library"
+        >
+          <SaveIcon className="w-4 h-4" />
+          <span>Save</span>
+        </button>
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
           aria-label="Import/Export"

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useTeam } from "#/hooks/useTeam"
+import { useLibrary } from "#/hooks/useLibrary"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog, computeSignature } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
@@ -24,7 +25,9 @@ import type { ImportExportPayload } from "#/lib/import-export"
 
 export function SimulatorPage() {
   const team = useTeam()
-  const { name, slots, loadouts, focusedId, loadTeam } = team
+  const { name, slots, loadouts, focusedId, originId, setOriginId, loadTeam } =
+    team
+  const { saveCurrent } = useLibrary()
 
   const { log, storedSignature, setLog, clearLog } = useSimulationLog()
 
@@ -189,6 +192,13 @@ export function SimulatorPage() {
     clearTimeline()
   }
 
+  function handleSaveTeam() {
+    // Update-or-create against the live Origin; re-stamp it after a create so a
+    // subsequent Save updates the same entry in place.
+    const savedId = saveCurrent(originId)
+    if (savedId !== originId) setOriginId(savedId)
+  }
+
   function handleSimulate() {
     setLog(
       runSimulation(
@@ -219,10 +229,12 @@ export function SimulatorPage() {
                 onEditTeam={handleOpenTeamModal}
                 onResetTimeline={handleResetTimeline}
                 onSimulate={handleSimulate}
+                onSaveTeam={handleSaveTeam}
                 onOpenSimulationLog={handleOpenSimulationLog}
                 onOpenSettings={handleOpenSettings}
                 timelineEmpty={entries.length === 0}
                 logEmpty={log.length === 0}
+                saveDisabled={slots.every((id) => id === null)}
                 autoRun={autoRun}
                 needsRun={needsRun}
                 exportString={exportString}
