@@ -9,6 +9,8 @@ import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 
 export interface ImportExportPayload {
   team: {
+    /** Mirrors `SavedTeam.name` so exported codes round-trip the label (wire VERSION 2). */
+    name: string
     slots: Slots
     loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
     focusedId: number | null
@@ -116,13 +118,16 @@ const stageIdx = (stageId: string) => {
 }
 
 // ---- Encode ----
-const VERSION = 1
+// VERSION 2 adds team.name right after the version byte; v1 codes (no name)
+// stay decodable, defaulting the name to "".
+const VERSION = 2
 
 export function encodePayload(payload: ImportExportPayload): string {
   const w = new Writer()
   w.push(VERSION)
 
   const { team, timeline } = payload
+  w.str(team.name)
   w.push(charIdx(team.focusedId))
   for (const id of team.slots) w.push(charIdx(id))
 
@@ -195,8 +200,11 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const r = new Reader(data)
 
   const version = r.next()
-  if (version !== VERSION)
+  if (version !== 1 && version !== 2)
     throw new Error(`Unsupported format version ${version}`)
+
+  // VERSION 2 carries the team name right after the version byte; v1 has none.
+  const name = version >= 2 ? r.str() : ""
 
   const focusedIdx = r.nullable()
   const focusedId = focusedIdx === null ? null : ALL_CHARACTERS[focusedIdx].id
@@ -262,5 +270,5 @@ export function decodePayload(encoded: string): ImportExportPayload {
     }
   }
 
-  return { team: { slots, loadouts, focusedId }, timeline }
+  return { team: { name, slots, loadouts, focusedId }, timeline }
 }

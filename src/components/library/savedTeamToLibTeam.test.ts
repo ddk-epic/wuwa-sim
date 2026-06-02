@@ -33,6 +33,7 @@ function loadout(over: Partial<SlotLoadout> = {}): SlotLoadout {
 function savedTeam(over: Partial<SavedTeam> = {}): SavedTeam {
   const payload: ImportExportPayload = {
     team: {
+      name: "Frosty",
       slots: [1102, 1203, null],
       loadouts: [
         loadout({ weaponId: 21020015, sequence: 2 }),

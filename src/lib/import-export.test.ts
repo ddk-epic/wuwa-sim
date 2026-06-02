@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import type { SlotLoadout } from "#/types/loadout"
 import type { ImportExportPayload } from "#/lib/import-export"
+import { encode as base91Encode, decode as base91Decode } from "#/lib/base91"
 
 // Minimal stubs — only the fields the codec actually reads.
 const CHAR_A = {
@@ -69,6 +70,7 @@ function emptyLoadout(): SlotLoadout {
 function basePayload(): ImportExportPayload {
   return {
     team: {
+      name: "",
       slots: [CHAR_A.id, null, null],
       loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
       focusedId: CHAR_A.id,
@@ -151,6 +153,33 @@ describe("team encoding", () => {
         decodePayload(encodePayload(payload)).team.loadouts[0].sequence,
       ).toBe(seq)
     }
+  })
+
+  it("roundtrips the team name (VERSION 2)", () => {
+    const payload = basePayload()
+    payload.team.name = "Sanhua Hypercarry"
+    expect(decodePayload(encodePayload(payload)).team.name).toBe(
+      "Sanhua Hypercarry",
+    )
+  })
+
+  it("roundtrips a unicode team name", () => {
+    const payload = basePayload()
+    payload.team.name = "凍結 ❄️ team"
+    expect(decodePayload(encodePayload(payload)).team.name).toBe("凍結 ❄️ team")
+  })
+
+  it("decodes a v1 code (no name) with the name defaulting to empty string", () => {
+    // A v2 encode of name="" is bytes [2, 0, …]; the equivalent v1 buffer is
+    // [1, …rest] (no version-2 name byte). Reconstruct one and decode it.
+    const payload = basePayload()
+    payload.team.name = ""
+    const v2Bytes = base91Decode(encodePayload(payload))
+    const v1Bytes = new Uint8Array([1, ...v2Bytes.slice(2)])
+    const decoded = decodePayload(base91Encode(v1Bytes))
+    expect(decoded.team.name).toBe("")
+    expect(decoded.team.slots).toEqual(payload.team.slots)
+    expect(decoded.team.focusedId).toBe(payload.team.focusedId)
   })
 })
 
@@ -312,14 +341,10 @@ describe("error handling", () => {
     expect(() => decodePayload("not valid !!!")).toThrow()
   })
 
-  it("throws on version mismatch", () => {
-    // Manually craft a buffer with version 99
-    // We encode a valid payload then corrupt the first character
-    const valid = encodePayload(basePayload())
-    // Replace decoded version byte — just pass garbage that decodes to wrong version
-    expect(() => decodePayload("AA" + valid.slice(2))).toThrow(
-      /version|invalid/i,
-    )
+  it("throws on an unsupported (too-new) format version", () => {
+    // Craft a buffer whose version byte is 99 (neither v1 nor v2).
+    const code = base91Encode(new Uint8Array([99, 0, 0xff]))
+    expect(() => decodePayload(code)).toThrow(/version/i)
   })
 
   it("throws when encoding an unknown characterId", () => {

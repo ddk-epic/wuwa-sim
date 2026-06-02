@@ -68,6 +68,7 @@ function snapshotLive(): {
   return {
     payload: {
       team: {
+        name: team.name,
         slots: team.slots,
         loadouts: team.loadouts,
         focusedId: team.focusedId,
@@ -176,11 +177,11 @@ export function useLibrary() {
     } catch {
       return false
     }
-    // No log travels in a bundle, so stats start empty until the team is loaded + re-run.
-    setTeams((prev) => [
-      ...prev,
-      newTeam("Imported team", payload, computeTeamStats([])),
-    ])
+    // Restore the bundled name; fall back to a placeholder only when it's empty
+    // (e.g. a v1 code, which carried no name). No log travels in a bundle, so
+    // stats start empty until the team is loaded + re-run.
+    const name = payload.team.name.trim() || "Imported team"
+    setTeams((prev) => [...prev, newTeam(name, payload, computeTeamStats([]))])
     return true
   }
 

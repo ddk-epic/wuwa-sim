@@ -24,7 +24,7 @@ import type { ImportExportPayload } from "#/lib/import-export"
 
 export function SimulatorPage() {
   const team = useTeam()
-  const { slots, loadouts, focusedId, loadTeam } = team
+  const { name, slots, loadouts, focusedId, loadTeam } = team
 
   const { log, storedSignature, setLog, clearLog } = useSimulationLog()
 
@@ -147,7 +147,7 @@ export function SimulatorPage() {
   }
 
   const exportString = encodePayload({
-    team: { slots, loadouts, focusedId },
+    team: { name, slots, loadouts, focusedId },
     timeline: nodes.length > 0 ? nodes : null,
   })
 

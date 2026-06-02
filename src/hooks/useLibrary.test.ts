@@ -25,9 +25,10 @@ function emptyLoadout(): SlotLoadout {
 }
 
 /** An all-null/default payload that the real codec round-trips with no catalog data. */
-function emptyPayload(): ImportExportPayload {
+function emptyPayload(name = ""): ImportExportPayload {
   return {
     team: {
+      name,
       slots: [null, null, null],
       loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
       focusedId: null,
@@ -181,6 +182,24 @@ describe("useLibrary", () => {
     })
     expect(ok).toBe(true)
     expect(result.current.teams).toHaveLength(1)
+  })
+
+  it("importBundle restores the bundled team name", () => {
+    const code = encodePayload(emptyPayload("Shorekeeper Quickswap"))
+    const { result } = renderHook(() => useLibrary())
+    act(() => {
+      result.current.importBundle(code)
+    })
+    expect(result.current.teams[0].name).toBe("Shorekeeper Quickswap")
+  })
+
+  it("importBundle falls back to a placeholder when the bundle has no name", () => {
+    const code = encodePayload(emptyPayload(""))
+    const { result } = renderHook(() => useLibrary())
+    act(() => {
+      result.current.importBundle(code)
+    })
+    expect(result.current.teams[0].name).toBe("Imported team")
   })
 
   it("importBundle rejects invalid input gracefully (returns false, adds nothing)", () => {
