@@ -38,13 +38,26 @@ export function isCancelCapable(skillType: SkillType): boolean {
   return CANCEL_CAPABLE.has(skillType)
 }
 
+/**
+ * A scheduled footing flip for a swap stage. `commit` is the launch/land flip
+ * that lands after the cursor advance; `reset` is the window-end return to
+ * ground that always accompanies a launch (the Trailing Window lasts exactly the
+ * stage's `actionTime`, per CONTEXT.md). A `reset` only ever appears alongside a
+ * launch `commit`, so the air-only gate is structural — callers never test it.
+ */
+export interface FootingChange {
+  atFrame: number
+  exitFooting: "ground" | "air"
+  kind: "commit" | "reset"
+}
+
 export interface StagePartition {
   /** Hits that resolve within the cursor advance — fired now, in order. */
   immediate: readonly TrailingHit[]
   /** Swap-stage hits landing after the advance — enqueued onto the stream. */
   trailing: readonly TrailingHit[]
-  /** A swap-stage launch/land whose commit frame falls after the advance. */
-  pendingFooting?: { atFrame: number; exitFooting: "ground" | "air" }
+  /** Swap-stage launch/land commits and the window-end reset, after the advance. */
+  footingChanges: readonly FootingChange[]
 }
 
 /**
@@ -77,28 +90,56 @@ export function partitionStage(ctx: {
     ? allBundles.filter((b) => b.hit.actionFrame > ctx.stageDuration)
     : []
 
-  const pendingFooting = isSwap
-    ? buildPendingFooting(
+  const footingChanges = isSwap
+    ? buildFootingChanges(
         ctx.resolved.stage.footing,
         ctx.stageStartFrame,
         ctx.stageDuration,
+        ctx.resolved.stage.actionTime,
       )
-    : undefined
+    : []
 
-  return { immediate, trailing, pendingFooting }
+  return { immediate, trailing, footingChanges }
 }
 
-function buildPendingFooting(
+/**
+ * Plan the footing flips a swap stage commits after its cursor advance. A launch
+ * past the advance flips to `air` at the launch frame and schedules its own
+ * window-end `reset` to ground at `stageStart + actionTime` (the Trailing
+ * Window's duration). A land past the advance flips to `ground` at the land
+ * frame with no reset. The launch/land gate uses `stageDuration` (the variant's
+ * `advance`); the reset frame uses the raw stage `actionTime` — the two are not
+ * interchangeable.
+ */
+function buildFootingChanges(
   footing: Footing | undefined,
   stageStartFrame: number,
   stageDuration: number,
-): { atFrame: number; exitFooting: "ground" | "air" } | undefined {
-  if (!footing || typeof footing !== "object") return undefined
+  actionTime: number,
+): FootingChange[] {
+  if (!footing || typeof footing !== "object") return []
   if ("launch" in footing && footing.launch > stageDuration) {
-    return { atFrame: stageStartFrame + footing.launch, exitFooting: "air" }
+    return [
+      {
+        atFrame: stageStartFrame + footing.launch,
+        exitFooting: "air",
+        kind: "commit",
+      },
+      {
+        atFrame: stageStartFrame + actionTime,
+        exitFooting: "ground",
+        kind: "reset",
+      },
+    ]
   }
   if ("land" in footing && footing.land > stageDuration) {
-    return { atFrame: stageStartFrame + footing.land, exitFooting: "ground" }
+    return [
+      {
+        atFrame: stageStartFrame + footing.land,
+        exitFooting: "ground",
+        kind: "commit",
+      },
+    ]
   }
-  return undefined
+  return []
 }

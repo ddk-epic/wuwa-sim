@@ -104,14 +104,14 @@ describe("trailing-window — partitionStage: non-swap partition", () => {
     })
     expect(result.immediate).toHaveLength(2)
     expect(result.trailing).toHaveLength(0)
-    expect(result.pendingFooting).toBeUndefined()
+    expect(result.footingChanges).toEqual([])
   })
 })
 
-describe("trailing-window — partitionStage: pendingFooting", () => {
-  it("adds pendingFooting when swap stage has {launch:N} with N > stageDuration", () => {
+describe("trailing-window — partitionStage: footingChanges", () => {
+  it("launch past advance → [commit@(start+launch), reset@(start+actionTime)]", () => {
     const resolved = makeResolvedStage({
-      stage: { actionTime: 0, footing: { launch: 15 } },
+      stage: { actionTime: 18, footing: { launch: 15 } },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -121,10 +121,14 @@ describe("trailing-window — partitionStage: pendingFooting", () => {
       variantKind: "swap",
       stageDuration: 6,
     })
-    expect(result.pendingFooting).toEqual({ atFrame: 25, exitFooting: "air" })
+    // Reset frame reads the raw stage actionTime (18), not the variant advance (6).
+    expect(result.footingChanges).toEqual([
+      { atFrame: 25, exitFooting: "air", kind: "commit" },
+      { atFrame: 28, exitFooting: "ground", kind: "reset" },
+    ])
   })
 
-  it("no pendingFooting when {launch:N} with N <= stageDuration (fires on-field)", () => {
+  it("no footingChanges when {launch:N} with N <= stageDuration (fires on-field)", () => {
     const resolved = makeResolvedStage({
       stage: { actionTime: 0, footing: { launch: 5 } },
     })
@@ -136,12 +140,12 @@ describe("trailing-window — partitionStage: pendingFooting", () => {
       variantKind: "swap",
       stageDuration: 6,
     })
-    expect(result.pendingFooting).toBeUndefined()
+    expect(result.footingChanges).toEqual([])
   })
 
-  it("adds pendingFooting for {land:N} when N > stageDuration", () => {
+  it("land past advance → [commit@(start+land)] with no reset", () => {
     const resolved = makeResolvedStage({
-      stage: { actionTime: 0, footing: { land: 20 } },
+      stage: { actionTime: 12, footing: { land: 20 } },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -151,13 +155,27 @@ describe("trailing-window — partitionStage: pendingFooting", () => {
       variantKind: "swap",
       stageDuration: 6,
     })
-    expect(result.pendingFooting).toEqual({
-      atFrame: 20,
-      exitFooting: "ground",
-    })
+    expect(result.footingChanges).toEqual([
+      { atFrame: 20, exitFooting: "ground", kind: "commit" },
+    ])
   })
 
-  it("no pendingFooting for non-swap stages (even with {launch:N})", () => {
+  it("transition within the stage → []", () => {
+    const resolved = makeResolvedStage({
+      stage: { actionTime: 18, footing: { launch: 4 } },
+    })
+    const result = partitionStage({
+      entry: makeEntry(1),
+      resolved,
+      stageStartFrame: 0,
+      hits: [],
+      variantKind: "swap",
+      stageDuration: 6,
+    })
+    expect(result.footingChanges).toEqual([])
+  })
+
+  it("no footingChanges for non-swap stages (even with {launch:N})", () => {
     const resolved = makeResolvedStage({
       stage: { actionTime: 0, footing: { launch: 15 } },
     })
@@ -169,6 +187,6 @@ describe("trailing-window — partitionStage: pendingFooting", () => {
       variantKind: undefined,
       stageDuration: 30,
     })
-    expect(result.pendingFooting).toBeUndefined()
+    expect(result.footingChanges).toEqual([])
   })
 })

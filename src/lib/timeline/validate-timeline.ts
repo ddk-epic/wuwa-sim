@@ -156,7 +156,7 @@ export function validateTimeline(
   }
 
   // Footing-walk pass: team-global cursor + per-character swap-deferred footing.
-  // Statically mirrors the Trailing Window's pendingFooting: a swap stage's
+  // Statically mirrors the Trailing Window's footingChanges: a swap stage's
   // launch/land exit is deferred until the same character re-enters (ADR-0022).
   let footingCursor: "ground" | "air" = "ground"
   const deferredFooting = new Map<number, "ground" | "air">()

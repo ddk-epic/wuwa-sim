@@ -149,34 +149,21 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
       payload: { kind: "trailing", bundle: t },
     })
   }
-  if (part.pendingFooting) {
-    // The launch/land commit sets the owner's footing at its commit frame — residue,
-    // obeying the same drop/pad as trailing hits.
+  for (const fc of part.footingChanges) {
+    // A `commit` (launch/land flip) is residue, obeying the same drop/pad as
+    // trailing hits; a `reset` is the window-end return to ground, cancelled by a
+    // swap-back before stageStart + actionTime. Trailing-window plans the frames;
+    // we only map its `kind` onto the Schedule's arrival vocabulary here.
     ctx.schedule.enqueue({
-      frame: part.pendingFooting.atFrame,
+      frame: fc.atFrame,
       owner: entry.characterId,
-      arrival: "residue",
+      arrival: fc.kind === "commit" ? "residue" : "reset",
       payload: {
         kind: "footing",
         characterId: entry.characterId,
-        exitFooting: part.pendingFooting.exitFooting,
+        exitFooting: fc.exitFooting,
       },
     })
-    // An airborne owner returns to ground when its Trailing Window passes without a
-    // swap-back; the window ends at stageStart + actionTime. A re-entry before then
-    // cancels this reset.
-    if (part.pendingFooting.exitFooting === "air") {
-      ctx.schedule.enqueue({
-        frame: stageStartFrame + resolved.stage.actionTime,
-        owner: entry.characterId,
-        arrival: "reset",
-        payload: {
-          kind: "footing",
-          characterId: entry.characterId,
-          exitFooting: "ground",
-        },
-      })
-    }
   }
   for (const h of part.immediate) processHit(h, ctx)
   cursor.frame = nextFrame
