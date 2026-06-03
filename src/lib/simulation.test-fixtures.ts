@@ -16,6 +16,8 @@ import type { BuffDef } from "#/types/buff"
 
 export const dmgHit = (
   value: number,
+  energy = 0,
+  concerto = 0,
   type: SkillType = "Basic Attack",
 ): DamageEntry => ({
   type,
@@ -23,8 +25,8 @@ export const dmgHit = (
   scalingStat: "atk",
   actionFrame: 0,
   value,
-  energy: 0,
-  concerto: 0,
+  energy,
+  concerto,
   toughness: 0,
   weakness: 0,
 })

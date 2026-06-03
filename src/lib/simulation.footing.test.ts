@@ -1,15 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type {
-  DamageEntry,
-  EnrichedCharacter,
-  SkillType,
-} from "#/types/character"
+import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { ActionEvent } from "#/types/simulation-log"
 
 import { runSimulation } from "./simulation"
-import { tlEntry } from "./simulation.test-fixtures"
+import { dmgHit, tlEntry } from "./simulation.test-fixtures"
 
 let testCharacters: EnrichedCharacter[] = []
 vi.mock("./loadout/catalog", () => ({
@@ -56,23 +52,6 @@ const emptyLoadouts: SlotLoadout[] = [
     cost3Mains: ["elemDmg", "elemDmg"],
   },
 ]
-
-const dmgHit = (
-  value: number,
-  energy = 0,
-  concerto = 0,
-  type: SkillType = "Basic Attack",
-): DamageEntry => ({
-  type,
-  dmgType: "Fusion",
-  scalingStat: "atk",
-  actionFrame: 0,
-  value,
-  energy,
-  concerto,
-  toughness: 0,
-  weakness: 0,
-})
 
 const charA: EnrichedCharacter = {
   id: 1,

@@ -26,7 +26,7 @@ const emitBuff = (offset: number): BuffDef => ({
     {
       kind: "emitHit",
       icdFrames: 0,
-      damage: { ...dmgHit(2.0, "Resonance Skill"), actionFrame: offset },
+      damage: { ...dmgHit(2.0, 0, 0, "Resonance Skill"), actionFrame: offset },
     },
   ],
 })

@@ -1,9 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type {
-  DamageEntry,
-  EnrichedCharacter,
-  SkillType,
-} from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
@@ -14,27 +10,10 @@ import {
 } from "./loadout/echo-stat-constants"
 
 import { runSimulation } from "./simulation"
-import { tlEntry } from "./simulation.test-fixtures"
+import { dmgHit, tlEntry } from "./simulation.test-fixtures"
 
 const BASE_ER =
   DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
-
-const dmgHit = (
-  value: number,
-  energy = 0,
-  concerto = 0,
-  type: SkillType = "Basic Attack",
-): DamageEntry => ({
-  type,
-  dmgType: "Fusion",
-  scalingStat: "atk",
-  actionFrame: 0,
-  value,
-  energy,
-  concerto,
-  toughness: 0,
-  weakness: 0,
-})
 
 const charA: EnrichedCharacter = {
   id: 1,
