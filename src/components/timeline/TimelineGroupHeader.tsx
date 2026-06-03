@@ -11,6 +11,7 @@ import { getCharacterById } from "#/lib/loadout/catalog"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
+import { HexPill } from "#/components/ui/HexPill"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { renderPoolValue } from "../log/log-cells"
@@ -133,16 +134,7 @@ export function TimelineGroupHeader({
         </div>
       </td>
       <td className="px-2 py-1.5">
-        <span
-          className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
-          style={{
-            background: `${dominantHex}15`,
-            border: `1px solid ${dominantHex}33`,
-            color: dominantHex,
-          }}
-        >
-          GROUP
-        </span>
+        <HexPill hex={dominantHex}>GROUP</HexPill>
       </td>
       <td
         className="px-2 py-1.5 text-gray-200 overflow-hidden"

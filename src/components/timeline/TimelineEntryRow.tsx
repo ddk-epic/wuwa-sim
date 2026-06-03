@@ -5,6 +5,7 @@ import { formatSkillType } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { renderPoolValue } from "../log/log-cells"
+import { HexPill } from "#/components/ui/HexPill"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -148,16 +149,7 @@ export function TimelineEntryRow({
       </td>
       <td className="px-2 py-2">
         {skillType !== null && (
-          <span
-            className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
-            style={{
-              background: `${charHex}15`,
-              border: `1px solid ${charHex}33`,
-              color: charHex,
-            }}
-          >
-            {formatSkillType(skillType)}
-          </span>
+          <HexPill hex={charHex}>{formatSkillType(skillType)}</HexPill>
         )}
       </td>
       <td className="px-2 py-2 text-gray-200 overflow-hidden">

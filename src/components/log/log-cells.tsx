@@ -11,6 +11,7 @@ import { formatSkillType } from "#/data/skill-types"
 import { formatCritCell } from "#/lib/damage/hit-formula"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
+import { HexPill } from "#/components/ui/HexPill"
 
 export const numCell = "px-2 py-2 text-right font-mono"
 export const COL_COUNT = 14
@@ -77,18 +78,7 @@ export function TypePill({
   skillType: string
 }) {
   const { hex } = charVisual(characterId)
-  return (
-    <span
-      className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
-      style={{
-        background: `${hex}15`,
-        border: `1px solid ${hex}33`,
-        color: hex,
-      }}
-    >
-      {formatSkillType(skillType)}
-    </span>
-  )
+  return <HexPill hex={hex}>{formatSkillType(skillType)}</HexPill>
 }
 
 export function CritCellValue({
@@ -134,18 +124,7 @@ export function CritCellValue({
 
 export function CoordPill({ element }: { element: Element }) {
   const hex = ELEMENT_HEX[element] ?? "#888"
-  return (
-    <span
-      className="inline-block px-1.5 py-0.5 rounded text-xs font-mono uppercase"
-      style={{
-        background: `${hex}15`,
-        border: `1px solid ${hex}33`,
-        color: hex,
-      }}
-    >
-      COORD
-    </span>
-  )
+  return <HexPill hex={hex}>COORD</HexPill>
 }
 
 export function SustainPill({ sub: _sub }: { sub: SustainEvent["sub"] }) {
