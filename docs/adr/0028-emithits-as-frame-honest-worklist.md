@@ -115,3 +115,7 @@ Work items 4 & 5 shipped; the hybrid's divergence list above is fully closed and
 - **Test migration done** — the ~46 reader assertions across 7 files moved to a `drainSynthetics` / `onEventResolved` harness (`buff-engine.test-utils.ts`) that resolves emit-decisions the way the simulation's drain does. The two legacy-only cases (the `honorEmitOffset: false` simulation case and Sanhua's "honor off" burst) were deleted.
 
 **Still deferred (unchanged from the endgame amendment):** In-trailing hits remain footing-blind — lifting that (footing-conditional buffs reading the acting character's live footing) is a separate follow-up — and the Trailing-Window-duration override is out of scope.
+
+## Amendment — the worklist is the `Schedule<T>` module
+
+The frame-ordered stream is now realized as a standalone, mechanism-only module: **`Schedule<T>` in `src/lib/schedule.ts`** (`Schedule`, `ScheduledWork<T>`, `ArrivalClass`). It owns ordering, the watermark drain, within-frame stability, and the same-character drop/pad/reset collision policy (`resolveArrival`) — but not resolution, which runs in a caller-supplied `resolve` callback, so it imports nothing from the buff engine, damage formulas, or Simulation Log. `simulation.ts` holds a `Schedule<Work>` and the per-kind `resolve`; the bare `pending: PendingEvent[]` array and the hand-rolled `resolveArrival`/`drainPending` free functions are gone.
