@@ -4,7 +4,7 @@ import { nextVariant } from "#/lib/stage"
 import { formatSkillType } from "#/data/skill-types"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
-import { renderPoolValue } from "../log/log-cells"
+import { TimeCell, DurationCell, PoolCell } from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
@@ -133,9 +133,7 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-label text-ui-damage">
-        {formatFrames(row.timeFrames)}
-      </td>
+      <TimeCell frames={row.timeFrames} />
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">
           <span
@@ -210,19 +208,9 @@ export function TimelineEntryRow({
           )}
         </div>
       </td>
-      <td className="px-2 py-2 text-right font-mono text-label text-gray-300">
-        {formatFrames(row.durationFrames)}
-      </td>
-      <td
-        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
-      >
-        {renderPoolValue(conVal, "var(--ui-concerto)")}
-      </td>
-      <td
-        className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
-      >
-        {renderPoolValue(resVal, "var(--ui-resonance)")}
-      </td>
+      <DurationCell frames={row.durationFrames} />
+      <PoolCell value={conVal} color="var(--ui-concerto)" stale={stale} />
+      <PoolCell value={resVal} color="var(--ui-resonance)" stale={stale} />
       <td
         className={`px-1 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
       >
