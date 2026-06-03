@@ -1,4 +1,4 @@
-import type { DamageEntry, Footing, HealTarget } from "#/types/character"
+import type { DamageEntry, Footing } from "#/types/character"
 import type { HitContext } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
@@ -16,6 +16,7 @@ import type { ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 import type { ResolvedStage } from "./stage"
+import { resolveHealTargets } from "./heal-targets"
 import { Schedule } from "./schedule"
 import { isCancelCapable, partitionStage } from "./trailing-window"
 import type { TrailingHit } from "./trailing-window"
@@ -449,7 +450,11 @@ function processHeal(
     cumulativeEnergy: dispatch.postState.energy,
     cumulativeConcerto: dispatch.postState.concerto,
     amount,
-    targets: resolveHealTargets(hit.target ?? "self", entry.characterId, slots),
+    targets: resolveHealTargets(
+      hit.target ?? "self",
+      entry.characterId,
+      slots.filter((id): id is number => id !== null),
+    ),
     scalingStat: hit.scalingStat,
     multiplier: hit.value,
     flat: hit.flat,
@@ -520,22 +525,4 @@ function processDamageHit(
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
   for (const e of events) log.push(e)
-}
-
-function resolveHealTargets(
-  target: HealTarget,
-  healerId: number,
-  slots: Slots,
-): number[] {
-  switch (target) {
-    case "self":
-    case "source":
-      return [healerId]
-    case "currentOnField":
-      return [healerId]
-    case "team":
-      return slots.filter((id) => id !== null)
-    case "nextOnField":
-      return []
-  }
 }

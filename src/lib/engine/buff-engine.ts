@@ -18,6 +18,7 @@ import type {
 } from "#/types/simulation-log"
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
+import { resolveHealTargets } from "../heal-targets"
 import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
 import type { DeferredEmit, EmitHitHost } from "./emit-hit-dispatcher"
 import { bootstrapSlot } from "../engine-bootstrap"
@@ -108,18 +109,8 @@ export class BuffEngine {
     getResource: (id) => this.getResource(id),
     activeBuffs: (id, hit) => this.activeBuffs(id, hit),
     passiveBuffs: (id) => this.passiveBuffs(id),
-    resolveHealTargets: (target, sourceId) => {
-      switch (target) {
-        case "self":
-        case "source":
-        case "currentOnField":
-          return [sourceId]
-        case "team":
-          return this.store.getPartyCharacterIds()
-        case "nextOnField":
-          return []
-      }
-    },
+    resolveHealTargets: (target, sourceId) =>
+      resolveHealTargets(target, sourceId, this.store.getPartyCharacterIds()),
   }
 
   /**
