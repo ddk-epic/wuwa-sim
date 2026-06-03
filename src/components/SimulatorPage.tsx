@@ -6,6 +6,7 @@ import { useSimulationLog, computeSignature } from "#/hooks/useSimulationLog"
 import { useSettings } from "#/hooks/useSettings"
 import { useUiPreferences } from "#/hooks/useUiPreferences"
 import { useAutoRun } from "#/hooks/useAutoRun"
+import { useModalToggle } from "#/hooks/useModalToggle"
 import { RenamingGroupProvider } from "#/hooks/useRenamingGroup"
 import { SettingsProvider } from "#/hooks/useSettingsContext"
 import { TeamProvider } from "#/hooks/useTeamContext"
@@ -115,39 +116,21 @@ export function SimulatorPage() {
     scheduleRun()
   }, [entries])
 
-  const [teamModalOpen, setTeamModalOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [simulationLogOpen, setSimulationLogOpen] = useState(false)
+  const teamModal = useModalToggle({
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+  })
+  const settingsModal = useModalToggle({
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+  })
+  const simulationLogModal = useModalToggle({
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+  })
   const [pendingImport, setPendingImport] =
     useState<ImportExportPayload | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
-
-  function handleOpenTeamModal() {
-    onModalOpen()
-    setTeamModalOpen(true)
-  }
-  function handleCloseTeamModal() {
-    setTeamModalOpen(false)
-    onModalClose()
-  }
-
-  function handleOpenSettings() {
-    onModalOpen()
-    setSettingsOpen(true)
-  }
-  function handleCloseSettings() {
-    setSettingsOpen(false)
-    onModalClose()
-  }
-
-  function handleOpenSimulationLog() {
-    onModalOpen()
-    setSimulationLogOpen(true)
-  }
-  function handleCloseSimulationLog() {
-    setSimulationLogOpen(false)
-    onModalClose()
-  }
 
   const exportString = encodePayload({
     team: { name, slots, loadouts, focusedId },
@@ -226,12 +209,12 @@ export function SimulatorPage() {
           >
             <main className="flex flex-col min-w-345 h-screen">
               <Header
-                onEditTeam={handleOpenTeamModal}
+                onEditTeam={teamModal.open}
                 onResetTimeline={handleResetTimeline}
                 onSimulate={handleSimulate}
                 onSaveTeam={handleSaveTeam}
-                onOpenSimulationLog={handleOpenSimulationLog}
-                onOpenSettings={handleOpenSettings}
+                onOpenSimulationLog={simulationLogModal.open}
+                onOpenSettings={settingsModal.open}
                 timelineEmpty={entries.length === 0}
                 logEmpty={log.length === 0}
                 saveDisabled={slots.every((id) => id === null)}
@@ -280,16 +263,16 @@ export function SimulatorPage() {
                   )}
                 </div>
               </div>
-              {teamModalOpen && (
-                <EditTeamModal onClose={handleCloseTeamModal} />
-              )}
-              {simulationLogOpen && (
+              {teamModal.isOpen && <EditTeamModal onClose={teamModal.close} />}
+              {simulationLogModal.isOpen && (
                 <SimulationLogModal
                   log={log}
-                  onClose={handleCloseSimulationLog}
+                  onClose={simulationLogModal.close}
                 />
               )}
-              {settingsOpen && <SettingsModal onClose={handleCloseSettings} />}
+              {settingsModal.isOpen && (
+                <SettingsModal onClose={settingsModal.close} />
+              )}
               {pendingImport !== null && (
                 <ConfirmModal
                   message="Import will overwrite your current timeline. Continue?"
