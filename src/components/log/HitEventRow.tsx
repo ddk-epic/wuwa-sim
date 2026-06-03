@@ -8,9 +8,10 @@ import {
   renderPoolValue,
   numCell,
   COL_COUNT,
+  IndexCell,
+  FrameCell,
 } from "./log-cells"
 import { HitEventDetail } from "./HitEventDetail"
-import { formatFrames } from "#/lib/format"
 import {
   formatDMGPctCell,
   formatDeepenCell,
@@ -36,15 +37,8 @@ export function HitEventRow({
         className="border-t border-border/60 text-muted cursor-pointer hover:bg-gray-800/40"
         onClick={onToggle}
       >
-        <td className="px-2 py-2 font-mono text-xs text-right text-muted-foreground">
-          <span className="text-muted-foreground/70 mr-1">
-            {isOpen ? "▾" : "▸"}
-          </span>
-          {index + 1}
-        </td>
-        <td className={`${numCell} text-label text-ui-damage`}>
-          {formatFrames(ev.frame)}
-        </td>
+        <IndexCell index={index} caret={isOpen} />
+        <FrameCell frame={ev.frame} />
         <td className="px-2 py-2">
           <CharCell id={ev.characterId} />
         </td>

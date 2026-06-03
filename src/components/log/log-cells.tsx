@@ -16,6 +16,49 @@ import { HexPill } from "#/components/ui/HexPill"
 export const numCell = "px-2 py-2 text-right font-mono"
 export const COL_COUNT = 14
 
+/** Leading index cell. Pass `caret` (open state) to prefix the expand glyph. */
+export function IndexCell({
+  index,
+  caret,
+}: {
+  index: number
+  caret?: boolean
+}) {
+  return (
+    <td className="px-2 py-2 font-mono text-xs text-right text-muted-foreground">
+      {caret !== undefined && (
+        <span className="text-muted-foreground/70 mr-1">
+          {caret ? "▾" : "▸"}
+        </span>
+      )}
+      {index + 1}
+    </td>
+  )
+}
+
+/** Leading frame cell, accented in the damage color. */
+export function FrameCell({ frame }: { frame: number }) {
+  return (
+    <td className={`${numCell} text-label text-ui-damage`}>
+      {formatFrames(frame)}
+    </td>
+  )
+}
+
+/** The six trailing empty stat cells that pad a non-hit row to COL_COUNT. */
+export function StatPad() {
+  return (
+    <>
+      <td className={`${numCell} text-xs`} />
+      <td className={`${numCell} text-xs`} />
+      <td className={`${numCell} text-xs`} />
+      <td className={`${numCell} text-xs`} />
+      <td className={`${numCell} text-xs`} />
+      <td className={`${numCell} text-xs`} />
+    </>
+  )
+}
+
 function charVisual(id: number) {
   const c = getCharacterById(id)
   const hex = (c?.element && ELEMENT_HEX[c.element]) ?? "#888"
