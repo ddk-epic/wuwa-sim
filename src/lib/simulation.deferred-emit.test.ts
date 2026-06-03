@@ -1,15 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type {
-  DamageEntry,
-  EnrichedCharacter,
-  SkillType,
-} from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
-import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
 import type { HitEvent, SimulationLogEntry } from "#/types/simulation-log"
 
 import { runSimulation } from "./simulation"
+import { dmgHit, makeChar, stageOf, tlEntry } from "./simulation.test-fixtures"
 
 /**
  * Honor-`actionFrame` for deferred emitHits.
@@ -18,21 +14,6 @@ import { runSimulation } from "./simulation"
  * actionFrame` and interleaves into the log in frame order — after its trigger
  * but before a later authored entry it now precedes.
  */
-
-const dmgHit = (
-  value: number,
-  type: SkillType = "Basic Attack",
-): DamageEntry => ({
-  type,
-  dmgType: "Fusion",
-  scalingStat: "atk",
-  actionFrame: 0,
-  value,
-  energy: 0,
-  concerto: 0,
-  toughness: 0,
-  weakness: 0,
-})
 
 /** An emitHit fired by the caster's own hit, landing `offset` frames later. */
 const emitBuff = (offset: number): BuffDef => ({
@@ -48,56 +29,6 @@ const emitBuff = (offset: number): BuffDef => ({
       damage: { ...dmgHit(2.0, "Resonance Skill"), actionFrame: offset },
     },
   ],
-})
-
-function makeChar(
-  id: number,
-  name: string,
-  buffs: BuffDef[] = [],
-): EnrichedCharacter {
-  return {
-    id,
-    name,
-    element: "Fusion",
-    weaponType: "Sword",
-    rarity: "5",
-    stats: {
-      base: { hp: 0, atk: 0, def: 0 },
-      max: { hp: 0, atk: 1000, def: 0 },
-    },
-    template: { weapon: "", echo: "", echoSet: "" },
-    skillTreeBonuses: [],
-    buffs,
-    skills: [
-      {
-        id: id * 10,
-        name: "Normal Attack",
-        type: "Normal Attack",
-        stages: [
-          {
-            name: "Stage 1",
-            category: "Basic Attack",
-            value: "100%",
-            actionTime: 60,
-            damage: [dmgHit(1.5)],
-          },
-        ],
-        damage: [],
-      },
-    ],
-  }
-}
-
-const stageOf = (kebab: string) =>
-  `char.${kebab}.basic-attack.normal-attack._::basic-attack`
-const tlEntry = (
-  characterId: number,
-  stageId: string,
-  id: string,
-): TimelineEntry => ({
-  id,
-  characterId,
-  stageId,
 })
 
 let testCharacters: EnrichedCharacter[] = []
