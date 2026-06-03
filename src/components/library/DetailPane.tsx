@@ -1,7 +1,7 @@
 import { Copy, Download, Pin, PinOff, Play, Trash2 } from "lucide-react"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { Card } from "#/components/ui/Card"
-import { HBtn } from "#/components/ui/HBtn"
+import { LabelBtn } from "#/components/ui/LabelBtn"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
 import { Kpi } from "#/components/ui/Kpi"
@@ -133,7 +133,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
               variant="destructive"
               onClick={() => actions.onDelete(team.id)}
             />
-            <HBtn
+            <LabelBtn
               icon={Play}
               label="Open to edit"
               primary

@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 
-/** A header/toolbar button with optional leading icon, keyboard hint, and primary accent. */
-export function HBtn({
+/** A button with a visible text label (plus optional icon, keyboard hint, and primary accent). The labeled counterpart to IconBtn. */
+export function LabelBtn({
   icon: Icon,
   label,
   primary,

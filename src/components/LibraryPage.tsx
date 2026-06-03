@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { CirclePlus, Download, Settings, Upload } from "lucide-react"
-import { HBtn } from "#/components/ui/HBtn"
+import { LabelBtn } from "#/components/ui/LabelBtn"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { DetailCard } from "#/components/library/DetailPane"
 import { LibraryList } from "#/components/library/LibraryList"
@@ -105,13 +105,13 @@ export function LibraryPage() {
         </div>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <HBtn icon={Upload} label="import" onClick={handleImport} />
-          <HBtn
+          <LabelBtn icon={Upload} label="import" onClick={handleImport} />
+          <LabelBtn
             icon={Download}
             label="export"
             onClick={() => selectedTeam && handleExport(selectedTeam.id)}
           />
-          <HBtn
+          <LabelBtn
             icon={CirclePlus}
             label="New team"
             primary

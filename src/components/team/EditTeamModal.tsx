@@ -1,4 +1,4 @@
-import { HBtn } from "#/components/ui/HBtn"
+import { LabelBtn } from "#/components/ui/LabelBtn"
 import { TeamBuilderModal } from "./TeamBuilderModal"
 
 /**
@@ -10,7 +10,7 @@ export function EditTeamModal({ onClose }: { onClose: () => void }) {
   return (
     <TeamBuilderModal
       onClose={onClose}
-      footer={<HBtn label="Close" onClick={onClose} />}
+      footer={<LabelBtn label="Close" onClick={onClose} />}
     />
   )
 }

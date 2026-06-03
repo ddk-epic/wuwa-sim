@@ -4,7 +4,7 @@ import { DraftTeamProvider } from "#/hooks/useDraftTeam"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { moveDraftToLive } from "#/hooks/useLibrary"
 import { suggestedTeamName } from "#/lib/loadout/team-ops"
-import { HBtn } from "#/components/ui/HBtn"
+import { LabelBtn } from "#/components/ui/LabelBtn"
 import { TeamBuilderModal } from "./TeamBuilderModal"
 
 /** The create modal's only commit: write the draft into the live Session, then jump to /sim. */
@@ -12,7 +12,7 @@ function MoveToSimButton() {
   const { name, slots, loadouts, focusedId } = useTeamContext()
   const navigate = useNavigate()
   return (
-    <HBtn
+    <LabelBtn
       icon={ArrowRight}
       label="Move to sim"
       primary
