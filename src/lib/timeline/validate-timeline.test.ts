@@ -1078,6 +1078,53 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
           ],
           damage: [],
         },
+        {
+          id: 6,
+          name: "Outro Move",
+          type: "Outro Skill",
+          stages: [
+            {
+              name: "Outro",
+              category: "Basic Attack",
+              value: "",
+              actionTime: 20,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 7,
+          name: "Air Intro",
+          type: "Intro Skill",
+          stages: [
+            {
+              name: "AirIntro",
+              category: "Basic Attack",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "air",
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 8,
+          name: "Ground Intro",
+          type: "Intro Skill",
+          stages: [
+            {
+              name: "GroundIntro",
+              category: "Basic Attack",
+              value: "",
+              actionTime: 20,
+              damage: [],
+              footing: "ground",
+            },
+          ],
+          damage: [],
+        },
       ],
     })
 
@@ -1216,6 +1263,38 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
       loadouts,
     )
     expect(result.rowWarnings.has("air")).toBe(false)
+  })
+
+  it("Intro exception: aerial Intro from a grounded field is valid (no launch/jump error)", () => {
+    // An Intro ignores incoming footing. From a ground cursor, an aerial Intro
+    // would normally hard-error "launch/jump required" — but Intros are exempt.
+    const result = validateTimeline(
+      [
+        fEntry("char.test.basic-attack.outro-move._::basic-attack", "outro"),
+        fEntry("char.test.basic-attack.air-intro._::basic-attack", "intro"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("intro")).toBe(false)
+    expect(result.rowErrors.has("intro")).toBe(false)
+    expect(result.rowWarnings.has("intro")).toBe(false)
+  })
+
+  it("Intro exception: grounded Intro from an airborne field pays no fall warning", () => {
+    // Field goes airborne (launch), then an Outro, then a grounded Intro. A normal
+    // grounded stage from air would warn fall frames; the Intro is exempt.
+    const result = validateTimeline(
+      [
+        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
+        fEntry("char.test.basic-attack.outro-move._::basic-attack", "outro"),
+        fEntry("char.test.basic-attack.ground-intro._::basic-attack", "intro"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("intro")).toBe(false)
+    expect(result.rowWarnings.has("intro")).toBe(false)
   })
 })
 

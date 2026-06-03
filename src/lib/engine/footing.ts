@@ -28,6 +28,25 @@ export class FootingModule {
   }
 
   /**
+   * An Intro Skill ignores the footing it enters on — it can take the field on any
+   * footing (see `references/footing.md`) — and instead establishes its own. Set
+   * team footing to the intro's settled value (`air` for `air`/`{ launch }`,
+   * `ground` for `ground`/`{ land }`); a footing-transparent intro keeps the
+   * current footing.
+   */
+  enterIntro(footing: Footing | undefined): void {
+    if (footing === undefined) return
+    if (
+      footing === "air" ||
+      (typeof footing === "object" && "launch" in footing)
+    ) {
+      this.tracker.setTeam("air")
+    } else {
+      this.tracker.setTeam("ground")
+    }
+  }
+
+  /**
    * Set a character's carried footing — the effect of a footing stream event: a
    * launch/land commit (`air`/`ground`) fired while the owner is [[In-trailing]],
    * or the window-end reset to `ground`. Instant: a single-frame flip. It does

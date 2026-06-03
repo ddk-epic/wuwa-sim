@@ -48,8 +48,11 @@ While a character is In-trailing, its stage is genuinely still resolving:
   window, the flip fires on the **trailing character** (its own footing evolves
   off-field; see [footing.md](./footing.md)). The field is unaffected — a
   different character is On-field now.
-- **Window-end reset** — when the window closes, an airborne trailing character
-  returns to `ground` as it benches to In-reserve.
+- **Window close** — when the animation finishes, the character **benches to
+  In-reserve**: it leaves play instantly (see above). Nothing grounds it at this
+  moment — an off-field character's footing is never read, so whatever footing it
+  had evolved simply stops mattering. Grounding is not done _here_; it is just the
+  **default a character takes when it next enters the field** (below).
 
 ---
 
@@ -63,7 +66,8 @@ There are two ways in, and they differ in footing:
   airborne (and pays fall if its next stage is grounded); its still-pending trailing hits and
   footing events are reconciled against the re-entry.
 - **Re-entry from In-reserve** — the window has passed (or there never was one).
-  The character enters **fresh and grounded**.
+  Entering the field from reserve **defaults to `ground`** — a benched character
+  always comes in grounded, regardless of whatever footing it had before benching.
 
 This is why a quick swap-back after a launch keeps you airborne, but coming back to
 the same character several seconds later puts you on the ground: in the first case

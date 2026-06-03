@@ -159,6 +159,38 @@ const charAerial: EnrichedCharacter = {
       ],
       damage: [],
     },
+    {
+      id: 104,
+      name: "Air Intro",
+      type: "Intro Skill",
+      stages: [
+        {
+          name: "Air Intro Stage",
+          category: "Basic Attack",
+          value: "100%",
+          actionTime: 30,
+          footing: "air", // aerial intro: sets the field airborne on entry
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 105,
+      name: "Ground Intro",
+      type: "Intro Skill",
+      stages: [
+        {
+          name: "Ground Intro Stage",
+          category: "Basic Attack",
+          value: "100%",
+          actionTime: 30,
+          footing: "ground", // grounded intro: enters clean even from an airborne field
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
   ],
 }
 
@@ -690,6 +722,73 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
       21,
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+    ).toBe(21)
+  })
+
+  it("Intro exception: a grounded Intro entered from an airborne field pays no fall", () => {
+    // charAerial launches (field → air), then charB's grounded Intro takes the field.
+    // A normal grounded stage would pay fall (airborne entry); an Intro ignores its
+    // incoming footing and enters clean — no fall.
+    testCharacters = [charAerial, charAerialB]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.ground-intro._::basic-attack",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
+  })
+
+  it("Intro exception: an aerial Intro sets the field airborne; a following ground stage then falls", () => {
+    // From a grounded field, charB's aerial Intro establishes air (it sets its own
+    // footing regardless of what it entered on). Its next grounded stage then pays a
+    // fall — proving the Intro drove team footing to air, not just ignored the check.
+    testCharacters = [charAerialB]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.air-intro._::basic-attack",
+        "e1",
+      ),
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e1")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
     ).toBe(21)

@@ -135,7 +135,12 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     arrival.padFrames,
     swapBack,
   )
-  engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
+  if (resolved.skillType === "Intro Skill") {
+    // An Intro establishes its own footing regardless of what it entered on.
+    engine.footing.enterIntro(resolved.stage.footing)
+  } else {
+    engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
+  }
   const part = partitionStage({
     entry,
     resolved,
@@ -278,11 +283,11 @@ function processEntry(
   // (a swap-back during its own Trailing Window enters airborne; a benched
   // character carries ground) or the inherited team footing (a fresh swap-in).
   const effectiveFooting = engine.footing.resolveEntry(entry.characterId)
-  const fall = computeFall(
-    effectiveFooting,
-    resolved.stage.footing,
-    ctx.fallFrames,
-  )
+  // Intro Skills ignore incoming footing — they enter on any footing, so never fall.
+  const fall =
+    resolved.skillType === "Intro Skill"
+      ? 0
+      : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
   const effectiveStart = stageStartFrame + fall + swapBack
 

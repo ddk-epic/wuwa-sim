@@ -178,9 +178,15 @@ export function validateTimeline(
     // Hard error only when grounded and the stage needs an airborne entry with
     // nothing to put us there. The reverse — airborne meeting a ground-entry stage,
     // including a { launch } — is legal: gravity lands us first (a soft fall), so it
-    // is handled in the warn pass, not here. (See references/footing.md.)
+    // is handled in the warn pass, not here. Intro Skills are exempt entirely: they
+    // ignore incoming footing and enter on any footing. (See references/footing.md.)
+    const isIntro = resolved?.skillType === "Intro Skill"
     let footingError: string | null = null
-    if (effectiveFooting === "ground" && stageEntryFooting(footing) === "air") {
+    if (
+      !isIntro &&
+      effectiveFooting === "ground" &&
+      stageEntryFooting(footing) === "air"
+    ) {
       footingError = isLand(footing)
         ? "Nothing to land from — not currently airborne"
         : "Launch/Jump required before an aerial stage"
@@ -223,8 +229,10 @@ export function validateTimeline(
       }
 
       // Airborne meeting any ground-entry stage (sustained "ground" or a { launch },
-      // which lands you before it re-launches) costs a fall.
+      // which lands you before it re-launches) costs a fall — except an Intro Skill,
+      // which ignores incoming footing and never falls.
       if (
+        resolved?.skillType !== "Intro Skill" &&
         effectiveFooting === "air" &&
         stageEntryFooting(footing) === "ground"
       ) {

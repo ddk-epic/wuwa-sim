@@ -76,9 +76,9 @@ what the field does afterward. So:
 - **Swap back to X within its trailing window** → X resumes `air` (the air combo
   continues), _even if_ the teammate who was on the field meanwhile grounded the
   field.
-- When X's trailing window closes and X benches to **In-reserve**, X returns to
-  `ground` — the **window-end reset**. A later re-entry from In-reserve is a fresh,
-  grounded entry. (See [trailing.md](./trailing.md).)
+- When X's trailing window closes, X **benches to In-reserve** — it simply leaves
+  play; no grounding happens at that moment. A later re-entry from In-reserve is a
+  fresh entry, which **defaults to `ground`** (see [trailing.md](./trailing.md)).
 
 These two facets only diverge once the swapped-in teammate starts changing the
 field. Facet 1 is the field's state; facet 2 is X's personal bookkeeping. Both are
@@ -154,3 +154,23 @@ Spelled out across the stage kinds:
 The asymmetry is physical: gravity recovers you from the air for free (so any
 ground-entry stage, including a launch, is reachable from the air via a fall), but
 nothing lifts you off the ground without an explicit launch.
+
+---
+
+# Exception: Intro Skills
+
+**Intro Skills ignore footing entirely on entry.** An Intro fires when a character
+swaps in (after a teammate's Outro), and it can **enter on any footing**, whatever
+the field was:
+
+- **No validity error** — an aerial Intro is legal from a grounded field, and a
+  grounded Intro from an airborne field; the entry rules above simply do not apply.
+- **No fall** — a grounded Intro entered while the field was airborne does **not**
+  pay fall frames. It enters clean.
+- **It sets the footing** — the Intro establishes the field footing per its own
+  declaration (an aerial Intro → `air`, a grounded Intro → `ground`, a
+  footing-transparent Intro keeps the current footing), and footing proceeds
+  normally from there.
+
+So an Intro is a clean footing **reset point**: nothing about the prior field state
+constrains it, and its own declaration becomes the new field footing.
