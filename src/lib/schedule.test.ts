@@ -2,14 +2,6 @@ import { describe, it, expect } from "vitest"
 import { Schedule } from "./schedule"
 import type { ScheduledWork } from "./schedule"
 
-/**
- * `Schedule<T>` is the mechanism-only extraction of the simulator's
- * frame-ordered pending-work pool (ADR-0028). These tests drive it with fake
- * `T` payloads — no engine, log, or damage — exercising ordering, the watermark
- * drain, and the same-character collision policy (`resolveArrival`) in
- * isolation.
- */
-
 /** Collect the payloads a full drain resolves, in resolution order. */
 function drainAll<T>(s: Schedule<T>, upto = Infinity): T[] {
   const out: T[] = []
@@ -28,8 +20,6 @@ function work<T>(
 describe("Schedule ordering", () => {
   it("drains in nondecreasing frame order, not enqueue (FIFO) order", () => {
     const s = new Schedule<string>()
-    // A late-landing item enqueued first must resolve after an earlier-landing
-    // item enqueued later (priority pool, not a queue).
     s.enqueue(work(14, "late"))
     s.enqueue(work(3, "early"))
     expect(drainAll(s)).toEqual(["early", "late"])
@@ -50,7 +40,6 @@ describe("Schedule watermark", () => {
     s.enqueue(work(5, "at"))
     s.enqueue(work(10, "after"))
     expect(drainAll(s, 5)).toEqual(["at"])
-    // The parked item survives for a later, higher watermark.
     expect(drainAll(s, 10)).toEqual(["after"])
   })
 
@@ -69,8 +58,7 @@ describe("Schedule re-entrancy", () => {
     const out: string[] = []
     s.drainUpTo(Infinity, (p) => {
       out.push(p)
-      // The chain emit from "first" lands at frame 5 — between the two pending
-      // items — and must interleave by frame, not append to the tail.
+      // "chained" lands at frame 5, between the two pending items.
       if (p === "first") s.enqueue(work(5, "chained"))
     })
     expect(out).toEqual(["first", "chained", "last"])
@@ -84,7 +72,7 @@ describe("Schedule resolveArrival — residue", () => {
     s.enqueue(work(8, "kept", { owner: 1, arrival: "residue" }))
     const { padFrames } = s.resolveArrival(1, true, 10)
     expect(padFrames).toBe(0)
-    // The residue at frame 20 (≥ 10) is dropped; the one at 8 (< 10) survives.
+    // Residue at frame 20 (≥ 10) dropped; the one at 8 (< 10) survives.
     expect(drainAll(s)).toEqual(["kept"])
   })
 
@@ -93,9 +81,7 @@ describe("Schedule resolveArrival — residue", () => {
     s.enqueue(work(18, "a", { owner: 1, arrival: "residue" }))
     s.enqueue(work(25, "b", { owner: 1, arrival: "residue" }))
     const { padFrames } = s.resolveArrival(1, false, 10)
-    // padFrames === latest − frame === 25 − 10.
-    expect(padFrames).toBe(15)
-    // Nothing dropped — all residue still lands.
+    expect(padFrames).toBe(15) // latest − frame === 25 − 10
     expect(drainAll(s)).toEqual(["a", "b"])
   })
 
@@ -134,7 +120,6 @@ describe("Schedule resolveArrival — reset", () => {
   it("cancels resets regardless of cancel-capability (orthogonal)", () => {
     const s = new Schedule<string>()
     s.enqueue(work(30, "reset", { owner: 1, arrival: "reset" }))
-    // Non-cancel-capable re-entry before the reset frame still cancels it.
     s.resolveArrival(1, false, 20)
     expect(drainAll(s)).toEqual([])
   })
@@ -144,10 +129,8 @@ describe("Schedule resolveArrival — ignore", () => {
   it("never drops, pads against, or cancels ignore-class items", () => {
     const s = new Schedule<string>()
     s.enqueue(work(20, "synthetic", { owner: 1, arrival: "ignore" }))
-    // Cancel-capable re-entry that would drop residue leaves ignore untouched...
     const cancel = s.resolveArrival(1, true, 10)
     expect(cancel.padFrames).toBe(0)
-    // ...and a non-cancel re-entry does not pad against it.
     const noncancel = s.resolveArrival(1, false, 10)
     expect(noncancel.padFrames).toBe(0)
     expect(drainAll(s)).toEqual(["synthetic"])
