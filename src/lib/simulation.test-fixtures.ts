@@ -54,7 +54,7 @@ export const stageOf = (kebab: string) =>
 export const tlEntry = (
   characterId: number,
   stageId: string,
-  id: string,
+  id = `${characterId}-${stageId}`,
 ): TimelineEntry => ({ id, characterId, stageId })
 
 export function makeChar(
