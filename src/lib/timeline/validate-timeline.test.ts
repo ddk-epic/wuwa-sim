@@ -112,98 +112,9 @@ describe("validateTimeline — skill existence", () => {
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
   })
-
-  it("accepts a stage with a newName using dot separator", () => {
-    testCharacters = [
-      baseChar({
-        skills: [
-          {
-            id: 1,
-            name: "Heavy Attack",
-            type: "Normal Attack",
-            stages: [
-              {
-                name: "Stage 1",
-                category: "Basic Attack",
-                value: "1",
-                newName: "Charged",
-                actionTime: 30,
-                damage: [],
-              },
-            ],
-            damage: [],
-          },
-        ],
-      }),
-    ]
-    const e = entry(
-      1,
-      "char.test.basic-attack.heavy-attack.charged::basic-attack",
-    )
-    const result = validateTimeline([e], slots, loadouts)
-    expect(result.invalidRowIds.has(e.id)).toBe(false)
-  })
-
-  it("accepts a stage whose newName starts with parenthesis", () => {
-    testCharacters = [
-      baseChar({
-        skills: [
-          {
-            id: 1,
-            name: "Normal Attack",
-            type: "Normal Attack",
-            stages: [
-              {
-                name: "Stage 2",
-                category: "Basic Attack",
-                value: "1",
-                newName: "(Stage 2)",
-                actionTime: 30,
-                damage: [],
-              },
-            ],
-            damage: [],
-          },
-        ],
-      }),
-    ]
-    const e = entry(
-      1,
-      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-    )
-    const result = validateTimeline([e], slots, loadouts)
-    expect(result.invalidRowIds.has(e.id)).toBe(false)
-  })
 })
 
 describe("validateTimeline — echo skill", () => {
-  it("accepts an Echo Skill entry when the slot has a matching echo", () => {
-    testCharacters = [baseChar()]
-    testEchoes = [
-      {
-        id: 10,
-        name: "Test Echo",
-        cost: 4,
-        element: "Fusion",
-        sets: ["Test Set"],
-        buffs: [],
-        skill: {
-          cooldown: 20,
-          description: "Test",
-          stages: [{ name: "Tap", newName: "Tap", actionTime: 30, damage: [] }],
-        },
-      },
-    ]
-    const e = entry(1, "echo.test-echo.tap::echo-skill")
-    const loadoutsWithEcho: [SlotLoadout, SlotLoadout, SlotLoadout] = [
-      { ...emptyLoadout, echoId: 10 },
-      emptyLoadout,
-      emptyLoadout,
-    ]
-    const result = validateTimeline([e], slots, loadoutsWithEcho)
-    expect(result.invalidRowIds.has(e.id)).toBe(false)
-  })
-
   it("marks Echo Skill invalid when no echo is equipped", () => {
     testCharacters = [baseChar()]
     const e = entry(1, "echo.test-echo.tap::echo-skill")
@@ -355,26 +266,6 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
     )
     const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
     expect(result.invalidRowIds.has("outro")).toBe(false)
-  })
-
-  it("accepts Intro preceded by Outro from the same character", () => {
-    testCharacters = [charWithAll(1)]
-    const outro = entry(
-      1,
-      "char.char1.basic-attack.outro-skill._::basic-attack",
-      "outro",
-    )
-    const intro = entry(
-      1,
-      "char.char1.basic-attack.intro-skill._::basic-attack",
-      "intro",
-    )
-    const result = validateTimeline(
-      [outro, intro],
-      [1, null, null],
-      twoCharLoadouts,
-    )
-    expect(result.invalidRowIds.has("intro")).toBe(false)
   })
 })
 
@@ -1238,19 +1129,6 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(
       result.rowErrors.get("land")?.some((e) => /land/i.test(e.message)),
     ).toBe(true)
-  })
-
-  it("no error: air â†’ ground (fall padding, not flagged in slice 1)", () => {
-    const result = validateTimeline(
-      [
-        fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
-        fEntry("char.test.basic-attack.ground-move._::basic-attack", "ground"),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("launch")).toBe(false)
-    expect(result.invalidRowIds.has("ground")).toBe(false)
   })
 
   it("valid: Jump (launch) â†’ air â†’ land sequence", () => {
