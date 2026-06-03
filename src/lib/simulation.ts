@@ -1,9 +1,4 @@
-import type {
-  DamageEntry,
-  Footing,
-  HealTarget,
-  SkillType,
-} from "#/types/character"
+import type { DamageEntry, Footing, HealTarget } from "#/types/character"
 import type { HitContext } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
@@ -21,6 +16,7 @@ import type { ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { findStageByEntry, resolveStageExecution } from "./stage"
 import type { ResolvedStage } from "./stage"
+import { Schedule } from "./schedule"
 import { isCancelCapable, partitionStage } from "./trailing-window"
 import type { TrailingHit } from "./trailing-window"
 
@@ -29,46 +25,29 @@ interface SimCursor {
   frame: number
 }
 
-/** A synthetic emit (emitHit/coordHit) awaiting resolution at its landing frame. */
-interface PendingSynthetic {
-  kind: "synthetic"
-  frame: number
-  emit: DeferredEmit
-  /** The authored entry whose hit emitted this synthetic, for log attribution. */
-  sourceEntryId: string
-}
-
 /**
- * A swap-stage trailing hit awaiting resolution at its `hitFrame`. A
- * same-character cancel-capable re-entry sets `valid: false` on trailing hits
- * with `hitFrame ≥ entryStart`, and the drain skips them instead of resolving.
+ * The payload of one frame-ordered stream member (the `Schedule`'s `T`): a
+ * synthetic emit, a swap-stage trailing hit, or a footing commit/reset. Frame,
+ * owner, and arrival class live on the `ScheduledWork` envelope; the `Schedule`
+ * owns ordering, the watermark drain, and the drop/pad/reset collision policy,
+ * so none of that is hand-written here.
+ *
+ *  - **synthetic** — an emitHit/coordHit; `ignore` class, never invalidated.
+ *  - **trailing** — a swap-stage trailing hit; `residue` class (dropped on a
+ *    cancel-capable re-entry, padded past on a non-cancel one).
+ *  - **footing** — a launch/land commit (`residue`) or a window-end ground
+ *    reset (`reset`, cancelled if the owner re-enters before its frame); on
+ *    resolve it sets the owner's carried footing via `commitFor`.
  */
-interface PendingTrailing {
-  kind: "trailing"
-  frame: number
-  characterId: number
-  valid: boolean
-  bundle: TrailingHit
-}
-
-/**
- * A footing change for one character on the stream: a launch/land commit
- * (`resetIfOffField: false`) that sets the owner's footing at its commit frame,
- * or a window-end reset (`resetIfOffField: true`) that returns the owner to
- * `ground` if still off-field at that frame. A cancelling re-entry sets
- * `valid: false`, and the drain skips it.
- */
-interface PendingFooting {
-  kind: "footing"
-  frame: number
-  characterId: number
-  valid: boolean
-  exitFooting: "ground" | "air"
-  resetIfOffField: boolean
-}
-
-/** One member of the frame-ordered event stream, drained in nondecreasing frame order. */
-type PendingEvent = PendingSynthetic | PendingTrailing | PendingFooting
+type Work =
+  | {
+      kind: "synthetic"
+      emit: DeferredEmit
+      /** The authored entry whose hit emitted this synthetic, for log attribution. */
+      sourceEntryId: string
+    }
+  | { kind: "trailing"; bundle: TrailingHit }
+  | { kind: "footing"; characterId: number; exitFooting: "ground" | "air" }
 
 /** Everything an entry/drain step needs. */
 interface SimContext {
@@ -81,8 +60,8 @@ interface SimContext {
   variantFloor: number
   fallFrames: number
   cursor: SimCursor
-  /** The frame-ordered pending-event stream: synthetics, trailing hits, footing commits/resets. */
-  pending: PendingEvent[]
+  /** The frame-ordered pending-work pool: synthetics, trailing hits, footing commits/resets. */
+  schedule: Schedule<Work>
 }
 
 export function runSimulation(
@@ -108,14 +87,14 @@ export function runSimulation(
     variantFloor,
     fallFrames,
     cursor: { frame: 0 },
-    pending: [],
+    schedule: new Schedule<Work>(),
   }
 
   for (const entry of entries) processAuthoredEntry(entry, ctx)
 
   // Drain the stream's tail: trailing hits / synthetics that never re-entered.
   // Parked footing commits with no re-entry are dropped.
-  drainPending(ctx, Infinity)
+  drainSchedule(ctx, Infinity)
 
   return log
 }
@@ -127,17 +106,16 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   const incomingSkillType = resolved?.skillType ?? "Basic Attack"
   // Resolve this entry's collision with the same character's in-flight trailing
   // hits / parked footing before draining: a cancel-capable re-entry invalidates them.
-  const arrival = resolveArrival(
-    ctx,
+  const arrival = ctx.schedule.resolveArrival(
     entry.characterId,
-    incomingSkillType,
+    isCancelCapable(incomingSkillType),
     cursor.frame,
   )
   cursor.frame += arrival.padFrames
   // Drain surviving members landing at/before this entry begins so they interleave
   // ahead of it in frame order. A surviving footing commit sets this character's
   // footing before its stage reads it for Fall Frames.
-  drainPending(ctx, cursor.frame)
+  drainSchedule(ctx, cursor.frame)
   const animFrames = resolved?.stage.animationFrames ?? 0
   if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
   const swapBack = engine.computeSwapBack(entry.characterId, cursor.frame)
@@ -162,35 +140,40 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     stageDuration,
   })
   for (const t of part.trailing) {
-    ctx.pending.push({
-      kind: "trailing",
+    // Trailing hits are residue: dropped on a cancel-capable re-entry, padded past on a non-cancel one.
+    ctx.schedule.enqueue({
       frame: t.hitFrame,
-      characterId: entry.characterId,
-      valid: true,
-      bundle: t,
+      owner: entry.characterId,
+      arrival: "residue",
+      payload: { kind: "trailing", bundle: t },
     })
   }
   if (part.pendingFooting) {
-    // The launch/land commit sets the owner's footing at its commit frame.
-    ctx.pending.push({
-      kind: "footing",
+    // The launch/land commit sets the owner's footing at its commit frame — residue,
+    // obeying the same drop/pad as trailing hits.
+    ctx.schedule.enqueue({
       frame: part.pendingFooting.atFrame,
-      characterId: entry.characterId,
-      valid: true,
-      exitFooting: part.pendingFooting.exitFooting,
-      resetIfOffField: false,
+      owner: entry.characterId,
+      arrival: "residue",
+      payload: {
+        kind: "footing",
+        characterId: entry.characterId,
+        exitFooting: part.pendingFooting.exitFooting,
+      },
     })
     // An airborne owner returns to ground when its Trailing Window passes without a
     // swap-back; the window ends at stageStart + actionTime. A re-entry before then
     // cancels this reset.
     if (part.pendingFooting.exitFooting === "air") {
-      ctx.pending.push({
-        kind: "footing",
+      ctx.schedule.enqueue({
         frame: stageStartFrame + resolved.stage.actionTime,
-        characterId: entry.characterId,
-        valid: true,
-        exitFooting: "ground",
-        resetIfOffField: true,
+        owner: entry.characterId,
+        arrival: "reset",
+        payload: {
+          kind: "footing",
+          characterId: entry.characterId,
+          exitFooting: "ground",
+        },
       })
     }
   }
@@ -199,79 +182,29 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 }
 
 /**
- * Resolve a same-character re-entry against its in-flight trailing hits and
- * footing commit on `ctx.pending`:
- *  - no collision (all land before this entry): nothing to do;
- *  - cancel-capable collision: invalidate trailing hits and the footing commit
- *    at/after the entry start so the drain skips them;
- *  - non-cancel-capable collision: pad to the latest pending frame so they land.
- * The window-end footing reset is cancelled here when the owner re-enters.
+ * Drain the pending-work pool up to `uptoFrame` through the `Schedule`,
+ * resolving each surviving member in nondecreasing frame order via `resolveWork`
+ * and logging it at its frame. Ordering, the watermark cutoff, within-frame
+ * stability, and tombstone-skipping all live in the `Schedule`; chains a
+ * `resolve` enqueues are picked up in the same drain.
  */
-function resolveArrival(
-  ctx: SimContext,
-  characterId: number,
-  skillType: SkillType,
-  frame: number,
-): { padFrames: number } {
-  const sameTrailing = ctx.pending.filter(
-    (p): p is PendingTrailing =>
-      p.kind === "trailing" && p.valid && p.characterId === characterId,
-  )
-  const sameFooting = ctx.pending.filter(
-    (p): p is PendingFooting =>
-      p.kind === "footing" && p.valid && p.characterId === characterId,
-  )
-  const commit = sameFooting.find((f) => !f.resetIfOffField)
-  const reset = sameFooting.find((f) => f.resetIfOffField)
-  // Re-entry before window-end keeps the carried footing — cancel the reset.
-  // A re-entry at/after window-end lets the reset fire first (back to ground).
-  if (reset && frame < reset.frame) reset.valid = false
-
-  if (sameTrailing.length === 0 && !commit) return { padFrames: 0 }
-
-  const hasHitCollision = sameTrailing.some((p) => p.frame >= frame)
-  const hasFootingCollision = !!commit && commit.frame >= frame
-
-  if (!hasHitCollision && !hasFootingCollision) return { padFrames: 0 }
-
-  if (isCancelCapable(skillType)) {
-    for (const p of sameTrailing) if (p.frame >= frame) p.valid = false
-    if (commit && commit.frame >= frame) commit.valid = false
-    return { padFrames: 0 }
-  }
-
-  // Pad past the latest pending same-character frame so every trailing hit and
-  // the footing commit land.
-  const lastHitFrame = sameTrailing.reduce(
-    (m, p) => Math.max(m, p.frame),
-    -Infinity,
-  )
-  const commitFrame = commit?.frame ?? -Infinity
-  const latest = Math.max(lastHitFrame, commitFrame)
-  return { padFrames: latest - frame }
+function drainSchedule(ctx: SimContext, uptoFrame: number): void {
+  ctx.schedule.drainUpTo(uptoFrame, (work) => resolveWork(work, ctx))
 }
 
-/**
- * Drain the pending-event stream up to `uptoFrame`, resolving members in
- * nondecreasing frame order and logging each at its frame. Chains may enqueue
- * further members, picked up in the same drain. Invalidated trailing hits are skipped.
- */
-function drainPending(ctx: SimContext, uptoFrame: number): void {
-  for (;;) {
-    // Stable within a frame: members keep their relative insertion order.
-    ctx.pending.sort((a, b) => a.frame - b.frame)
-    if (ctx.pending.length === 0 || ctx.pending[0].frame > uptoFrame) return
-    const next = ctx.pending.shift() as PendingEvent
-    if (next.kind === "trailing") {
-      if (!next.valid) continue
-      resolveTrailingBundle(next.bundle, ctx)
-    } else if (next.kind === "footing") {
-      if (!next.valid) continue
+/** Resolve one drained stream member by kind: synthetic / trailing hit / footing commit. */
+function resolveWork(work: Work, ctx: SimContext): void {
+  switch (work.kind) {
+    case "trailing":
+      resolveTrailingBundle(work.bundle, ctx)
+      break
+    case "footing":
       // Commit or window-end reset — set the owner's carried footing.
-      ctx.engine.footing.commitFor(next.characterId, next.exitFooting)
-    } else {
-      resolvePendingSynthetic(next, ctx)
-    }
+      ctx.engine.footing.commitFor(work.characterId, work.exitFooting)
+      break
+    case "synthetic":
+      resolvePendingSynthetic(work, ctx)
+      break
   }
 }
 
@@ -284,12 +217,15 @@ function advanceTo(
   ctx: SimContext,
   frame: number,
 ): { lifecycleEvents: BuffEvent[] } {
-  drainPending(ctx, frame)
+  drainSchedule(ctx, frame)
   return ctx.engine.tickToFrame(frame)
 }
 
 /** Resolve a single deferred synthetic at its landing frame and log it. */
-function resolvePendingSynthetic(sd: PendingSynthetic, ctx: SimContext): void {
+function resolvePendingSynthetic(
+  sd: Extract<Work, { kind: "synthetic" }>,
+  ctx: SimContext,
+): void {
   const { engine, log } = ctx
   // Advance to the landing frame for a frame-honest snapshot, then resolve and
   // run the synthetic chain.
@@ -306,17 +242,16 @@ function resolvePendingSynthetic(sd: PendingSynthetic, ctx: SimContext): void {
     enqueueSynthetic(ctx, emit, sd.sourceEntryId)
 }
 
-/** Enqueue a synthetic emit onto the pending stream at its landing frame. */
+/** Enqueue a synthetic emit onto the stream at its landing frame (ignore class — never invalidated). */
 function enqueueSynthetic(
   ctx: SimContext,
   emit: DeferredEmit,
   sourceEntryId: string,
 ): void {
-  ctx.pending.push({
-    kind: "synthetic",
+  ctx.schedule.enqueue({
     frame: emit.landingFrame,
-    emit,
-    sourceEntryId,
+    arrival: "ignore",
+    payload: { kind: "synthetic", emit, sourceEntryId },
   })
 }
 
@@ -409,7 +344,7 @@ function fireSkillCast(
   // Flush this cast's immediate (offset-0) synthetics in place so they log before
   // the action event and apply their resource gains before its cumulativeEnergy
   // snapshot. Offset emits (landingFrame > frame) stay pending for a later drain.
-  drainPending(ctx, frame)
+  drainSchedule(ctx, frame)
 }
 
 function buildActionEvent(
@@ -456,7 +391,7 @@ function computeFall(
  * so anything landing at/before it resolves ahead of it.
  */
 function processHit(bundle: TrailingHit, ctx: SimContext): void {
-  drainPending(ctx, bundle.hitFrame)
+  drainSchedule(ctx, bundle.hitFrame)
   resolveTrailingBundle(bundle, ctx)
 }
 
