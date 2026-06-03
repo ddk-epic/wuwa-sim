@@ -2,16 +2,12 @@ import type { Footing, VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { findStageByEntry } from "../stage"
+import { findStageByEntry, stageEntryFooting } from "../stage"
 
 function footingExitState(footing: Footing): "ground" | "air" {
   if (footing === "air") return "air"
   if (typeof footing === "object" && "launch" in footing) return "air"
   return "ground"
-}
-
-function isLaunch(footing: Footing): boolean {
-  return typeof footing === "object" && "launch" in footing
 }
 
 function isLand(footing: Footing): boolean {
@@ -22,7 +18,6 @@ function isLand(footing: Footing): boolean {
 // the variant's actionTime covers the commit frame (ADR-0022 amendment).
 function resolvedExitFooting(
   footing: Footing,
-  entryFooting: "ground" | "air",
   variantKind: VariantKind | undefined,
   stage: {
     actionTime: number
@@ -35,15 +30,18 @@ function resolvedExitFooting(
   const commitFrame = "launch" in footing ? footing.launch : footing.land
   const transitionTarget: "ground" | "air" =
     "launch" in footing ? "air" : "ground"
+  // A { launch } runs from the ground (reached via a fall if entered airborne), a
+  // { land } from the air; an uncommitted transition returns to that required entry.
+  const requiredEntry: "ground" | "air" = "launch" in footing ? "ground" : "air"
 
-  // swap: transition fires later via trailing window; cursor stays at entry footing
-  if (variantKind === "swap") return entryFooting
+  // swap: transition fires later via trailing window; cursor stays at the required entry
+  if (variantKind === "swap") return requiredEntry
 
   // cancel/instantCancel: commit only if variant's actionTime covers the commit frame
   if (variantKind === "cancel" || variantKind === "instantCancel") {
     const variantActionTime =
       stage.variants?.[variantKind]?.actionTime ?? stage.actionTime
-    return commitFrame <= variantActionTime ? transitionTarget : entryFooting
+    return commitFrame <= variantActionTime ? transitionTarget : requiredEntry
   }
 
   // Full / no variant: always exits at transition target
@@ -177,13 +175,15 @@ export function validateTimeline(
       footingCursor = deferred
     }
 
+    // Hard error only when grounded and the stage needs an airborne entry with
+    // nothing to put us there. The reverse — airborne meeting a ground-entry stage,
+    // including a { launch } — is legal: gravity lands us first (a soft fall), so it
+    // is handled in the warn pass, not here. (See references/footing.md.)
     let footingError: string | null = null
-    if (effectiveFooting === "ground" && footing === "air") {
-      footingError = "Launch/Jump required before an aerial stage"
-    } else if (effectiveFooting === "air" && isLaunch(footing)) {
-      footingError = "Already airborne — cannot launch again"
-    } else if (effectiveFooting === "ground" && isLand(footing)) {
-      footingError = "Nothing to land from — not currently airborne"
+    if (effectiveFooting === "ground" && stageEntryFooting(footing) === "air") {
+      footingError = isLand(footing)
+        ? "Nothing to land from — not currently airborne"
+        : "Launch/Jump required before an aerial stage"
     }
 
     if (footingError) {
@@ -196,7 +196,6 @@ export function validateTimeline(
     // Advance team cursor to variant-aware exit footing
     footingCursor = resolvedExitFooting(
       footing,
-      effectiveFooting,
       entry.variantKind,
       resolved.stage,
     )
@@ -223,16 +222,20 @@ export function validateTimeline(
         footingCursorForWarn = deferred
       }
 
-      if (effectiveFooting === "air" && footing === "ground") {
+      // Airborne meeting any ground-entry stage (sustained "ground" or a { launch },
+      // which lands you before it re-launches) costs a fall.
+      if (
+        effectiveFooting === "air" &&
+        stageEntryFooting(footing) === "ground"
+      ) {
         const existing = rowWarnings.get(entry.id) ?? []
         existing.push({
-          message: "Fall frames apply (airborne → ground stage)",
+          message: "Fall frames apply (airborne → grounded-entry stage)",
         })
         rowWarnings.set(entry.id, existing)
       }
       footingCursorForWarn = resolvedExitFooting(
         footing,
-        effectiveFooting,
         entry.variantKind,
         resolved.stage,
       )

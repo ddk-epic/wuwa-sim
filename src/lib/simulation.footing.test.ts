@@ -224,6 +224,22 @@ const charSnapA: EnrichedCharacter = {
       ],
       damage: [],
     },
+    {
+      id: 303,
+      name: "Land Stage",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Land Stage",
+          category: "Basic Attack",
+          value: "",
+          actionTime: 5,
+          footing: { land: 2 }, // non-swap land: flips team to ground on-field
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
   ],
 }
 
@@ -563,5 +579,119 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     // trailing hit from charA fires via drainAll (1 immediate + 1 trailing = 2 total)
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(2)
+  })
+
+  it("in-stage swap launch (launch <= advance): carried air still resets at window-end → ground (no fall)", () => {
+    // swapFrames=20 makes {launch:15} an in-stage commit (15 <= advance 20): the
+    // launch fires while charA is still on-field so the field flips to air, but the
+    // air must ALSO ride on charA and reset at window-end. charB's 50-frame action
+    // pushes charA's re-entry past window-end (frame 30) → the reset has already
+    // grounded charA's carried footing → charA re-enters grounded, no fall.
+    // (Before the fix, the in-stage case carried nothing and scheduled no reset, so
+    // team footing stayed air and charA wrongly re-entered airborne → fall 21.)
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        variantKind: "swap",
+      },
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "e2",
+      ),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      20,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall ?? 0,
+    ).toBe(0)
+  })
+
+  it("in-stage swap launch: swap-back within window resumes air even after a teammate grounded the field (pays fall)", () => {
+    // The core of the bug. swapFrames=20 → {launch:15} commits in-stage and the
+    // field flips to air. charB then lands (non-swap {land:2}) which sets team
+    // footing to ground. charA swaps back at ~frame 25, within its window (ends at
+    // frame 30, so the window-end reset is cancelled). Because the air rides on
+    // charA's own carried footing — not the (now grounded) team — charA resumes air
+    // and pays fall on its grounded re-entry stage.
+    // (Before the fix, the in-stage launch carried nothing, so charA read the
+    // grounded team and wrongly re-entered on the ground → fall 0.)
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      {
+        id: "e1",
+        characterId: 52,
+        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        variantKind: "swap",
+      },
+      tlEntry(53, "char.snap-b.basic-attack.land-stage._::basic-attack", "e2"),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "e3",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      20,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall,
+    ).toBe(21)
+  })
+
+  it("air → { launch }: an airborne launch falls to ground first, then re-launches (pays fall)", () => {
+    // charAerial launches (ground → air), then launches again while airborne. A
+    // { launch } stage enters on the ground, so the airborne second launch falls
+    // first → pays fall frames, then re-launches at its commit frame. computeFall
+    // keys on the stage's ground *entry*, which { launch } has — not just "ground".
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
+    expect(
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+    ).toBe(21)
   })
 })

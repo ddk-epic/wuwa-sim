@@ -14,7 +14,11 @@ import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
-import { findStageByEntry, resolveStageExecution } from "./stage"
+import {
+  findStageByEntry,
+  resolveStageExecution,
+  stageEntryFooting,
+} from "./stage"
 import type { ResolvedStage } from "./stage"
 import { resolveHealTargets } from "./heal-targets"
 import { Schedule } from "./schedule"
@@ -370,7 +374,10 @@ function computeFall(
   fallFrames: number,
 ): number {
   if (currentFooting !== "air") return 0
-  if (stageFooting !== "ground") return 0
+  // Fall when the next stage begins on the ground — a sustained "ground" stage or a
+  // { launch } (which launches *from* the ground, so an airborne entry falls first,
+  // then re-launches at the commit frame). { land } / "air" / transparent: no fall.
+  if (stageEntryFooting(stageFooting) !== "ground") return 0
   return fallFrames
 }
 

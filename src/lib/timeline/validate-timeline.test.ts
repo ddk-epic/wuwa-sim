@@ -1103,7 +1103,10 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     ).toBe(true)
   })
 
-  it("hard error: air â†’ launch ('already airborne')", () => {
+  it("soft fall (not an error): air â†’ launch falls to ground, then launches", () => {
+    // A { launch } entered airborne is legal: gravity lands the character (fall
+    // frames), then the launch fires at its commit frame. So a second consecutive
+    // launch is valid with a fall warning, not the old "already airborne" hard error.
     const result = validateTimeline(
       [
         fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch1"),
@@ -1112,9 +1115,10 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
       [1, null, null],
       loadouts,
     )
-    expect(result.invalidRowIds.has("launch2")).toBe(true)
+    expect(result.invalidRowIds.has("launch2")).toBe(false)
+    expect(result.rowErrors.has("launch2")).toBe(false)
     expect(
-      result.rowErrors.get("launch2")?.some((e) => /airborne/i.test(e.message)),
+      result.rowWarnings.get("launch2")?.some((w) => /fall/i.test(w.message)),
     ).toBe(true)
     expect(result.invalidRowIds.has("launch1")).toBe(false)
   })

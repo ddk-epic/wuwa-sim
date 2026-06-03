@@ -128,9 +128,12 @@ describe("trailing-window — partitionStage: footingChanges", () => {
     ])
   })
 
-  it("no footingChanges when {launch:N} with N <= stageDuration (fires on-field)", () => {
+  it("in-stage launch (commit <= advance) still carries [commit, reset] on the owner", () => {
+    // The launch frame (5) falls within the advance (6) — the owner flips the
+    // field on-field, but the air must still ride on the owner for a swap-back,
+    // so the commit + window-end reset are emitted regardless of the advance.
     const resolved = makeResolvedStage({
-      stage: { actionTime: 0, footing: { launch: 5 } },
+      stage: { actionTime: 24, footing: { launch: 5 } },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -140,7 +143,10 @@ describe("trailing-window — partitionStage: footingChanges", () => {
       variantKind: "swap",
       stageDuration: 6,
     })
-    expect(result.footingChanges).toEqual([])
+    expect(result.footingChanges).toEqual([
+      { atFrame: 5, exitFooting: "air", kind: "commit" },
+      { atFrame: 24, exitFooting: "ground", kind: "reset" },
+    ])
   })
 
   it("land past advance → [commit@(start+land)] with no reset", () => {
@@ -160,9 +166,12 @@ describe("trailing-window — partitionStage: footingChanges", () => {
     ])
   })
 
-  it("transition within the stage → []", () => {
+  it("in-stage land (commit <= advance) still carries [commit] on the owner", () => {
+    // Symmetric to the in-stage launch: a land that commits within the advance
+    // still carries `ground` on the owner so a swap-back after a teammate went
+    // airborne resumes the owner grounded. No reset (land ends grounded already).
     const resolved = makeResolvedStage({
-      stage: { actionTime: 18, footing: { launch: 4 } },
+      stage: { actionTime: 18, footing: { land: 4 } },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -172,7 +181,9 @@ describe("trailing-window — partitionStage: footingChanges", () => {
       variantKind: "swap",
       stageDuration: 6,
     })
-    expect(result.footingChanges).toEqual([])
+    expect(result.footingChanges).toEqual([
+      { atFrame: 4, exitFooting: "ground", kind: "commit" },
+    ])
   })
 
   it("no footingChanges for non-swap stages (even with {launch:N})", () => {

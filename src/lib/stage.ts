@@ -15,6 +15,22 @@ import { getCharacterById, getEchoById } from "./loadout/catalog"
 
 export const STAGE_CAST_NAME = "Skill DMG"
 
+/**
+ * The footing a stage begins on (its "entry footing"). Sustained values enter
+ * as-is; a `{ launch }` starts on the **ground** (it launches _from_ the ground,
+ * so an airborne character must fall first), a `{ land }` starts in the **air**.
+ * Omission is footing-transparent — no entry requirement. See
+ * `references/footing.md` ("Falling").
+ */
+export function stageEntryFooting(
+  footing: Footing | undefined,
+): "ground" | "air" | undefined {
+  if (footing === undefined) return undefined
+  if (footing === "air") return "air"
+  if (typeof footing === "object" && "land" in footing) return "air"
+  return "ground" // sustained "ground" or { launch }
+}
+
 function toKebab(s: string | undefined): string {
   if (!s) return "_"
   const k = s
