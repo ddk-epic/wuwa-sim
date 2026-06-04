@@ -1,0 +1,29 @@
+{
+  "id": 21020026,
+  "name": "Red Spring",
+  "rarity": "SSR",
+  "weaponType": "Sword",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 47,
+      "max": 587.5
+    },
+    "sub": {
+      "name": "Crit. Rate",
+      "base": 0.054,
+      "max": 0.243
+    }
+  },
+  "passive": {
+    "name": "Beyond the Cycle",
+    "description": "Increase ATK by 12%/15%/18%/21%/24%. When dealing Basic Attack DMG, the wielder gains 10%/12.5%/15%/17.5%/20% Basic Attack DMG Bonus for 14/14/14/14/14s. This effect can be triggered once per second, stacking up to 3/3/3/3/3 times.\nWhen the wielder's Concerto Energy is consumed, gain 40%/50%/60%/70%/80% Basic DMG Bonus for 10/10/10/10/10. This effect can be triggered once per second and ends when the wielder is switched off the field.",
+    "params": [
+      [0.12, 0.1, 14, 3, 0.4, 10],
+      [0.15, 0.125, 14, 3, 0.5, 10],
+      [0.18, 0.15, 14, 3, 0.6, 10],
+      [0.21, 0.175, 14, 3, 0.7, 10],
+      [0.24, 0.2, 14, 3, 0.8, 10]
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 6,
+  "name": "Havoc Eclipse",
+  "type": "two-five",
+  "effects": [
+    {
+      "pieces": 2,
+      "description": "Havoc DMG + 10%."
+    },
+    {
+      "pieces": 5,
+      "description": "Havoc DMG + 7.5% after releasing Basic Attack or Heavy Attack. This effect stacks up to 4 times, each stack lasts 15s."
+    }
+  ]
+}
