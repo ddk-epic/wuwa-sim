@@ -10,7 +10,10 @@ When a Supernal Stellarealm is generated, Shorekeeper's first Intro Skill trigge
 
 ## Outro Skill — Binary Butterfly
 
-Shorekeeper summons 1 Flare Star Butterfly and 1 Dim Star Butterfly to circle the Resonator on the field for up to 30s, granting the following effects: - If the Resonator on the field is hit or launched, tapping the Dodge Button allows the Resonator to immediately recover from the interruption, triggering a successful Dodge. The Resonator launched in the air can land on the ground standing if they are close to the ground. This effect can be triggered up to 5 time(s).- All nearby party members' DMG is Amplified by 15%.
+Shorekeeper summons 1 Flare Star Butterfly and 1 Dim Star Butterfly to circle the Resonator on the field for up to 30s, granting the following effects:
+
+- If the Resonator on the field is hit or launched, tapping the Dodge Button allows the Resonator to immediately recover from the interruption, triggering a successful Dodge. The Resonator launched in the air can land on the ground standing if they are close to the ground. This effect can be triggered up to 5 time(s).
+- All nearby party members' DMG is Amplified by 15%.
 
 ## Normal Attack — Origin Calculus
 
@@ -20,7 +23,11 @@ Perform up to 4 consecutive attacks, dealing Spectro DMG. Each hit generates 1 C
 
 ### Heavy Attack
 
-Hold the Normal Attack Button to enter Unbound Form, which consumes STA continuously. While in this form, Shorekeeper will:- Generate a segment of Deductive Data every second;- Automatically collect nearby plant collectibles.Using up all STA or actions such as casting Basic Attack will end the Unbound Form and deal Spectro DMG to the target. Each accumulated segment of Deductive Data will convert into a segment of Empirical Data and generate a Collapsed Core.
+Hold the Normal Attack Button to enter Unbound Form, which consumes STA continuously. While in this form, Shorekeeper will:
+
+- Generate a segment of Deductive Data every second;
+- Automatically collect nearby plant collectibles.
+  Using up all STA or actions such as casting Basic Attack will end the Unbound Form and deal Spectro DMG to the target. Each accumulated segment of Deductive Data will convert into a segment of Empirical Data and generate a Collapsed Core.
 
 ### Mid-air Attack
 
@@ -32,7 +39,8 @@ Press the Normal Attack Button after a successful Dodge to attack a target, deal
 
 ## Resonance Skill — Chaos Theory
 
-Restore HP for all nearby party members and summon 5 Dim Star Butterflies, which automatically track and attack a target, dealing Spectro DMG. Follow up with Basic Attack in time to start the Basic Attack cycle from Stage 2.Can be performed in mid-air.
+Restore HP for all nearby party members and summon 5 Dim Star Butterflies, which automatically track and attack a target, dealing Spectro DMG. Follow up with Basic Attack in time to start the Basic Attack cycle from Stage 2.
+Can be performed in mid-air.
 
 ## Resonance Liberation — End Loop
 
@@ -42,11 +50,13 @@ Generate the Outer Stellarealm to restore HP for all party members within its ef
 
 ### Inner Stellarealm
 
-When a party member uses Intro Skill within the Outer Stellarealm, it evolves into the Inner Stellarealm. Within the effective range of the Inner Stellarealm, for every 0.2% of Shorekeeper's Energy Regen, all party members gain a 0.01% increase of Crit. Rate, up to 12.5%. Inner Stellarealm has all the effects of the Outer Stellarealm.
+When a party member uses Intro Skill within the Outer Stellarealm, it evolves into the Inner Stellarealm. Within the effective range of the Inner Stellarealm, for every 0.2% of Shorekeeper's Energy Regen, all party members gain a 0.01% increase of Crit. Rate, up to 12.5%.
+Inner Stellarealm has all the effects of the Outer Stellarealm.
 
 ### Supernal Stellarealm
 
-When a party member uses Intro Skill within the Inner Stellarealm, it evolves into the Supernal Stellarealm. Within the effective range of the Supernal Stellarealm, for every 0.1% of Shorekeeper's Energy Regen, all party members gain a 0.01% increase of Crit. DMG, up to 25%. Supernal Stellarealm has all the effects of the Inner Stellarealm.
+When a party member uses Intro Skill within the Inner Stellarealm, it evolves into the Supernal Stellarealm. Within the effective range of the Supernal Stellarealm, for every 0.1% of Shorekeeper's Energy Regen, all party members gain a 0.01% increase of Crit. DMG, up to 25%.
+Supernal Stellarealm has all the effects of the Inner Stellarealm.
 
 ## Forte Circuit — Astral Chord
 
@@ -64,7 +74,12 @@ When Shorekeeper has 5 segments of Empirical Data, casting Mid-air Attack will c
 
 ### Empirical Data
 
-Shorekeeper can hold up to 5 segments of Empirical Data.- Obtain 1 segment of Empirical Data when Basic Attack Stage 1, 2, or 4 hits a target.- Obtain 2 segments of Empirical Data when Basic Attack Stage 3 hits a target.- Obtain 1 segment of Empirical Data when Mid-air Attack hits a target.- Obtain 1 segment of Empirical Data when Dodge Counter hits a target.
+Shorekeeper can hold up to 5 segments of Empirical Data.
+
+- Obtain 1 segment of Empirical Data when Basic Attack Stage 1, 2, or 4 hits a target.
+- Obtain 2 segments of Empirical Data when Basic Attack Stage 3 hits a target.
+- Obtain 1 segment of Empirical Data when Mid-air Attack hits a target.
+- Obtain 1 segment of Empirical Data when Dodge Counter hits a target.
 
 ## Inherent Skill
 
@@ -84,7 +99,11 @@ Has a chance to produce special dishes when cooking.
 
 ### S1 - Unspoken Conjecture
 
-The Stellarealms generated by Resonance Liberation End Loop gain the following enhancements:- The effective range of the healing and buffs is extended by 150%- The duration is extended by 10s.- Casting Intro Skill Discernment no longer ends the existing Stellarealm.
+The Stellarealms generated by Resonance Liberation End Loop gain the following enhancements:
+
+- The effective range of the healing and buffs is extended by 150%
+- The duration is extended by 10s.
+- Casting Intro Skill Discernment no longer ends the existing Stellarealm.
 
 ### S2 - Night's Gift and Refusal
 

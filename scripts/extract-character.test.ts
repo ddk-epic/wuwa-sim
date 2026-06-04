@@ -96,6 +96,7 @@ describe("enrichSkill flat attachment", () => {
     const result = enrichSkill(
       [makeApiSkillAttribute("Healing", "950+23.80%")],
       [makeApiDamageEntry("23.80%")],
+      "Normal Attack",
     )
     expect(result.stages[0].damage?.[0].flat).toBe(950)
   })
@@ -105,6 +106,7 @@ describe("enrichSkill flat attachment", () => {
     enrichSkill(
       [makeApiSkillAttribute("Healing", "950+23.80%*2")],
       [makeApiDamageEntry("23.80%"), makeApiDamageEntry("23.80%")],
+      "Normal Attack",
     )
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("[flat]"))
     warn.mockRestore()

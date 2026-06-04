@@ -58,6 +58,7 @@ function formatLiberationCastStage(skillName: string, level: number): string {
     `${l}{`,
     `${l1}name: "Skill DMG",`,
     `${l1}newName: ${s(skillName)},`,
+    `${l1}category: "Resonance Liberation",`,
     `${l1}value: "",`,
     `${l1}actionTime: 0,`,
     `${l1}animationFrames: 60,`,
@@ -74,6 +75,7 @@ function formatOutroStage(level: number): string {
     `${l}{`,
     `${l1}name: "Outro DMG",`,
     `${l1}newName: '',`,
+    `${l1}category: "Outro Skill",`,
     `${l1}value: "0%",`,
     `${l1}actionTime: 0,`,
     `${l1}variants: {},`,
@@ -91,6 +93,7 @@ function formatStage(stage: SkillAttribute, level: number): string {
     `${l}{`,
     `${l1}name: ${s(stage.name)},`,
     `${l1}newName: ${s(newName)},`,
+    `${l1}category: ${s(stage.category)},`,
     `${l1}value: ${s(stage.value)},`,
   ]
   if (isDodgeCounter) lines.push(`${l1}hidden: true,`)

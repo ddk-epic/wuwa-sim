@@ -44,15 +44,21 @@ Whenever a Character on a team nearby performs an attack on targets with a Photo
 
 ### Heavy Attack: Starflower Blooms
 
-When casting Heavy Attack, if Verina carries "Photosynthesis Energy", Verina consumes 1 stack of "Photosynthesis Energy" to recover Concerto Energy and heal all characters on a nearby team.Heavy Attack: Starflower Blooms deals Spectro DMG, considered as Heavy Attack DMG.
+When casting Heavy Attack, if Verina carries "Photosynthesis Energy", Verina consumes 1 stack of "Photosynthesis Energy" to recover Concerto Energy and heal all characters on a nearby team.
+Heavy Attack: Starflower Blooms deals Spectro DMG, considered as Heavy Attack DMG.
 
 ### Mid-air Attack: Starflower Blooms
 
-When casting Mid-air Attack, if Verina carries "Photosynthesis Energy", Verina consumes 1 stack of "Photosynthesis Energy" to recover Concerto Energy and heal all characters on a nearby team.Mid-air Attack: Starflower Blooms deals Spectro DMG, considered as Basic Attack DMG.Verina can cast Mid-air Attack: Starflower Blooms by using Basic Attack after casting Heavy Attack: Starflower Blooms.
+When casting Mid-air Attack, if Verina carries "Photosynthesis Energy", Verina consumes 1 stack of "Photosynthesis Energy" to recover Concerto Energy and heal all characters on a nearby team.
+Mid-air Attack: Starflower Blooms deals Spectro DMG, considered as Basic Attack DMG.
+Verina can cast Mid-air Attack: Starflower Blooms by using Basic Attack after casting Heavy Attack: Starflower Blooms.
 
 ### Photosynthesis Energy
 
-Verina can hold up to 4 stacks of "Photosynthesis Energy".Verina obtains 1 stack of "Photosynthesis Energy" for every Basic Attack 5 on hit.Verina obtains 1 stack of "Photosynthesis Energy" after casting Resonance Skill Botany Experiment.Verina obtains 1 stack of "Photosynthesis Energy" after casting Intro Skill Verdant Growth.
+Verina can hold up to 4 stacks of "Photosynthesis Energy".
+Verina obtains 1 stack of "Photosynthesis Energy" for every Basic Attack 5 on hit.
+Verina obtains 1 stack of "Photosynthesis Energy" after casting Resonance Skill Botany Experiment.
+Verina obtains 1 stack of "Photosynthesis Energy" after casting Intro Skill Verdant Growth.
 
 ## Inherent Skill
 

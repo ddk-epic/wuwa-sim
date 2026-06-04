@@ -24,6 +24,7 @@
       "stages": [
         {
           "name": "Stage 1 DMG",
+          "category": "Basic Attack",
           "value": "55.66%",
           "damage": [
             {
@@ -41,6 +42,7 @@
         },
         {
           "name": "Stage 2 DMG",
+          "category": "Basic Attack",
           "value": "66.20%",
           "damage": [
             {
@@ -58,6 +60,7 @@
         },
         {
           "name": "Stage 3 DMG",
+          "category": "Basic Attack",
           "value": "66.30%*2",
           "damage": [
             {
@@ -86,6 +89,7 @@
         },
         {
           "name": "Stage 4 DMG",
+          "category": "Basic Attack",
           "value": "38.27%*4",
           "damage": [
             {
@@ -136,6 +140,7 @@
         },
         {
           "name": "Woolies Damage",
+          "category": "Basic Attack",
           "value": "238.57%",
           "damage": [
             {
@@ -153,6 +158,7 @@
         },
         {
           "name": "Heavy Attack DMG",
+          "category": "Heavy Attack",
           "value": "187.08%",
           "staCost": 25,
           "damage": [
@@ -171,6 +177,7 @@
         },
         {
           "name": "Mid-air Attack",
+          "category": "Basic Attack",
           "value": "123.26%",
           "staCost": 30,
           "damage": [
@@ -189,6 +196,7 @@
         },
         {
           "name": "Dodge Counter DMG",
+          "category": "Basic Attack",
           "value": "125.94%*2",
           "damage": [
             {
@@ -226,6 +234,7 @@
       "stages": [
         {
           "name": "Flaming Woolies Damage",
+          "category": "Resonance Skill",
           "value": "76.61%*8",
           "concerto": 15,
           "damage": [
@@ -321,6 +330,7 @@
         },
         {
           "name": "Energetic Welcome Damage",
+          "category": "Resonance Skill",
           "value": "339.16%",
           "concerto": 5,
           "damage": [
@@ -351,6 +361,7 @@
       "stages": [
         {
           "name": "Cosmos: Frolicking Stage 1 DMG",
+          "category": "Resonance Liberation",
           "value": "90.18%*2",
           "damage": [
             {
@@ -379,6 +390,7 @@
         },
         {
           "name": "Cosmos: Frolicking Stage 2 DMG",
+          "category": "Resonance Liberation",
           "value": "56.40%*3",
           "damage": [
             {
@@ -418,6 +430,7 @@
         },
         {
           "name": "Cosmos: Frolicking Stage 3 DMG",
+          "category": "Resonance Liberation",
           "value": "65.99%*4",
           "damage": [
             {
@@ -468,6 +481,7 @@
         },
         {
           "name": "Stage 4 DMG",
+          "category": "Resonance Liberation",
           "value": "194.01%*3",
           "damage": [
             {
@@ -507,6 +521,7 @@
         },
         {
           "name": "Cosmos: Heavy Attack DMG",
+          "category": "Resonance Liberation",
           "value": "217.58%",
           "staCost": 25,
           "damage": [
@@ -525,6 +540,7 @@
         },
         {
           "name": "Cosmos Rampage Damage",
+          "category": "Resonance Liberation",
           "value": "63.32%*4",
           "cooldown": 4,
           "damage": [
@@ -576,6 +592,7 @@
         },
         {
           "name": "Cosmos: Dodge Counter DMG",
+          "category": "Resonance Liberation",
           "value": "65.99%*4",
           "damage": [
             {
@@ -649,6 +666,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Intro Skill",
           "value": "198.81%",
           "damage": [
             {
@@ -674,6 +692,7 @@
       "stages": [
         {
           "name": "Cloudy Frenzy Damage",
+          "category": "Resonance Liberation",
           "value": "334.00%",
           "concerto": 10,
           "damage": [
@@ -692,6 +711,7 @@
         },
         {
           "name": "Cosmos Rupture Damage",
+          "category": "Resonance Liberation",
           "value": "46.42%*6+495.21%",
           "concerto": 10,
           "damage": [

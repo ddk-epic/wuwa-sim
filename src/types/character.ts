@@ -111,6 +111,16 @@ export interface Skill {
   damage: DamageEntry[]
 }
 
+/**
+ * Buff source names lifted verbatim from the API for the raw extraction stage:
+ * Inherent Skill names and Resonance Chain node names. These are scaffolds the
+ * author turns into engine `BuffDef`s by hand in the enriched `.ts` file.
+ */
+export interface CharacterBuffNames {
+  inherent: string[]
+  resonanceChain: string[]
+}
+
 export interface Character {
   id: number
   name: string
@@ -120,7 +130,7 @@ export interface Character {
   stats: CharacterStats
   skills: Skill[]
   skillTreeBonuses: string[]
-  buffs: BuffDef[]
+  buffs: CharacterBuffNames
   recommendedSkillDmgPriority?: SkillType
   primaryScalingStat?: "atk" | "hp" | "def"
 }
@@ -177,8 +187,9 @@ export interface CharacterTemplate {
   echoSet: string
 }
 
-export interface EnrichedCharacter extends Omit<Character, "skills"> {
+export interface EnrichedCharacter extends Omit<Character, "skills" | "buffs"> {
   skills: EnrichedSkill[]
+  buffs: BuffDef[]
   forteCap?: number
   template: CharacterTemplate
 }

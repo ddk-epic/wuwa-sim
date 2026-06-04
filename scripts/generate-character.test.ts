@@ -14,7 +14,7 @@ const minimalChar: Character = {
   },
   skills: [],
   skillTreeBonuses: [],
-  buffs: [],
+  buffs: { inherent: [], resonanceChain: [] },
 }
 
 const charWithBonuses: Character = {

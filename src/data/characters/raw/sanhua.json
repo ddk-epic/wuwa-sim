@@ -24,6 +24,7 @@
       "stages": [
         {
           "name": "Stage 1 DMG",
+          "category": "Basic Attack",
           "value": "48.71%",
           "damage": [
             {
@@ -41,6 +42,7 @@
         },
         {
           "name": "Stage 2 DMG",
+          "category": "Basic Attack",
           "value": "73.76%",
           "damage": [
             {
@@ -58,6 +60,7 @@
         },
         {
           "name": "Stage 3 DMG",
+          "category": "Basic Attack",
           "value": "21.58%*4",
           "damage": [
             {
@@ -108,6 +111,7 @@
         },
         {
           "name": "Stage 4 DMG",
+          "category": "Basic Attack",
           "value": "39.67%*2",
           "damage": [
             {
@@ -136,6 +140,7 @@
         },
         {
           "name": "Stage 5 DMG",
+          "category": "Basic Attack",
           "value": "233.81%",
           "damage": [
             {
@@ -153,6 +158,7 @@
         },
         {
           "name": "Heavy Attack DMG",
+          "category": "Heavy Attack",
           "value": "22.27%*5",
           "staCost": 25,
           "damage": [
@@ -215,6 +221,7 @@
         },
         {
           "name": "Mid-air Attack DMG",
+          "category": "Basic Attack",
           "value": "86.29%",
           "staCost": 30,
           "damage": [
@@ -233,6 +240,7 @@
         },
         {
           "name": "Dodge Counter DMG",
+          "category": "Heavy Attack",
           "value": "167.01%",
           "damage": [
             {
@@ -260,6 +268,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Resonance Skill",
           "value": "359.85%",
           "damage": [
             {
@@ -288,6 +297,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Resonance Liberation",
           "value": "809.48%",
           "damage": [
             {
@@ -328,6 +338,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Intro Skill",
           "value": "139.17%",
           "damage": [
             {
@@ -354,6 +365,7 @@
       "stages": [
         {
           "name": "Detonate Damage",
+          "category": "Heavy Attack",
           "value": "186.29%*2",
           "concerto": 15,
           "damage": [
@@ -383,6 +395,7 @@
         },
         {
           "name": "Glacier Burst Damage",
+          "category": "Resonance Skill",
           "value": "139.17%",
           "concerto": 15,
           "damage": [
@@ -401,6 +414,7 @@
         },
         {
           "name": "Ice Prism Burst Damage",
+          "category": "Resonance Skill",
           "value": "79.53%",
           "concerto": 15,
           "damage": [
@@ -419,6 +433,7 @@
         },
         {
           "name": "Ice Thorn Burst Damage",
+          "category": "Resonance Skill",
           "value": "59.65%",
           "damage": [
             {
@@ -461,7 +476,7 @@
   ],
   "skillTreeBonuses": ["Glacio DMG Bonus", "ATK"],
   "buffs": {
-    "inherent": ["Condensation", "Avalanche", ""],
+    "inherent": ["Condensation", "Avalanche"],
     "resonanceChain": [
       "Solitude's Embrace",
       "Snowy Clarity",

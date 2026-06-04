@@ -24,6 +24,7 @@
       "stages": [
         {
           "name": "Stage 1 DMG",
+          "category": "Basic Attack",
           "value": "37.86%",
           "damage": [
             {
@@ -41,6 +42,7 @@
         },
         {
           "name": "Stage 2 DMG",
+          "category": "Basic Attack",
           "value": "51.16%",
           "damage": [
             {
@@ -58,6 +60,7 @@
         },
         {
           "name": "Stage 3 DMG",
+          "category": "Basic Attack",
           "value": "25.58%*2",
           "damage": [
             {
@@ -86,6 +89,7 @@
         },
         {
           "name": "Stage 4 DMG",
+          "category": "Basic Attack",
           "value": "67.32%",
           "damage": [
             {
@@ -103,6 +107,7 @@
         },
         {
           "name": "Stage 5 DMG",
+          "category": "Basic Attack",
           "value": "71.62%",
           "damage": [
             {
@@ -120,6 +125,7 @@
         },
         {
           "name": "Heavy Attack DMG",
+          "category": "Heavy Attack",
           "value": "99.41%",
           "staCost": 30,
           "damage": [
@@ -138,6 +144,7 @@
         },
         {
           "name": "Mid-air Attack Stage 1 DMG",
+          "category": "Basic Attack",
           "value": "56.37%",
           "staCost": 5,
           "damage": [
@@ -156,6 +163,7 @@
         },
         {
           "name": "Mid-air Attack Stage 2 DMG",
+          "category": "Basic Attack",
           "value": "53.19%",
           "damage": [
             {
@@ -173,6 +181,7 @@
         },
         {
           "name": "Mid-air Attack Stage 3 DMG",
+          "category": "Basic Attack",
           "value": "25.42%*3",
           "damage": [
             {
@@ -212,6 +221,7 @@
         },
         {
           "name": "Mid-air Heavy Attack DMG",
+          "category": "Heavy Attack",
           "value": "61.64%",
           "staCost": 30,
           "damage": [
@@ -230,6 +240,7 @@
         },
         {
           "name": "Dodge Counter DMG",
+          "category": "Basic Attack",
           "value": "129.23%",
           "damage": [
             {
@@ -257,6 +268,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Resonance Skill",
           "value": "35.79%*3+71.58%",
           "damage": [
             {
@@ -319,6 +331,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Resonance Liberation",
           "value": "198.81%",
           "damage": [
             {
@@ -336,6 +349,7 @@
         },
         {
           "name": "Arboreal Flourish Healing",
+          "category": "Resonance Liberation",
           "value": "950+23.80%",
           "damage": [
             {
@@ -354,6 +368,7 @@
         },
         {
           "name": "Coordinated Attack DMG",
+          "category": "Resonance Liberation",
           "value": "9.95%",
           "damage": [
             {
@@ -371,6 +386,7 @@
         },
         {
           "name": "Coordinated Attack Healing",
+          "category": "Resonance Liberation",
           "value": "428+10.71%",
           "damage": [
             {
@@ -424,6 +440,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Intro Skill",
           "value": "99.41%",
           "damage": [
             {
@@ -449,6 +466,7 @@
       "stages": [
         {
           "name": "Heavy Attack: Starflower Blooms Damage",
+          "category": "Heavy Attack",
           "value": "64.95%+97.42%",
           "damage": [
             {
@@ -477,6 +495,7 @@
         },
         {
           "name": "Starflower Blooms Healing",
+          "category": "Basic Attack",
           "value": "1188+29.75%",
           "damage": [
             {
@@ -495,6 +514,7 @@
         },
         {
           "name": "Mid-air Attack: Starflower Blooms Stage 1 DMG",
+          "category": "Basic Attack",
           "value": "67.64%",
           "damage": [
             {
@@ -512,6 +532,7 @@
         },
         {
           "name": "Mid-air Attack: Starflower Blooms Stage 2 DMG",
+          "category": "Basic Attack",
           "value": "63.82%",
           "damage": [
             {
@@ -529,6 +550,7 @@
         },
         {
           "name": "Mid-air Attack: Starflower Blooms Stage 3 DMG",
+          "category": "Basic Attack",
           "value": "30.50%*3",
           "damage": [
             {
@@ -592,5 +614,15 @@
     }
   ],
   "skillTreeBonuses": ["Healing Bonus", "ATK"],
-  "buffs": []
+  "buffs": {
+    "inherent": ["Grace of Life", "Gift of Nature", "Skillful Cooking"],
+    "resonanceChain": [
+      "Moment of Emergence",
+      "Sprouting Reflections",
+      "The Choice to Flourish",
+      "Blossoming Embrace",
+      "Miraculous Blooms",
+      "Joyous Harvest"
+    ]
+  }
 }

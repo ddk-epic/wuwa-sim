@@ -60,12 +60,12 @@ During Cosmos Rave, use Basic Attack after a successful Dodge to attack the targ
 
 ## Forte Circuit — Black & White Woolies
 
-### Heavy Attack: Cloudy Frenzy:
+### Heavy Attack: Cloudy Frenzy
 
 When Encore's "Mayhem" is full, after casting a Heavy Attack, Encore will consume all "Mayhem" to enter the Mayhem state, reducing damage taken by 70%. Switching Characters does not interrupt the Mayhem state.
 After the Mayhem state ends, Encore will cast Cloudy Frenzy, dealing Fusion DMG, considered as Resonance Liberation damage.
 
-### Heavy Attack: Cosmos Rupture:
+### Heavy Attack: Cosmos Rupture
 
 During Cosmos Rave, when casting Heavy Attack, if "Mayhem" is full, Encore will consume all "Mayhem" to enter Cosmos' Mayhem state, reducing damage taken by 70%. Switching Characters does not interrupt the Cosmos' Mayhem state.
 After Cosmos' Mayhem state ends, Encore will cast Cosmos Rupture, dealing Fusion DMG, considered as Resonance Liberation DMG.
@@ -88,6 +88,10 @@ During the Resonance Liberation Cosmos Rave, when Encore's HP is above 70%, DMG 
 ### Woolies Cheer Dance
 
 When Resonance Skill Flaming Woolies or Resonance Skill Cosmos - Rampage is cast, Encore's Fusion DMG Bonus is increased by 10% for 10s.
+
+### Skillful Cooking
+
+Has a chance to produce special dishes when cooking.
 
 ## Resonance Chain
 

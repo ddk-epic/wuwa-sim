@@ -3,10 +3,12 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type {
   Character,
+  CharacterBuffNames,
   CharacterStats,
   DamageEntry,
   Skill,
   SkillAttribute,
+  SkillCategory,
   SkillGrouping,
   SkillType,
   StatGroup,
@@ -106,6 +108,7 @@ function mapStats(properties: ApiProperty[]): CharacterStats {
 
   for (const prop of properties) {
     const key = STAT_KEY_MAP[prop.Name]
+    if (!key) continue // only hp/atk/def are stored as base/max growth stats
     base[key] = prop.BaseValue
     const maxGrowth = prop.GrowthValues[prop.GrowthValues.length - 1]
     max[key] = maxGrowth.value
@@ -163,9 +166,36 @@ export function parseValuesFromValue(value: string): ParsedValues {
   return { flat, rates }
 }
 
+/**
+ * Skill groupings whose name is also a valid trigger-axis `SkillCategory`. For
+ * these, group ≡ category, so the grouping is the right default. The groupings
+ * NOT listed here ("Normal Attack", "Forte Circuit", "Inherent Skill") are not
+ * categories, so their stages fall back to the first hit's damage type.
+ */
+const GROUPING_IS_CATEGORY = new Set<SkillGrouping>([
+  "Resonance Skill",
+  "Resonance Liberation",
+  "Intro Skill",
+  "Outro Skill",
+  "Tune Break",
+  "Echo Skill",
+  "Movement",
+])
+
+function defaultCategory(
+  grouping: SkillGrouping,
+  firstHit: DamageEntry | undefined,
+): SkillCategory {
+  if (GROUPING_IS_CATEGORY.has(grouping)) return grouping as SkillCategory
+  // Normal Attack / Forte Circuit / Inherent Skill: grouping is not a category.
+  // The damage hit type splits e.g. Basic vs Heavy within "Normal Attack".
+  return firstHit?.type ?? "Basic Attack"
+}
+
 export function enrichSkill(
   attributes: ApiSkillAttribute[],
   damageList: ApiDamageEntry[],
+  grouping: SkillGrouping,
 ): {
   stages: SkillAttribute[]
   damage: DamageEntry[]
@@ -181,7 +211,11 @@ export function enrichSkill(
     const { flat, rates: parsedRates } = parseValuesFromValue(value)
 
     if (parsedRates.length === 0) {
-      return { name: attr.attributeName, category: "Basic Attack", value }
+      return {
+        name: attr.attributeName,
+        category: defaultCategory(grouping, undefined),
+        value,
+      }
     }
 
     const matched: DamageEntry[] = []
@@ -206,7 +240,11 @@ export function enrichSkill(
     }
 
     if (matched.length === 0) {
-      return { name: attr.attributeName, category: "Basic Attack", value }
+      return {
+        name: attr.attributeName,
+        category: defaultCategory(grouping, undefined),
+        value,
+      }
     }
 
     if (flat !== undefined) {
@@ -219,8 +257,12 @@ export function enrichSkill(
     }
 
     return {
+      // Default the input-axis category from the skill grouping when the
+      // grouping is itself a category; otherwise from the first hit's damage
+      // type (ADR-0024: the two axes are orthogonal). Correct ~90% of the
+      // time; off-type stages are fixed by hand in the enriched .ts.
       name: attr.attributeName,
-      category: "Basic Attack",
+      category: defaultCategory(grouping, matched[0]),
       value,
       damage: matched,
     }
@@ -312,7 +354,11 @@ export function enrichSkill(
 function mapSkills(skills: ApiSkill[]): Skill[] {
   return skills.map((skill) => {
     const { stages, damage, cooldown, duration, concerto, resonanceCost } =
-      enrichSkill(skill.SkillAttributes, skill.DamageList)
+      enrichSkill(
+        skill.SkillAttributes,
+        skill.DamageList,
+        skill.SkillType as SkillGrouping,
+      )
     return {
       id: skill.SkillId,
       name: skill.SkillName,
@@ -343,6 +389,16 @@ export function mapSkillTreeBonuses(skillTree: ApiSkillTreeNode[]): string[] {
   return result
 }
 
+export function extractBuffNames(data: ApiCharacter): CharacterBuffNames {
+  const inherent = data.Skills.filter(
+    (s) => s.SkillType === "Inherent Skill" && s.SkillName.trim() !== "",
+  ).map((s) => s.SkillName)
+  const resonanceChain = [...data.ResonantChain]
+    .sort((a, b) => a.GroupIndex - b.GroupIndex)
+    .map((n) => n.NodeName)
+  return { inherent, resonanceChain }
+}
+
 // --- Reference Markdown ---
 
 function htmlToMarkdown(html: string): string {
@@ -351,10 +407,17 @@ function htmlToMarkdown(html: string): string {
     /<span[^>]*class="[^"]*font-bold[^"]*text-3xl[^"]*"[^>]*>(.*?)<\/span>/gi,
     (_, inner) => `### ${inner.replace(/<[^>]+>/g, "")}`,
   )
-  // <br><br> → double newline (handle both <br> and <br/>)
-  result = result.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "\n\n")
-  // strip remaining tags, keep inner text
+  // Every <br> is a line break in the source — bullets, enumerated lines, and
+  // sentence joins alike. Render each as a newline; <br><br> naturally yields a
+  // blank line, which the cleanup below collapses to a single paragraph break.
+  result = result.replace(/<br\s*\/?>/gi, "\n")
+  // strip remaining tags (e.g. <size=10>, </span>), keep inner text
   result = result.replace(/<[^>]+>/g, "")
+  // Cleanup: drop horizontal whitespace stranded by spacer tags around the
+  // line breaks, then collapse runs of blank lines to one paragraph break.
+  result = result.replace(/[^\S\n]+\n/g, "\n")
+  result = result.replace(/\n[^\S\n]+/g, "\n")
+  result = result.replace(/\n{3,}/g, "\n\n")
   return result.trim()
 }
 
@@ -439,7 +502,7 @@ export async function extractCharacter(id: string): Promise<void> {
     stats: mapStats(data.Properties),
     skills: mapSkills(data.Skills),
     skillTreeBonuses: mapSkillTreeBonuses(data.SkillTree),
-    buffs: [],
+    buffs: extractBuffNames(data),
   }
 
   const slug = data.Name.Content.toLowerCase().replace(/\s+/g, "-")

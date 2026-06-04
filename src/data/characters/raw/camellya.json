@@ -8,14 +8,12 @@
     "base": {
       "hp": 826,
       "atk": 36,
-      "def": 95,
-      "undefined": 0
+      "def": 95
     },
     "max": {
       "hp": 10325,
       "atk": 450,
-      "def": 1161.109,
-      "undefined": 0
+      "def": 1161.109
     }
   },
   "skills": [
@@ -26,6 +24,7 @@
       "stages": [
         {
           "name": "Basic Attack 1 DMG",
+          "category": "Basic Attack",
           "value": "62.53%",
           "damage": [
             {
@@ -43,6 +42,7 @@
         },
         {
           "name": "Basic Attack 2 DMG",
+          "category": "Basic Attack",
           "value": "46.48%*2",
           "damage": [
             {
@@ -71,6 +71,7 @@
         },
         {
           "name": "Basic Attack 3 DMG",
+          "category": "Basic Attack",
           "value": "50.70%*3",
           "damage": [
             {
@@ -110,6 +111,7 @@
         },
         {
           "name": "Basic Attack 4 DMG",
+          "category": "Basic Attack",
           "value": "24.70%*20",
           "damage": [
             {
@@ -336,6 +338,7 @@
         },
         {
           "name": "Basic Attack 5 DMG",
+          "category": "Basic Attack",
           "value": "48.17%*4",
           "damage": [
             {
@@ -386,6 +389,7 @@
         },
         {
           "name": "Heavy Attack DMG",
+          "category": "Heavy Attack",
           "value": "88.14%*3",
           "staCost": 25,
           "damage": [
@@ -426,6 +430,7 @@
         },
         {
           "name": "Mid-air Attack DMG",
+          "category": "Basic Attack",
           "value": "65.61%*2",
           "staCost": 30,
           "damage": [
@@ -455,6 +460,7 @@
         },
         {
           "name": "Dodge Counter DMG",
+          "category": "Basic Attack",
           "value": "99.40%*3",
           "damage": [
             {
@@ -537,6 +543,7 @@
       "stages": [
         {
           "name": "Crimson Blossom DMG",
+          "category": "Resonance Skill",
           "value": "113.62%*2",
           "concerto": 7,
           "damage": [
@@ -566,6 +573,7 @@
         },
         {
           "name": "Vining Waltz 1 DMG",
+          "category": "Resonance Skill",
           "value": "96.33%",
           "staCost": 5,
           "damage": [
@@ -584,6 +592,7 @@
         },
         {
           "name": "Vining Waltz 2 DMG",
+          "category": "Resonance Skill",
           "value": "45.63%*2",
           "staCost": 5,
           "damage": [
@@ -613,6 +622,7 @@
         },
         {
           "name": "Vining Waltz 3 DMG",
+          "category": "Resonance Skill",
           "value": "21.95%*6",
           "staCost": 5,
           "damage": [
@@ -686,6 +696,7 @@
         },
         {
           "name": "Vining Waltz 4 DMG",
+          "category": "Resonance Skill",
           "value": "67.59%*3",
           "staCost": 5,
           "damage": [
@@ -726,6 +737,7 @@
         },
         {
           "name": "Floral Ravage DMG",
+          "category": "Resonance Skill",
           "value": "52.61%*5",
           "concerto": 7,
           "damage": [
@@ -788,6 +800,7 @@
         },
         {
           "name": "Vining Ronde DMG",
+          "category": "Resonance Skill",
           "value": "52.95%*3",
           "staCost": 5,
           "damage": [
@@ -828,6 +841,7 @@
         },
         {
           "name": "Atonement DMG",
+          "category": "Resonance Skill",
           "value": "113.33%*2",
           "damage": [
             {
@@ -856,11 +870,13 @@
         },
         {
           "name": "Blazing Waltz DMG",
+          "category": "Resonance Skill",
           "value": "21.95%*19",
           "staCost": 5
         },
         {
           "name": "STA Cost Per Second When Suspended",
+          "category": "Resonance Skill",
           "value": "5"
         }
       ],
@@ -876,6 +892,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Resonance Liberation",
           "value": "1202.81%",
           "damage": [
             {
@@ -928,6 +945,7 @@
       "stages": [
         {
           "name": "Skill DMG",
+          "category": "Intro Skill",
           "value": "198.81%",
           "damage": [
             {
@@ -966,6 +984,7 @@
       "stages": [
         {
           "name": "Ephemeral DMG",
+          "category": "Basic Attack",
           "value": "1262.45%",
           "cooldown": 25,
           "damage": [
@@ -1087,5 +1106,15 @@
     }
   ],
   "skillTreeBonuses": ["Crit. DMG", "ATK"],
-  "buffs": []
+  "buffs": {
+    "inherent": ["Seedbed", "Epiphyte", "Skillful Cooking"],
+    "resonanceChain": [
+      "Somewhere No One Travelled",
+      "Calling Upon the Silent Rose",
+      "A Bud Adorned by Thorns",
+      "Roots Set Deep In Eternity",
+      "Infinity Held in Your Palm",
+      "Bloom For You Thousand Times Over"
+    ]
+  }
 }

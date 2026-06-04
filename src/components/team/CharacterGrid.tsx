@@ -1,4 +1,4 @@
-import type { Character } from "#/types/character"
+import type { EnrichedCharacter } from "#/types/character"
 import { ELEMENT_HEX } from "#/data/elements"
 import { listCharacters } from "#/lib/loadout/catalog"
 import { useTeamContext } from "#/hooks/useTeamContext"
@@ -34,7 +34,7 @@ export function CharacterGrid() {
 }
 
 interface CharacterCardProps {
-  character: Character
+  character: EnrichedCharacter
   slotNumber: number | null
   isFocused: boolean
   isBlocked: boolean
