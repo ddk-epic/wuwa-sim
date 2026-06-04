@@ -20,8 +20,18 @@ import type {
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { resolveHealTargets } from "../heal-targets"
-import { buffInstanceKey, EmitHitDispatcher } from "./emit-hit-dispatcher"
-import type { DeferredEmit, EmitHitHost } from "./emit-hit-dispatcher"
+import {
+  buffInstanceKey,
+  buildSyntheticEvent,
+  EmitHitDispatcher,
+} from "./emit-hit-dispatcher"
+import type {
+  DeferredEmit,
+  EmitHitHost,
+  EmitHitInput,
+} from "./emit-hit-dispatcher"
+import { accrueForHit } from "./resource-accrual"
+import type { Accrual } from "./resource-accrual"
 import { bootstrapSlot } from "../engine-bootstrap"
 import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
@@ -104,10 +114,6 @@ export class BuffEngine {
   /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
   private deferredEmits: DeferredEmit[] = []
   private emitHitHost: EmitHitHost = {
-    resolveStats: (id, hit) => this.resolveStats(id, hit),
-    applyResourceDelta: (id, resource, delta, frame, out, hitsOut, depth) =>
-      this.applyResourceDelta(id, resource, delta, frame, out, hitsOut, depth),
-    getResource: (id) => this.getResource(id),
     activeBuffs: (id, hit) => this.activeBuffs(id, hit),
     passiveBuffs: (id) => this.passiveBuffs(id),
     resolveHealTargets: (target, sourceId) =>
@@ -311,51 +317,11 @@ export class BuffEngine {
     // Resource phase (implicit): hit-driven and skill-cast-driven accumulation
     // happens before trigger matching so resourceCrossed triggers can chain.
     if (event.kind === "hitLanded") {
-      if (event.energy) {
-        const actorER = this.resolveStats(event.characterId).energyRechargePct
+      for (const a of this.accrueHitGains(event)) {
         this.applyResourceDelta(
-          event.characterId,
-          "energy",
-          event.energy * (1 + actorER),
-          event.frame,
-          out,
-          hitsOut,
-          depth,
-        )
-        if (!event.synthetic) {
-          const sharedEnergy = event.energy * 0.5 * (1 + actorER)
-          for (const teammateId of this.store.getPartyCharacterIds()) {
-            if (teammateId !== event.characterId) {
-              this.applyResourceDelta(
-                teammateId,
-                "energy",
-                sharedEnergy,
-                event.frame,
-                out,
-                hitsOut,
-                depth,
-              )
-            }
-          }
-        }
-      }
-      if (event.concerto) {
-        this.applyResourceDelta(
-          event.characterId,
-          "concerto",
-          event.concerto,
-          event.frame,
-          out,
-          hitsOut,
-          depth,
-        )
-      }
-      if (event.forte) {
-        const actorFRPct = this.resolveStats(event.characterId).forteRechargePct
-        this.applyResourceDelta(
-          event.characterId,
-          "forte",
-          event.forte * (1 + actorFRPct),
+          a.characterId,
+          a.resource,
+          a.delta,
           event.frame,
           out,
           hitsOut,
@@ -528,14 +494,7 @@ export class BuffEngine {
       return
     }
 
-    const hit = this.emitHitDispatcher.resolve(
-      input,
-      frame,
-      depth,
-      this.emitHitHost,
-      out,
-      hitsOut,
-    )
+    const hit = this.resolveSyntheticEmit(input, frame, out, hitsOut, depth)
     hitsOut.push(hit)
     this.fireEmitChain(
       effect,
@@ -606,13 +565,12 @@ export class BuffEngine {
     const lifecycleEvents: BuffEvent[] = []
     const syntheticEvents: (HitEvent | SustainEvent)[] = []
     this.deferredEmits = []
-    const event = this.emitHitDispatcher.resolve(
+    const event = this.resolveSyntheticEmit(
       d.input,
       d.landingFrame,
-      d.depth,
-      this.emitHitHost,
       lifecycleEvents,
       syntheticEvents,
+      d.depth,
     )
     // A coord emit never re-enters the trigger matcher (coordHit→coord is
     // structurally impossible); only an emitHit fires its own hitLanded chain.
@@ -678,17 +636,98 @@ export class BuffEngine {
       this.deferredEmits.push({ input, landingFrame: frame, depth })
       return
     }
-    const hit = this.emitHitDispatcher.dispatch(
-      input,
-      { frame, depth },
-      this.emitHitHost,
-      out,
-      hitsOut,
-    )
-    if (!hit) return
+    // The emit decision (ICD + chain cap) stays in the dispatcher; the engine
+    // owns the accrual + snapshot via resolveSyntheticEmit.
+    if (!this.emitHitDispatcher.tryEmit(input, { frame, depth })) return
+    const hit = this.resolveSyntheticEmit(input, frame, out, hitsOut, depth)
     hitsOut.push(hit)
     // Bypass: coord events are NOT re-entered into the trigger matcher.
     // No dispatchEvent call here — coordHit→coord chain is structurally impossible.
+  }
+
+  /**
+   * Authored-hit accrual: the ordered energy/share/concerto/forte deltas a
+   * landed hit grants. ER/FR is read hit-agnostically (no hit context) once,
+   * only when an energy or forte gain actually needs it. The pure rule lives in
+   * {@link accrueForHit}; this only supplies engine state.
+   */
+  private accrueHitGains(event: HitLandedEvent): Accrual[] {
+    if (!event.energy && !event.concerto && !event.forte) return []
+    const needsStats = !!event.energy || !!event.forte
+    const stats = needsStats ? this.resolveStats(event.characterId) : null
+    return accrueForHit(
+      {
+        energy: event.energy,
+        concerto: event.concerto,
+        forte: event.forte,
+        synthetic: event.synthetic,
+      },
+      {
+        id: event.characterId,
+        er: stats?.energyRechargePct ?? 0,
+        fr: stats?.forteRechargePct ?? 0,
+      },
+      this.store.getPartyCharacterIds(),
+    )
+  }
+
+  /**
+   * Resolve an already-decided synthetic emit into its event: the engine owns
+   * the accrual now (the dispatcher only decides + builds the snapshot). Stats
+   * are resolved hit-scoped for the damage snapshot, then the hit-agnostic
+   * ER/FR feeds {@link accrueForHit}; deltas are applied before `post` is read
+   * so the snapshot's cumulative totals reflect this synthetic's own gains.
+   */
+  private resolveSyntheticEmit(
+    input: EmitHitInput,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): HitEvent | SustainEvent {
+    const character = getCharacterById(input.sourceCharacterId)
+    const hitCtx: HitContext = {
+      sourceBuffId: input.def.id,
+      skillType: input.effect.skillType ?? input.effect.damage.type,
+      element: input.effect.element ?? character?.element,
+    }
+    // Hit-scoped table for the damage snapshot — taken before accrual deltas.
+    const stats = this.resolveStats(input.sourceCharacterId, hitCtx)
+    // ER/FR is hit-agnostic by contract: read without hit context (#321).
+    const actorStats = this.resolveStats(input.sourceCharacterId)
+    const accruals = accrueForHit(
+      {
+        energy: input.effect.damage.energy,
+        concerto: input.effect.damage.concerto,
+        synthetic: true,
+      },
+      {
+        id: input.sourceCharacterId,
+        er: actorStats.energyRechargePct,
+        fr: actorStats.forteRechargePct,
+      },
+      this.store.getPartyCharacterIds(),
+    )
+    for (const a of accruals) {
+      this.applyResourceDelta(
+        a.characterId,
+        a.resource,
+        a.delta,
+        frame,
+        out,
+        hitsOut,
+        depth,
+      )
+    }
+    const post = this.getResource(input.sourceCharacterId)
+    return buildSyntheticEvent(
+      input,
+      frame,
+      stats,
+      post,
+      this.emitHitHost,
+      hitCtx,
+    )
   }
 
   private applyResourceDelta(

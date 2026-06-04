@@ -3,16 +3,10 @@ import type {
   CoordHitEffect,
   EmitHitEffect,
   HitContext,
-  ResourceKind,
   ResourceState,
 } from "#/types/buff"
 import type { HealTarget } from "#/types/character"
-import type {
-  ActiveBuff,
-  BuffEvent,
-  HitEvent,
-  SustainEvent,
-} from "#/types/simulation-log"
+import type { ActiveBuff, HitEvent, SustainEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { computeDamage } from "../damage/compute-damage"
@@ -54,18 +48,12 @@ export interface DeferredEmit {
   depth: number
 }
 
+/**
+ * Snapshot-only host: what {@link buildSyntheticEvent} needs to read the active
+ * buff lists and heal targets. Stat resolution and resource accrual are owned by
+ * the engine now (#321) — the dispatcher no longer touches either.
+ */
 export interface EmitHitHost {
-  resolveStats: (characterId: number, hit?: HitContext) => StatTable
-  applyResourceDelta: (
-    characterId: number,
-    resource: ResourceKind,
-    delta: number,
-    frame: number,
-    out: BuffEvent[],
-    hitsOut: (HitEvent | SustainEvent)[],
-    depth: number,
-  ) => void
-  getResource: (characterId: number) => ResourceState
   activeBuffs: (characterId: number, hit?: HitContext) => ActiveBuff[]
   passiveBuffs: (characterId: number) => ActiveBuff[]
   resolveHealTargets: (
@@ -88,18 +76,6 @@ export class EmitHitDispatcher {
 
   reset(): void {
     this.icd.clear()
-  }
-
-  /** Returns the synthetic event, or null when ICD blocks or chain depth cap is reached. */
-  dispatch(
-    input: EmitHitInput,
-    ctx: EmitHitDispatchContext,
-    host: EmitHitHost,
-    out: BuffEvent[],
-    hitsOut: (HitEvent | SustainEvent)[],
-  ): HitEvent | SustainEvent | null {
-    if (!this.tryEmit(input, ctx)) return null
-    return this.resolve(input, ctx.frame, ctx.depth, host, out, hitsOut)
   }
 
   /**
@@ -129,56 +105,6 @@ export class EmitHitDispatcher {
       )
     }
     return true
-  }
-
-  /**
-   * Resolve an already-decided emit into its synthetic event at `frame`: apply
-   * its resource gains and snapshot via {@link buildSyntheticEvent}. The caller
-   * supplies the frame — the trigger frame for an immediate emit, the landing
-   * frame for a deferred one — and must have advanced engine state to it first.
-   */
-  resolve(
-    input: EmitHitInput,
-    frame: number,
-    depth: number,
-    host: EmitHitHost,
-    out: BuffEvent[],
-    hitsOut: (HitEvent | SustainEvent)[],
-  ): HitEvent | SustainEvent {
-    const character = getCharacterById(input.sourceCharacterId)
-    const hitCtx: HitContext = {
-      sourceBuffId: input.def.id,
-      skillType: input.effect.skillType ?? input.effect.damage.type,
-      element: input.effect.element ?? character?.element,
-    }
-
-    const stats = host.resolveStats(input.sourceCharacterId, hitCtx)
-
-    if (input.effect.damage.energy) {
-      host.applyResourceDelta(
-        input.sourceCharacterId,
-        "energy",
-        input.effect.damage.energy * (1 + stats.energyRechargePct),
-        frame,
-        out,
-        hitsOut,
-        depth,
-      )
-    }
-    if (input.effect.damage.concerto) {
-      host.applyResourceDelta(
-        input.sourceCharacterId,
-        "concerto",
-        input.effect.damage.concerto,
-        frame,
-        out,
-        hitsOut,
-        depth,
-      )
-    }
-    const post = host.getResource(input.sourceCharacterId)
-
-    return buildSyntheticEvent(input, frame, stats, post, host, hitCtx)
   }
 }
 
