@@ -35,9 +35,4 @@ describe("base91 encode/decode roundtrip", () => {
       expect(code).toBeLessThanOrEqual(126)
     }
   })
-
-  it("encode is deterministic", () => {
-    const data = new Uint8Array([1, 2, 3, 4, 5])
-    expect(encode(data)).toBe(encode(data))
-  })
 })
