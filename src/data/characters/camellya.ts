@@ -223,6 +223,29 @@ export const camellya = {
         },
       ],
     },
+    {
+      // Every 10 Crimson Pistils (forte) consumed mints one Crimson Bud. The
+      // `resourceStep` trigger fires once per 10-forte boundary crossed
+      // downward (carryover handled by the trigger index, ADR-0032). The buff
+      // carries no concerto/energy effect — the conversion's concerto is
+      // already encoded in the per-hit API values, so the bud is the only
+      // thing emitted here. Stacks (capped at 10) are read by Sweet Dream.
+      id: "char.camellya.forte.crimson-bud",
+      name: "Crimson Bud",
+      description:
+        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), lasting 15s.",
+      trigger: {
+        event: "resourceStep",
+        characterId: 1603,
+        resource: "forte",
+        step: 10,
+        direction: "consumed",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 15 },
+      stacking: { max: 10, onRetrigger: "addStack" },
+      effects: [],
+    },
   ],
   skills: [
     {

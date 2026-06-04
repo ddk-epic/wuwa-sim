@@ -88,6 +88,66 @@ describe("TriggerIndex", () => {
     expect(idx.crossedThresholds("forte", "up", 0, 100)).toEqual([])
   })
 
+  const stepDef = (
+    resource: string,
+    direction: "consumed" | "gained",
+    step: number,
+  ): BuffDef => ({
+    id: `step.${resource}.${direction}.${step}`,
+    name: "step",
+    trigger: {
+      event: "resourceStep",
+      resource: resource as "forte",
+      direction,
+      step,
+    },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 15 },
+    effects: [],
+  })
+
+  it("resourceStep consumed: full 100→0 drain fires every multiple of step", () => {
+    const idx = new TriggerIndex([stepDef("forte", "consumed", 10)])
+    expect(idx.crossedThresholds("forte", "down", 100, 0)).toEqual([
+      0, 10, 20, 30, 40, 50, 60, 70, 80, 90,
+    ])
+  })
+
+  it("resourceStep consumed: single boundary 100→90 mints one (m=90)", () => {
+    const idx = new TriggerIndex([stepDef("forte", "consumed", 10)])
+    expect(idx.crossedThresholds("forte", "down", 100, 90)).toEqual([90])
+  })
+
+  it("resourceStep consumed: multi-cross in one delta with carryover", () => {
+    const idx = new TriggerIndex([stepDef("forte", "consumed", 10)])
+    // 93.8 → 88.5 crosses only 90; 88.5 → 70 crosses 80 and 70.
+    expect(idx.crossedThresholds("forte", "down", 93.8, 88.5)).toEqual([90])
+    expect(idx.crossedThresholds("forte", "down", 88.5, 70)).toEqual([70, 80])
+  })
+
+  it("resourceStep consumed: never fires on a gain (up)", () => {
+    const idx = new TriggerIndex([stepDef("forte", "consumed", 10)])
+    expect(idx.crossedThresholds("forte", "up", 0, 100)).toEqual([])
+  })
+
+  it("resourceStep gained: fires every multiple on an upward refill", () => {
+    const idx = new TriggerIndex([stepDef("forte", "gained", 10)])
+    expect(idx.crossedThresholds("forte", "up", 0, 100)).toEqual([
+      10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+    ])
+  })
+
+  it("resourceStep and explicit resourceCrossed coexist on the same key", () => {
+    const idx = new TriggerIndex([
+      stepDef("forte", "consumed", 10),
+      rcDef("forte", "down", 0),
+    ])
+    // Step multiples 0..90 plus the explicit 0 (deduped).
+    expect(idx.crossedThresholds("forte", "down", 100, 0)).toEqual([
+      0, 10, 20, 30, 40, 50, 60, 70, 80, 90,
+    ])
+  })
+
   it("non-resourceCrossed triggers are ignored", () => {
     const simStartDef: BuffDef = {
       id: "simstart",

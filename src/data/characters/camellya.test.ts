@@ -234,3 +234,104 @@ describe("Camellya — bonusMultiplier scoped via appliesToHits", () => {
     ).toBeCloseTo(0)
   })
 })
+
+describe("Camellya — pistil drain mints Crimson Buds (resourceStep, ADR-0032)", () => {
+  const BUD = "char.camellya.forte.crimson-bud"
+
+  /** A consuming hit: drains `forte` raw and grants the per-hit API concerto. */
+  function consumeForte(
+    engine: ReturnType<typeof makeEngine>,
+    forte: number,
+    frame: number,
+    concerto = 0,
+  ) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+      frame,
+      energy: 0,
+      concerto,
+      forte,
+    })
+  }
+
+  /** Intro Everblooming refill: positive forte, FR-scaled then capped at 100. */
+  function refillForte(engine: ReturnType<typeof makeEngine>, frame: number) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Intro Skill",
+      dmgType: "Damage",
+      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      frame,
+      energy: 0,
+      concerto: 0,
+      forte: 100,
+    })
+  }
+
+  function budStacks(engine: ReturnType<typeof makeEngine>): number {
+    return engine.activeBuffs(CAMELLYA).find((b) => b.id === BUD)?.stacks ?? 0
+  }
+
+  it("refills forte to 100 (capped) on Everblooming", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    expect(engine.getResource(CAMELLYA).forte).toBe(100)
+  })
+
+  it("negative forte drains the ledger raw (not FR-scaled) and floors at 0", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -30, 1)
+    expect(engine.getResource(CAMELLYA).forte).toBeCloseTo(70)
+    consumeForte(engine, -999, 2)
+    expect(engine.getResource(CAMELLYA).forte).toBe(0)
+  })
+
+  it("each 10 forte consumed mints one Crimson Bud", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -10, 1)
+    expect(budStacks(engine)).toBe(1)
+    consumeForte(engine, -25, 2)
+    // 100 → 90 → 65 crosses 90, then 80, 70 — total 3 buds.
+    expect(budStacks(engine)).toBe(3)
+  })
+
+  it("draining a full 100 forte yields 10 Crimson Buds (capped at 10)", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -100, 1)
+    expect(budStacks(engine)).toBe(10)
+  })
+
+  it("does not exceed the 10-stack cap even with a second refill+drain", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -100, 1)
+    refillForte(engine, 2)
+    consumeForte(engine, -100, 3)
+    expect(budStacks(engine)).toBe(10)
+  })
+
+  it("the conversion leaves concerto untouched — buds are minted, not concerto", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    // A consuming hit carries its own API concerto (5) and drains 30 forte.
+    consumeForte(engine, -30, 1, 5)
+    // Exactly the per-hit concerto — resourceStep adds no extra +4/bud.
+    expect(engine.getResource(CAMELLYA).concerto).toBe(5)
+    expect(budStacks(engine)).toBe(3)
+  })
+
+  it("refills (gains) never mint buds", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    expect(budStacks(engine)).toBe(0)
+  })
+})

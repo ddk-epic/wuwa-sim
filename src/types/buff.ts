@@ -162,6 +162,18 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
     }
+  | {
+      // Fires once per `step` of the resource crossed in `direction` (ADR-0032).
+      // Sugar over `resourceCrossed`: the trigger index expands it to a
+      // threshold at every multiple of `step` and rides the per-threshold
+      // crossing dispatch, so multi-cross and carryover fall out for free.
+      event: "resourceStep"
+      resource: ResourceKind
+      step: number
+      direction: "consumed" | "gained"
+      actor?: "self" | "any"
+      characterId?: number
+    }
 
 export type BuffTarget =
   | { kind: "self" }

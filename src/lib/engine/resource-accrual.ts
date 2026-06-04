@@ -38,7 +38,8 @@ const TEAMMATE_ENERGY_SHARE = 0.5
  *
  * Energy is ER-scaled once by the **actor's** ER — the teammate share is
  * `energy * 0.5 * (1 + actorER)`, never re-scaled by the teammate's own ER.
- * Concerto is raw; forte is FR-scaled. Synthetic gains never share energy.
+ * Concerto is raw; forte is FR-scaled on gains only (raw on consumption).
+ * Synthetic gains never share energy.
  */
 export function accrueForHit(
   gains: AccrualGains,
@@ -77,10 +78,13 @@ export function accrueForHit(
   }
 
   if (gains.forte) {
+    // Forte Recharge scales generation only: positive forte (a gain) is
+    // FR-scaled, negative forte (consumption authored on a damage entry,
+    // ADR-0032) applies raw so recharge never inflates the size of a cost.
     accruals.push({
       characterId: actor.id,
       resource: "forte",
-      delta: gains.forte * (1 + actor.fr),
+      delta: gains.forte > 0 ? gains.forte * (1 + actor.fr) : gains.forte,
     })
   }
 
