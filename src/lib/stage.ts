@@ -94,6 +94,27 @@ export function makeEchoStageId(
   return `echo.${toKebab(echoName)}.${toKebab(stageName)}::echo-skill`
 }
 
+/**
+ * Match a stageId filter `t` against a concrete hit stageId `sid`. A `t` that
+ * ends in a `.<hitIndex>` suffix requires an exact match; otherwise `t` is a
+ * lineage prefix that matches every hit of the stage (and of descendant
+ * stages). Shared by trigger matching (instance-store) and `appliesToHits` Hit
+ * Filter matching (stat-table-builder) so both axes read stageIds the same way.
+ */
+export function stageIdMatches(t: string, sid: string): boolean {
+  if (sid === t) return true
+  // Trigger `.<digits>` suffix targets a specific hit — require exact match.
+  if (/\.\d+$/.test(t)) return false
+  const sidNoHit = sid.replace(/\.\d+$/, "")
+  if (sidNoHit === t) return true
+  const sidLineage = sidNoHit.includes("::")
+    ? sidNoHit.slice(0, sidNoHit.indexOf("::"))
+    : sidNoHit
+  const tLineage = t.includes("::") ? t.slice(0, t.indexOf("::")) : t
+  if (sidLineage === tLineage) return true
+  return sidLineage.startsWith(tLineage + ".")
+}
+
 export function stageLabel(skillName: string, newName?: string): string {
   if (!newName) return skillName
   if (newName.startsWith("(")) return `${skillName} ${newName}`

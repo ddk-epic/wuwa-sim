@@ -980,6 +980,9 @@ export class BuffEngine {
       const getCharStat = (cid: number, stat: ScalarStatKey): number => {
         return this.resolveStats(cid)[stat]
       }
+      const getBuffStacks = (cid: number, buffId: string): number => {
+        return this.store.buffStacksOnTarget(buffId, cid)
+      }
       // One pass over the gated instances; `accumulateStatEffects` only does
       // `+=`, so folding hit-agnostic and hit-scoped buffs together yields the
       // same total as the two old passes.
@@ -988,6 +991,7 @@ export class BuffEngine {
           base,
           { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
           getCharStat,
+          getBuffStacks,
         )
       }
       return base

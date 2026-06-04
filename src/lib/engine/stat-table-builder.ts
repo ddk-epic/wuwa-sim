@@ -16,6 +16,7 @@ import type {
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { WeaponData } from "#/types/weapon"
+import { stageIdMatches } from "../stage"
 import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
@@ -50,11 +51,26 @@ function matchesAxis<T>(
     : filterVal === ctxVal
 }
 
+/**
+ * Match the `stageId` Hit Filter axis. Unlike the other axes (exact/includes),
+ * a filter id without a `.<hitIndex>` suffix matches any hit of that stage
+ * lineage — the same semantics trigger matching uses (see `stageIdMatches`).
+ */
+function matchesStageIdAxis(
+  filterVal: string | string[] | undefined,
+  ctxVal: string | undefined,
+): boolean {
+  if (filterVal === undefined) return true
+  if (ctxVal === undefined) return false
+  const ids = Array.isArray(filterVal) ? filterVal : [filterVal]
+  return ids.some((t) => stageIdMatches(t, ctxVal))
+}
+
 /** Returns true when every present axis in `filter` matches `ctx`. */
 export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
   return (
     matchesAxis(filter.sourceBuffId, ctx.sourceBuffId) &&
-    matchesAxis(filter.stageId, ctx.stageId) &&
+    matchesStageIdAxis(filter.stageId, ctx.stageId) &&
     matchesAxis(filter.skillType, ctx.skillType) &&
     matchesAxis(filter.skillCategory, ctx.skillCategory) &&
     matchesAxis(filter.element, ctx.element)
@@ -70,12 +86,20 @@ export function accumulateStatEffects(
   stats: StatTable,
   contribution: StatContribution,
   getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
+  getBuffStacks?: (characterId: number, buffId: string) => number,
 ): void {
   const { def, stacks, snapshots } = contribution
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
-    const v = resolveValue(effect.value, stacks, snapshots, i, getCharStat)
+    const v = resolveValue(
+      effect.value,
+      stacks,
+      snapshots,
+      i,
+      getCharStat,
+      getBuffStacks,
+    )
     applyToPath(stats, effect.path, v)
   }
 }
@@ -87,17 +111,23 @@ export function accumulateStatEffects(
 export function freezeSnapshots(
   def: BuffDef,
   stacks: number,
+  getBuffStacks?: (characterId: number, buffId: string) => number,
 ): Record<number, number> | undefined {
   let out: Record<number, number> | undefined
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
-    if (effect.value.kind === "scaledByStat") continue
-    if (!effect.value.snapshot) continue
-    const frozen =
-      effect.value.kind === "perStack"
-        ? effect.value.v * stacks
-        : effect.value.v
+    const value = effect.value
+    // `scaledByStat` is always read live (never frozen).
+    if (value.kind === "scaledByStat") continue
+    if (!value.snapshot) continue
+    let frozen: number
+    if (value.kind === "scaledByStacks") {
+      const n = getBuffStacks?.(value.characterId, value.buffId) ?? 0
+      frozen = value.base + value.per * Math.min(n, value.max)
+    } else {
+      frozen = value.kind === "perStack" ? value.v * stacks : value.v
+    }
     if (!out) out = {}
     out[i] = frozen
   }
@@ -110,6 +140,7 @@ function resolveValue(
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
   getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
+  getBuffStacks?: (characterId: number, buffId: string) => number,
 ): number {
   if ("snapshot" in value && value.snapshot && snapshots) {
     return snapshots[effectIndex]
@@ -123,6 +154,10 @@ function resolveValue(
       const raw = getCharStat?.(value.characterId, value.stat) ?? 0
       const statVal = (value.base ?? 0) + raw
       return Math.min((statVal / value.per) * value.scale, value.max)
+    }
+    case "scaledByStacks": {
+      const n = getBuffStacks?.(value.characterId, value.buffId) ?? 0
+      return value.base + value.per * Math.min(n, value.max)
     }
   }
 }

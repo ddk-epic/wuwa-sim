@@ -11,6 +11,7 @@ import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
+import { stageIdMatches } from "../stage"
 import { cloneStats, freezeSnapshots } from "./stat-table-builder"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
@@ -164,6 +165,16 @@ export class InstanceStore {
         sourceCharacterId: inst.sourceCharacterId,
       }))
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  }
+
+  /** Stacks of the active instance with `buffId` on `characterId` (0 if none). */
+  buffStacksOnTarget(buffId: string, characterId: number): number {
+    const inst = this.active.find(
+      (i) =>
+        i.def.id === buffId &&
+        (i.global || i.targetCharacterId === characterId),
+    )
+    return inst?.stacks ?? 0
   }
 
   /** Returns true when any active instance with the given def.id targets `characterId` or is global. */
@@ -330,7 +341,9 @@ export class InstanceStore {
         endTime: newEndTime,
         stacks: 1,
         appliedFrame: frame,
-        snapshots: freezeSnapshots(def, 1),
+        snapshots: freezeSnapshots(def, 1, (cid, buffId) =>
+          this.buffStacksOnTarget(buffId, cid),
+        ),
         ...(isGlobal ? { global: true as const } : {}),
       })
       this.version_++
@@ -410,7 +423,9 @@ export class InstanceStore {
           endTime: newEndTime,
           stacks: 1,
           appliedFrame: frame,
-          snapshots: freezeSnapshots(def, 1),
+          snapshots: freezeSnapshots(def, 1, (cid, buffId) =>
+            this.buffStacksOnTarget(buffId, cid),
+          ),
         })
         this.version_++
         out.push({
@@ -470,21 +485,6 @@ export class InstanceStore {
       this.version_++
     }
   }
-}
-
-/** Match `t` against `sid`. Lineage prefix match when `t` lacks a `.<hitIndex>` suffix. */
-function stageIdMatches(t: string, sid: string): boolean {
-  if (sid === t) return true
-  // Trigger `.<digits>` suffix targets a specific hit — require exact match.
-  if (/\.\d+$/.test(t)) return false
-  const sidNoHit = sid.replace(/\.\d+$/, "")
-  if (sidNoHit === t) return true
-  const sidLineage = sidNoHit.includes("::")
-    ? sidNoHit.slice(0, sidNoHit.indexOf("::"))
-    : sidNoHit
-  const tLineage = t.includes("::") ? t.slice(0, t.indexOf("::")) : t
-  if (sidLineage === tLineage) return true
-  return sidLineage.startsWith(tLineage + ".")
 }
 
 export function matchesTrigger(

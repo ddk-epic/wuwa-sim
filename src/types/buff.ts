@@ -50,6 +50,18 @@ export type ValueExpr =
       /** Offset added to the stat value before computing (use 1.0 for ER/Pct stats that have an implicit 100% base). */
       base?: number
     }
+  | {
+      // `base + per × min(stacks_of(buffId on characterId), max)` (ADR-0032).
+      // With `snapshot: true` the stack count is frozen at apply, so a value
+      // read off a transient buff survives that buff's later removal.
+      kind: "scaledByStacks"
+      buffId: string
+      characterId: number
+      per: number
+      base: number
+      max: number
+      snapshot?: boolean
+    }
 
 export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
 

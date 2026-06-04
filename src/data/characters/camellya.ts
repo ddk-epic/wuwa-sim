@@ -1,5 +1,35 @@
 import type { EnrichedCharacter } from "#/types/character"
 
+/** The Forte Circuit Ephemeral cast — the trigger for Budding Mode + Sweet Dream. */
+const EPHEMERAL_CAST_STAGE =
+  "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack"
+
+/**
+ * Stages Sweet Dream's `bonusMultiplier` applies to (ADR-0032): her core
+ * attacks — the Normal Attack chain, the Vining/Blazing Waltzes, Vining Ronde,
+ * Atonement, and the two Crimson Blossom / Floral Ravage Resonance-Skill hits.
+ * Listed as lineage stageIds (no `.<hit>` suffix) so every hit of each stage
+ * matches; Ephemeral itself is deliberately excluded. Heavy Pruning, Mid-air,
+ * and Dodge Counter are not core attacks and stay unscaled.
+ */
+const SWEET_DREAM_STAGES = [
+  "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+  "char.camellya.basic-attack.burgeoning.basic-attack-2::basic-attack",
+  "char.camellya.basic-attack.burgeoning.basic-attack-3::basic-attack",
+  "char.camellya.basic-attack.burgeoning.basic-attack-4::basic-attack",
+  "char.camellya.basic-attack.burgeoning.basic-attack-4-hold::basic-attack",
+  "char.camellya.basic-attack.burgeoning.basic-attack-5::basic-attack",
+  "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
+  "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
+  "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
+  "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
+  "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
+  "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack",
+  "char.camellya.basic-attack.burgeoning.atonement::basic-attack",
+  "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
+  "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
+]
+
 export const camellya = {
   id: 1603,
   name: "Camellya",
@@ -245,6 +275,109 @@ export const camellya = {
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 10, onRetrigger: "addStack" },
       effects: [],
+    },
+    {
+      // Budding Mode is the presence flag S3/S6 condition on, and it carries
+      // Sweet Dream: a `bonusMultiplier` read off the live Crimson Bud count at
+      // Ephemeral cast and snapshotted (`scaledByStacks`, snapshot:true), so the
+      // value survives the same cast's bud consumption. `replace` re-snapshots
+      // on a fresh cast. It has no intrinsic timer — it ends on swap-out
+      // (`expiresOnSourceSwapOut`) or when pistils hit 0 (see budding-mode-end).
+      id: "char.camellya.forte.budding-mode",
+      name: "Budding Mode",
+      description:
+        "Casting Ephemeral consumes all Crimson Buds and enters Budding Mode: core attacks gain a Sweet Dream DMG Multiplier of 50% + 5% per Bud consumed (max 10). Ends on swap-out or when Crimson Pistils reach 0.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        stageId: EPHEMERAL_CAST_STAGE,
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      expiresOnSourceSwapOut: true,
+      stacking: { max: 1, onRetrigger: "replace" },
+      appliesToHits: { stageId: SWEET_DREAM_STAGES },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: {
+            kind: "scaledByStacks",
+            buffId: "char.camellya.forte.crimson-bud",
+            characterId: 1603,
+            base: 0.5,
+            per: 0.05,
+            max: 10,
+            snapshot: true,
+          },
+        },
+        { kind: "removeBuffs", ids: ["char.camellya.forte.crimson-bud"] },
+      ],
+    },
+    {
+      // Pistil-zero exit: when forte crosses 0 downward, Budding Mode ends.
+      id: "char.camellya.forte.budding-mode-end",
+      name: "Budding Mode End",
+      description: "Budding Mode ends when Crimson Pistils reach 0.",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "forte",
+        threshold: 0,
+        direction: "down",
+        characterId: 1603,
+      },
+      effects: [
+        { kind: "removeBuffs", ids: ["char.camellya.forte.budding-mode"] },
+      ],
+    },
+    {
+      // S3: while Budding Mode is active, ATK +58%. Gated as a lazy permanent
+      // instance (condition keeps it out of the folded base table).
+      id: "char.camellya.s3.budding-atk",
+      name: "S3: Budding ATK",
+      description:
+        "While Budding Mode is active, Camellya's ATK is increased by 58%.",
+      requiresSequence: 3,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.camellya.forte.budding-mode",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.58 },
+        },
+      ],
+    },
+    {
+      // S6 (non-Perennial half): adds a flat +150% to the Sweet Dream multiplier
+      // on the same core attacks while Budding Mode is active.
+      id: "char.camellya.s6.sweet-dream-rider",
+      name: "S6: Sweet Dream Rider",
+      description:
+        "While Budding Mode is active, the Sweet Dream DMG Multiplier is increased by an additional 150%.",
+      requiresSequence: 6,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.camellya.forte.budding-mode",
+        on: "source",
+      },
+      appliesToHits: { stageId: SWEET_DREAM_STAGES },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 1.5 },
+        },
+      ],
     },
   ],
   skills: [

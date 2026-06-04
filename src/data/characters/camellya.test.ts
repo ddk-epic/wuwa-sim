@@ -335,3 +335,164 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep, ADR-0032)"
     expect(budStacks(engine)).toBe(0)
   })
 })
+
+describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks, ADR-0032)", () => {
+  const BUDDING = "char.camellya.forte.budding-mode"
+  const BUD = "char.camellya.forte.crimson-bud"
+
+  const CORE_HIT: HitContext = {
+    stageId:
+      "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+    skillCategory: "Basic Attack",
+    skillType: "Basic Attack",
+    element: "Havoc",
+  }
+  const CRIMSON_BLOSSOM_HIT: HitContext = {
+    stageId:
+      "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack.2",
+    skillCategory: "Resonance Skill",
+    skillType: "Basic Attack",
+    element: "Havoc",
+  }
+
+  /** Refill to 100, then drain enough forte to mint exactly `buds` Crimson Buds. */
+  function mintBuds(engine: ReturnType<typeof makeEngine>, buds: number) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Intro Skill",
+      dmgType: "Damage",
+      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      frame: 0,
+      forte: 100,
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+      frame: 1,
+      forte: -10 * buds,
+    })
+  }
+
+  function castEphemeral(engine: ReturnType<typeof makeEngine>, frame: number) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId: EPHEMERAL_STAGE,
+      skillCategory: "Resonance Skill",
+      frame,
+    })
+  }
+
+  function buddingActive(engine: ReturnType<typeof makeEngine>): boolean {
+    return engine.activeBuffIds(CAMELLYA).includes(BUDDING)
+  }
+  function budStacks(engine: ReturnType<typeof makeEngine>): number {
+    return engine.activeBuffs(CAMELLYA).find((b) => b.id === BUD)?.stacks ?? 0
+  }
+
+  it("casting Ephemeral with N buds → core attacks gain 0.5 + 0.05×N (snapshot)", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 3)
+    expect(budStacks(engine)).toBe(3)
+    castEphemeral(engine, 2)
+    // Sweet Dream = 0.5 + 0.05 × 3 = 0.65 on core attacks.
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      0.65,
+    )
+    expect(
+      engine.resolveStats(CAMELLYA, CRIMSON_BLOSSOM_HIT).bonusMultiplier,
+    ).toBeCloseTo(0.65)
+  })
+
+  it("buds are consumed on cast but the snapshotted Sweet Dream persists", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 4)
+    castEphemeral(engine, 2)
+    // Buds gone…
+    expect(budStacks(engine)).toBe(0)
+    // …but Sweet Dream still reads the frozen 0.5 + 0.05 × 4 = 0.70.
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      0.7,
+    )
+  })
+
+  it("Sweet Dream does not apply to Ephemeral itself or non-core hits", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 3)
+    castEphemeral(engine, 2)
+    // Ephemeral and Fervor hits are not core attacks — no Sweet Dream.
+    expect(
+      engine.resolveStats(CAMELLYA, EPHEMERAL_HIT).bonusMultiplier,
+    ).toBeCloseTo(0)
+    expect(
+      engine.resolveStats(CAMELLYA, FERVOR_HIT).bonusMultiplier,
+    ).toBeCloseTo(0)
+    // Hit-agnostic pass never folds the appliesToHits multiplier.
+    expect(engine.resolveStats(CAMELLYA).bonusMultiplier).toBeCloseTo(0)
+  })
+
+  it("Budding Mode ends on swap-out", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 2)
+    castEphemeral(engine, 2)
+    expect(buddingActive(engine)).toBe(true)
+    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 3 })
+    expect(buddingActive(engine)).toBe(false)
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      0,
+    )
+  })
+
+  it("Budding Mode ends when Crimson Pistils reach 0", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 3) // forte at 70 after draining 30
+    castEphemeral(engine, 2)
+    expect(buddingActive(engine)).toBe(true)
+    // Drain the remaining 70 forte to 0 → pistil-zero exit.
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+      frame: 3,
+      forte: -70,
+    })
+    expect(engine.getResource(CAMELLYA).forte).toBe(0)
+    expect(buddingActive(engine)).toBe(false)
+  })
+
+  it("S3: ATK +58% only while Budding Mode is active (sequence 3)", () => {
+    const engine = makeEngine(3)
+    const before = engine.resolveStats(CAMELLYA).atkPct
+    mintBuds(engine, 2)
+    castEphemeral(engine, 2)
+    expect(engine.resolveStats(CAMELLYA).atkPct).toBeCloseTo(before + 0.58)
+    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 3 })
+    expect(engine.resolveStats(CAMELLYA).atkPct).toBeCloseTo(before)
+  })
+
+  it("S6: adds +1.5 to the Sweet Dream multiplier at sequence 6", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 3)
+    castEphemeral(engine, 2)
+    // 0.65 (Sweet Dream) + 1.5 (S6 rider) = 2.15 on core attacks.
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      2.15,
+    )
+  })
+
+  it("does not enter Budding Mode below the Ephemeral cast", () => {
+    const engine = makeEngine()
+    mintBuds(engine, 3)
+    expect(buddingActive(engine)).toBe(false)
+    // Buds remain unconsumed until Ephemeral is cast.
+    expect(budStacks(engine)).toBe(3)
+  })
+})

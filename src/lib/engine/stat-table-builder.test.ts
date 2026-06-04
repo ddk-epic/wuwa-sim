@@ -208,6 +208,85 @@ describe("freezeSnapshots", () => {
     })
     expect(freezeSnapshots(def, 4)).toEqual({ 0: 0.2 })
   })
+
+  it("freezes scaledByStacks against the live stack count of another buff", () => {
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: {
+            kind: "scaledByStacks",
+            buffId: "other",
+            characterId: 1,
+            base: 0.5,
+            per: 0.05,
+            max: 10,
+            snapshot: true,
+          },
+        },
+      ],
+    })
+    // 0.5 + 0.05 × min(3, 10) = 0.65, read from the stack-count callback.
+    expect(freezeSnapshots(def, 1, () => 3)).toEqual({ 0: 0.65 })
+  })
+})
+
+describe("scaledByStacks ValueExpr", () => {
+  const buff = (snapshot: boolean): BuffDef =>
+    baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: {
+            kind: "scaledByStacks",
+            buffId: "buds",
+            characterId: 1,
+            base: 0.5,
+            per: 0.05,
+            max: 10,
+            snapshot,
+          },
+        },
+      ],
+    })
+
+  it("resolves base + per × stacks live from the stack-count callback", () => {
+    const stats = emptyStatTable()
+    accumulateStatEffects(
+      stats,
+      { def: buff(false), stacks: 1 },
+      undefined,
+      () => 4,
+    )
+    expect(stats.bonusMultiplier).toBeCloseTo(0.7)
+  })
+
+  it("clamps the stack count to max", () => {
+    const stats = emptyStatTable()
+    accumulateStatEffects(
+      stats,
+      { def: buff(false), stacks: 1 },
+      undefined,
+      () => 25,
+    )
+    expect(stats.bonusMultiplier).toBeCloseTo(1.0)
+  })
+
+  it("a frozen snapshot ignores later stack changes", () => {
+    const def = buff(true)
+    const snapshots = freezeSnapshots(def, 1, () => 3)
+    const stats = emptyStatTable()
+    // Live callback now reports 0 buds; the frozen 0.65 must win.
+    accumulateStatEffects(
+      stats,
+      { def, stacks: 1, snapshots },
+      undefined,
+      () => 0,
+    )
+    expect(stats.bonusMultiplier).toBeCloseTo(0.65)
+  })
 })
 
 const baseChar = (
@@ -381,5 +460,24 @@ describe("matchesHit", () => {
   it("fails on any mismatched axis even if others match", () => {
     const f: HitFilter = { sourceBuffId: "buff.a", element: "Fusion" }
     expect(matchesHit(f, ctx)).toBe(false)
+  })
+
+  it("stageId axis matches every hit of a lineage filter (no hit suffix)", () => {
+    const hit: HitContext = { stageId: "char.x.skill.stage::basic-attack.3" }
+    // Lineage filter (no `.<hit>` suffix) matches any hit index.
+    expect(
+      matchesHit({ stageId: "char.x.skill.stage::basic-attack" }, hit),
+    ).toBe(true)
+    // An exact per-hit filter still requires the exact hit index.
+    expect(
+      matchesHit({ stageId: "char.x.skill.stage::basic-attack.1" }, hit),
+    ).toBe(false)
+    // Array form: any lineage id matching is enough.
+    expect(
+      matchesHit(
+        { stageId: ["char.x.other::basic-attack", "char.x.skill.stage"] },
+        hit,
+      ),
+    ).toBe(true)
   })
 })
