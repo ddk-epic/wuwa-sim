@@ -246,6 +246,148 @@ describe("BuffEngine — resource state (#58)", () => {
     warn.mockRestore()
   })
 
+  it("Outro Skill cast drains the caster's concerto to exactly 0 (#323)", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 100,
+    })
+    expect(engine.getResource(1).concerto).toBe(100)
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    expect(warn).not.toHaveBeenCalled()
+    expect(engine.getResource(1).concerto).toBe(0)
+    warn.mockRestore()
+  })
+
+  it("Outro overcap is wasted: concerto 130 → 0 (not 30) (#323)", () => {
+    testCharacters = [baseChar({ id: 1 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 130,
+    })
+    expect(engine.getResource(1).concerto).toBe(130)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    expect(engine.getResource(1).concerto).toBe(0)
+  })
+
+  it("Outro cast with concerto < 100 warns and still drains to 0 (#323)", () => {
+    testCharacters = [baseChar({ id: 1, name: "Test Character" })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 50,
+    })
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0][0]).toContain("Test Character")
+    expect(engine.getResource(1).concerto).toBe(0)
+    warn.mockRestore()
+  })
+
+  it("Outro drain fires resourceCrossed down for crossed thresholds (#323)", () => {
+    // Buff fires a synthetic hit when concerto crosses 100 downward.
+    const onConcertoDrop: BuffDef = {
+      id: "char.emit-on-concerto-down",
+      name: "Emit on Concerto Down",
+      trigger: {
+        event: "resourceCrossed",
+        resource: "concerto",
+        threshold: 100,
+        direction: "down",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "emitHit",
+          damage: {
+            type: "Basic Attack",
+            dmgType: "Fusion",
+            scalingStat: "atk",
+            actionFrame: 0,
+            value: 0.5,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
+          icdFrames: 0,
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [onConcertoDrop] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 130,
+    })
+    const { deferredEmits } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0]).toMatchObject({
+      kind: "hit",
+      synthetic: true,
+      sourceBuffId: "char.emit-on-concerto-down",
+      characterId: 1,
+    })
+  })
+
   it("resourceCrossed dispatched through main pipeline: own resource Effect crossing a threshold fires another buff with emitHit (#62)", () => {
     // Buff A: on skillCast, adds 100 concerto to self via a resource Effect.
     // Buff B: on concerto crossing 100 upward, emits a synthetic hit.

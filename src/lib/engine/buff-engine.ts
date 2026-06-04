@@ -81,6 +81,12 @@ export interface BootstrapInput {
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
+/**
+ * Concerto an Outro Skill consumes on cast (ADR-0031). Single source of truth.
+ * Concerto stays uncapped, so surplus above this is wasted by the full drain.
+ */
+export const OUTRO_CONCERTO_COST = 100
+
 /** Synthetic emit-hit events have no SkillCategory source; map from effect skillType. */
 function skillTypeToCategory(skillType: SkillType | undefined): SkillCategory {
   return skillType ?? "Basic Attack"
@@ -354,6 +360,26 @@ export class BuffEngine {
         this.setResource(
           event.characterId,
           "energy",
+          0,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
+      }
+      if (event.skillCategory === "Outro Skill") {
+        const concerto = this.getResource(event.characterId).concerto
+        if (concerto < OUTRO_CONCERTO_COST) {
+          const character = getCharacterById(event.characterId)
+          const name = character ? character.name : `id ${event.characterId}`
+          console.warn(
+            `[BuffEngine] Outro Skill cast by ${name} with insufficient concerto (${concerto} < ${OUTRO_CONCERTO_COST})`,
+          )
+        }
+        // Full drain — surplus above 100 is wasted by design (ADR-0031).
+        this.setResource(
+          event.characterId,
+          "concerto",
           0,
           event.frame,
           out,
