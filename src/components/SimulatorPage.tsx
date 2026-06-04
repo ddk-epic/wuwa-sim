@@ -19,6 +19,7 @@ import { SimulationLogModal } from "#/components/log/SimulationLogModal"
 import { SettingsModal } from "#/components/SettingsModal"
 import { TimelineView } from "#/components/timeline/TimelineView"
 import { ConfirmModal } from "#/components/ui/ConfirmModal"
+import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { getTimelineSummary } from "#/lib/timeline/timeline-summary"
 import { runSimulation } from "#/lib/simulation"
 import { encodePayload, decodePayload } from "#/lib/import-export"
@@ -257,9 +258,10 @@ export function SimulatorPage() {
                   {slots.some((id) => id !== null) ? (
                     <SkillCatalog onStageClick={addEntry} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500 text-lg">
-                      Select a character to view skills
-                    </div>
+                    <EmptyStatement
+                      statement="No characters yet"
+                      description="Add a character to your team to browse their skills."
+                    />
                   )}
                 </div>
               </div>

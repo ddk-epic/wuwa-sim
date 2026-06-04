@@ -3,6 +3,7 @@ import { Copy, Pencil, Pin, PinOff, Play, Trash2, X } from "lucide-react"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { Kpi } from "#/components/ui/Kpi"
 import { ElDot } from "#/components/ui/ElDot"
+import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { PortraitStrip } from "./portraits"
 import { blendGradient, elementHex, TEXT_OVER_PORTRAIT } from "./theme"
 import type { LibTeam, RowActions } from "./types"
@@ -174,14 +175,10 @@ function TeamTab({
 
 function LibraryEmptyList() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-3 text-center">
-      <span className="text-stat font-semibold text-foreground">
-        No teams yet
-      </span>
-      <span className="text-sm text-muted max-w-60">
-        Saved teams from the simulator will appear here.
-      </span>
-    </div>
+    <EmptyStatement
+      statement="No teams yet"
+      description="Save a team to see it here."
+    />
   )
 }
 

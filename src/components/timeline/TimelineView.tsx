@@ -11,6 +11,7 @@ import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 import { summarizeGroups } from "#/lib/timeline/timeline-group-summary"
 import { applyDragPreview } from "#/lib/timeline/timeline-drag-preview"
 import { ConfirmModal } from "../ui/ConfirmModal"
+import { EmptyStatement } from "../ui/EmptyStatement"
 import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
 import { GhostEntryRow } from "./GhostEntryRow"
@@ -127,9 +128,10 @@ export function TimelineView({
 
   if (entries.length === 0 && nodes.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
-        Select a skill from the sidebar to build your rotation
-      </div>
+      <EmptyStatement
+        statement="No rotation yet"
+        description="Select a skill from the sidebar to start building your rotation."
+      />
     )
   }
 

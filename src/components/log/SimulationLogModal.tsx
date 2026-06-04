@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Modal } from "#/components/ui/Modal"
+import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { LogTable } from "./LogTable"
 import { isBuff } from "./BuffEventRow"
@@ -38,9 +39,11 @@ export function SimulationLogModal({ log, onClose }: SimulationLogModalProps) {
     >
       <div className="flex-1 min-h-0 overflow-x-auto overflow-y-scroll">
         {log.length === 0 ? (
-          <p className="py-8 text-center text-muted-foreground text-sm">
-            No simulation data. Click Simulate to generate.
-          </p>
+          <EmptyStatement
+            className="h-full"
+            statement="No simulation data"
+            description="Run a simulation to generate a detailed combat log."
+          />
         ) : (
           <LogTable log={filtered} />
         )}

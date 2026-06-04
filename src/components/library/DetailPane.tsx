@@ -5,6 +5,7 @@ import { LabelBtn } from "#/components/ui/LabelBtn"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
 import { Kpi } from "#/components/ui/Kpi"
+import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { DmgDonut, TypeDistribution } from "./charts"
 import { ElementAvatar } from "./portraits"
 import { blendGradient, elementHex, portraitSrc } from "./theme"
@@ -206,16 +207,10 @@ function MemberCards({ team }: { team: LibTeam }) {
 
 function EmptyMainPane() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-10 gap-5.5 min-h-0">
-      <div className="flex flex-col gap-2 items-center text-center max-w-110">
-        <span className="text-stat font-semibold text-foreground">
-          Your library is empty
-        </span>
-        <span className="text-sm text-muted">
-          Build a team in the simulator and save it here.
-        </span>
-      </div>
-    </div>
+    <EmptyStatement
+      statement="Start your library"
+      description="Build a team in the simulator and save it to see it here."
+    />
   )
 }
 
@@ -231,9 +226,10 @@ export function DetailCard({
   if (isEmpty) return <EmptyMainPane />
   if (!team)
     return (
-      <div className="flex-1 flex items-center justify-center text-muted text-sm italic">
-        Select a team from the library
-      </div>
+      <EmptyStatement
+        statement="No team selected"
+        description="Pick a team from the library to see its details."
+      />
     )
   return (
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
