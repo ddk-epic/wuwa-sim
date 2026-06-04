@@ -34,18 +34,14 @@ export const ECHO_MAIN_1COST_SCALING = {
 
 // Cost-4 variable main stat values (references/echo-stats.md)
 export const ECHO_MAIN_4COST_VARIABLE = {
-  scalingAtk: 0.33,
-  scalingHp: 0.33,
-  scalingDef: 0.415,
+  scaling: { atk: 0.33, hp: 0.33, def: 0.415 },
   cr: 0.22,
   cd: 0.44,
 } as const
 
 // Cost-3 variable main stat values (references/echo-stats.md)
 export const ECHO_MAIN_3COST_VARIABLE = {
-  scalingAtk: 0.3,
-  scalingHp: 0.3,
-  scalingDef: 0.38,
+  scaling: { atk: 0.3, hp: 0.3, def: 0.38 },
   er: 0.32,
   elemDmg: 0.3,
 } as const

@@ -305,8 +305,8 @@ describe("compileBaseStats", () => {
     expect(stats.hpPct).toBeCloseTo(
       DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.hpPct +
         2 * ECHO_MAIN_1COST_SCALING.hp +
-        ECHO_MAIN_4COST_VARIABLE.scalingHp +
-        2 * ECHO_MAIN_3COST_VARIABLE.scalingHp,
+        ECHO_MAIN_4COST_VARIABLE.scaling.hp +
+        2 * ECHO_MAIN_3COST_VARIABLE.scaling.hp,
     )
   })
 

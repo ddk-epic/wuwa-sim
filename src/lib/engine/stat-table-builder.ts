@@ -192,6 +192,17 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
   }
 }
 
+/** The Stat Table percent field a character's primary scaling stat rolls into. */
+function scalingPctKey(
+  primaryScalingStat: "atk" | "hp" | "def",
+): "atkPct" | "hpPct" | "defPct" {
+  return primaryScalingStat === "atk"
+    ? "atkPct"
+    : primaryScalingStat === "hp"
+      ? "hpPct"
+      : "defPct"
+}
+
 function accumulateEchoSubstatBlock(
   stats: StatTable,
   character: EnrichedCharacter,
@@ -199,13 +210,8 @@ function accumulateEchoSubstatBlock(
 ): void {
   stats.critRate += DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
   stats.critDmg += DEFAULT_SUBSTAT_ROLLS.critDmg * ECHO_SUBSTAT.critDmg
-  if (primaryScalingStat === "atk") {
-    stats.atkPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.atkPct
-  } else if (primaryScalingStat === "hp") {
-    stats.hpPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.hpPct
-  } else {
-    stats.defPct += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.defPct
-  }
+  const pctKey = scalingPctKey(primaryScalingStat)
+  stats[pctKey] += DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT[pctKey]
   stats.energyRechargePct +=
     DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
   const skillType: SkillType =
@@ -224,10 +230,8 @@ function accumulateEchoMainBlock(
     layout.cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
     layout.cost3 * ECHO_MAIN_FIXED.cost3FlatAtk
   stats.hpFlat += layout.cost1 * ECHO_MAIN_FIXED.cost1FlatHp
-  const scalingVal = ECHO_MAIN_1COST_SCALING[primaryScalingStat]
-  if (primaryScalingStat === "atk") stats.atkPct += layout.cost1 * scalingVal
-  else if (primaryScalingStat === "hp") stats.hpPct += layout.cost1 * scalingVal
-  else stats.defPct += layout.cost1 * scalingVal
+  stats[scalingPctKey(primaryScalingStat)] +=
+    layout.cost1 * ECHO_MAIN_1COST_SCALING[primaryScalingStat]
 }
 
 function accumulateCost4Mains(
@@ -241,13 +245,8 @@ function accumulateCost4Mains(
     } else if (main === "cd") {
       stats.critDmg += ECHO_MAIN_4COST_VARIABLE.cd
     } else {
-      if (primaryScalingStat === "atk") {
-        stats.atkPct += ECHO_MAIN_4COST_VARIABLE.scalingAtk
-      } else if (primaryScalingStat === "hp") {
-        stats.hpPct += ECHO_MAIN_4COST_VARIABLE.scalingHp
-      } else {
-        stats.defPct += ECHO_MAIN_4COST_VARIABLE.scalingDef
-      }
+      stats[scalingPctKey(primaryScalingStat)] +=
+        ECHO_MAIN_4COST_VARIABLE.scaling[primaryScalingStat]
     }
   }
 }
@@ -264,13 +263,8 @@ function accumulateCost3Mains(
     } else if (main === "elemDmg") {
       stats.elementBonus[characterElement] += ECHO_MAIN_3COST_VARIABLE.elemDmg
     } else {
-      if (primaryScalingStat === "atk") {
-        stats.atkPct += ECHO_MAIN_3COST_VARIABLE.scalingAtk
-      } else if (primaryScalingStat === "hp") {
-        stats.hpPct += ECHO_MAIN_3COST_VARIABLE.scalingHp
-      } else {
-        stats.defPct += ECHO_MAIN_3COST_VARIABLE.scalingDef
-      }
+      stats[scalingPctKey(primaryScalingStat)] +=
+        ECHO_MAIN_3COST_VARIABLE.scaling[primaryScalingStat]
     }
   }
 }
