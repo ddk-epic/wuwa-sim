@@ -41,7 +41,7 @@ describe("ImportExportModal (combined)", () => {
       />,
     )
     expect(
-      (screen.getByDisplayValue("CODE-123") as HTMLTextAreaElement).readOnly,
+      screen.getByDisplayValue<HTMLTextAreaElement>("CODE-123").readOnly,
     ).toBe(true)
     expect(screen.getByText("bad code")).toBeTruthy()
   })

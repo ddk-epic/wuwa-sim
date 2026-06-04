@@ -180,7 +180,7 @@ export function validateTimeline(
     // including a { launch } — is legal: gravity lands us first (a soft fall), so it
     // is handled in the warn pass, not here. Intro Skills are exempt entirely: they
     // ignore incoming footing and enter on any footing. (See references/footing.md.)
-    const isIntro = resolved?.skillType === "Intro Skill"
+    const isIntro = resolved.skillType === "Intro Skill"
     let footingError: string | null = null
     if (
       !isIntro &&
@@ -232,7 +232,7 @@ export function validateTimeline(
       // which lands you before it re-launches) costs a fall — except an Intro Skill,
       // which ignores incoming footing and never falls.
       if (
-        resolved?.skillType !== "Intro Skill" &&
+        resolved.skillType !== "Intro Skill" &&
         effectiveFooting === "air" &&
         stageEntryFooting(footing) === "ground"
       ) {

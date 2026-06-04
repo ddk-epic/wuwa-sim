@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EnrichedCharacter } from "#/types/character"
-import type { DamageEntry } from "#/types/character"
+import type { EnrichedCharacter, DamageEntry } from "#/types/character"
 import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
@@ -204,7 +203,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
 })
 
 describe("BuffEngine — coordHit (#219)", () => {
-  const dmg = (
+  const coordDmg = (
     overrides: Partial<{
       value: number
       dmgType: string
@@ -228,7 +227,7 @@ describe("BuffEngine — coordHit (#219)", () => {
     trigger: { event: "hitLanded", characterId: 1, source: "self" },
     target: { kind: "self" },
     duration: { kind: "permanent" },
-    effects: [{ kind: "coordHit", damage: dmg(), icdFrames: 0 }],
+    effects: [{ kind: "coordHit", damage: coordDmg(), icdFrames: 0 }],
     ...overrides,
   })
 
@@ -264,7 +263,7 @@ describe("BuffEngine — coordHit (#219)", () => {
       trigger: { event: "hitLanded", characterId: 1, source: "synthetic" },
       target: { kind: "self" },
       duration: { kind: "permanent" },
-      effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 1000 }],
+      effects: [{ kind: "emitHit", damage: coordDmg(), icdFrames: 1000 }],
     }
     testCharacters = [baseChar({ id: 1, buffs: [coordBuff(), synthTrap] })]
     const engine = new BuffEngine()
@@ -295,8 +294,12 @@ describe("BuffEngine — coordHit (#219)", () => {
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [
-        { kind: "coordHit", damage: dmg(), icdFrames: 0 },
-        { kind: "coordHit", damage: dmg({ dmgType: "Heal" }), icdFrames: 0 },
+        { kind: "coordHit", damage: coordDmg(), icdFrames: 0 },
+        {
+          kind: "coordHit",
+          damage: coordDmg({ dmgType: "Heal" }),
+          icdFrames: 0,
+        },
       ],
     }
     testCharacters = [baseChar({ id: 1, buffs: [coordPairBuff] })]
@@ -329,7 +332,11 @@ describe("BuffEngine — coordHit (#219)", () => {
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [
-        { kind: "coordHit", damage: dmg({ dmgType: "Heal" }), icdFrames: 0 },
+        {
+          kind: "coordHit",
+          damage: coordDmg({ dmgType: "Heal" }),
+          icdFrames: 0,
+        },
       ],
     }
     testCharacters = [baseChar({ id: 1, buffs: [healCoordBuff] })]
@@ -649,18 +656,6 @@ describe("BuffEngine — emitHit (#60)", () => {
 })
 
 describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#117)", () => {
-  const dmg = (): DamageEntry => ({
-    type: "Basic Attack",
-    dmgType: "Fusion",
-    scalingStat: "atk",
-    actionFrame: 0,
-    value: 1.0,
-    energy: 0,
-    concerto: 0,
-    toughness: 0,
-    weakness: 0,
-  })
-
   it("trigger with sourceBuffId only fires on matching synthetic hit", () => {
     const emitter: BuffDef = {
       id: "char.emitter-a",

@@ -31,7 +31,7 @@ export function ElementAvatar({
       <CharacterPortrait
         src={portraitSrc(member.name)}
         alt={member.name}
-        initial={member.name[0]?.toUpperCase() ?? "?"}
+        initial={member.name.at(0)?.toUpperCase() ?? "?"}
         hex={hex}
         style={{
           filter: grayscale
@@ -98,7 +98,7 @@ export function PortraitStrip({
           <CharacterPortrait
             src={portraitSrc(m.name)}
             alt=""
-            initial={m.name[0]?.toUpperCase() ?? "?"}
+            initial={m.name.at(0)?.toUpperCase() ?? "?"}
             hex={elementHex(m.element)}
             className="w-full h-full object-cover object-[center_22%] block"
           />

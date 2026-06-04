@@ -48,7 +48,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
               <CharacterPortrait
                 src={portraitSrc(m.name)}
                 alt=""
-                initial={m.name[0]?.toUpperCase() ?? "?"}
+                initial={m.name.at(0)?.toUpperCase() ?? "?"}
                 hex={elementHex(m.element)}
                 className="w-full h-full object-cover object-[center_42%] block"
               />

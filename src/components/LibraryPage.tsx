@@ -36,7 +36,7 @@ export function LibraryPage() {
   const [importError, setImportError] = useState<string | null>(null)
 
   const selectedTeam =
-    teams.find((t) => t.id === selectedId) ?? teams[0] ?? null
+    teams.find((t) => t.id === selectedId) ?? teams.at(0) ?? null
   const isEmpty = teams.length === 0
 
   function handleCreate() {

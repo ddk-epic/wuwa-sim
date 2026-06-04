@@ -49,7 +49,6 @@ export function useAutoRun({
       safeRun()
     }
     return () => cancel()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Toggle off→on: run immediately if needsRun
@@ -59,7 +58,6 @@ export function useAutoRun({
       safeRun()
     }
     prevAutoRunRef.current = autoRun
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRun])
 
   const scheduleRun = useCallback(() => {
@@ -69,7 +67,6 @@ export function useAutoRun({
       timerRef.current = null
       safeRun()
     }, debounceMs)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cancel, debounceMs])
 
   const onModalOpen = useCallback(() => {
@@ -80,7 +77,6 @@ export function useAutoRun({
     if (autoRunRef.current && needsRunRef.current) {
       safeRun()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return { scheduleRun, onModalOpen, onModalClose }

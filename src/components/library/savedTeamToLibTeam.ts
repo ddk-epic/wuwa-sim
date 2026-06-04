@@ -40,8 +40,8 @@ export function savedTeamToLibTeam(saved: SavedTeam): LibTeam {
         ? (getWeaponById(loadout.weaponId)?.name ?? "")
         : "",
     })
-    const dmg = stats.dmgByChar[charId]
-    if (dmg !== undefined) dmgByChar[character.name] = dmg
+    if (charId in stats.dmgByChar)
+      dmgByChar[character.name] = stats.dmgByChar[charId]
   })
 
   const totalDmg = Object.values(stats.dmgByChar).reduce((s, v) => s + v, 0)
