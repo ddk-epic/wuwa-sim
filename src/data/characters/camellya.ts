@@ -1,35 +1,5 @@
 import type { EnrichedCharacter } from "#/types/character"
 
-/** The Forte Circuit Ephemeral cast — the trigger for Budding Mode + Sweet Dream. */
-const EPHEMERAL_CAST_STAGE =
-  "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack"
-
-/**
- * Stages Sweet Dream's `bonusMultiplier` applies to (ADR-0032): her core
- * attacks — the Normal Attack chain, the Vining/Blazing Waltzes, Vining Ronde,
- * Atonement, and the two Crimson Blossom / Floral Ravage Resonance-Skill hits.
- * Listed as lineage stageIds (no `.<hit>` suffix) so every hit of each stage
- * matches; Ephemeral itself is deliberately excluded. Heavy Pruning, Mid-air,
- * and Dodge Counter are not core attacks and stay unscaled.
- */
-const SWEET_DREAM_STAGES = [
-  "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
-  "char.camellya.basic-attack.burgeoning.basic-attack-2::basic-attack",
-  "char.camellya.basic-attack.burgeoning.basic-attack-3::basic-attack",
-  "char.camellya.basic-attack.burgeoning.basic-attack-4::basic-attack",
-  "char.camellya.basic-attack.burgeoning.basic-attack-4-hold::basic-attack",
-  "char.camellya.basic-attack.burgeoning.basic-attack-5::basic-attack",
-  "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
-  "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
-  "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
-  "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
-  "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
-  "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack",
-  "char.camellya.basic-attack.burgeoning.atonement::basic-attack",
-  "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
-  "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
-]
-
 export const camellya = {
   id: 1603,
   name: "Camellya",
@@ -101,12 +71,9 @@ export const camellya = {
       ],
     },
     {
-      // Sequence multipliers (S2/S3/S5) are intrinsic per-skill DMG Multiplier
-      // bonuses scoped via `appliesToHits`. They must stay per-hit instances —
-      // a `simStart`+`permanent` buff with no `condition` is folded into the
-      // base stat table unconditionally (engine-bootstrap.ts), which would leak
-      // the multiplier onto every hit. The always-true `forte >= 0` gate keeps
-      // them as permanent instances so the `appliesToHits` filter applies.
+      // Per-skill DMG Multiplier scoped via `appliesToHits`. The always-true
+      // `forte >= 0` condition keeps it a per-hit instance instead of being
+      // folded into the base table (which would leak it onto every hit).
       id: "char.camellya.s2.ephemeral-multiplier",
       name: "S2: Ephemeral DMG Multiplier",
       description: "Ephemeral DMG Multiplier is increased by 120%.",
@@ -254,12 +221,7 @@ export const camellya = {
       ],
     },
     {
-      // Every 10 Crimson Pistils (forte) consumed mints one Crimson Bud. The
-      // `resourceStep` trigger fires once per 10-forte boundary crossed
-      // downward (carryover handled by the trigger index, ADR-0032). The buff
-      // carries no concerto/energy effect — the conversion's concerto is
-      // already encoded in the per-hit API values, so the bud is the only
-      // thing emitted here. Stacks (capped at 10) are read by Sweet Dream.
+      // Every 10 forte consumed mints one Crimson Bud (capped at 10), read by Sweet Dream.
       id: "char.camellya.forte.crimson-bud",
       name: "Crimson Bud",
       description:
@@ -274,11 +236,9 @@ export const camellya = {
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 10, onRetrigger: "addStack" },
-      // Cannot gain Crimson Buds while Budding Mode is active (ADR-0033). The
-      // forte drain continues inside Budding, so the resourceStep trigger still
-      // fires; the trigger-time gate suppresses bud minting without touching the
-      // drain. `gateTriggerOnCondition` is required because the buff carries no
-      // stat effect for the continuous condition pass to gate.
+      // No Crimson Buds while Budding Mode is active. Forte keeps draining (the
+      // trigger still fires), so `gateTriggerOnCondition` suppresses minting at
+      // trigger time.
       condition: {
         kind: "buffActive",
         buffId: "char.camellya.forte.budding-mode",
@@ -289,12 +249,9 @@ export const camellya = {
       effects: [],
     },
     {
-      // Budding Mode is the presence flag S3/S6 condition on, and it carries
-      // Sweet Dream: a `bonusMultiplier` read off the live Crimson Bud count at
-      // Ephemeral cast and snapshotted (`scaledByStacks`, snapshot:true), so the
-      // value survives the same cast's bud consumption. `replace` re-snapshots
-      // on a fresh cast. It has no intrinsic timer — it ends on swap-out
-      // (`expiresOnSourceSwapOut`) or when pistils hit 0 (see budding-mode-end).
+      // Budding Mode carries Sweet Dream: a `bonusMultiplier` read off the
+      // Crimson Bud count at cast and snapshotted.
+      // ends on swap-out or when pistils hit 0 (see budding-mode-end).
       id: "char.camellya.forte.budding-mode",
       name: "Budding Mode",
       description:
@@ -302,13 +259,31 @@ export const camellya = {
       trigger: {
         event: "skillCast",
         characterId: 1603,
-        stageId: EPHEMERAL_CAST_STAGE,
+        stageId:
+          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       expiresOnSourceSwapOut: true,
       stacking: { max: 1, onRetrigger: "replace" },
-      appliesToHits: { stageId: SWEET_DREAM_STAGES },
+      appliesToHits: {
+        stageId: [
+          "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-2::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-3::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-4::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-4-hold::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-5::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
+          "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack",
+          "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
+          "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
+        ],
+      },
       effects: [
         {
           kind: "stat",
@@ -343,14 +318,8 @@ export const camellya = {
       ],
     },
     {
-      // Forte Energy Regen Multiplier (ADR-0033): her consuming attacks gain
-      // +150% Energy Regen Multiplier, so they generate 2.5× Resonance Energy.
-      // Read hit-scoped off the negative-`forte` marker (the engine only folds
-      // `energyGainMult` into hits with `forte < 0`), so this is a plain self
-      // buff with no `appliesToHits`. Gated OFF inside Budding Mode via a negated
-      // condition so the Budding ERM's −1.0 can zero the factor ("reduced to 0%").
-      // Lazy permanent instance: the `condition` keeps it out of the folded base
-      // table so it never leaks onto non-consuming hits.
+      // +150% Energy Regen Multiplier on consuming attacks → 2.5× Resonance Energy.
+      // While Budding Mode is NOT active.
       id: "char.camellya.forte.erm",
       name: "Forte Energy Regen Multiplier",
       description:
@@ -373,11 +342,8 @@ export const camellya = {
       ],
     },
     {
-      // Budding-Mode ERM suppression (ADR-0033): while Budding Mode is active,
-      // contribute −1.0 to `energyGainMult`. The Forte ERM (+1.5) is gated off
-      // in Budding, so the net factor on consuming attacks is 1 + (−1.0) = 0 —
-      // "Energy Regen Multiplier reduced to 0%". Each buff states its own value
-      // and the cancellation emerges; neither hardcodes the other's magnitude.
+      // While Budding Mode is active, −1.0 to `energyGainMult`.
+      // is 1 + (−1.0) = 0.
       id: "char.camellya.forte.budding-erm",
       name: "Budding Mode Energy Suppression",
       description:
@@ -399,8 +365,6 @@ export const camellya = {
       ],
     },
     {
-      // S3: while Budding Mode is active, ATK +58%. Gated as a lazy permanent
-      // instance (condition keeps it out of the folded base table).
       id: "char.camellya.s3.budding-atk",
       name: "S3: Budding ATK",
       description:
@@ -423,8 +387,6 @@ export const camellya = {
       ],
     },
     {
-      // S6 (non-Perennial half): adds a flat +150% to the Sweet Dream multiplier
-      // on the same core attacks while Budding Mode is active.
       id: "char.camellya.s6.sweet-dream-rider",
       name: "S6: Sweet Dream Rider",
       description:
@@ -438,7 +400,24 @@ export const camellya = {
         buffId: "char.camellya.forte.budding-mode",
         on: "source",
       },
-      appliesToHits: { stageId: SWEET_DREAM_STAGES },
+      appliesToHits: {
+        stageId: [
+          "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-2::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-3::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-4::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-4-hold::basic-attack",
+          "char.camellya.basic-attack.burgeoning.basic-attack-5::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
+          "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
+          "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack",
+          "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
+          "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
+        ],
+      },
       effects: [
         {
           kind: "stat",
@@ -953,10 +932,9 @@ export const camellya = {
           value: "88.14%*3",
           actionTime: 0,
           variants: {},
-          // Seedbed: Heavy Pruning is considered Basic Attack DMG. The hit
-          // `type` (SkillType) is retagged to "Basic Attack" while the stage
-          // `category` (SkillCategory) stays "Heavy Attack" — the always-on
-          // SkillType≠SkillCategory split is baked into stage data (ADR-0032).
+          // Seedbed: Heavy Pruning counts as Basic Attack DMG. The hit `type`
+          // is retagged to "Basic Attack" while the stage `category` stays
+          // "Heavy Attack".
           damage: [
             {
               type: "Basic Attack",

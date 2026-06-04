@@ -69,9 +69,8 @@ export interface StatTable {
   healingBonus: number
   bonusMultiplier: number
   /**
-   * Per-skill Energy Regen Multiplier bucket (ADR-0033). Folded into energy
-   * accrual as a `× (1 + energyGainMult)` factor, read hit-scoped off the
-   * negative-`forte` marker (consuming attacks only). Additive across buffs.
+   * Energy Regen Multiplier. Folded into energy accrual as a
+   * `× (1 + energyGainMult)` factor on consuming attacks only.
    */
   energyGainMult: number
 }

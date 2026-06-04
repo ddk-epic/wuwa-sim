@@ -51,9 +51,8 @@ export type ValueExpr =
       base?: number
     }
   | {
-      // `base + per × min(stacks_of(buffId on characterId), max)` (ADR-0032).
-      // With `snapshot: true` the stack count is frozen at apply, so a value
-      // read off a transient buff survives that buff's later removal.
+      // `base + per × min(stacks_of(buffId on characterId), max)`. With
+      // `snapshot: true` the stack count is frozen at apply time.
       kind: "scaledByStacks"
       buffId: string
       characterId: number
@@ -175,10 +174,8 @@ export type Trigger =
       characterId?: number
     }
   | {
-      // Fires once per `step` of the resource crossed in `direction` (ADR-0032).
-      // Sugar over `resourceCrossed`: the trigger index expands it to a
-      // threshold at every multiple of `step` and rides the per-threshold
-      // crossing dispatch, so multi-cross and carryover fall out for free.
+      // Fires once per `step` of the resource crossed in `direction`. The
+      // trigger index expands it to a threshold at every multiple of `step`.
       event: "resourceStep"
       resource: ResourceKind
       step: number
@@ -200,7 +197,7 @@ export type Condition =
       kind: "buffActive"
       buffId: string
       on: "target" | "source"
-      /** When true, the condition is satisfied while the buff is ABSENT (ADR-0033). */
+      /** When true, the condition is satisfied while the buff is ABSENT. */
       negate?: boolean
     }
   | { kind: "onField" }
@@ -273,10 +270,8 @@ export interface BuffDef {
   /** Continuously evaluated; gates whether instance contributes effects. */
   condition?: Condition
   /**
-   * Opt-in (ADR-0033): when true, `condition` is also evaluated at trigger time
-   * and a false result suppresses instantiation entirely (not just contribution).
-   * Use for "cannot gain X while Y" gates where the buff carries no stat effect
-   * to gate continuously (e.g. a stack-emitting buff).
+   * When true, `condition` is also evaluated at trigger time; a false result
+   * suppresses instantiation entirely (not just contribution).
    */
   gateTriggerOnCondition?: boolean
   /** When true, instance is removed when its source character swaps out. */

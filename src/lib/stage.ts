@@ -98,8 +98,7 @@ export function makeEchoStageId(
  * Match a stageId filter `t` against a concrete hit stageId `sid`. A `t` that
  * ends in a `.<hitIndex>` suffix requires an exact match; otherwise `t` is a
  * lineage prefix that matches every hit of the stage (and of descendant
- * stages). Shared by trigger matching (instance-store) and `appliesToHits` Hit
- * Filter matching (stat-table-builder) so both axes read stageIds the same way.
+ * stages).
  */
 export function stageIdMatches(t: string, sid: string): boolean {
   if (sid === t) return true

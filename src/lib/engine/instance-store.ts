@@ -494,10 +494,9 @@ export function matchesTrigger(
 ): boolean {
   if (trigger.event === "simStart") return false
 
-  // `resourceStep` rides the per-threshold `resourceCrossed` dispatch: it
-  // matches a crossing event whose threshold is a multiple of `step` in the
-  // mapped direction (ADR-0032). Handled before the kind check below because
-  // its trigger kind ("resourceStep") differs from the event kind it consumes.
+  // A `resourceStep` trigger matches a `resourceCrossed` event whose threshold
+  // is a multiple of `step` in the mapped direction. Handled before the kind
+  // check because the trigger kind differs from the event kind it consumes.
   if (trigger.event === "resourceStep" && event.kind === "resourceCrossed") {
     if (trigger.resource !== event.resource) return false
     const direction = trigger.direction === "gained" ? "up" : "down"
