@@ -1,0 +1,53 @@
+# Stat Table
+
+A `StatTable` is the **flattened, aggregated stat sheet** for one character at one
+moment: every base/percent/flat stat, crit, damage bonus, deepen, shred, and
+recharge value the damage formula needs, already summed across character, weapon,
+echoes, and active buffs. It is the single object buffs write into and the damage
+pipeline reads from.
+
+**Source files:** `src/types/stat-table.ts`, `src/lib/engine/stat-table-builder.ts`
+
+## How it works
+
+The shape is intentionally wide and flat. Scalars cover the three primary stats in
+`base` / `Pct` / `Flat` form (`atkBase`/`atkPct`/`atkFlat`, likewise HP and DEF),
+`critRate` / `critDmg`, `defShred`, recharge (`energyRechargePct`,
+`forteRechargePct`), `healingBonus`, and `bonusMultiplier`. Three axes are keyed
+maps rather than scalars:
+
+- `elementBonus` / `elementDeepen` — `Record<Element, number>`
+- `skillTypeBonus` / `skillTypeDeepen` / `shreds` — `Record<SkillType, number>`
+
+…each paired with an `all*` scalar (`allDmgBonus`, `allDeepen`) for
+element-/type-agnostic contributions. `emptyStatTable()` seeds every field to
+zero (maps included) and is the starting point the builder accumulates onto.
+
+`ScalarStatKey` enumerates just the scalar (non-map) fields — it is the address
+space a buff `StatEffect` can target directly. The keyed-map axes are addressed
+separately. See [BUFFS](BUFFS.md) for the full StatPath ↔ field mapping rather
+than duplicating it here.
+
+### How it's built
+
+`stat-table-builder.ts` starts from `emptyStatTable()` and layers contributions
+in order: character base stats (with the intrinsic 5% crit-rate / 150% crit-dmg
+floor every character starts at), the weapon main/sub stats, the echo build —
+expanded from the `SlotLoadout`'s `echoBuild` pattern and main-stat choices into
+concrete main + substat rolls via `echo-stat-constants` — and finally the active
+`BuffDef`s, which resolve their `ValueExpr` and write into the matching field.
+
+## Gotchas
+
+- The crit floor (5% / 150%) is applied in the builder, not stored on the
+  character — an empty table has `critRate: 0`.
+- `SkillType` here excludes `"Movement"`-only nuances and `"Forte Circuit"`
+  (which is a `SkillGrouping`, not a `SkillType`); the map keys follow the
+  `SkillType` union exactly.
+
+## Related
+
+- [BUFFS](BUFFS.md) — StatPath reference: which path writes which field
+- [buff-engine](buff-engine.md) — how buffs accumulate onto the table
+- [loadout](loadout.md) — the echo build / main-stat inputs the builder expands
+- [enriched-model](enriched-model.md) — the character/weapon/echo shapes consumed

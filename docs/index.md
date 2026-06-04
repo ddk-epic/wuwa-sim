@@ -1,7 +1,7 @@
 # Docs Index
 
 Concept pages documenting `src/`. ADRs (`adr/`) record architectural decisions.
-Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md](log.md).
+Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md](log.md). Testing: which tests to drop — [test-pruning-guidelines.md](test-pruning-guidelines.md).
 
 ## Engine
 
@@ -11,11 +11,13 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 
 ## Game model
 
-_(grows as concepts are captured)_
+- [enriched-model](enriched-model.md) — raw extracted data vs the `Enriched*` shapes the engine runs; enrichment as a manual authoring step
+- [loadout](loadout.md) — the configurable team unit: numeric-ID slots, sequences, echo build, main-stat choices, and how ids resolve to data
+- [stat-table](stat-table.md) — the flat aggregated stat sheet buffs write into and the damage formula reads
 
 ## Data
 
-_(grows as concepts are captured)_
+- [data](data.md) — the data layer: per-domain folder triad (authored entry + `index.ts` registry + `raw/` extraction), the ID scheme, and shared vocabularies
 
 ## Decisions
 

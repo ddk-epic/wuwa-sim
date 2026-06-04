@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-04 — Populated the empty Game model and Data index sections
+
+Captured the concepts behind the two empty `index.md` sections rather than mechanically mirroring folders. Agreed boundary: Game model = `src/types/` domain shapes, Data = `src/data/` authoring/storage; buff/timeline/log types stay engine-owned. Centerpiece is `enriched-model.md` — the non-obvious raw→`Enriched*` bridge, which is a **manual authoring step** (author hand-writes the enriched `.ts` from `raw/*.json` + `references/`), not a runtime transform; the lone runtime exception is `injectMovement`. Added `loadout.md` (numeric-ID-decoupled team unit, resolved via `catalog.ts`), `stat-table.md` (flat aggregated stat sheet, 5%/150% crit floor in the builder, links to BUFFS for StatPath), and `data.md` (folder triad: authored entry + `index.ts` registry + `raw/` extraction). Linked the orphaned `test-pruning-guidelines.md` from the intro line (workflow doc, not a concept section).
+
+Pages touched: enriched-model.md (new), loadout.md (new), stat-table.md (new), data.md (new), index.md.
+
 ## 2026-06-04 — Concerto consumption model
 
 Designed how concerto is spent and observed. Concerto stays uncapped (parallel to energy) so wasted overcap is visible; no cap is registered. Outro Skills drain all concerto to 0 via an engine-internal branch in the `skillCast` handler (sibling to the energy-on-Liberation block): `console.warn` when concerto < `OUTRO_CONCERTO_COST` (=100), still firing, then `setResource(concerto, 0)` — surplus above 100 is wasted by design. The "Outro needs ≥ 100" rule is warn-only, not a static row error, because `validate-timeline.ts` is resource-agnostic (a post-sim pass could upgrade it later). Character kits spend partial concerto via the existing data-authored `resource` `op: "sub"` effect gated by `resourceAtLeast` — distinct path from Outro, unified only at the ledger. Readers key on a new `resourceConsumed` trigger (fires on any net decrease), not `resourceCrossed`, which is threshold-keyed and can't express "any spend." Added a low-side `Math.max(0, …)` floor to `ResourceLedger.applyDelta`. Unblocks the deferred Red Spring concerto-consumed passive. Considered and rejected: a hard 100 cap (hides overcap), per-character Outro drain authoring (rule is universal), and reusing `resourceCrossed down` for readers (misses partial spends).
