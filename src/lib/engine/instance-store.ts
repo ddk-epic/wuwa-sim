@@ -62,6 +62,14 @@ export type EngineEvent =
       direction: "up" | "down"
       frame: number
     }
+  | {
+      kind: "resourceConsumed"
+      characterId: number
+      resource: ResourceKind
+      /** Magnitude of the net decrease (before - after), always > 0. */
+      amount: number
+      frame: number
+    }
 
 export interface Candidate {
   def: BuffDef
@@ -601,6 +609,23 @@ export function matchesTrigger(
     if (trigger.resource !== event.resource) return false
     if (trigger.direction !== event.direction) return false
     if (trigger.threshold !== event.threshold) return false
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
+      return false
+    }
+    return true
+  }
+
+  if (
+    trigger.event === "resourceConsumed" &&
+    event.kind === "resourceConsumed"
+  ) {
+    if (trigger.resource !== event.resource) return false
     if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
       return false
     }

@@ -154,6 +154,14 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
     }
+  | {
+      // Fires on any net decrease of a resource, of any size (ADR-0031) —
+      // threshold-free, unlike `resourceCrossed`. The faithful "on spend" hook.
+      event: "resourceConsumed"
+      resource: ResourceKind
+      actor?: "self" | "any"
+      characterId?: number
+    }
 
 export type BuffTarget =
   | { kind: "self" }

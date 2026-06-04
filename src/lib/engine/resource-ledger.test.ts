@@ -106,3 +106,27 @@ describe("ResourceLedger — forte cap", () => {
     expect(r.getResource(1).forte).toBe(10)
   })
 })
+
+describe("ResourceLedger — floor at 0 (#324)", () => {
+  it("a sub larger than the current value floors at 0, not negative", () => {
+    const r = new ResourceLedger()
+    r.applyDelta(1, "concerto", 70)
+    expect(r.applyDelta(1, "concerto", -100)).toEqual({ before: 70, after: 0 })
+    expect(r.getResource(1).concerto).toBe(0)
+  })
+
+  it("floor protects every resource channel, not just concerto", () => {
+    const r = new ResourceLedger()
+    r.applyDelta(1, "energy", 20)
+    expect(r.applyDelta(1, "energy", -50)).toEqual({ before: 20, after: 0 })
+    r.applyDelta(1, "forte", 1)
+    expect(r.applyDelta(1, "forte", -5)).toEqual({ before: 1, after: 0 })
+  })
+
+  it("existing high-side cap behavior is unchanged by the floor", () => {
+    const r = new ResourceLedger()
+    r.registerCap(1, "forte", 4)
+    expect(r.applyDelta(1, "forte", 10)).toEqual({ before: 0, after: 4 })
+    expect(r.getResource(1).forte).toBe(4)
+  })
+})

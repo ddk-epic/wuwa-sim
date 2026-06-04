@@ -388,6 +388,171 @@ describe("BuffEngine — resource state (#58)", () => {
     })
   })
 
+  // A buff that emits a synthetic hit whenever concerto is consumed by self.
+  const emitOnConcertoConsumed: BuffDef = {
+    id: "char.emit-on-concerto-consumed",
+    name: "Emit on Concerto Consumed",
+    trigger: { event: "resourceConsumed", resource: "concerto", actor: "self" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [
+      {
+        kind: "emitHit",
+        damage: {
+          type: "Basic Attack",
+          dmgType: "Fusion",
+          scalingStat: "atk",
+          actionFrame: 0,
+          value: 0.5,
+          energy: 0,
+          concerto: 0,
+          toughness: 0,
+          weakness: 0,
+        },
+        icdFrames: 0,
+      },
+    ],
+  }
+
+  it("resourceConsumed fires on a partial op:sub spend gated by resourceAtLeast (#324)", () => {
+    // On skillCast, spend 30 concerto when the caster has at least 30.
+    const spendConcerto: BuffDef = {
+      id: "char.spend-concerto",
+      name: "Spend Concerto",
+      trigger: { event: "skillCast", characterId: 1 },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "concerto",
+        n: 30,
+        on: "source",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "sub",
+          value: { kind: "const", v: 30 },
+        },
+      ],
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [spendConcerto, emitOnConcertoConsumed] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 100,
+    })
+    const { deferredEmits } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+      frame: 1,
+    })
+    expect(engine.getResource(1).concerto).toBe(70)
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0]).toMatchObject({
+      synthetic: true,
+      sourceBuffId: "char.emit-on-concerto-consumed",
+      characterId: 1,
+    })
+  })
+
+  it("resourceConsumed fires on the engine-internal Outro drain (#324)", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [emitOnConcertoConsumed] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 130,
+    })
+    const { deferredEmits } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    const synthetics = drainSynthetics(engine, deferredEmits)
+    expect(synthetics).toHaveLength(1)
+    expect(synthetics[0]).toMatchObject({
+      sourceBuffId: "char.emit-on-concerto-consumed",
+    })
+  })
+
+  it("resourceConsumed does NOT fire on concerto accrual (upward delta) (#324)", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [emitOnConcertoConsumed] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    const { deferredEmits } = engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 50,
+    })
+    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(0)
+  })
+
+  it("resourceConsumed characterId filter narrows the trigger (#324)", () => {
+    // Listener keyed to character 2; only character 1 spends → no fire.
+    const listenForChar2: BuffDef = {
+      ...emitOnConcertoConsumed,
+      id: "char.emit-on-concerto-consumed-2",
+      trigger: {
+        event: "resourceConsumed",
+        resource: "concerto",
+        actor: "any",
+        characterId: 2,
+      },
+    }
+    testCharacters = [
+      baseChar({ id: 1, buffs: [listenForChar2] }),
+      baseChar({ id: 2 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 130,
+    })
+    const { deferredEmits } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Outro Skill",
+      frame: 1,
+    })
+    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(0)
+  })
+
   it("resourceCrossed dispatched through main pipeline: own resource Effect crossing a threshold fires another buff with emitHit (#62)", () => {
     // Buff A: on skillCast, adds 100 concerto to self via a resource Effect.
     // Buff B: on concerto crossing 100 upward, emits a synthetic hit.

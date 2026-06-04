@@ -780,6 +780,16 @@ export class BuffEngine {
       hitsOut,
       depth,
     )
+    this.fireResourceConsumed(
+      characterId,
+      resource,
+      before,
+      after,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
   }
 
   private setResource(
@@ -797,6 +807,16 @@ export class BuffEngine {
       value,
     )
     this.fireResourceCrossed(
+      characterId,
+      resource,
+      before,
+      after,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
+    this.fireResourceConsumed(
       characterId,
       resource,
       before,
@@ -843,6 +863,36 @@ export class BuffEngine {
         depth,
       )
     }
+  }
+
+  /**
+   * Fires `resourceConsumed` on any net decrease (ADR-0031), threshold-free —
+   * catching both the engine-internal Outro drain and data-authored `op: "sub"`
+   * spends. Never fires on accrual (`after >= before`).
+   */
+  private fireResourceConsumed(
+    characterId: number,
+    resource: ResourceKind,
+    before: number,
+    after: number,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    if (after >= before) return
+    this.dispatchEvent(
+      {
+        kind: "resourceConsumed",
+        characterId,
+        resource,
+        amount: before - after,
+        frame,
+      },
+      out,
+      hitsOut,
+      depth,
+    )
   }
 
   private applyResourceEffect(
