@@ -1,5 +1,6 @@
 import type {
   BuffDef,
+  BuffInstance,
   CoordHitEffect,
   EmitHitEffect,
   HitContext,
@@ -830,6 +831,30 @@ export class BuffEngine {
     return this.store.tickToFrame(frame)
   }
 
+  /**
+   * The single membership gate behind both `resolveStats` and `activeBuffs`: a
+   * buff instance "contributes" to a hit iff it passes the Hit Filter (checked
+   * first, short-circuiting the condition evaluator) and its condition holds.
+   *
+   * Hit Filter: a non-`appliesToHits` buff always passes; an `appliesToHits`
+   * buff passes only when a matching `hit` is supplied. This makes "listed =
+   * contributed" structural — one predicate instead of two hand-copied folds.
+   */
+  private activeContributions(
+    characterId: number,
+    hit?: HitContext,
+  ): BuffInstance[] {
+    return this.store.getActiveTargeting(characterId).filter((inst) => {
+      if (inst.def.appliesToHits) {
+        if (!hit || !matchesHit(inst.def.appliesToHits, hit)) return false
+      }
+      return (
+        !inst.def.condition ||
+        this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
+      )
+    })
+  }
+
   resolveStats(characterId: number, hit?: HitContext): StatTable {
     if (this.resolvingStats.has(characterId)) {
       return this.store.cloneBaseStats(characterId)
@@ -837,44 +862,18 @@ export class BuffEngine {
     this.resolvingStats.add(characterId)
     try {
       const base = this.store.cloneBaseStats(characterId)
-      const contributions = this.store.getActiveTargeting(characterId)
       const getCharStat = (cid: number, stat: ScalarStatKey): number => {
         return this.resolveStats(cid)[stat]
       }
-      for (const inst of contributions) {
-        if (inst.def.appliesToHits) continue
-        if (
-          inst.def.condition &&
-          !this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
-        ) {
-          continue
-        }
+      // One pass over the gated instances; `accumulateStatEffects` only does
+      // `+=`, so folding hit-agnostic and hit-scoped buffs together yields the
+      // same total as the two old passes.
+      for (const inst of this.activeContributions(characterId, hit)) {
         accumulateStatEffects(
           base,
           { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
           getCharStat,
         )
-      }
-      if (hit) {
-        for (const inst of contributions) {
-          if (!inst.def.appliesToHits) continue
-          if (!matchesHit(inst.def.appliesToHits, hit)) continue
-          if (
-            inst.def.condition &&
-            !this.evaluator.evaluateCached(
-              inst.def.condition,
-              inst,
-              characterId,
-            )
-          ) {
-            continue
-          }
-          accumulateStatEffects(
-            base,
-            { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
-            getCharStat,
-          )
-        }
       }
       return base
     } finally {
@@ -894,17 +893,7 @@ export class BuffEngine {
 
   /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. When `hit` is provided, `appliesToHits` buffs that do not match the hit are also excluded. */
   activeBuffs(characterId: number, hit?: HitContext): ActiveBuff[] {
-    return this.store
-      .getActiveTargeting(characterId)
-      .filter((inst) => {
-        if (inst.def.appliesToHits) {
-          if (!hit || !matchesHit(inst.def.appliesToHits, hit)) return false
-        }
-        return (
-          !inst.def.condition ||
-          this.evaluator.evaluateCached(inst.def.condition, inst, characterId)
-        )
-      })
+    return this.activeContributions(characterId, hit)
       .map((inst) => ({
         id: inst.def.id,
         name: inst.def.name,

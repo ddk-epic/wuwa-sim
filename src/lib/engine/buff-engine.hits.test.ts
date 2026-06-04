@@ -3,7 +3,7 @@ import type { EnrichedCharacter, DamageEntry } from "#/types/character"
 import type { WeaponData } from "#/types/weapon"
 import type { EnrichedEcho } from "#/types/echo"
 import type { EchoSet } from "#/types/echo-set"
-import type { BuffDef } from "#/types/buff"
+import type { BuffDef, HitContext } from "#/types/buff"
 import { BuffEngine } from "./buff-engine"
 import { drainSynthetics } from "./buff-engine.test-utils"
 import {
@@ -744,5 +744,106 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
     })
 
     expect(engine.activeBuffIds(1)).not.toContain("char.chain")
+  })
+})
+
+describe("BuffEngine — activeContributions gate: listed = contributed (#320)", () => {
+  it("a live false-condition instance is in activeBuffIds but not activeBuffs / resolveStats", () => {
+    const condBuff: BuffDef = {
+      id: "test.cond-atk",
+      name: "Conditional Atk",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Basic Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 600 },
+      // Gated on a buff that is never active → condition is false at read time.
+      condition: { kind: "buffActive", buffId: "test.never", on: "source" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [condBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+
+    // Lifecycle view: the instance is live regardless of its condition.
+    expect(engine.activeBuffIds(1)).toContain("test.cond-atk")
+    // Contribution view: a false condition removes it from both seam callers.
+    expect(engine.activeBuffs(1).map((b) => b.id)).not.toContain(
+      "test.cond-atk",
+    )
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+  })
+
+  it("an appliesToHits buff is excluded when hit is omitted, included when a matching hit is passed", () => {
+    const hitScopedBuff: BuffDef = {
+      id: "test.hit-atk",
+      name: "Hit Scoped Atk",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Basic Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "frames", v: 600 },
+      appliesToHits: { skillType: "Heavy Attack" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [hitScopedBuff] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+
+    // Hit omitted: hit-scoped buff never feeds the hit-agnostic stat table / list.
+    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
+    expect(engine.activeBuffs(1).map((b) => b.id)).not.toContain("test.hit-atk")
+
+    // Non-matching hit: still excluded.
+    const nonMatching: HitContext = { skillType: "Basic Attack" }
+    expect(engine.resolveStats(1, nonMatching).atkPct).toBeCloseTo(BASE_ATK_PCT)
+    expect(engine.activeBuffs(1, nonMatching).map((b) => b.id)).not.toContain(
+      "test.hit-atk",
+    )
+
+    // Matching hit: included in both the stat table and the list.
+    const matching: HitContext = { skillType: "Heavy Attack" }
+    expect(engine.resolveStats(1, matching).atkPct).toBeCloseTo(
+      BASE_ATK_PCT + 0.2,
+    )
+    expect(engine.activeBuffs(1, matching).map((b) => b.id)).toContain(
+      "test.hit-atk",
+    )
   })
 })
