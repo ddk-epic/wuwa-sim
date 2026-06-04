@@ -40,16 +40,23 @@ const TEAMMATE_ENERGY_SHARE = 0.5
  * `energy * 0.5 * (1 + actorER)`, never re-scaled by the teammate's own ER.
  * Concerto is raw; forte is FR-scaled on gains only (raw on consumption).
  * Synthetic gains never share energy.
+ *
+ * `energyGainMult` is the per-skill Energy Regen Multiplier (ADR-0033): the
+ * **actor's** own energy becomes `energy × (1 + ER) × (1 + energyGainMult)`.
+ * The caller resolves it hit-scoped (only on consuming hits) and passes 0
+ * otherwise; the teammate share is deliberately left unscaled by it (a personal
+ * regen multiplier, not part of the shared base).
  */
 export function accrueForHit(
   gains: AccrualGains,
   actor: AccrualActor,
   partyIds: number[],
+  energyGainMult = 0,
 ): Accrual[] {
   const accruals: Accrual[] = []
 
   if (gains.energy) {
-    const actorEnergy = gains.energy * (1 + actor.er)
+    const actorEnergy = gains.energy * (1 + actor.er) * (1 + energyGainMult)
     accruals.push({
       characterId: actor.id,
       resource: "energy",

@@ -209,6 +209,21 @@ export class BuffEngine {
       this.deferOutroBuff(def, sourceCharacterId, frame)
       return
     }
+    // Opt-in trigger-time condition gate (ADR-0033). By default a stateful
+    // buff's `condition` only gates contribution, not instantiation; with
+    // `gateTriggerOnCondition` the trigger itself is suppressed when the
+    // condition is false — extends the nextOnField precedent above to self/
+    // global buffs (used so Crimson Buds cannot mint while Budding is active).
+    if (
+      def.gateTriggerOnCondition &&
+      def.condition &&
+      !this.evaluator.evaluateUncached(
+        def.condition,
+        subjectAtTrigger(sourceCharacterId),
+      )
+    ) {
+      return
+    }
     if (def.target?.kind === "global") {
       this.store.applyBuff(def, sourceCharacterId, GLOBAL_TARGET_ID, frame, out)
       return
@@ -681,6 +696,13 @@ export class BuffEngine {
     if (!event.energy && !event.concerto && !event.forte) return []
     const needsStats = !!event.energy || !!event.forte
     const stats = needsStats ? this.resolveStats(event.characterId) : null
+    // `#321` contract narrowing (ADR-0033): ER/FR stay hit-agnostic, but the
+    // Energy Regen Multiplier bucket is read hit-scoped — keyed off the
+    // negative-`forte` marker, so it lands only on consuming attacks. The
+    // value itself comes from condition-gated buffs (no appliesToHits scope),
+    // so the hit-agnostic table carries it; the `forte < 0` test is the scope.
+    const energyGainMult =
+      stats && (event.forte ?? 0) < 0 ? stats.energyGainMult : 0
     return accrueForHit(
       {
         energy: event.energy,
@@ -694,6 +716,7 @@ export class BuffEngine {
         fr: stats?.forteRechargePct ?? 0,
       },
       this.store.getPartyCharacterIds(),
+      energyGainMult,
     )
   }
 

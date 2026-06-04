@@ -187,6 +187,7 @@ export function cloneStats(s: StatTable): StatTable {
     forteRechargePct: s.forteRechargePct,
     healingBonus: s.healingBonus,
     bonusMultiplier: s.bonusMultiplier,
+    energyGainMult: s.energyGainMult,
   }
 }
 
@@ -207,6 +208,7 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "forteRechargePct":
     case "healingBonus":
     case "bonusMultiplier":
+    case "energyGainMult":
       stats[path.stat] += v
       return
     case "elementBonus":

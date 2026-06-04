@@ -196,7 +196,13 @@ export type BuffTarget =
 export const GLOBAL_TARGET_ID = 0
 
 export type Condition =
-  | { kind: "buffActive"; buffId: string; on: "target" | "source" }
+  | {
+      kind: "buffActive"
+      buffId: string
+      on: "target" | "source"
+      /** When true, the condition is satisfied while the buff is ABSENT (ADR-0033). */
+      negate?: boolean
+    }
   | { kind: "onField" }
   | { kind: "actorIsOnField" }
   | { kind: "actorIsOffField" }
@@ -266,6 +272,13 @@ export interface BuffDef {
   nonStackingGroup?: string
   /** Continuously evaluated; gates whether instance contributes effects. */
   condition?: Condition
+  /**
+   * Opt-in (ADR-0033): when true, `condition` is also evaluated at trigger time
+   * and a false result suppresses instantiation entirely (not just contribution).
+   * Use for "cannot gain X while Y" gates where the buff carries no stat effect
+   * to gate continuously (e.g. a stack-emitting buff).
+   */
+  gateTriggerOnCondition?: boolean
   /** When true, instance is removed when its source character swaps out. */
   expiresOnSourceSwapOut?: boolean
   /**

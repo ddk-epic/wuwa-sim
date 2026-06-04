@@ -42,6 +42,7 @@ export type ScalarStatKey =
   | "forteRechargePct"
   | "healingBonus"
   | "bonusMultiplier"
+  | "energyGainMult"
 
 export interface StatTable {
   atkBase: number
@@ -67,6 +68,12 @@ export interface StatTable {
   forteRechargePct: number
   healingBonus: number
   bonusMultiplier: number
+  /**
+   * Per-skill Energy Regen Multiplier bucket (ADR-0033). Folded into energy
+   * accrual as a `× (1 + energyGainMult)` factor, read hit-scoped off the
+   * negative-`forte` marker (consuming attacks only). Additive across buffs.
+   */
+  energyGainMult: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -94,5 +101,6 @@ export function emptyStatTable(): StatTable {
     forteRechargePct: 0,
     healingBonus: 0,
     bonusMultiplier: 0,
+    energyGainMult: 0,
   }
 }

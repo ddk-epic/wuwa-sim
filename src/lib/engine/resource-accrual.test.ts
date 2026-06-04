@@ -68,6 +68,31 @@ describe("accrueForHit — pure resource gain rule (#321)", () => {
     ])
   })
 
+  it("scales actor energy by (1 + ER) × (1 + energyGainMult) (ADR-0033)", () => {
+    const [first] = accrueForHit({ energy: 10 }, actor, party, 1.5)
+    expect(first).toEqual({
+      characterId: 1,
+      resource: "energy",
+      delta: 10 * (1 + 0.2) * (1 + 1.5),
+    })
+  })
+
+  it("energyGainMult of −1.0 zeroes the actor's energy gain", () => {
+    const [first] = accrueForHit({ energy: 10 }, actor, party, -1.0)
+    expect(first.delta).toBeCloseTo(0)
+  })
+
+  it("energyGainMult leaves the teammate share unscaled", () => {
+    const accruals = accrueForHit({ energy: 10 }, actor, party, 1.5)
+    const shares = accruals.filter(
+      (a) => a.resource === "energy" && a.characterId !== actor.id,
+    )
+    expect(shares).toEqual([
+      { characterId: 2, resource: "energy", delta: 10 * 0.5 * (1 + 0.2) },
+      { characterId: 3, resource: "energy", delta: 10 * 0.5 * (1 + 0.2) },
+    ])
+  })
+
   it("omits absent or zero gains", () => {
     expect(
       accrueForHit({ energy: 0, concerto: 0, forte: 0 }, actor, party),

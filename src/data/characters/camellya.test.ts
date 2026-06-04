@@ -496,3 +496,101 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks, ADR-0032)", (
     expect(budStacks(engine)).toBe(3)
   })
 })
+
+describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate, ADR-0033)", () => {
+  const BUD = "char.camellya.forte.crimson-bud"
+  const BASIC_STAGE =
+    "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1"
+
+  function refillForte(engine: ReturnType<typeof makeEngine>, frame: number) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Intro Skill",
+      dmgType: "Damage",
+      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      frame,
+      forte: 100,
+    })
+  }
+
+  /** Fire a hit carrying `energy`; `forte < 0` marks it a consuming attack. */
+  function hit(
+    engine: ReturnType<typeof makeEngine>,
+    frame: number,
+    energy: number,
+    forte?: number,
+  ) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId: BASIC_STAGE,
+      frame,
+      energy,
+      forte,
+    })
+  }
+
+  function castEphemeral(engine: ReturnType<typeof makeEngine>, frame: number) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId: EPHEMERAL_STAGE,
+      skillCategory: "Resonance Skill",
+      frame,
+    })
+  }
+
+  function budStacks(engine: ReturnType<typeof makeEngine>): number {
+    return engine.activeBuffs(CAMELLYA).find((b) => b.id === BUD)?.stacks ?? 0
+  }
+
+  it("consuming attacks generate 2.5× energy outside Budding Mode", () => {
+    const engine = makeEngine()
+    const er = engine.resolveStats(CAMELLYA).energyRechargePct
+    hit(engine, 0, 10, -5)
+    // +150% ERM → energy × (1 + ER) × 2.5.
+    expect(engine.getResource(CAMELLYA).energy).toBeCloseTo(10 * (1 + er) * 2.5)
+  })
+
+  it("non-consuming hits are unaffected — ER only, no ERM", () => {
+    const engine = makeEngine()
+    const er = engine.resolveStats(CAMELLYA).energyRechargePct
+    // forte undefined → not a consuming attack → ERM does not land.
+    hit(engine, 0, 10)
+    expect(engine.getResource(CAMELLYA).energy).toBeCloseTo(10 * (1 + er))
+  })
+
+  it("consuming attacks generate 0 energy inside Budding Mode", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0) // forte 100, mints 0 buds
+    castEphemeral(engine, 1) // enter Budding Mode (forte still 100)
+    const before = engine.getResource(CAMELLYA).energy
+    hit(engine, 2, 10, -5) // consuming; forte 100 → 95, Budding stays
+    // Budding ERM (−1.0) cancels the base → factor 0 → no energy gained.
+    expect(engine.getResource(CAMELLYA).energy).toBeCloseTo(before)
+  })
+
+  it("no Crimson Buds are minted while Budding Mode is active, though forte still drains", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0) // forte 100
+    castEphemeral(engine, 1) // enter Budding (consumes the 0 buds)
+    expect(budStacks(engine)).toBe(0)
+    hit(engine, 2, 0, -30) // drains 30 forte inside Budding
+    // Forte fell 100 → 70 (would mint 3 buds), but the gate suppresses minting.
+    expect(engine.getResource(CAMELLYA).forte).toBeCloseTo(70)
+    expect(budStacks(engine)).toBe(0)
+  })
+
+  it("bud minting resumes once Budding Mode ends", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    castEphemeral(engine, 1)
+    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 2 })
+    // Budding over → the gate opens; draining 20 forte mints 2 buds.
+    hit(engine, 3, 0, -20)
+    expect(budStacks(engine)).toBe(2)
+  })
+})

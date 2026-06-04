@@ -263,7 +263,7 @@ export const camellya = {
       id: "char.camellya.forte.crimson-bud",
       name: "Crimson Bud",
       description:
-        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), lasting 15s.",
+        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), lasting 15s. No Buds are gained while Budding Mode is active.",
       trigger: {
         event: "resourceStep",
         characterId: 1603,
@@ -274,6 +274,18 @@ export const camellya = {
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 10, onRetrigger: "addStack" },
+      // Cannot gain Crimson Buds while Budding Mode is active (ADR-0033). The
+      // forte drain continues inside Budding, so the resourceStep trigger still
+      // fires; the trigger-time gate suppresses bud minting without touching the
+      // drain. `gateTriggerOnCondition` is required because the buff carries no
+      // stat effect for the continuous condition pass to gate.
+      condition: {
+        kind: "buffActive",
+        buffId: "char.camellya.forte.budding-mode",
+        on: "source",
+        negate: true,
+      },
+      gateTriggerOnCondition: true,
       effects: [],
     },
     {
@@ -328,6 +340,62 @@ export const camellya = {
       },
       effects: [
         { kind: "removeBuffs", ids: ["char.camellya.forte.budding-mode"] },
+      ],
+    },
+    {
+      // Forte Energy Regen Multiplier (ADR-0033): her consuming attacks gain
+      // +150% Energy Regen Multiplier, so they generate 2.5× Resonance Energy.
+      // Read hit-scoped off the negative-`forte` marker (the engine only folds
+      // `energyGainMult` into hits with `forte < 0`), so this is a plain self
+      // buff with no `appliesToHits`. Gated OFF inside Budding Mode via a negated
+      // condition so the Budding ERM's −1.0 can zero the factor ("reduced to 0%").
+      // Lazy permanent instance: the `condition` keeps it out of the folded base
+      // table so it never leaks onto non-consuming hits.
+      id: "char.camellya.forte.erm",
+      name: "Forte Energy Regen Multiplier",
+      description:
+        "Camellya's consuming attacks gain +150% Energy Regen Multiplier (×2.5 Resonance Energy). Reduced to 0% during Budding Mode.",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.camellya.forte.budding-mode",
+        on: "source",
+        negate: true,
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyGainMult" },
+          value: { kind: "const", v: 1.5 },
+        },
+      ],
+    },
+    {
+      // Budding-Mode ERM suppression (ADR-0033): while Budding Mode is active,
+      // contribute −1.0 to `energyGainMult`. The Forte ERM (+1.5) is gated off
+      // in Budding, so the net factor on consuming attacks is 1 + (−1.0) = 0 —
+      // "Energy Regen Multiplier reduced to 0%". Each buff states its own value
+      // and the cancellation emerges; neither hardcodes the other's magnitude.
+      id: "char.camellya.forte.budding-erm",
+      name: "Budding Mode Energy Suppression",
+      description:
+        "While Budding Mode is active, Camellya's consuming attacks generate no Resonance Energy.",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buffId: "char.camellya.forte.budding-mode",
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "energyGainMult" },
+          value: { kind: "const", v: -1.0 },
+        },
       ],
     },
     {
