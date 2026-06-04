@@ -16,7 +16,214 @@ export const camellya = {
     max: { hp: 10325, atk: 450, def: 1161.109 },
   },
   skillTreeBonuses: ["Crit. DMG", "ATK"],
-  buffs: [],
+  forteCap: 100,
+  buffs: [
+    {
+      id: "char.camellya.inherent.seedbed",
+      name: "Seedbed",
+      description: "Camellya's Havoc DMG Bonus is increased by 15%.",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Havoc" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.inherent.epiphyte",
+      name: "Epiphyte",
+      description: "Camellya's Basic Attack DMG Bonus is increased by 15%.",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Basic Attack" },
+          value: { kind: "const", v: 0.15 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.s1.crit-dmg",
+      name: "S1: Budding Beauty",
+      description:
+        "After using Intro Skill, Camellya's Crit. DMG increases by 28% for 18s.",
+      requiresSequence: 1,
+      cooldown: 25,
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        skillCategory: "Intro Skill",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 18 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critDmg" },
+          value: { kind: "const", v: 0.28 },
+        },
+      ],
+    },
+    {
+      // Sequence multipliers (S2/S3/S5) are intrinsic per-skill DMG Multiplier
+      // bonuses scoped via `appliesToHits`. They must stay per-hit instances —
+      // a `simStart`+`permanent` buff with no `condition` is folded into the
+      // base stat table unconditionally (engine-bootstrap.ts), which would leak
+      // the multiplier onto every hit. The always-true `forte >= 0` gate keeps
+      // them as permanent instances so the `appliesToHits` filter applies.
+      id: "char.camellya.s2.ephemeral-multiplier",
+      name: "S2: Ephemeral DMG Multiplier",
+      description: "Ephemeral DMG Multiplier is increased by 120%.",
+      requiresSequence: 2,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: {
+        stageId:
+          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack.1",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 1.2 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.s3.fervor-multiplier",
+      name: "S3: Fervor DMG Multiplier",
+      description:
+        "Resonance Liberation Fervor Efflorescent DMG Multiplier is increased by 50%.",
+      requiresSequence: 3,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: {
+        stageId:
+          "char.camellya.resonance-liberation.fervor-efflorescent._::resonance-liberation.1",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.s4.intro-basic-bonus",
+      name: "S4: Intro Basic Attack DMG",
+      description:
+        "After using Intro Skill, all team members' Basic Attack DMG Bonus increases by 25% for 30s.",
+      requiresSequence: 4,
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        skillCategory: "Intro Skill",
+      },
+      target: { kind: "global" },
+      duration: { kind: "seconds", v: 30 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "skillTypeBonus", key: "Basic Attack" },
+          value: { kind: "const", v: 0.25 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.s5.intro-multiplier",
+      name: "S5: Intro DMG Multiplier",
+      description:
+        "Intro Skill Everblooming DMG Multiplier is increased by 303%.",
+      requiresSequence: 5,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: { skillCategory: "Intro Skill" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 3.03 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.s5.outro-multiplier",
+      name: "S5: Outro DMG Multiplier",
+      description: "Outro Skill Twining DMG Multiplier is increased by 68%.",
+      requiresSequence: 5,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: { skillCategory: "Outro Skill" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 0.68 },
+        },
+      ],
+    },
+    {
+      id: "char.camellya.forte.ephemeral-concerto-spend",
+      name: "Ephemeral Concerto Spend",
+      description:
+        "Casting Forte Circuit Ephemeral consumes 70 Concerto Energy. Skipped when Concerto < 70.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        stageId:
+          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack",
+      },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "concerto",
+        n: 70,
+        on: "source",
+      },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "sub",
+          value: { kind: "const", v: 70 },
+        },
+      ],
+    },
+  ],
   skills: [
     {
       id: 1001301,
@@ -41,6 +248,7 @@ export const camellya = {
               concerto: 1.85,
               toughness: 0.37,
               weakness: 0.296,
+              forte: -6.2,
             },
           ],
         },
@@ -62,6 +270,7 @@ export const camellya = {
               concerto: 1.38,
               toughness: 0.275,
               weakness: 0.22,
+              forte: -9.3 / 2,
             },
             {
               type: "Basic Attack",
@@ -73,6 +282,7 @@ export const camellya = {
               concerto: 1.38,
               toughness: 0.275,
               weakness: 0.22,
+              forte: -9.3 / 2,
             },
           ],
         },
@@ -94,6 +304,7 @@ export const camellya = {
               concerto: 1.5,
               toughness: 0.3,
               weakness: 0.24,
+              forte: -14.8 / 3,
             },
             {
               type: "Basic Attack",
@@ -105,6 +316,7 @@ export const camellya = {
               concerto: 1.5,
               toughness: 0.3,
               weakness: 0.24,
+              forte: -14.8 / 3,
             },
             {
               type: "Basic Attack",
@@ -116,6 +328,7 @@ export const camellya = {
               concerto: 1.5,
               toughness: 0.3,
               weakness: 0.24,
+              forte: -14.8 / 3,
             },
           ],
         },
@@ -123,6 +336,88 @@ export const camellya = {
           name: "Basic Attack 4 DMG",
           category: "Basic Attack",
           newName: "Basic Attack 4",
+          value: "24.70%*6",
+          actionTime: 0,
+          variants: {},
+          damage: [
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+            {
+              type: "Basic Attack",
+              dmgType: "Damage",
+              scalingStat: "ATK",
+              actionFrame: 0,
+              value: 0.247,
+              energy: 0.27,
+              concerto: 0.54,
+              toughness: 0.108,
+              weakness: 0.0864,
+              forte: -14.2 / 6,
+            },
+          ],
+        },
+        {
+          name: "Basic Attack 4 DMG",
+          category: "Basic Attack",
+          newName: "Basic Attack 4 (Hold)",
           value: "24.70%*20",
           actionTime: 0,
           variants: {},
@@ -137,6 +432,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -148,6 +444,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -159,6 +456,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -170,6 +468,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -181,6 +480,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -192,6 +492,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -203,6 +504,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -214,6 +516,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -225,6 +528,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -236,6 +540,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -247,6 +552,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -258,6 +564,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -269,6 +576,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -280,6 +588,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -291,6 +600,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -302,6 +612,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -313,6 +624,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -324,6 +636,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -335,6 +648,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
             {
               type: "Basic Attack",
@@ -346,6 +660,7 @@ export const camellya = {
               concerto: 0.54,
               toughness: 0.108,
               weakness: 0.0864,
+              forte: -40 / 20,
             },
           ],
         },
@@ -367,6 +682,7 @@ export const camellya = {
               concerto: 1.43,
               toughness: 0.285,
               weakness: 0.228,
+              forte: -14.2 / 4,
             },
             {
               type: "Basic Attack",
@@ -378,6 +694,7 @@ export const camellya = {
               concerto: 1.43,
               toughness: 0.285,
               weakness: 0.228,
+              forte: -14.2 / 4,
             },
             {
               type: "Basic Attack",
@@ -389,6 +706,7 @@ export const camellya = {
               concerto: 1.43,
               toughness: 0.285,
               weakness: 0.228,
+              forte: -14.2 / 4,
             },
             {
               type: "Basic Attack",
@@ -400,6 +718,7 @@ export const camellya = {
               concerto: 1.43,
               toughness: 0.285,
               weakness: 0.228,
+              forte: -14.2 / 4,
             },
           ],
         },
@@ -410,9 +729,13 @@ export const camellya = {
           value: "88.14%*3",
           actionTime: 0,
           variants: {},
+          // Seedbed: Heavy Pruning is considered Basic Attack DMG. The hit
+          // `type` (SkillType) is retagged to "Basic Attack" while the stage
+          // `category` (SkillCategory) stays "Heavy Attack" — the always-on
+          // SkillType≠SkillCategory split is baked into stage data (ADR-0032).
           damage: [
             {
-              type: "Heavy Attack",
+              type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 0,
@@ -421,9 +744,10 @@ export const camellya = {
               concerto: 2.22,
               toughness: 0.4433,
               weakness: 0.3547,
+              forte: -22.3 / 3,
             },
             {
-              type: "Heavy Attack",
+              type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 0,
@@ -432,9 +756,10 @@ export const camellya = {
               concerto: 2.22,
               toughness: 0.4433,
               weakness: 0.3547,
+              forte: -22.3 / 3,
             },
             {
-              type: "Heavy Attack",
+              type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 0,
@@ -443,6 +768,7 @@ export const camellya = {
               concerto: 2.22,
               toughness: 0.4433,
               weakness: 0.3547,
+              forte: -22.3 / 3,
             },
           ],
         },
@@ -464,6 +790,7 @@ export const camellya = {
               concerto: 1.65,
               toughness: 0.33,
               weakness: 0.264,
+              forte: -10.5 / 2,
             },
             {
               type: "Basic Attack",
@@ -475,6 +802,7 @@ export const camellya = {
               concerto: 1.65,
               toughness: 0.33,
               weakness: 0.264,
+              forte: -10.5 / 2,
             },
           ],
         },
@@ -540,6 +868,7 @@ export const camellya = {
               concerto: 2.85,
               toughness: 0.57,
               weakness: 0.456,
+              forte: -9.3,
             },
           ],
         },
@@ -561,6 +890,7 @@ export const camellya = {
               concerto: 1.35,
               toughness: 0.27,
               weakness: 0.216,
+              forte: -9.2 / 2,
             },
             {
               type: "Basic Attack",
@@ -572,6 +902,7 @@ export const camellya = {
               concerto: 1.35,
               toughness: 0.27,
               weakness: 0.216,
+              forte: -9.2 / 2,
             },
           ],
         },
@@ -593,6 +924,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
             {
               type: "Basic Attack",
@@ -604,6 +936,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
             {
               type: "Basic Attack",
@@ -615,6 +948,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
             {
               type: "Basic Attack",
@@ -626,6 +960,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
             {
               type: "Basic Attack",
@@ -637,6 +972,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
             {
               type: "Basic Attack",
@@ -648,6 +984,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -9.5 / 6,
             },
           ],
         },
@@ -669,6 +1006,7 @@ export const camellya = {
               concerto: 2,
               toughness: 0.4,
               weakness: 0.32,
+              forte: -20.1 / 3,
             },
             {
               type: "Basic Attack",
@@ -680,6 +1018,7 @@ export const camellya = {
               concerto: 2,
               toughness: 0.4,
               weakness: 0.32,
+              forte: -20.1 / 3,
             },
             {
               type: "Basic Attack",
@@ -691,6 +1030,7 @@ export const camellya = {
               concerto: 2,
               toughness: 0.4,
               weakness: 0.32,
+              forte: -20.1 / 3,
             },
           ],
         },
@@ -712,6 +1052,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -723,6 +1064,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -734,6 +1076,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -745,6 +1088,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -756,6 +1100,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -767,6 +1112,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -778,6 +1124,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -789,6 +1136,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -800,6 +1148,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -811,6 +1160,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -822,6 +1172,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -833,6 +1184,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -844,6 +1196,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -855,6 +1208,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -866,6 +1220,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -877,6 +1232,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -888,6 +1244,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -899,6 +1256,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
             {
               type: "Basic Attack",
@@ -910,6 +1268,7 @@ export const camellya = {
               concerto: 0.48,
               toughness: 0.096,
               weakness: 0.0768,
+              forte: -30.8 / 19,
             },
           ],
         },
@@ -931,6 +1290,7 @@ export const camellya = {
               concerto: 1.57,
               toughness: 0.3134,
               weakness: 0.2507,
+              forte: -15.5 / 3,
             },
             {
               type: "Basic Attack",
@@ -942,6 +1302,7 @@ export const camellya = {
               concerto: 1.57,
               toughness: 0.3134,
               weakness: 0.2507,
+              forte: -15.5 / 3,
             },
             {
               type: "Basic Attack",
@@ -953,6 +1314,7 @@ export const camellya = {
               concerto: 1.57,
               toughness: 0.3134,
               weakness: 0.2507,
+              forte: -15.5 / 3,
             },
           ],
         },
@@ -1051,6 +1413,7 @@ export const camellya = {
               concerto: 0,
               toughness: 1,
               weakness: 0.508,
+              forte: -21 / 2,
             },
             {
               type: "Basic Attack",
@@ -1062,6 +1425,7 @@ export const camellya = {
               concerto: 0,
               toughness: 1,
               weakness: 0.508,
+              forte: -21 / 2,
             },
           ],
         },
@@ -1084,6 +1448,7 @@ export const camellya = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.2352,
+              forte: -24.7 / 5,
             },
             {
               type: "Basic Attack",
@@ -1095,6 +1460,7 @@ export const camellya = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.2352,
+              forte: -24.7 / 5,
             },
             {
               type: "Basic Attack",
@@ -1106,6 +1472,7 @@ export const camellya = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.2352,
+              forte: -24.7 / 5,
             },
             {
               type: "Basic Attack",
@@ -1117,6 +1484,7 @@ export const camellya = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.2352,
+              forte: -24.7 / 5,
             },
             {
               type: "Basic Attack",
@@ -1128,6 +1496,7 @@ export const camellya = {
               concerto: 0,
               toughness: 0.4,
               weakness: 0.2352,
+              forte: -24.7 / 5,
             },
           ],
         },
@@ -1219,6 +1588,7 @@ export const camellya = {
               concerto: 0,
               toughness: 1.2,
               weakness: 0.96,
+              forte: 100,
             },
           ],
         },
@@ -1262,6 +1632,7 @@ export const camellya = {
               concerto: 0,
               toughness: 2,
               weakness: 6.08,
+              forte: 100,
             },
           ],
         },
