@@ -4,9 +4,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
   BuffEvent,
-  HitEvent,
   SimulationLogEntry,
-  SustainEvent,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./damage/compute-damage"
@@ -14,6 +12,7 @@ import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
+import { buildHitEvent, buildSustainEvent } from "./engine/log-event-builders"
 import {
   findStageByEntry,
   resolveStageExecution,
@@ -230,13 +229,11 @@ function resolvePendingSynthetic(
   const r = engine.resolveDeferredEmit(sd.emit)
   r.event.sourceEntryId = sd.sourceEntryId
   log.push(r.event)
-  pushBuffEvents(log, r.lifecycleEvents)
+  drainDispatch(ctx, r, sd.sourceEntryId)
   for (const synth of r.syntheticEvents) {
     synth.sourceEntryId = sd.sourceEntryId
     log.push(synth)
   }
-  for (const emit of r.deferredEmits)
-    enqueueSynthetic(ctx, emit, sd.sourceEntryId)
 }
 
 /** Enqueue a synthetic emit onto the stream at its landing frame (ignore class — never invalidated). */
@@ -326,7 +323,7 @@ function fireSkillCast(
   ctx: SimContext,
   frame: number,
 ): void {
-  const { engine, log } = ctx
+  const { engine } = ctx
   const result = engine.onEvent({
     kind: "skillCast",
     characterId: entry.characterId,
@@ -336,8 +333,7 @@ function fireSkillCast(
     concerto: resolved.concerto,
     resonanceCost: resolved.resonanceCost,
   })
-  pushBuffEvents(log, result.lifecycleEvents)
-  for (const emit of result.deferredEmits) enqueueSynthetic(ctx, emit, entry.id)
+  drainDispatch(ctx, result, entry.id)
   // Flush this cast's immediate (offset-0) synthetics in place so they log before
   // the action event and apply their resource gains before its cumulativeEnergy
   // snapshot. Offset emits (landingFrame > frame) stay pending for a later drain.
@@ -439,32 +435,34 @@ function processHeal(
     frame: hitFrame,
     stageId: `${resolved.stageId}.${hitIndex + 1}`,
   })
-  const sustainEvent: SustainEvent = {
-    kind: "sustain",
-    sub: "heal",
-    characterId: entry.characterId,
-    skillType: hit.type,
-    skillName: `${resolved.skillName} [heal ${hitIndex + 1}]`,
-    frame: hitFrame,
-    cumulativeEnergy: dispatch.postState.energy,
-    cumulativeConcerto: dispatch.postState.concerto,
-    amount,
-    targets: resolveHealTargets(
-      hit.target ?? "self",
-      entry.characterId,
-      slots.filter((id): id is number => id !== null),
-    ),
-    scalingStat: hit.scalingStat,
-    multiplier: hit.value,
-    flat: hit.flat,
-    statsSnapshot: { ...hitResolved.stats },
-    activeBuffs: hitResolved.activeBuffs,
-    passiveBuffs: hitResolved.passiveBuffs,
-  }
+  const sustainEvent = buildSustainEvent(
+    {
+      characterId: entry.characterId,
+      frame: hitFrame,
+      skillType: hit.type,
+      scalingStat: hit.scalingStat,
+      multiplier: hit.value,
+      amount,
+      flat: hit.flat,
+      targets: resolveHealTargets(
+        hit.target ?? "self",
+        entry.characterId,
+        slots.filter((id): id is number => id !== null),
+      ),
+      cumulativeEnergy: dispatch.postState.energy,
+      cumulativeConcerto: dispatch.postState.concerto,
+      statsSnapshot: hitResolved.stats,
+      activeBuffs: hitResolved.activeBuffs,
+      passiveBuffs: hitResolved.passiveBuffs,
+    },
+    {
+      kind: "authored",
+      skillName: `${resolved.skillName} [heal ${hitIndex + 1}]`,
+      sourceEntryId: entry.id,
+    },
+  )
   log.push(sustainEvent)
-  pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const emit of dispatch.deferredEmits)
-    enqueueSynthetic(ctx, emit, entry.id)
+  drainDispatch(ctx, dispatch, entry.id)
 }
 
 function processDamageHit(
@@ -498,30 +496,48 @@ function processDamageHit(
     concerto: hit.concerto,
     forte: hit.forte,
   })
-  const hitEvent: HitEvent = {
-    kind: "hit",
-    characterId: entry.characterId,
-    skillType: hit.type,
-    skillName: `${resolved.skillName} [hit ${hitIndex + 1}]`,
-    frame: hitFrame,
-    cumulativeEnergy: dispatch.postState.energy,
-    cumulativeConcerto: dispatch.postState.concerto,
-    damage: dmg,
-    element: resolved.element,
-    dmgType: hit.dmgType,
-    scalingStat: hit.scalingStat,
-    multiplier: hit.value,
-    statsSnapshot: { ...hitResolved.stats },
-    activeBuffs: hitResolved.activeBuffs,
-    passiveBuffs: hitResolved.passiveBuffs,
-    sourceEntryId: entry.id,
-  }
+  const hitEvent = buildHitEvent(
+    {
+      characterId: entry.characterId,
+      frame: hitFrame,
+      skillType: hit.type,
+      element: resolved.element,
+      dmgType: hit.dmgType,
+      scalingStat: hit.scalingStat,
+      multiplier: hit.value,
+      damage: dmg,
+      cumulativeEnergy: dispatch.postState.energy,
+      cumulativeConcerto: dispatch.postState.concerto,
+      statsSnapshot: hitResolved.stats,
+      activeBuffs: hitResolved.activeBuffs,
+      passiveBuffs: hitResolved.passiveBuffs,
+    },
+    {
+      kind: "authored",
+      skillName: `${resolved.skillName} [hit ${hitIndex + 1}]`,
+      sourceEntryId: entry.id,
+    },
+  )
   log.push(hitEvent)
-  pushBuffEvents(log, dispatch.lifecycleEvents)
-  for (const emit of dispatch.deferredEmits)
-    enqueueSynthetic(ctx, emit, entry.id)
+  drainDispatch(ctx, dispatch, entry.id)
 }
 
 function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
   for (const e of events) log.push(e)
+}
+
+/**
+ * The dispatch sink shared by every event-emitting site: log the lifecycle
+ * events, then re-enqueue each deferred emit onto the stream. Structural over
+ * the result shape — `HitDispatch` and the `onEvent` / `resolveDeferredEmit`
+ * results all carry both fields.
+ */
+function drainDispatch(
+  ctx: SimContext,
+  dispatch: { lifecycleEvents: BuffEvent[]; deferredEmits: DeferredEmit[] },
+  sourceEntryId: string,
+): void {
+  pushBuffEvents(ctx.log, dispatch.lifecycleEvents)
+  for (const emit of dispatch.deferredEmits)
+    enqueueSynthetic(ctx, emit, sourceEntryId)
 }

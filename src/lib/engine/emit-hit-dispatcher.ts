@@ -11,7 +11,8 @@ import type { StatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
 import { computeDamage } from "../damage/compute-damage"
 import { computeHealing } from "../damage/compute-healing"
-import { cloneStats } from "./stat-table-builder"
+import { buildHitEvent, buildSustainEvent } from "./log-event-builders"
+import type { EventAttribution } from "./log-event-builders"
 
 declare const buffInstanceKeyBrand: unique symbol
 export type BuffInstanceKey = string & { readonly [buffInstanceKeyBrand]: true }
@@ -111,7 +112,9 @@ export class EmitHitDispatcher {
 /**
  * Construct the synthetic Hit/Sustain event from already-resolved `stats` and
  * post-delta `post` resources. The caller decides at which frame to read
- * `stats`/`post`.
+ * `stats`/`post`. Routes through the shared {@link buildHitEvent} /
+ * {@link buildSustainEvent} builders — the dispatcher supplies only the
+ * synthetic-origin attribution.
  */
 export function buildSyntheticEvent(
   input: EmitHitInput,
@@ -123,7 +126,14 @@ export function buildSyntheticEvent(
 ): HitEvent | SustainEvent {
   const character = getCharacterById(input.sourceCharacterId)
   const skillType = input.effect.skillType ?? input.effect.damage.type
-  const isCoord = input.effect.kind === "coordHit"
+  const attribution: EventAttribution = {
+    kind: "synthetic",
+    skillName: input.def.name,
+    sourceBuffId: input.def.id,
+    ...(input.effect.kind === "coordHit" && { coord: true as const }),
+  }
+  const activeBuffs = host.activeBuffs(input.sourceCharacterId, hitCtx)
+  const passiveBuffs = host.passiveBuffs(input.sourceCharacterId)
 
   if (input.effect.damage.dmgType === "Heal") {
     const amount = computeHealing(
@@ -134,30 +144,27 @@ export function buildSyntheticEvent(
       },
       stats,
     )
-    return {
-      kind: "sustain",
-      sub: "heal",
-      synthetic: true,
-      ...(isCoord && { coord: true as const }),
-      sourceBuffId: input.def.id,
-      characterId: input.sourceCharacterId,
-      skillType,
-      skillName: input.def.name,
-      frame,
-      cumulativeEnergy: post.energy,
-      cumulativeConcerto: post.concerto,
-      amount,
-      targets: host.resolveHealTargets(
-        input.effect.damage.target ?? "self",
-        input.sourceCharacterId,
-      ),
-      scalingStat: input.effect.damage.scalingStat,
-      multiplier: input.effect.damage.value,
-      flat: input.effect.damage.flat,
-      statsSnapshot: cloneStats(stats),
-      activeBuffs: host.activeBuffs(input.sourceCharacterId, hitCtx),
-      passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
-    }
+    return buildSustainEvent(
+      {
+        characterId: input.sourceCharacterId,
+        frame,
+        skillType,
+        scalingStat: input.effect.damage.scalingStat,
+        multiplier: input.effect.damage.value,
+        amount,
+        flat: input.effect.damage.flat,
+        targets: host.resolveHealTargets(
+          input.effect.damage.target ?? "self",
+          input.sourceCharacterId,
+        ),
+        cumulativeEnergy: post.energy,
+        cumulativeConcerto: post.concerto,
+        statsSnapshot: stats,
+        activeBuffs,
+        passiveBuffs,
+      },
+      attribution,
+    )
   }
 
   const element = input.effect.element ?? character?.element ?? "Physical"
@@ -172,24 +179,22 @@ export function buildSyntheticEvent(
     stats,
   )
 
-  return {
-    kind: "hit",
-    synthetic: true,
-    ...(isCoord && { coord: true as const }),
-    sourceBuffId: input.def.id,
-    characterId: input.sourceCharacterId,
-    skillType,
-    skillName: input.def.name,
-    frame,
-    cumulativeEnergy: post.energy,
-    cumulativeConcerto: post.concerto,
-    damage,
-    element,
-    dmgType: input.effect.damage.dmgType,
-    scalingStat: input.effect.damage.scalingStat,
-    multiplier: input.effect.damage.value,
-    statsSnapshot: cloneStats(stats),
-    activeBuffs: host.activeBuffs(input.sourceCharacterId, hitCtx),
-    passiveBuffs: host.passiveBuffs(input.sourceCharacterId),
-  }
+  return buildHitEvent(
+    {
+      characterId: input.sourceCharacterId,
+      frame,
+      skillType,
+      element,
+      dmgType: input.effect.damage.dmgType,
+      scalingStat: input.effect.damage.scalingStat,
+      multiplier: input.effect.damage.value,
+      damage,
+      cumulativeEnergy: post.energy,
+      cumulativeConcerto: post.concerto,
+      statsSnapshot: stats,
+      activeBuffs,
+      passiveBuffs,
+    },
+    attribution,
+  )
 }
