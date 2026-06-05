@@ -106,7 +106,7 @@ export const shorekeeper = {
     },
     {
       id: "char.shorekeeper.s6.discernment-dmg",
-      name: "S6: Discernment (DMG)",
+      name: "S6: To the New World (DMG)",
       description: "Discernment cast grants Bonus Multiplier +42% for 0.5s.",
       requiresSequence: 6,
       trigger: {
@@ -127,7 +127,7 @@ export const shorekeeper = {
     },
     {
       id: "char.shorekeeper.s6.discernment-critdmg",
-      name: "S6: Discernment (Crit DMG)",
+      name: "S6: To the New World (Crit DMG)",
       description: "Discernment cast grants Crit DMG +500% for 0.5s.",
       requiresSequence: 6,
       trigger: {
@@ -198,7 +198,7 @@ export const shorekeeper = {
     },
     {
       id: "char.shorekeeper.s2.outer-stellarealm-atk",
-      name: "S2: Outer Stellarealm (ATK)",
+      name: "S2: Night's Gift and Refusal",
       description:
         "Resonance Liberation grants team ATK +40% for Outer Stellarealm duration.",
       requiresSequence: 2,
