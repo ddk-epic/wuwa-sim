@@ -20,7 +20,7 @@ export const verina = {
   buffs: [
     {
       id: "char.verina.outro.blossom-deepen",
-      name: "Blossom (DMG Amp)",
+      name: "Blossom",
       description:
         "Outro Skill Blossom amplifies All DMG for all Resonators by 15% for 30s. 6s HoT portion is deferred (no HoT primitive).",
       trigger: {
@@ -148,7 +148,7 @@ export const verina = {
     },
     {
       id: "char.verina.forte.starflower-consume",
-      name: "Forte: Starflower Blooms Consume",
+      name: "Forte: Starflower Blooms (Consume)",
       description:
         "Heavy/Mid-air Starflower Blooms consumes 1 Forte, restores 12 Concerto, and heals the team. Skipped when Forte = 0.",
       trigger: {
@@ -201,7 +201,7 @@ export const verina = {
     },
     {
       id: "char.verina.s2.concerto-grant",
-      name: "S2: Concerto Restore",
+      name: "S2: Sprouting Reflections",
       description:
         "Botany Experiment landing restores 10 Concerto Energy once per cast (hit 1).",
       requiresSequence: 2,
@@ -293,7 +293,7 @@ export const verina = {
     },
     {
       id: "char.verina.s6.joyous-harvest-coord",
-      name: "S6: Joyous Harvest",
+      name: "S6: Joyous Harvest (Coord)",
       description:
         "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms trigger an extra Coordinated Attack (same DMG as Liberation Photosynthesis Mark).",
       requiresSequence: 6,
