@@ -50,7 +50,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s1.crit-dmg",
-      name: "S1: Budding Beauty",
+      name: "S1: Somewhere No One Travelled",
       description:
         "After using Intro Skill, Camellya's Crit. DMG increases by 28% for 18s.",
       requiresSequence: 1,
@@ -75,7 +75,7 @@ export const camellya = {
       // `forte >= 0` condition keeps it a per-hit instance instead of being
       // folded into the base table (which would leak it onto every hit).
       id: "char.camellya.s2.ephemeral-multiplier",
-      name: "S2: Ephemeral DMG Multiplier",
+      name: "S2: Calling Upon the Silent Rose",
       description: "Ephemeral DMG Multiplier is increased by 120%.",
       requiresSequence: 2,
       trigger: { event: "simStart" },
@@ -101,7 +101,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s3.fervor-multiplier",
-      name: "S3: Fervor DMG Multiplier",
+      name: "S3: A Bud Adorned by Thorns (DMG Multiplier)",
       description:
         "Resonance Liberation Fervor Efflorescent DMG Multiplier is increased by 50%.",
       requiresSequence: 3,
@@ -128,7 +128,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s4.intro-basic-bonus",
-      name: "S4: Intro Basic Attack DMG",
+      name: "S4: Roots Set Deep In Eternity",
       description:
         "After using Intro Skill, all team members' Basic Attack DMG Bonus increases by 25% for 30s.",
       requiresSequence: 4,
@@ -149,7 +149,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s5.intro-multiplier",
-      name: "S5: Intro DMG Multiplier",
+      name: "S5: Infinity Held in Your Palm (Intro)",
       description:
         "Intro Skill Everblooming DMG Multiplier is increased by 303%.",
       requiresSequence: 5,
@@ -173,7 +173,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s5.outro-multiplier",
-      name: "S5: Outro DMG Multiplier",
+      name: "S5: Infinity Held in Your Palm (Outro)",
       description: "Outro Skill Twining DMG Multiplier is increased by 68%.",
       requiresSequence: 5,
       trigger: { event: "simStart" },
@@ -196,7 +196,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.forte.ephemeral-concerto-spend",
-      name: "Ephemeral Concerto Spend",
+      name: "Ephemeral (Concerto Consume)",
       description:
         "Casting Forte Circuit Ephemeral consumes 70 Concerto Energy. Skipped when Concerto < 70.",
       trigger: {
@@ -293,7 +293,7 @@ export const camellya = {
     {
       // Pistil-zero exit: when forte crosses 0 downward, Budding Mode ends.
       id: "char.camellya.forte.budding-mode-end",
-      name: "Budding Mode End",
+      name: "Budding Mode (End)",
       description: "Budding Mode ends when Crimson Pistils reach 0.",
       trigger: {
         event: "resourceCrossed",
@@ -310,7 +310,7 @@ export const camellya = {
       // +150% Energy Regen Multiplier on consuming attacks → 2.5× Resonance Energy.
       // While Budding Mode is NOT active.
       id: "char.camellya.forte.erm",
-      name: "Forte Energy Regen Multiplier",
+      name: "150% ER Multiplier",
       description:
         "Camellya's consuming attacks gain +150% Energy Regen Multiplier (×2.5 Resonance Energy). Reduced to 0% during Budding Mode.",
       trigger: { event: "simStart" },
@@ -334,7 +334,7 @@ export const camellya = {
       // While Budding Mode is active, −1.0 to `energyGainMult`.
       // is 1 + (−1.0) = 0.
       id: "char.camellya.forte.budding-erm",
-      name: "Budding Mode Energy Suppression",
+      name: "Budding Mode (0 ER Multiplier)",
       description:
         "While Budding Mode is active, Camellya's consuming attacks generate no Resonance Energy.",
       trigger: { event: "simStart" },
@@ -355,7 +355,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s3.budding-atk",
-      name: "S3: Budding ATK",
+      name: "S3: A Bud Adorned by Thorns (ATK)",
       description:
         "While Budding Mode is active, Camellya's ATK is increased by 58%.",
       requiresSequence: 3,
@@ -377,7 +377,7 @@ export const camellya = {
     },
     {
       id: "char.camellya.s6.sweet-dream-rider",
-      name: "S6: Sweet Dream Rider",
+      name: "S6: Bloom For You Thousand Times Over",
       description:
         "While Budding Mode is active, the Sweet Dream DMG Multiplier is increased by an additional 150%.",
       requiresSequence: 6,
