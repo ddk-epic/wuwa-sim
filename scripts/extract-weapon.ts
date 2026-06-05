@@ -159,7 +159,9 @@ export async function appendToReference(data: ApiWeapon): Promise<void> {
     return
   }
 
-  if (existing.split("\n").some((line) => line === `## ${data.WeaponName}`)) {
+  if (
+    existing.split("\n").some((line) => line.trim() === `## ${data.WeaponName}`)
+  ) {
     console.warn(
       `${data.WeaponName} already present in references/weapons/${stem}.md; skipping.`,
     )
@@ -204,7 +206,11 @@ export async function extractWeapon(id: string): Promise<void> {
     },
   }
 
-  const slug = data.WeaponName.toLowerCase().replace(/\s+/g, "-")
+  const slug = data.WeaponName.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "")
   const outputDir = path.join(PROJECT_ROOT, "src/data/weapons/raw")
   const outputPath = path.join(outputDir, `${slug}.json`)
 

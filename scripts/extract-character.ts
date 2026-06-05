@@ -505,7 +505,11 @@ export async function extractCharacter(id: string): Promise<void> {
     buffs: extractBuffNames(data),
   }
 
-  const slug = data.Name.Content.toLowerCase().replace(/\s+/g, "-")
+  const slug = data.Name.Content.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "")
   const outputDir = path.join(PROJECT_ROOT, "src/data/characters/raw")
   const outputPath = path.join(outputDir, `${slug}.json`)
 
