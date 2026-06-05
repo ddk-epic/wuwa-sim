@@ -495,6 +495,42 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks, ADR-0032)", (
     // Buds remain unconsumed until Ephemeral is cast.
     expect(budStacks(engine)).toBe(3)
   })
+
+  // Pins the lineage-prefix scope (stageIdMatches depth 3): the Sweet Dream
+  // recipients are declared as skill-group prefixes, so the whole Normal Attack
+  // group — including stages omitted from the old explicit tuple (Heavy Pruning,
+  // Mid-air, Dodge Counter, Atonement) — gains Sweet Dream, while Ephemeral
+  // (a sibling Resonance Skill under vegetative-universe) stays excluded.
+  it("Sweet Dream covers the whole Normal Attack group via lineage prefix", () => {
+    const hit = (stageId: string): HitContext => ({
+      stageId,
+      skillCategory: "Basic Attack",
+      skillType: "Basic Attack",
+      element: "Havoc",
+    })
+    const covered = [
+      "char.camellya.basic-attack.burgeoning.mid-air-attack::basic-attack.1",
+      "char.camellya.basic-attack.burgeoning.dodge-counter::basic-attack.2",
+      "char.camellya.basic-attack.burgeoning.atonement::basic-attack.1",
+      "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack.10",
+      "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack.1",
+      "char.camellya.heavy-attack.burgeoning.heavy-attack::basic-attack.2",
+      "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack.3",
+    ]
+    const engine = makeEngine()
+    mintBuds(engine, 3)
+    castEphemeral(engine, 2)
+    for (const stageId of covered) {
+      expect(
+        engine.resolveStats(CAMELLYA, hit(stageId)).bonusMultiplier,
+      ).toBeCloseTo(0.65)
+    }
+    // Ephemeral shares the "Basic Attack" hit type but a different lineage —
+    // it must not be swept in by the group prefix.
+    expect(
+      engine.resolveStats(CAMELLYA, EPHEMERAL_HIT).bonusMultiplier,
+    ).toBeCloseTo(0)
+  })
 })
 
 describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate, ADR-0033)", () => {
