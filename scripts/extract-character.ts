@@ -96,7 +96,7 @@ const WEAPON_TYPE_MAP: Record<number, string> = {
   5: "Rectifier",
 }
 
-const STAT_KEY_MAP: Record<string, keyof StatGroup> = {
+const STAT_KEY_MAP: Partial<Record<string, keyof StatGroup>> = {
   HP: "hp",
   ATK: "atk",
   DEF: "def",
