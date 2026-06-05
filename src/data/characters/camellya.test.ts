@@ -147,7 +147,10 @@ describe("Camellya — S4 Intro team Basic Attack DMG +25%", () => {
   })
 })
 
-describe("Camellya — Ephemeral 70-concerto spend", () => {
+describe("Camellya — Ephemeral concerto cost (on the hit)", () => {
+  const ephemeralCost = camellya.skills.find((s) => s.type === "Forte Circuit")!
+    .stages[0].damage[0].concerto
+
   function grantConcerto(engine: ReturnType<typeof makeEngine>, n: number) {
     engine.onEvent({
       kind: "hitLanded",
@@ -159,31 +162,33 @@ describe("Camellya — Ephemeral 70-concerto spend", () => {
     })
   }
 
-  it("concerto ≥ 70 → Ephemeral cast spends 70", () => {
+  function landEphemeral(engine: ReturnType<typeof makeEngine>) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Resonance Skill",
+      dmgType: "Damage",
+      frame: 1,
+      concerto: ephemeralCost,
+    })
+  }
+
+  it("the Ephemeral hit carries a −70 concerto cost", () => {
+    expect(ephemeralCost).toBe(-70)
+  })
+
+  it("consumes 70 concerto", () => {
     const engine = makeEngine()
     grantConcerto(engine, 70)
-    expect(engine.getResource(CAMELLYA).concerto).toBe(70)
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: CAMELLYA,
-      stageId: EPHEMERAL_STAGE,
-      skillCategory: "Resonance Skill",
-      frame: 1,
-    })
+    landEphemeral(engine)
     expect(engine.getResource(CAMELLYA).concerto).toBe(0)
   })
 
-  it("concerto < 70 → Ephemeral cast does not spend", () => {
+  it("floors at 0 when below the cost", () => {
     const engine = makeEngine()
     grantConcerto(engine, 50)
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: CAMELLYA,
-      stageId: EPHEMERAL_STAGE,
-      skillCategory: "Resonance Skill",
-      frame: 1,
-    })
-    expect(engine.getResource(CAMELLYA).concerto).toBe(50)
+    landEphemeral(engine)
+    expect(engine.getResource(CAMELLYA).concerto).toBe(0)
   })
 })
 

@@ -195,32 +195,6 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.forte.ephemeral-concerto-spend",
-      name: "Ephemeral (Concerto Consume)",
-      description:
-        "Casting Forte Circuit Ephemeral consumes 70 Concerto Energy. Skipped when Concerto < 70.",
-      trigger: {
-        event: "skillCast",
-        characterId: 1603,
-        stageId:
-          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack",
-      },
-      condition: {
-        kind: "resourceAtLeast",
-        resource: "concerto",
-        n: 70,
-        on: "source",
-      },
-      effects: [
-        {
-          kind: "resource",
-          resource: "concerto",
-          op: "sub",
-          value: { kind: "const", v: 70 },
-        },
-      ],
-    },
-    {
       // Every 10 forte consumed mints one Crimson Bud (capped at 10), read by Sweet Dream.
       id: "char.camellya.forte.crimson-bud",
       name: "Crimson Bud",
@@ -1809,7 +1783,7 @@ export const camellya = {
               actionFrame: 0,
               value: 12.6245,
               energy: 12,
-              concerto: 0,
+              concerto: -70,
               toughness: 2,
               weakness: 6.08,
               forte: 100,
