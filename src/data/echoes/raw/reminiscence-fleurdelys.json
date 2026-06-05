@@ -1,0 +1,35 @@
+{
+  "id": 6000106,
+  "name": "Reminiscence: Fleurdelys",
+  "element": "Electro",
+  "skill": {
+    "cooldown": 20,
+    "description": "Summon Windcleaver and attack the target, dealing 27.36% Aero DMG 8 times and 136.80% Aero DMG once.The Resonator with this Echo equipped in the main slot gains 10.00% Aero DMG Bonus. When Resonator: Aero or Cartethyia equips this Echo, they gain 10.00% more Aero DMG Bonus.CD: 20s.",
+    "hits": [
+      {
+        "type": "Echo Skill",
+        "dmgType": "Damage",
+        "scalingStat": "ATK",
+        "actionFrame": 0,
+        "value": 0.2736,
+        "energy": 0.38,
+        "concerto": 0,
+        "toughness": 0.152,
+        "weakness": 0
+      },
+      {
+        "type": "Echo Skill",
+        "dmgType": "Damage",
+        "scalingStat": "ATK",
+        "actionFrame": 0,
+        "value": 1.368,
+        "energy": 1.9,
+        "concerto": 0,
+        "toughness": 0.76,
+        "weakness": 0
+      }
+    ]
+  },
+  "sets": ["Gusts of Welkin", "Windward Pilgrimage"],
+  "buffs": []
+}

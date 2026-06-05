@@ -1,0 +1,29 @@
+{
+  "id": 21020056,
+  "name": "Defier's Thorn",
+  "rarity": "SSR",
+  "weaponType": "Sword",
+  "stats": {
+    "main": {
+      "name": "ATK",
+      "base": 33,
+      "max": 412.5
+    },
+    "sub": {
+      "name": "HP",
+      "base": 0.00001605,
+      "max": 0.7223
+    }
+  },
+  "passive": {
+    "name": "A Free Knight's Tarantella",
+    "description": "Max HP is increased by 12%/15%/18%/21%/24%. 15/15/15/15/15s after casting Intro Skill or Basic Attacks, ignore 8%/10%/12%/14%/16% of the target's DEF when dealing damage. If the target has at least 1 stack of Aero Erosion, the DMG taken by the target is Amplified by 20%/25%/30%/35%/40%.",
+    "params": [
+      [0.12, 0.08, 0.2, 15],
+      [0.15, 0.1, 0.25, 15],
+      [0.18, 0.12, 0.3, 15],
+      [0.21, 0.14, 0.35, 15],
+      [0.24, 0.16, 0.4, 15]
+    ]
+  }
+}

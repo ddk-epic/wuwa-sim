@@ -1,0 +1,15 @@
+{
+  "id": 17,
+  "name": "Windward Pilgrimage",
+  "type": "two-five",
+  "effects": [
+    {
+      "pieces": 2,
+      "description": "Aero DMG + 10%"
+    },
+    {
+      "pieces": 5,
+      "description": "Hitting a target with Aero Erosion increases Crit. Rate by 10% and grants 30% Aero DMG Bonus, lasting for 10s."
+    }
+  ]
+}

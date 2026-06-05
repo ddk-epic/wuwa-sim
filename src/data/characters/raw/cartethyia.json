@@ -1,0 +1,1840 @@
+{
+  "id": 1409,
+  "name": "Cartethyia",
+  "element": "Aero",
+  "weaponType": "Sword",
+  "rarity": "SSR",
+  "stats": {
+    "base": {
+      "hp": 1184,
+      "atk": 25,
+      "def": 50
+    },
+    "max": {
+      "hp": 14800,
+      "atk": 312.5,
+      "def": 611.11
+    }
+  },
+  "skills": [
+    {
+      "id": 1003501,
+      "name": "Sword to Carve My Forms",
+      "type": "Normal Attack",
+      "stages": [
+        {
+          "name": "Stage 2 DMG",
+          "category": "Basic Attack",
+          "value": "3.94%+3.94%+5.25%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0394,
+              "energy": 0.58,
+              "concerto": 0.81,
+              "toughness": 0.2304,
+              "weakness": 0.1844
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0394,
+              "energy": 0.58,
+              "concerto": 0.81,
+              "toughness": 0.2304,
+              "weakness": 0.1844
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0525,
+              "energy": 0.77,
+              "concerto": 1.08,
+              "toughness": 0.3072,
+              "weakness": 0.2458
+            }
+          ]
+        },
+        {
+          "name": "Stage 3 DMG",
+          "category": "Basic Attack",
+          "value": "4.28%+4.28%+4.28%+4.28%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.63,
+              "concerto": 0.88,
+              "toughness": 0.4,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.63,
+              "concerto": 0.88,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.63,
+              "concerto": 0.88,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.63,
+              "concerto": 0.88,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            }
+          ]
+        },
+        {
+          "name": "Stage 4 DMG",
+          "category": "Basic Attack",
+          "value": "2.52%*3+7.54%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0252,
+              "energy": 0.37,
+              "concerto": 0.52,
+              "toughness": 0.1474,
+              "weakness": 0.1179
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0252,
+              "energy": 0.37,
+              "concerto": 0.52,
+              "toughness": 0.1474,
+              "weakness": 0.1179
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0252,
+              "energy": 0.37,
+              "concerto": 0.52,
+              "toughness": 0.1474,
+              "weakness": 0.1179
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0754,
+              "energy": 1.11,
+              "concerto": 1.55,
+              "toughness": 0.442,
+              "weakness": 0.3536
+            }
+          ]
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "category": "Basic Attack",
+          "value": "6.85%+6.85%+6.85%+6.85%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0685,
+              "energy": 0.63,
+              "concerto": 1.41,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0685,
+              "energy": 0.63,
+              "concerto": 1.41,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0685,
+              "energy": 0.63,
+              "concerto": 1.41,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0685,
+              "energy": 0.63,
+              "concerto": 1.41,
+              "toughness": 0.2505,
+              "weakness": 0.2004
+            }
+          ]
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "category": "Basic Attack",
+          "value": "2.08%*3+6.24%",
+          "staCost": 20,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 0.42,
+              "concerto": 0.59,
+              "toughness": 0.1667,
+              "weakness": 0.1334
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 0.42,
+              "concerto": 0.59,
+              "toughness": 0.1667,
+              "weakness": 0.1334
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 0.42,
+              "concerto": 0.59,
+              "toughness": 0.1667,
+              "weakness": 0.1334
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0624,
+              "energy": 1.25,
+              "concerto": 1.75,
+              "toughness": 0.5,
+              "weakness": 0.4
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 1 Sword Shadow Recalled",
+          "category": "Basic Attack",
+          "value": "5.65%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0565,
+              "energy": 1.33,
+              "concerto": 1.86,
+              "toughness": 0.531,
+              "weakness": 0.4248
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 2 Sword Shadows Recalled",
+          "category": "Basic Attack",
+          "value": "3.30%*3",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.033,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.033,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.033,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 3 Sword Shadows Recalled",
+          "category": "Basic Attack",
+          "value": "11.29%*3",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1129,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1129,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1129,
+              "energy": 0.45,
+              "concerto": 0.62,
+              "toughness": 0.531,
+              "weakness": 0.1416
+            }
+          ]
+        },
+        {
+          "name": "Stage 1 DMG",
+          "category": "Basic Attack",
+          "value": "4.78%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0478,
+              "energy": 0.7,
+              "concerto": 0.98,
+              "toughness": 0.28,
+              "weakness": 0.224
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack",
+          "category": "Basic Attack",
+          "value": "5.65%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0565,
+              "energy": 1.33,
+              "concerto": 1.86,
+              "toughness": 0.531,
+              "weakness": 0.4248
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0754,
+          "energy": 1.11,
+          "concerto": 1.55,
+          "toughness": 0.442,
+          "weakness": 0.3536
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0565,
+          "energy": 0.45,
+          "concerto": 0.62,
+          "toughness": 0.531,
+          "weakness": 0.1416
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0717,
+          "energy": 0.7,
+          "concerto": 0.98,
+          "toughness": 0.28,
+          "weakness": 0.224
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.059,
+          "energy": 0.58,
+          "concerto": 0.81,
+          "toughness": 0.2304,
+          "weakness": 0.1844
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.059,
+          "energy": 0.58,
+          "concerto": 0.81,
+          "toughness": 0.2304,
+          "weakness": 0.1844
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0787,
+          "energy": 0.77,
+          "concerto": 1.08,
+          "toughness": 0.3072,
+          "weakness": 0.2458
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0641,
+          "energy": 0.63,
+          "concerto": 0.88,
+          "toughness": 0.4,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0641,
+          "energy": 0.63,
+          "concerto": 0.88,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0641,
+          "energy": 0.63,
+          "concerto": 0.88,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0641,
+          "energy": 0.63,
+          "concerto": 0.88,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1028,
+          "energy": 0.63,
+          "concerto": 1.41,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1028,
+          "energy": 0.63,
+          "concerto": 1.41,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1028,
+          "energy": 0.63,
+          "concerto": 1.41,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1028,
+          "energy": 0.63,
+          "concerto": 1.41,
+          "toughness": 0.2505,
+          "weakness": 0.2004
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0377,
+          "energy": 0.37,
+          "concerto": 0.52,
+          "toughness": 0.1474,
+          "weakness": 0.1179
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1131,
+          "energy": 1.11,
+          "concerto": 1.55,
+          "toughness": 0.442,
+          "weakness": 0.3536
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0312,
+          "energy": 0.42,
+          "concerto": 0.59,
+          "toughness": 0.1667,
+          "weakness": 0.1334
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0935,
+          "energy": 1.25,
+          "concerto": 1.75,
+          "toughness": 0.5,
+          "weakness": 0.4
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1695,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1695,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1695,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.1695,
+          "energy": 1.33,
+          "concerto": 1.86,
+          "toughness": 0.531,
+          "weakness": 0.4248
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.099,
+          "energy": 0.45,
+          "concerto": 0.62,
+          "toughness": 0.531,
+          "weakness": 0.1416
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.3387,
+          "energy": 0.45,
+          "concerto": 0.62,
+          "toughness": 0.531,
+          "weakness": 0.1416
+        }
+      ]
+    },
+    {
+      "id": 1003502,
+      "name": "Sword to Bear Their Names",
+      "type": "Resonance Skill",
+      "stages": [
+        {
+          "name": "Skill DMG",
+          "category": "Resonance Skill",
+          "value": "6.89%*3+8.86%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0689,
+              "energy": 3.8,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.168
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0689,
+              "energy": 3.8,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.168
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0689,
+              "energy": 3.8,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.168
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0886,
+              "energy": 4.88,
+              "concerto": 0,
+              "toughness": 0.3,
+              "weakness": 0.216
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0.4,
+          "weakness": 0
+        }
+      ]
+    },
+    {
+      "id": 1003503,
+      "name": "A Knight's Heartfelt Prayers",
+      "type": "Resonance Liberation",
+      "stages": [
+        {
+          "name": "Blade of Howling Squall DMG",
+          "category": "Resonance Liberation",
+          "value": "13.12%*7",
+          "cooldown": 25,
+          "concerto": 20,
+          "damage": [
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            },
+            {
+              "type": "Resonance Liberation",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1312,
+              "energy": 0,
+              "concerto": 0,
+              "toughness": 0.5715,
+              "weakness": 2.4
+            }
+          ]
+        },
+        {
+          "name": "A Knight's Heartfelt Prayers Resonance Cost",
+          "category": "Resonance Liberation",
+          "value": "125",
+          "cooldown": 25,
+          "concerto": 20
+        }
+      ],
+      "damage": [
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0.4,
+          "weakness": 0
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0.531,
+          "weakness": 0
+        },
+        {
+          "type": "Resonance Liberation",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.2624,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0.5715,
+          "weakness": 2.4
+        }
+      ]
+    },
+    {
+      "id": 1003504,
+      "name": "A Heart's Truest Wishes",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1003505,
+      "name": "Wind's Indelible Imprint",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1003506,
+      "name": "Sword to Mark Tide's Trace",
+      "type": "Intro Skill",
+      "stages": [
+        {
+          "name": "Sword to Mark Tide's Trace DMG",
+          "category": "Intro Skill",
+          "value": "2.08%*3+6.24%",
+          "concerto": 10,
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 1.67,
+              "concerto": 0,
+              "toughness": 0.146,
+              "weakness": 0.1168
+            },
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 1.67,
+              "concerto": 0,
+              "toughness": 0.146,
+              "weakness": 0.1168
+            },
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0208,
+              "energy": 1.67,
+              "concerto": 0,
+              "toughness": 0.146,
+              "weakness": 0.1168
+            },
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0624,
+              "energy": 5,
+              "concerto": 0,
+              "toughness": 0.438,
+              "weakness": 0.3504
+            }
+          ]
+        },
+        {
+          "name": "Sword to Call for Freedom DMG",
+          "category": "Intro Skill",
+          "value": "4.28%+9.97%",
+          "concerto": 10,
+          "damage": [
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.53,
+              "concerto": 0,
+              "toughness": 0.2106,
+              "weakness": 0.1685
+            },
+            {
+              "type": "Intro Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0997,
+              "energy": 1.23,
+              "concerto": 0,
+              "toughness": 0.4914,
+              "weakness": 0.3932
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Intro Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Intro Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0312,
+          "energy": 1.67,
+          "concerto": 0,
+          "toughness": 0.146,
+          "weakness": 0.1168
+        },
+        {
+          "type": "Intro Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Intro Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0.0935,
+          "energy": 5,
+          "concerto": 0,
+          "toughness": 0.438,
+          "weakness": 0.3504
+        }
+      ]
+    },
+    {
+      "id": 1003507,
+      "name": "Tempest",
+      "type": "Forte Circuit",
+      "stages": [
+        {
+          "name": "Basic Attack Stage 1 DMG",
+          "category": "Basic Attack",
+          "value": "6.49%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0649,
+              "energy": 0.75,
+              "concerto": 1.05,
+              "toughness": 0.3,
+              "weakness": 0.24
+            }
+          ]
+        },
+        {
+          "name": "Basic Attack Stage 2 DMG",
+          "category": "Basic Attack",
+          "value": "3.63%+1.82%+1.82%+1.82%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0363,
+              "energy": 0.77,
+              "concerto": 1.07,
+              "toughness": 0.4,
+              "weakness": 0.2439
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0182,
+              "energy": 0.39,
+              "concerto": 0.54,
+              "toughness": 0.1524,
+              "weakness": 0.122
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0182,
+              "energy": 0.39,
+              "concerto": 0.54,
+              "toughness": 0.1524,
+              "weakness": 0.122
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0182,
+              "energy": 0.39,
+              "concerto": 0.54,
+              "toughness": 0.1524,
+              "weakness": 0.122
+            }
+          ]
+        },
+        {
+          "name": "Basic Attack Stage 3 DMG",
+          "category": "Basic Attack",
+          "value": "2.13%+2.13%+2.13%+4.26%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0213,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0213,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0213,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0426,
+              "energy": 0.9,
+              "concerto": 1.26,
+              "toughness": 0.36,
+              "weakness": 0.288
+            }
+          ]
+        },
+        {
+          "name": "Basic Attack Stage 4 DMG",
+          "category": "Basic Attack",
+          "value": "2.74%*5",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0274,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0274,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0274,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0274,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0274,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            }
+          ]
+        },
+        {
+          "name": "Basic Attack Stage 5 DMG",
+          "category": "Basic Attack",
+          "value": "7.20%+28.80%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.072,
+              "energy": 0.4,
+              "concerto": 0.56,
+              "toughness": 0.4,
+              "weakness": 0.1268
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.288,
+              "energy": 1.59,
+              "concerto": 2.22,
+              "toughness": 0.6336,
+              "weakness": 0.5069
+            }
+          ]
+        },
+        {
+          "name": "Dodge Counter DMG",
+          "category": "Basic Attack",
+          "value": "3.20%+3.20%+3.20%+6.39%",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.032,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.032,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.032,
+              "energy": 0.45,
+              "concerto": 0.63,
+              "toughness": 0.18,
+              "weakness": 0.144
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0639,
+              "energy": 0.9,
+              "concerto": 1.26,
+              "toughness": 0.36,
+              "weakness": 0.288
+            }
+          ]
+        },
+        {
+          "name": "Upward Cut DMG",
+          "category": "Basic Attack",
+          "value": "4.54%*2",
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0454,
+              "energy": 0.76,
+              "concerto": 1.06,
+              "toughness": 0.4,
+              "weakness": 0.242
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0454,
+              "energy": 0.76,
+              "concerto": 1.06,
+              "toughness": 0.4,
+              "weakness": 0.242
+            }
+          ]
+        },
+        {
+          "name": "Heavy Attack DMG",
+          "category": "Basic Attack",
+          "value": "4.28%+9.97%",
+          "staCost": 20,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0428,
+              "energy": 0.53,
+              "concerto": 0.74,
+              "toughness": 0.2106,
+              "weakness": 0.1685
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0997,
+              "energy": 1.23,
+              "concerto": 1.72,
+              "toughness": 0.4914,
+              "weakness": 0.3932
+            }
+          ]
+        },
+        {
+          "name": "Enhanced Heavy Attack DMG",
+          "category": "Basic Attack",
+          "value": "7.78%*2+3.89%",
+          "staCost": 20,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0778,
+              "energy": 0.96,
+              "concerto": 1.35,
+              "toughness": 0.4,
+              "weakness": 0.3066
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0778,
+              "energy": 0.96,
+              "concerto": 1.35,
+              "toughness": 0.4,
+              "weakness": 0.3066
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0389,
+              "energy": 0.48,
+              "concerto": 0.68,
+              "toughness": 0.1916,
+              "weakness": 0.1533
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 1 DMG",
+          "category": "Basic Attack",
+          "value": "2.99%+2.99%+3.08%",
+          "staCost": 5,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0299,
+              "energy": 0.66,
+              "concerto": 0.93,
+              "toughness": 0.2634,
+              "weakness": 0.2107
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0299,
+              "energy": 0.66,
+              "concerto": 0.93,
+              "toughness": 0.2634,
+              "weakness": 0.2107
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0308,
+              "energy": 0.68,
+              "concerto": 0.95,
+              "toughness": 0.2714,
+              "weakness": 0.2171
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 2 DMG",
+          "category": "Basic Attack",
+          "value": "7.39%+7.39%+14.77%",
+          "staCost": 5,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0739,
+              "energy": 0.52,
+              "concerto": 0.72,
+              "toughness": 0.2055,
+              "weakness": 0.1644
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0739,
+              "energy": 0.52,
+              "concerto": 0.72,
+              "toughness": 0.2055,
+              "weakness": 0.1644
+            },
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1477,
+              "energy": 1.03,
+              "concerto": 1.44,
+              "toughness": 0.411,
+              "weakness": 0.3288
+            }
+          ]
+        },
+        {
+          "name": "Mid-air Attack 3 DMG",
+          "category": "Basic Attack",
+          "value": "2.20%",
+          "staCost": 30,
+          "damage": [
+            {
+              "type": "Basic Attack",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.022,
+              "energy": 0.48,
+              "concerto": 0.67,
+              "toughness": 0.191,
+              "weakness": 0.1528
+            }
+          ]
+        },
+        {
+          "name": "Sword to Answer Waves' Call DMG",
+          "category": "Resonance Skill",
+          "value": "1.86%*4+17.36%",
+          "concerto": 10,
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.18,
+              "concerto": 0,
+              "toughness": 0.4,
+              "weakness": 0.0551
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.66,
+              "concerto": 0,
+              "toughness": 0.0688,
+              "weakness": 0.0551
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.66,
+              "concerto": 0,
+              "toughness": 0.0688,
+              "weakness": 0.0551
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.66,
+              "concerto": 0,
+              "toughness": 0.0688,
+              "weakness": 0.0551
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.1736,
+              "energy": 1.61,
+              "concerto": 0,
+              "toughness": 0.6419,
+              "weakness": 0.5136
+            }
+          ]
+        },
+        {
+          "name": "May Tempest Break the Tides DMG",
+          "category": "Resonance Skill",
+          "value": "1.86%*2+7.03%*3",
+          "concerto": 10,
+          "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0703,
+              "energy": 2.5,
+              "concerto": 0,
+              "toughness": 0.2599,
+              "weakness": 0.2079
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0703,
+              "energy": 2.5,
+              "concerto": 0,
+              "toughness": 0.2599,
+              "weakness": 0.2079
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0703,
+              "energy": 2.5,
+              "concerto": 0,
+              "toughness": 0.2599,
+              "weakness": 0.2079
+            }
+          ]
+        }
+      ],
+      "damage": [
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        },
+        {
+          "type": "Resonance Skill",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
+          "value": 0,
+          "energy": 0,
+          "concerto": 0,
+          "toughness": 0,
+          "weakness": 0
+        }
+      ]
+    },
+    {
+      "id": 1003508,
+      "name": "Skillful Cooking",
+      "type": "Inherent Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1003509,
+      "name": "Wind's Divine Blessing",
+      "type": "Outro Skill",
+      "stages": [],
+      "damage": []
+    },
+    {
+      "id": 1003510,
+      "name": "",
+      "type": "Tune Break",
+      "stages": [],
+      "damage": []
+    }
+  ],
+  "skillTreeBonuses": ["Crit. Rate Up", "HP Up"],
+  "buffs": {
+    "inherent": [
+      "A Heart's Truest Wishes",
+      "Wind's Indelible Imprint",
+      "Skillful Cooking"
+    ],
+    "resonanceChain": [
+      "Crown Destined by Fate",
+      "Blade Broken by Tempest",
+      "Prisoner Hanged in the Tower",
+      "Sacrifice Made for Salvation",
+      "Hope Reshaped in Storms",
+      "Freedom Found in Storm's Wake"
+    ]
+  }
+}
