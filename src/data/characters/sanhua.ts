@@ -312,80 +312,20 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.s5.thorn-crit",
-      name: "S5: Unraveling Fate (Ice Thorn)",
+      id: "char.sanhua.s5.unraveling-fate",
+      name: "S5: Unraveling Fate",
       description:
-        "When Ice Thorn detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
+        "Crit DMG of Forte Circuit Ice Burst +100%. Requires Sequence 5.",
       requiresSequence: 5,
-      trigger: {
-        event: "hitLanded",
-        characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
-        source: "self",
-      },
+      trigger: { event: "simStart" },
       target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
-      condition: {
-        kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-thorn",
-        on: "source",
-      },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "critDmg" },
-          value: { kind: "const", v: 1.0 },
-        },
-      ],
-    },
-    {
-      id: "char.sanhua.s5.prism-crit",
-      name: "S5: Unraveling Fate (Ice Prism)",
-      description:
-        "When Ice Prism detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
-      requiresSequence: 5,
-      trigger: {
-        event: "hitLanded",
-        characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
-        source: "self",
-      },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
-      condition: {
-        kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-prism",
-        on: "source",
-      },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "critDmg" },
-          value: { kind: "const", v: 1.0 },
-        },
-      ],
-    },
-    {
-      id: "char.sanhua.s5.glacier-crit",
-      name: "S5: Unraveling Fate (Ice Glacier)",
-      description:
-        "When Ice Glacier detonates, Crit DMG +100% for the burst hit. Requires Sequence 5.",
-      requiresSequence: 5,
-      trigger: {
-        event: "hitLanded",
-        characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
-        source: "self",
-      },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 1 },
-      condition: {
-        kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-glacier",
-        on: "source",
+      duration: { kind: "permanent" },
+      appliesToHits: {
+        sourceBuffId: [
+          "char.sanhua.ice-thorn-burst",
+          "char.sanhua.ice-prism-burst",
+          "char.sanhua.ice-glacier-burst",
+        ],
       },
       effects: [
         {

@@ -219,10 +219,15 @@ export function bootstrapSlot(
   for (const buff of buffs) {
     const isPermanentSimStart =
       buff.trigger.event === "simStart" && buff.duration?.kind === "permanent"
-    if (isPermanentSimStart && !buff.condition) {
+    // A hit-scoped (`appliesToHits`) buff must never be pre-folded into the base
+    // table: its effects are gated per-hit at resolveStats time via the
+    // `activeContributions` filter. Folding bypasses that gate and would leak the
+    // bonus onto every hit, so it stays a runtime instance like a conditional one.
+    const needsInstance = buff.condition != null || buff.appliesToHits != null
+    if (isPermanentSimStart && !needsInstance) {
       accumulateStatEffects(stats, { def: buff, stacks: 1 })
       foldedBuffs.push(buff)
-    } else if (isPermanentSimStart && buff.condition) {
+    } else if (isPermanentSimStart && needsInstance) {
       permanentInstances.push({
         def: buff,
         sourceCharacterId: charId,

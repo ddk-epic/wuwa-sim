@@ -194,6 +194,78 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
   })
 })
 
+describe("Sanhua — S5 Unraveling Fate (Ice Burst Crit DMG +100%)", () => {
+  const DETONATE_STAGE =
+    "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack"
+
+  function makeEngineSeq(sequence: number) {
+    testCharacters = [sanhua]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1102, null, null],
+      loadouts: [{ ...emptyLoadout, sequence }, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  /** Arm the Ice Thorn flag (Intro Skill), detonate, and resolve the burst. */
+  function resolveThornBurst(engine: ReturnType<typeof makeEngineSeq>) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1102,
+      skillCategory: "Intro Skill",
+      frame: 0,
+    })
+    const { deferredEmits } = onEventResolved(engine, {
+      kind: "hitLanded",
+      characterId: 1102,
+      skillCategory: "Heavy Attack",
+      stageId: DETONATE_STAGE,
+      dmgType: "Damage",
+      frame: 100,
+    })
+    const burst = deferredEmits.find(
+      (d) => d.input.def.id === "char.sanhua.ice-thorn-burst",
+    )
+    expect(burst).toBeDefined()
+    return engine.resolveDeferredEmit(burst!)
+  }
+
+  it("folds +100% Crit DMG into the Ice Burst snapshot at S5, even though the burst resolves 14 frames after the detonate", () => {
+    const engine = makeEngineSeq(5)
+    // Hit-agnostic baseline excludes the appliesToHits buff.
+    const baseline = engine.resolveStats(1102).critDmg
+    const resolved = resolveThornBurst(engine)
+    expect(resolved.event.kind).toBe("hit")
+    expect(
+      resolved.event.kind === "hit" && resolved.event.statsSnapshot.critDmg,
+    ).toBeCloseTo(baseline + 1.0)
+  })
+
+  it("does not boost the Ice Burst Crit DMG below S5", () => {
+    const engine = makeEngineSeq(4)
+    const baseline = engine.resolveStats(1102).critDmg
+    const resolved = resolveThornBurst(engine)
+    expect(
+      resolved.event.kind === "hit" && resolved.event.statsSnapshot.critDmg,
+    ).toBeCloseTo(baseline)
+  })
+
+  it("is excluded from the hit-agnostic stat pass at S5 (not pre-folded into base, never leaks onto the detonate Heavy tap)", () => {
+    const engine = makeEngineSeq(5)
+    expect(engine.activeBuffIds(1102)).toContain(
+      "char.sanhua.s5.unraveling-fate",
+    )
+    const burstCritDmg = (
+      resolveThornBurst(makeEngineSeq(5)).event as {
+        statsSnapshot: { critDmg: number }
+      }
+    ).statsSnapshot.critDmg
+    // Burst gets +1.0; the hit-agnostic pass must stay a full 1.0 below it.
+    expect(engine.resolveStats(1102).critDmg).toBeCloseTo(burstCritDmg - 1.0)
+  })
+})
+
 describe("Sanhua — Detonate burst honors its actionFrame offset (ADR-0028)", () => {
   const DETONATE_STAGE =
     "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack"
