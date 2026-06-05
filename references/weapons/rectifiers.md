@@ -1,11 +1,11 @@
 # Rectifiers
 
-**Weapon Type:** Rectifier
+**Weapon Type:** Rectifier  
 **Rarity/Level:** Level 90
 
 ## Stringmaster
 
-**ATK:** 500  
+**ATK:** 500.0  
 **Crit. Rate:** 36.0%
 
 **Electric Amplification:**
@@ -15,8 +15,18 @@ Grants **12% / 15% / 18% / 21% / 24%** Attribute DMG Bonus. When dealing Resonan
 
 ## Stellar Symphony
 
-**ATK:** 412.50  
+**ATK:** 412.5  
 **Energy Regen:** 77.04%
 
 **Astral Evolvement:**
 Increase HP by **12% / 15% / 18% / 21% / 24%**. Restore **8 / 10 / 12 / 14 / 16** Concerto Energy when casting Resonance Liberation. This effect can be triggered 1 time(s) every 20s. When casting Resonance Skill that heals, increase nearby party members' ATK by **14% / 17.5% / 21% / 24.5% / 28%** for 30s. Effects of the same name cannot be stacked.
+
+---
+
+## Variation
+
+**ATK:** 337.5  
+**Energy Regen:** 51.84%
+
+**Ceaseless Aria:**
+When Resonance Skill is cast, restores **8 / 10 / 12 / 14 / 16** Concerto Energy. This effect can be triggered 1 times every 20s.

@@ -80,6 +80,96 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "")
 }
 
+// --- Markdown reference ---
+
+const WEAPON_TYPE_FILES: Record<string, string> = {
+  Sword: "swords",
+  Broadblade: "broadblades",
+  Pistols: "pistols",
+  Gauntlets: "gauntlets",
+  Rectifier: "rectifiers",
+}
+
+// Level-90 stat value with trailing zeros trimmed but at least one decimal
+// place kept, so meaningful precision survives (77.04%) while round values
+// still read as decimals (500.0). Percentages keep their trailing "%".
+function formatStatValue(prop: ApiProperty): string {
+  const raw = prop.GrowthValues[prop.GrowthValues.length - 1].Value
+  const isPercentage = raw.endsWith("%")
+  const num = parseFloat(raw.replace("%", ""))
+  let formatted = num.toString()
+  if (!formatted.includes(".")) formatted += ".0"
+  return isPercentage ? `${formatted}%` : formatted
+}
+
+function transformDescription(desc: string): string {
+  const withRanges = desc.replace(
+    /<span\b[^>]*class="[^"]*font-bold[^"]*"[^>]*>(.*?)<\/span>/g,
+    (_, inner: string) => {
+      const parts = inner.split("/").map((p) => p.trim())
+      const allEqual = parts.every((p) => p === parts[0])
+      return allEqual ? parts[0] : `**${parts.join(" / ")}**`
+    },
+  )
+  return stripHtml(withRanges)
+}
+
+function buildSection(data: ApiWeapon): string {
+  const [mainProp, subProp] = data.Properties
+  const atk = formatStatValue(mainProp)
+  const sub = formatStatValue(subProp)
+  const description = transformDescription(data.Desc)
+
+  return (
+    `## ${data.WeaponName}\n\n` +
+    `**${mainProp.Name}:** ${atk}  \n` +
+    `**${subProp.Name}:** ${sub}\n\n` +
+    `**${data.ResonName}:**\n` +
+    `${description}`
+  )
+}
+
+export async function appendToReference(data: ApiWeapon): Promise<void> {
+  const stem = WEAPON_TYPE_FILES[data.WeaponTypeName]
+  if (!stem) {
+    console.warn(
+      `No reference file mapping for weapon type "${data.WeaponTypeName}"; skipping markdown append.`,
+    )
+    return
+  }
+
+  const refPath = path.join(PROJECT_ROOT, "references/weapons", `${stem}.md`)
+  const section = buildSection(data)
+
+  let existing: string | null = null
+  try {
+    existing = await fs.readFile(refPath, "utf8")
+  } catch {
+    // File doesn't exist yet
+  }
+
+  if (existing === null) {
+    const title = stem.charAt(0).toUpperCase() + stem.slice(1)
+    const header =
+      `# ${title}\n\n` +
+      `**Weapon Type:** ${data.WeaponTypeName}  \n` +
+      `**Rarity/Level:** Level 90\n\n`
+    await fs.writeFile(refPath, `${header}${section}\n`)
+    console.log(`Created references/weapons/${stem}.md with ${data.WeaponName}`)
+    return
+  }
+
+  if (existing.split("\n").some((line) => line === `## ${data.WeaponName}`)) {
+    console.warn(
+      `${data.WeaponName} already present in references/weapons/${stem}.md; skipping.`,
+    )
+    return
+  }
+
+  await fs.writeFile(refPath, `${existing.trimEnd()}\n\n---\n\n${section}\n`)
+  console.log(`Appended ${data.WeaponName} to references/weapons/${stem}.md`)
+}
+
 // --- Main ---
 
 export async function extractWeapon(id: string): Promise<void> {
@@ -128,6 +218,8 @@ export async function extractWeapon(id: string): Promise<void> {
   await fs.mkdir(outputDir, { recursive: true })
   await fs.writeFile(outputPath, JSON.stringify(weapon, null, 2))
   console.log(`Written to src/data/weapons/raw/${slug}.json`)
+
+  await appendToReference(data)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
