@@ -76,5 +76,5 @@ The engine bootstrap and stat-table builder load the registries
 
 - [data](data.md) — where raw and authored entries live, and the extraction step
 - [buff-engine](buff-engine.md) — how authored `BuffDef`s are run
-- [BUFFS](BUFFS.md) — StatPath reference the buffs target
+- [buff-reference](buff-reference.md) — StatPath reference the buffs target
 - [engine-overview](engine-overview.md) — the engine that consumes the enriched registries

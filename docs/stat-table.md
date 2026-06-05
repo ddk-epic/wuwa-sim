@@ -25,7 +25,7 @@ zero (maps included) and is the starting point the builder accumulates onto.
 
 `ScalarStatKey` enumerates just the scalar (non-map) fields — it is the address
 space a buff `StatEffect` can target directly. The keyed-map axes are addressed
-separately. See [BUFFS](BUFFS.md) for the full StatPath ↔ field mapping rather
+separately. See [buff-reference](buff-reference.md) for the full StatPath ↔ field mapping rather
 than duplicating it here.
 
 ### How it's built
@@ -47,7 +47,7 @@ concrete main + substat rolls via `echo-stat-constants` — and finally the acti
 
 ## Related
 
-- [BUFFS](BUFFS.md) — StatPath reference: which path writes which field
+- [buff-reference](buff-reference.md) — StatPath reference: which path writes which field
 - [buff-engine](buff-engine.md) — how buffs accumulate onto the table
 - [loadout](loadout.md) — the echo build / main-stat inputs the builder expands
 - [enriched-model](enriched-model.md) — the character/weapon/echo shapes consumed
