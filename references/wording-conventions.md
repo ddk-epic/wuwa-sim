@@ -33,6 +33,15 @@ less than ×(1 + N%) whenever other DMG Bonus is already present. Reserve the
 separate multiplicative `bonusMultiplier` factor for effects that explicitly read
 as their own multiplier (e.g. Shorekeeper S6 "Bonus Multiplier").
 
+**Check the Chinese source when unsure which bucket applies.** The English
+localization can blur the distinction, but the Chinese text is unambiguous:
+
+- **提升** ("increased") → **DMG Bonus** bucket (the `dmgBonus` additive space).
+- **加深** ("deepen") → **Deepen** bucket (the `deepen` additive space).
+
+When a description is ambiguous about whether an effect is a DMG Bonus or a
+Deepen, double-check against the Chinese wording (提升 vs. 加深) before deciding.
+
 ## Verified examples
 
 - **Sanhua — Avalanche:** "Damage dealt by Sanhua's Forte Circuit Ice Burst is
