@@ -1,5 +1,6 @@
 import type { Element } from "#/data/elements"
 import type { NegStatusType } from "#/data/neg-status-types"
+import type { HitLabel } from "#/data/hit-labels"
 import type { DamageEntry, SkillCategory, SkillType } from "./character"
 import type { ScalarStatKey } from "./stat-table"
 
@@ -15,6 +16,7 @@ export interface HitFilter {
   skillType?: SkillType | SkillType[]
   skillCategory?: SkillCategory | SkillCategory[]
   element?: Element | Element[]
+  label?: HitLabel | HitLabel[]
 }
 
 /**
@@ -28,6 +30,7 @@ export interface HitContext {
   skillType?: SkillType
   skillCategory?: SkillCategory
   element?: Element
+  labels?: HitLabel[]
 }
 
 export type StatPath =
@@ -130,6 +133,12 @@ export type NegStatusEffect = {
   n?: number
 }
 
+export type NegStatusModEffect = {
+  kind: "negStatusMod"
+  status: NegStatusType
+  intervalMult: number
+}
+
 export type Effect =
   | StatEffect
   | ResourceEffect
@@ -137,6 +146,7 @@ export type Effect =
   | CoordHitEffect
   | RemoveBuffsEffect
   | NegStatusEffect
+  | NegStatusModEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 

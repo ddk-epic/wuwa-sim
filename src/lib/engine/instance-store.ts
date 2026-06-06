@@ -148,6 +148,10 @@ export class InstanceStore {
     }
   }
 
+  allActive(): readonly BuffInstance[] {
+    return this.active
+  }
+
   /** Sorted (by def.id) instances targeting `characterId` for stat resolution. */
   getActiveTargeting(characterId: number): BuffInstance[] {
     return this.active

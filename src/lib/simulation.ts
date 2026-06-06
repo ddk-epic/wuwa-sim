@@ -4,6 +4,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
   BuffEvent,
+  HitEvent,
   SimulationLogEntry,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
@@ -99,6 +100,16 @@ export function runSimulation(
   // Drain the stream's tail: trailing hits / synthetics that never re-entered.
   // Parked footing commits with no re-entry are dropped.
   drainSchedule(ctx, Infinity)
+
+  // Flush Negative Status ticks scheduled past the last authored action.
+  const statuses = engine.getTarget().list()
+  if (statuses.length > 0) {
+    const lastEnd = Math.max(
+      ctx.cursor.frame,
+      ...statuses.map((s) => s.endTime),
+    )
+    pushAdvance(log, engine.tickToFrame(lastEnd))
+  }
 
   return log
 }
@@ -212,9 +223,18 @@ function resolveWork(work: Work, ctx: SimContext): void {
 function advanceTo(
   ctx: SimContext,
   frame: number,
-): { lifecycleEvents: BuffEvent[] } {
+): { lifecycleEvents: BuffEvent[]; tickEvents: HitEvent[] } {
   drainSchedule(ctx, frame)
   return ctx.engine.tickToFrame(frame)
+}
+
+/** Log a clock-advance's expiry lifecycle events and its Negative Status ticks. */
+function pushAdvance(
+  log: SimulationLogEntry[],
+  result: { lifecycleEvents: BuffEvent[]; tickEvents: HitEvent[] },
+): void {
+  for (const e of result.lifecycleEvents) log.push(e)
+  for (const t of result.tickEvents) log.push(t)
 }
 
 /** Resolve a single deferred synthetic at its landing frame and log it. */
@@ -225,7 +245,7 @@ function resolvePendingSynthetic(
   const { engine, log } = ctx
   // Advance to the landing frame for a frame-honest snapshot, then resolve and
   // run the synthetic chain.
-  pushBuffEvents(log, engine.tickToFrame(sd.emit.landingFrame).lifecycleEvents)
+  pushAdvance(log, engine.tickToFrame(sd.emit.landingFrame))
   const r = engine.resolveDeferredEmit(sd.emit)
   r.event.sourceEntryId = sd.sourceEntryId
   log.push(r.event)
@@ -290,7 +310,7 @@ function processEntry(
 
   // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
   // starts resolves ahead of it.
-  pushBuffEvents(log, advanceTo(ctx, effectiveStart).lifecycleEvents)
+  pushAdvance(log, advanceTo(ctx, effectiveStart))
 
   if (resolved.skillType !== "Movement") {
     fireSkillCast(entry, resolved, ctx, effectiveStart)
@@ -403,9 +423,10 @@ function resolveTrailingBundle(bundle: TrailingHit, ctx: SimContext): void {
     skillCategory: resolved.skillCategory,
     skillType: hit.type,
     element: resolved.element,
+    labels: hit.labels,
   }
   const hitResolved = engine.resolveHit(entry.characterId, hitFrame, hitContext)
-  pushBuffEvents(log, hitResolved.lifecycleEvents)
+  pushAdvance(log, hitResolved)
 
   if (hit.dmgType === "Heal") {
     processHeal(hit, hitIndex, hitFrame, entry, resolved, hitResolved, ctx)

@@ -1,4 +1,5 @@
 import type { Element } from "#/data/elements"
+import type { HitLabel } from "#/data/hit-labels"
 import type { BuffDef } from "./buff"
 
 /**
@@ -97,6 +98,8 @@ export interface DamageEntry {
   independent?: boolean
   /** Per-hit forte resource gain for the actor. Scaled by forteRechargePct. */
   forte?: number
+  /** "Counts-as" labels — a hit may bear several (e.g. a plunge considered Aero Erosion DMG). */
+  labels?: HitLabel[]
 }
 
 export interface Skill {

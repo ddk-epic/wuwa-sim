@@ -36,8 +36,9 @@ export class Target {
     n: number,
     frame: number,
     sourceCharacterId: number,
-  ): void {
+  ): boolean {
     const existing = this.statuses.get(def.type)
+    let created = false
     if (existing) {
       existing.stacks = Math.min(existing.stacks + n, existing.cap)
       existing.endTime = this.endTimeFor(def, frame)
@@ -49,9 +50,12 @@ export class Target {
         cap: def.cap,
         endTime: this.endTimeFor(def, frame),
         sourceCharacterId,
+        nextTickFrame: Infinity,
       })
+      created = true
     }
     this.version++
+    return created
   }
 
   reduceBy(type: NegStatusType, n: number): void {
@@ -68,8 +72,9 @@ export class Target {
     def: NegStatusDef,
     frame: number,
     sourceCharacterId: number,
-  ): void {
+  ): boolean {
     const existing = this.statuses.get(def.type)
+    let created = false
     if (existing) {
       existing.stacks = existing.cap
       existing.endTime = this.endTimeFor(def, frame)
@@ -81,9 +86,12 @@ export class Target {
         cap: def.cap,
         endTime: this.endTimeFor(def, frame),
         sourceCharacterId,
+        nextTickFrame: Infinity,
       })
+      created = true
     }
     this.version++
+    return created
   }
 
   raiseCap(type: NegStatusType, n: number): void {
@@ -91,6 +99,15 @@ export class Target {
     if (!existing) return
     existing.cap += n
     this.version++
+  }
+
+  getInstance(type: NegStatusType): NegStatusInstance | undefined {
+    return this.statuses.get(type)
+  }
+
+  setNextTick(type: NegStatusType, frame: number): void {
+    const inst = this.statuses.get(type)
+    if (inst) inst.nextTickFrame = frame
   }
 
   hasAnyStatus(): boolean {

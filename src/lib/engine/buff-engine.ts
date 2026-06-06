@@ -41,6 +41,9 @@ import type { Candidate, EngineEvent } from "./instance-store"
 import { Target } from "./target"
 import { negStatusDef } from "#/data/neg-statuses"
 import type { NegStatusType } from "#/data/neg-status-types"
+import type { NegStatusInstance } from "#/types/target"
+import { computeDamage } from "../damage/compute-damage"
+import { buildHitEvent } from "./log-event-builders"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
@@ -57,6 +60,7 @@ export interface ResolvedHit {
   activeBuffs: ActiveBuff[]
   passiveBuffs: ActiveBuff[]
   lifecycleEvents: BuffEvent[]
+  tickEvents: HitEvent[]
 }
 
 export interface HitDispatch {
@@ -489,27 +493,60 @@ export class BuffEngine {
         const statusDef = negStatusDef(effect.status)
         const n = effect.n ?? 0
         switch (effect.op) {
-          case "apply":
-            this.target.apply(statusDef, n, ctx.event.frame, sourceCharacterId)
+          case "apply": {
+            const created = this.target.apply(
+              statusDef,
+              n,
+              ctx.event.frame,
+              sourceCharacterId,
+            )
+            if (created) this.scheduleFirstTick(effect.status, ctx.event.frame)
             this.fireNegStatusInflicted(effect.status, sourceCharacterId, ctx)
             break
+          }
           case "reduceBy":
             this.target.reduceBy(effect.status, n)
             break
-          case "raiseToMax":
-            this.target.raiseToMax(
+          case "raiseToMax": {
+            const created = this.target.raiseToMax(
               statusDef,
               ctx.event.frame,
               sourceCharacterId,
             )
+            if (created) this.scheduleFirstTick(effect.status, ctx.event.frame)
             this.fireNegStatusInflicted(effect.status, sourceCharacterId, ctx)
             break
+          }
           case "raiseCap":
             this.target.raiseCap(effect.status, n)
             break
         }
       }
     }
+  }
+
+  private scheduleFirstTick(status: NegStatusType, frame: number): void {
+    this.target.setNextTick(status, frame + this.intervalFrames(status))
+  }
+
+  private currentIntervalMult(status: NegStatusType): number {
+    let mult = 1
+    for (const inst of this.store.allActive()) {
+      for (const effect of inst.def.effects) {
+        if (effect.kind === "negStatusMod" && effect.status === status) {
+          mult *= effect.intervalMult
+        }
+      }
+    }
+    return mult
+  }
+
+  private intervalFrames(status: NegStatusType): number {
+    const def = negStatusDef(status)
+    const frames = Math.round(
+      def.tickInterval * 60 * this.currentIntervalMult(status),
+    )
+    return Math.max(1, frames)
   }
 
   private fireNegStatusInflicted(
@@ -1015,10 +1052,98 @@ export class BuffEngine {
     }
   }
 
-  /** Advance internal clock to `frame`; expire instances whose endTime <= frame. */
-  tickToFrame(frame: number): { lifecycleEvents: BuffEvent[] } {
+  /**
+   * Advance internal clock to `frame`; expire instances whose endTime <= frame
+   * and emit any Negative Status ticks due at/before it, each snapshotting engine
+   * state at its own tick frame.
+   */
+  tickToFrame(frame: number): {
+    lifecycleEvents: BuffEvent[]
+    tickEvents: HitEvent[]
+  } {
+    const lifecycleEvents: BuffEvent[] = []
+    const tickEvents: HitEvent[] = []
+    for (;;) {
+      const tf = this.earliestDueTick(frame)
+      if (tf === null) break
+      for (const e of this.store.tickToFrame(tf).lifecycleEvents)
+        lifecycleEvents.push(e)
+      this.target.expireBefore(tf)
+      for (const inst of this.target.list()) {
+        if (inst.nextTickFrame > tf) continue
+        tickEvents.push(this.buildStatusTick(inst, tf))
+        this.target.setNextTick(
+          inst.def.type,
+          tf + this.intervalFrames(inst.def.type),
+        )
+      }
+    }
+    for (const e of this.store.tickToFrame(frame).lifecycleEvents)
+      lifecycleEvents.push(e)
     this.target.expireBefore(frame)
-    return this.store.tickToFrame(frame)
+    return { lifecycleEvents, tickEvents }
+  }
+
+  private earliestDueTick(frame: number): number | null {
+    let min: number | null = null
+    for (const inst of this.target.list()) {
+      if (
+        inst.nextTickFrame <= frame &&
+        (min === null || inst.nextTickFrame < min)
+      ) {
+        min = inst.nextTickFrame
+      }
+    }
+    return min
+  }
+
+  private buildStatusTick(inst: NegStatusInstance, frame: number): HitEvent {
+    const def = inst.def
+    const inflictor = inst.sourceCharacterId
+    const hitCtx: HitContext = {
+      element: def.element,
+      skillType: "Basic Attack",
+      labels: [def.label],
+    }
+    const stats = this.resolveStats(inflictor, hitCtx)
+    const damage = computeDamage(
+      {
+        multiplier: 1,
+        element: def.element,
+        skillType: "Basic Attack",
+        dmgType: def.type,
+        source: {
+          kind: "statusTick",
+          baseUnit: def.baseUnit,
+          stacks: inst.stacks,
+          stackFactor: def.stackFactor,
+        },
+      },
+      stats,
+      this.target.getParams(),
+    )
+    const post = this.getResource(inflictor)
+    return buildHitEvent(
+      {
+        characterId: inflictor,
+        frame,
+        skillType: "Basic Attack",
+        element: def.element,
+        dmgType: def.type,
+        multiplier: 1,
+        damage,
+        cumulativeEnergy: post.energy,
+        cumulativeConcerto: post.concerto,
+        statsSnapshot: stats,
+        activeBuffs: this.activeBuffs(inflictor, hitCtx),
+        passiveBuffs: this.passiveBuffs(inflictor),
+      },
+      {
+        kind: "synthetic",
+        skillName: def.type,
+        sourceBuffId: `negStatus.${def.type}`,
+      },
+    )
   }
 
   getTargetParams(): TargetParams {
@@ -1136,11 +1261,11 @@ export class BuffEngine {
     frame: number,
     hit?: HitContext,
   ): ResolvedHit {
-    const { lifecycleEvents } = this.tickToFrame(frame)
+    const { lifecycleEvents, tickEvents } = this.tickToFrame(frame)
     const stats = this.resolveStats(actingCharacterId, hit)
     const activeBuffs = this.activeBuffs(actingCharacterId, hit)
     const passiveBuffs = this.passiveBuffs(actingCharacterId)
-    return { stats, activeBuffs, passiveBuffs, lifecycleEvents }
+    return { stats, activeBuffs, passiveBuffs, lifecycleEvents, tickEvents }
   }
 
   /**

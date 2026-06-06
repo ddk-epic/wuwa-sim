@@ -4,6 +4,7 @@ import type { NegStatusDef } from "#/types/target"
 export const AERO_EROSION: NegStatusDef = {
   type: "Aero Erosion",
   element: "Aero",
+  label: "Aero Erosion",
   cap: 3,
   duration: 15,
   tickInterval: 2.5,

@@ -9,12 +9,23 @@ export const RES_MULT_CONST = 0.9
 
 export type ScalingStat = "ATK" | "HP" | "DEF"
 
+export type DamageSource =
+  | { kind: "authored" }
+  | { kind: "synthetic" }
+  | {
+      kind: "statusTick"
+      baseUnit: number
+      stacks: number
+      stackFactor: Record<number, number>
+    }
+
 export interface DamageContext {
   multiplier: number
   element: Element
   skillType: SkillType
   dmgType: string
   scalingStat?: string
+  source?: DamageSource
 }
 
 function normalizeScalingStat(raw: string | undefined): ScalingStat {
@@ -40,30 +51,39 @@ export function computeDamage(
   stats: StatTable,
   target: TargetParams = DEFAULT_TARGET_PARAMS,
 ): number {
-  const stat = normalizeScalingStat(ctx.scalingStat)
-  const base = scalingBase(stat, stats)
+  const source = ctx.source ?? { kind: "authored" }
+  const isTick = source.kind === "statusTick"
+
+  // StatusTick replaces MV × scaling with a flat baseUnit × stack factor, and
+  // forces crit off; it also carries no skill type, so skill-type buckets drop.
+  const base = isTick
+    ? source.baseUnit * (source.stackFactor[source.stacks] ?? 0)
+    : scalingBase(normalizeScalingStat(ctx.scalingStat), stats)
+  const multiplier = isTick ? 1 : ctx.multiplier
+
   const dmgBonus =
     stats.elementBonus[ctx.element] +
-    stats.skillTypeBonus[ctx.skillType] +
+    (isTick ? 0 : stats.skillTypeBonus[ctx.skillType]) +
     stats.allDmgBonus
   const deepen =
     stats.elementDeepen[ctx.element] +
-    stats.skillTypeDeepen[ctx.skillType] +
+    (isTick ? 0 : stats.skillTypeDeepen[ctx.skillType]) +
     stats.allDeepen
+
   const critRate = Math.min(stats.critRate, 1)
-  const critFactor = 1 - critRate + critRate * stats.critDmg
+  const critFactor = isTick ? 1 : 1 - critRate + critRate * stats.critDmg
 
   const defConst = target.defMultConst
   const defMult = defConst / (defConst + (1 - defConst) * (1 - stats.defShred))
 
   const baseResist = 1 - target.resMultConst
-  const skillResShred = stats.shreds[ctx.skillType]
+  const skillResShred = isTick ? 0 : stats.shreds[ctx.skillType]
   const effectiveResist = baseResist - skillResShred
   const resMult =
     effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
 
   const raw =
-    ctx.multiplier *
+    multiplier *
     base *
     (1 + stats.bonusMultiplier) *
     (1 + dmgBonus) *

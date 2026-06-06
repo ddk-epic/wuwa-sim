@@ -1,9 +1,11 @@
 import type { Element } from "#/data/elements"
 import type { NegStatusType } from "#/data/neg-status-types"
+import type { HitLabel } from "#/data/hit-labels"
 
 export interface NegStatusDef {
   type: NegStatusType
   element: Element
+  label: HitLabel
   cap: number
   duration: number
   tickInterval: number
@@ -17,6 +19,7 @@ export interface NegStatusInstance {
   cap: number
   endTime: number
   sourceCharacterId: number
+  nextTickFrame: number
 }
 
 export interface TargetParams {

@@ -529,6 +529,16 @@ describe("matchesHit", () => {
     expect(matchesHit(f, ctx)).toBe(false)
   })
 
+  it("label axis matches when the hit carries one of the wanted labels", () => {
+    const labelled: HitContext = { labels: ["Aero Erosion"] }
+    expect(matchesHit({ label: "Aero Erosion" }, labelled)).toBe(true)
+    expect(matchesHit({ label: ["Aero Erosion"] }, labelled)).toBe(true)
+    expect(
+      matchesHit({ label: "Aero Erosion" }, { skillType: "Basic Attack" }),
+    ).toBe(false)
+    expect(matchesHit({ label: "Aero Erosion" }, { labels: [] })).toBe(false)
+  })
+
   it("stageId axis matches every hit of a lineage filter (no hit suffix)", () => {
     const hit: HitContext = { stageId: "char.x.skill.stage::basic-attack.3" }
     // Lineage filter (no `.<hit>` suffix) matches any hit index.

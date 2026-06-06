@@ -16,6 +16,7 @@ import type {
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import type { NegStatusType } from "#/data/neg-status-types"
+import type { HitLabel } from "#/data/hit-labels"
 import type { WeaponData } from "#/types/weapon"
 import { stageIdMatches } from "../stage"
 import {
@@ -67,6 +68,16 @@ function matchesStageIdAxis(
   return ids.some((t) => stageIdMatches(t, ctxVal))
 }
 
+function matchesLabelAxis(
+  filterVal: HitLabel | HitLabel[] | undefined,
+  ctxLabels: HitLabel[] | undefined,
+): boolean {
+  if (filterVal === undefined) return true
+  if (!ctxLabels || ctxLabels.length === 0) return false
+  const wanted = Array.isArray(filterVal) ? filterVal : [filterVal]
+  return wanted.some((l) => ctxLabels.includes(l))
+}
+
 /** Returns true when every present axis in `filter` matches `ctx`. */
 export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
   return (
@@ -74,7 +85,8 @@ export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
     matchesStageIdAxis(filter.stageId, ctx.stageId) &&
     matchesAxis(filter.skillType, ctx.skillType) &&
     matchesAxis(filter.skillCategory, ctx.skillCategory) &&
-    matchesAxis(filter.element, ctx.element)
+    matchesAxis(filter.element, ctx.element) &&
+    matchesLabelAxis(filter.label, ctx.labels)
   )
 }
 

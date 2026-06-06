@@ -266,4 +266,48 @@ describe("computeDamage", () => {
       Math.round(1 * 1000 * defMult * 0.8),
     )
   })
+
+  describe("statusTick source", () => {
+    const tickCtx = (stacks: number): DamageContext =>
+      ctx({
+        multiplier: 99,
+        element: "Aero",
+        source: {
+          kind: "statusTick",
+          baseUnit: 2000,
+          stacks,
+          stackFactor: { 1: 0.8, 2: 2, 3: 4 },
+        },
+      })
+
+    it("builds a flat baseUnit × stackFactor base, ignoring multiplier and scaling", () => {
+      expect(computeDamage(tickCtx(3), stats({ atkBase: 9999 }))).toBe(
+        Math.round(2000 * 4 * DEFRES),
+      )
+    })
+
+    it("forces crit off (crit term collapses to ×1)", () => {
+      const s = stats({ critRate: 1, critDmg: 3 })
+      expect(computeDamage(tickCtx(2), s)).toBe(Math.round(2000 * 2 * DEFRES))
+    })
+
+    it("ignores skill-type bonus/deepen but applies element/all dmgBonus, deepen, and vul", () => {
+      const s = stats({
+        elementBonus: { ...emptyStatTable().elementBonus, Aero: 0.3 },
+        skillTypeBonus: {
+          ...emptyStatTable().skillTypeBonus,
+          "Basic Attack": 0.5,
+        },
+        allDeepen: 0.2,
+        skillTypeDeepen: {
+          ...emptyStatTable().skillTypeDeepen,
+          "Basic Attack": 0.5,
+        },
+        vul: 0.4,
+      })
+      expect(computeDamage(tickCtx(1), s)).toBe(
+        Math.round(2000 * 0.8 * 1.3 * 1.2 * 1.4 * DEFRES),
+      )
+    })
+  })
 })
