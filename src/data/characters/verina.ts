@@ -795,19 +795,7 @@ export const verina = {
           ],
         },
       ],
-      damage: [
-        {
-          type: "Basic Attack",
-          dmgType: "Heal",
-          scalingStat: "ATK",
-          actionFrame: 0,
-          value: 0.12,
-          energy: 0,
-          concerto: 0,
-          toughness: 0,
-          weakness: 0,
-        },
-      ],
+      damage: [],
     },
     {
       id: 1000304,

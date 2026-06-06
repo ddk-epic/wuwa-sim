@@ -833,19 +833,7 @@ export const shorekeeper = {
           ],
         },
       ],
-      damage: [
-        {
-          type: "Resonance Liberation",
-          dmgType: "Damage",
-          scalingStat: "HP",
-          actionFrame: 0,
-          value: 0.2789,
-          energy: 3.34,
-          concerto: 0,
-          toughness: 0.3334,
-          weakness: 2.4414,
-        },
-      ],
+      damage: [],
     },
     {
       id: 1002507,
