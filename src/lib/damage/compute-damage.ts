@@ -66,6 +66,7 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
     (1 + stats.bonusMultiplier) *
     (1 + dmgBonus) *
     (1 + deepen) *
+    (1 + stats.vul) *
     critFactor *
     defMult *
     resMult

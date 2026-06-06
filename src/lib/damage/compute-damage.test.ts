@@ -235,4 +235,17 @@ describe("computeDamage", () => {
       Math.round(1 * 1000 * 1.5 * 1.3 * DEFRES),
     )
   })
+
+  it("vul applies as a standalone × (1 + vul) factor", () => {
+    expect(computeDamage(ctx({ multiplier: 1 }), stats({ vul: 0.4 }))).toBe(
+      Math.round(1 * 1000 * 1.4 * DEFRES),
+    )
+  })
+
+  it("vul is its own multiplicative space, independent of dmgBonus and deepen", () => {
+    const s = stats({ allDmgBonus: 0.3, allDeepen: 0.2, vul: 0.4 })
+    expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
+      Math.round(1 * 1000 * (1 + 0.3) * (1 + 0.2) * (1 + 0.4) * DEFRES),
+    )
+  })
 })

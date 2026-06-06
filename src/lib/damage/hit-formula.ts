@@ -88,6 +88,7 @@ export interface FormulaBreakdown {
   bonusMultiplier: number
   dmgBonus: number
   deepen: number
+  vul: number
   critFactor: number
   defMult: number
   resMult: number
@@ -132,12 +133,14 @@ export function computeFormulaBreakdown(
     effectiveResist >= 0 ? 1 - effectiveResist : 1 - effectiveResist / 2
 
   const bonusMultiplier = snap.bonusMultiplier
+  const vul = snap.vul
   const result = Math.round(
     scalingValue *
       ev.multiplier *
       (1 + bonusMultiplier) *
       (1 + dmgBonus) *
       (1 + deepen) *
+      (1 + vul) *
       critFactor *
       defMult *
       resMult,
@@ -149,6 +152,7 @@ export function computeFormulaBreakdown(
     bonusMultiplier,
     dmgBonus,
     deepen,
+    vul,
     critFactor,
     defMult,
     resMult,

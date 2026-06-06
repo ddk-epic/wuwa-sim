@@ -107,6 +107,22 @@ describe("accumulateStatEffects", () => {
     expect(stats.elementBonus.Fusion).toBeCloseTo(0.3)
   })
 
+  it("two vul stat effects accumulate additively into the vul bucket", () => {
+    const stats = emptyStatTable()
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "vul" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    })
+    accumulateStatEffects(stats, { def, stacks: 1 })
+    accumulateStatEffects(stats, { def, stacks: 1 })
+    expect(stats.vul).toBeCloseTo(0.6)
+  })
+
   it("scaledByStat reads from getCharStat and applies formula", () => {
     const stats = emptyStatTable()
     const def = baseBuff({

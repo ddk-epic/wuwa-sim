@@ -107,6 +107,12 @@ function FormulaBox({
         <Op s="×" />
         <Term label="deepen" value={`(1 + ${(bd.deepen * 100).toFixed(1)}%)`} />
         <Op s="×" />
+        {bd.vul !== 0 && (
+          <>
+            <Term label="vul" value={`(1 + ${(bd.vul * 100).toFixed(1)}%)`} />
+            <Op s="×" />
+          </>
+        )}
         <Term label="crit" value={bd.critFactor.toFixed(4)} />
         <Op s="×" />
         <Term label="def" value={bd.defMult.toFixed(4)} />

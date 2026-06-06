@@ -43,6 +43,7 @@ export type ScalarStatKey =
   | "healingBonus"
   | "bonusMultiplier"
   | "energyGainMult"
+  | "vul"
 
 export interface StatTable {
   atkBase: number
@@ -73,6 +74,12 @@ export interface StatTable {
    * `× (1 + energyGainMult)` factor on consuming attacks only.
    */
   energyGainMult: number
+  /**
+   * Vulnerability ("takes more DMG"). Its own multiplicative bucket in the
+   * damage formula — additive within itself, independent of dmgBonus and
+   * deepen. Modelled attacker-side (single-target sim); see ADR-0035.
+   */
+  vul: number
 }
 
 export function emptyStatTable(): StatTable {
@@ -101,5 +108,6 @@ export function emptyStatTable(): StatTable {
     healingBonus: 0,
     bonusMultiplier: 0,
     energyGainMult: 0,
+    vul: 0,
   }
 }
