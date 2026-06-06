@@ -484,6 +484,7 @@ function processDamageHit(
       scalingStat: hit.scalingStat,
     },
     hitResolved.stats,
+    engine.getTargetParams(),
   )
   const dispatch = engine.recordHit({
     kind: "hitLanded",

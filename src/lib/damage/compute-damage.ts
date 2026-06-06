@@ -1,6 +1,8 @@
 import type { Element } from "#/data/elements"
 import type { SkillType } from "#/types/character"
 import type { StatTable } from "#/types/stat-table"
+import type { TargetParams } from "#/types/target"
+import { DEFAULT_TARGET_PARAMS } from "#/types/target"
 
 export const DEF_MULT_CONST = 0.5
 export const RES_MULT_CONST = 0.9
@@ -33,7 +35,11 @@ function scalingBase(stat: ScalingStat, stats: StatTable): number {
   }
 }
 
-export function computeDamage(ctx: DamageContext, stats: StatTable): number {
+export function computeDamage(
+  ctx: DamageContext,
+  stats: StatTable,
+  target: TargetParams = DEFAULT_TARGET_PARAMS,
+): number {
   const stat = normalizeScalingStat(ctx.scalingStat)
   const base = scalingBase(stat, stats)
   const dmgBonus =
@@ -47,14 +53,10 @@ export function computeDamage(ctx: DamageContext, stats: StatTable): number {
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = 1 - critRate + critRate * stats.critDmg
 
-  // DEF_MULT_CONST = charDef / (charDef + enemyDef); defShred reduces enemy DEF portion
-  const defMult =
-    DEF_MULT_CONST /
-    (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - stats.defShred))
+  const defConst = target.defMultConst
+  const defMult = defConst / (defConst + (1 - defConst) * (1 - stats.defShred))
 
-  // RES_MULT_CONST = 1 - baseResistance; shreds lowers effective resistance per skill type
-  // When effective resistance goes negative the negative portion is halved
-  const baseResist = 1 - RES_MULT_CONST
+  const baseResist = 1 - target.resMultConst
   const skillResShred = stats.shreds[ctx.skillType]
   const effectiveResist = baseResist - skillResShred
   const resMult =

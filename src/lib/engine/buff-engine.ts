@@ -18,6 +18,7 @@ import type {
   SustainEvent,
 } from "#/types/simulation-log"
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
+import type { TargetParams } from "#/types/target"
 import { getCharacterById } from "../loadout/catalog"
 import { resolveHealTargets } from "../heal-targets"
 import {
@@ -37,6 +38,8 @@ import { ConditionEvaluator } from "./condition-evaluator"
 import type { ConditionSubject, ConditionWorld } from "./condition-evaluator"
 import { InstanceStore } from "./instance-store"
 import type { Candidate, EngineEvent } from "./instance-store"
+import { Target } from "./target"
+import { negStatusDef } from "#/data/neg-statuses"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
@@ -104,6 +107,7 @@ type PendingOutroBuff = {
 
 export class BuffEngine {
   private store = new InstanceStore()
+  private target = new Target()
   private triggerIndex = new TriggerIndex([])
   private resources = new ResourceLedger()
   private onField = new OnFieldTracker()
@@ -134,6 +138,7 @@ export class BuffEngine {
   private readonly phases: ReadonlyArray<PhaseHandler> = [
     { name: "resource", run: (ctx) => this.runResourcePhase(ctx) },
     { name: "stat", run: (ctx) => this.runStatPhase(ctx) },
+    { name: "negStatus", run: (ctx) => this.runNegStatusPhase(ctx) },
     { name: "emitHit", run: (ctx) => this.runEmitHitPhase(ctx) },
     { name: "coordHit", run: (ctx) => this.runCoordHitPhase(ctx) },
     {
@@ -153,10 +158,12 @@ export class BuffEngine {
       hasActiveBuff: (id, charId) => this.store.hasActiveOnTarget(id, charId),
       isOnField: (charId) => this.onField.isOnField(charId),
       getResourceValue: (charId, r) => this.resources.getResource(charId)[r],
+      hasAnyNegStatus: () => this.target.hasAnyStatus(),
       mutationVersions: () => ({
         store: this.store.mutationVersion(),
         resources: this.resources.mutationVersion(),
         onField: this.onField.mutationVersion(),
+        target: this.target.mutationVersion(),
       }),
     }
   }
@@ -233,6 +240,7 @@ export class BuffEngine {
 
   bootstrap(input: BootstrapInput): { lifecycleEvents: BuffEvent[] } {
     this.store.clear()
+    this.target.reset()
     this.resources.clear()
     this.resources.clearCaps()
     this.onField.clear()
@@ -470,6 +478,34 @@ export class BuffEngine {
     }
     for (const { def, sourceCharacterId } of deferred) {
       this.applyOrDefer(def, sourceCharacterId, ctx.event.frame, ctx.out)
+    }
+  }
+
+  private runNegStatusPhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
+      for (const effect of def.effects) {
+        if (effect.kind !== "negStatus") continue
+        const statusDef = negStatusDef(effect.status)
+        const n = effect.n ?? 0
+        switch (effect.op) {
+          case "apply":
+            this.target.apply(statusDef, n, ctx.event.frame, sourceCharacterId)
+            break
+          case "reduceBy":
+            this.target.reduceBy(effect.status, n)
+            break
+          case "raiseToMax":
+            this.target.raiseToMax(
+              statusDef,
+              ctx.event.frame,
+              sourceCharacterId,
+            )
+            break
+          case "raiseCap":
+            this.target.raiseCap(effect.status, n)
+            break
+        }
+      }
     }
   }
 
@@ -960,7 +996,16 @@ export class BuffEngine {
 
   /** Advance internal clock to `frame`; expire instances whose endTime <= frame. */
   tickToFrame(frame: number): { lifecycleEvents: BuffEvent[] } {
+    this.target.expireBefore(frame)
     return this.store.tickToFrame(frame)
+  }
+
+  getTargetParams(): TargetParams {
+    return this.target.getParams()
+  }
+
+  getTarget(): Target {
+    return this.target
   }
 
   /**
@@ -1029,14 +1074,23 @@ export class BuffEngine {
 
   /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. When `hit` is provided, `appliesToHits` buffs that do not match the hit are also excluded. */
   activeBuffs(characterId: number, hit?: HitContext): ActiveBuff[] {
-    return this.activeContributions(characterId, hit)
-      .map((inst) => ({
+    const buffs: ActiveBuff[] = this.activeContributions(characterId, hit).map(
+      (inst) => ({
         id: inst.def.id,
         name: inst.def.name,
         stacks: inst.stacks,
         sourceCharacterId: inst.sourceCharacterId,
-      }))
-      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      }),
+    )
+    for (const s of this.target.list()) {
+      buffs.push({
+        id: `negStatus.${s.def.type}`,
+        name: s.def.type,
+        stacks: s.stacks,
+        sourceCharacterId: s.sourceCharacterId,
+      })
+    }
+    return buffs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   }
 
   /** Passive buffs folded into baseStats at bootstrap for `characterId`, as ActiveBuff entries. */

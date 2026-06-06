@@ -220,6 +220,16 @@ Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain 
 **Intro Skill / Outro Skill**:
 The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free.
 
+**Negative Status** (NegStatus):
+A target-side inflicted debuff and the reusable engine primitive for the family (Aero Erosion, Spectro Frazzle, Electro Flare, Glacio Chafe, Fusion Burst, Havoc Bane). Parameterised by a `NegStatusDef` (`{ type, element, cap, duration, tickInterval, baseUnit, stackFactor[] }`); a live instance holds stacks, cap, `endTime`, and its own tick clock. Two things read it: its **presence** is a queryable condition ("targets with Negative Statuses" — e.g. Cartethyia's Outro), and its **stack count** feeds value expressions (e.g. the inherent's vul). Written by a `negStatus` effect (`apply N` / `reduceBy N` / `raiseToMax` / `raiseCap N`).
+
+**Aero Erosion**:
+A stacking **Negative Status** held on the target that deals periodic **Aero Erosion DMG**. Base stack cap 3 (raisable by some effects — inherent reads up to 6; S2 raises the cap +3); ~15s total duration; ticks once every ~2–3s. Stacks do **not** decay individually — the whole status expires at end of duration, and re-applying at max stacks only resets the duration.
+_Avoid_: Aero DoT, erosion debuff.
+
+**Aero Erosion DMG**:
+The periodic Aero damage instance the **Aero Erosion** status deals. Runs through the **normal damage formula**, with two differences: (1) the `scalingStat × MV` term is replaced by a **flat base unit × a stack-count factor** (`factor = {1: 0.8, 2: 2, 3: 4, 4: 6, 5: 8, 6: 10}`, i.e. `2×(stacks−1)` for ≥2 stacks), and (2) it **cannot crit** — modeled by forcing the hit's crit rate and crit DMG to 0 so the crit term is ×1. Deepen, DMG Bonus, defMult, and resistMult all apply normally — it scales with the inflictor's bonuses. Dealt by the status, not by a Resonator hit; its Acting Character (for stat-sheet purposes) is the inflictor.
+
 ### Team Library
 
 **Session**:
@@ -265,6 +275,7 @@ The shared modal (`TeamModal`) for composing a team — a name field above the [
 - **"Normal Attack" vs Skill Type / Skill Category** — `"Normal Attack"` is a `SkillGrouping` only (UI sidebar section). It is **not** a `SkillCategory` or `SkillType`. It does not appear in stageIds, engine events, or triggers. `"Forte Circuit"` and `"Inherent Skill"` follow the same rule — they are groupings, not engine types. Stages under these groupings have their own `SkillCategory` (the player action, e.g. `"Basic Attack"` or `"Heavy Attack"`) tagged per stage. Authoring `Trigger.skillCategory: "Normal Attack"` is a TypeScript error; use `["Basic Attack", "Heavy Attack"]` if you want to match either. See ADR-0024.
 - **"Amplify" / "Amplified"** — the in-game UI term for **Deepen**. Deepen is our canonical term; do not introduce an `amplify` field. When game text says a character's DMG is "Amplified by X%", that is a Deepen effect (`stat: "deepen"`), not a DMG Bonus. Example: Sanhua's Outro (Silversnow) says "Basic Attack DMG Amplified by 38%" — modeled as `deepen["Basic Attack"] = 0.38`.
 - **"DMG Bonus"** — at compute time, element bonus and skill-type bonus share one additive bucket. Stored separately on the Stat Table for trigger/condition specificity, but summed into a single `(1 + Σ)` factor in the damage formula.
+- **"takes X% more DMG from [character]" / vulnerability (`vul`)** — distinct from "Amplified by" (Deepen). A separate **multiplicative** bucket in the formula, additive within itself: `… × (1 + vul) × …`, beside `bonusMultiplier`/`dmgBonus`/`deepen`. Stored as `vul` on the Stat Table and modelled **attacker-side** (the sim is single-target, so "target takes +X% from a character" ≡ "that character deals +X%"); source-scoped wording is therefore authored as a **self-buff**.
 
 ## Example dialogue
 

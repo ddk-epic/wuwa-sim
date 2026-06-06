@@ -12,7 +12,13 @@ function makeWorld(overrides: Partial<ConditionWorld> = {}): ConditionWorld {
     hasActiveBuff: vi.fn(),
     isOnField: vi.fn(),
     getResourceValue: vi.fn(),
-    mutationVersions: vi.fn(() => ({ store: 0, resources: 0, onField: 0 })),
+    hasAnyNegStatus: vi.fn(),
+    mutationVersions: vi.fn(() => ({
+      store: 0,
+      resources: 0,
+      onField: 0,
+      target: 0,
+    })),
     ...overrides,
   }
 }
@@ -156,7 +162,7 @@ describe("ConditionEvaluator", () => {
 
   describe("caching", () => {
     it("repeated identical calls return cached result (evalCount unchanged)", () => {
-      const versions = { store: 0, resources: 0, onField: 0 }
+      const versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const world = makeWorld({
         mutationVersions: vi.fn(() => versions),
         isOnField: vi.fn(() => true),
@@ -184,7 +190,7 @@ describe("ConditionEvaluator", () => {
     })
 
     it("cache invalidates when store version changes", () => {
-      let versions = { store: 0, resources: 0, onField: 0 }
+      let versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const world = makeWorld({
         mutationVersions: vi.fn(() => versions),
         isOnField: vi.fn(() => true),
@@ -199,13 +205,13 @@ describe("ConditionEvaluator", () => {
       expect(evaluator.evalCountForTest()).toBe(1)
 
       // Change store version
-      versions = { store: 1, resources: 0, onField: 0 }
+      versions = { store: 1, resources: 0, onField: 0, target: 0 }
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(2)
     })
 
     it("cache invalidates when resources version changes", () => {
-      let versions = { store: 0, resources: 0, onField: 0 }
+      let versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const world = makeWorld({
         mutationVersions: vi.fn(() => versions),
         isOnField: vi.fn(() => true),
@@ -219,13 +225,13 @@ describe("ConditionEvaluator", () => {
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(1)
 
-      versions = { store: 0, resources: 1, onField: 0 }
+      versions = { store: 0, resources: 1, onField: 0, target: 0 }
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(2)
     })
 
     it("cache invalidates when onField version changes", () => {
-      let versions = { store: 0, resources: 0, onField: 0 }
+      let versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const world = makeWorld({
         mutationVersions: vi.fn(() => versions),
         isOnField: vi.fn(() => true),
@@ -239,13 +245,13 @@ describe("ConditionEvaluator", () => {
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(1)
 
-      versions = { store: 0, resources: 0, onField: 1 }
+      versions = { store: 0, resources: 0, onField: 1, target: 0 }
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(2)
     })
 
     it("cache key isolation across (buffId, sourceId, targetId, actingId)", () => {
-      const versions = { store: 0, resources: 0, onField: 0 }
+      const versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const isOnFieldMock = vi.fn().mockReturnValue(true)
       const world = makeWorld({
         mutationVersions: vi.fn(() => versions),

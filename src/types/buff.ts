@@ -1,4 +1,5 @@
 import type { Element } from "#/data/elements"
+import type { NegStatusType } from "#/data/neg-status-types"
 import type { DamageEntry, SkillCategory, SkillType } from "./character"
 import type { ScalarStatKey } from "./stat-table"
 
@@ -112,12 +113,20 @@ export type RemoveBuffsEffect = {
   ids: string[]
 }
 
+export type NegStatusEffect = {
+  kind: "negStatus"
+  status: NegStatusType
+  op: "apply" | "reduceBy" | "raiseToMax" | "raiseCap"
+  n?: number
+}
+
 export type Effect =
   | StatEffect
   | ResourceEffect
   | EmitHitEffect
   | CoordHitEffect
   | RemoveBuffsEffect
+  | NegStatusEffect
 
 export type TriggerSource = "self" | "synthetic" | "any"
 
@@ -209,6 +218,7 @@ export type Condition =
       n: number
       on: "target" | "source"
     }
+  | { kind: "targetHasNegStatus" }
 
 export interface ResourceState {
   energy: number

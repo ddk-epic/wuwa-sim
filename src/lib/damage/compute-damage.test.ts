@@ -248,4 +248,22 @@ describe("computeDamage", () => {
       Math.round(1 * 1000 * (1 + 0.3) * (1 + 0.2) * (1 + 0.4) * DEFRES),
     )
   })
+
+  it("a default target reproduces the historical def/res constants", () => {
+    expect(computeDamage(ctx({ multiplier: 1 }), stats())).toBe(
+      computeDamage(ctx({ multiplier: 1 }), stats(), {
+        level: 100,
+        defMultConst: DEF_MULT_CONST,
+        resMultConst: RES_MULT_CONST,
+      }),
+    )
+  })
+
+  it("target params drive the def and res mitigation factors", () => {
+    const target = { level: 90, defMultConst: 0.6, resMultConst: 0.8 }
+    const defMult = 0.6 / (0.6 + (1 - 0.6) * 1)
+    expect(computeDamage(ctx({ multiplier: 1 }), stats(), target)).toBe(
+      Math.round(1 * 1000 * defMult * 0.8),
+    )
+  })
 })
