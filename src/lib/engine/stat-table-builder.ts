@@ -15,6 +15,7 @@ import type {
 } from "#/types/loadout"
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
+import type { NegStatusType } from "#/data/neg-status-types"
 import type { WeaponData } from "#/types/weapon"
 import { stageIdMatches } from "../stage"
 import {
@@ -87,6 +88,7 @@ export function accumulateStatEffects(
   contribution: StatContribution,
   getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
   getBuffStacks?: (characterId: number, buffId: string) => number,
+  getStatusStacks?: (status: NegStatusType) => number,
 ): void {
   const { def, stacks, snapshots } = contribution
   for (let i = 0; i < def.effects.length; i++) {
@@ -99,6 +101,7 @@ export function accumulateStatEffects(
       i,
       getCharStat,
       getBuffStacks,
+      getStatusStacks,
     )
     applyToPath(stats, effect.path, v)
   }
@@ -118,8 +121,9 @@ export function freezeSnapshots(
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
     const value = effect.value
-    // `scaledByStat` is always read live (never frozen).
+    // `scaledByStat` and `fromStatusStacks` are always read live (never frozen).
     if (value.kind === "scaledByStat") continue
+    if (value.kind === "fromStatusStacks") continue
     if (!value.snapshot) continue
     let frozen: number
     if (value.kind === "scaledByStacks") {
@@ -141,6 +145,7 @@ function resolveValue(
   effectIndex: number,
   getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
   getBuffStacks?: (characterId: number, buffId: string) => number,
+  getStatusStacks?: (status: NegStatusType) => number,
 ): number {
   if ("snapshot" in value && value.snapshot && snapshots) {
     return snapshots[effectIndex]
@@ -158,6 +163,13 @@ function resolveValue(
     case "scaledByStacks": {
       const n = getBuffStacks?.(value.characterId, value.buffId) ?? 0
       return value.base + value.per * Math.min(n, value.max)
+    }
+    case "fromStatusStacks": {
+      const n = getStatusStacks?.(value.status) ?? 0
+      const capped = Math.min(n, value.max)
+      return (
+        value.base + value.per * Math.max(0, capped - (value.threshold ?? 0))
+      )
     }
   }
 }

@@ -6,6 +6,7 @@ import type {
   Trigger,
 } from "#/types/buff"
 import { GLOBAL_TARGET_ID } from "#/types/buff"
+import type { NegStatusType } from "#/data/neg-status-types"
 import type { SkillCategory } from "#/types/character"
 import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
@@ -69,6 +70,12 @@ export type EngineEvent =
       resource: ResourceKind
       /** Magnitude of the net decrease (before - after), always > 0. */
       amount: number
+      frame: number
+    }
+  | {
+      kind: "negStatusInflicted"
+      characterId: number
+      status: NegStatusType
       frame: number
     }
 
@@ -647,6 +654,25 @@ export function matchesTrigger(
     event.kind === "resourceConsumed"
   ) {
     if (trigger.resource !== event.resource) return false
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
+      return false
+    }
+    return true
+  }
+
+  if (
+    trigger.event === "negStatusInflicted" &&
+    event.kind === "negStatusInflicted"
+  ) {
+    if (trigger.status !== undefined && trigger.status !== event.status) {
+      return false
+    }
     if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
       return false
     }

@@ -69,16 +69,7 @@ export interface StatTable {
   forteRechargePct: number
   healingBonus: number
   bonusMultiplier: number
-  /**
-   * Energy Regen Multiplier. Folded into energy accrual as a
-   * `× (1 + energyGainMult)` factor on consuming attacks only.
-   */
   energyGainMult: number
-  /**
-   * Vulnerability ("takes more DMG"). Its own multiplicative bucket in the
-   * damage formula — additive within itself, independent of dmgBonus and
-   * deepen. Modelled attacker-side (single-target sim); see ADR-0035.
-   */
   vul: number
 }
 

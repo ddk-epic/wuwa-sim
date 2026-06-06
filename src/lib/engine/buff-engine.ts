@@ -40,6 +40,7 @@ import { InstanceStore } from "./instance-store"
 import type { Candidate, EngineEvent } from "./instance-store"
 import { Target } from "./target"
 import { negStatusDef } from "#/data/neg-statuses"
+import type { NegStatusType } from "#/data/neg-status-types"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { ResourceLedger } from "./resource-ledger"
@@ -490,6 +491,7 @@ export class BuffEngine {
         switch (effect.op) {
           case "apply":
             this.target.apply(statusDef, n, ctx.event.frame, sourceCharacterId)
+            this.fireNegStatusInflicted(effect.status, sourceCharacterId, ctx)
             break
           case "reduceBy":
             this.target.reduceBy(effect.status, n)
@@ -500,6 +502,7 @@ export class BuffEngine {
               ctx.event.frame,
               sourceCharacterId,
             )
+            this.fireNegStatusInflicted(effect.status, sourceCharacterId, ctx)
             break
           case "raiseCap":
             this.target.raiseCap(effect.status, n)
@@ -507,6 +510,24 @@ export class BuffEngine {
         }
       }
     }
+  }
+
+  private fireNegStatusInflicted(
+    status: NegStatusType,
+    sourceCharacterId: number,
+    ctx: PhaseContext,
+  ): void {
+    this.dispatchEvent(
+      {
+        kind: "negStatusInflicted",
+        characterId: sourceCharacterId,
+        status,
+        frame: ctx.event.frame,
+      },
+      ctx.out,
+      ctx.hitsOut,
+      ctx.depth + 1,
+    )
   }
 
   private runRemoveBuffsPhase(ctx: PhaseContext): void {
@@ -1045,6 +1066,9 @@ export class BuffEngine {
       const getBuffStacks = (cid: number, buffId: string): number => {
         return this.store.buffStacksOnTarget(buffId, cid)
       }
+      const getStatusStacks = (status: NegStatusType): number => {
+        return this.target.stacksOf(status)
+      }
       // One pass over the gated instances; `accumulateStatEffects` only does
       // `+=`, so folding hit-agnostic and hit-scoped buffs together yields the
       // same total as the two old passes.
@@ -1054,6 +1078,7 @@ export class BuffEngine {
           { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
           getCharStat,
           getBuffStacks,
+          getStatusStacks,
         )
       }
       return base

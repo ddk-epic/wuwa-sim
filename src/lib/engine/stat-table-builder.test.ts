@@ -305,6 +305,57 @@ describe("scaledByStacks ValueExpr", () => {
   })
 })
 
+describe("fromStatusStacks ValueExpr", () => {
+  const vulBuff = baseBuff({
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "vul" },
+        value: {
+          kind: "fromStatusStacks",
+          status: "Aero Erosion",
+          base: 0.3,
+          per: 0.1,
+          max: 6,
+          threshold: 1,
+        },
+      },
+    ],
+  })
+
+  const resolve = (statusStacks: number): number => {
+    const stats = emptyStatTable()
+    accumulateStatEffects(
+      stats,
+      { def: vulBuff, stacks: 1 },
+      undefined,
+      undefined,
+      () => statusStacks,
+    )
+    return stats.vul
+  }
+
+  it("stays flat at base up to the threshold, then adds per-stack", () => {
+    expect(resolve(1)).toBeCloseTo(0.3)
+    expect(resolve(2)).toBeCloseTo(0.4)
+    expect(resolve(3)).toBeCloseTo(0.5)
+  })
+
+  it("clamps the status stack count to max", () => {
+    expect(resolve(10)).toBeCloseTo(0.3 + 0.1 * (6 - 1))
+  })
+
+  it("reads 0 stacks when no callback is supplied", () => {
+    const stats = emptyStatTable()
+    accumulateStatEffects(stats, { def: vulBuff, stacks: 1 })
+    expect(stats.vul).toBeCloseTo(0.3)
+  })
+
+  it("is never frozen — freezeSnapshots ignores it", () => {
+    expect(freezeSnapshots(vulBuff, 1, () => 3)).toBeUndefined()
+  })
+})
+
 const baseChar = (
   overrides: Partial<EnrichedCharacter> = {},
 ): EnrichedCharacter => ({

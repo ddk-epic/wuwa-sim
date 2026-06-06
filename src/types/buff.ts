@@ -62,6 +62,16 @@ export type ValueExpr =
       max: number
       snapshot?: boolean
     }
+  | {
+      // `base + per × max(0, min(stacks_of_status, max) − threshold)`, read live
+      // from the target's status stack count. Never frozen.
+      kind: "fromStatusStacks"
+      status: NegStatusType
+      per: number
+      base: number
+      max: number
+      threshold?: number
+    }
 
 export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
 
@@ -189,6 +199,12 @@ export type Trigger =
       resource: ResourceKind
       step: number
       direction: "consumed" | "gained"
+      actor?: "self" | "any"
+      characterId?: number
+    }
+  | {
+      event: "negStatusInflicted"
+      status?: NegStatusType
       actor?: "self" | "any"
       characterId?: number
     }
