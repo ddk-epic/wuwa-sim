@@ -72,10 +72,10 @@ describe("computeDamage", () => {
     )
   })
 
-  it("skillTypeDeepen applies as its own multiplicative factor on matching skillType", () => {
+  it("skillTypeAmp applies as its own multiplicative factor on matching skillType", () => {
     const s = stats({
-      skillTypeDeepen: {
-        ...emptyStatTable().skillTypeDeepen,
+      skillTypeAmp: {
+        ...emptyStatTable().skillTypeAmp,
         "Basic Attack": 0.25,
       },
     })
@@ -84,8 +84,8 @@ describe("computeDamage", () => {
     )
   })
 
-  it("allDeepen applies to every skill type equally", () => {
-    const s = stats({ allDeepen: 0.2 })
+  it("allAmp applies to every skill type equally", () => {
+    const s = stats({ allAmp: 0.2 })
     const expected = Math.round(1 * 1000 * 1.2 * DEFRES)
     expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(expected)
     expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
@@ -94,13 +94,13 @@ describe("computeDamage", () => {
     expect(computeDamage(ctx({ skillType: "Outro Skill" }), s)).toBe(expected)
   })
 
-  it("allDeepen and skillTypeDeepen stack additively before the factor", () => {
+  it("allAmp and skillTypeAmp stack additively before the factor", () => {
     const s = stats({
-      skillTypeDeepen: {
-        ...emptyStatTable().skillTypeDeepen,
+      skillTypeAmp: {
+        ...emptyStatTable().skillTypeAmp,
         "Basic Attack": 0.1,
       },
-      allDeepen: 0.2,
+      allAmp: 0.2,
     })
     expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(
       Math.round(1 * 1000 * 1.3 * DEFRES),
@@ -110,9 +110,9 @@ describe("computeDamage", () => {
     )
   })
 
-  it("elementDeepen applies when element matches", () => {
+  it("elementAmp applies when element matches", () => {
     const s = stats({
-      elementDeepen: { ...emptyStatTable().elementDeepen, Fusion: 0.15 },
+      elementAmp: { ...emptyStatTable().elementAmp, Fusion: 0.15 },
     })
     expect(computeDamage(ctx({ element: "Fusion" }), s)).toBe(
       Math.round(1 * 1000 * 1.15 * DEFRES),
@@ -242,8 +242,8 @@ describe("computeDamage", () => {
     )
   })
 
-  it("vul is its own multiplicative space, independent of dmgBonus and deepen", () => {
-    const s = stats({ allDmgBonus: 0.3, allDeepen: 0.2, vul: 0.4 })
+  it("vul is its own multiplicative space, independent of dmgBonus and amp", () => {
+    const s = stats({ allDmgBonus: 0.3, allAmp: 0.2, vul: 0.4 })
     expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
       Math.round(1 * 1000 * (1 + 0.3) * (1 + 0.2) * (1 + 0.4) * DEFRES),
     )
@@ -291,16 +291,16 @@ describe("computeDamage", () => {
       expect(computeDamage(tickCtx(2), s)).toBe(Math.round(2000 * 2 * DEFRES))
     })
 
-    it("ignores skill-type bonus/deepen but applies element/all dmgBonus, deepen, and vul", () => {
+    it("ignores skill-type bonus/amp but applies element/all dmgBonus, amp, and vul", () => {
       const s = stats({
         elementBonus: { ...emptyStatTable().elementBonus, Aero: 0.3 },
         skillTypeBonus: {
           ...emptyStatTable().skillTypeBonus,
           "Basic Attack": 0.5,
         },
-        allDeepen: 0.2,
-        skillTypeDeepen: {
-          ...emptyStatTable().skillTypeDeepen,
+        allAmp: 0.2,
+        skillTypeAmp: {
+          ...emptyStatTable().skillTypeAmp,
           "Basic Attack": 0.5,
         },
         vul: 0.4,

@@ -37,8 +37,8 @@ export type StatPath =
   | { stat: ScalarStatKey }
   | { stat: "elementBonus"; key: Element }
   | { stat: "skillTypeBonus"; key: SkillType }
-  | { stat: "elementDeepen"; key: Element }
-  | { stat: "skillTypeDeepen"; key: SkillType }
+  | { stat: "elementAmp"; key: Element }
+  | { stat: "skillTypeAmp"; key: SkillType }
   | { stat: "shred"; key: SkillType }
 
 export type ValueExpr =

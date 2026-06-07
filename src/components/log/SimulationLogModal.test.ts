@@ -4,7 +4,7 @@ import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"
 import {
   formatActiveBuffLabel,
-  formatDeepenCell,
+  formatAmpCell,
   formatDMGPctCell,
   formatStatComponents,
   computeFormulaBreakdown,
@@ -119,33 +119,33 @@ describe("formatDMGPctCell", () => {
   })
 })
 
-describe("formatDeepenCell", () => {
-  it("0 deepen shows +0%", () =>
-    expect(formatDeepenCell(snap(), "Fusion", "Basic Attack")).toBe("+0%"))
-  it("matching skillTypeDeepen shown", () => {
+describe("formatAmpCell", () => {
+  it("0 amp shows +0%", () =>
+    expect(formatAmpCell(snap(), "Fusion", "Basic Attack")).toBe("+0%"))
+  it("matching skillTypeAmp shown", () => {
     const s = snap({
-      skillTypeDeepen: {
-        ...emptyStatTable().skillTypeDeepen,
+      skillTypeAmp: {
+        ...emptyStatTable().skillTypeAmp,
         "Basic Attack": 0.2,
       },
     })
-    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+20%")
+    expect(formatAmpCell(s, "Fusion", "Basic Attack")).toBe("+20%")
   })
   it("non-matching skill type shows +0%", () => {
     const s = snap({
-      skillTypeDeepen: {
-        ...emptyStatTable().skillTypeDeepen,
+      skillTypeAmp: {
+        ...emptyStatTable().skillTypeAmp,
         "Resonance Skill": 0.3,
       },
     })
-    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+0%")
+    expect(formatAmpCell(s, "Fusion", "Basic Attack")).toBe("+0%")
   })
-  it("elementDeepen + allDeepen sum into deepen cell", () => {
+  it("elementAmp + allAmp sum into amp cell", () => {
     const s = snap({
-      elementDeepen: { ...emptyStatTable().elementDeepen, Fusion: 0.1 },
-      allDeepen: 0.05,
+      elementAmp: { ...emptyStatTable().elementAmp, Fusion: 0.1 },
+      allAmp: 0.05,
     })
-    expect(formatDeepenCell(s, "Fusion", "Basic Attack")).toBe("+15%")
+    expect(formatAmpCell(s, "Fusion", "Basic Attack")).toBe("+15%")
   })
 })
 

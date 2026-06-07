@@ -203,9 +203,9 @@ export function cloneStats(s: StatTable): StatTable {
     elementBonus: { ...s.elementBonus },
     skillTypeBonus: { ...s.skillTypeBonus },
     allDmgBonus: s.allDmgBonus,
-    elementDeepen: { ...s.elementDeepen },
-    skillTypeDeepen: { ...s.skillTypeDeepen },
-    allDeepen: s.allDeepen,
+    elementAmp: { ...s.elementAmp },
+    skillTypeAmp: { ...s.skillTypeAmp },
+    allAmp: s.allAmp,
     shreds: { ...s.shreds },
     energyRechargePct: s.energyRechargePct,
     forteRechargePct: s.forteRechargePct,
@@ -228,7 +228,7 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "critDmg":
     case "defShred":
     case "allDmgBonus":
-    case "allDeepen":
+    case "allAmp":
     case "energyRechargePct":
     case "forteRechargePct":
     case "healingBonus":
@@ -243,11 +243,11 @@ function applyToPath(stats: StatTable, path: StatPath, v: number): void {
     case "skillTypeBonus":
       stats.skillTypeBonus[path.key] += v
       return
-    case "elementDeepen":
-      stats.elementDeepen[path.key] += v
+    case "elementAmp":
+      stats.elementAmp[path.key] += v
       return
-    case "skillTypeDeepen":
-      stats.skillTypeDeepen[path.key] += v
+    case "skillTypeAmp":
+      stats.skillTypeAmp[path.key] += v
       return
     case "shred":
       stats.shreds[path.key] += v

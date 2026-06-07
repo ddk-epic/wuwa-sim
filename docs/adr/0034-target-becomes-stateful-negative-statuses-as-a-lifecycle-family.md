@@ -21,8 +21,8 @@ Modifiers that change a status's _behavior_ (Mandate of Divinity halves the Eros
 
 ## Known limitations to revisit
 
-- **`baseUnit` is reverse-calculated from a single empirical sample** (level-90 inflictor vs level-100 enemy) and needs the test character's Aero DMG Bonus / Deepen backed out to be clean; until then it is approximate, not authoritative.
-- **Sword Shadows and form/Manifest are presence-flag buffs, not modelled state** — the form change is surfaced for log visibility only; renaming the acting character per Cartethyia⇄Fleurdelys switch is out of scope. Sword-shadow recall, Conviction, and the Heart/Mandate/Power-of-Discord virtues are abstracted as user-asserted toggles/conditions (Mandate = a self-buff carrying the Erosion Deepen + `intervalMult`), consistent with ADR-0032's "attack availability is the author's choice in a timeline-driven sim."
+- **`baseUnit` is reverse-calculated from a single empirical sample** (level-90 inflictor vs level-100 enemy) and needs the test character's Aero DMG Bonus / Amplify backed out to be clean; until then it is approximate, not authoritative.
+- **Sword Shadows and form/Manifest are presence-flag buffs, not modelled state** — the form change is surfaced for log visibility only; renaming the acting character per Cartethyia⇄Fleurdelys switch is out of scope. Sword-shadow recall, Conviction, and the Heart/Mandate/Power-of-Discord virtues are abstracted as user-asserted toggles/conditions (Mandate = a self-buff carrying the Erosion Amplify + `intervalMult`), consistent with ADR-0032's "attack availability is the author's choice in a timeline-driven sim."
 - **S1 is out of scope** — its Zeal/Crit-DMG ramp gates on _defeating_ targets, which the engine cannot represent.
 - **Multi-target stack propagation** (Power of Discord, "raise to highest among targets") is inert in a single-target sim and unmodelled.
 - Companion to ADR-0035 (the `vul` bucket and the polymorphic DamageSource the tick is one variant of).

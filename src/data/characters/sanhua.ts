@@ -22,7 +22,7 @@ export const sanhua = {
       id: "char.sanhua.outro.silversnow",
       name: "Silversnow",
       description:
-        "After Sanhua uses Outro, the next on-field Resonator's Basic Attack DMG is deepened by 38% for 14s.",
+        "After Sanhua uses Outro, the next on-field Resonator's Basic Attack DMG is amplified by 38% for 14s.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
@@ -33,7 +33,7 @@ export const sanhua = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "skillTypeDeepen", key: "Basic Attack" },
+          path: { stat: "skillTypeAmp", key: "Basic Attack" },
           value: { kind: "const", v: 0.38 },
         },
       ],

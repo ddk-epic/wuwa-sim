@@ -44,7 +44,7 @@ function castResoSkill(engine: BuffEngine, frame: number): void {
   })
 }
 
-// baseChar resolves to 0 Aero bonus / 0 deepen / 0 vul, so a tick is
+// baseChar resolves to 0 Aero bonus / 0 amp / 0 vul, so a tick is
 // baseUnit × factor × defMult(0.5) × resMult(0.9).
 const DEFRES = 0.45
 const tickDmg = (factor: number) => Math.round(2150 * factor * DEFRES)
@@ -104,10 +104,10 @@ describe("Aero Erosion tick cadence", () => {
   })
 })
 
-describe("Aero Erosion label-scoped Deepen", () => {
-  const erosionDeepen: BuffDef = {
-    id: "test.erosion-deepen",
-    name: "Erosion Deepen",
+describe("Aero Erosion label-scoped Amplify", () => {
+  const erosionAmp: BuffDef = {
+    id: "test.erosion-amp",
+    name: "Erosion Amplify",
     trigger: { event: "simStart" },
     target: { kind: "self" },
     duration: { kind: "permanent" },
@@ -115,14 +115,14 @@ describe("Aero Erosion label-scoped Deepen", () => {
     effects: [
       {
         kind: "stat",
-        path: { stat: "allDeepen" },
+        path: { stat: "allAmp" },
         value: { kind: "const", v: 0.5 },
       },
     ],
   }
 
   it("folds into ticks and any labelled hit, but not a non-labelled hit", () => {
-    const engine = bootstrap([applyErosion(1), erosionDeepen])
+    const engine = bootstrap([applyErosion(1), erosionAmp])
     castResoSkill(engine, 0)
 
     const ticks = engine.tickToFrame(200).tickEvents
@@ -132,10 +132,10 @@ describe("Aero Erosion label-scoped Deepen", () => {
       engine.resolveStats(1, {
         labels: ["Aero Erosion"],
         skillType: "Basic Attack",
-      }).allDeepen,
+      }).allAmp,
     ).toBeCloseTo(0.5)
     expect(
-      engine.resolveStats(1, { skillType: "Basic Attack" }).allDeepen,
+      engine.resolveStats(1, { skillType: "Basic Attack" }).allAmp,
     ).toBeCloseTo(0)
   })
 })

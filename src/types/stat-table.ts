@@ -37,7 +37,7 @@ export type ScalarStatKey =
   | "critDmg"
   | "defShred"
   | "allDmgBonus"
-  | "allDeepen"
+  | "allAmp"
   | "energyRechargePct"
   | "forteRechargePct"
   | "healingBonus"
@@ -60,9 +60,9 @@ export interface StatTable {
   elementBonus: Record<Element, number>
   skillTypeBonus: Record<SkillType, number>
   allDmgBonus: number
-  elementDeepen: Record<Element, number>
-  skillTypeDeepen: Record<SkillType, number>
-  allDeepen: number
+  elementAmp: Record<Element, number>
+  skillTypeAmp: Record<SkillType, number>
+  allAmp: number
   defShred: number
   shreds: Record<SkillType, number>
   energyRechargePct: number
@@ -89,9 +89,9 @@ export function emptyStatTable(): StatTable {
     elementBonus: emptyElementMap(),
     skillTypeBonus: emptySkillTypeMap(),
     allDmgBonus: 0,
-    elementDeepen: emptyElementMap(),
-    skillTypeDeepen: emptySkillTypeMap(),
-    allDeepen: 0,
+    elementAmp: emptyElementMap(),
+    skillTypeAmp: emptySkillTypeMap(),
+    allAmp: 0,
     defShred: 0,
     shreds: emptySkillTypeMap(),
     energyRechargePct: 0,

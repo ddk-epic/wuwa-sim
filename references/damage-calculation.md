@@ -7,7 +7,7 @@ The calculator uses the same formulas as the Wuthering Waves Wiki.
 **Main Damage Formula:**
 
 ```
-Damage = totalAttack × MV × totalDeepen × totalDamageBonus × crit × defenseMultiplier × resistMultiplier
+Damage = totalAttack × MV × totalAmp × totalDamageBonus × crit × defenseMultiplier × resistMultiplier
 ```
 
 Below is the full breakdown of each component.
@@ -36,13 +36,13 @@ MV represents the inherent multiplier of an attack or skill.
 
 ---
 
-## 3. Deepen
+## 3. Amplify
 
 ```
-1 + allDeepen
+1 + allAmp
 ```
 
-Deepen is a multiplicative category separate from Damage Bonus.
+Amplify is a multiplicative category separate from Damage Bonus.
 
 ---
 

@@ -15,26 +15,26 @@ Reference for `StatPath` values accepted by `kind: "stat"` buff effects.
 | `critRate`          | —           | Critical rate                                                                           |
 | `critDmg`           | —           | Critical damage multiplier                                                              |
 | `defShred`          | —           | Enemy DEF reduction                                                                     |
-| `allDmgBonus`       | —           | Wildcard DMG amp summed alongside element/skill-type bonuses                            |
-| `allDeepen`         | —           | Wildcard deepen summed alongside element/skill-type deepens                             |
+| `allDmgBonus`       | —           | Wildcard DMG bonus summed alongside element/skill-type bonuses                          |
+| `allAmp`            | —           | Wildcard Amplify summed alongside element/skill-type Amplify                            |
 | `energyRechargePct` | —           | Energy recharge percent                                                                 |
-| `elementBonus`      | `Element`   | Per-element DMG amp                                                                     |
-| `skillTypeBonus`    | `SkillType` | Per-skill-type DMG amp                                                                  |
-| `elementDeepen`     | `Element`   | Per-element deepen                                                                      |
-| `skillTypeDeepen`   | `SkillType` | Per-skill-type deepen                                                                   |
+| `elementBonus`      | `Element`   | Per-element DMG bonus                                                                   |
+| `skillTypeBonus`    | `SkillType` | Per-skill-type DMG bonus                                                                |
+| `elementAmp`        | `Element`   | Per-element Amplify                                                                     |
+| `skillTypeAmp`      | `SkillType` | Per-skill-type Amplify                                                                  |
 | `shred`             | `SkillType` | Enemy RES reduction for the given skill type                                            |
 | `healingBonus`      | —           | Flat additive healing bonus; multiplies the entire heal expression `(1 + healingBonus)` |
 
-### DMG bonus and deepen buckets
+### DMG bonus and Amplify buckets
 
-DMG bonus and deepen each have three symmetric buckets — per-element, per-skill-type, and a global wildcard. They sum additively at hit time:
+DMG bonus and Amplify each have three symmetric buckets — per-element, per-skill-type, and a global wildcard. They sum additively at hit time:
 
 ```
 dmgBonus = elementBonus[element] + skillTypeBonus[skillType] + allDmgBonus
-deepen   = elementDeepen[element] + skillTypeDeepen[skillType] + allDeepen
+amp      = elementAmp[element] + skillTypeAmp[skillType] + allAmp
 ```
 
-Authored buffs targeting "all" damage of a kind should use the scalar paths `allDmgBonus` / `allDeepen`. See ADR-0017.
+Authored buffs targeting "all" damage of a kind should use the scalar paths `allDmgBonus` / `allAmp`. See ADR-0017.
 
 ## Healing pipeline
 

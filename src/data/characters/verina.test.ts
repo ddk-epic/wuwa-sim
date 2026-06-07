@@ -53,8 +53,8 @@ function makeEngine(sequence = 0) {
   return engine
 }
 
-describe("Verina — Outro Blossom (deepen all +15%)", () => {
-  it("Outro Skill cast applies deepen all +15% to team for 30s", () => {
+describe("Verina — Outro Blossom (amp all +15%)", () => {
+  it("Outro Skill cast applies amp all +15% to team for 30s", () => {
     const engine = makeEngine()
     engine.onEvent({
       kind: "skillCast",
@@ -63,9 +63,9 @@ describe("Verina — Outro Blossom (deepen all +15%)", () => {
       frame: 0,
     })
     expect(engine.activeBuffIds(1503)).toContain(
-      "char.verina.outro.blossom-deepen",
+      "char.verina.outro.blossom-amp",
     )
-    expect(engine.resolveStats(1503).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(1503).allAmp).toBeCloseTo(0.15)
   })
 })
 

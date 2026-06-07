@@ -480,7 +480,7 @@ describe("Global buffs — Binary Butterfly", () => {
   const shorekeeperId = 1505
   const teammateId = 2
 
-  it("grants team-wide allDeepen when Shorekeeper casts Outro Skill", () => {
+  it("grants team-wide allAmp when Shorekeeper casts Outro Skill", () => {
     testCharacters = [shorekeeper, baseChar({ id: teammateId })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -488,8 +488,8 @@ describe("Global buffs — Binary Butterfly", () => {
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
 
-    expect(engine.resolveStats(shorekeeperId).allDeepen).toBe(0)
-    expect(engine.resolveStats(teammateId).allDeepen).toBe(0)
+    expect(engine.resolveStats(shorekeeperId).allAmp).toBe(0)
+    expect(engine.resolveStats(teammateId).allAmp).toBe(0)
 
     const { lifecycleEvents } = engine.onEvent({
       kind: "skillCast",
@@ -506,8 +506,8 @@ describe("Global buffs — Binary Butterfly", () => {
     )
     expect(applied).toHaveLength(1)
 
-    expect(engine.resolveStats(shorekeeperId).allDeepen).toBeCloseTo(0.15)
-    expect(engine.resolveStats(teammateId).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(shorekeeperId).allAmp).toBeCloseTo(0.15)
+    expect(engine.resolveStats(teammateId).allAmp).toBeCloseTo(0.15)
   })
 
   it("is not seeded when Shorekeeper is not in the party", () => {

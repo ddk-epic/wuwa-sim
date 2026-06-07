@@ -7,7 +7,7 @@ SkillType = "Basic Attack" | "Heavy Attack" | "Resonance Skill" | "Resonance Lib
           | "Forte Circuit" | "Intro Skill" | "Outro Skill" | "Echo Skill"
 ```
 
-`SkillType` types `DamageEntry.type`, `Trigger.skillType` (on both `skillCast` and `hitLanded` branches), `EngineEvent.skillType` (both branches), and the keys of `Stat Table` `deepens` / `skillTypeBonus` / `shreds`.
+`SkillType` types `DamageEntry.type`, `Trigger.skillType` (on both `skillCast` and `hitLanded` branches), `EngineEvent.skillType` (both branches), and the keys of `Stat Table` `amps` / `skillTypeBonus` / `shreds`.
 
 `Skill.type` is **not** a `SkillType`. It carries a UI grouping label that includes the parent term `"Normal Attack"` (covering both `"Basic Attack"` and `"Heavy Attack"`) and is used only for the skill sidebar grouping. It stays an untyped `string` because it never reaches the engine — every `skillCast` and `hitLanded` event reports a `SkillType`, never a UI label.
 

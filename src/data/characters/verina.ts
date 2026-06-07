@@ -19,7 +19,7 @@ export const verina = {
   skillTreeBonuses: ["Healing Bonus", "ATK"],
   buffs: [
     {
-      id: "char.verina.outro.blossom-deepen",
+      id: "char.verina.outro.blossom-amp",
       name: "Blossom",
       description:
         "Outro Skill Blossom amplifies All DMG for all Resonators by 15% for 30s. 6s HoT portion is deferred (no HoT primitive).",
@@ -33,7 +33,7 @@ export const verina = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "allDeepen" },
+          path: { stat: "allAmp" },
           value: { kind: "const", v: 0.15 },
         },
       ],

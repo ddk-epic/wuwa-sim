@@ -332,22 +332,22 @@ Don't include version numbers, balance patches, or character IDs (in human-autho
 
 **Multi-effect buffs** — when a _single_ buff def carries several stat effects, append a parenthetical listing short labels for each, comma-separated: `"Woolies Cheer Dance (Fusion, Basic)"`. Short labels by stat path:
 
-| Stat path                     | Label                                |
-| ----------------------------- | ------------------------------------ |
-| `elementBonus/<Element>`      | element name (`Fusion`, `Glacio`, …) |
-| `skillTypeBonus/<SkillType>`  | short skill name (see table below)   |
-| `elementDeepen/<Element>`     | `<element> Deepen`                   |
-| `skillTypeDeepen/<SkillType>` | `<short> Deepen`                     |
-| `shred/<SkillType>`           | `<short> Shred`                      |
-| `atkPct`                      | `ATK`                                |
-| `hpPct`                       | `HP`                                 |
-| `defPct`                      | `DEF`                                |
-| `critRate`                    | `CRIT Rate`                          |
-| `critDmg`                     | `CRIT DMG`                           |
-| `defShred`                    | `DEF Shred`                          |
-| `allDmgBonus`                 | `All`                                |
-| `energyRechargePct`           | `ER`                                 |
-| flat stats (rare)             | `ATK Flat`, `HP Flat`, `DEF Flat`    |
+| Stat path                    | Label                                |
+| ---------------------------- | ------------------------------------ |
+| `elementBonus/<Element>`     | element name (`Fusion`, `Glacio`, …) |
+| `skillTypeBonus/<SkillType>` | short skill name (see table below)   |
+| `elementAmp/<Element>`       | `<element> Amplify`                  |
+| `skillTypeAmp/<SkillType>`   | `<short> Amplify`                    |
+| `shred/<SkillType>`          | `<short> Shred`                      |
+| `atkPct`                     | `ATK`                                |
+| `hpPct`                      | `HP`                                 |
+| `defPct`                     | `DEF`                                |
+| `critRate`                   | `CRIT Rate`                          |
+| `critDmg`                    | `CRIT DMG`                           |
+| `defShred`                   | `DEF Shred`                          |
+| `allDmgBonus`                | `All`                                |
+| `energyRechargePct`          | `ER`                                 |
+| flat stats (rare)            | `ATK Flat`, `HP Flat`, `DEF Flat`    |
 
 SkillType short forms:
 
@@ -416,8 +416,8 @@ A buff's `effects` is an array; entries can mix kinds.
 
 **Stat paths** (`StatPath`):
 
-- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`, `allDeepen`
-- Keyed: `elementBonus` (key = `Element`), `skillTypeBonus` (key = `SkillType`), `elementDeepen` (key = `Element`), `skillTypeDeepen` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys. Wildcards use the flat scalars `allDmgBonus` / `allDeepen` (see ADR-0017).
+- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`, `allAmp`
+- Keyed: `elementBonus` (key = `Element`), `skillTypeBonus` (key = `SkillType`), `elementAmp` (key = `Element`), `skillTypeAmp` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys. Wildcards use the flat scalars `allDmgBonus` / `allAmp` (see ADR-0017).
 
 **Value expressions** (`ValueExpr`):
 
@@ -471,7 +471,7 @@ A simStart-permanent buff with a `condition` becomes a permanent instance instea
 
 ### SkillType values (damage-calc axis)
 
-`SkillType` is the damage classification — a closed union used for `DamageEntry.type` and `skillTypeBonus` / `skillTypeDeepen` / `shreds` keys. It is **not** a trigger filter (triggers use `skillCategory`):
+`SkillType` is the damage classification — a closed union used for `DamageEntry.type` and `skillTypeBonus` / `skillTypeAmp` / `shreds` keys. It is **not** a trigger filter (triggers use `skillCategory`):
 
 | Value                    |
 | ------------------------ |

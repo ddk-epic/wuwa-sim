@@ -14,7 +14,7 @@ import {
 import { HitEventDetail } from "./HitEventDetail"
 import {
   formatDMGPctCell,
-  formatDeepenCell,
+  formatAmpCell,
   formatERCell,
   formatScalingCell,
 } from "#/lib/damage/hit-formula"
@@ -76,7 +76,7 @@ export function HitEventRow({
           {formatDMGPctCell(snap, ev.element, ev.skillType)}
         </td>
         <td className={`${numCell} text-xs`}>
-          {formatDeepenCell(snap, ev.element, ev.skillType)}
+          {formatAmpCell(snap, ev.element, ev.skillType)}
         </td>
       </tr>
       {isOpen && (

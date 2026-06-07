@@ -297,8 +297,7 @@ export const shorekeeper = {
     {
       id: "char.shorekeeper.outro.binary-butterfly",
       name: "Binary Butterfly",
-      description:
-        "Outro Skill grants all team members allDeepen +15% for 30s.",
+      description: "Outro Skill grants all team members allAmp +15% for 30s.",
       trigger: {
         event: "skillCast",
         characterId: 1505,
@@ -309,7 +308,7 @@ export const shorekeeper = {
       effects: [
         {
           kind: "stat",
-          path: { stat: "allDeepen" },
+          path: { stat: "allAmp" },
           value: { kind: "const", v: 0.15 },
         },
       ],

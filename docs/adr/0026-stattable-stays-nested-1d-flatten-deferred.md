@@ -2,8 +2,8 @@
 
 `StatTable` (`src/types/stat-table.ts`) stays a heterogeneous shape: scalar `number`
 fields (`atkBase`, `atkPct`, `critRate`, …) alongside five nested per-dimension
-records — `elementBonus`/`elementDeepen` (`Record<Element, number>`) and
-`skillTypeBonus`/`skillTypeDeepen`/`shreds` (`Record<SkillType, number>`). A proposal
+records — `elementBonus`/`elementAmp` (`Record<Element, number>`) and
+`skillTypeBonus`/`skillTypeAmp`/`shreds` (`Record<SkillType, number>`). A proposal
 to flatten it into a uniform `Record<StatKey, number>` using template-literal
 composite keys (`` `elementBonus.${Element}` ``, `` `shred.${SkillType}` ``, …), in
 the name of handling the whole table with no branch-on-shape, is **rejected for now.**

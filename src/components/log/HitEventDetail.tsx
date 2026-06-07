@@ -105,7 +105,7 @@ function FormulaBox({
         <Op s="×" />
         <Term label="dmg%" value={`(1 + ${(bd.dmgBonus * 100).toFixed(1)}%)`} />
         <Op s="×" />
-        <Term label="deepen" value={`(1 + ${(bd.deepen * 100).toFixed(1)}%)`} />
+        <Term label="amp" value={`(1 + ${(bd.amp * 100).toFixed(1)}%)`} />
         <Op s="×" />
         {bd.vul !== 0 && (
           <>

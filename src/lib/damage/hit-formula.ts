@@ -40,15 +40,13 @@ export function formatDMGPctCell(
   return `+${Math.round(total * 100)}%`
 }
 
-export function formatDeepenCell(
+export function formatAmpCell(
   snap: StatTable,
   element: Element,
   skillType: SkillType,
 ): string {
   const total =
-    snap.elementDeepen[element] +
-    snap.skillTypeDeepen[skillType] +
-    snap.allDeepen
+    snap.elementAmp[element] + snap.skillTypeAmp[skillType] + snap.allAmp
   return `+${Math.round(total * 100)}%`
 }
 
@@ -87,7 +85,7 @@ export interface FormulaBreakdown {
   multiplier: number
   bonusMultiplier: number
   dmgBonus: number
-  deepen: number
+  amp: number
   vul: number
   critFactor: number
   defMult: number
@@ -116,10 +114,8 @@ export function computeFormulaBreakdown(
     snap.skillTypeBonus[ev.skillType] +
     snap.allDmgBonus
 
-  const deepen =
-    snap.elementDeepen[ev.element] +
-    snap.skillTypeDeepen[ev.skillType] +
-    snap.allDeepen
+  const amp =
+    snap.elementAmp[ev.element] + snap.skillTypeAmp[ev.skillType] + snap.allAmp
   const cr = Math.min(snap.critRate, 1)
   const critFactor = 1 - cr + cr * snap.critDmg
 
@@ -139,7 +135,7 @@ export function computeFormulaBreakdown(
       ev.multiplier *
       (1 + bonusMultiplier) *
       (1 + dmgBonus) *
-      (1 + deepen) *
+      (1 + amp) *
       (1 + vul) *
       critFactor *
       defMult *
@@ -151,7 +147,7 @@ export function computeFormulaBreakdown(
     multiplier: ev.multiplier,
     bonusMultiplier,
     dmgBonus,
-    deepen,
+    amp,
     vul,
     critFactor,
     defMult,

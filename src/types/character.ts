@@ -35,7 +35,7 @@ export type SkillCategory =
 
 /**
  * Damage-calc type, derived from `damage[0].type`. Used for `skillTypeBonus`,
- * `skillTypeDeepen`, `shred` lookups in the damage formula. Independent of the
+ * `skillTypeAmp`, `shred` lookups in the damage formula. Independent of the
  * trigger-matching `SkillCategory` axis — the two are orthogonal (see ADR-0024).
  *
  * `"Forte Circuit"` is **not** a `SkillType` — it is a `SkillGrouping` only.

@@ -839,7 +839,7 @@ describe("BuffEngine — global target kind (#276)", () => {
     effects: [
       {
         kind: "stat",
-        path: { stat: "allDeepen" },
+        path: { stat: "allAmp" },
         value: { kind: "const", v: 0.15 },
       },
     ],
@@ -883,9 +883,9 @@ describe("BuffEngine — global target kind (#276)", () => {
       skillCategory: "Basic Attack",
       frame: 0,
     })
-    expect(engine.resolveStats(1).allDeepen).toBeCloseTo(0.15)
-    expect(engine.resolveStats(2).allDeepen).toBeCloseTo(0.15)
-    expect(engine.resolveStats(3).allDeepen).toBeCloseTo(0.15)
+    expect(engine.resolveStats(1).allAmp).toBeCloseTo(0.15)
+    expect(engine.resolveStats(2).allAmp).toBeCloseTo(0.15)
+    expect(engine.resolveStats(3).allAmp).toBeCloseTo(0.15)
   })
 
   it("all party members see the buff in activeBuffIds", () => {
@@ -939,9 +939,9 @@ describe("BuffEngine — global target kind (#276)", () => {
     expect(engine.activeBuffIds(1)).not.toContain("test.global-amp")
     expect(engine.activeBuffIds(2)).not.toContain("test.global-amp")
     expect(engine.activeBuffIds(3)).not.toContain("test.global-amp")
-    expect(engine.resolveStats(1).allDeepen).toBeCloseTo(0)
-    expect(engine.resolveStats(2).allDeepen).toBeCloseTo(0)
-    expect(engine.resolveStats(3).allDeepen).toBeCloseTo(0)
+    expect(engine.resolveStats(1).allAmp).toBeCloseTo(0)
+    expect(engine.resolveStats(2).allAmp).toBeCloseTo(0)
+    expect(engine.resolveStats(3).allAmp).toBeCloseTo(0)
   })
 
   it("expiresOnSourceSwapOut removes the global instance when source swaps out", () => {

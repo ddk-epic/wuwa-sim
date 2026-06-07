@@ -1,7 +1,7 @@
 # Stat Table
 
 A `StatTable` is the **flattened, aggregated stat sheet** for one character at one
-moment: every base/percent/flat stat, crit, damage bonus, deepen, shred, and
+moment: every base/percent/flat stat, crit, damage bonus, Amplify, shred, and
 recharge value the damage formula needs, already summed across character, weapon,
 echoes, and active buffs. It is the single object buffs write into and the damage
 pipeline reads from.
@@ -16,10 +16,10 @@ The shape is intentionally wide and flat. Scalars cover the three primary stats 
 `forteRechargePct`), `healingBonus`, and `bonusMultiplier`. Three axes are keyed
 maps rather than scalars:
 
-- `elementBonus` / `elementDeepen` — `Record<Element, number>`
-- `skillTypeBonus` / `skillTypeDeepen` / `shreds` — `Record<SkillType, number>`
+- `elementBonus` / `elementAmp` — `Record<Element, number>`
+- `skillTypeBonus` / `skillTypeAmp` / `shreds` — `Record<SkillType, number>`
 
-…each paired with an `all*` scalar (`allDmgBonus`, `allDeepen`) for
+…each paired with an `all*` scalar (`allDmgBonus`, `allAmp`) for
 element-/type-agnostic contributions. `emptyStatTable()` seeds every field to
 zero (maps included) and is the starting point the builder accumulates onto.
 

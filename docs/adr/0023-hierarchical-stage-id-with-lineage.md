@@ -8,7 +8,7 @@ The motivating case is Stellar Symphony's passive "when casting Resonance Skill 
 
 - **Add a `parentSkillType` field to hit/heal events.** Rejected: introduces a second "skill type" concept on every event, with the existing `skillType` (from `hit.type`) still present for damage calc. Two fields answering "what kind of skill is this?" with different answers is a footgun.
 - **Keep `hitIndex` as a separate field.** Rejected: `hitIndex` is already encoded positionally in the hierarchical ID. Removing the field eliminates a redundant axis and simplifies trigger definitions — one `stageId` match replaces `stageId` + `hitIndex`.
-- **Use `::` or mixed separators.** Rejected: dots are consistent with buff ID conventions (`char.verina.outro.blossom-deepen`). No edge case requires a different separator since all segments are kebab-cased.
+- **Use `::` or mixed separators.** Rejected: dots are consistent with buff ID conventions (`char.verina.outro.blossom-amp`). No edge case requires a different separator since all segments are kebab-cased.
 
 ## Consequences
 

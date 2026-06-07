@@ -1,6 +1,6 @@
 # Unified buff system as the only damage-modifier pipeline
 
-Every damage modifier — crit rate, ATK%, element bonus, skill-type bonus, deepen, weapon passives, echo set bonuses, skill-tree nodes — flows through the buff system. There is no separate "permanent stat" pathway; permanent modifiers are buffs with `duration: { kind: "permanent" }`, baked into a base Stat Table at sim start as an optimization. Reason: in WuWa the line between "permanent" and "temporary" modifier is fuzzy (conditional resonance chain nodes have infinite duration but runtime predicates), and a single resolution path means one place to debug a wrong damage number.
+Every damage modifier — crit rate, ATK%, element bonus, skill-type bonus, amp, weapon passives, echo set bonuses, skill-tree nodes — flows through the buff system. There is no separate "permanent stat" pathway; permanent modifiers are buffs with `duration: { kind: "permanent" }`, baked into a base Stat Table at sim start as an optimization. Reason: in WuWa the line between "permanent" and "temporary" modifier is fuzzy (conditional resonance chain nodes have infinite duration but runtime predicates), and a single resolution path means one place to debug a wrong damage number.
 
 ## Considered Options
 

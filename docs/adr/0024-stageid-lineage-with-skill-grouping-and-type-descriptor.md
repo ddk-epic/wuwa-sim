@@ -30,7 +30,7 @@ Three typed unions replace the old `SkillCategory`:
 
 - **`SkillGrouping`** — the UI skill-tree section a skill belongs to. Includes `"Normal Attack"` and `"Forte Circuit"` (pure display groupings). Used on `Skill.type` (populated from game API) and for sidebar filtering. Has no engine presence — not in stageIds, not in events, not in triggers.
 - **`SkillCategory`** — the player input/action that triggered the stage. A mandatory field on every stage in character data. Encoded in the stageId lineage. Carried as an explicit field on `EngineEvent`. Used for trigger matching.
-- **`SkillType`** — the damage-calc type derived from `damage[0].type`. Encoded after `::` in the stageId. Used for `skillTypeBonus`, `skillTypeDeepen`, `shreds` lookups in the damage formula.
+- **`SkillType`** — the damage-calc type derived from `damage[0].type`. Encoded after `::` in the stageId. Used for `skillTypeBonus`, `skillTypeAmp`, `shreds` lookups in the damage formula.
 
 ```typescript
 type SkillGrouping =

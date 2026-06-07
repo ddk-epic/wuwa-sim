@@ -65,10 +65,10 @@ export function computeDamage(
     stats.elementBonus[ctx.element] +
     (isTick ? 0 : stats.skillTypeBonus[ctx.skillType]) +
     stats.allDmgBonus
-  const deepen =
-    stats.elementDeepen[ctx.element] +
-    (isTick ? 0 : stats.skillTypeDeepen[ctx.skillType]) +
-    stats.allDeepen
+  const amp =
+    stats.elementAmp[ctx.element] +
+    (isTick ? 0 : stats.skillTypeAmp[ctx.skillType]) +
+    stats.allAmp
 
   const critRate = Math.min(stats.critRate, 1)
   const critFactor = isTick ? 1 : 1 - critRate + critRate * stats.critDmg
@@ -87,7 +87,7 @@ export function computeDamage(
     base *
     (1 + stats.bonusMultiplier) *
     (1 + dmgBonus) *
-    (1 + deepen) *
+    (1 + amp) *
     (1 + stats.vul) *
     critFactor *
     defMult *
