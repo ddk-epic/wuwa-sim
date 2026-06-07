@@ -101,13 +101,16 @@ export function runSimulation(
   // Parked footing commits with no re-entry are dropped.
   drainSchedule(ctx, Infinity)
 
-  // Flush Negative Status ticks scheduled past the last authored action.
+  // Flush trailing lifecycle past the last authored action so the log carries
+  // each buff's real expiry and any Negative Status ticks: advance to the latest
+  // of the cursor, the live buff ends, and the status ends.
   const statuses = engine.getTarget().list()
-  if (statuses.length > 0) {
-    const lastEnd = Math.max(
-      ctx.cursor.frame,
-      ...statuses.map((s) => s.endTime),
-    )
+  const lastEnd = Math.max(
+    ctx.cursor.frame,
+    engine.latestActiveEndFrame(),
+    ...statuses.map((s) => s.endTime),
+  )
+  if (lastEnd > ctx.cursor.frame) {
     pushAdvance(log, engine.tickToFrame(lastEnd))
   }
 

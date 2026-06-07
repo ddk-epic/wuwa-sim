@@ -18,7 +18,7 @@ import type {
   SustainEvent,
 } from "#/types/simulation-log"
 import type { ScalarStatKey, StatTable } from "#/types/stat-table"
-import type { TargetParams } from "#/types/target"
+import type { TargetParams, NegStatusInstance } from "#/types/target"
 import { getCharacterById } from "../loadout/catalog"
 import { resolveHealTargets } from "../heal-targets"
 import {
@@ -41,7 +41,6 @@ import type { Candidate, EngineEvent } from "./instance-store"
 import { Target } from "./target"
 import { negStatusDef } from "#/data/neg-statuses"
 import type { NegStatusType } from "#/data/neg-status-types"
-import type { NegStatusInstance } from "#/types/target"
 import { computeDamage } from "../damage/compute-damage"
 import { buildHitEvent } from "./log-event-builders"
 import { FootingModule } from "./footing"
@@ -1082,6 +1081,20 @@ export class BuffEngine {
       lifecycleEvents.push(e)
     this.target.expireBefore(frame)
     return { lifecycleEvents, tickEvents }
+  }
+
+  /**
+   * Latest finite `endTime` among currently-active buff instances (0 if none).
+   * Used to flush trailing expiries past the last authored action so the log
+   * carries each buff's real end; permanent (Infinity) instances are ignored.
+   */
+  latestActiveEndFrame(): number {
+    let max = 0
+    for (const inst of this.store.allActive()) {
+      if (Number.isFinite(inst.endTime) && inst.endTime > max)
+        max = inst.endTime
+    }
+    return max
   }
 
   private earliestDueTick(frame: number): number | null {

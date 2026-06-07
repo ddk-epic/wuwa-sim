@@ -269,6 +269,10 @@ export function SimulatorPage() {
               {simulationLogModal.isOpen && (
                 <SimulationLogModal
                   log={log}
+                  rosterIds={slots.filter((id): id is number => id !== null)}
+                  totalDamage={summary.totalDamage}
+                  dps={summary.dps}
+                  totalTimeFrames={summary.totalTimeFrames}
                   onClose={simulationLogModal.close}
                 />
               )}
