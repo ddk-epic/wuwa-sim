@@ -1,5 +1,5 @@
 import { formatFrames } from "#/lib/format"
-import { renderPoolValue } from "../log/log-cells"
+import { PoolValue } from "../ui/PoolValue"
 
 /** Vertical padding shared by the timeline column: entry rows py-2, dense group header py-1.5. */
 function pad(dense?: boolean): string {
@@ -56,7 +56,7 @@ export function PoolCell({
     <td
       className={`px-2 ${pad(dense)} text-right font-mono${stale ? " opacity-40" : ""}`}
     >
-      {renderPoolValue(value, color)}
+      <PoolValue value={value} color={color} />
     </td>
   )
 }

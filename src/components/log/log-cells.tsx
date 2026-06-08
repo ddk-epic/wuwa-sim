@@ -1,4 +1,3 @@
-import type { ReactNode } from "react"
 import type {
   ActionEvent,
   HitEvent,
@@ -62,22 +61,6 @@ export function StatPad() {
 
 export function resolveCharName(id: number): string {
   return getCharacterById(id)?.name ?? `#${id}`
-}
-
-export function renderPoolValue(val: number | null, color: string): ReactNode {
-  if (val === null) return <span className="text-ui-zero">—</span>
-  if (val === 0) return <span className="text-ui-zero">0</span>
-  if (val >= 100)
-    return (
-      <span className="font-bold" style={{ color }}>
-        {val.toFixed(1)}
-      </span>
-    )
-  return (
-    <span className="font-medium" style={{ color }}>
-      {val.toFixed(1)}
-    </span>
-  )
 }
 
 export function CharChip({ id }: { id: number }) {

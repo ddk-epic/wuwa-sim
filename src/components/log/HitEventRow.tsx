@@ -5,12 +5,12 @@ import {
   CoordPill,
   CritCellValue,
   SkillNameSuffix,
-  renderPoolValue,
   numCell,
   COL_COUNT,
   IndexCell,
   FrameCell,
 } from "./log-cells"
+import { PoolValue } from "../ui/PoolValue"
 import { HitEventDetail } from "./HitEventDetail"
 import {
   formatDMGPctCell,
@@ -50,10 +50,10 @@ export function HitEventRow({
           <SkillNameSuffix ev={ev} />
         </td>
         <td className={numCell}>
-          {renderPoolValue(ev.cumulativeConcerto, "var(--ui-concerto)")}
+          <PoolValue value={ev.cumulativeConcerto} color="var(--ui-concerto)" />
         </td>
         <td className={numCell}>
-          {renderPoolValue(ev.cumulativeEnergy, "var(--ui-resonance)")}
+          <PoolValue value={ev.cumulativeEnergy} color="var(--ui-resonance)" />
         </td>
         <td className={numCell}>
           <span className="font-semibold text-sm text-yellow-400">

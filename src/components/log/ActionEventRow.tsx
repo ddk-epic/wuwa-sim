@@ -3,12 +3,12 @@ import {
   CharCell,
   TypePill,
   SkillNameSuffix,
-  renderPoolValue,
   numCell,
   IndexCell,
   FrameCell,
   StatPad,
 } from "./log-cells"
+import { PoolValue } from "../ui/PoolValue"
 
 export function ActionEventRow({
   ev,
@@ -32,10 +32,10 @@ export function ActionEventRow({
         <SkillNameSuffix ev={ev} />
       </td>
       <td className={numCell}>
-        {renderPoolValue(ev.cumulativeConcerto, "var(--ui-concerto)")}
+        <PoolValue value={ev.cumulativeConcerto} color="var(--ui-concerto)" />
       </td>
       <td className={numCell}>
-        {renderPoolValue(ev.cumulativeEnergy, "var(--ui-resonance)")}
+        <PoolValue value={ev.cumulativeEnergy} color="var(--ui-resonance)" />
       </td>
       <td className={numCell}>
         <span className="text-muted-foreground/40">—</span>
