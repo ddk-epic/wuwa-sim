@@ -1,10 +1,5 @@
-import { ELEMENT_HEX } from "#/data/elements"
-import type { Element } from "#/data/elements"
+import { elementHex } from "#/components/ui/character-visual"
 import type { Member } from "./types"
-
-export function elementHex(element: string): string {
-  return ELEMENT_HEX[element as Element] ?? "#888"
-}
 
 export const TYPE_COLORS: Record<string, string> = {
   // Common skill types — rainbow hues.
@@ -17,10 +12,6 @@ export const TYPE_COLORS: Record<string, string> = {
   "Forte Circuit": "#f97316", // orange
   "Echo Skill": "#8b5cf6", // violet
   "Outro Skill": "#ec4899", // magenta
-}
-
-export function portraitSrc(name: string): string {
-  return `/portraits/${name.toLowerCase()}.png`
 }
 
 export const TEXT_OVER_PORTRAIT =

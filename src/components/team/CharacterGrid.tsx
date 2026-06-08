@@ -1,5 +1,9 @@
 import type { EnrichedCharacter } from "#/types/character"
-import { ELEMENT_HEX } from "#/data/elements"
+import {
+  elementHex,
+  portraitSrc,
+  nameInitial,
+} from "#/components/ui/character-visual"
 import { listCharacters } from "#/lib/loadout/catalog"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
@@ -48,10 +52,9 @@ function CharacterCard({
   isBlocked,
   onClick,
 }: CharacterCardProps) {
-  const elementHex = ELEMENT_HEX[character.element] ?? "#888"
+  const hex = elementHex(character.element)
   const rarityHex =
     RARITY_HEX[character.rarity] ?? "var(--color-rarity-fallback)"
-  const fileName = character.name.toLowerCase()
 
   return (
     <button
@@ -68,10 +71,10 @@ function CharacterCard({
       style={{ borderColor: rarityHex }}
     >
       <CharacterPortrait
-        src={`/portraits/${fileName}.png`}
+        src={portraitSrc(character.name)}
         alt={character.name}
-        initial={character.name[0].toUpperCase()}
-        hex={elementHex}
+        initial={nameInitial(character.name)}
+        hex={hex}
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: "center 15%" }}
       />

@@ -1,5 +1,9 @@
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
-import { elementHex, portraitSrc } from "./theme"
+import {
+  elementHex,
+  portraitSrc,
+  nameInitial,
+} from "#/components/ui/character-visual"
 import type { Member } from "./types"
 
 export function ElementAvatar({
@@ -31,7 +35,7 @@ export function ElementAvatar({
       <CharacterPortrait
         src={portraitSrc(member.name)}
         alt={member.name}
-        initial={member.name.at(0)?.toUpperCase() ?? "?"}
+        initial={nameInitial(member.name)}
         hex={hex}
         style={{
           filter: grayscale
@@ -98,7 +102,7 @@ export function PortraitStrip({
           <CharacterPortrait
             src={portraitSrc(m.name)}
             alt=""
-            initial={m.name.at(0)?.toUpperCase() ?? "?"}
+            initial={nameInitial(m.name)}
             hex={elementHex(m.element)}
             className="w-full h-full object-cover object-[center_22%] block"
           />

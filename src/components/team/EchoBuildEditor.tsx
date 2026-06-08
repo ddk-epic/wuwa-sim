@@ -5,7 +5,7 @@ import {
   COST3_MAINS_DEFAULT,
   COST4_MAINS_DEFAULT,
 } from "#/lib/loadout/template"
-import { ELEMENT_HEX } from "#/data/elements"
+import { elementHex } from "#/components/ui/character-visual"
 import { useSlot } from "#/hooks/useTeamContext"
 import { ComboboxSelect } from "#/components/team/TeamSlotControls"
 
@@ -23,7 +23,7 @@ interface EchoBuildEditorProps {
 
 export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
   const { character, loadout, setPatch } = useSlot(slotIndex)
-  const hex = character ? (ELEMENT_HEX[character.element] ?? "#888") : "#888"
+  const hex = elementHex(character?.element ?? "")
   const scaling = character?.primaryScalingStat ?? "atk"
   const scalingLabel = SCALING_LABEL[scaling]
   const layout = ECHO_BUILD_LAYOUT[loadout.echoBuild]

@@ -1,4 +1,4 @@
-import { elementHex } from "#/components/library/theme"
+import { elementHex } from "#/components/ui/character-visual"
 
 /** A small glowing element-colored dot. */
 export function ElDot({

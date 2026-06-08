@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
 import { formatSkillType } from "#/data/skill-types"
 import { compactDamage } from "#/lib/format"
-import { elementHex, TYPE_COLORS } from "./theme"
+import { elementHex } from "#/components/ui/character-visual"
+import { TYPE_COLORS } from "./theme"
 import type { LibTeam } from "./types"
 
 function Donut({

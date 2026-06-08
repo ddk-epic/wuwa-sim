@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
 import { useTeamContext } from "#/hooks/useTeamContext"
-import { ELEMENT_HEX } from "#/data/elements"
+import { elementHex } from "#/components/ui/character-visual"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { getFocusedStageCatalog } from "#/components/skills/focused-stage-catalog"
@@ -82,7 +82,7 @@ export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
       <div className="flex shrink-0">
         {filledCharacters.map((character) => {
           const isFocused = character.id === focusedId
-          const hex = ELEMENT_HEX[character.element] ?? "#888"
+          const hex = elementHex(character.element)
           return (
             <button
               key={character.id}

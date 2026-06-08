@@ -1,7 +1,6 @@
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 import type { DropHandlerBundle } from "#/hooks/useTimelineDrag"
-import { getCharacterById } from "#/lib/loadout/catalog"
-import { ELEMENT_HEX } from "#/data/elements"
+import { characterVisual } from "#/components/ui/character-visual"
 
 type GroupGhostItem = Extract<RenderItem, { type: "groupGhost" }>
 
@@ -23,8 +22,7 @@ export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
       <td className="px-2 py-1.5 w-36">
         <div className="flex items-center">
           {distinctCharIds.map((charId, idx) => {
-            const char = getCharacterById(charId)
-            const hex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+            const { hex } = characterVisual(charId)
             return (
               <span
                 key={charId}

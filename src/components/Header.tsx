@@ -9,7 +9,11 @@ import {
   SettingsIcon,
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
-import { ELEMENT_HEX } from "#/data/elements"
+import {
+  elementHex,
+  portraitSrc,
+  nameInitial,
+} from "#/components/ui/character-visual"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { useTeamContext } from "#/hooks/useTeamContext"
 import { ConfirmModal } from "./ui/ConfirmModal"
@@ -187,18 +191,16 @@ function TeamButton({ slots, onClick }: TeamButtonProps) {
       {filled.length > 0 && (
         <div className="flex items-center gap-1 -ml-1.5">
           {filled.map((char) => {
-            const hex = ELEMENT_HEX[char!.element] ?? "#888"
-            const name = char!.name.toLowerCase()
             return (
               <div
                 key={char!.id}
                 className="w-9 h-9 rounded-sm overflow-hidden"
               >
                 <CharacterPortrait
-                  src={`/portraits/${name}.png`}
+                  src={portraitSrc(char!.name)}
                   alt={char!.name}
-                  initial={char!.name[0].toUpperCase()}
-                  hex={hex}
+                  initial={nameInitial(char!.name)}
+                  hex={elementHex(char!.element)}
                   className="w-full h-full object-cover"
                 />
               </div>

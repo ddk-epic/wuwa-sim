@@ -1,6 +1,6 @@
 import { UsersRoundIcon, SwordsIcon } from "lucide-react"
 import { listWeaponsByType } from "#/lib/loadout/catalog"
-import { ELEMENT_HEX } from "#/data/elements"
+import { elementHex } from "#/components/ui/character-visual"
 import { useSlot, useTeamContext } from "#/hooks/useTeamContext"
 import { EchoBuildEditor } from "#/components/team/EchoBuildEditor"
 import { TeamSlotPortrait } from "#/components/team/TeamSlotPortrait"
@@ -39,7 +39,7 @@ function SlotCard({ slotIndex }: { slotIndex: number }) {
     )
   }
 
-  const hex = ELEMENT_HEX[character.element] ?? "#888"
+  const hex = elementHex(character.element)
   const compatibleWeapons = listWeaponsByType(character.weaponType)
   const weapon =
     compatibleWeapons.find((w) => w.id === loadout.weaponId) ?? null

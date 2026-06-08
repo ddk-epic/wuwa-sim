@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react"
 import { formatSkillType } from "#/data/skill-types"
-import { getCharacterById } from "#/lib/loadout/catalog"
-import { elementHex, portraitSrc } from "#/components/library/theme"
+import { characterVisual, portraitSrc } from "#/components/ui/character-visual"
 import { TL_LABEL_W, TL_RULER_H } from "./BuffTimelineLog"
 import type { Char } from "./BuffTimelineLog"
 import { TL_BUFF_LANES } from "./build-buff-timeline-model"
@@ -12,9 +11,8 @@ import type {
 } from "./build-buff-timeline-model"
 
 function hydrateChar(id: number): Char {
-  const c = getCharacterById(id)
-  const element = c?.element ?? "Physical"
-  return { id, name: c?.name ?? `#${id}`, element, hex: elementHex(element) }
+  const v = characterVisual(id)
+  return { id, name: v.name, element: v.element, hex: v.hex }
 }
 
 const PX_PER_SEC = 104
@@ -449,7 +447,7 @@ export function BuffTimelinePlot({
                             key={b.id}
                             buff={b}
                             sourceName={
-                              getCharacterById(b.sourceCharacterId)?.name ?? "—"
+                              characterVisual(b.sourceCharacterId).name
                             }
                             hex={char.hex}
                             px={px}

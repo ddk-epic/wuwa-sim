@@ -6,8 +6,7 @@ import {
   Trash2,
 } from "lucide-react"
 import type { GroupSummary } from "#/lib/timeline/timeline-group-summary"
-import { ELEMENT_HEX } from "#/data/elements"
-import { getCharacterById } from "#/lib/loadout/catalog"
+import { characterVisual } from "#/components/ui/character-visual"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
@@ -102,15 +101,14 @@ export function TimelineGroupHeader({
         <div className="flex items-center gap-1">
           <div className="flex items-center">
             {distinctCharIds.map((charId, idx) => {
-              const char = getCharacterById(charId)
-              const hex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
-              const name = char?.name.toLowerCase() ?? ""
+              const v = characterVisual(charId)
+              const hex = v.hex
               return (
                 <CharacterPortrait
                   key={charId}
-                  src={`/portraits/${name}.png`}
-                  alt={char?.name ?? ""}
-                  initial={char?.name[0].toUpperCase() ?? "?"}
+                  src={v.portraitSrc}
+                  alt={v.name}
+                  initial={v.initial}
                   hex={hex}
                   className="w-5 h-5 rounded-full object-cover"
                   style={{

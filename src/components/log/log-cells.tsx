@@ -6,12 +6,12 @@ import type {
 } from "#/types/simulation-log"
 import type { Element } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
-import { ELEMENT_HEX } from "#/data/elements"
 import { formatSkillType } from "#/data/skill-types"
 import { formatCritCell } from "#/lib/damage/hit-formula"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { HexPill } from "#/components/ui/HexPill"
+import { characterVisual, elementHex } from "#/components/ui/character-visual"
 
 export const numCell = "px-2 py-2 text-right font-mono"
 export const COL_COUNT = 14
@@ -59,12 +59,6 @@ export function StatPad() {
   )
 }
 
-function charVisual(id: number) {
-  const c = getCharacterById(id)
-  const hex = (c?.element && ELEMENT_HEX[c.element]) ?? "#888"
-  return { hex, name: c?.name ?? `#${id}`, letter: c?.element[0] ?? "?" }
-}
-
 export function resolveCharName(id: number): string {
   return getCharacterById(id)?.name ?? `#${id}`
 }
@@ -86,7 +80,7 @@ export function renderPoolValue(val: number | null, color: string): ReactNode {
 }
 
 export function CharChip({ id }: { id: number }) {
-  const v = charVisual(id)
+  const v = characterVisual(id)
   return (
     <span
       className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-xs font-black text-gray-900 shrink-0 ml-1"
@@ -99,7 +93,7 @@ export function CharChip({ id }: { id: number }) {
 }
 
 export function CharCell({ id }: { id: number }) {
-  const v = charVisual(id)
+  const v = characterVisual(id)
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <span
@@ -120,7 +114,7 @@ export function TypePill({
   characterId: number
   skillType: string
 }) {
-  const { hex } = charVisual(characterId)
+  const { hex } = characterVisual(characterId)
   return <HexPill hex={hex}>{formatSkillType(skillType)}</HexPill>
 }
 
@@ -166,7 +160,7 @@ export function CritCellValue({
 }
 
 export function CoordPill({ element }: { element: Element }) {
-  const hex = ELEMENT_HEX[element] ?? "#888"
+  const hex = elementHex(element)
   return <HexPill hex={hex}>COORD</HexPill>
 }
 

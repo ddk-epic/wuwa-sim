@@ -5,7 +5,8 @@ import { Kpi } from "#/components/ui/Kpi"
 import { ElDot } from "#/components/ui/ElDot"
 import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { PortraitStrip } from "./portraits"
-import { blendGradient, elementHex, TEXT_OVER_PORTRAIT } from "./theme"
+import { elementHex } from "#/components/ui/character-visual"
+import { blendGradient, TEXT_OVER_PORTRAIT } from "./theme"
 import type { LibTeam, RowActions } from "./types"
 
 export const LIBRARY_W = 692

@@ -8,7 +8,12 @@ import { Kpi } from "#/components/ui/Kpi"
 import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { DmgDonut, TypeDistribution } from "./charts"
 import { ElementAvatar } from "./portraits"
-import { blendGradient, elementHex, portraitSrc } from "./theme"
+import {
+  elementHex,
+  portraitSrc,
+  nameInitial,
+} from "#/components/ui/character-visual"
+import { blendGradient } from "./theme"
 import type { LibTeam, RowActions } from "./types"
 
 function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
@@ -48,7 +53,7 @@ function DetailHero({ team, actions }: { team: LibTeam; actions: RowActions }) {
               <CharacterPortrait
                 src={portraitSrc(m.name)}
                 alt=""
-                initial={m.name.at(0)?.toUpperCase() ?? "?"}
+                initial={nameInitial(m.name)}
                 hex={elementHex(m.element)}
                 className="w-full h-full object-cover object-[center_42%] block"
               />

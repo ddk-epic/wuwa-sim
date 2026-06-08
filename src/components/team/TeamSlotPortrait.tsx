@@ -1,5 +1,6 @@
 import type { EnrichedCharacter } from "#/types/character"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
+import { portraitSrc, nameInitial } from "#/components/ui/character-visual"
 
 interface TeamSlotPortraitProps {
   character: EnrichedCharacter
@@ -14,13 +15,12 @@ export function TeamSlotPortrait({
   slotIndex,
   sequenceStepper,
 }: TeamSlotPortraitProps) {
-  const fileName = character.name.toLowerCase()
   return (
     <div className="relative aspect-4/3 w-full bg-darkest overflow-hidden">
       <CharacterPortrait
-        src={`/portraits/${fileName}.png`}
+        src={portraitSrc(character.name)}
         alt={character.name}
-        initial={character.name[0].toUpperCase()}
+        initial={nameInitial(character.name)}
         hex={hex}
         className="absolute inset-0 w-full h-full object-contain pt-2"
         style={{ objectPosition: "center 50%" }}
