@@ -97,7 +97,7 @@ function buildEchoStage(
   return {
     key,
     label,
-    typeLabel: STAGE_TYPE_LABELS[skillType],
+    typeLabel: STAGE_TYPE_LABELS["Echo Skill"],
     skillType,
     skillGrouping: "Echo Skill",
     skillCategory: "Echo Skill",
@@ -121,7 +121,7 @@ function buildCharacterStage(
   return {
     key,
     label,
-    typeLabel: STAGE_TYPE_LABELS[skillType],
+    typeLabel: STAGE_TYPE_LABELS[stage.category],
     skillType,
     skillGrouping: skill.type,
     skillCategory: stage.category,

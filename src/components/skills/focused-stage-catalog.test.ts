@@ -289,22 +289,30 @@ describe("focused-stage-catalog — character stages", () => {
     ).toBeDefined()
   })
 
-  it("derives attack type from the first damage entry when present (reflected in typeLabel)", () => {
+  it("typeLabel reflects the stage's skillCategory", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    const stage1 = result.characterStages.find(
+    const basic = result.characterStages.find(
       (s) => s.label === "Normal Attack",
     )
-    expect(stage1?.typeLabel).toBe("BASIC")
-  })
-
-  it("falls back to skill type when stage has no damage entries (reflected in typeLabel)", () => {
-    setCatalog([char1], [])
-    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    const stage = result.characterStages.find(
+    expect(basic?.typeLabel).toBe("BASIC")
+    const skill = result.characterStages.find(
       (s) => s.label === "Resonance Skill · Override",
     )
-    expect(stage?.typeLabel).toBe("SKILL")
+    expect(skill?.typeLabel).toBe("SKILL")
+  })
+
+  it("derives skillType from the first damage entry, falling back to category", () => {
+    setCatalog([char1], [])
+    const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
+    const withDamage = result.characterStages.find(
+      (s) => s.label === "Normal Attack",
+    )
+    expect(withDamage?.skillType).toBe("Basic Attack")
+    const noDamage = result.characterStages.find(
+      (s) => s.label === "Resonance Skill · Override",
+    )
+    expect(noDamage?.skillType).toBe("Resonance Skill")
   })
 
   it("exposes skillGrouping from the parent Skill and skillCategory from the stage", () => {

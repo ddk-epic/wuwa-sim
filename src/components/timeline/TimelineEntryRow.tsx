@@ -44,7 +44,7 @@ export function TimelineEntryRow({
     charName,
     charHex,
     elementLetter,
-    skillType,
+    damageType,
     skillName,
     stageWithVariants,
     isInvalid,
@@ -146,8 +146,8 @@ export function TimelineEntryRow({
         </div>
       </td>
       <td className="px-2 py-2">
-        {skillType !== null && (
-          <HexPill hex={charHex}>{formatSkillType(skillType)}</HexPill>
+        {damageType !== null && (
+          <HexPill hex={charHex}>{formatSkillType(damageType)}</HexPill>
         )}
       </td>
       <td className="px-2 py-2 text-gray-200 overflow-hidden">

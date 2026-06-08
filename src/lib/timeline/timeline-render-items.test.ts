@@ -238,11 +238,34 @@ describe("buildTimelineRenderItems", () => {
     expect(e.skillName).toBe("Heavy Attack")
   })
 
-  it("skillType and skillName are null when stage not resolved", () => {
+  it("damageType comes from damage[0].type", () => {
+    const stage = makeResolvedStage({
+      stageId: "s1",
+      skillType: "Resonance Skill",
+      damage: [{ type: "Heavy Attack" } as ResolvedStage["damage"][number]],
+    })
+    resolvedStages.set("s1", stage)
+    const items = call([topEntry("e1", 1, "s1")])
+    expect(entryItems(items)[0].damageType).toBe("Heavy Attack")
+  })
+
+  it("damageType falls back to skillType when stage has no damage", () => {
+    const stage = makeResolvedStage({
+      stageId: "s1",
+      skillType: "Resonance Liberation",
+      damage: [],
+    })
+    resolvedStages.set("s1", stage)
+    const items = call([topEntry("e1", 1, "s1")])
+    expect(entryItems(items)[0].damageType).toBe("Resonance Liberation")
+  })
+
+  it("skillType, damageType and skillName are null when stage not resolved", () => {
     resolvedStages.set("s1", null)
     const items = call([topEntry("e1", 1, "s1")])
     const e = entryItems(items)[0]
     expect(e.skillType).toBeNull()
+    expect(e.damageType).toBeNull()
     expect(e.skillName).toBeNull()
   })
 

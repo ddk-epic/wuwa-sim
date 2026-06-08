@@ -54,6 +54,7 @@ function entryItem(
     charHex,
     elementLetter: "T",
     skillType: null,
+    damageType: null,
     skillName,
     stageWithVariants: null,
     isInvalid: false,

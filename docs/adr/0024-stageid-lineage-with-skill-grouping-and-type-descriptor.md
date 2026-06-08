@@ -110,6 +110,7 @@ A derivation fallback (`damage[0].type`) would silently produce wrong categories
 - **`Trigger`** gains `skillCategory?: SkillCategory | SkillCategory[]` filter. `skillType` filter is retained during transition but deprecated — to be ported to `skillCategory` and removed.
 - **`categoryToSkillType()`** is deleted.
 - **`skillType` stays on `SimulationLogBase`** for UI display. `HitEvent.skillType` sourced from `hit.type`.
+- **Type pills render different axes by panel.** The **skill sidebar** (authoring intent) shows `SkillCategory` — how the stage is triggered. The **authored timeline** and the entire **post-run log** show the damage type (`damage[0].type`, falling back to the stage's collapsed `skillType` when a stage has no hits) — what the stage counts as for damage scaling. A stage can therefore read as e.g. `SKILL` in the sidebar and `BASIC` in the timeline; this is intended, not a bug.
 - **`makeCharStageId`** accepts `SkillCategory` for lineage and `SkillType` for the `::` segment. `makeEchoStageId` appends `::echo-skill`.
 - **`FILTER_KEY_TO_TYPES`** in `SkillCatalog.tsx` switches to `SkillGrouping` for sidebar filtering.
 - All hardcoded stageId strings updated in a single big-bang migration.

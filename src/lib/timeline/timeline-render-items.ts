@@ -47,6 +47,7 @@ export type RenderItem =
       charHex: string
       elementLetter: string
       skillType: SkillType | null
+      damageType: SkillType | null
       skillName: string | null
       stageWithVariants: ActionTimeStage | null
       isInvalid: boolean
@@ -110,6 +111,7 @@ function resolveEntryFields(
   | "charHex"
   | "elementLetter"
   | "skillType"
+  | "damageType"
   | "skillName"
   | "stageWithVariants"
   | "isInvalid"
@@ -124,6 +126,9 @@ function resolveEntryFields(
 
   const resolved = findStageByEntry(entry, slots, loadouts)
   const skillType = resolved?.skillType ?? null
+  const damageType = resolved
+    ? (resolved.damage[0]?.type ?? resolved.skillType)
+    : null
   const skillName = resolved?.skillName ?? null
   const stageWithVariants =
     resolved !== null &&
@@ -142,6 +147,7 @@ function resolveEntryFields(
     charHex,
     elementLetter,
     skillType,
+    damageType,
     skillName,
     stageWithVariants,
     isInvalid,
