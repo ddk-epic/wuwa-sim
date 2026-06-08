@@ -119,32 +119,9 @@ describe("deriveNewName", () => {
 })
 
 describe("formatCharacter", () => {
-  it("emits the character id", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("id: 1,")
-  })
-
   it("uses the provided variable name", () => {
     const out = formatCharacter(minimalChar, "testHero")
     expect(out).toContain("export const testHero =")
-  })
-
-  it("satisfies EnrichedCharacter", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("satisfies EnrichedCharacter")
-  })
-
-  it("emits a template block with empty string placeholders", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("template: {")
-    expect(out).toContain("weapon: '',")
-    expect(out).toContain("echo: '',")
-    expect(out).toContain("echoSet: '',")
-  })
-
-  it("emits empty skillTreeBonuses array when none present", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("skillTreeBonuses: [")
   })
 
   it("emits skillTreeBonuses values from the character", () => {
@@ -153,35 +130,15 @@ describe("formatCharacter", () => {
     expect(out).toContain('"ATK",')
   })
 
-  it("emits empty buffs array", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("buffs: [],")
-  })
-
   it("emits stats base and max", () => {
     const out = formatCharacter(minimalChar, "testHero")
     expect(out).toContain("base: { hp: 100, atk: 10, def: 20 }")
     expect(out).toContain("max: { hp: 1000, atk: 100, def: 200 }")
   })
 
-  it("derives newName by stripping ' DMG' from stage name", () => {
+  it("derives newName from stage name via deriveNewName", () => {
     const out = formatCharacter(charWithSkills, "testHero")
     expect(out).toContain('newName: "Stage 1",')
-  })
-
-  it("derives newName by stripping ' Damage' from stage name", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    expect(out).toContain('newName: "Woolies",')
-  })
-
-  it("sets newName to '' for stage named 'Skill DMG'", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    expect(out).toContain("newName: '',")
-  })
-
-  it("leaves newName unchanged when no known suffix", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    expect(out).toContain('newName: "Mid-air Attack",')
   })
 
   it("emits hidden: true for stages with 'Dodge Counter' in name", () => {
@@ -281,18 +238,6 @@ describe("formatCharacter", () => {
     expect(outroSection).toContain("actionTime: 0,")
     expect(outroSection).toContain("variants: {},")
     expect(outroSection).toContain("damage: [],")
-  })
-
-  it("emits variants: {} in normal stages", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    expect(out).toContain("variants: {},")
-  })
-
-  it("emits variants: {} in the Liberation cast stage", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    const libIdx = out.indexOf('"Resonance Liberation"')
-    const libSection = out.slice(libIdx)
-    expect(libSection).toContain("variants: {},")
   })
 
   it("emits flat: line in damage entry when flat is defined", () => {

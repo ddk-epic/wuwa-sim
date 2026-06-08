@@ -1821,7 +1821,7 @@
       "damage": []
     }
   ],
-  "skillTreeBonuses": ["Crit. Rate Up", "HP Up"],
+  "skillTreeBonuses": ["Crit. Rate", "HP"],
   "buffs": {
     "inherent": [
       "A Heart's Truest Wishes",

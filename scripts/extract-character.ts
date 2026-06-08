@@ -10,6 +10,7 @@ import type {
   SkillAttribute,
   SkillCategory,
   SkillGrouping,
+  SkillTreeStat,
   SkillType,
   StatGroup,
 } from "../src/types/character.js"
@@ -375,15 +376,55 @@ function mapSkills(skills: ApiSkill[]): Skill[] {
 
 // --- SkillTree / ResonantChain ---
 
-export function mapSkillTreeBonuses(skillTree: ApiSkillTreeNode[]): string[] {
-  const seen = new Set<string>()
-  const result: string[] = []
+const ELEMENTS = [
+  "Fusion",
+  "Glacio",
+  "Electro",
+  "Aero",
+  "Havoc",
+  "Spectro",
+  "Physical",
+] as const
+
+const SKILL_TREE_STATS = [
+  "ATK",
+  "HP",
+  "DEF",
+  "Crit. Rate",
+  "Crit. DMG",
+  "Healing Bonus",
+  ...ELEMENTS.map((e) => `${e} DMG Bonus` as const),
+] satisfies readonly SkillTreeStat[]
+
+// Longest first so e.g. "Crit. DMG" wins over a shorter prefix.
+const SKILL_TREE_STATS_BY_LENGTH = [...SKILL_TREE_STATS].sort(
+  (a, b) => b.length - a.length,
+)
+
+function normalizeSkillTreeStat(title: string): SkillTreeStat | null {
+  const stripped = title.replace(/\+$/, "").trim()
+  return (
+    SKILL_TREE_STATS_BY_LENGTH.find((stat) => stripped.startsWith(stat)) ?? null
+  )
+}
+
+export function mapSkillTreeBonuses(
+  skillTree: ApiSkillTreeNode[],
+): SkillTreeStat[] {
+  const seen = new Set<SkillTreeStat>()
+  const result: SkillTreeStat[] = []
   for (const node of skillTree) {
     if (!node.PropertyNodeTitle) continue
-    const name = node.PropertyNodeTitle.replace(/\+$/, "")
-    if (!seen.has(name)) {
-      seen.add(name)
-      result.push(name)
+    const stat = normalizeSkillTreeStat(node.PropertyNodeTitle)
+    if (!stat) {
+      console.warn(
+        `  [skill-tree] unrecognized node title "${node.PropertyNodeTitle}" — skipping`,
+      )
+      continue
+    }
+    if (!seen.has(stat)) {
+      seen.add(stat)
+      result.push(stat)
     }
   }
   return result

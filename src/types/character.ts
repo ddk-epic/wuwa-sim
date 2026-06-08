@@ -124,6 +124,15 @@ export interface CharacterBuffNames {
   resonanceChain: string[]
 }
 
+export type SkillTreeStat =
+  | "ATK"
+  | "HP"
+  | "DEF"
+  | "Crit. Rate"
+  | "Crit. DMG"
+  | "Healing Bonus"
+  | `${Element} DMG Bonus`
+
 export interface Character {
   id: number
   name: string
@@ -132,7 +141,7 @@ export interface Character {
   rarity: string
   stats: CharacterStats
   skills: Skill[]
-  skillTreeBonuses: string[]
+  skillTreeBonuses: SkillTreeStat[]
   buffs: CharacterBuffNames
   recommendedSkillDmgPriority?: SkillType
   primaryScalingStat?: "atk" | "hp" | "def"

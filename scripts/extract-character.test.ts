@@ -7,8 +7,16 @@ import {
 } from "./extract-character.js"
 
 describe("mapSkillTreeBonuses", () => {
-  it("returns empty array for no nodes", () => {
-    expect(mapSkillTreeBonuses([])).toEqual([])
+  it("warns and skips unrecognized node titles", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    expect(
+      mapSkillTreeBonuses([
+        { PropertyNodeTitle: "Mystery Stat Up+" },
+        { PropertyNodeTitle: "ATK+" },
+      ]),
+    ).toEqual(["ATK"])
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("[skill-tree]"))
+    warn.mockRestore()
   })
 
   it("strips trailing + from PropertyNodeTitle", () => {
