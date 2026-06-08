@@ -73,14 +73,12 @@ function BuffLane({
   px,
   hoverT,
   restStart,
-  h,
 }: {
   buff: Buff
   hex: string
   px: (v: number) => number
   hoverT: number | null
   restStart: number
-  h: number
 }) {
   const ht = hoverT
   const active = ht != null && ht >= buff.startTime && ht <= buff.endTime
@@ -110,41 +108,39 @@ function BuffLane({
   }`
 
   return (
-    <div className="relative" style={{ height: h, flexShrink: 0 }}>
-      <div
-        title={title}
-        className={`absolute top-px bottom-px flex items-center gap-1 overflow-hidden px-1.5 transition-[opacity,box-shadow,border-color] duration-100 ${overruns ? "rounded-l-md" : "rounded-md"}`}
+    <div
+      title={title}
+      className={`absolute top-px bottom-px flex items-center gap-1 overflow-hidden px-1.5 transition-[opacity,box-shadow,border-color] duration-100 ${overruns ? "rounded-l-md" : "rounded-md"}`}
+      style={{
+        left: px(buff.startTime),
+        width: Math.max(px(renderEnd - buff.startTime), 3),
+        background: buffFill(hex),
+        border: `1px solid ${hex}${active ? "cc" : "66"}`,
+        opacity: dim ? 0.45 : 1,
+        boxShadow: active
+          ? `inset 0 0 0 1px ${hex}55, 0 0 10px ${hex}44`
+          : "none",
+        maskImage: mask,
+        WebkitMaskImage: mask,
+      }}
+    >
+      <span
+        className="shrink-0 rounded-full"
         style={{
-          left: px(buff.startTime),
-          width: Math.max(px(renderEnd - buff.startTime), 3),
-          background: buffFill(hex),
-          border: `1px solid ${hex}${active ? "cc" : "66"}`,
-          opacity: dim ? 0.45 : 1,
-          boxShadow: active
-            ? `inset 0 0 0 1px ${hex}55, 0 0 10px ${hex}44`
-            : "none",
-          maskImage: mask,
-          WebkitMaskImage: mask,
+          width: 5,
+          height: 5,
+          background: hex,
+          boxShadow: active ? `0 0 6px ${hex}` : "none",
         }}
+      />
+      <span
+        className={`whitespace-nowrap text-detail ${active ? "font-semibold text-foreground" : "font-medium text-muted-foreground"}`}
       >
-        <span
-          className="shrink-0 rounded-full"
-          style={{
-            width: 5,
-            height: 5,
-            background: hex,
-            boxShadow: active ? `0 0 6px ${hex}` : "none",
-          }}
-        />
-        <span
-          className={`whitespace-nowrap text-detail ${active ? "font-semibold text-foreground" : "font-medium text-muted-foreground"}`}
-        >
-          {buff.buffName}
-        </span>
-        <span className="shrink-0 font-mono text-micro text-muted-foreground/70">
-          {timer}
-        </span>
-      </div>
+        {buff.buffName}
+      </span>
+      <span className="shrink-0 font-mono text-micro text-muted-foreground/70">
+        {timer}
+      </span>
     </div>
   )
 }
@@ -388,19 +384,26 @@ export function BuffTimelinePlot({
                     h={LANE_H}
                   />
                   {Array.from({ length: TL_BUFF_LANES }).map((_, laneIdx) => {
-                    const b = myBuffs.find((x) => x.lane === laneIdx)
-                    return b ? (
-                      <BuffLane
-                        key={laneIdx}
-                        buff={b}
-                        hex={char.hex}
-                        px={px}
-                        hoverT={hover?.t ?? null}
-                        restStart={restStart}
-                        h={LANE_H}
-                      />
-                    ) : (
+                    const laneBuffs = myBuffs.filter((x) => x.lane === laneIdx)
+                    return laneBuffs.length === 0 ? (
                       <EmptyLane key={laneIdx} h={LANE_H} />
+                    ) : (
+                      <div
+                        key={laneIdx}
+                        className="relative"
+                        style={{ height: LANE_H, flexShrink: 0 }}
+                      >
+                        {laneBuffs.map((b) => (
+                          <BuffLane
+                            key={b.id}
+                            buff={b}
+                            hex={char.hex}
+                            px={px}
+                            hoverT={hover?.t ?? null}
+                            restStart={restStart}
+                          />
+                        ))}
+                      </div>
                     )
                   })}
                 </div>
