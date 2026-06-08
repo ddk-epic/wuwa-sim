@@ -76,6 +76,8 @@ export interface SustainEvent extends SimulationLogBase {
 
 export interface BuffEvent {
   kind: "buffApplied" | "buffRefreshed" | "buffExpired" | "buffConsumed"
+  /** Identity of the Buff Instance this event belongs to (stamped at creation). */
+  instanceId: number
   buffId: string
   buffName: string
   sourceCharacterId: number

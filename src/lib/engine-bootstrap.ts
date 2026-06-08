@@ -127,7 +127,7 @@ export interface SlotBootstrap {
   charId: number
   baseStats: StatTable
   triggerable: BuffDef[]
-  permanentInstances: BuffInstance[]
+  permanentInstances: Omit<BuffInstance, "instanceId">[]
   foldedBuffs: BuffDef[]
 }
 
@@ -214,7 +214,7 @@ export function bootstrapSlot(
   for (const buff of buffs) validateBuffDef(buff)
 
   const triggerable: BuffDef[] = []
-  const permanentInstances: BuffInstance[] = []
+  const permanentInstances: Omit<BuffInstance, "instanceId">[] = []
   const foldedBuffs: BuffDef[] = []
   for (const buff of buffs) {
     const isPermanentSimStart =

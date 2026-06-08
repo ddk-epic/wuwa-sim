@@ -338,6 +338,8 @@ export interface BuffDef {
 
 export interface BuffInstance {
   def: BuffDef
+  /** Stable, monotonic identity stamped at creation; pairs lifecycle events by instance. */
+  instanceId: number
   sourceCharacterId: number
   targetCharacterId: number
   endTime: number

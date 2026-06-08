@@ -11,6 +11,7 @@ function buff(
 ): BuffEvent {
   return {
     kind,
+    instanceId: 0,
     buffId,
     buffName: buffId,
     sourceCharacterId: 0,

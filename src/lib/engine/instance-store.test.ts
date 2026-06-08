@@ -474,3 +474,70 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
   })
 })
+
+describe("InstanceStore — instanceId identity", () => {
+  it("two perSource instances on the same target from different sources get distinct ids", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({ perSource: true, duration: { kind: "frames", v: 60 } })
+    s.applyBuff(d, 1, 5, 0, out)
+    s.applyBuff(d, 2, 5, 0, out)
+    const ids = s.allActive().map((i) => i.instanceId)
+    expect(ids).toHaveLength(2)
+    expect(ids[0]).not.toBe(ids[1])
+    const applied = out.filter((e) => e.kind === "buffApplied")
+    expect(applied.map((e) => e.instanceId)).toEqual(ids)
+  })
+
+  it("refresh emits the same instanceId as the original buffApplied", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({ duration: { kind: "frames", v: 60 } })
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 30, out)
+    expect(out[0].kind).toBe("buffApplied")
+    expect(out[1].kind).toBe("buffRefreshed")
+    expect(out[1].instanceId).toBe(out[0].instanceId)
+  })
+
+  it("addStack carries the original instanceId", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({
+      duration: { kind: "frames", v: 60 },
+      stacking: { max: 3, onRetrigger: "addStack" },
+    })
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 10, out)
+    expect(out[1].kind).toBe("buffRefreshed")
+    expect(out[1].instanceId).toBe(out[0].instanceId)
+  })
+
+  it("replace emits buffExpired with the old id and buffApplied with a new id", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({
+      duration: { kind: "frames", v: 60 },
+      stacking: { max: 1, onRetrigger: "replace" },
+    })
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 30, out)
+    const [firstApplied, expired, secondApplied] = out
+    expect(firstApplied.kind).toBe("buffApplied")
+    expect(expired.kind).toBe("buffExpired")
+    expect(secondApplied.kind).toBe("buffApplied")
+    expect(expired.instanceId).toBe(firstApplied.instanceId)
+    expect(secondApplied.instanceId).not.toBe(firstApplied.instanceId)
+  })
+
+  it("clear() resets the id counter for deterministic ids per run", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({ duration: { kind: "frames", v: 60 } })
+    s.applyBuff(d, 1, 1, 0, out)
+    const firstId = s.allActive()[0].instanceId
+    s.clear()
+    s.applyBuff(d, 1, 1, 0, out)
+    expect(s.allActive()[0].instanceId).toBe(firstId)
+  })
+})

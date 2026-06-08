@@ -30,6 +30,7 @@ function makeBuffInstance(
 ): BuffInstance {
   return {
     def: { id, name: id, trigger: { event: "simStart" }, effects: [] },
+    instanceId: 0,
     sourceCharacterId: sourceId,
     targetCharacterId: targetId,
     endTime: 0,

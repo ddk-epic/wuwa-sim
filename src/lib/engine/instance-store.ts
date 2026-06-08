@@ -96,12 +96,14 @@ export class InstanceStore {
   private baseStats = new Map<number, StatTable>()
   private slotsBySlotIndex: number[] = []
   private version_ = 0
+  private nextInstanceId = 0
 
   clear(): void {
     this.active = []
     this.triggerableBySource.clear()
     this.baseStats.clear()
     this.slotsBySlotIndex = []
+    this.nextInstanceId = 0
     this.version_++
   }
 
@@ -131,8 +133,8 @@ export class InstanceStore {
     this.triggerableBySource.set(characterId, [...existing, ...defs])
   }
 
-  pushPermanentInstance(inst: BuffInstance): void {
-    this.active.push(inst)
+  pushPermanentInstance(inst: Omit<BuffInstance, "instanceId">): void {
+    this.active.push({ ...inst, instanceId: this.nextInstanceId++ })
     this.version_++
   }
 
@@ -243,6 +245,7 @@ export class InstanceStore {
       ) {
         out.push({
           kind: "buffExpired",
+          instanceId: inst.instanceId,
           buffId: inst.def.id,
           buffName: inst.def.name,
           sourceCharacterId: inst.sourceCharacterId,
@@ -272,6 +275,7 @@ export class InstanceStore {
       if (next <= 0) {
         out.push({
           kind: "buffConsumed",
+          instanceId: inst.instanceId,
           buffId: inst.def.id,
           buffName: inst.def.name,
           sourceCharacterId: inst.sourceCharacterId,
@@ -297,6 +301,7 @@ export class InstanceStore {
       if (inst.endTime <= frame) {
         lifecycleEvents.push({
           kind: "buffExpired",
+          instanceId: inst.instanceId,
           buffId: inst.def.id,
           buffName: inst.def.name,
           sourceCharacterId: inst.sourceCharacterId,
@@ -345,8 +350,10 @@ export class InstanceStore {
 
     if (!existing) {
       const isGlobal = targetCharacterId === GLOBAL_TARGET_ID
+      const instanceId = this.nextInstanceId++
       this.active.push({
         def,
+        instanceId,
         sourceCharacterId,
         targetCharacterId,
         endTime: newEndTime,
@@ -360,6 +367,7 @@ export class InstanceStore {
       this.version_++
       out.push({
         kind: "buffApplied",
+        instanceId,
         buffId: def.id,
         buffName: def.name,
         sourceCharacterId,
@@ -380,6 +388,7 @@ export class InstanceStore {
         this.version_++
         out.push({
           kind: "buffRefreshed",
+          instanceId: existing.instanceId,
           buffId: def.id,
           buffName: def.name,
           sourceCharacterId,
@@ -395,6 +404,7 @@ export class InstanceStore {
         this.version_++
         out.push({
           kind: "buffRefreshed",
+          instanceId: existing.instanceId,
           buffId: def.id,
           buffName: def.name,
           sourceCharacterId,
@@ -408,6 +418,7 @@ export class InstanceStore {
         this.version_++
         out.push({
           kind: "buffRefreshed",
+          instanceId: existing.instanceId,
           buffId: def.id,
           buffName: def.name,
           sourceCharacterId,
@@ -419,6 +430,7 @@ export class InstanceStore {
       case "replace": {
         out.push({
           kind: "buffExpired",
+          instanceId: existing.instanceId,
           buffId: def.id,
           buffName: def.name,
           sourceCharacterId: existing.sourceCharacterId,
@@ -427,8 +439,10 @@ export class InstanceStore {
           stacks: existing.stacks,
         })
         this.active = this.active.filter((i) => i !== existing)
+        const instanceId = this.nextInstanceId++
         this.active.push({
           def,
+          instanceId,
           sourceCharacterId,
           targetCharacterId,
           endTime: newEndTime,
@@ -441,6 +455,7 @@ export class InstanceStore {
         this.version_++
         out.push({
           kind: "buffApplied",
+          instanceId,
           buffId: def.id,
           buffName: def.name,
           sourceCharacterId,
@@ -479,6 +494,7 @@ export class InstanceStore {
       if (idSet.has(inst.def.id)) {
         out.push({
           kind: "buffConsumed",
+          instanceId: inst.instanceId,
           buffId: inst.def.id,
           buffName: inst.def.name,
           sourceCharacterId: inst.sourceCharacterId,

@@ -29,6 +29,7 @@ const applied = (
   buffName = buffId,
 ): SimulationLogEntry => ({
   kind: "buffApplied",
+  instanceId: 0,
   buffId,
   buffName,
   sourceCharacterId: source,
@@ -44,6 +45,7 @@ const expired = (
   buffName = buffId,
 ): SimulationLogEntry => ({
   kind: "buffExpired",
+  instanceId: 0,
   buffId,
   buffName,
   sourceCharacterId: 99,
