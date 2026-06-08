@@ -7,6 +7,7 @@ import {
 } from "#/hooks/useSettingsContext"
 import {
   useAutoRunPreference,
+  useDefaultLogPreference,
   useUiPreferencesActions,
 } from "#/hooks/useUiPreferencesContext"
 
@@ -24,6 +25,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const settings = useSettingsValue()
   const { setSettings } = useSettingsActions()
   const autoRun = useAutoRunPreference()
+  const defaultLogVariant = useDefaultLogPreference()
   const { setPreferences } = useUiPreferencesActions()
 
   return (
@@ -71,6 +73,37 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
             aria-pressed={autoRun}
           >
             Auto
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-sm text-gray-400">Default log</span>
+        <div
+          className="flex rounded-sm border border-gray-700 overflow-hidden font-mono text-sm"
+          role="group"
+          aria-label="Default log"
+        >
+          <button
+            className={`px-3 py-1 transition-colors ${
+              defaultLogVariant === "table"
+                ? "bg-gray-700 text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setPreferences({ defaultLogVariant: "table" })}
+            aria-pressed={defaultLogVariant === "table"}
+          >
+            Table
+          </button>
+          <button
+            className={`px-3 py-1 transition-colors ${
+              defaultLogVariant === "timeline"
+                ? "bg-gray-700 text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setPreferences({ defaultLogVariant: "timeline" })}
+            aria-pressed={defaultLogVariant === "timeline"}
+          >
+            Timeline
           </button>
         </div>
       </div>

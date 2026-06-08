@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { Modal } from "#/components/ui/Modal"
 import { EmptyStatement } from "#/components/ui/EmptyStatement"
-import type { SimulationLogEntry } from "#/types/simulation-log"
+import type { LogVariant, SimulationLogEntry } from "#/types/simulation-log"
+import { useDefaultLogPreference } from "#/hooks/useUiPreferencesContext"
 import { LogTable } from "./LogTable"
 import { isBuff } from "./BuffEventRow"
 import { BuffTimelineLog, BuffTimelineKpis } from "./BuffTimelineLog"
@@ -15,8 +16,6 @@ interface SimulationLogModalProps {
   onClose: () => void
 }
 
-type LogVariant = "table" | "timeline"
-
 export function SimulationLogModal({
   log,
   rosterIds,
@@ -27,7 +26,7 @@ export function SimulationLogModal({
 }: SimulationLogModalProps) {
   const hitCount = log.filter((e) => e.kind === "hit").length
   const [showBuffs, setShowBuffs] = useState(true)
-  const [variant, setVariant] = useState<LogVariant>("table")
+  const [variant, setVariant] = useState<LogVariant>(useDefaultLogPreference())
   const filtered = showBuffs ? log : log.filter((e) => !isBuff(e))
 
   return (

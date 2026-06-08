@@ -83,3 +83,5 @@ export type SimulationLogEntry =
   | HitEvent
   | SustainEvent
   | BuffEvent
+
+export type LogVariant = "table" | "timeline"

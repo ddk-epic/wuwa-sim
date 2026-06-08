@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react"
 import type { ReactNode } from "react"
+import type { LogVariant } from "#/types/simulation-log"
 import type { UiPreferences } from "./useUiPreferences"
 
 interface UiPreferencesActions {
@@ -42,6 +43,10 @@ function useUiPreferencesContext(): UiPreferencesContextValue {
 
 export function useAutoRunPreference(): boolean {
   return useUiPreferencesContext().preferences.autoRun
+}
+
+export function useDefaultLogPreference(): LogVariant {
+  return useUiPreferencesContext().preferences.defaultLogVariant
 }
 
 export function useUiPreferencesActions(): UiPreferencesActions {

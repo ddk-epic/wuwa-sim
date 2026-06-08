@@ -1,11 +1,14 @@
+import type { LogVariant } from "#/types/simulation-log"
 import { useLocalStorage } from "./useLocalStorage"
 
 export interface UiPreferences {
   autoRun: boolean
+  defaultLogVariant: LogVariant
 }
 
 const DEFAULTS: UiPreferences = {
   autoRun: true,
+  defaultLogVariant: "table",
 }
 
 const STORAGE_KEY = "wuwa.preferences"
@@ -16,6 +19,11 @@ function mergeWithDefaults(stored: unknown): UiPreferences {
   return {
     autoRun:
       typeof partial.autoRun === "boolean" ? partial.autoRun : DEFAULTS.autoRun,
+    defaultLogVariant:
+      partial.defaultLogVariant === "table" ||
+      partial.defaultLogVariant === "timeline"
+        ? partial.defaultLogVariant
+        : DEFAULTS.defaultLogVariant,
   }
 }
 
