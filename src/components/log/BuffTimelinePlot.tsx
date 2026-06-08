@@ -6,10 +6,9 @@ import type { Model, ActionBlock, Buff, Char } from "./BuffTimelineLog"
 const PX_PER_SEC = 104
 const FADE_S = 0.15
 const LANE_H = 21
-const BUFF_ALPHA = "33"
 
 function buffFill(hex: string) {
-  return `${hex}${BUFF_ALPHA}`
+  return `${hex}33`
 }
 
 function ActionLane({
@@ -158,7 +157,15 @@ function EmptyLane({ h }: { h: number }) {
   )
 }
 
-function CharLabel({ char, buffCount }: { char: Char; buffCount: number }) {
+function CharLabel({
+  char,
+  buffCount,
+  dimmed,
+}: {
+  char: Char
+  buffCount: number
+  dimmed: boolean
+}) {
   const src = `/portraits/${char.name.toLowerCase()}.png`
   return (
     <div
@@ -166,13 +173,15 @@ function CharLabel({ char, buffCount }: { char: Char; buffCount: number }) {
       style={{ width: TL_LABEL_W, boxSizing: "border-box" }}
     >
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-[filter,opacity] duration-100"
         style={{
           backgroundImage: `url("${src}")`,
           backgroundSize: "cover",
           backgroundPosition: "top center",
-          filter: "grayscale(1) contrast(1.08) brightness(1.05)",
-          opacity: 0.62,
+          filter: dimmed
+            ? "grayscale(1) contrast(1.08) brightness(1)"
+            : "contrast(1) brightness(1.05) saturate(1.1)",
+          opacity: dimmed ? 0.65 : 0.9,
         }}
       />
       <div
@@ -292,6 +301,13 @@ export function BuffTimelinePlot({
   const px = (v: number) => v * PX_PER_SEC
   const plotW = axisMax * PX_PER_SEC
 
+  // The character whose action is live at the hovered time
+  const focusedCharId =
+    hover != null
+      ? (actionBlocks.find((b) => hover.t >= b.start && hover.t <= b.end)
+          ?.charId ?? null)
+      : null
+
   const onMove = (e: React.MouseEvent) => {
     const el = rootRef.current
     if (!el) return
@@ -355,7 +371,11 @@ export function BuffTimelinePlot({
                   background: `linear-gradient(90deg, ${char.hex}12, ${char.hex}05 18%, transparent 32%)`,
                 }}
               >
-                <CharLabel char={char} buffCount={myBuffs.length} />
+                <CharLabel
+                  char={char}
+                  buffCount={myBuffs.length}
+                  dimmed={focusedCharId != null && focusedCharId !== char.id}
+                />
                 <div
                   className="relative flex shrink-0 flex-col gap-0.5 py-1"
                   style={{ width: plotW }}
