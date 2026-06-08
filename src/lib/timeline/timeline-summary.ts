@@ -1,19 +1,26 @@
-import type { ActionEvent, SimulationLogEntry } from "#/types/simulation-log"
+import type {
+  ActionEvent,
+  DelayBreakdown,
+  SimulationLogEntry,
+} from "#/types/simulation-log"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { findStageByEntry, resolveStageExecution } from "../stage"
 
 const EMPTY_SLOTS: Slots = [null, null, null]
 const EMPTY_LOADOUTS: SlotLoadout[] = []
+const ZERO_DELAY: DelayBreakdown = {
+  react: 0,
+  floor: 0,
+  pad: 0,
+  fall: 0,
+  swapBack: 0,
+}
 
 export interface TimelineSummaryRow {
   timeFrames: number
   durationFrames: number
-  reactFrames: number
-  floorFrames: number
-  padFrames: number
-  fallFrames: number
-  swapBackFrames: number
+  delay: DelayBreakdown
   damage: number | null
   cumulativeConcerto: number | null
   cumulativeEnergy: number | null
@@ -70,22 +77,14 @@ export function getTimelineSummary(
 
     let timeFrames: number
     let durationFrames: number
-    let reactFrames: number
-    let floorFrames: number
-    let padFrames: number
-    let fallFrames: number
-    let swapBackFrames: number
+    let delay: DelayBreakdown
     let damage: number | null
     let cumulativeConcerto: number | null
     let cumulativeEnergy: number | null
 
     if (ae !== undefined) {
       timeFrames = ae.frame
-      reactFrames = ae.delayBreakdown?.react ?? 0
-      floorFrames = ae.delayBreakdown?.floor ?? 0
-      padFrames = ae.delayBreakdown?.pad ?? 0
-      fallFrames = ae.delayBreakdown?.fall ?? 0
-      swapBackFrames = ae.delayBreakdown?.swapBack ?? 0
+      delay = ae.delayBreakdown ?? ZERO_DELAY
 
       if (nextAe !== undefined) {
         durationFrames = nextAe.frame - ae.frame
@@ -123,11 +122,13 @@ export function getTimelineSummary(
         : null
 
       durationFrames = execution?.advance ?? 0
-      reactFrames = execution?.react ?? 0
-      floorFrames = execution?.floor ?? 0
-      padFrames = 0
-      fallFrames = 0
-      swapBackFrames = 0
+      delay = {
+        react: execution?.react ?? 0,
+        floor: execution?.floor ?? 0,
+        pad: 0,
+        fall: 0,
+        swapBack: 0,
+      }
       damage = null
       cumulativeConcerto = null
       cumulativeEnergy = null
@@ -138,11 +139,7 @@ export function getTimelineSummary(
     rows.push({
       timeFrames,
       durationFrames,
-      reactFrames,
-      floorFrames,
-      padFrames,
-      fallFrames,
-      swapBackFrames,
+      delay,
       damage,
       cumulativeConcerto,
       cumulativeEnergy,

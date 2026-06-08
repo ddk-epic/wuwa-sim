@@ -11,16 +11,22 @@ interface SimulationLogBase {
   cumulativeConcerto: number
 }
 
+/**
+ * Padding Delay breakdown. `react`/`floor` are mutually exclusive (see
+ * stage.ts); `pad`/`fall`/`swapBack` are additive.
+ */
+export interface DelayBreakdown {
+  react: number
+  floor: number
+  pad: number
+  fall: number
+  swapBack: number
+}
+
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
   variantKind?: VariantKind
-  delayBreakdown?: {
-    react: number
-    floor: number
-    pad: number
-    fall: number
-    swapBack: number
-  }
+  delayBreakdown?: DelayBreakdown
   sourceEntryId?: string
 }
 

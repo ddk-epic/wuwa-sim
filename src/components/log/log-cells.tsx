@@ -11,6 +11,7 @@ import { formatCritCell } from "#/lib/damage/hit-formula"
 import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { HexPill } from "#/components/ui/HexPill"
+import { DelayBadge } from "#/components/ui/DelayBadge"
 import { characterVisual, elementHex } from "#/components/ui/character-visual"
 
 export const numCell = "px-2 py-2 text-right font-mono"
@@ -175,45 +176,10 @@ export function SustainPill({ sub: _sub }: { sub: SustainEvent["sub"] }) {
 export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
   if (ev.kind === "action") {
     const label = formatVariantKind(ev.variantKind, "long")
-    const delay = ev.delayBreakdown
-    const hasDelay =
-      delay &&
-      (delay.react > 0 ||
-        delay.floor > 0 ||
-        delay.pad > 0 ||
-        delay.fall > 0 ||
-        delay.swapBack > 0)
     return (
       <>
         {label && <span className="ml-2 text-sm">{label}</span>}
-        {hasDelay && (
-          <span
-            className="ml-2 text-xs text-muted-foreground"
-            title={[
-              delay.floor > 0
-                ? `floor: ${formatFrames(delay.floor)}`
-                : delay.react > 0
-                  ? `react: ${formatFrames(delay.react)}`
-                  : "",
-              delay.pad > 0 ? `pad: ${formatFrames(delay.pad)}` : "",
-              delay.fall > 0 ? `fall: ${formatFrames(delay.fall)}` : "",
-              delay.swapBack > 0
-                ? `swap-back: ${formatFrames(delay.swapBack)}`
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          >
-            +
-            {formatFrames(
-              delay.react +
-                delay.floor +
-                delay.pad +
-                delay.fall +
-                delay.swapBack,
-            )}
-          </span>
-        )}
+        <DelayBadge delay={ev.delayBreakdown} className="ml-2" />
       </>
     )
   }

@@ -2,10 +2,10 @@ import type { TimelineEntry } from "#/types/timeline"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import { nextVariant } from "#/lib/stage"
 import { formatSkillType } from "#/data/skill-types"
-import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { TimeCell, DurationCell, PoolCell } from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
+import { DelayBadge } from "#/components/ui/DelayBadge"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -56,11 +56,7 @@ export function TimelineEntryRow({
   const row = summary.rows[index] ?? {
     timeFrames: 0,
     durationFrames: 0,
-    reactFrames: 0,
-    floorFrames: 0,
-    padFrames: 0,
-    fallFrames: 0,
-    swapBackFrames: 0,
+    delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0 },
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,
@@ -76,14 +72,6 @@ export function TimelineEntryRow({
     { groupId, groupLocked },
     containerIndex,
   )
-
-  const reactDelayFrames = row.reactFrames
-  const floorFrames = row.floorFrames
-  const padFrames = row.padFrames
-  const fallFrames = row.fallFrames
-  const swapBackFrames = row.swapBackFrames
-  const totalDelayFrames =
-    reactDelayFrames + floorFrames + padFrames + fallFrames + swapBackFrames
 
   const conVal = row.cumulativeConcerto
   const resVal = row.cumulativeEnergy
@@ -177,27 +165,7 @@ export function TimelineEntryRow({
               {formatVariantKind(entry.variantKind, "short")}
             </button>
           )}
-          {totalDelayFrames > 0 && (
-            <span
-              className="text-xs text-gray-500 shrink-0"
-              title={[
-                floorFrames > 0
-                  ? `floor: ${formatFrames(floorFrames)}`
-                  : reactDelayFrames > 0
-                    ? `react: ${formatFrames(reactDelayFrames)}`
-                    : "",
-                padFrames > 0 ? `pad: ${formatFrames(padFrames)}` : "",
-                fallFrames > 0 ? `fall: ${formatFrames(fallFrames)}` : "",
-                swapBackFrames > 0
-                  ? `swap-back: ${formatFrames(swapBackFrames)}`
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            >
-              +{formatFrames(totalDelayFrames)}
-            </span>
-          )}
+          <DelayBadge delay={row.delay} className="shrink-0" />
           {showMessage && errors.length > 0 && (
             <span className="text-xs text-red-400">{errors[0].message}</span>
           )}

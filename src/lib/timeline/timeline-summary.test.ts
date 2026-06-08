@@ -187,11 +187,7 @@ describe("getTimelineSummary — single entry", () => {
       {
         timeFrames: 0,
         durationFrames: 60,
-        reactFrames: 0,
-        floorFrames: 0,
-        padFrames: 0,
-        fallFrames: 0,
-        swapBackFrames: 0,
+        delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0 },
         damage: null,
         cumulativeConcerto: null,
         cumulativeEnergy: null,
@@ -350,14 +346,12 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     expect(result.rows[0]).toMatchObject({
       timeFrames: 0,
       durationFrames: 60,
-      reactFrames: 0,
-      padFrames: 0,
+      delay: { react: 0, pad: 0 },
       damage: 900,
     })
     expect(result.rows[1]).toMatchObject({
       timeFrames: 60,
-      reactFrames: 9,
-      padFrames: 0,
+      delay: { react: 9, pad: 0 },
       damage: 1200,
     })
     expect(result.totalDamage).toBe(2100)
@@ -387,8 +381,7 @@ describe("getTimelineSummary — log ingestion: mixed match/fallback", () => {
     expect(result.rows[1]).toMatchObject({
       timeFrames: 60,
       durationFrames: 60,
-      reactFrames: 0,
-      padFrames: 0,
+      delay: { react: 0, pad: 0 },
       damage: null, // fallback rows show no estimate
     })
   })
@@ -517,8 +510,8 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
-    expect(result.rows[0].reactFrames).toBe(9)
-    expect(result.rows[0].floorFrames).toBe(0)
+    expect(result.rows[0].delay.react).toBe(9)
+    expect(result.rows[0].delay.floor).toBe(0)
   })
 
   it("floorFrames=variantFloor and reactFrames=0 when floor wins", () => {
@@ -534,8 +527,8 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)
-    expect(result.rows[0].reactFrames).toBe(0)
-    expect(result.rows[0].floorFrames).toBe(15)
+    expect(result.rows[0].delay.react).toBe(0)
+    expect(result.rows[0].delay.floor).toBe(15)
   })
 
   it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
@@ -557,7 +550,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
       undefined,
       0,
     )
-    expect(result.rows[0].floorFrames).toBe(0)
-    expect(result.rows[0].reactFrames).toBe(0)
+    expect(result.rows[0].delay.floor).toBe(0)
+    expect(result.rows[0].delay.react).toBe(0)
   })
 })
