@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { formatSkillType } from "#/data/skill-types"
 import { TL_LABEL_W, TL_RULER_H, TL_BUFF_LANES } from "./BuffTimelineLog"
 import type { Model, ActionBlock, Buff, Char } from "./BuffTimelineLog"
@@ -293,6 +293,7 @@ export function BuffTimelinePlot({
   setHover: (h: { x: number; t: number } | null) => void
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
+  const lastClientX = useRef<number | null>(null)
   const { chars, actionBlocks, buffs, axisMax, restStart } = model
   const px = (v: number) => v * PX_PER_SEC
   const plotW = axisMax * PX_PER_SEC
@@ -304,28 +305,56 @@ export function BuffTimelinePlot({
           ?.charId ?? null)
       : null
 
+  // Resolve hover from a screen X using the container's current scroll
+  const computeHover = useCallback(
+    (clientX: number) => {
+      const el = rootRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      if (clientX - rect.left < TL_LABEL_W) {
+        setHover(null)
+        return
+      }
+      const xLanes = clientX - rect.left + el.scrollLeft - TL_LABEL_W
+      const t = xLanes / PX_PER_SEC
+      if (xLanes < 0 || t > restStart) {
+        setHover(null)
+        return
+      }
+      setHover({ x: xLanes, t })
+    },
+    [restStart, setHover],
+  )
+
   const onMove = (e: React.MouseEvent) => {
+    lastClientX.current = e.clientX
+    computeHover(e.clientX)
+  }
+
+  // Wheel-down pans the timeline right. Native horizontal scroll (trackpad / shift+wheel) is left alone.
+  useEffect(() => {
     const el = rootRef.current
     if (!el) return
-    const rect = el.getBoundingClientRect()
-    if (e.clientX - rect.left < TL_LABEL_W) {
-      setHover(null)
-      return
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return
+      e.preventDefault()
+      const scale =
+        e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientWidth : 1
+      el.scrollLeft += e.deltaY * scale
+      if (lastClientX.current != null) computeHover(lastClientX.current)
     }
-    const xLanes = e.clientX - rect.left + el.scrollLeft - TL_LABEL_W
-    const t = xLanes / PX_PER_SEC
-    if (xLanes < 0 || t > restStart) {
-      setHover(null)
-      return
-    }
-    setHover({ x: xLanes, t })
-  }
+    el.addEventListener("wheel", onWheel, { passive: false })
+    return () => el.removeEventListener("wheel", onWheel)
+  }, [computeHover])
 
   return (
     <div
       ref={rootRef}
       onMouseMove={onMove}
-      onMouseLeave={() => setHover(null)}
+      onMouseLeave={() => {
+        lastClientX.current = null
+        setHover(null)
+      }}
       className="relative flex-1 min-h-0 overflow-auto bg-darkest cursor-crosshair"
     >
       <div className="relative" style={{ width: TL_LABEL_W + plotW }}>
