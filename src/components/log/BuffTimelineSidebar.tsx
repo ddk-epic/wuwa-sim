@@ -1,18 +1,25 @@
 import { Clock } from "lucide-react"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { formatSkillType } from "#/data/skill-types"
+import { elementHex } from "#/components/library/theme"
 import { TL_RULER_H } from "./BuffTimelineLog"
-import type { Model } from "./BuffTimelineLog"
+import type { Char } from "./BuffTimelineLog"
+import type { BuffTimelineModel } from "./build-buff-timeline-model"
 
 export function BuffTimelineSidebar({
   model,
   hover,
 }: {
-  model: Model
+  model: BuffTimelineModel
   hover: { t: number } | null
 }) {
-  const { chars, actionBlocks, buffs, passivesByChar } = model
-  const charById = (id: number) => chars.find((c) => c.id === id)
+  const { charIds, actionBlocks, buffs, passivesByChar } = model
+  const charById = (id: number): Char | undefined => {
+    if (!charIds.includes(id)) return undefined
+    const c = getCharacterById(id)
+    const element = c?.element ?? "Physical"
+    return { id, name: c?.name ?? `#${id}`, element, hex: elementHex(element) }
+  }
   const tNow = hover?.t ?? null
 
   const topBar = (
@@ -132,7 +139,7 @@ export function BuffTimelineSidebar({
                   />
                 </div>
                 <div className="ml-3 mt-0.5 font-mono text-micro text-muted-foreground/70">
-                  {b.sourceName}
+                  {getCharacterById(b.sourceCharacterId)?.name ?? "—"}
                 </div>
               </div>
             )

@@ -1,7 +1,21 @@
 import { useCallback, useEffect, useRef } from "react"
 import { formatSkillType } from "#/data/skill-types"
-import { TL_LABEL_W, TL_RULER_H, TL_BUFF_LANES } from "./BuffTimelineLog"
-import type { Model, ActionBlock, Buff, Char } from "./BuffTimelineLog"
+import { getCharacterById } from "#/lib/loadout/catalog"
+import { elementHex, portraitSrc } from "#/components/library/theme"
+import { TL_LABEL_W, TL_RULER_H } from "./BuffTimelineLog"
+import type { Char } from "./BuffTimelineLog"
+import { TL_BUFF_LANES } from "./build-buff-timeline-model"
+import type {
+  BuffTimelineModel,
+  ActionBlock,
+  Buff,
+} from "./build-buff-timeline-model"
+
+function hydrateChar(id: number): Char {
+  const c = getCharacterById(id)
+  const element = c?.element ?? "Physical"
+  return { id, name: c?.name ?? `#${id}`, element, hex: elementHex(element) }
+}
 
 const PX_PER_SEC = 104
 const FADE_S = 0.15
@@ -69,12 +83,14 @@ function ActionLane({
 
 function BuffLane({
   buff,
+  sourceName,
   hex,
   px,
   hoverT,
   restStart,
 }: {
   buff: Buff
+  sourceName: string
   hex: string
   px: (v: number) => number
   hoverT: number | null
@@ -103,7 +119,7 @@ function BuffLane({
   } else {
     timer = "∞"
   }
-  const title = `${buff.buffName} — from ${buff.sourceName} · ${buff.startTime.toFixed(1)}s · ${
+  const title = `${buff.buffName} — from ${sourceName} · ${buff.startTime.toFixed(1)}s · ${
     known ? `${(buff.endTime - buff.startTime).toFixed(1)}s` : "permanent"
   }`
 
@@ -162,7 +178,7 @@ function CharLabel({
   buffCount: number
   dimmed: boolean
 }) {
-  const src = `/portraits/${char.name.toLowerCase()}.png`
+  const src = portraitSrc(char.name)
   return (
     <div
       className="sticky left-0 z-20 flex shrink-0 flex-col justify-end overflow-hidden border-r border-border bg-background"
@@ -288,13 +304,14 @@ export function BuffTimelinePlot({
   hover,
   setHover,
 }: {
-  model: Model
+  model: BuffTimelineModel
   hover: { x: number; t: number } | null
   setHover: (h: { x: number; t: number } | null) => void
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const lastClientX = useRef<number | null>(null)
-  const { chars, actionBlocks, buffs, axisMax, restStart } = model
+  const { charIds, actionBlocks, buffs, axisMax, restStart } = model
+  const chars = charIds.map(hydrateChar)
   const px = (v: number) => v * PX_PER_SEC
   const plotW = axisMax * PX_PER_SEC
 
@@ -386,6 +403,11 @@ export function BuffTimelinePlot({
           {chars.map((char, ci) => {
             const myActions = actionBlocks.filter((c) => c.charId === char.id)
             const myBuffs = buffs.filter((b) => b.charId === char.id)
+            // TL_BUFF_LANES is a floor; extra concurrent buffs extend the row downward.
+            const laneCount = Math.max(
+              TL_BUFF_LANES,
+              myBuffs.reduce((mx, b) => Math.max(mx, b.lane + 1), 0),
+            )
             return (
               <div
                 key={char.id}
@@ -412,7 +434,7 @@ export function BuffTimelinePlot({
                     hoverT={hover?.t ?? null}
                     h={LANE_H}
                   />
-                  {Array.from({ length: TL_BUFF_LANES }).map((_, laneIdx) => {
+                  {Array.from({ length: laneCount }).map((_, laneIdx) => {
                     const laneBuffs = myBuffs.filter((x) => x.lane === laneIdx)
                     return laneBuffs.length === 0 ? (
                       <EmptyLane key={laneIdx} h={LANE_H} />
@@ -426,6 +448,9 @@ export function BuffTimelinePlot({
                           <BuffLane
                             key={b.id}
                             buff={b}
+                            sourceName={
+                              getCharacterById(b.sourceCharacterId)?.name ?? "—"
+                            }
                             hex={char.hex}
                             px={px}
                             hoverT={hover?.t ?? null}
