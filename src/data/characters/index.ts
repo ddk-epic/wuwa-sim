@@ -5,6 +5,7 @@ import { sanhua } from "./sanhua"
 import { shorekeeper } from "./shorekeeper"
 import { verina } from "./verina"
 import { camellya } from "./camellya"
+import { cartethyia } from "./cartethyia"
 
 function injectMovement(char: EnrichedCharacter): EnrichedCharacter {
   return { ...char, skills: [...char.skills, DODGE_SKILL, JUMP_SKILL] }
@@ -16,4 +17,5 @@ export const ALL_CHARACTERS: EnrichedCharacter[] = [
   verina,
   shorekeeper,
   camellya,
+  cartethyia,
 ].map(injectMovement)

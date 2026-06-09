@@ -15,7 +15,7 @@ export const cartethyia = {
     base: { hp: 1184, atk: 25, def: 50 },
     max: { hp: 14800, atk: 312.5, def: 611.11 },
   },
-  skillTreeBonuses: ["Crit. Rate Up", "HP Up"],
+  skillTreeBonuses: ["Crit. Rate", "HP"],
   buffs: [],
   skills: [
     {
@@ -502,6 +502,10 @@ export const cartethyia = {
       id: 1003503,
       name: "A Knight's Heartfelt Prayers",
       type: "Resonance Liberation",
+      cooldown: 25,
+      duration: 12,
+      concerto: 20,
+      resonanceCost: 125,
       stages: [
         {
           name: "Skill DMG",
@@ -601,17 +605,6 @@ export const cartethyia = {
               weakness: 2.4,
             },
           ],
-        },
-        {
-          name: "A Knight's Heartfelt Prayers Resonance Cost",
-          newName: "A Knight's Heartfelt Prayers Resonance Cost",
-          category: "Resonance Liberation",
-          value: "125",
-          cooldown: 25,
-          concerto: 20,
-          actionTime: 0,
-          variants: {},
-          damage: [],
         },
       ],
       damage: [],

@@ -592,6 +592,7 @@ export const shorekeeper = {
           category: "Resonance Skill",
           newName: "Healing",
           value: "1313+5.97%",
+          hidden: true,
           actionTime: 0,
           variants: {},
           damage: [
@@ -636,6 +637,7 @@ export const shorekeeper = {
           category: "Basic Attack",
           newName: "Healing",
           value: "438+2.39%",
+          hidden: true,
           actionTime: 0,
           variants: {},
           damage: [
@@ -792,6 +794,7 @@ export const shorekeeper = {
           category: "Intro Skill",
           newName: "Enlightenment Healing",
           value: "259+1.20%",
+          hidden: true,
           actionTime: 0,
           variants: {},
           damage: [
@@ -814,6 +817,7 @@ export const shorekeeper = {
           category: "Intro Skill",
           newName: "Discernment Healing",
           value: "289+1.32%",
+          hidden: true,
           actionTime: 0,
           variants: {},
           damage: [
