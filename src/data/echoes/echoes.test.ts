@@ -10,6 +10,7 @@ import {
 } from "#/lib/loadout/echo-stat-constants"
 import { infernoRider } from "./inferno-rider"
 import { bellBorneGeochelone } from "./bell-borne-geochelone"
+import { reminiscenceFleurdelys } from "./reminiscence-fleurdelys"
 import type { EchoSet } from "#/types/echo-set"
 
 const BASE_ELEM_BONUS =
@@ -186,5 +187,42 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
     })
     expect(engine.activeBuffIds(1)).toContain(BBG_BUFF)
     expect(engine.resolveStats(1).allDmgBonus).toBeCloseTo(0.1)
+  })
+})
+
+describe("Reminiscence: Fleurdelys — Aero base + wielder-gated bonus (#344)", () => {
+  const AERO_BASE = "echo.reminiscence-fleurdelys.aero"
+  const AERO_WIELDER = "echo.reminiscence-fleurdelys.aero-wielder"
+
+  function makeFleurEngine(charId: number) {
+    testCharacters = [{ ...testChar, id: charId, element: "Aero" }]
+    testEchoes = [reminiscenceFleurdelys]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [charId, null, null],
+      loadouts: [
+        { ...emptyLoadout, echoId: reminiscenceFleurdelys.id },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    return engine
+  }
+
+  it("base Aero +10% folds for any wielder (not the wielder-gated buff)", () => {
+    const engine = makeFleurEngine(1)
+    // Both permanent passives fold (or no-op) — neither appears as an active instance.
+    expect(engine.activeBuffIds(1)).not.toContain(AERO_BASE)
+    expect(engine.activeBuffIds(1)).not.toContain(AERO_WIELDER)
+  })
+
+  it("Cartethyia (1409) gets an extra Aero +10% over a non-listed wielder", () => {
+    const aeroOther = makeFleurEngine(1).resolveStats(1).elementBonus["Aero"]
+    const aeroCarte =
+      makeFleurEngine(1409).resolveStats(1409).elementBonus["Aero"]
+    // Same loadout/element on both, so the only delta is the wielder-gated buff.
+    expect(aeroCarte - aeroOther).toBeCloseTo(0.1)
+    // Base Aero buff still folds for the non-listed wielder.
+    expect(aeroOther).toBeGreaterThanOrEqual(0.1)
   })
 })

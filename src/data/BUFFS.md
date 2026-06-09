@@ -140,16 +140,16 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **When to use**: an Intro/Outro/Liberation that buffs the entire team.
 
-**Key fields**: `target: { kind: "team" }`. Otherwise identical to recipes 2/3.
+**Key fields**: `target: { kind: "global" }`. Otherwise identical to recipes 2/3.
 
-**Gotchas**: `team` includes the source character. If you only want allies, use a `condition` to exclude self, or model it as a `nextOnField` instead.
+**Gotchas**: `global` includes the source character. If you only want allies, use a `condition` to exclude self, or model it as a `nextOnField` instead.
 
 ```ts
 {
   id: "char.example.lib.warcry",
   name: "Warcry",
   trigger: { event: "skillCast", characterId: 9999, skillCategory: "Resonance Liberation" },
-  target: { kind: "team" },
+  target: { kind: "global" },
   duration: { kind: "seconds", v: 20 },
   effects: [
     { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v: 0.15 } },
@@ -185,7 +185,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **Key fields**: `condition` — re-evaluated continuously, gates contribution without removing the instance.
 
-**Gotchas**: a `condition` on a permanent simStart buff prevents it from being pre-folded into base stats; it becomes a permanent _instance_. That's fine and expected. The four kinds are `buffActive`, `onField`, `actorIsOnField`, `resourceAtLeast`.
+**Gotchas**: a `condition` on a permanent simStart buff prevents it from being pre-folded into base stats; it becomes a permanent _instance_. That's fine and expected. The kinds are `buffActive`, `onField`, `actorIsOnField`, `actorIsOffField`, `resourceAtLeast`, and `targetHasNegStatus` (optionally narrowed to a specific status) — see the **Conditions & gating** reference.
 
 A conditional permanent simStart instance is injected at bootstrap and **never emits `buffApplied`/`buffExpired` log rows** — it contributes whenever its condition passes, but the Simulation Log shows no row marking when it switched on/off (lifecycle rows come only from triggered `applyBuff`). If the buff really models a discrete, time-boxed window (e.g. a 10s liberation window), author it as a triggered buff instead — fire off the event that opens the window with a matching `duration`, and drop the condition — so it produces proper lifecycle rows. Keep this conditional-permanent shape only for genuinely continuous predicates with no natural trigger+duration (e.g. an `actorIsOffField` off-field stat).
 
@@ -364,14 +364,14 @@ SkillType short forms:
 
 ### Triggers
 
-| `event`           | When it fires                                                                                                   |
-| ----------------- | --------------------------------------------------------------------------------------------------------------- |
-| `simStart`        | Once at sim start. Used for permanent passives.                                                                 |
-| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                             |
-| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `sourceBuffId`. |
-| `swapIn`          | A character swaps to on-field.                                                                                  |
-| `swapOut`         | A character swaps off-field.                                                                                    |
-| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                           |
+| `event`           | When it fires                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `simStart`        | Once at sim start. Used for permanent passives.                                                                                    |
+| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                                                |
+| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `sourceBuffId`, `targetHasStatus`. |
+| `swapIn`          | A character swaps to on-field.                                                                                                     |
+| `swapOut`         | A character swaps off-field.                                                                                                       |
+| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                                              |
 
 Triggers filter on `skillCategory` — the **player action** (e.g. "when casting Heavy Attack"), see **SkillCategory values** below — **never** on the damage-calc `skillType`. The two are independent axes (ADR-0024): a stage's `skillCategory` and its damage `SkillType` can differ by design, and triggers always key on the action. `"Normal Attack"` is not a valid `skillCategory` (TypeScript will catch it).
 
@@ -380,6 +380,8 @@ Triggers filter on `skillCategory` — the **player action** (e.g. "when casting
 `source` on `hitLanded`: `"self"` = real hits the character performed, `"synthetic"` = injected via `emitHit`, `"any"` = both. Use `"self"` to avoid feedback loops where a buff-triggered synthetic hit re-triggers the same buff.
 
 `stageId` on `hitLanded`: narrows to hits from a specific stage, using the full lineage id (ADR-0024 format) — `char.<name>.<category>.<skill>.<stage>::<skill-type>.<n>` for character hits, `echo.<name>.<stage>::echo-skill.<n>` for echo hits. Accepts a single string or an array. `hitLanded`/`healLanded` match by **lineage prefix** (`stageIdMatches`): a trigger id _without_ a trailing `.<n>` matches every hit of that stage; with a `.<n>` suffix it pins the Nth hit (1-based). This is **not** symmetric with `skillCast`, which matches `stageId` by exact equality (cast events carry no hit-index suffix). Use the lineage id rather than a bare stage name to avoid cross-echo collisions — e.g. `stageId: "echo.inferno-rider._::echo-skill"` matches all Inferno Rider Tap hits, and `"echo.inferno-rider._::echo-skill.3"` only the 3rd. Synthetic hits carry no `stageId`; a trigger with `stageId` set never matches synthetics. (ADR-0014, superseded in part by ADR-0024.)
+
+`targetHasStatus` on `hitLanded`: a `NegStatusType` that fires the trigger only when the hit lands on a target currently carrying that status (e.g. `targetHasStatus: "Aero Erosion"`). This is a **trigger-time** gate — the target's statuses are read at the moment of the hit, and the resulting buff then runs free for its full `duration`. Reach for this when the in-game text reads "hitting a target with X" and the buff should snapshot on a qualifying hit. For a buff whose contribution must instead _follow_ a status across a window (winking off if the status drops), use the continuous `condition: { kind: "targetHasNegStatus", status }` gate instead — see **Status & identity gating**.
 
 ### Source-binding convention
 
@@ -399,10 +401,12 @@ For `hitLanded` triggers, **always set `source` explicitly** — `"self"` for re
 | `kind`        | Who receives the buff                                  |
 | ------------- | ------------------------------------------------------ |
 | `self`        | The trigger's source character (usually the caster).   |
-| `team`        | All three slots, including source.                     |
+| `global`      | All three slots, including source (team-wide shared).  |
 | `nextOnField` | Armed at trigger time; lands on whoever swaps in next. |
 
-There is no built-in "team excluding self" — model it with a `condition` or use `nextOnField`.
+There is no built-in "all allies except self" — model it with a `condition` or use `nextOnField`.
+
+**Wielder filter on `self`** — `self` takes an optional `characterId?: number | number[]`. It _filters_ the self-target by wielder identity: the buff lands only if the source character id is in the list, otherwise it does not apply at all. It is **not** a target selector — a foreign id yields no application, it never redirects the buff to that character. Because filtering is an apply-time landing decision (not a `condition`), a permanent simStart self-passive using it stays pre-foldable into base stats. Use it for wielder-conditional gear passives ("+X% only when character N equips this echo").
 
 ### Effects
 
@@ -416,7 +420,7 @@ A buff's `effects` is an array; entries can mix kinds.
 
 **Stat paths** (`StatPath`):
 
-- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`, `allAmp`
+- Flat: `atkPct`, `atkFlat`, `hpPct`, `hpFlat`, `defPct`, `defFlat`, `critRate`, `critDmg`, `defShred`, `energyRechargePct`, `allDmgBonus`, `allAmp`, `vul`. `vul` is target vulnerability (DMG taken), a multiplicative factor separate from the Amplify bucket — only use it when the source text is genuinely a "DMG taken by target" debuff; an "Amplify" worded effect belongs in `allAmp` / `elementAmp` / `skillTypeAmp`.
 - Keyed: `elementBonus` (key = `Element`), `skillTypeBonus` (key = `SkillType`), `elementAmp` (key = `Element`), `skillTypeAmp` (key = `SkillType`), `shred` (key = `SkillType`) — see **SkillType values** for valid keys. Wildcards use the flat scalars `allDmgBonus` / `allAmp` (see ADR-0017).
 
 **Value expressions** (`ValueExpr`):
@@ -447,15 +451,28 @@ A buff's `effects` is an array; entries can mix kinds.
 
 `condition` is re-evaluated continuously. While false, the instance is present but contributes no effects. While true again, contributions resume.
 
-| `condition.kind`  | Predicate                                                     |
-| ----------------- | ------------------------------------------------------------- |
-| `onField`         | The buff's _target_ is currently on field.                    |
-| `actorIsOnField`  | The buff's _source_ is currently on field.                    |
-| `actorIsOffField` | The buff's _source_ is currently off field.                   |
-| `buffActive`      | A specific buff (`buffId`) is active on `target` or `source`. |
-| `resourceAtLeast` | A resource is ≥ `n` on `target` or `source`.                  |
+| `condition.kind`     | Predicate                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `onField`            | The buff's _target_ is currently on field.                                                                     |
+| `actorIsOnField`     | The buff's _source_ is currently on field.                                                                     |
+| `actorIsOffField`    | The buff's _source_ is currently off field.                                                                    |
+| `buffActive`         | A specific buff (`buffId`) is active on `target` or `source`.                                                  |
+| `resourceAtLeast`    | A resource is ≥ `n` on `target` or `source`.                                                                   |
+| `targetHasNegStatus` | The target has a negative status. Optionally narrowed to one type via `status?: NegStatusType` (absent = any). |
 
 A simStart-permanent buff with a `condition` becomes a permanent instance instead of being pre-folded — that's the intended way to model "always there but only contributes when X".
+
+### Status & identity gating
+
+Three separate tools answer "does this buff apply, given the target's status or the wielder's identity?" They look similar but differ in _when_ they evaluate — pick by the shape of the effect, not by which is shortest to write:
+
+| Tool                                                  | Layer                       | Evaluated             | Use when                                                                                                                                                                                                       |
+| ----------------------------------------------------- | --------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `condition: { kind: "targetHasNegStatus", status }`   | condition (contribution)    | **continuously**      | the effect must _follow_ the status across a window — if the status drops mid-window the contribution must stop, and resume if it returns. E.g. "within 15s of casting, while the target has Aero Erosion, …". |
+| `trigger: { event: "hitLanded", …, targetHasStatus }` | trigger (instantiation)     | **trigger-time only** | the buff snapshots on a qualifying hit, then runs free for its `duration` regardless of later status changes. E.g. "hitting a target with Aero Erosion grants … for 10s".                                      |
+| `target: { kind: "self", characterId }`               | target (apply-time landing) | **apply-time**        | the buff is wielder-conditional gear — lands only for specific equipper(s). Stays pre-foldable. E.g. "+X% only when character N equips this echo".                                                             |
+
+The continuous vs. trigger-time distinction is the common trap: a "lasting Ns after hitting an X target" buff is trigger-time (`targetHasStatus`), **not** a continuous condition — a condition would also wink the buff off the instant the status lapsed inside the N-second window.
 
 ### Source-specific fields
 

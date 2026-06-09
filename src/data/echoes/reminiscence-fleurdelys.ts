@@ -6,7 +6,40 @@ export const reminiscenceFleurdelys = {
   cost: 4,
   element: "Aero",
   sets: ["Gusts of Welkin", "Windward Pilgrimage"],
-  buffs: [],
+  buffs: [
+    {
+      id: "echo.reminiscence-fleurdelys.aero",
+      name: "Reminiscence: Fleurdelys (Aero)",
+      description: "Aero DMG +10% for the Resonator equipping this Echo.",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Aero" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+    {
+      id: "echo.reminiscence-fleurdelys.aero-wielder",
+      name: "Reminiscence: Fleurdelys (Aero, wielder)",
+      description:
+        "Aero Rover or Cartethyia gains an additional Aero DMG +10% when equipping this Echo.",
+      trigger: { event: "simStart" },
+      // Wielder filter: append Aero Rover's id when Rover joins the roster.
+      target: { kind: "self", characterId: [1409] },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementBonus", key: "Aero" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    },
+  ],
   skill: {
     cooldown: 20,
     description:
