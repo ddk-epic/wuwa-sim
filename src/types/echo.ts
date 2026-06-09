@@ -1,5 +1,10 @@
 import type { Element } from "#/data/elements"
-import type { DamageEntry } from "./character.js"
+import type {
+  DamageEntry,
+  Footing,
+  StageVariant,
+  VariantKind,
+} from "./character.js"
 import type { BuffDef } from "./buff"
 
 export type { DamageEntry }
@@ -38,6 +43,8 @@ export interface EnrichedEchoStage {
   newName: string
   actionTime: number
   hidden?: boolean
+  variants?: Partial<Record<VariantKind, StageVariant>>
+  footing?: Footing
   damage: DamageEntry[]
 }
 
