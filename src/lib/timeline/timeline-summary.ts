@@ -48,6 +48,9 @@ export function getTimelineSummary(
   const lastHitConcertoByEntryId = new Map<string, number>()
   const lastHitEnergyByEntryId = new Map<string, number>()
 
+  const entryCharById = new Map<string, number>()
+  for (const entry of entries) entryCharById.set(entry.id, entry.characterId)
+
   if (log) {
     for (const e of log) {
       if (e.kind === "action") {
@@ -59,8 +62,10 @@ export function getTimelineSummary(
           e.sourceEntryId,
           (hitDamageByEntryId.get(e.sourceEntryId) ?? 0) + e.damage,
         )
-        lastHitConcertoByEntryId.set(e.sourceEntryId, e.cumulativeConcerto)
-        lastHitEnergyByEntryId.set(e.sourceEntryId, e.cumulativeEnergy)
+        if (e.characterId === entryCharById.get(e.sourceEntryId)) {
+          lastHitConcertoByEntryId.set(e.sourceEntryId, e.cumulativeConcerto)
+          lastHitEnergyByEntryId.set(e.sourceEntryId, e.cumulativeEnergy)
+        }
       }
     }
   }
