@@ -1,6 +1,6 @@
 import type { Element } from "#/data/elements"
 import type { StatTable } from "./stat-table"
-import type { SkillType, VariantKind } from "./character"
+import type { SkillType, SkillCategory, VariantKind } from "./character"
 
 interface SimulationLogBase {
   characterId: number
@@ -25,6 +25,8 @@ export interface DelayBreakdown {
 
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
+  /** Trigger axis (player input) for this action; orthogonal to `skillType`. */
+  skillCategory: SkillCategory
   variantKind?: VariantKind
   delayBreakdown?: DelayBreakdown
   sourceEntryId?: string

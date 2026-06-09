@@ -62,6 +62,7 @@ function action(characterId: number): ActionEvent {
     kind: "action",
     characterId,
     skillType: "Basic Attack",
+    skillCategory: "Basic Attack",
     skillName: "action",
     frame: 0,
     cumulativeEnergy: 0,

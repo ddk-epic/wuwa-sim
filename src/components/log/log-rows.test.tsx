@@ -21,7 +21,11 @@ const base = {
   cumulativeConcerto: 5,
 }
 
-const action: ActionEvent = { ...base, kind: "action" }
+const action: ActionEvent = {
+  ...base,
+  kind: "action",
+  skillCategory: "Basic Attack",
+}
 
 const hit: HitEvent = {
   ...base,

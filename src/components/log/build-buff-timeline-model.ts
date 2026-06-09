@@ -1,22 +1,23 @@
 import type { SimulationLogEntry, ActiveBuff } from "#/types/simulation-log"
-import type { SkillType } from "#/types/character"
+import type { SkillType, SkillCategory } from "#/types/character"
 
 export const FPS = 60
 /** Floor on rendered buff lanes per character; not a cap (lanes may exceed it). */
 export const TL_BUFF_LANES = 5
 const MIN_BLOCK_S = 0.25
 
-/** How many lanes a skill type's block spans on the action lane. */
-const LANE_SPAN_BY_SKILL_TYPE: [SkillType, 1 | 2][] = [
+/** How many lanes a skill category's block spans on the action lane. */
+const LANE_SPAN_BY_CATEGORY: [SkillCategory, 1 | 2][] = [
   ["Resonance Liberation", 2],
   ["Outro Skill", 2],
 ]
-const laneSpanOf = (skillType: SkillType): 1 | 2 =>
-  LANE_SPAN_BY_SKILL_TYPE.find(([type]) => type === skillType)?.[1] ?? 1
+const laneSpanOf = (skillCategory: SkillCategory): 1 | 2 =>
+  LANE_SPAN_BY_CATEGORY.find(([cat]) => cat === skillCategory)?.[1] ?? 1
 
 export type ActionBlock = {
   charId: number
   skillName: string
+  skillCategory: SkillCategory
   skillType: SkillType
   start: number
   end: number
@@ -87,10 +88,11 @@ export function buildBuffTimelineModel(
     return {
       charId: a.characterId,
       skillName: a.skillName,
+      skillCategory: a.skillCategory,
       skillType: a.skillType,
       start,
       end,
-      laneSpan: laneSpanOf(a.skillType),
+      laneSpan: laneSpanOf(a.skillCategory),
     }
   })
 

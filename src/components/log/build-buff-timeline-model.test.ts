@@ -15,6 +15,7 @@ const action = (
 ): SimulationLogEntry => ({
   kind: "action",
   skillType: "Basic Attack",
+  skillCategory: "Basic Attack",
   skillName: "Attack",
   cumulativeEnergy: 0,
   cumulativeConcerto: 0,
@@ -145,6 +146,35 @@ describe("buildBuffTimelineModel", () => {
     ]
     const m = buildBuffTimelineModel(log, [2, 3])
     expect(m.charIds).toEqual([2, 3, 5])
+  })
+
+  it("lane height keys on skillCategory, not the damage type (skillType)", () => {
+    // A liberation whose damage[0].type collapsed to Basic Attack: category drives height.
+    const log: SimulationLogEntry[] = [
+      action({
+        characterId: 1,
+        frame: 0,
+        skillCategory: "Resonance Liberation",
+        skillType: "Basic Attack",
+      }),
+      action({
+        characterId: 1,
+        frame: 60,
+        skillCategory: "Basic Attack",
+        skillType: "Resonance Liberation",
+      }),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    expect(m.actionBlocks[0].laneSpan).toBe(2)
+    expect(m.actionBlocks[1].laneSpan).toBe(1)
+  })
+
+  it("Outro Skill category spans 2 lanes", () => {
+    const m = buildBuffTimelineModel(
+      [action({ characterId: 1, frame: 0, skillCategory: "Outro Skill" })],
+      [1],
+    )
+    expect(m.actionBlocks[0].laneSpan).toBe(2)
   })
 
   it("same-frame action yields a zero-width block (frozen: end === start)", () => {

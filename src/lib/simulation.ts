@@ -379,6 +379,7 @@ function buildActionEvent(
     kind: "action",
     characterId: entry.characterId,
     skillType: resolved.damage[0]?.type ?? resolved.skillType,
+    skillCategory: resolved.skillCategory,
     skillName: resolved.skillName,
     frame,
     cumulativeEnergy: actorState.energy,
