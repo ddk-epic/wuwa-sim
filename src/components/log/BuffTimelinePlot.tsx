@@ -45,7 +45,7 @@ function ActionLane({
           return (
             <div
               key={i}
-              title={`${b.skillName} · ${b.skillType}`}
+              title={`${b.skillName} · ${b.skillCategory}`}
               className="absolute flex overflow-hidden rounded-[3px] outline outline-darkest transition-[filter,box-shadow] duration-100"
               style={{
                 left: px(b.start),
@@ -69,7 +69,7 @@ function ActionLane({
                   padding: b.laneSpan > 1 ? "3px 5px 0" : "0 5px",
                 }}
               >
-                {formatSkillType(b.skillType)}
+                {formatSkillType(b.skillCategory)}
               </span>
             </div>
           )

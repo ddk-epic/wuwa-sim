@@ -70,7 +70,7 @@ export function BuffTimelineSidebar({
     <>
       <div className="border-b border-border px-3.5 py-2.5">
         <div className="mb-2.5 font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
-          action
+          {action ? `action · ${action.skillCategory}` : "action"}
         </div>
         {action && actionChar ? (
           <div
