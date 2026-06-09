@@ -13,6 +13,7 @@ function makeWorld(overrides: Partial<ConditionWorld> = {}): ConditionWorld {
     isOnField: vi.fn(),
     getResourceValue: vi.fn(),
     hasAnyNegStatus: vi.fn(),
+    hasNegStatus: vi.fn(),
     mutationVersions: vi.fn(() => ({
       store: 0,
       resources: 0,
@@ -158,6 +159,45 @@ describe("ConditionEvaluator", () => {
       }
       const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
       expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
+    })
+
+    it("targetHasNegStatus without status matches any status (backward-compat)", () => {
+      const world = makeWorld({
+        hasAnyNegStatus: vi.fn(() => true),
+        hasNegStatus: vi.fn(() => false),
+      })
+      const evaluator = new ConditionEvaluator(world)
+      const cond: Condition = { kind: "targetHasNegStatus" }
+      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
+      expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
+      expect(world.hasAnyNegStatus).toHaveBeenCalled()
+      expect(world.hasNegStatus).not.toHaveBeenCalled()
+    })
+
+    it("targetHasNegStatus with status is true when that status is present", () => {
+      const world = makeWorld({
+        hasNegStatus: vi.fn((t: string) => t === "Aero Erosion"),
+      })
+      const evaluator = new ConditionEvaluator(world)
+      const cond: Condition = {
+        kind: "targetHasNegStatus",
+        status: "Aero Erosion",
+      }
+      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
+      expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
+    })
+
+    it("targetHasNegStatus with status is false when a different status is present", () => {
+      const world = makeWorld({
+        hasNegStatus: vi.fn((t: string) => t === "Spectro Frazzle"),
+      })
+      const evaluator = new ConditionEvaluator(world)
+      const cond: Condition = {
+        kind: "targetHasNegStatus",
+        status: "Aero Erosion",
+      }
+      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
+      expect(evaluator.evaluateUncached(cond, subject)).toBe(false)
     })
   })
 

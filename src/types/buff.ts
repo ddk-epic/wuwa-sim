@@ -244,7 +244,11 @@ export type Condition =
       n: number
       on: "target" | "source"
     }
-  | { kind: "targetHasNegStatus" }
+  | {
+      kind: "targetHasNegStatus"
+      /** Narrow to a specific negative status. Absent = any negative status. */
+      status?: NegStatusType
+    }
 
 export interface ResourceState {
   energy: number

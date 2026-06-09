@@ -163,6 +163,7 @@ export class BuffEngine {
       isOnField: (charId) => this.onField.isOnField(charId),
       getResourceValue: (charId, r) => this.resources.getResource(charId)[r],
       hasAnyNegStatus: () => this.target.hasAnyStatus(),
+      hasNegStatus: (t) => this.target.has(t),
       mutationVersions: () => ({
         store: this.store.mutationVersion(),
         resources: this.resources.mutationVersion(),

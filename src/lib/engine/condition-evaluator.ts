@@ -1,3 +1,4 @@
+import type { NegStatusType } from "#/data/neg-status-types"
 import type { BuffInstance, Condition, ResourceKind } from "#/types/buff"
 
 export interface ConditionSubject {
@@ -10,6 +11,7 @@ export interface ConditionWorld {
   isOnField: (characterId: number) => boolean
   getResourceValue: (characterId: number, resource: ResourceKind) => number
   hasAnyNegStatus: () => boolean
+  hasNegStatus: (type: NegStatusType) => boolean
   /**
    * Returns a version tuple used by ConditionEvaluator as a cache-invalidation key.
    * INVARIANT: every subsystem read by evaluateUncached must appear in this tuple.
@@ -110,7 +112,9 @@ export class ConditionEvaluator {
         return this.world.getResourceValue(id, cond.resource) >= cond.n
       }
       case "targetHasNegStatus":
-        return this.world.hasAnyNegStatus()
+        return cond.status
+          ? this.world.hasNegStatus(cond.status)
+          : this.world.hasAnyNegStatus()
     }
   }
 
