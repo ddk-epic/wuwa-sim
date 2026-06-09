@@ -93,6 +93,30 @@ describe("accrueForHit — pure resource gain rule (#321)", () => {
     ])
   })
 
+  it("energyFlat grants actor energy verbatim and shares it unscaled", () => {
+    const accruals = accrueForHit({ energy: 10 }, actor, party, 1.5, true)
+    expect(accruals).toEqual([
+      { characterId: 1, resource: "energy", delta: 10 },
+      { characterId: 2, resource: "energy", delta: 5 },
+      { characterId: 3, resource: "energy", delta: 5 },
+    ])
+  })
+
+  it("energyFlat leaves forte FR-scaled", () => {
+    const accruals = accrueForHit(
+      { energy: 10, forte: 4 },
+      actor,
+      party,
+      0,
+      true,
+    )
+    expect(accruals).toContainEqual({
+      characterId: 1,
+      resource: "forte",
+      delta: 4 * (1 + 0.3),
+    })
+  })
+
   it("omits absent or zero gains", () => {
     expect(
       accrueForHit({ energy: 0, concerto: 0, forte: 0 }, actor, party),

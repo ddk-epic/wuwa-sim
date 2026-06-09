@@ -808,6 +808,7 @@ export class BuffEngine {
       },
       this.store.getPartyCharacterIds(),
       energyGainMult,
+      event.skillCategory === "Intro Skill",
     )
   }
 

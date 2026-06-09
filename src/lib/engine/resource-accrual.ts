@@ -29,39 +29,35 @@ export interface AccrualActor {
 const TEAMMATE_ENERGY_SHARE = 0.5
 
 /**
- * The single rule for "how much energy/concerto/forte does this hit grant, and
- * to whom." Pure: no engine state, no callbacks — unit-testable on numbers.
+ * Pure rule for the energy/concerto/forte a hit grants. Returns an ordered list
+ * (actor energy, teammate shares, concerto, forte) for deterministic dispatch.
  *
- * Returns an **ordered** list the engine applies in sequence (so `resourceCrossed`
- * chaining stays deterministic): actor energy, then each teammate's shared
- * energy in `partyIds` order, then actor concerto, then actor forte.
- *
- * Energy is ER-scaled once by the **actor's** ER — the teammate share is
- * `energy * 0.5 * (1 + actorER)`, never re-scaled by the teammate's own ER.
- * Concerto is raw; forte is FR-scaled on gains only (raw on consumption).
- * Synthetic gains never share energy.
- *
- * `energyGainMult` scales the actor's own energy:
- * `energy × (1 + ER) × (1 + energyGainMult)`. The teammate share is not scaled
- * by it. Defaults to 0.
+ * Energy: actor gets `energy × (1 + ER) × (1 + energyGainMult)`, each teammate
+ * `energy × 0.5 × (1 + ER)`; synthetic gains don't share. Concerto is raw; forte
+ * is FR-scaled on gains, raw on consumption. `energyFlat` grants energy verbatim
+ * (no ER, no mult) to actor and share alike — for Intro Skills.
  */
 export function accrueForHit(
   gains: AccrualGains,
   actor: AccrualActor,
   partyIds: number[],
   energyGainMult = 0,
+  energyFlat = false,
 ): Accrual[] {
   const accruals: Accrual[] = []
 
   if (gains.energy) {
-    const actorEnergy = gains.energy * (1 + actor.er) * (1 + energyGainMult)
+    const erScale = energyFlat ? 1 : 1 + actor.er
+    const actorEnergy = energyFlat
+      ? gains.energy
+      : gains.energy * erScale * (1 + energyGainMult)
     accruals.push({
       characterId: actor.id,
       resource: "energy",
       delta: actorEnergy,
     })
     if (!gains.synthetic) {
-      const sharedEnergy = gains.energy * TEAMMATE_ENERGY_SHARE * (1 + actor.er)
+      const sharedEnergy = gains.energy * TEAMMATE_ENERGY_SHARE * erScale
       for (const teammateId of partyIds) {
         if (teammateId !== actor.id) {
           accruals.push({

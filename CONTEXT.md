@@ -206,19 +206,19 @@ The 0–100 swap-out resource. Hits add Concerto; reaching 100 enables Outro Ski
 **Resonance Energy** (commonly "Energy"):
 The per-character resource that gates **Resonance Liberation**. Two gain channels with different scaling:
 
-- **Damage Entry `energy`** — per-hit generation read from each `DamageEntry.energy`. Any hit may grant energy (including Forte Circuit, Outro Skill, Echo Skill); data authors set `energy: 0` when the in-game source grants none. Scaled by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`.
+- **Damage Entry `energy`** — per-hit generation read from each `DamageEntry.energy`. Any hit may grant energy (including Forte Circuit, Outro Skill, Echo Skill); data authors set `energy: 0` when the in-game source grants none. Scaled by the actor's `energyRechargePct`: `actorGain = entryEnergy × (1 + actorER)`. **Exception**: Intro Skill hits grant energy flat — no ER, no gain mult — matching the fixed in-game intro generation.
 - **Buff `resource` Effect on energy** — flat grants from echoes (e.g. Impermanence Heron), weapons, Resonance Chain nodes, outros. Not ER-scaled.
   Sim deliberately does not cap energy — overflow is a useful optimization signal indicating the user has spare ER they could redirect to other stats.
   _Avoid_: confusing with the **Resonance** resource, a separate per-character counter on `ResourceState`.
 
 **Shared Energy**:
-Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain to every teammate: `teammateGain = entryEnergy × 0.5 × (1 + actorER)`. The teammate's own ER does not apply to the shared portion. Synthetic hits do not share energy. Buff-driven (flat) energy grants do not share.
+Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain to every teammate: `teammateGain = entryEnergy × 0.5 × (1 + actorER)`. The teammate's own ER does not apply to the shared portion. For flat Intro Skill energy the share is also flat (`entryEnergy × 0.5`, no ER). Synthetic hits do not share energy. Buff-driven (flat) energy grants do not share.
 
 **Resonance Cost**:
 `Stage.resonanceCost` — the energy a Resonance Liberation Stage requires (default 100; Encore is 125). On Liberation cast, the engine sets the actor's energy to 0 (not subtract — overflow above the cost is forfeited on cast); if pre-cast energy was below the cost, a warning is logged but the cast still proceeds and the Stage resolves normally.
 
 **Intro Skill / Outro Skill**:
-The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free.
+The skills that fire on swap-in / swap-out respectively. Outros consume Concerto; intros are free. Intros generate a fixed amount of energy and concerto that no gain modifier (ER, gain mult) touches.
 
 **Negative Status** (NegStatus):
 A target-side inflicted debuff and the reusable engine primitive for the family (Aero Erosion, Spectro Frazzle, Electro Flare, Glacio Chafe, Fusion Burst, Havoc Bane). Parameterised by a `NegStatusDef` (`{ type, element, cap, duration, tickInterval, baseUnit, stackFactor[] }`); a live instance holds stacks, cap, `endTime`, and its own tick clock. Two things read it: its **presence** is a queryable condition ("targets with Negative Statuses" — e.g. Cartethyia's Outro), and its **stack count** feeds value expressions (e.g. the inherent's vul). Written by a `negStatus` effect (`apply N` / `reduceBy N` / `raiseToMax` / `raiseCap N`).
