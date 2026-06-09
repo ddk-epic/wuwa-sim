@@ -168,6 +168,12 @@ export type Trigger =
       source?: TriggerSource
       stageId?: string | string[]
       sourceBuffId?: string | string[]
+      /**
+       * Fire only when the hit lands on a target that currently has this
+       * negative status. Evaluated once at trigger time (the target's statuses
+       * are stamped onto the event at dispatch), not continuously.
+       */
+      targetHasStatus?: NegStatusType
     }
   | {
       event: "swapIn"

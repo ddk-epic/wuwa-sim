@@ -475,6 +475,60 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
   })
 })
 
+describe("matchesTrigger — targetHasStatus gate (#342)", () => {
+  const baseEvent: EngineEvent = {
+    kind: "hitLanded",
+    characterId: 1,
+    skillCategory: "Resonance Skill",
+    dmgType: "Damage",
+    frame: 0,
+  }
+
+  it("fires when stamped targetStatuses includes the type", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      targetHasStatus: "Aero Erosion",
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, targetStatuses: ["Aero Erosion"] },
+        1,
+      ),
+    ).toBe(true)
+  })
+
+  it("does not fire when the status is absent from targetStatuses", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      targetHasStatus: "Aero Erosion",
+    }
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, targetStatuses: ["Spectro Frazzle"] },
+        1,
+      ),
+    ).toBe(false)
+    // targetStatuses entirely absent also fails the gate.
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
+  })
+
+  it("is unaffected when targetHasStatus is omitted", () => {
+    const trigger: Trigger = { event: "hitLanded", actor: "self" }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
+    expect(
+      matchesTrigger(
+        trigger,
+        { ...baseEvent, targetStatuses: ["Aero Erosion"] },
+        1,
+      ),
+    ).toBe(true)
+  })
+})
+
 describe("InstanceStore — instanceId identity", () => {
   it("two perSource instances on the same target from different sources get distinct ids", () => {
     const s = new InstanceStore()

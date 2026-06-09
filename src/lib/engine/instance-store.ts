@@ -46,6 +46,8 @@ export type EngineEvent =
       forte?: number
       /** Buff def id that produced this synthetic hit via emitHit; undefined for authored hits. */
       sourceBuffId?: string
+      /** Target's negative statuses stamped at dispatch, for trigger-time gating. */
+      targetStatuses?: NegStatusType[]
     }
   | {
       kind: "healLanded"
@@ -622,6 +624,12 @@ export function matchesTrigger(
         ? trigger.sourceBuffId
         : [trigger.sourceBuffId]
       if (!ids.includes(event.sourceBuffId ?? "")) return false
+    }
+    if (
+      trigger.targetHasStatus &&
+      !event.targetStatuses?.includes(trigger.targetHasStatus)
+    ) {
+      return false
     }
     return true
   }

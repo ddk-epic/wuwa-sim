@@ -348,6 +348,9 @@ export class BuffEngine {
     // Resource phase (implicit): hit-driven and skill-cast-driven accumulation
     // happens before trigger matching so resourceCrossed triggers can chain.
     if (event.kind === "hitLanded") {
+      // Stamp the target's current statuses for trigger-time gating, so
+      // matchesTrigger can stay pure (no world/target access).
+      event.targetStatuses = this.target.list().map((i) => i.def.type)
       for (const a of this.accrueHitGains(event)) {
         this.applyResourceDelta(
           a.characterId,
