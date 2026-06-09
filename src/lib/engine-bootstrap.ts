@@ -217,6 +217,16 @@ export function bootstrapSlot(
   const permanentInstances: Omit<BuffInstance, "instanceId">[] = []
   const foldedBuffs: BuffDef[] = []
   for (const buff of buffs) {
+    // self wielder-id filter (#343): the source is always this slot's char, so a
+    // self-target whose characterId list excludes charId never lands here — skip it
+    // entirely (no fold, no instance, no triggerable registration).
+    const target = buff.target
+    if (target?.kind === "self" && target.characterId != null) {
+      const allowed = Array.isArray(target.characterId)
+        ? target.characterId
+        : [target.characterId]
+      if (!allowed.includes(charId)) continue
+    }
     const isPermanentSimStart =
       buff.trigger.event === "simStart" && buff.duration?.kind === "permanent"
     // A hit-scoped (`appliesToHits`) buff must never be pre-folded into the base

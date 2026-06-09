@@ -204,8 +204,12 @@ export class InstanceStore {
   resolveTargetIds(def: BuffDef, sourceCharacterId: number): number[] {
     if (def.target == null) return [sourceCharacterId]
     switch (def.target.kind) {
-      case "self":
-        return [sourceCharacterId]
+      case "self": {
+        const ids = def.target.characterId
+        if (ids == null) return [sourceCharacterId]
+        const allowed = Array.isArray(ids) ? ids : [ids]
+        return allowed.includes(sourceCharacterId) ? [sourceCharacterId] : []
+      }
       case "nextOnField":
         throw new Error(
           `resolveTargetIds called with nextOnField buff "${def.id}" — use applyOrDefer`,

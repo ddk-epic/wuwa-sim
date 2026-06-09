@@ -4,6 +4,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho, EchoSet } from "#/types/echo"
 import type { WeaponData } from "#/types/weapon"
 import {
+  bootstrapSlot,
   buildCharacterBuffDefs,
   buildEchoBuffDefs,
   buildEchoSetBuffDefs,
@@ -12,9 +13,11 @@ import {
 } from "./engine-bootstrap"
 
 let testEchoSets: EchoSet[] = []
+let testChar: EnrichedCharacter | null = null
 
 vi.mock("./loadout/catalog", () => ({
-  getCharacterById: () => null,
+  getCharacterById: (id: number) =>
+    testChar && testChar.id === id ? testChar : null,
   getEchoById: () => null,
   getEchoSetById: (id: number) => testEchoSets.find((s) => s.id === id) ?? null,
   getWeaponById: () => null,
@@ -35,6 +38,7 @@ vi.mock("./loadout/resolve-echo-sets", () => ({
 
 afterEach(() => {
   testEchoSets = []
+  testChar = null
 })
 
 const simStartPermanentBuff = (id: string): BuffDef => ({
@@ -249,6 +253,64 @@ describe("buildEchoSetBuffDefs", () => {
     testEchoSets = [baseEchoSet(1, { buffs: [fivePieceBuff] })]
     const result = buildEchoSetBuffDefs(1, 1)
     expect(result).toHaveLength(0)
+  })
+})
+
+describe("bootstrapSlot — self wielder-id filter (#343)", () => {
+  const wielderBuff = (characterId: number | number[]): BuffDef => ({
+    ...simStartPermanentBuff("char.wielder-passive"),
+    target: { kind: "self", characterId },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.1 },
+      },
+    ],
+  })
+
+  it("folds a permanent self-passive when the slot char is listed (scalar)", () => {
+    testChar = baseChar({ id: 5, buffs: [wielderBuff(5)] })
+    const slot = bootstrapSlot(5, null)
+    expect(slot?.foldedBuffs.map((b) => b.id)).toContain("char.wielder-passive")
+  })
+
+  it("does not fold or instance for an unlisted slot char (scalar)", () => {
+    testChar = baseChar({ id: 5, buffs: [wielderBuff(7)] })
+    const slot = bootstrapSlot(5, null)
+    expect(slot?.foldedBuffs.map((b) => b.id)).not.toContain(
+      "char.wielder-passive",
+    )
+    expect(slot?.permanentInstances).toHaveLength(0)
+    expect(slot?.triggerable).toHaveLength(0)
+  })
+
+  it("honors the array form", () => {
+    testChar = baseChar({ id: 8, buffs: [wielderBuff([7, 8])] })
+    const slot = bootstrapSlot(8, null)
+    expect(slot?.foldedBuffs.map((b) => b.id)).toContain("char.wielder-passive")
+
+    testChar = baseChar({ id: 9, buffs: [wielderBuff([7, 8])] })
+    const slot2 = bootstrapSlot(9, null)
+    expect(slot2?.foldedBuffs.map((b) => b.id)).not.toContain(
+      "char.wielder-passive",
+    )
+  })
+
+  it("omitted characterId folds as today", () => {
+    const buff: BuffDef = {
+      ...simStartPermanentBuff("char.plain-passive"),
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    testChar = baseChar({ id: 5, buffs: [buff] })
+    const slot = bootstrapSlot(5, null)
+    expect(slot?.foldedBuffs.map((b) => b.id)).toContain("char.plain-passive")
   })
 })
 

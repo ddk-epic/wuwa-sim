@@ -233,6 +233,42 @@ describe("InstanceStore — resolveTargetIds", () => {
       s.resolveTargetIds(def({ target: { kind: "nextOnField" } }), 1),
     ).toThrow("applyOrDefer")
   })
+
+  describe("self wielder-id filter (#343)", () => {
+    it("scalar characterId: lands for a listed wielder", () => {
+      const s = new InstanceStore()
+      expect(
+        s.resolveTargetIds(
+          def({ target: { kind: "self", characterId: 7 } }),
+          7,
+        ),
+      ).toEqual([7])
+    })
+
+    it("scalar characterId: no-ops for an unlisted wielder", () => {
+      const s = new InstanceStore()
+      expect(
+        s.resolveTargetIds(
+          def({ target: { kind: "self", characterId: 7 } }),
+          9,
+        ),
+      ).toEqual([])
+    })
+
+    it("array characterId: lands when source is in the list, no-ops otherwise", () => {
+      const s = new InstanceStore()
+      const d = def({ target: { kind: "self", characterId: [7, 8] } })
+      expect(s.resolveTargetIds(d, 8)).toEqual([8])
+      expect(s.resolveTargetIds(d, 9)).toEqual([])
+    })
+
+    it("omitted characterId behaves exactly as today (always self)", () => {
+      const s = new InstanceStore()
+      expect(s.resolveTargetIds(def({ target: { kind: "self" } }), 9)).toEqual([
+        9,
+      ])
+    })
+  })
 })
 
 describe("matchesTrigger — synthetic source filtering", () => {

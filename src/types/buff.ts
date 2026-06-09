@@ -226,7 +226,16 @@ export type Trigger =
     }
 
 export type BuffTarget =
-  | { kind: "self" }
+  | {
+      kind: "self"
+      /**
+       * FILTERS the self-target by wielder identity: the buff lands only when
+       * the source character's id is listed. This is NOT a selector — a foreign
+       * id yields no application and never redirects the buff to that character.
+       * Absent = always lands on the source (today's behavior).
+       */
+      characterId?: number | number[]
+    }
   | { kind: "nextOnField" }
   | { kind: "global" }
 
