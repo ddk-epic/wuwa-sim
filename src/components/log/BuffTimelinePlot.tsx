@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
+import { Users } from "lucide-react"
 import { formatSkillType } from "#/data/skill-types"
 import { characterVisual, portraitSrc } from "#/components/ui/character-visual"
 import { TL_LABEL_W, TL_RULER_H } from "./BuffTimelineLog"
@@ -12,7 +13,7 @@ import type {
 
 function hydrateChar(id: number): Char {
   const v = characterVisual(id)
-  return { id, name: v.name, element: v.element, hex: v.hex }
+  return { id, name: v.name, element: v.element, hex: v.hex, isTeam: v.isTeam }
 }
 
 const PX_PER_SEC = 104
@@ -182,18 +183,27 @@ function CharLabel({
       className="sticky left-0 z-20 flex shrink-0 flex-col justify-end overflow-hidden border-r border-border bg-background"
       style={{ width: TL_LABEL_W, boxSizing: "border-box" }}
     >
-      <div
-        className="absolute inset-0 transition-[filter,opacity] duration-100"
-        style={{
-          backgroundImage: `url("${src}")`,
-          backgroundSize: "cover",
-          backgroundPosition: "top center",
-          filter: dimmed
-            ? "grayscale(1) contrast(1.08) brightness(1)"
-            : "contrast(1) brightness(1.05) saturate(1.1)",
-          opacity: dimmed ? 0.65 : 0.9,
-        }}
-      />
+      {char.isTeam ? (
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-opacity duration-100"
+          style={{ color: char.hex, opacity: dimmed ? 0.4 : 0.85 }}
+        >
+          <Users size={100} strokeWidth={1.5} />
+        </div>
+      ) : (
+        <div
+          className="absolute inset-0 transition-[filter,opacity] duration-100"
+          style={{
+            backgroundImage: `url("${src}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "top center",
+            filter: dimmed
+              ? "grayscale(1) contrast(1.08) brightness(1)"
+              : "contrast(1) brightness(1.05) saturate(1.1)",
+            opacity: dimmed ? 0.65 : 0.9,
+          }}
+        />
+      )}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -385,16 +395,16 @@ export function BuffTimelinePlot({
                 left: TL_LABEL_W + px(restStart),
                 width: px(axisMax - restStart),
                 background:
-                  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-background) 85%, transparent) 0 7px, color-mix(in srgb, var(--color-darkest) 85%, transparent) 7px 14px)",
+                  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-border) 70%, transparent) 0 12px, transparent 12px 24px)",
               }}
             />
           )}
           {restStart < axisMax && (
             <div
-              className="absolute top-1 z-6 pointer-events-none font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70 whitespace-nowrap"
+              className="absolute top-1 z-6 p-1 pointer-events-none font-mono text-label uppercase tracking-[1px] text-muted-foreground/70 whitespace-nowrap"
               style={{ left: TL_LABEL_W + px(restStart) + 6 }}
             >
-              rest
+              end
             </div>
           )}
 
@@ -442,19 +452,20 @@ export function BuffTimelinePlot({
                         className="relative"
                         style={{ height: LANE_H, flexShrink: 0 }}
                       >
-                        {laneBuffs.map((b) => (
-                          <BuffLane
-                            key={b.id}
-                            buff={b}
-                            sourceName={
-                              characterVisual(b.sourceCharacterId).name
-                            }
-                            hex={char.hex}
-                            px={px}
-                            hoverT={hover?.t ?? null}
-                            restStart={restStart}
-                          />
-                        ))}
+                        {laneBuffs.map((b) => {
+                          const src = characterVisual(b.sourceCharacterId)
+                          return (
+                            <BuffLane
+                              key={b.id}
+                              buff={b}
+                              sourceName={src.name}
+                              hex={char.isTeam ? src.hex : char.hex}
+                              px={px}
+                              hoverT={hover?.t ?? null}
+                              restStart={restStart}
+                            />
+                          )
+                        })}
                       </div>
                     )
                   })}

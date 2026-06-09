@@ -13,6 +13,7 @@ export type Char = {
   name: string
   element: string
   hex: string
+  isTeam: boolean
 }
 
 export function BuffTimelineLog({

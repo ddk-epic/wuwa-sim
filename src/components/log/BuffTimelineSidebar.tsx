@@ -17,7 +17,13 @@ export function BuffTimelineSidebar({
   const charById = (id: number): Char | undefined => {
     if (!charIds.includes(id)) return undefined
     const v = characterVisual(id)
-    return { id, name: v.name, element: v.element, hex: v.hex }
+    return {
+      id,
+      name: v.name,
+      element: v.element,
+      hex: v.hex,
+      isTeam: v.isTeam,
+    }
   }
   const tNow = hover?.t ?? null
 
@@ -108,7 +114,9 @@ export function BuffTimelineSidebar({
           )}
           {live.map((b) => {
             const c = charById(b.charId)
-            const hex = c?.hex ?? "#888"
+            const hex = c?.isTeam
+              ? characterVisual(b.sourceCharacterId).hex
+              : (c?.hex ?? "#888")
             const prog = !Number.isFinite(b.endTime)
               ? 0
               : Math.min(
