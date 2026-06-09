@@ -106,15 +106,20 @@ export function buildBuffTimelineModel(
       passivesByChar.set(e.characterId, e.passiveBuffs)
   }
 
-  type PendingBuffStart = {
-    startTime: number
-    sourceCharacterId: number
+  // Pair lifecycle events purely by instanceId (#339/#340). Each Buff Instance
+  // owns a unique id, so a perSource buff live from two sources on one target
+  // yields two distinct groups instead of colliding on a buffId:target key.
+  type IntervalAcc = {
+    hasStart: boolean
+    charId: number
     buffName: string
+    sourceCharacterId: number
+    startTime: number
+    /** First terminal frame, or Infinity while the buff is still live. */
+    endTime: number
   }
-  const pendingBuffStarts = new Map<string, PendingBuffStart>()
-  type BuffInterval = Omit<Buff, "lane">
-  const intervals: BuffInterval[] = []
-  let intervalSeq = 0
+  const byInstance = new Map<number, IntervalAcc>()
+  const instanceOrder: number[] = []
   for (const e of log) {
     if (
       e.kind !== "buffApplied" &&
@@ -123,39 +128,50 @@ export function buildBuffTimelineModel(
       e.kind !== "buffConsumed"
     )
       continue
-    const key = `${e.buffId}:${e.targetCharacterId}`
+    let acc = byInstance.get(e.instanceId)
+    if (!acc) {
+      acc = {
+        hasStart: false,
+        charId: 0,
+        buffName: "",
+        sourceCharacterId: 0,
+        startTime: 0,
+        endTime: Infinity,
+      }
+      byInstance.set(e.instanceId, acc)
+      instanceOrder.push(e.instanceId)
+    }
     const time = e.frame / FPS
     if (e.kind === "buffApplied" || e.kind === "buffRefreshed") {
-      if (!pendingBuffStarts.has(key))
-        pendingBuffStarts.set(key, {
-          startTime: time,
-          sourceCharacterId: e.sourceCharacterId,
-          buffName: e.buffName,
-        })
-    } else {
-      const pending = pendingBuffStarts.get(key)
-      if (!pending) continue
-      intervals.push({
-        id: `b${intervalSeq++}`,
-        charId: e.targetCharacterId,
-        buffName: e.buffName,
-        sourceCharacterId: pending.sourceCharacterId,
-        startTime: pending.startTime,
-        endTime: time,
-      })
-      pendingBuffStarts.delete(key)
+      // start = the first apply; it holds the original source/name before a
+      // later refresh overwrites them.
+      if (!acc.hasStart) {
+        acc.hasStart = true
+        acc.charId = e.targetCharacterId
+        acc.buffName = e.buffName
+        acc.sourceCharacterId = e.sourceCharacterId
+        acc.startTime = time
+      }
+    } else if (acc.endTime === Infinity) {
+      // first terminal closes the bar (preserves the prior first-wins behavior)
+      acc.endTime = time
     }
   }
-  // never expired → permanent
-  for (const [key, pending] of pendingBuffStarts) {
-    const target = key.slice(key.lastIndexOf(":") + 1)
+
+  type BuffInterval = Omit<Buff, "lane">
+  const intervals: BuffInterval[] = []
+  let intervalSeq = 0
+  for (const instanceId of instanceOrder) {
+    const acc = byInstance.get(instanceId)!
+    // terminal-only group (terminal with no start) → dropped, no interval
+    if (!acc.hasStart) continue
     intervals.push({
       id: `b${intervalSeq++}`,
-      charId: Number(target),
-      buffName: pending.buffName,
-      sourceCharacterId: pending.sourceCharacterId,
-      startTime: pending.startTime,
-      endTime: Infinity,
+      charId: acc.charId,
+      buffName: acc.buffName,
+      sourceCharacterId: acc.sourceCharacterId,
+      startTime: acc.startTime,
+      endTime: acc.endTime,
     })
   }
 

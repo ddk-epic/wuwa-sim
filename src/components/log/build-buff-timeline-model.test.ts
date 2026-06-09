@@ -27,9 +27,10 @@ const applied = (
   frame: number,
   source = 99,
   buffName = buffId,
+  instanceId = 0,
 ): SimulationLogEntry => ({
   kind: "buffApplied",
-  instanceId: 0,
+  instanceId,
   buffId,
   buffName,
   sourceCharacterId: source,
@@ -43,9 +44,10 @@ const expired = (
   target: number,
   frame: number,
   buffName = buffId,
+  instanceId = 0,
 ): SimulationLogEntry => ({
   kind: "buffExpired",
-  instanceId: 0,
+  instanceId,
   buffId,
   buffName,
   sourceCharacterId: 99,
@@ -82,8 +84,8 @@ describe("buildBuffTimelineModel", () => {
     const log: SimulationLogEntry[] = [action({ characterId: 1, frame: 0 })]
     const N = 7
     for (let i = 0; i < N; i++) {
-      log.push(applied(`b.${i}`, 1, 0))
-      log.push(expired(`b.${i}`, 1, 60))
+      log.push(applied(`b.${i}`, 1, 0, 99, `b.${i}`, i))
+      log.push(expired(`b.${i}`, 1, 60, `b.${i}`, i))
     }
     const m = buildBuffTimelineModel(log, [1])
     const lanes = m.buffs.map((b) => b.lane).sort((a, b) => a - b)
@@ -94,10 +96,10 @@ describe("buildBuffTimelineModel", () => {
   it("reuses a lane once the prior buff has ended", () => {
     const log: SimulationLogEntry[] = [
       action({ characterId: 1, frame: 0 }),
-      applied("b.a", 1, 0),
-      expired("b.a", 1, 60),
-      applied("b.b", 1, 120),
-      expired("b.b", 1, 180),
+      applied("b.a", 1, 0, 99, "b.a", 0),
+      expired("b.a", 1, 60, "b.a", 0),
+      applied("b.b", 1, 120, 99, "b.b", 1),
+      expired("b.b", 1, 180, "b.b", 1),
     ]
     const m = buildBuffTimelineModel(log, [1])
     expect(m.buffs.every((b) => b.lane === 0)).toBe(true)
@@ -153,5 +155,94 @@ describe("buildBuffTimelineModel", () => {
     ]
     const m = buildBuffTimelineModel(log, [1, 2])
     expect(m.actionBlocks[0].end).toBe(m.actionBlocks[0].start)
+  })
+})
+
+describe("buildBuffTimelineModel — interval pairing by instanceId (#340)", () => {
+  it("perSource: two instances of one buffId on the same target → two untruncated bars", () => {
+    // A live [0s,5s] from source 1, B live [3s,8s] from source 2 — same buffId+target.
+    // Old buffId:target keying collapsed these into one truncated bar.
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      applied("b.shared", 9, 0, 1, "Shared", 0),
+      applied("b.shared", 9, 180, 2, "Shared", 1),
+      expired("b.shared", 9, 300, "Shared", 0),
+      expired("b.shared", 9, 480, "Shared", 1),
+    ]
+    const m = buildBuffTimelineModel(log, [9])
+    const bars = m.buffs
+      .filter((b) => b.buffName === "Shared")
+      .sort((a, b) => a.startTime - b.startTime)
+    expect(bars).toHaveLength(2)
+    expect(bars[0]).toMatchObject({
+      startTime: 0,
+      endTime: 5,
+      sourceCharacterId: 1,
+    })
+    expect(bars[1]).toMatchObject({
+      startTime: 3,
+      endTime: 8,
+      sourceCharacterId: 2,
+    })
+  })
+
+  it("apply → expire → apply on the same identity → two separate bars", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      applied("b.x", 1, 0, 99, "b.x", 0),
+      expired("b.x", 1, 60, "b.x", 0),
+      applied("b.x", 1, 120, 99, "b.x", 1),
+      expired("b.x", 1, 180, "b.x", 1),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    const bars = m.buffs.sort((a, b) => a.startTime - b.startTime)
+    expect(bars).toHaveLength(2)
+    expect(bars[0]).toMatchObject({ startTime: 0, endTime: 1 })
+    expect(bars[1]).toMatchObject({ startTime: 2, endTime: 3 })
+  })
+
+  it("never-expired instance → single Infinity bar", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      applied("b.perm", 1, 0, 99, "b.perm", 7),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    expect(m.buffs).toHaveLength(1)
+    expect(m.buffs[0].endTime).toBe(Infinity)
+  })
+
+  it("refresh keeps the original source/start, extends the same bar", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      applied("b.r", 1, 0, 5, "b.r", 0),
+      // refresh from a different source must not start a new bar nor overwrite source
+      {
+        kind: "buffRefreshed",
+        instanceId: 0,
+        buffId: "b.r",
+        buffName: "b.r",
+        sourceCharacterId: 8,
+        targetCharacterId: 1,
+        frame: 30,
+        stacks: 1,
+      },
+      expired("b.r", 1, 90, "b.r", 0),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    expect(m.buffs).toHaveLength(1)
+    expect(m.buffs[0]).toMatchObject({
+      startTime: 0,
+      endTime: 1.5,
+      sourceCharacterId: 5,
+    })
+  })
+
+  it("terminal-only group (terminal with no start) → dropped", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      expired("b.seeded", 1, 60, "b.seeded", 0),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    expect(m.buffs).toEqual([])
   })
 })
