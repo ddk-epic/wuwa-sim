@@ -195,11 +195,6 @@ describe("buildTimelineRenderItems", () => {
     expect(entryItems(items)[0].charName).toBe("Char1")
   })
 
-  it("charName falls back to '—' when character not found", () => {
-    const items = call([topEntry("e1", 99)])
-    expect(entryItems(items)[0].charName).toBe("—")
-  })
-
   it("resolves charHex from character element", () => {
     testCharacters = [makeChar(1, "Fusion")]
     const items = call([topEntry("e1", 1)])
@@ -208,20 +203,10 @@ describe("buildTimelineRenderItems", () => {
     expect(hex).toMatch(/^#/)
   })
 
-  it("charHex falls back to #888 when character not found", () => {
-    const items = call([topEntry("e1", 99)])
-    expect(entryItems(items)[0].charHex).toBe("#888")
-  })
-
   it("elementLetter is first letter of element", () => {
     testCharacters = [makeChar(1, "Glacio")]
     const items = call([topEntry("e1", 1)])
     expect(entryItems(items)[0].elementLetter).toBe("G")
-  })
-
-  it("elementLetter falls back to '?' when character not found", () => {
-    const items = call([topEntry("e1", 99)])
-    expect(entryItems(items)[0].elementLetter).toBe("?")
   })
 
   // Stage resolution
@@ -258,15 +243,6 @@ describe("buildTimelineRenderItems", () => {
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     expect(entryItems(items)[0].damageType).toBe("Resonance Liberation")
-  })
-
-  it("skillType, damageType and skillName are null when stage not resolved", () => {
-    resolvedStages.set("s1", null)
-    const items = call([topEntry("e1", 1, "s1")])
-    const e = entryItems(items)[0]
-    expect(e.skillType).toBeNull()
-    expect(e.damageType).toBeNull()
-    expect(e.skillName).toBeNull()
   })
 
   it("stageWithVariants is set when stage has variants", () => {

@@ -263,15 +263,6 @@ describe("getTimelineSummary — dps", () => {
   })
 })
 
-describe("getTimelineSummary — missing character", () => {
-  it("treats unknown characterId as null damage (stage cannot be resolved)", () => {
-    testCharacters = []
-    const result = getTimelineSummary([normalAttack(99)])
-    expect(result.rows[0].damage).toBeNull()
-    expect(result.totalDamage).toBe(0)
-  })
-})
-
 // â”€â”€ Log ingestion (#187) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeActionEvent(

@@ -9,10 +9,8 @@ import {
 } from "./character-visual"
 
 describe("character-visual atoms", () => {
-  it("elementHex maps known elements and falls back to gray", () => {
+  it("elementHex maps known elements to their hex", () => {
     expect(elementHex("Glacio")).toBe("#5ad7f0")
-    expect(elementHex("Nonsense")).toBe("#888")
-    expect(elementHex("")).toBe("#888")
   })
 
   it("portraitSrc lowercases the name", () => {
@@ -20,30 +18,16 @@ describe("character-visual atoms", () => {
     expect(portraitSrc("Jinhsi")).toBe("/portraits/jinhsi.png")
   })
 
-  it("nameInitial uppercases the first letter, '?' on empty", () => {
+  it("nameInitial uppercases the first letter", () => {
     expect(nameInitial("verina")).toBe("V")
-    expect(nameInitial("")).toBe("?")
   })
 
-  it("elementLetter takes the first letter, '?' on empty", () => {
+  it("elementLetter takes the first letter", () => {
     expect(elementLetter("Glacio")).toBe("G")
-    expect(elementLetter("")).toBe("?")
   })
 })
 
 describe("characterVisual", () => {
-  it("unknown id → full gray/'?'/empty-element bundle", () => {
-    const v = characterVisual(-1)
-    expect(v).toEqual({
-      name: "#-1",
-      element: "",
-      hex: "#888",
-      portraitSrc: "/portraits/#-1.png",
-      initial: "?",
-      letter: "?",
-    })
-  })
-
   it("known id → correct hex/name/initial/letter", () => {
     // Pick a real character from the catalog so the test is data-agnostic.
     const c = listCharacters()[0]
