@@ -1,24 +1,28 @@
 import { formatFrames } from "#/lib/format"
 import { PoolValue } from "../ui/PoolValue"
+import { WaitBadge } from "../ui/WaitBadge"
 
 /** Vertical padding shared by the timeline column: entry rows py-2, dense group header py-1.5. */
 function pad(dense?: boolean): string {
   return dense ? "py-1.5" : "py-2"
 }
 
-/** Leading time cell, accented in the damage color. */
+/** Leading time cell, accented in the damage color, with an inline prior-gate `WaitBadge`. */
 export function TimeCell({
   frames,
   dense,
+  priorGate = 0,
 }: {
   frames: number
   dense?: boolean
+  priorGate?: number
 }) {
   return (
     <td
-      className={`px-2 ${pad(dense)} text-right font-mono text-label text-ui-damage`}
+      className={`pl-2 pr-0 ${pad(dense)} text-right font-mono text-label text-ui-damage`}
     >
       {formatFrames(frames)}
+      <WaitBadge priorGate={priorGate} className="ml-1" />
     </td>
   )
 }

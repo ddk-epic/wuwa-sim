@@ -41,18 +41,21 @@ describe("formatPaddingDelay", () => {
     expect(f!.total).toBe(63)
   })
 
-  it("total is the sum of all six fields", () => {
+  it("total sums the five action-padding fields, excluding priorGate", () => {
     const f = formatPaddingDelay(
       delay({ react: 9, pad: 1, fall: 2, swapBack: 3, priorGate: 4 }),
     )
-    expect(f!.total).toBe(19)
+    expect(f!.total).toBe(15)
   })
 
-  it("appends prior-gate after swap-back in the tooltip", () => {
+  it("priorGate alone → null (surfaced by WaitBadge, not here)", () => {
+    expect(formatPaddingDelay(delay({ priorGate: 43 }))).toBeNull()
+  })
+
+  it("excludes prior-gate from the tooltip", () => {
     const f = formatPaddingDelay(delay({ swapBack: 30, priorGate: 43 }))
-    expect(f!.tooltip).toBe(
-      `swap-back: ${formatFrames(30)} · prior-gate: ${formatFrames(43)}`,
-    )
-    expect(f!.total).toBe(73)
+    expect(f!.tooltip).toBe(`swap-back: ${formatFrames(30)}`)
+    expect(f!.tooltip).not.toContain("prior-gate")
+    expect(f!.total).toBe(30)
   })
 })

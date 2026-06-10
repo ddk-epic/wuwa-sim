@@ -96,3 +96,37 @@ describe("log rows column count", () => {
     expect(container.textContent).toContain("▸")
   })
 })
+
+describe("prior-gate wait badge on action rows", () => {
+  it("ActionEventRow renders an inline wait badge from delayBreakdown.priorGate", () => {
+    const container = renderRow(
+      <ActionEventRow
+        ev={{
+          ...action,
+          delayBreakdown: {
+            react: 0,
+            floor: 0,
+            pad: 0,
+            fall: 0,
+            swapBack: 0,
+            priorGate: 42,
+          },
+        }}
+        index={0}
+      />,
+    )
+    expect(container.querySelector("span[title='wait 0.70s']")).not.toBeNull()
+  })
+
+  it("ActionEventRow omits the wait badge when there is no delayBreakdown", () => {
+    const container = renderRow(<ActionEventRow ev={action} index={0} />)
+    expect(container.querySelector("span[title^='wait']")).toBeNull()
+  })
+
+  it("HitEventRow does not feed FrameCell a priorGate", () => {
+    const container = renderRow(
+      <HitEventRow ev={hit} index={0} isOpen={false} onToggle={() => {}} />,
+    )
+    expect(container.querySelector("span[title^='wait']")).toBeNull()
+  })
+})

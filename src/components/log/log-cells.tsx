@@ -11,6 +11,7 @@ import { formatFrames } from "#/lib/format"
 import { formatVariantKind } from "#/lib/format-variant-kind"
 import { HexPill } from "#/components/ui/HexPill"
 import { DelayBadge } from "#/components/ui/DelayBadge"
+import { WaitBadge } from "#/components/ui/WaitBadge"
 import { characterVisual, elementHex } from "#/components/ui/character-visual"
 
 export const numCell = "px-2 py-2 text-right font-mono"
@@ -36,11 +37,18 @@ export function IndexCell({
   )
 }
 
-/** Leading frame cell, accented in the damage color. */
-export function FrameCell({ frame }: { frame: number }) {
+/** Leading frame cell, accented in the damage color, with an inline prior-gate `WaitBadge`. */
+export function FrameCell({
+  frame,
+  priorGate,
+}: {
+  frame: number
+  priorGate?: number
+}) {
   return (
     <td className={`${numCell} text-label text-ui-damage`}>
       {formatFrames(frame)}
+      <WaitBadge priorGate={priorGate ?? 0} className="ml-1" />
     </td>
   )
 }

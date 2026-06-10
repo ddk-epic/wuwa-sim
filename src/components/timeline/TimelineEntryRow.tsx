@@ -56,7 +56,7 @@ export function TimelineEntryRow({
   const row = summary.rows[index] ?? {
     timeFrames: 0,
     durationFrames: 0,
-    delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0 },
+    delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0, priorGate: 0 },
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,
@@ -121,7 +121,7 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <TimeCell frames={row.timeFrames} />
+      <TimeCell frames={row.timeFrames} priorGate={row.delay.priorGate} />
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">
           <span

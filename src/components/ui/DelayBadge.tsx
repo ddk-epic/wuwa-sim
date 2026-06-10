@@ -4,12 +4,13 @@ import { formatFrames } from "#/lib/format"
 /**
  * Sums a Padding Delay breakdown and renders its tooltip. Returns `null` when
  * there is no delay. `floor`/`react` are mutually exclusive (floor wins);
- * `pad`/`fall`/`swapBack`/`priorGate` are appended in order.
+ * `pad`/`fall`/`swapBack` are appended in order. `priorGate` is excluded — it's
+ * surfaced separately by `WaitBadge`.
  */
 export function formatPaddingDelay(
   d: DelayBreakdown,
 ): { total: number; tooltip: string } | null {
-  const total = d.react + d.floor + d.pad + d.fall + d.swapBack + d.priorGate
+  const total = d.react + d.floor + d.pad + d.fall + d.swapBack
   if (total === 0) return null
   const tooltip = [
     d.floor > 0
@@ -20,7 +21,6 @@ export function formatPaddingDelay(
     d.pad > 0 ? `pad: ${formatFrames(d.pad)}` : "",
     d.fall > 0 ? `fall: ${formatFrames(d.fall)}` : "",
     d.swapBack > 0 ? `swap-back: ${formatFrames(d.swapBack)}` : "",
-    d.priorGate > 0 ? `prior-gate: ${formatFrames(d.priorGate)}` : "",
   ]
     .filter(Boolean)
     .join(" · ")

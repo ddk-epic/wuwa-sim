@@ -20,7 +20,7 @@ export function ActionEventRow({
   return (
     <tr className="border-t border-border/60">
       <IndexCell index={index} />
-      <FrameCell frame={ev.frame} />
+      <FrameCell frame={ev.frame} priorGate={ev.delayBreakdown?.priorGate} />
       <td className="px-2 py-2">
         <CharCell id={ev.characterId} />
       </td>
