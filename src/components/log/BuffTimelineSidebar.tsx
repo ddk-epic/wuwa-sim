@@ -4,9 +4,27 @@ import { formatSkillType } from "#/data/skill-types"
 import { characterVisual } from "#/components/ui/character-visual"
 import { TL_RULER_H } from "./BuffTimelineLog"
 import type { Char } from "./BuffTimelineLog"
-import type { BuffTimelineModel } from "./build-buff-timeline-model"
+import type { Buff, BuffTimelineModel } from "./build-buff-timeline-model"
 
 const SIDEBAR_W = 420
+
+const endsAt = (b: Buff, t: number) =>
+  Number.isFinite(b.endTime) ? Math.max(0, b.endTime - t) : Infinity
+
+/** Buffs grouped by source character, each group sorted soonest-to-expire. */
+function groupBySource(live: Buff[], t: number) {
+  const groups: { sourceId: number; buffs: Buff[] }[] = []
+  for (const b of live) {
+    let g = groups.find((x) => x.sourceId === b.sourceCharacterId)
+    if (!g) {
+      g = { sourceId: b.sourceCharacterId, buffs: [] }
+      groups.push(g)
+    }
+    g.buffs.push(b)
+  }
+  for (const g of groups) g.buffs.sort((a, b) => endsAt(a, t) - endsAt(b, t))
+  return groups
+}
 
 export function BuffTimelineSidebar({
   model,
@@ -112,7 +130,7 @@ export function BuffTimelineSidebar({
       <div className="flex flex-1 flex-col min-h-0">
         <div className="flex justify-between px-5 pb-1.5 pt-2.5">
           <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
-            active buffs
+            active buffs · by source
           </span>
           <span className="font-mono text-detail text-muted-foreground">
             {live.length}
@@ -122,54 +140,70 @@ export function BuffTimelineSidebar({
           {live.length === 0 && (
             <span className="text-detail text-muted-foreground/70">none</span>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            {live.map((b) => {
-              const c = charById(b.charId)
-              const hex = c?.isTeam
-                ? characterVisual(b.sourceCharacterId).hex
-                : (c?.hex ?? "#888")
-              const left = !Number.isFinite(b.endTime)
-                ? 1
-                : Math.min(
-                    1,
-                    Math.max(0, (b.endTime - t) / (b.endTime - b.startTime)),
-                  )
-              return (
+          {groupBySource(live, t).map((g) => {
+            const src = characterVisual(g.sourceId)
+            return (
+              <div
+                key={g.sourceId}
+                className="mb-2.5 overflow-hidden rounded-lg border border-border"
+              >
                 <div
-                  key={b.id}
-                  className="overflow-hidden rounded-md border border-border bg-foreground/2"
+                  className="flex items-center gap-2 border-b px-3 py-2"
+                  style={{
+                    background: `${src.hex}12`,
+                    borderColor: `${src.hex}2e`,
+                  }}
                 >
-                  <div className="px-2 pt-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: hex }}
-                      />
-                      <span className="truncate text-micro text-foreground">
-                        {b.buffName}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 flex items-center justify-between font-mono text-micro text-muted-foreground/70">
-                      <span className="truncate">
-                        {characterVisual(b.sourceCharacterId).name}
-                      </span>
-                      <span className="shrink-0">
-                        {Number.isFinite(b.endTime)
-                          ? `${Math.max(0, b.endTime - t).toFixed(1)}s`
-                          : "∞"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-1.5 h-[3px] bg-border">
-                    <div
-                      className="h-full"
-                      style={{ width: `${left * 100}%`, background: hex }}
-                    />
-                  </div>
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: src.hex }}
+                  />
+                  <span className="text-detail font-semibold text-foreground">
+                    {src.name}
+                  </span>
+                  <span className="ml-auto font-mono text-micro text-muted-foreground/70">
+                    {g.buffs.length} active
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+                <div className="px-3 py-2.5">
+                  {g.buffs.map((b) => {
+                    const left = !Number.isFinite(b.endTime)
+                      ? 1
+                      : Math.min(
+                          1,
+                          Math.max(
+                            0,
+                            (b.endTime - t) / (b.endTime - b.startTime),
+                          ),
+                        )
+                    return (
+                      <div key={b.id} className="mb-2 last:mb-0">
+                        <div className="flex items-center gap-2.5">
+                          <span className="truncate text-detail text-foreground">
+                            {b.buffName}
+                          </span>
+                          <span className="ml-auto shrink-0 font-mono text-label font-bold tabular-nums text-muted-foreground">
+                            {Number.isFinite(b.endTime)
+                              ? `${Math.max(0, b.endTime - t).toFixed(1)}s`
+                              : "∞"}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-border">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${left * 100}%`,
+                              background: src.hex,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
 
           {actionChar && (
             <>
