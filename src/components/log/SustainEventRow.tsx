@@ -5,20 +5,24 @@ import {
   numCell,
   IndexCell,
   FrameCell,
+  WaitCell,
   StatPad,
 } from "./log-cells"
 
 export function SustainEventRow({
   ev,
   index,
+  showWait = false,
 }: {
   ev: SustainEvent
   index: number
+  showWait?: boolean
 }) {
   return (
     <tr className="border-t border-border/60">
       <IndexCell index={index} />
       <FrameCell frame={ev.frame} />
+      {showWait && <WaitCell />}
       <td className="px-2 py-2">
         <CharCell id={ev.characterId} />
       </td>

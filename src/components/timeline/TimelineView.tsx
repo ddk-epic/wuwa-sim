@@ -126,6 +126,8 @@ export function TimelineView({
     return summarizeGroups(summary.rows, spans)
   }, [baseRenderItems, summary])
 
+  const showWait = summary.rows.some((r) => r.delay.priorGate > 0)
+
   if (entries.length === 0 && nodes.length === 0) {
     return (
       <EmptyStatement
@@ -150,7 +152,8 @@ export function TimelineView({
         <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
           <tr className="text-muted-foreground text-xs font-mono tracking-[1px] uppercase">
             <th className="px-2 py-2 text-right w-7.5">#</th>
-            <th className="px-2 py-2 text-right w-26">time</th>
+            <th className="px-2 py-2 text-right w-18">time</th>
+            {showWait && <th className="px-0 py-2 w-7.5"></th>}
             <th className="px-2 py-2 w-36">char</th>
             <th className="px-2 py-2 w-16">type</th>
             <th className="px-2 py-2">skill</th>
@@ -169,6 +172,7 @@ export function TimelineView({
                   key={`ghost-${item.sourceId}`}
                   item={item}
                   handlers={drag.ghostHandlers()}
+                  showWait={showWait}
                 />
               )
             }
@@ -178,6 +182,7 @@ export function TimelineView({
                   key={`groupGhost-${item.sourceGroupId}`}
                   item={item}
                   handlers={drag.ghostHandlers()}
+                  showWait={showWait}
                 />
               )
             }
@@ -189,6 +194,7 @@ export function TimelineView({
                   hidden={item.hidden === true}
                   isExpanded={expandedGroupIds.has(item.groupId)}
                   groupSummaries={groupSummaries}
+                  showWait={showWait}
                   drag={drag}
                   onToggleExpand={toggleExpand}
                   onToggleGroupLock={onToggleGroupLock}
@@ -208,6 +214,7 @@ export function TimelineView({
                 prevEntry={i > 0 ? entries[i - 1] : null}
                 summary={summary}
                 stale={stale}
+                showWait={showWait}
                 drag={drag}
                 onRemove={onRemove}
                 onUpdateEntry={onUpdateEntry}

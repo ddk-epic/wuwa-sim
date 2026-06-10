@@ -1,5 +1,5 @@
 import type { BuffEvent, SimulationLogEntry } from "#/types/simulation-log"
-import { CharCell, numCell, COL_COUNT } from "./log-cells"
+import { CharCell, WaitCell, numCell, COL_COUNT } from "./log-cells"
 import { formatFrames } from "#/lib/format"
 
 const BUFF_KINDS = new Set([
@@ -16,9 +16,11 @@ export function isBuff(e: SimulationLogEntry): e is BuffEvent {
 export function BuffEventRow({
   buff,
   index,
+  showWait = false,
 }: {
   buff: BuffEvent
   index: number
+  showWait?: boolean
 }) {
   const verb =
     buff.kind === "buffApplied"
@@ -42,6 +44,7 @@ export function BuffEventRow({
       <td className={`${numCell} text-ui-damage text-label`}>
         {formatFrames(buff.frame)}
       </td>
+      {showWait && <WaitCell />}
       <td className="px-2 py-1">
         <CharCell id={buff.targetCharacterId} />
       </td>

@@ -37,24 +37,23 @@ export function IndexCell({
   )
 }
 
-/**
- * Leading frame cell, accented in the damage color. The prior-gate `WaitBadge`
- * (action rows only) sits in a fixed-width reserved slot right of the time so
- * the value never shifts when a wait appears.
- */
-export function FrameCell({
-  frame,
-  priorGate,
-}: {
-  frame: number
-  priorGate?: number
-}) {
+/** Leading frame cell, accented in the damage color. */
+export function FrameCell({ frame }: { frame: number }) {
   return (
     <td className={`${numCell} text-label text-ui-damage`}>
       {formatFrames(frame)}
-      <span className="inline-block w-10 text-left align-baseline font-sans">
-        <WaitBadge priorGate={priorGate ?? 0} className="ml-1" />
-      </span>
+    </td>
+  )
+}
+
+/**
+ * Prior-gate wait cell, holding the `WaitBadge` (or empty). Rendered right of
+ * the frame only when the log has any wait, so the time column is undisturbed.
+ */
+export function WaitCell({ priorGate = 0 }: { priorGate?: number }) {
+  return (
+    <td className="px-0 py-2 w-7.5">
+      <WaitBadge priorGate={priorGate} className="-ml-1.5" />
     </td>
   )
 }

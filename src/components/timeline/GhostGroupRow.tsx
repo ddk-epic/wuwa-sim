@@ -7,9 +7,14 @@ type GroupGhostItem = Extract<RenderItem, { type: "groupGhost" }>
 interface GhostGroupRowProps {
   item: GroupGhostItem
   handlers: DropHandlerBundle
+  showWait?: boolean
 }
 
-export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
+export function GhostGroupRow({
+  item,
+  handlers,
+  showWait = false,
+}: GhostGroupRowProps) {
   const { label, entryCount, dominantHex, distinctCharIds } = item
   return (
     <tr
@@ -19,6 +24,7 @@ export function GhostGroupRow({ item, handlers }: GhostGroupRowProps) {
     >
       <td className="px-2 py-1.5 w-8" />
       <td className="px-2 py-1.5 w-18" />
+      {showWait && <td className="px-0 py-1.5 w-7.5" />}
       <td className="px-2 py-1.5 w-36">
         <div className="flex items-center">
           {distinctCharIds.map((charId, idx) => {

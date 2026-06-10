@@ -97,36 +97,51 @@ describe("log rows column count", () => {
   })
 })
 
-describe("prior-gate wait badge on action rows", () => {
-  it("ActionEventRow renders an inline wait badge from delayBreakdown.priorGate", () => {
+describe("prior-gate wait column", () => {
+  const waiting: ActionEvent = {
+    ...action,
+    delayBreakdown: {
+      react: 0,
+      floor: 0,
+      pad: 0,
+      fall: 0,
+      swapBack: 0,
+      priorGate: 42,
+    },
+  }
+
+  it("ActionEventRow adds a wait cell with the badge when showWait", () => {
     const container = renderRow(
-      <ActionEventRow
-        ev={{
-          ...action,
-          delayBreakdown: {
-            react: 0,
-            floor: 0,
-            pad: 0,
-            fall: 0,
-            swapBack: 0,
-            priorGate: 42,
-          },
-        }}
-        index={0}
-      />,
+      <ActionEventRow ev={waiting} index={0} showWait />,
     )
+    expect(cellCount(container)).toBe(COL_COUNT + 1)
     expect(container.querySelector("span[title='wait 0.70s']")).not.toBeNull()
   })
 
-  it("ActionEventRow omits the wait badge when there is no delayBreakdown", () => {
-    const container = renderRow(<ActionEventRow ev={action} index={0} />)
+  it("ActionEventRow renders no wait cell without showWait", () => {
+    const container = renderRow(<ActionEventRow ev={waiting} index={0} />)
+    expect(cellCount(container)).toBe(COL_COUNT)
     expect(container.querySelector("span[title^='wait']")).toBeNull()
   })
 
-  it("HitEventRow does not feed FrameCell a priorGate", () => {
+  it("HitEventRow adds an empty wait cell when showWait", () => {
     const container = renderRow(
-      <HitEventRow ev={hit} index={0} isOpen={false} onToggle={() => {}} />,
+      <HitEventRow
+        ev={hit}
+        index={0}
+        isOpen={false}
+        onToggle={() => {}}
+        showWait
+      />,
     )
+    expect(cellCount(container)).toBe(COL_COUNT + 1)
     expect(container.querySelector("span[title^='wait']")).toBeNull()
+  })
+
+  it("SustainEventRow adds an empty wait cell when showWait", () => {
+    const container = renderRow(
+      <SustainEventRow ev={sustain} index={0} showWait />,
+    )
+    expect(cellCount(container)).toBe(COL_COUNT + 1)
   })
 })

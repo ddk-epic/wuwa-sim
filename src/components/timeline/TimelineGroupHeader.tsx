@@ -13,7 +13,7 @@ import { InlineRename } from "#/components/ui/InlineRename"
 import { HexPill } from "#/components/ui/HexPill"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
-import { TimeCell, DurationCell, PoolCell } from "./timeline-cells"
+import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
 type GroupHeaderRenderItem = Extract<RenderItem, { type: "groupHeader" }>
@@ -24,6 +24,7 @@ interface TimelineGroupHeaderProps {
   groupSummaries: Map<string, GroupSummary>
   drag: TimelineDrag
   hidden?: boolean
+  showWait?: boolean
   onToggleExpand: (groupId: string) => void
   onToggleGroupLock: (groupId: string) => void
   onGroupLabelCommit: (groupId: string, label: string) => void
@@ -38,6 +39,7 @@ export function TimelineGroupHeader({
   groupSummaries,
   drag,
   hidden = false,
+  showWait = false,
   onToggleExpand,
   onToggleGroupLock,
   onGroupLabelCommit,
@@ -96,7 +98,8 @@ export function TimelineGroupHeader({
           }}
         />
       </td>
-      <TimeCell frames={gs?.startTimeFrames ?? 0} dense />
+      <TimeCell frames={gs?.startTimeFrames ?? 0} />
+      {showWait && <WaitCell />}
       <td className="px-2 py-1.5">
         <div className="flex items-center gap-1">
           <div className="flex items-center">
@@ -154,9 +157,9 @@ export function TimelineGroupHeader({
           </span>
         </div>
       </td>
-      <DurationCell frames={totalDurFrames} dense />
-      <PoolCell value={lastConVal} color="var(--ui-concerto)" dense />
-      <PoolCell value={lastResVal} color="var(--ui-resonance)" dense />
+      <DurationCell frames={totalDurFrames} />
+      <PoolCell value={lastConVal} color="var(--ui-concerto)" />
+      <PoolCell value={lastResVal} color="var(--ui-resonance)" />
       <td className="px-1 py-1.5 font-semibold text-right font-mono">
         {totalDamage !== null ? (
           isExpanded ? (

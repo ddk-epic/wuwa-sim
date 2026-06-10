@@ -6,9 +6,14 @@ type GhostItem = Extract<RenderItem, { type: "ghost" }>
 interface GhostEntryRowProps {
   item: GhostItem
   handlers: DropHandlerBundle
+  showWait?: boolean
 }
 
-export function GhostEntryRow({ item, handlers }: GhostEntryRowProps) {
+export function GhostEntryRow({
+  item,
+  handlers,
+  showWait = false,
+}: GhostEntryRowProps) {
   const { charHex, skillName } = item
   return (
     <tr
@@ -18,6 +23,7 @@ export function GhostEntryRow({ item, handlers }: GhostEntryRowProps) {
     >
       <td className="px-2 py-2 w-8" />
       <td className="px-2 py-2 w-18" />
+      {showWait && <td className="px-0 py-2 w-7.5" />}
       <td className="px-2 py-2 w-36">
         <span
           className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-xs font-black text-gray-900 shrink-0"

@@ -3,7 +3,7 @@ import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import { nextVariant } from "#/lib/stage"
 import { formatSkillType } from "#/data/skill-types"
 import { formatVariantKind } from "#/lib/format-variant-kind"
-import { TimeCell, DurationCell, PoolCell } from "./timeline-cells"
+import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
 import { DelayBadge } from "#/components/ui/DelayBadge"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
@@ -16,6 +16,7 @@ interface TimelineEntryRowProps {
   prevEntry: TimelineEntry | null
   summary: TimelineSummary
   stale?: boolean
+  showWait?: boolean
   drag: TimelineDrag
   hidden?: boolean
   onRemove: (id: string) => void
@@ -27,6 +28,7 @@ export function TimelineEntryRow({
   prevEntry,
   summary,
   stale,
+  showWait = false,
   drag,
   hidden = false,
   onRemove,
@@ -121,7 +123,8 @@ export function TimelineEntryRow({
         ) : null}
         <span className="text-gray-400">{index + 1}</span>
       </td>
-      <TimeCell frames={row.timeFrames} priorGate={row.delay.priorGate} />
+      <TimeCell frames={row.timeFrames} />
+      {showWait && <WaitCell priorGate={row.delay.priorGate} />}
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">
           <span

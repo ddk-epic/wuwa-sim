@@ -6,7 +6,7 @@ import { BuffEventRow, isBuff } from "./BuffEventRow"
 import { SustainEventRow } from "./SustainEventRow"
 import { groupBuffEvents } from "./groupBuffEvents"
 import type { BuffGroupRow } from "./groupBuffEvents"
-import { CharCell, CharChip, numCell, COL_COUNT } from "./log-cells"
+import { CharCell, CharChip, WaitCell, numCell, COL_COUNT } from "./log-cells"
 import { formatFrames } from "#/lib/format"
 
 const headerCell = "px-2 py-2 font-mono text-xs tracking-[1px] uppercase"
@@ -21,7 +21,15 @@ function verbAndColor(kind: BuffGroupRow["buffKind"]) {
   return { verb: "expired", color: "text-rose-400/70" }
 }
 
-function GroupedBuffRow({ row, index }: { row: BuffGroupRow; index: number }) {
+function GroupedBuffRow({
+  row,
+  index,
+  showWait,
+}: {
+  row: BuffGroupRow
+  index: number
+  showWait: boolean
+}) {
   const { verb, color } = verbAndColor(row.buffKind)
 
   const allTargets = row.entries.flatMap((e) => e.targetCharacterIds)
@@ -37,6 +45,7 @@ function GroupedBuffRow({ row, index }: { row: BuffGroupRow; index: number }) {
       <td className={`${numCell} text-ui-damage text-label`}>
         {formatFrames(row.frame)}
       </td>
+      {showWait && <WaitCell />}
       <td className="px-2 py-1">
         {singleTarget !== null ? <CharCell id={singleTarget} /> : null}
       </td>
@@ -74,13 +83,17 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
     })
 
   const rows = groupBuffEvents(log)
+  const showWait = log.some(
+    (e) => e.kind === "action" && (e.delayBreakdown?.priorGate ?? 0) > 0,
+  )
 
   return (
     <table className="w-full text-sm text-left table-fixed min-w-300">
       <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
         <tr className="text-muted-foreground">
           <th className={`${headerCell} text-right w-7.5`}>#</th>
-          <th className={`${headerCell} text-right w-26`}>time</th>
+          <th className={`${headerCell} text-right w-18`}>time</th>
+          {showWait && <th className={`${headerCell} w-7.5`}></th>}
           <th className={`${headerCell} w-36`}>char</th>
           <th className={`${headerCell} w-16`}>type</th>
           <th className={headerCell}>skill</th>
@@ -98,11 +111,20 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
       <tbody>
         {rows.map((row, i) => {
           if (row.kind === "buffGroup") {
-            return <GroupedBuffRow key={i} row={row} index={i} />
+            return (
+              <GroupedBuffRow key={i} row={row} index={i} showWait={showWait} />
+            )
           }
           const entry = row.entry
           if (isBuff(entry)) {
-            return <BuffEventRow key={i} buff={entry} index={i} />
+            return (
+              <BuffEventRow
+                key={i}
+                buff={entry}
+                index={i}
+                showWait={showWait}
+              />
+            )
           }
           if (entry.kind === "hit") {
             return (
@@ -112,13 +134,23 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
                 index={i}
                 isOpen={open.has(i)}
                 onToggle={() => onToggle(i)}
+                showWait={showWait}
               />
             )
           }
           if (entry.kind === "action") {
-            return <ActionEventRow key={i} ev={entry} index={i} />
+            return (
+              <ActionEventRow
+                key={i}
+                ev={entry}
+                index={i}
+                showWait={showWait}
+              />
+            )
           }
-          return <SustainEventRow key={i} ev={entry} index={i} />
+          return (
+            <SustainEventRow key={i} ev={entry} index={i} showWait={showWait} />
+          )
         })}
       </tbody>
     </table>
