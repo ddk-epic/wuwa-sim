@@ -33,7 +33,7 @@ export function SimulationLogModal({
     <Modal
       onClose={onClose}
       variant="fullscreen"
-      panelClassName="w-full h-full max-w-330 max-h-[95vh] flex flex-col"
+      panelClassName="w-full h-full max-w-380 max-h-[95vh] flex flex-col"
       title="Simulation Log"
       titleAside={
         <span className="font-mono text-xs text-muted-foreground/70">

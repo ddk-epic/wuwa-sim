@@ -6,6 +6,8 @@ import { TL_RULER_H } from "./BuffTimelineLog"
 import type { Char } from "./BuffTimelineLog"
 import type { BuffTimelineModel } from "./build-buff-timeline-model"
 
+const SIDEBAR_W = 420
+
 export function BuffTimelineSidebar({
   model,
   hover,
@@ -29,7 +31,7 @@ export function BuffTimelineSidebar({
 
   const topBar = (
     <div
-      className="flex shrink-0 items-center justify-between border-b border-border bg-darkest px-3.5"
+      className="flex shrink-0 items-center justify-between border-b border-border bg-darkest px-4"
       style={{ height: TL_RULER_H, boxSizing: "border-box" }}
     >
       <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground">
@@ -46,7 +48,7 @@ export function BuffTimelineSidebar({
   const shell = (children: React.ReactNode) => (
     <div
       className="flex shrink-0 flex-col border-l border-border bg-darkest"
-      style={{ width: 280 }}
+      style={{ width: SIDEBAR_W }}
     >
       {topBar}
       {children}
@@ -74,33 +76,41 @@ export function BuffTimelineSidebar({
 
   return shell(
     <>
-      <div className="border-b border-border px-3.5 py-2.5">
-        <div className="mb-2.5 font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
-          {action ? `action · ${action.skillCategory}` : "action"}
+      {/* hero NOW block — current action, subtly tinted in its element color */}
+      <div
+        className="border-b border-border px-5 py-4"
+        style={{
+          background:
+            action && actionChar
+              ? `linear-gradient(135deg, ${actionChar.hex}1c, transparent 70%)`
+              : undefined,
+        }}
+      >
+        <div className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
+          {action ? action.skillCategory : "idle"}
         </div>
         {action && actionChar ? (
-          <div
-            className="flex items-center pl-2.5"
-            style={{ borderLeft: `3px solid ${actionChar.hex}` }}
-          >
-            <div className="min-w-0">
-              <div className="truncate text-label font-bold text-foreground">
-                {action.skillName}
-              </div>
-              <div className="mt-0.5 font-mono text-micro tracking-[0.3px] text-muted-foreground">
-                {actionChar.name} · {formatSkillType(action.skillType)}
-              </div>
+          <>
+            <div className="mt-0.5 text-wrap text-stat font-extrabold leading-tight text-foreground">
+              {action.skillName}
             </div>
-          </div>
+            <div className="mt-1 flex items-center gap-1.5 font-mono text-detail text-muted-foreground">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: actionChar.hex }}
+              />
+              {actionChar.name} · {formatSkillType(action.skillType)}
+            </div>
+          </>
         ) : (
-          <span className="text-detail italic text-muted-foreground/70">
+          <div className="mt-1 text-detail italic text-muted-foreground/70">
             idle / gap
-          </span>
+          </div>
         )}
       </div>
 
       <div className="flex flex-1 flex-col min-h-0">
-        <div className="flex justify-between px-3.5 pt-2 pb-1.5">
+        <div className="flex justify-between px-5 pb-1.5 pt-2.5">
           <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
             active buffs
           </span>
@@ -108,54 +118,63 @@ export function BuffTimelineSidebar({
             {live.length}
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto px-3.5 pb-3">
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
           {live.length === 0 && (
             <span className="text-detail text-muted-foreground/70">none</span>
           )}
-          {live.map((b) => {
-            const c = charById(b.charId)
-            const hex = c?.isTeam
-              ? characterVisual(b.sourceCharacterId).hex
-              : (c?.hex ?? "#888")
-            const prog = !Number.isFinite(b.endTime)
-              ? 0
-              : Math.min(
-                  1,
-                  Math.max(0, (t - b.startTime) / (b.endTime - b.startTime)),
-                )
-            return (
-              <div key={b.id} className="mb-2">
-                <div className="mb-1 flex items-center gap-1.5">
-                  <span
-                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: hex }}
-                  />
-                  <span className="truncate text-detail text-foreground">
-                    {b.buffName}
-                  </span>
-                  <span className="ml-auto shrink-0 font-mono text-micro text-muted-foreground/70">
-                    {Number.isFinite(b.endTime)
-                      ? `${Math.max(0, b.endTime - t).toFixed(1)}s`
-                      : "∞"}
-                  </span>
+          <div className="grid grid-cols-2 gap-2">
+            {live.map((b) => {
+              const c = charById(b.charId)
+              const hex = c?.isTeam
+                ? characterVisual(b.sourceCharacterId).hex
+                : (c?.hex ?? "#888")
+              const left = !Number.isFinite(b.endTime)
+                ? 1
+                : Math.min(
+                    1,
+                    Math.max(0, (b.endTime - t) / (b.endTime - b.startTime)),
+                  )
+              return (
+                <div
+                  key={b.id}
+                  className="overflow-hidden rounded-md border border-border bg-foreground/2"
+                >
+                  <div className="px-2 pt-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: hex }}
+                      />
+                      <span className="truncate text-micro text-foreground">
+                        {b.buffName}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center justify-between font-mono text-micro text-muted-foreground/70">
+                      <span className="truncate">
+                        {characterVisual(b.sourceCharacterId).name}
+                      </span>
+                      <span className="shrink-0">
+                        {Number.isFinite(b.endTime)
+                          ? `${Math.max(0, b.endTime - t).toFixed(1)}s`
+                          : "∞"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-1.5 h-[3px] bg-border">
+                    <div
+                      className="h-full"
+                      style={{ width: `${left * 100}%`, background: hex }}
+                    />
+                  </div>
                 </div>
-                <div className="ml-3 h-[3px] overflow-hidden rounded-full bg-border">
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${(1 - prog) * 100}%`, background: hex }}
-                  />
-                </div>
-                <div className="ml-3 mt-0.5 font-mono text-micro text-muted-foreground/70">
-                  {characterVisual(b.sourceCharacterId).name}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
 
           {actionChar && (
             <>
               <div
-                className={`flex justify-between border-t border-border pt-2.5 ${live.length ? "mt-3" : ""}`}
+                className={`flex justify-between border-t border-border pt-2.5 ${live.length ? "mt-4" : ""}`}
               >
                 <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
                   passive · {actionChar.name}
@@ -164,41 +183,35 @@ export function BuffTimelineSidebar({
                   {passives.length}
                 </span>
               </div>
-              {passives.length === 0 && (
+              {passives.length === 0 ? (
                 <span className="mt-1.5 block text-detail text-muted-foreground/70">
                   none
                 </span>
-              )}
-              <div className="mt-2">
-                {passives.map((p) => {
-                  const srcName =
-                    p.sourceCharacterId != null
-                      ? getCharacterById(p.sourceCharacterId)?.name
-                      : undefined
-                  return (
-                    <div
-                      key={p.id}
-                      className="mb-1.5 flex items-center gap-1.5"
-                    >
-                      <span className="h-[5px] w-[5px] shrink-0 rounded-[1px] bg-muted-foreground/70" />
-                      <span className="truncate text-detail text-muted-foreground">
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {passives.map((p) => {
+                    const srcName =
+                      p.sourceCharacterId != null
+                        ? getCharacterById(p.sourceCharacterId)?.name
+                        : undefined
+                    return (
+                      <span
+                        key={p.id}
+                        className="rounded-full bg-foreground/5 px-2 py-0.5 text-micro text-muted-foreground"
+                        title={srcName}
+                      >
                         {p.name}
                         {p.stacks > 1 && (
-                          <span className="font-mono text-muted-foreground/70">
+                          <span className="text-muted-foreground/70">
                             {" "}
                             ×{p.stacks}
                           </span>
                         )}
                       </span>
-                      {srcName && (
-                        <span className="ml-auto shrink-0 font-mono text-micro text-muted-foreground/70">
-                          {srcName}
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>

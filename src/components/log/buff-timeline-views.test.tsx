@@ -32,18 +32,18 @@ const model = (over: Partial<BuffTimelineModel> = {}): BuffTimelineModel => ({
 })
 
 describe("BuffTimelineSidebar — action header", () => {
-  it("header reads `action · <FULL CATEGORY>` when an action is live", () => {
+  it("header shows the FULL category when an action is live", () => {
     const { container } = render(
       <BuffTimelineSidebar model={model()} hover={{ t: 0.5 }} />,
     )
-    expect(container.textContent).toContain("action · Resonance Skill")
+    expect(container.textContent).toContain("Resonance Skill")
+    expect(container.textContent).toContain("Burst")
   })
 
-  it("header falls back to plain `action` over an idle gap", () => {
+  it("header falls back to an idle gap over a dead zone", () => {
     const { container } = render(
       <BuffTimelineSidebar model={model()} hover={{ t: 5 }} />,
     )
-    expect(container.textContent).toContain("action")
     expect(container.textContent).not.toContain("Resonance Skill")
     expect(container.textContent).toContain("idle / gap")
   })
@@ -75,10 +75,10 @@ describe("BuffTimelinePlot — frozen hover", () => {
     const plot = container.querySelector(".cursor-crosshair")!
 
     fireEvent.mouseMove(plot, { clientX: 200 })
-    expect(container.textContent).toContain("action · Resonance Skill")
+    expect(container.textContent).toContain("Resonance Skill")
 
     fireEvent.mouseLeave(plot)
-    expect(container.textContent).toContain("action · Resonance Skill")
+    expect(container.textContent).toContain("Resonance Skill")
     expect(container.textContent).not.toContain("Hover over the timeline")
   })
 
@@ -87,10 +87,10 @@ describe("BuffTimelinePlot — frozen hover", () => {
     const plot = container.querySelector(".cursor-crosshair")!
 
     fireEvent.mouseMove(plot, { clientX: 200 })
-    expect(container.textContent).toContain("action · Resonance Skill")
+    expect(container.textContent).toContain("Resonance Skill")
 
     fireEvent.mouseMove(plot, { clientX: 400 })
-    expect(container.textContent).toContain("action · Resonance Skill")
+    expect(container.textContent).toContain("Resonance Skill")
   })
 })
 
