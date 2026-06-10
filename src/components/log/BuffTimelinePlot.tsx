@@ -336,16 +336,10 @@ export function BuffTimelinePlot({
       const el = rootRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
-      if (clientX - rect.left < TL_LABEL_W) {
-        setHover(null)
-        return
-      }
+      if (clientX - rect.left < TL_LABEL_W) return
       const xLanes = clientX - rect.left + el.scrollLeft - TL_LABEL_W
       const t = xLanes / PX_PER_SEC
-      if (xLanes < 0 || t > restStart) {
-        setHover(null)
-        return
-      }
+      if (xLanes < 0 || t > restStart) return
       setHover({ x: xLanes, t })
     },
     [restStart, setHover],
@@ -377,8 +371,8 @@ export function BuffTimelinePlot({
       ref={rootRef}
       onMouseMove={onMove}
       onMouseLeave={() => {
+        // Leave hover in place; clear only the pan-tracking cursor.
         lastClientX.current = null
-        setHover(null)
       }}
       className="relative flex-1 min-h-0 overflow-auto bg-darkest cursor-crosshair"
     >

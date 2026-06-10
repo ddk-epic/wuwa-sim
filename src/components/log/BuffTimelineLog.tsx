@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { SimulationLogEntry } from "#/types/simulation-log"
 import { buildBuffTimelineModel, FPS } from "./build-buff-timeline-model"
 import { BuffTimelinePlot } from "./BuffTimelinePlot"
@@ -28,6 +28,8 @@ export function BuffTimelineLog({
     [log, rosterIds],
   )
   const [hover, setHover] = useState<{ x: number; t: number } | null>(null)
+  // Reset to the clean prompt when the model changes (re-sim / roster change).
+  useEffect(() => setHover(null), [model])
 
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-darkest">
