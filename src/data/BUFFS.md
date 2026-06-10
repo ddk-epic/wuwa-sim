@@ -4,6 +4,8 @@ How to write `BuffDef` entries on characters, weapons, echoes, and echo sets. St
 
 The authoritative type is `src/types/buff.ts`. This doc explains semantics that the type can't.
 
+For the rest of a character file — skills, stages, timing, and the stageId a trigger references — see [CHARACTERS.md](CHARACTERS.md).
+
 ---
 
 ## Anatomy of a buff
@@ -75,7 +77,11 @@ Each recipe shows the smallest complete buff for the pattern. Copy, rename, twea
   target: { kind: "self" },
   duration: { kind: "permanent" },
   effects: [
-    { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v: 0.12 } },
+    {
+      kind: "stat",
+      path: { stat: "atkPct" },
+      value: { kind: "const", v: 0.12 },
+    },
   ],
 }
 ```
@@ -152,7 +158,11 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
   target: { kind: "global" },
   duration: { kind: "seconds", v: 20 },
   effects: [
-    { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v: 0.15 } },
+    {
+      kind: "stat",
+      path: { stat: "atkPct" },
+      value: { kind: "const", v: 0.15 },
+    },
   ],
 }
 ```
@@ -174,7 +184,11 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
   duration: { kind: "seconds", v: 8 },
   stacking: { max: 5, onRetrigger: "addStack" },
   effects: [
-    { kind: "stat", path: { stat: "atkPct" }, value: { kind: "perStack", v: 0.04 } },
+    {
+      kind: "stat",
+      path: { stat: "atkPct" },
+      value: { kind: "perStack", v: 0.04 },
+    },
   ],
 }
 ```
@@ -198,7 +212,11 @@ A conditional permanent simStart instance is injected at bootstrap and **never e
   duration: { kind: "permanent" },
   condition: { kind: "onField" },
   effects: [
-    { kind: "stat", path: { stat: "critRate" }, value: { kind: "const", v: 0.10 } },
+    {
+      kind: "stat",
+      path: { stat: "critRate" },
+      value: { kind: "const", v: 0.10 },
+    },
   ],
 }
 ```
@@ -251,7 +269,11 @@ A conditional permanent simStart instance is injected at bootstrap and **never e
   target: { kind: "self" },
   duration: { kind: "seconds", v: 10 },
   effects: [
-    { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v: 0.20 } },
+    {
+      kind: "stat",
+      path: { stat: "atkPct" },
+      value: { kind: "const", v: 0.20 },
+    },
   ],
 }
 ```
@@ -273,7 +295,11 @@ A conditional permanent simStart instance is injected at bootstrap and **never e
   target: { kind: "self" },
   duration: { kind: "permanent" },
   effects: [
-    { kind: "stat", path: { stat: "critDmg" }, value: { kind: "const", v: 0.20 } },
+    {
+      kind: "stat",
+      path: { stat: "critDmg" },
+      value: { kind: "const", v: 0.20 },
+    },
   ],
 }
 ```
@@ -295,7 +321,11 @@ A conditional permanent simStart instance is injected at bootstrap and **never e
   target: { kind: "self" },
   duration: { kind: "seconds", v: 15 },
   effects: [
-    { kind: "stat", path: { stat: "atkPct" }, value: { kind: "const", v: 0.225 } },
+    {
+      kind: "stat",
+      path: { stat: "atkPct" },
+      value: { kind: "const", v: 0.225 },
+    },
   ],
 }
 ```

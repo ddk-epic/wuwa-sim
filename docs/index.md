@@ -18,6 +18,8 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 ## Data
 
 - [data](data.md) — the data layer: per-domain folder triad (authored entry + `index.ts` registry + `raw/` extraction), the ID scheme, and shared vocabularies
+- [CHARACTERS.md](../src/data/CHARACTERS.md) — authoring guide: the character-file shell, skills, stages, timing, and stageId lineage
+- [BUFFS.md](../src/data/BUFFS.md) — authoring guide: writing `BuffDef` entries on characters, weapons, echoes, and echo sets
 
 ## Decisions
 
