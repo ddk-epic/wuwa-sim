@@ -331,6 +331,10 @@ function processEntry(
   // starts resolves ahead of it.
   pushAdvance(log, advanceTo(ctx, effectiveStart))
 
+  if (isCancelCapable(resolved.skillType)) {
+    ctx.schedule.cancelResidue(entry.characterId, effectiveStart)
+  }
+
   if (resolved.skillType !== "Movement") {
     fireSkillCast(entry, resolved, ctx, effectiveStart)
   }

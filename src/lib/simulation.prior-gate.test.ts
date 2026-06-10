@@ -4,6 +4,7 @@ import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { ActionEvent } from "#/types/simulation-log"
 
+import type { HitEvent } from "#/types/simulation-log"
 import { runSimulation } from "./simulation"
 import { dmgHit } from "./simulation.test-fixtures"
 
@@ -184,5 +185,52 @@ describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(211)
     expect(follow?.delayBreakdown?.priorGate).toBe(103)
+  })
+})
+
+// windowChar with Prereq's single hit replaced by 8 trailing hits (frames 33…103),
+// matching Flaming Woolies inside its 108-frame window.
+const wooliesChar: EnrichedCharacter = {
+  ...windowChar,
+  skills: [
+    {
+      id: 10,
+      name: "Woolies",
+      type: "Resonance Skill",
+      stages: [
+        {
+          name: "Prereq",
+          category: "Resonance Skill",
+          newName: "Prereq",
+          value: "100%",
+          actionTime: 108,
+          variants: { swap: { actionTime: 0 } },
+          damage: [33, 43, 53, 63, 73, 83, 93, 103].map((actionFrame) => ({
+            ...dmgHit(1, 0, 0, "Resonance Skill"),
+            actionFrame,
+          })),
+        },
+        windowChar.skills[0].stages[1],
+      ],
+      damage: [],
+    },
+  ],
+}
+
+describe("simulation — gated follow-up does not cancel in-flight trailing hits", () => {
+  it("lands all 8 trailing hits when the gate pad holds the follow-up to frame 103", () => {
+    testCharacters = [wooliesChar, filler(64)]
+    const log = run([
+      ent(1, PREREQ, "p", "swap"),
+      ent(2, FILLER_STAGE, "x"),
+      ent(1, FOLLOW, "f"),
+    ])
+    const trailing = log.filter(
+      (e): e is HitEvent => e.kind === "hit" && e.sourceEntryId === "p",
+    )
+    expect(trailing.map((h) => h.frame)).toEqual([
+      33, 43, 53, 63, 73, 83, 93, 103,
+    ])
+    expect(actionFor(log, "f")?.frame).toBe(103)
   })
 })

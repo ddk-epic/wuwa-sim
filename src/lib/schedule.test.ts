@@ -66,13 +66,11 @@ describe("Schedule re-entrancy", () => {
 })
 
 describe("Schedule resolveArrival — residue", () => {
-  it("drops own residue at/after the frame on a cancel-capable re-entry", () => {
+  it("does not drop residue on a cancel-capable re-entry — that runs at effectiveStart", () => {
     const s = new Schedule<string>()
-    s.enqueue(work(20, "drop-me", { owner: 1, arrival: "residue" }))
-    s.enqueue(work(8, "kept", { owner: 1, arrival: "residue" }))
+    s.enqueue(work(20, "kept", { owner: 1, arrival: "residue" }))
     const { padFrames } = s.resolveArrival(1, true, 10)
     expect(padFrames).toBe(0)
-    // Residue at frame 20 (≥ 10) dropped; the one at 8 (< 10) survives.
     expect(drainAll(s)).toEqual(["kept"])
   })
 
@@ -92,12 +90,21 @@ describe("Schedule resolveArrival — residue", () => {
     expect(padFrames).toBe(0)
     expect(drainAll(s)).toEqual(["before"])
   })
+})
 
-  it("only collides with the same owner's residue", () => {
+describe("Schedule cancelResidue", () => {
+  it("drops own residue at/after the frame, keeps earlier residue", () => {
+    const s = new Schedule<string>()
+    s.enqueue(work(20, "drop-me", { owner: 1, arrival: "residue" }))
+    s.enqueue(work(8, "kept", { owner: 1, arrival: "residue" }))
+    s.cancelResidue(1, 10)
+    expect(drainAll(s)).toEqual(["kept"])
+  })
+
+  it("only cancels the same owner's residue", () => {
     const s = new Schedule<string>()
     s.enqueue(work(20, "other", { owner: 2, arrival: "residue" }))
-    const { padFrames } = s.resolveArrival(1, true, 10)
-    expect(padFrames).toBe(0)
+    s.cancelResidue(1, 10)
     expect(drainAll(s)).toEqual(["other"])
   })
 })

@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-11 — Cancel-capable residue drop reads `effectiveStart`, not the pre-pad cursor
+
+`Flaming Woolies (swap) → Eternal Frost → Energetic Welcome` dropped 4 of 8 trailing woolies: the cancel-capable drop ran in `resolveArrival` at the pre-pad cursor (`S+64`) before the `minDelay: 103` gate pushed Energetic Welcome's start to `S+103`, cancelling residue that lands during the gate wait. Split the two collision behaviors by the frame each must read — the non-cancel pad _produces_ a start floor (input cursor, stays in `resolveArrival`); the cancel-capable drop _consumes_ the final start (`effectiveStart`, moved to a new `Schedule.cancelResidue`, run after the pre-drain so the boundary hit lands and only the strict overlap is cancelled). Rejected `minDelay: 104` (moves the start, not the cursor the drop reads) and an explicit max-of-floors rewrite of `computePriorGatePad` (lateral, behavior-neutral churn). Corrects ADR-0036's claim that the In-trailing swap-back needed no machinery.
+
+Pages touched: ADR-0037 (new), CONTEXT.md (Trailing Window, Schedule, Prior-Stage Gate).
+
 ## 2026-06-04 — Per-skill Energy Regen Multiplier (hit-scoped energy accrual)
 
 Camellya's Forte Circuit "+150% Energy Regen Multiplier" (0% in Budding Mode) forces energy accrual to become hit-scoped: `entryEnergy × (1 + ER) × (1 + energyGainMult)`, narrowing the `#321` hit-agnostic-energy contract (ER/FR stay hit-agnostic; only the new `energyGainMult` bucket is per-hit). The multiplier is keyed off the negative-`forte` marker (`forte < 0`) from ADR-0032 — a hit that consumes pistils _is_ a consuming attack and gets the ERM, one source of truth — rather than a `SkillType` key (too coarse: Seedbed recategorizes Heavy to Basic, sweeping in non-consuming Basic hits). "Reduced to 0%" is modeled with a new reusable negated condition (`buffActive { negate }`): Forte +1.5 gated NOT-Budding, Budding −1.0 → net ×0. Rejected: SkillType-keyed ERM (coarse), baking +150% into the raw API energy values (unfaithful), Budding hardcoding −2.5 (couples to Forte's value), a stat `set` op (larger/riskier than a negated condition).

@@ -32,9 +32,8 @@ export class Schedule<T> {
   }
 
   /**
-   * Resolve a same-character re-entry against this owner's pending items.
-   * Returns `padFrames`: frames to advance the caller's cursor (0 unless a
-   * non-cancel-capable re-entry collides with residue).
+   * Cancel any `reset` the owner caught early, and return the non-cancel-capable
+   * pad past pending residue. The cancel-capable drop runs via `cancelResidue`.
    */
   resolveArrival(
     owner: number,
@@ -53,19 +52,28 @@ export class Schedule<T> {
       }
     }
 
+    if (cancelCapable) return { padFrames: 0 }
+
     const residue = this.items.filter(
       (it) => it.valid && it.owner === owner && it.arrival === "residue",
     )
-    const collides = residue.some((it) => it.frame >= frame)
-    if (!collides) return { padFrames: 0 }
-
-    if (cancelCapable) {
-      for (const it of residue) if (it.frame >= frame) it.valid = false
-      return { padFrames: 0 }
-    }
-
     const latest = residue.reduce((m, it) => Math.max(m, it.frame), -Infinity)
+    if (latest < frame) return { padFrames: 0 }
     return { padFrames: latest - frame }
+  }
+
+  /** Invalidate this owner's residue landing at/after `frame` — the cancel-capable drop. */
+  cancelResidue(owner: number, frame: number): void {
+    for (const it of this.items) {
+      if (
+        it.valid &&
+        it.owner === owner &&
+        it.arrival === "residue" &&
+        it.frame >= frame
+      ) {
+        it.valid = false
+      }
+    }
   }
 
   /**
