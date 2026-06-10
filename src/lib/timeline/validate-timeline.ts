@@ -117,11 +117,7 @@ export function validateTimeline(
     } else if (skillType !== "Echo Skill" && requiredStageId !== undefined) {
       const minDelay = resolved?.minDelay
       if (minDelay !== undefined) {
-        // Window mode: the prerequisite must have cast earlier anywhere on the
-        // same character. Intervening entries (swap-out, teammate entries, the
-        // actor's own other actions) do not break it; the actual minDelay pad
-        // is computed sim-side (ADR-0036). Validation only proves an anchor
-        // exists so the sim is guaranteed to find one.
+        // Scan back for any earlier matching prerequisite on the same character.
         let anchor: TimelineEntry | undefined
         for (let j = i - 1; j >= 0; j--) {
           const prev = entries[j]
@@ -143,8 +139,7 @@ export function validateTimeline(
           })
         }
       } else {
-        // Chain mode: the prerequisite must be the immediately preceding
-        // same-character entry. Any intervening same-character entry breaks it.
+        // The prerequisite must be the immediately preceding same-character entry.
         let effectivePrev: TimelineEntry | undefined
         for (let j = i - 1; j >= 0; j--) {
           const prev = entries[j]

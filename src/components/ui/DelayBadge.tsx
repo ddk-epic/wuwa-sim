@@ -4,9 +4,7 @@ import { formatFrames } from "#/lib/format"
 /**
  * Sums a Padding Delay breakdown and renders its tooltip. Returns `null` when
  * there is no delay. `floor`/`react` are mutually exclusive (floor wins);
- * `pad`/`fall`/`swapBack`/`priorGate` are appended in order. `priorGate` already
- * holds the gate's pad beyond `swapBack` (see DelayBreakdown), so summing stays
- * correct despite the two being a `max`-combine at source.
+ * `pad`/`fall`/`swapBack`/`priorGate` are appended in order.
  */
 export function formatPaddingDelay(
   d: DelayBreakdown,

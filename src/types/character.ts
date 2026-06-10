@@ -169,9 +169,8 @@ type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
 export type EnrichedSkillAttribute =
   | (EnrichedSkillAttributeBase & {
       requiresPriorStageId: string
-      // Frames. Absent ⇒ chain mode (prerequisite must immediately precede).
-      // Present ⇒ window mode (prerequisite cast earlier anywhere on the same
-      // character; intervening entries don't break it). See ADR-0036.
+      // Frames. Absent ⇒ prerequisite must immediately precede; present ⇒
+      // prerequisite need only have cast earlier on the same character.
       minDelay?: number
     })
   | (EnrichedSkillAttributeBase & {

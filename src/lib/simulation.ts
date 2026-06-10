@@ -67,11 +67,7 @@ interface SimContext {
   cursor: SimCursor
   /** The frame-ordered pending-work pool: synthetics, trailing hits, footing commits/resets. */
   schedule: Schedule<Work>
-  /**
-   * Most-recent cast frame of each stage, keyed `${characterId}:${stageId}`.
-   * Read by the windowed Prior-Stage Gate to anchor its `minDelay` pad; written
-   * at every entry's cast frame so re-casting re-arms the anchor (ADR-0036).
-   */
+  /** Most-recent cast frame of each stage, keyed `${characterId}:${stageId}`. */
   priorCasts: Map<string, number>
 }
 
@@ -147,9 +143,6 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 
   if (!resolved) return
 
-  // Windowed Prior-Stage Gate: pad the start so it cannot begin before
-  // `anchorCastFrame + minDelay`. The pad `max`-combines with `swapBack` (both
-  // are floors on the same start), so subtract what swapBack already forces.
   const priorGate = computePriorGatePad(
     ctx,
     entry,
@@ -331,8 +324,7 @@ function processEntry(
 
   const effectiveStart = stageStartFrame + fall + swapBack + priorGate
 
-  // Record this entry's cast frame so a later windowed follow-up can anchor its
-  // minDelay pad to it (most-recent-wins; re-casting re-arms the anchor).
+  // Record this entry's cast frame for later prerequisite lookups.
   ctx.priorCasts.set(`${entry.characterId}:${resolved.stageId}`, effectiveStart)
 
   // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
@@ -434,11 +426,9 @@ function buildActionEvent(
 }
 
 /**
- * The windowed Prior-Stage Gate's pad: frames the follow-up's start must wait so
- * it begins no earlier than `anchorCastFrame + minDelay`. Returns 0 in chain
- * mode (no `minDelay`) or with no recorded anchor. The result `max`-combines
- * with `swapBack` — both floor the same start — so we subtract `swapBack`'s
- * contribution and clamp at 0, leaving only the gate's *additional* frames.
+ * Frames the follow-up's start must wait to begin no earlier than
+ * `anchorCastFrame + minDelay`, beyond what `swapBack` already forces. Returns 0
+ * when `minDelay` is absent or no anchor was recorded.
  */
 function computePriorGatePad(
   ctx: SimContext,
