@@ -545,6 +545,9 @@ export const encore = {
           name: "Energetic Welcome Damage",
           category: "Resonance Skill",
           newName: "Energetic Welcome",
+          requiresPriorStageId:
+            "char.encore.resonance-skill.flaming-woolies.flaming-woolies::resonance-skill",
+          minDelay: 103,
           value: "339.16%",
           concerto: 5,
           actionTime: 51,

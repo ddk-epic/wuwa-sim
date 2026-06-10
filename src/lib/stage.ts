@@ -61,6 +61,7 @@ export interface ResolvedStage {
   skillType: SkillType
   skillName: string
   requiresPriorStageId?: string
+  minDelay?: number
 }
 
 /** Derive the `::skill-type` segment of a character stageId. */
@@ -167,6 +168,8 @@ export function findStageByEntry(
               ? skill.name
               : stageLabel(skill.name, s.newName),
             requiresPriorStageId: s.requiresPriorStageId,
+            minDelay:
+              s.requiresPriorStageId !== undefined ? s.minDelay : undefined,
           }
         }
       }

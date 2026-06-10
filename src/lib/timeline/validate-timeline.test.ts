@@ -389,6 +389,123 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
   })
 })
 
+describe("validateTimeline — window mode (minDelay)", () => {
+  const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
+  const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"
+  const SKILL = "char.test.basic-attack.resonance-skill._::basic-attack"
+
+  // Stage 2 is a window-mode follow-up to Stage 1: requires a prior Stage 1 on
+  // the same character at any distance; minDelay present ⇒ intervening entries
+  // (swaps, teammate entries, own actions) do not break the gate.
+  const windowChar = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1",
+              category: "Basic Attack",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2",
+              category: "Basic Attack",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresPriorStageId: STAGE_1,
+              minDelay: 50,
+            },
+          ],
+          damage: [],
+        },
+        {
+          id: 2,
+          name: "Resonance Skill",
+          type: "Resonance Skill",
+          stages: [
+            {
+              name: "Skill",
+              category: "Basic Attack",
+              value: "",
+              actionTime: 30,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("accepts the follow-up immediately after its prerequisite", () => {
+    testCharacters = [windowChar(1)]
+    const result = validateTimeline(
+      [entry(1, STAGE_1, "s1"), entry(1, STAGE_2, "s2")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("accepts the follow-up across a swap-out, teammate entry, and swap-back", () => {
+    testCharacters = [windowChar(1), baseChar({ id: 2 })]
+    const result = validateTimeline(
+      [
+        entry(1, STAGE_1, "s1"),
+        entry(2, "char.test.basic-attack.normal-attack._::basic-attack", "tm"),
+        entry(1, STAGE_2, "s2"),
+      ],
+      [1, 2, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("accepts the follow-up when the actor's own action intervenes", () => {
+    testCharacters = [windowChar(1)]
+    const result = validateTimeline(
+      [
+        entry(1, STAGE_1, "s1"),
+        entry(1, SKILL, "skill"),
+        entry(1, STAGE_2, "s2"),
+      ],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("flags the follow-up when no prior prerequisite exists on that character", () => {
+    testCharacters = [windowChar(1)]
+    const result = validateTimeline(
+      [entry(1, SKILL, "skill"), entry(1, STAGE_2, "s2")],
+      [1, null, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+  })
+
+  it("does not let a teammate's colliding prerequisite satisfy the gate", () => {
+    // Both characters share the "Test" name, so their Stage 1 stageIds are
+    // byte-identical — only the same-character scoping keeps them apart.
+    testCharacters = [windowChar(1), windowChar(2)]
+    const result = validateTimeline(
+      [entry(2, STAGE_1, "tm-s1"), entry(1, STAGE_2, "s2")],
+      [1, 2, null],
+      loadouts,
+    )
+    expect(result.invalidRowIds.has("s2")).toBe(true)
+  })
+})
+
 describe("validateTimeline — cascade suppression", () => {
   // Chain: Stage 0 â†’ Stage 1 (req Stage 0) â†’ Stage 2 (req Stage 1) â†’ Stage 3 (req Stage 2)
   const chainChar = (): EnrichedCharacter =>

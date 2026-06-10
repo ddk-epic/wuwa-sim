@@ -115,25 +115,54 @@ export function validateTimeline(
         })
       }
     } else if (skillType !== "Echo Skill" && requiredStageId !== undefined) {
-      // Chain mode: the prerequisite must be the immediately preceding
-      // same-character entry. Any intervening same-character entry breaks it.
-      let effectivePrev: TimelineEntry | undefined
-      for (let j = i - 1; j >= 0; j--) {
-        const prev = entries[j]
-        if (prev.characterId !== entry.characterId) continue
-        effectivePrev = prev
-        break
-      }
-      if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
-        errors.push({
-          message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
-          isConsequence: false,
-        })
-      } else if (invalidRowIds.has(effectivePrev.id)) {
-        errors.push({
-          message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
-          isConsequence: true,
-        })
+      const minDelay = resolved?.minDelay
+      if (minDelay !== undefined) {
+        // Window mode: the prerequisite must have cast earlier anywhere on the
+        // same character. Intervening entries (swap-out, teammate entries, the
+        // actor's own other actions) do not break it; the actual minDelay pad
+        // is computed sim-side (ADR-0036). Validation only proves an anchor
+        // exists so the sim is guaranteed to find one.
+        let anchor: TimelineEntry | undefined
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = entries[j]
+          if (prev.characterId !== entry.characterId) continue
+          if (prev.stageId === requiredStageId) {
+            anchor = prev
+            break
+          }
+        }
+        if (!anchor) {
+          errors.push({
+            message: `Stage "${entry.stageId}" requires a prior "${requiredStageId}" on the same character`,
+            isConsequence: false,
+          })
+        } else if (invalidRowIds.has(anchor.id)) {
+          errors.push({
+            message: `Stage "${entry.stageId}" requires a prior "${requiredStageId}" on the same character`,
+            isConsequence: true,
+          })
+        }
+      } else {
+        // Chain mode: the prerequisite must be the immediately preceding
+        // same-character entry. Any intervening same-character entry breaks it.
+        let effectivePrev: TimelineEntry | undefined
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = entries[j]
+          if (prev.characterId !== entry.characterId) continue
+          effectivePrev = prev
+          break
+        }
+        if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
+          errors.push({
+            message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
+            isConsequence: false,
+          })
+        } else if (invalidRowIds.has(effectivePrev.id)) {
+          errors.push({
+            message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
+            isConsequence: true,
+          })
+        }
       }
     }
 
