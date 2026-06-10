@@ -313,8 +313,8 @@ export function BuffTimelinePlot({
   setHover,
 }: {
   model: BuffTimelineModel
-  hover: { x: number; t: number } | null
-  setHover: (h: { x: number; t: number } | null) => void
+  hover: { t: number } | null
+  setHover: (h: { t: number } | null) => void
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const lastClientX = useRef<number | null>(null)
@@ -340,7 +340,7 @@ export function BuffTimelinePlot({
       const xLanes = clientX - rect.left + el.scrollLeft - TL_LABEL_W
       const t = xLanes / PX_PER_SEC
       if (xLanes < 0 || t > restStart) return
-      setHover({ x: xLanes, t })
+      setHover({ t })
     },
     [restStart, setHover],
   )
@@ -472,7 +472,7 @@ export function BuffTimelinePlot({
             <div
               className="absolute top-0 bottom-0 z-15 w-px pointer-events-none bg-ui-damage"
               style={{
-                left: TL_LABEL_W + hover.x,
+                left: TL_LABEL_W + px(hover.t),
                 boxShadow: "0 0 8px var(--color-ui-damage)",
               }}
             >

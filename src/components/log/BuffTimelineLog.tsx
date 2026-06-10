@@ -27,7 +27,7 @@ export function BuffTimelineLog({
     () => buildBuffTimelineModel(log, rosterIds),
     [log, rosterIds],
   )
-  const [hover, setHover] = useState<{ x: number; t: number } | null>(null)
+  const [hover, setHover] = useState<{ t: number } | null>(null)
   // Reset to the clean prompt when the model changes (re-sim / roster change).
   useEffect(() => setHover(null), [model])
 

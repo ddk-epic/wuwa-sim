@@ -60,7 +60,7 @@ describe("BuffTimelineSidebar — action header", () => {
 // PX_PER_SEC is 104; with a zero-origin jsdom rect, clientX 200 → t ≈ 0.115s
 // (inside the [0,1] action block) and clientX 400 → t ≈ 2.04s (past restStart).
 function FreezeHarness({ model: m }: { model: BuffTimelineModel }) {
-  const [hover, setHover] = useState<{ x: number; t: number } | null>(null)
+  const [hover, setHover] = useState<{ t: number } | null>(null)
   return (
     <>
       <BuffTimelinePlot model={m} hover={hover} setHover={setHover} />
