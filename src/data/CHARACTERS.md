@@ -247,7 +247,34 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 3.
 
 See: `src/data/characters/sanhua.ts` — Frigid Light.
 
-### 4. Cancel / swap variants
+### 4. Windowed follow-up (`minDelay`)
+
+**When to use**: a stage that follows a prerequisite cast but is **not** a strict combo link — it stays available after swaps and the actor's own other actions, and only becomes castable a fixed time after the prerequisite. Encore's Energetic Welcome (castable ~103 frames after Flaming Woolies, surviving a swap-out) is the canonical case.
+
+**Key fields**: same `requiresPriorStageId` gate as the combo chain (recipe 3), **plus** a sibling `minDelay` (frames). Presence of `minDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + minDelay`, surfaced as a `prior-gate` Padding Delay component.
+
+**Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `minDelay`, the pad is **0**. Set `minDelay` to the prerequisite's "castable-after" delay (Energetic Welcome uses `103`, Flaming Woolies' last-hit `actionFrame`). See ADR-0036.
+
+```ts
+{
+  name: "Energetic Welcome Damage",
+  category: "Resonance Skill",
+  newName: "Energetic Welcome",
+  // Window-mode follow-up to Flaming Woolies: castable ~103 frames after its
+  // cast, staying available across a swap-out. Timing pad is computed sim-side.
+  requiresPriorStageId:
+    "char.encore.resonance-skill.flaming-woolies.flaming-woolies::resonance-skill",
+  minDelay: 103,
+  value: "339.16%",
+  actionTime: 51,
+  variants: { cancel: { actionTime: 15 }, swap: { actionTime: 0 } },
+  damage: [/* … */],
+}
+```
+
+See: `src/data/characters/encore.ts` — Flaming Woolies → Energetic Welcome.
+
+### 5. Cancel / swap variants
 
 **When to use**: a stage whose timeline cost shrinks when the player cancels into the next action or swaps out early.
 
@@ -286,7 +313,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
 
 See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 5.
 
-### 5. Zero-damage stage (Outro, utility)
+### 6. Zero-damage stage (Outro, utility)
 
 **When to use**: a stage that exists for timing and triggers but deals no damage — an Outro that only buffs, a stance toggle.
 
@@ -306,7 +333,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 5.
 
 See: `src/data/characters/sanhua.ts` — Silversnow (Outro).
 
-### 6. Hidden stage
+### 7. Hidden stage
 
 **When to use**: a stage that's a real, schedulable action but shouldn't clutter the skill sidebar — a dodge counter, a conditional follow-up.
 
@@ -341,7 +368,7 @@ Note this stage's `category` is `Basic Attack` (the action) while its hit `type`
 
 See: `src/data/characters/sanhua.ts` — Frigid Light, Dodge Counter.
 
-### 7. Forte Circuit payload stage
+### 8. Forte Circuit payload stage
 
 **When to use**: a Forte Circuit payload — authored under a `type: "Forte Circuit"` skill, but its stage is the actual heavy-attack action the player presses.
 
@@ -396,7 +423,7 @@ The buff that wires a flag onto this stage references `char.sanhua.heavy-attack.
 
 See: `src/data/characters/sanhua.ts` — Clarity of Mind.
 
-### 8. Launching (footing) stage
+### 9. Launching (footing) stage
 
 **When to use**: a stage that takes the character off the ground — a plunge launcher, an aerial attack, a skill that commits to a `{ launch }` or `{ land }`. `footing` declares the ground/air state the stage enters on so footing-aware combos and timing resolve correctly.
 
@@ -497,6 +524,7 @@ A stage is an `EnrichedSkillAttribute`.
 | `id`                   | Optional explicit override; normally omit and let the lineage id compose.                                                                                                                                                                       |
 | `footing`              | Entry footing — `"ground"`, `"air"`, `{ launch: n }`, `{ land: n }`.                                                                                                                                                                            |
 | `requiresPriorStageId` | Combo-string gating — this stage only follows the given predecessor stageId (exact match).                                                                                                                                                      |
+| `minDelay`             | Frames. Only alongside `requiresPriorStageId`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + minDelay`. See Cookbook recipe 4.                        |
 
 **Rare fields:**
 

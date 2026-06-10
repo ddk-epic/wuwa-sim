@@ -13,7 +13,10 @@ interface SimulationLogBase {
 
 /**
  * Padding Delay breakdown. `react`/`floor` are mutually exclusive (see
- * stage.ts); `pad`/`fall`/`swapBack` are additive.
+ * stage.ts); `pad`/`fall`/`swapBack` are additive. `priorGate` (the windowed
+ * Prior-Stage Gate's minDelay pad) `max`-combines with `swapBack` — both are
+ * absolute-frame floors on the same entry's start — so the value stored here is
+ * the gate's pad *beyond* what `swapBack` already forces (ADR-0036).
  */
 export interface DelayBreakdown {
   react: number
@@ -21,6 +24,7 @@ export interface DelayBreakdown {
   pad: number
   fall: number
   swapBack: number
+  priorGate: number
 }
 
 export interface ActionEvent extends SimulationLogBase {

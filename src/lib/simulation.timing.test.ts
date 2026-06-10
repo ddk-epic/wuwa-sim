@@ -254,6 +254,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       pad: 0,
       fall: 0,
       swapBack: 0,
+      priorGate: 0,
     })
   })
 
@@ -341,6 +342,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       pad: 0,
       fall: 0,
       swapBack: 0,
+      priorGate: 0,
     })
   })
 })

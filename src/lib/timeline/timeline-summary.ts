@@ -15,6 +15,7 @@ const ZERO_DELAY: DelayBreakdown = {
   pad: 0,
   fall: 0,
   swapBack: 0,
+  priorGate: 0,
 }
 
 export interface TimelineSummaryRow {
@@ -133,6 +134,7 @@ export function getTimelineSummary(
         pad: 0,
         fall: 0,
         swapBack: 0,
+        priorGate: 0,
       }
       damage = null
       cumulativeConcerto = null

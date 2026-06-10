@@ -6,7 +6,7 @@ function row(p: Partial<TimelineSummaryRow>): TimelineSummaryRow {
   return {
     timeFrames: 0,
     durationFrames: 0,
-    delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0 },
+    delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0, priorGate: 0 },
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,

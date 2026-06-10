@@ -187,7 +187,14 @@ describe("getTimelineSummary — single entry", () => {
       {
         timeFrames: 0,
         durationFrames: 60,
-        delay: { react: 0, floor: 0, pad: 0, fall: 0, swapBack: 0 },
+        delay: {
+          react: 0,
+          floor: 0,
+          pad: 0,
+          fall: 0,
+          swapBack: 0,
+          priorGate: 0,
+        },
         damage: null,
         cumulativeConcerto: null,
         cumulativeEnergy: null,
@@ -274,6 +281,7 @@ function makeActionEvent(
     pad: number
     fall: number
     swapBack: number
+    priorGate: number
   },
 ): Extract<SimulationLogEntry, { kind: "action" }> {
   return {
@@ -330,6 +338,7 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
         pad: 0,
         fall: 0,
         swapBack: 0,
+        priorGate: 0,
       }),
       makeHitEvent("e2", 60, 1200),
     ]
@@ -500,6 +509,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
         pad: 0,
         fall: 0,
         swapBack: 0,
+        priorGate: 0,
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
@@ -517,6 +527,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
         pad: 0,
         fall: 0,
         swapBack: 0,
+        priorGate: 0,
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)

@@ -9,6 +9,7 @@ const delay = (over: Partial<DelayBreakdown> = {}): DelayBreakdown => ({
   pad: 0,
   fall: 0,
   swapBack: 0,
+  priorGate: 0,
   ...over,
 })
 
@@ -40,10 +41,18 @@ describe("formatPaddingDelay", () => {
     expect(f!.total).toBe(63)
   })
 
-  it("total is the sum of all five fields", () => {
+  it("total is the sum of all six fields", () => {
     const f = formatPaddingDelay(
-      delay({ react: 9, pad: 1, fall: 2, swapBack: 3 }),
+      delay({ react: 9, pad: 1, fall: 2, swapBack: 3, priorGate: 4 }),
     )
-    expect(f!.total).toBe(15)
+    expect(f!.total).toBe(19)
+  })
+
+  it("appends prior-gate after swap-back in the tooltip", () => {
+    const f = formatPaddingDelay(delay({ swapBack: 30, priorGate: 43 }))
+    expect(f!.tooltip).toBe(
+      `swap-back: ${formatFrames(30)} · prior-gate: ${formatFrames(43)}`,
+    )
+    expect(f!.total).toBe(73)
   })
 })

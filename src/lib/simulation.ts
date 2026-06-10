@@ -67,6 +67,12 @@ interface SimContext {
   cursor: SimCursor
   /** The frame-ordered pending-work pool: synthetics, trailing hits, footing commits/resets. */
   schedule: Schedule<Work>
+  /**
+   * Most-recent cast frame of each stage, keyed `${characterId}:${stageId}`.
+   * Read by the windowed Prior-Stage Gate to anchor its `minDelay` pad; written
+   * at every entry's cast frame so re-casting re-arms the anchor (ADR-0036).
+   */
+  priorCasts: Map<string, number>
 }
 
 export function runSimulation(
@@ -93,6 +99,7 @@ export function runSimulation(
     fallFrames,
     cursor: { frame: 0 },
     schedule: new Schedule<Work>(),
+    priorCasts: new Map(),
   }
 
   for (const entry of entries) processAuthoredEntry(entry, ctx)
@@ -140,6 +147,17 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 
   if (!resolved) return
 
+  // Windowed Prior-Stage Gate: pad the start so it cannot begin before
+  // `anchorCastFrame + minDelay`. The pad `max`-combines with `swapBack` (both
+  // are floors on the same start), so subtract what swapBack already forces.
+  const priorGate = computePriorGatePad(
+    ctx,
+    entry,
+    resolved,
+    cursor.frame,
+    swapBack,
+  )
+
   const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
     entry,
     cursor.frame,
@@ -147,6 +165,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     ctx,
     arrival.padFrames,
     swapBack,
+    priorGate,
   )
   if (resolved.skillType === "Intro Skill") {
     // An Intro establishes its own footing regardless of what it entered on.
@@ -279,6 +298,7 @@ function processEntry(
   ctx: SimContext,
   padFrames: number = 0,
   swapBack: number = 0,
+  priorGate: number = 0,
 ): {
   allHits: DamageEntry[]
   stageDuration: number
@@ -309,7 +329,11 @@ function processEntry(
       ? 0
       : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
-  const effectiveStart = stageStartFrame + fall + swapBack
+  const effectiveStart = stageStartFrame + fall + swapBack + priorGate
+
+  // Record this entry's cast frame so a later windowed follow-up can anchor its
+  // minDelay pad to it (most-recent-wins; re-casting re-arms the anchor).
+  ctx.priorCasts.set(`${entry.characterId}:${resolved.stageId}`, effectiveStart)
 
   // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
   // starts resolves ahead of it.
@@ -329,6 +353,7 @@ function processEntry(
     padFrames,
     fall,
     swapBack,
+    priorGate,
   )
   log.push(actionEvent)
 
@@ -373,6 +398,7 @@ function buildActionEvent(
   padFrames: number = 0,
   fall: number = 0,
   swapBack: number = 0,
+  priorGate: number = 0,
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
   const event: ActionEvent = {
@@ -387,10 +413,48 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
-  if (react > 0 || floor > 0 || padFrames > 0 || fall > 0 || swapBack > 0) {
-    event.delayBreakdown = { react, floor, pad: padFrames, fall, swapBack }
+  if (
+    react > 0 ||
+    floor > 0 ||
+    padFrames > 0 ||
+    fall > 0 ||
+    swapBack > 0 ||
+    priorGate > 0
+  ) {
+    event.delayBreakdown = {
+      react,
+      floor,
+      pad: padFrames,
+      fall,
+      swapBack,
+      priorGate,
+    }
   }
   return event
+}
+
+/**
+ * The windowed Prior-Stage Gate's pad: frames the follow-up's start must wait so
+ * it begins no earlier than `anchorCastFrame + minDelay`. Returns 0 in chain
+ * mode (no `minDelay`) or with no recorded anchor. The result `max`-combines
+ * with `swapBack` — both floor the same start — so we subtract `swapBack`'s
+ * contribution and clamp at 0, leaving only the gate's *additional* frames.
+ */
+function computePriorGatePad(
+  ctx: SimContext,
+  entry: TimelineEntry,
+  resolved: ResolvedStage,
+  cursorFrame: number,
+  swapBack: number,
+): number {
+  const { requiresPriorStageId, minDelay } = resolved
+  if (requiresPriorStageId === undefined || minDelay === undefined) return 0
+  const anchor = ctx.priorCasts.get(
+    `${entry.characterId}:${requiresPriorStageId}`,
+  )
+  if (anchor === undefined) return 0
+  const rawPad = Math.max(0, anchor + minDelay - cursorFrame)
+  return Math.max(0, rawPad - swapBack)
 }
 
 function computeFall(
