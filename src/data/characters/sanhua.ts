@@ -396,6 +396,8 @@ export const sanhua = {
           name: "Stage 2 DMG",
           category: "Basic Attack",
           newName: "Stage 2",
+          requiresPriorStageId:
+            "char.sanhua.basic-attack.frigid-light.stage-1::basic-attack",
           value: "73.76%",
           actionTime: 31,
           variants: {
@@ -420,6 +422,8 @@ export const sanhua = {
           name: "Stage 3 DMG",
           category: "Basic Attack",
           newName: "Stage 3",
+          requiresPriorStageId:
+            "char.sanhua.basic-attack.frigid-light.stage-2::basic-attack",
           value: "21.58%*4",
           actionTime: 39,
           variants: {
@@ -477,6 +481,8 @@ export const sanhua = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Stage 4",
+          requiresPriorStageId:
+            "char.sanhua.basic-attack.frigid-light.stage-3::basic-attack",
           value: "39.67%*2",
           actionTime: 37,
           variants: {
@@ -512,6 +518,8 @@ export const sanhua = {
           name: "Stage 5 DMG",
           category: "Basic Attack",
           newName: "Stage 5",
+          requiresPriorStageId:
+            "char.sanhua.basic-attack.frigid-light.stage-4::basic-attack",
           value: "233.81%",
           actionTime: 108,
           variants: {
@@ -676,6 +684,7 @@ export const sanhua = {
               concerto: 0,
               toughness: 1,
               weakness: 0.8,
+              independent: true,
             },
           ],
         },

@@ -2,7 +2,6 @@ import type { Element } from "#/data/elements"
 import type {
   DamageEntry,
   Footing,
-  MovementKind,
   SkillCategory,
   SkillGrouping,
   SkillType,
@@ -61,8 +60,7 @@ export interface ResolvedStage {
   skillCategory: SkillCategory
   skillType: SkillType
   skillName: string
-  requiresStageId?: string
-  comboAllows?: readonly MovementKind[]
+  requiresPriorStageId?: string
 }
 
 /** Derive the `::skill-type` segment of a character stageId. */
@@ -140,8 +138,6 @@ export function findStageByEntry(
             stageType,
           ) === entry.stageId
         ) {
-          const comboAllows =
-            s.requiresStageId !== undefined ? s.comboAllows : undefined
           const isCastStage = s.name === STAGE_CAST_NAME
           // Stage-level skillType, collapsed from the parent skill grouping.
           // Grouping-only labels that are not SkillTypes (Normal Attack,
@@ -170,8 +166,7 @@ export function findStageByEntry(
             skillName: isCastStage
               ? skill.name
               : stageLabel(skill.name, s.newName),
-            requiresStageId: s.requiresStageId,
-            comboAllows,
+            requiresPriorStageId: s.requiresPriorStageId,
           }
         }
       }

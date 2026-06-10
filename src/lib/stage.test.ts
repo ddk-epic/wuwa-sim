@@ -247,7 +247,7 @@ describe("findStageByEntry — character skill", () => {
     expect(result).toBeNull()
   })
 
-  it("includes requiresStageId when set on the stage", () => {
+  it("includes requiresPriorStageId when set on the stage", () => {
     testCharacters = [
       baseChar({
         skills: [
@@ -263,7 +263,7 @@ describe("findStageByEntry — character skill", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "2nd",
-                requiresStageId:
+                requiresPriorStageId:
                   "char.test-char.basic-attack.normal-attack._::basic-attack",
               },
             ],
@@ -282,7 +282,7 @@ describe("findStageByEntry — character skill", () => {
       emptyLoadout,
       emptyLoadout,
     ])
-    expect(result?.requiresStageId).toBe(
+    expect(result?.requiresPriorStageId).toBe(
       "char.test-char.basic-attack.normal-attack._::basic-attack",
     )
   })

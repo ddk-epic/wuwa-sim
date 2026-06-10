@@ -269,7 +269,7 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
   })
 })
 
-describe("validateTimeline — stage-reachability (requiresStageId)", () => {
+describe("validateTimeline — stage-reachability (requiresPriorStageId)", () => {
   const charWithPrereq = (id: number): EnrichedCharacter =>
     baseChar({
       id,
@@ -294,7 +294,7 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId:
+              requiresPriorStageId:
                 "char.test.basic-attack.normal-attack.stage-1::basic-attack",
             },
           ],
@@ -377,7 +377,7 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
     expect(result.invalidRowIds.has("s1")).toBe(false)
   })
 
-  it("does not flag stages with no requiresStageId", () => {
+  it("does not flag stages with no requiresPriorStageId", () => {
     testCharacters = [charWithPrereq(1)]
     const s1 = entry(
       1,
@@ -386,291 +386,6 @@ describe("validateTimeline — stage-reachability (requiresStageId)", () => {
     )
     const result = validateTimeline([s1], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s1")).toBe(false)
-  })
-})
-
-describe("validateTimeline — comboAllows (Movement transparency)", () => {
-  const movementChar = (id: number): EnrichedCharacter =>
-    baseChar({
-      id,
-      skills: [
-        {
-          id: 1,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: [
-            {
-              name: "Stage 1",
-              category: "Basic Attack",
-              newName: "Stage 1",
-              value: "1",
-              actionTime: 30,
-              damage: [],
-            },
-            {
-              name: "Stage 2",
-              category: "Basic Attack",
-              newName: "Stage 2",
-              value: "1",
-              actionTime: 30,
-              damage: [],
-              requiresStageId:
-                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-              comboAllows: ["Dodge"],
-            },
-          ],
-          damage: [],
-        },
-        {
-          id: 2,
-          name: "Dodge",
-          type: "Movement",
-          stages: [
-            {
-              name: "Dodge",
-              category: "Basic Attack",
-              value: "",
-              actionTime: 21,
-              damage: [],
-            },
-          ],
-          damage: [],
-        },
-        {
-          id: 3,
-          name: "Jump",
-          type: "Movement",
-          stages: [
-            {
-              name: "Jump",
-              category: "Basic Attack",
-              value: "",
-              actionTime: 18,
-              damage: [],
-            },
-          ],
-          damage: [],
-        },
-      ],
-    })
-
-  it("comboAllows: Dodge between Stage 1 and Stage 2 validates green", () => {
-    testCharacters = [movementChar(1)]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(false)
-  })
-
-  it("default omitted comboAllows: Dodge between Stage 1 and Stage 2 validates red", () => {
-    const opaqueChar = baseChar({
-      id: 1,
-      skills: [
-        {
-          id: 1,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: [
-            {
-              name: "Stage 1",
-              category: "Basic Attack",
-              newName: "Stage 1",
-              value: "1",
-              actionTime: 30,
-              damage: [],
-            },
-            {
-              name: "Stage 2",
-              category: "Basic Attack",
-              newName: "Stage 2",
-              value: "1",
-              actionTime: 30,
-              damage: [],
-              requiresStageId:
-                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-              // comboAllows omitted â†’ opaque
-            },
-          ],
-          damage: [],
-        },
-        {
-          id: 2,
-          name: "Dodge",
-          type: "Movement",
-          stages: [
-            {
-              name: "Dodge",
-              category: "Basic Attack",
-              value: "",
-              actionTime: 21,
-              damage: [],
-            },
-          ],
-          damage: [],
-        },
-      ],
-    })
-    testCharacters = [opaqueChar]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(true)
-  })
-
-  it("comboAllows: Dodge, Jump between Stage 1 and Stage 2 still validates green", () => {
-    const charWithBoth: EnrichedCharacter = {
-      ...movementChar(1),
-      skills: movementChar(1).skills.map((skill) => {
-        if (skill.name !== "Normal Attack") return skill
-        return {
-          ...skill,
-          stages: skill.stages.map((s) => {
-            if (s.newName !== "Stage 2") return s
-            return { ...s, comboAllows: ["Dodge", "Jump"] as const }
-          }),
-        }
-      }),
-    }
-    testCharacters = [charWithBoth]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(1, "char.test.basic-attack.dodge._::basic-attack", "dodge"),
-        entry(1, "char.test.basic-attack.jump._::basic-attack", "jump"),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(false)
-  })
-
-  it("comboAllows Dodge: Jump between Stage 1 and Stage 2 still resets the chain", () => {
-    testCharacters = [movementChar(1)]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(1, "char.test.basic-attack.jump._::basic-attack", "jump"),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(true)
-  })
-
-  it("non-Movement entry between gate and prerequisite always resets the chain", () => {
-    const charWithSkill: EnrichedCharacter = {
-      ...movementChar(1),
-      skills: [
-        ...movementChar(1).skills,
-        {
-          id: 10,
-          name: "Resonance Skill",
-          type: "Resonance Skill",
-          stages: [
-            {
-              name: "Skill",
-              category: "Basic Attack",
-              value: "",
-              actionTime: 30,
-              damage: [],
-            },
-          ],
-          damage: [],
-        },
-      ],
-    }
-    testCharacters = [charWithSkill]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(
-          1,
-          "char.test.basic-attack.resonance-skill._::basic-attack",
-          "skill",
-        ),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(true)
-  })
-
-  it("two consecutive Dodges still resolve to the prior real stage", () => {
-    testCharacters = [movementChar(1)]
-    const result = validateTimeline(
-      [
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "s1",
-        ),
-        entry(1, "char.test.basic-attack.dodge._::basic-attack", "d1"),
-        entry(1, "char.test.basic-attack.dodge._::basic-attack", "d2"),
-        entry(
-          1,
-          "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-          "s2",
-        ),
-      ],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(false)
   })
 })
 
@@ -700,7 +415,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId:
+              requiresPriorStageId:
                 "char.test.basic-attack.normal-attack.stage-0::basic-attack",
             },
             {
@@ -710,7 +425,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId:
+              requiresPriorStageId:
                 "char.test.basic-attack.normal-attack.stage-1::basic-attack",
             },
             {
@@ -720,7 +435,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresStageId:
+              requiresPriorStageId:
                 "char.test.basic-attack.normal-attack.stage-2::basic-attack",
             },
           ],
@@ -939,7 +654,7 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
     expect(result.rowWarnings.size).toBe(1)
   })
 
-  it("requiresStageId is satisfied by a swap-variant preceding entry", () => {
+  it("requiresPriorStageId is satisfied by a swap-variant preceding entry", () => {
     testCharacters = [
       baseChar({
         id: 1,
@@ -965,7 +680,7 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "second",
-                requiresStageId:
+                requiresPriorStageId:
                   "char.test.basic-attack.normal-attack.first::basic-attack",
               },
             ],
@@ -986,7 +701,7 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
       stageId: "char.test.basic-attack.normal-attack.second::basic-attack",
     }
     const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
-    // swap variant on the preceding entry still satisfies requiresStageId
+    // swap variant on the preceding entry still satisfies requiresPriorStageId
     expect(result.rowErrors.has("e2")).toBe(false)
     expect(result.invalidRowIds.has("e2")).toBe(false)
   })

@@ -82,8 +82,7 @@ export function validateTimeline(
 
     const resolved = findStageByEntry(entry, slots, loadouts)
     const skillType = resolved?.skillType ?? null
-    const requiredStageId = resolved?.requiresStageId
-    const comboAllows = resolved?.comboAllows ?? []
+    const requiredStageId = resolved?.requiresPriorStageId
 
     // Intro Skill must follow Outro Skill
     if (skillType === "Intro Skill") {
@@ -116,21 +115,12 @@ export function validateTimeline(
         })
       }
     } else if (skillType !== "Echo Skill" && requiredStageId !== undefined) {
-      // Walk backwards, skipping Movement entries whose skill name is in comboAllows
+      // Chain mode: the prerequisite must be the immediately preceding
+      // same-character entry. Any intervening same-character entry breaks it.
       let effectivePrev: TimelineEntry | undefined
       for (let j = i - 1; j >= 0; j--) {
         const prev = entries[j]
         if (prev.characterId !== entry.characterId) continue
-        if (comboAllows.length > 0) {
-          const prevResolved = findStageByEntry(prev, slots, loadouts)
-          const skillBaseName = prev.stageId.split(".")[3] ?? ""
-          if (
-            prevResolved?.skillType === "Movement" &&
-            comboAllows.some((a) => a.toLowerCase() === skillBaseName)
-          ) {
-            continue
-          }
-        }
         effectivePrev = prev
         break
       }

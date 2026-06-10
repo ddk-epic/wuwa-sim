@@ -205,6 +205,8 @@ export const encore = {
           name: "Stage 2 DMG",
           category: "Basic Attack",
           newName: "Stage 2",
+          requiresPriorStageId:
+            "char.encore.basic-attack.wooly-attack.stage-1::basic-attack",
           value: "66.20%",
           actionTime: 28,
           variants: {
@@ -229,6 +231,8 @@ export const encore = {
           name: "Stage 3 DMG",
           category: "Basic Attack",
           newName: "Stage 3",
+          requiresPriorStageId:
+            "char.encore.basic-attack.wooly-attack.stage-2::basic-attack",
           value: "66.30%*2",
           actionTime: 39,
           variants: {
@@ -264,6 +268,8 @@ export const encore = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Stage 4",
+          requiresPriorStageId:
+            "char.encore.basic-attack.wooly-attack.stage-3::basic-attack",
           value: "38.27%*4",
           actionTime: 45,
           variants: {
@@ -321,6 +327,8 @@ export const encore = {
           name: "Stage 5 DMG",
           category: "Basic Attack",
           newName: "Stage 5 - Wooly Strike",
+          requiresPriorStageId:
+            "char.encore.basic-attack.wooly-attack.stage-4::basic-attack",
           value: "238.57%",
           actionTime: 81,
           variants: {
@@ -618,6 +626,8 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 2 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 2",
+          requiresPriorStageId:
+            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-1::basic-attack",
           value: "56.40%*3",
           actionTime: 54,
           variants: {
@@ -664,6 +674,8 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 3 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 3",
+          requiresPriorStageId:
+            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-2::basic-attack",
           value: "65.99%*4",
           actionTime: 48,
           variants: {
@@ -721,6 +733,8 @@ export const encore = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 4",
+          requiresPriorStageId:
+            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-3::basic-attack",
           value: "194.01%*3",
           actionTime: 107,
           variants: {
@@ -733,36 +747,36 @@ export const encore = {
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 54,
-              independent: true,
               value: 1.9401,
               energy: 1.43,
               concerto: 2.86,
               toughness: 0.4586,
               weakness: 0.688,
+              independent: true,
             },
             {
               type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 54,
-              independent: true,
               value: 1.9401,
               energy: 1.43,
               concerto: 2.86,
               toughness: 0.4586,
               weakness: 0.688,
+              independent: true,
             },
             {
               type: "Basic Attack",
               dmgType: "Damage",
               scalingStat: "ATK",
               actionFrame: 54,
-              independent: true,
               value: 1.9401,
               energy: 1.43,
               concerto: 2.86,
               toughness: 0.4586,
               weakness: 0.688,
+              independent: true,
             },
           ],
         },

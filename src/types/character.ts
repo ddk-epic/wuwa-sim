@@ -168,11 +168,10 @@ type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
 
 export type EnrichedSkillAttribute =
   | (EnrichedSkillAttributeBase & {
-      requiresStageId: string
-      comboAllows?: readonly MovementKind[]
+      requiresPriorStageId: string
     })
   | (EnrichedSkillAttributeBase & {
-      requiresStageId?: never
+      requiresPriorStageId?: never
     })
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {
