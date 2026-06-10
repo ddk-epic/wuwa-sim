@@ -28,16 +28,19 @@ describe("timeline-cells", () => {
     expect(td.textContent).toBe("1.00s")
   })
 
-  it("TimeCell drops right padding and omits the wait badge at gate 0", () => {
+  it("TimeCell omits the wait badge at gate 0", () => {
     const td = renderCell(<TimeCell frames={60} priorGate={0} />)
-    expect(td.className).toContain("pr-0")
     expect(td.textContent).toBe("1.00s")
+    expect(td.querySelector("span[title^='wait']")).toBeNull()
   })
 
-  it("TimeCell renders an inline wait badge when priorGate > 0", () => {
+  it("TimeCell renders the wait badge in a reserved slot when priorGate > 0", () => {
     const td = renderCell(<TimeCell frames={102} priorGate={42} />)
     expect(td.textContent).toBe("1.70s+0.70s")
-    expect(td.querySelector("span[title='wait 0.70s']")).not.toBeNull()
+    const badge = td.querySelector("span[title='wait 0.70s']")
+    expect(badge).not.toBeNull()
+    // The badge lives inside a fixed-width slot so the time value stays put.
+    expect(badge!.parentElement!.className).toContain("w-10")
   })
 
   it("DurationCell uses py-2 by default and py-1.5 when dense", () => {

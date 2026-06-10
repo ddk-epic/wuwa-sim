@@ -7,7 +7,11 @@ function pad(dense?: boolean): string {
   return dense ? "py-1.5" : "py-2"
 }
 
-/** Leading time cell, accented in the damage color, with an inline prior-gate `WaitBadge`. */
+/**
+ * Leading time cell, accented in the damage color. The prior-gate `WaitBadge`
+ * sits in a fixed-width reserved slot right of the time so the value never
+ * shifts when a wait appears.
+ */
 export function TimeCell({
   frames,
   dense,
@@ -19,10 +23,12 @@ export function TimeCell({
 }) {
   return (
     <td
-      className={`pl-2 pr-0 ${pad(dense)} text-right font-mono text-label text-ui-damage`}
+      className={`px-2 ${pad(dense)} text-right font-mono text-label text-ui-damage`}
     >
       {formatFrames(frames)}
-      <WaitBadge priorGate={priorGate} className="ml-1" />
+      <span className="inline-block w-10 text-left align-baseline font-sans">
+        <WaitBadge priorGate={priorGate} className="ml-1" />
+      </span>
     </td>
   )
 }

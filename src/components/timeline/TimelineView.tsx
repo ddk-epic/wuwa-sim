@@ -150,7 +150,7 @@ export function TimelineView({
         <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
           <tr className="text-muted-foreground text-xs font-mono tracking-[1px] uppercase">
             <th className="px-2 py-2 text-right w-7.5">#</th>
-            <th className="px-2 py-2 text-right w-18">time</th>
+            <th className="px-2 py-2 text-right w-26">time</th>
             <th className="px-2 py-2 w-36">char</th>
             <th className="px-2 py-2 w-16">type</th>
             <th className="px-2 py-2">skill</th>

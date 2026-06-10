@@ -80,7 +80,7 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
       <thead className="sticky top-0 z-10 bg-darkest border-b border-border">
         <tr className="text-muted-foreground">
           <th className={`${headerCell} text-right w-7.5`}>#</th>
-          <th className={`${headerCell} text-right w-18`}>time</th>
+          <th className={`${headerCell} text-right w-26`}>time</th>
           <th className={`${headerCell} w-36`}>char</th>
           <th className={`${headerCell} w-16`}>type</th>
           <th className={headerCell}>skill</th>
