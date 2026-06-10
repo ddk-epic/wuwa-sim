@@ -33,6 +33,17 @@ describe("timeline-cells", () => {
     expect(td.querySelector("span[title='wait 0.70s']")).not.toBeNull()
   })
 
+  it("WaitCell sums swapBack and priorGate into the wait", () => {
+    const td = renderCell(<WaitCell swapBack={30} priorGate={12} />)
+    expect(td.textContent).toBe("+0.70s")
+    expect(td.querySelector("span[title='wait 0.70s']")).not.toBeNull()
+  })
+
+  it("WaitCell renders the wait badge for swapBack alone", () => {
+    const td = renderCell(<WaitCell swapBack={42} />)
+    expect(td.querySelector("span[title='wait 0.70s']")).not.toBeNull()
+  })
+
   it("PoolCell adds opacity-40 only when stale", () => {
     expect(
       renderCell(<PoolCell value={50} color="var(--ui-concerto)" />).className,

@@ -31,31 +31,26 @@ describe("formatPaddingDelay", () => {
     expect(f!.tooltip).toBe(`react: ${formatFrames(9)}`)
   })
 
-  it("appends pad/fall/swap-back in order, joined by ' · '", () => {
-    const f = formatPaddingDelay(
-      delay({ floor: 30, pad: 6, fall: 21, swapBack: 6 }),
-    )
+  it("appends pad/fall in order, joined by ' · '", () => {
+    const f = formatPaddingDelay(delay({ floor: 30, pad: 6, fall: 21 }))
     expect(f!.tooltip).toBe(
-      `floor: ${formatFrames(30)} · pad: ${formatFrames(6)} · fall: ${formatFrames(21)} · swap-back: ${formatFrames(6)}`,
+      `floor: ${formatFrames(30)} · pad: ${formatFrames(6)} · fall: ${formatFrames(21)}`,
     )
-    expect(f!.total).toBe(63)
+    expect(f!.total).toBe(57)
   })
 
-  it("total sums the five action-padding fields, excluding priorGate", () => {
+  it("total sums the action-cost fields, excluding the swapBack/priorGate floors", () => {
     const f = formatPaddingDelay(
       delay({ react: 9, pad: 1, fall: 2, swapBack: 3, priorGate: 4 }),
     )
-    expect(f!.total).toBe(15)
+    expect(f!.total).toBe(12)
   })
 
-  it("priorGate alone → null (surfaced by WaitBadge, not here)", () => {
+  it("the start floors (swapBack, priorGate) alone → null — surfaced by WaitBadge", () => {
     expect(formatPaddingDelay(delay({ priorGate: 43 }))).toBeNull()
-  })
-
-  it("excludes prior-gate from the tooltip", () => {
-    const f = formatPaddingDelay(delay({ swapBack: 30, priorGate: 43 }))
-    expect(f!.tooltip).toBe(`swap-back: ${formatFrames(30)}`)
-    expect(f!.tooltip).not.toContain("prior-gate")
-    expect(f!.total).toBe(30)
+    expect(formatPaddingDelay(delay({ swapBack: 30 }))).toBeNull()
+    expect(
+      formatPaddingDelay(delay({ swapBack: 30, priorGate: 43 })),
+    ).toBeNull()
   })
 })

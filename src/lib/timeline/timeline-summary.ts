@@ -87,13 +87,19 @@ export function getTimelineSummary(
     let damage: number | null
     let cumulativeConcerto: number | null
     let cumulativeEnergy: number | null
+    // Wait owned by the NEXT entry but living in this row's gap — kept out of the
+    // displayed duration, added back into the real clock below.
+    let waitNext = 0
 
     if (ae !== undefined) {
       timeFrames = ae.frame
       delay = ae.delayBreakdown ?? ZERO_DELAY
 
       if (nextAe !== undefined) {
-        durationFrames = nextAe.frame - ae.frame
+        waitNext =
+          (nextAe.delayBreakdown?.swapBack ?? 0) +
+          (nextAe.delayBreakdown?.priorGate ?? 0)
+        durationFrames = nextAe.frame - ae.frame - waitNext
       } else {
         const resolved = findStageByEntry(entry, slots, loadouts)
         durationFrames = resolved
@@ -141,7 +147,7 @@ export function getTimelineSummary(
       cumulativeEnergy = null
     }
 
-    cumulativeFrames += durationFrames
+    cumulativeFrames += durationFrames + waitNext
     if (damage !== null) totalDamage += damage
     rows.push({
       timeFrames,
@@ -153,7 +159,7 @@ export function getTimelineSummary(
     })
   }
 
-  const totalTimeFrames = rows.reduce((s, r) => s + r.durationFrames, 0)
+  const totalTimeFrames = cumulativeFrames
   const dps =
     totalTimeFrames > 0 ? Math.round(totalDamage / (totalTimeFrames / 60)) : 0
 

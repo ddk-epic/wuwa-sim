@@ -47,13 +47,23 @@ export function FrameCell({ frame }: { frame: number }) {
 }
 
 /**
- * Prior-gate wait cell, holding the `WaitBadge` (or empty). Rendered right of
- * the frame only when the log has any wait, so the time column is undisturbed.
+ * Wait cell, holding the `WaitBadge` (or empty). Rendered right of the frame
+ * only when the log has any wait, so the time column is undisturbed.
  */
-export function WaitCell({ priorGate = 0 }: { priorGate?: number }) {
+export function WaitCell({
+  swapBack = 0,
+  priorGate = 0,
+}: {
+  swapBack?: number
+  priorGate?: number
+}) {
   return (
     <td className="px-0 py-2 w-7.5">
-      <WaitBadge priorGate={priorGate} className="-ml-1.5" />
+      <WaitBadge
+        swapBack={swapBack}
+        priorGate={priorGate}
+        className="-ml-1.5"
+      />
     </td>
   )
 }

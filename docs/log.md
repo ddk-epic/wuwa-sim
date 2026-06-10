@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-11 — Swap-back renders as an up-front wait, not a delay component
+
+`swapBack` was buried in the `DelayBadge` `+N` suffix beside the skill, reading as if the re-entering stage got fatter. It's a start _floor_ (the character is idle, waiting out its swap-back CD), the same kind as `priorGate` — so it moves to the up-front wait column, summed with `priorGate` in `WaitBadge` (they `max`-combine, so the sum doesn't double-count). `formatPaddingDelay` now totals only the action costs (`react`/`floor`/`pad`/`fall`); the two start floors are excluded and surfaced as the wait. Applied to both the Timeline and the Simulation Log (engine source of truth, same `DelayBreakdown`). Relocating the wait onto the _next_ character's row (charC, who can't know about charA's timer) was set aside as infeasible; the wait still sits on the held-up entry but reads honestly. Same pass also stopped the wait from double-counting into the **preceding** row's Duration cell: `timeline-summary` computed a row's duration as the raw gap to the next action, which swallowed the next entry's `swapBack`/`priorGate`. Duration now subtracts the next entry's wait, while the real clock (`cumulativeFrames`) and `totalTimeFrames`/DPS keep counting it. Engine behavior unchanged — presentation only.
+
+Pages touched: CONTEXT.md (Padding Delay surfacing).
+
 ## 2026-06-11 — Cancel-capable residue drop reads `effectiveStart`, not the pre-pad cursor
 
 `Flaming Woolies (swap) → Eternal Frost → Energetic Welcome` dropped 4 of 8 trailing woolies: the cancel-capable drop ran in `resolveArrival` at the pre-pad cursor (`S+64`) before the `minDelay: 103` gate pushed Energetic Welcome's start to `S+103`, cancelling residue that lands during the gate wait. Split the two collision behaviors by the frame each must read — the non-cancel pad _produces_ a start floor (input cursor, stays in `resolveArrival`); the cancel-capable drop _consumes_ the final start (`effectiveStart`, moved to a new `Schedule.cancelResidue`, run after the pre-drain so the boundary hit lands and only the strict overlap is cancelled). Rejected `minDelay: 104` (moves the start, not the cursor the drop reads) and an explicit max-of-floors rewrite of `computePriorGatePad` (lateral, behavior-neutral churn). Corrects ADR-0036's claim that the In-trailing swap-back needed no machinery.

@@ -358,6 +358,31 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     expect(result.totalDamage).toBe(2100)
     expect(result.totalTimeFrames).toBe(60 + result.rows[1].durationFrames)
   })
+
+  it("keeps the next entry's wait out of the prior row's duration but in the total", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const e2 = normalAttack(1, "e2")
+
+    // e2 starts at 60 carrying a 30f wait (swapBack 20 + priorGate 10). The 60f
+    // gap is its wait + e1's own 30f advance.
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeActionEvent("e2", 60, {
+        react: 0,
+        floor: 0,
+        pad: 0,
+        fall: 0,
+        swapBack: 20,
+        priorGate: 10,
+      }),
+    ]
+
+    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
+    expect(result.rows[0].durationFrames).toBe(30) // 60 gap − 30 wait
+    expect(result.rows[1].timeFrames).toBe(60)
+    expect(result.totalTimeFrames).toBe(60 + result.rows[1].durationFrames)
+  })
 })
 
 describe("getTimelineSummary — log ingestion: mixed match/fallback", () => {

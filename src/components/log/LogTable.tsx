@@ -84,7 +84,10 @@ export function LogTable({ log }: { log: SimulationLogEntry[] }) {
 
   const rows = groupBuffEvents(log)
   const showWait = log.some(
-    (e) => e.kind === "action" && (e.delayBreakdown?.priorGate ?? 0) > 0,
+    (e) =>
+      e.kind === "action" &&
+      ((e.delayBreakdown?.swapBack ?? 0) > 0 ||
+        (e.delayBreakdown?.priorGate ?? 0) > 0),
   )
 
   return (

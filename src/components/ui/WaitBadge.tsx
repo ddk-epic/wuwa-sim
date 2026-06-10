@@ -1,20 +1,23 @@
 import { formatFrames } from "#/lib/format"
 
-/** Inline `+0.Xs` wait before an action starts (prior-stage gate). `null` at 0. */
+/** Inline `+0.Xs` wait before an action starts — the start floors (swap-back + prior-gate). `null` at 0. */
 export function WaitBadge({
-  priorGate,
+  swapBack = 0,
+  priorGate = 0,
   className,
 }: {
-  priorGate: number
+  swapBack?: number
+  priorGate?: number
   className?: string
 }) {
-  if (priorGate === 0) return null
+  const wait = swapBack + priorGate
+  if (wait === 0) return null
   return (
     <span
       className={`text-xs text-muted-foreground ${className ?? ""}`}
-      title={`wait ${formatFrames(priorGate)}`}
+      title={`wait ${formatFrames(wait)}`}
     >
-      +{formatFrames(priorGate)}
+      +{formatFrames(wait)}
     </span>
   )
 }

@@ -124,7 +124,12 @@ export function TimelineEntryRow({
         <span className="text-gray-400">{index + 1}</span>
       </td>
       <TimeCell frames={row.timeFrames} />
-      {showWait && <WaitCell priorGate={row.delay.priorGate} />}
+      {showWait && (
+        <WaitCell
+          swapBack={row.delay.swapBack}
+          priorGate={row.delay.priorGate}
+        />
+      )}
       <td className="px-2 py-2 text-white overflow-hidden">
         <div className="flex items-center gap-1.5 min-w-0">
           <span
