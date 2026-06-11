@@ -94,16 +94,52 @@ describe("buildBuffTimelineModel", () => {
     expect(Math.max(...lanes)).toBeGreaterThanOrEqual(TL_BUFF_LANES)
   })
 
-  it("reuses a lane once the prior buff has ended", () => {
+  it("a distinct buff never reuses a freed lane — each identity owns its own", () => {
     const log: SimulationLogEntry[] = [
       action({ characterId: 1, frame: 0 }),
       applied("b.a", 1, 0, 99, "b.a", 0),
       expired("b.a", 1, 60, "b.a", 0),
+      // b.b applies after b.a has expired; the lane is free but belongs to b.a
       applied("b.b", 1, 120, 99, "b.b", 1),
       expired("b.b", 1, 180, "b.b", 1),
     ]
     const m = buildBuffTimelineModel(log, [1])
-    expect(m.buffs.every((b) => b.lane === 0)).toBe(true)
+    const byName = (n: string) => m.buffs.find((b) => b.buffName === n)!
+    expect(byName("b.a").lane).toBe(0)
+    expect(byName("b.b").lane).toBe(1)
+  })
+
+  it("the same identity returns to its own lane on re-apply", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      applied("b.a", 1, 0, 99, "b.a", 0),
+      expired("b.a", 1, 60, "b.a", 0),
+      // an unrelated buff opens lane 1 while b.a is gone…
+      applied("b.b", 1, 30, 99, "b.b", 1),
+      expired("b.b", 1, 200, "b.b", 1),
+      // …yet b.a re-applies back into lane 0, not a fresh lane
+      applied("b.a", 1, 120, 99, "b.a", 2),
+      expired("b.a", 1, 180, "b.a", 2),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    expect(
+      m.buffs.filter((b) => b.buffName === "b.a").every((b) => b.lane === 0),
+    ).toBe(true)
+    expect(m.buffs.find((b) => b.buffName === "b.b")!.lane).toBe(1)
+  })
+
+  it("a self-overlap of one identity spills into an extra owned lane", () => {
+    const log: SimulationLogEntry[] = [
+      action({ characterId: 1, frame: 0 }),
+      // two live instances of the same identity overlap [0,3s] and [1,4s]
+      applied("b.a", 1, 0, 99, "b.a", 0),
+      applied("b.a", 1, 60, 99, "b.a", 1),
+      expired("b.a", 1, 180, "b.a", 0),
+      expired("b.a", 1, 240, "b.a", 1),
+    ]
+    const m = buildBuffTimelineModel(log, [1])
+    const lanes = m.buffs.map((b) => b.lane).sort((a, b) => a - b)
+    expect(lanes).toEqual([0, 1])
   })
 
   it("never-expired buff → endTime Infinity", () => {
