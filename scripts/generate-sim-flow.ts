@@ -525,6 +525,8 @@ document.addEventListener("keydown", function (ev) {
 });
 
 svg.addEventListener("click", function (ev) {
+  // a pan that actually moved fires a click on release — swallow it
+  if (didPan) { didPan = false; return; }
   var g = ev.target.closest("g.station, g.store");
   if (g) state.focus = state.focus === g.dataset.id ? null : g.dataset.id;
   else state.focus = null;
@@ -533,18 +535,24 @@ svg.addEventListener("click", function (ev) {
 
 // pan / zoom
 var panning = null;
+var didPan = false;
 svg.addEventListener("mousedown", function (ev) {
   if (ev.target.closest("g.station, g.store")) return;
-  panning = { mx: ev.clientX, my: ev.clientY, vx: vb.x, vy: vb.y };
+  panning = { mx: ev.clientX, my: ev.clientY, vx: vb.x, vy: vb.y, moved: false };
 });
 window.addEventListener("mousemove", function (ev) {
   if (!panning) return;
+  if (Math.abs(ev.clientX - panning.mx) + Math.abs(ev.clientY - panning.my) > 3) panning.moved = true;
+  if (!panning.moved) return;
   var scale = vb.w / svg.clientWidth;
   vb.x = panning.vx - (ev.clientX - panning.mx) * scale;
   vb.y = panning.vy - (ev.clientY - panning.my) * scale;
   svg.setAttribute("viewBox", vb.x + " " + vb.y + " " + vb.w + " " + vb.h);
 });
-window.addEventListener("mouseup", function () { panning = null; });
+window.addEventListener("mouseup", function () {
+  didPan = !!(panning && panning.moved);
+  panning = null;
+});
 svg.addEventListener("wheel", function (ev) {
   ev.preventDefault();
   var f = ev.deltaY > 0 ? 1.15 : 1 / 1.15;
@@ -567,7 +575,7 @@ const html = `<!doctype html>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #15171c; color: #d7dae0; font: 13px/1.45 ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
-  #graph { width: 100vw; height: 100vh; display: block; cursor: grab; }
+  #graph { width: 100vw; height: 100vh; display: block; cursor: grab; user-select: none; }
   #graph:active { cursor: grabbing; }
   .flow { fill: none; stroke-width: 1.8; }
   .flow.spine { stroke: #8b93a5; marker-end: url(#arr-spine); stroke-width: 2.2; }
