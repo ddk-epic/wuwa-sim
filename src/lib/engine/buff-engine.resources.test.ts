@@ -140,28 +140,27 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(fired).toHaveLength(0)
   })
 
-  it("warns when Resonance Liberation casts with insufficient energy but still dispatches, and zeroes energy", () => {
+  it("raises an insufficientEnergy diagnostic when Liberation casts below cost but still dispatches, and zeroes energy", () => {
     testCharacters = [baseChar({ id: 1, name: "Test Character" })]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),
       loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
     })
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Resonance Liberation",
       frame: 0,
     })
-    expect(warn).toHaveBeenCalledTimes(1)
-    expect(warn.mock.calls[0][0]).toContain("Test Character")
-    expect(warn.mock.calls[0][0]).toContain("0")
+    expect(result.diagnostics).toHaveLength(1)
+    expect(result.diagnostics[0].kind).toBe("insufficientEnergy")
+    expect(result.diagnostics[0].message).toContain("Test Character")
+    expect(result.diagnostics[0].message).toContain("0")
     expect(engine.getResource(1).energy).toBe(0)
-    warn.mockRestore()
   })
 
-  it("Liberation with energy >= cost zeroes energy and logs no warning", () => {
+  it("Liberation with energy >= cost zeroes energy with no diagnostic", () => {
     testCharacters = [baseChar({ id: 1 })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -176,17 +175,15 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
       energy: 100,
     })
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 100,
     })
-    expect(warn).not.toHaveBeenCalled()
+    expect(result.diagnostics).toHaveLength(0)
     expect(engine.getResource(1).energy).toBe(0)
-    warn.mockRestore()
   })
 
   it("Liberation with energy > resonanceCost zeroes energy (overflow forfeited)", () => {
@@ -204,20 +201,18 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
       energy: 200,
     })
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 100,
     })
-    expect(warn).not.toHaveBeenCalled()
+    expect(result.diagnostics).toHaveLength(0)
     expect(engine.getResource(1).energy).toBe(0)
-    warn.mockRestore()
   })
 
-  it("Encore Liberation at energy=100 warns (cost=125) and zeroes energy", () => {
+  it("Encore Liberation at energy=100 raises a diagnostic (cost=125) and zeroes energy", () => {
     testCharacters = [baseChar({ id: 1, name: "Encore" })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -232,18 +227,17 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
       energy: 100,
     })
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Resonance Liberation",
       frame: 1,
       resonanceCost: 125,
     })
-    expect(warn).toHaveBeenCalledTimes(1)
-    expect(warn.mock.calls[0][0]).toContain("125")
+    expect(result.diagnostics).toHaveLength(1)
+    expect(result.diagnostics[0].kind).toBe("insufficientEnergy")
+    expect(result.diagnostics[0].message).toContain("125")
     expect(engine.getResource(1).energy).toBe(0)
-    warn.mockRestore()
   })
 
   it("Outro Skill cast drains the caster's concerto to exactly 0 (#323)", () => {
@@ -262,16 +256,14 @@ describe("BuffEngine — resource state (#58)", () => {
       concerto: 100,
     })
     expect(engine.getResource(1).concerto).toBe(100)
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
       frame: 1,
     })
-    expect(warn).not.toHaveBeenCalled()
+    expect(result.diagnostics).toHaveLength(0)
     expect(engine.getResource(1).concerto).toBe(0)
-    warn.mockRestore()
   })
 
   it("Outro overcap is wasted: concerto 130 → 0 (not 30) (#323)", () => {
@@ -299,7 +291,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(engine.getResource(1).concerto).toBe(0)
   })
 
-  it("Outro cast with concerto < 100 warns and still drains to 0 (#323)", () => {
+  it("Outro cast with concerto < 100 raises a diagnostic and still drains to 0 (#323)", () => {
     testCharacters = [baseChar({ id: 1, name: "Test Character" })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -314,17 +306,16 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
       concerto: 50,
     })
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    engine.onEvent({
+    const result = engine.onEvent({
       kind: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
       frame: 1,
     })
-    expect(warn).toHaveBeenCalledTimes(1)
-    expect(warn.mock.calls[0][0]).toContain("Test Character")
+    expect(result.diagnostics).toHaveLength(1)
+    expect(result.diagnostics[0].kind).toBe("insufficientConcerto")
+    expect(result.diagnostics[0].message).toContain("Test Character")
     expect(engine.getResource(1).concerto).toBe(0)
-    warn.mockRestore()
   })
 
   it("Outro drain fires resourceCrossed down for crossed thresholds (#323)", () => {

@@ -14,6 +14,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActiveBuff,
   BuffEvent,
+  Diagnostic,
   HitEvent,
   SustainEvent,
 } from "#/types/simulation-log"
@@ -127,6 +128,8 @@ export class BuffEngine {
   })
   /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
   private deferredEmits: DeferredEmit[] = []
+  /** Diagnostics produced during the in-flight `onEvent` call. */
+  private diagnostics: Diagnostic[] = []
   private emitHitHost: EmitHitHost = {
     activeBuffs: (id, hit) => this.activeBuffs(id, hit),
     passiveBuffs: (id) => this.passiveBuffs(id),
@@ -295,17 +298,20 @@ export class BuffEngine {
   }
 
   /**
-   * Process a triggering event. Returns lifecycle events from any apply/refresh
-   * plus the emit decisions taken this event (`deferredEmits`); the simulation
-   * resolves each at its landing frame.
+   * Process a triggering event. Returns lifecycle events from any apply/refresh,
+   * the emit decisions taken this event (`deferredEmits`; the simulation
+   * resolves each at its landing frame), and any Diagnostics the event raised
+   * (cast-below-cost warnings — the cast proceeds, the caller logs the warning).
    */
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
     deferredEmits: DeferredEmit[]
+    diagnostics: Diagnostic[]
   } {
     const lifecycleEvents: BuffEvent[] = []
     const syntheticEvents: (HitEvent | SustainEvent)[] = []
     this.deferredEmits = []
+    this.diagnostics = []
 
     // Implicit swap inference: an authored skillCast by a different character
     // than the current on-field implies swapOut(prev) → swapIn(next).
@@ -336,6 +342,7 @@ export class BuffEngine {
     return {
       lifecycleEvents,
       deferredEmits: this.deferredEmits,
+      diagnostics: this.diagnostics,
     }
   }
 
@@ -381,9 +388,10 @@ export class BuffEngine {
         if (energy < cost) {
           const character = getCharacterById(event.characterId)
           const name = character ? character.name : `id ${event.characterId}`
-          console.warn(
-            `[BuffEngine] Resonance Liberation cast by ${name} with insufficient energy (${energy} < ${cost})`,
-          )
+          this.diagnostics.push({
+            kind: "insufficientEnergy",
+            message: `${name} cast Liberation below cost (${Math.floor(energy)} / ${cost} energy)`,
+          })
         }
         this.setResource(
           event.characterId,
@@ -400,9 +408,10 @@ export class BuffEngine {
         if (concerto < OUTRO_CONCERTO_COST) {
           const character = getCharacterById(event.characterId)
           const name = character ? character.name : `id ${event.characterId}`
-          console.warn(
-            `[BuffEngine] Outro Skill cast by ${name} with insufficient concerto (${concerto} < ${OUTRO_CONCERTO_COST})`,
-          )
+          this.diagnostics.push({
+            kind: "insufficientConcerto",
+            message: `${name} cast Outro below cost (${Math.floor(concerto)} / ${OUTRO_CONCERTO_COST} concerto)`,
+          })
         }
         // Full drain — surplus above 100 is wasted by design.
         this.setResource(

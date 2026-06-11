@@ -25,12 +25,24 @@ export interface DelayBreakdown {
   priorGate: number
 }
 
+/**
+ * An engine-emitted warning about an executed action — the action proceeded,
+ * but the simulation observed something a real play could not do (impossible
+ * entry footing) or would not allow (casting below a resource cost). Carried on
+ * the action's ActionEvent and surfaced on its timeline row.
+ */
+export interface Diagnostic {
+  kind: "footingViolation" | "insufficientEnergy" | "insufficientConcerto"
+  message: string
+}
+
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"
   /** Trigger axis (player input) for this action; orthogonal to `skillType`. */
   skillCategory: SkillCategory
   variantKind?: VariantKind
   delayBreakdown?: DelayBreakdown
+  diagnostics?: Diagnostic[]
   sourceEntryId?: string
 }
 

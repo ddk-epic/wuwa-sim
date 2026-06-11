@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { flattenNodes } from "#/types/timeline"
+import type { SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import { validateTimeline } from "#/lib/timeline/validate-timeline"
+import { deriveRowDiagnostics } from "#/lib/timeline/log-diagnostics"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import type { DropPosition } from "#/hooks/useTimelineDrag"
 import { useTeamContext } from "#/hooks/useTeamContext"
@@ -20,6 +22,8 @@ import { GhostGroupRow } from "./GhostGroupRow"
 interface TimelineViewProps {
   nodes: TimelineNode[]
   summary: TimelineSummary
+  /** Last run's Simulation Log — engine Diagnostics fold into row warnings. */
+  log: SimulationLogEntry[]
   stale?: boolean
   onRemove: (id: string) => void
   onReorder: (fromId: string, toId: string, position: DropPosition) => void
@@ -40,6 +44,7 @@ interface TimelineViewProps {
 export function TimelineView({
   nodes,
   summary,
+  log,
   stale,
   onRemove,
   onReorder,
@@ -95,6 +100,8 @@ export function TimelineView({
     [entries, slots, loadouts],
   )
 
+  const logWarnings = useMemo(() => deriveRowDiagnostics(log), [log])
+
   const baseRenderItems = useMemo(
     () =>
       buildTimelineRenderItems(
@@ -103,8 +110,9 @@ export function TimelineView({
         slots,
         loadouts,
         validation,
+        logWarnings,
       ),
-    [nodes, expandedGroupIds, slots, loadouts, validation],
+    [nodes, expandedGroupIds, slots, loadouts, validation, logWarnings],
   )
 
   const renderItems = applyDragPreview(baseRenderItems, {

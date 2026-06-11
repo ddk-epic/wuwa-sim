@@ -241,6 +241,7 @@ export function SimulatorPage() {
                   <TimelineView
                     nodes={nodes}
                     summary={summary}
+                    log={log}
                     stale={stale}
                     onRemove={removeEntry}
                     onReorder={reorderEntries}

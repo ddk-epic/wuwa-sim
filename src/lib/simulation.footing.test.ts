@@ -794,3 +794,152 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     ).toBe(21)
   })
 })
+
+describe("runSimulation — footing violation diagnostics", () => {
+  const actionFor = (
+    result: ReturnType<typeof runSimulation>,
+    entryId: string,
+  ): ActionEvent | undefined =>
+    result.find(
+      (e): e is ActionEvent =>
+        e.kind === "action" && e.sourceEntryId === entryId,
+    )
+
+  it("grounded entry into a sustained-air stage executes with a footingViolation diagnostic", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "e1",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const action = actionFor(result, "e1")
+    expect(action).toBeDefined()
+    expect(action?.diagnostics).toHaveLength(1)
+    expect(action?.diagnostics?.[0].kind).toBe("footingViolation")
+    expect(action?.diagnostics?.[0].message).toContain("Launch/Jump required")
+  })
+
+  it("grounded entry into a { land } stage reports 'nothing to land from'", () => {
+    testCharacters = [charSnapA, charSnapB]
+    const entries: TimelineEntry[] = [
+      tlEntry(52, "char.snap-a.basic-attack.land-stage._::basic-attack", "e1"),
+    ]
+    const result = runSimulation(
+      entries,
+      snapSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const action = actionFor(result, "e1")
+    expect(action?.diagnostics).toHaveLength(1)
+    expect(action?.diagnostics?.[0].kind).toBe("footingViolation")
+    expect(action?.diagnostics?.[0].message).toContain("Nothing to land from")
+  })
+
+  it("an air stage after a launch raises no diagnostic", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
+    expect(actionFor(result, "e2")?.diagnostics).toBeUndefined()
+  })
+
+  it("an aerial Intro from a grounded field is exempt (no diagnostic)", () => {
+    testCharacters = [charAerial, charAerialB]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        51,
+        "char.aerial-char-b.basic-attack.air-intro._::basic-attack",
+        "e1",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      aerialSlots(),
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
+  })
+
+  it("an insufficient-resource cast diagnostic reaches the ActionEvent", () => {
+    const charLib: EnrichedCharacter = {
+      ...charA,
+      id: 60,
+      name: "Lib Char",
+      skills: [
+        {
+          id: 400,
+          name: "Big Burst",
+          type: "Resonance Liberation",
+          stages: [
+            {
+              name: "Burst Stage",
+              category: "Resonance Liberation",
+              value: "100%",
+              actionTime: 40,
+              damage: [],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [charLib]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        60,
+        "char.lib-char.resonance-liberation.big-burst._::resonance-liberation",
+        "e1",
+      ),
+    ]
+    const result = runSimulation(
+      entries,
+      [60, null, null],
+      emptyLoadouts,
+      0,
+      6,
+      0,
+      21,
+    )
+    const action = actionFor(result, "e1")
+    expect(action?.diagnostics).toHaveLength(1)
+    expect(action?.diagnostics?.[0].kind).toBe("insufficientEnergy")
+  })
+})

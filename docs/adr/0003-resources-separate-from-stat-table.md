@@ -15,4 +15,4 @@ Energy, Concerto, Forte, and Resonance are stored on the Buff Engine as a per-ch
 
 ## Known limitations to revisit
 
-- **Resonance Liberation cost gating** is not enforced; v1 computes Liberation damage even when energy < 100 and emits a console warning. Revisit if/when the timeline editor is taught to gate availability.
+- **Resonance Liberation cost gating** is not enforced; the sim computes Liberation damage even when energy < cost and raises an `insufficientEnergy` Diagnostic on the Action Event (surfaced on the timeline row). Revisit if/when the timeline editor is taught to gate availability.

@@ -152,7 +152,7 @@ const STATIONS: Station[] = [
     id: "action",
     title: "Action event + footing",
     module: "buildActionEvent · engine.footing",
-    desc: "The action row is logged with the post-cast energy/concerto snapshot and the full delayBreakdown (react / floor / pad / fall / swapBack / priorGate). Then the stage's footing applies: an Intro establishes its own footing; any other stage merges onto the carried one.",
+    desc: "The action row is logged with the post-cast energy/concerto snapshot, the full delayBreakdown (react / floor / pad / fall / swapBack / priorGate), and any Diagnostics (footing violation, below-cost Liberation/Outro cast — warn-but-proceed). Then the stage's footing applies: an Intro establishes its own footing; any other stage merges onto the carried one.",
     reads: [{ store: "resources", what: "energy/concerto snapshot" }],
     writes: [
       { store: "log", what: "Action row" },

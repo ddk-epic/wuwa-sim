@@ -4,6 +4,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
   BuffEvent,
+  Diagnostic,
   HitEvent,
   SimulationLogEntry,
 } from "#/types/simulation-log"
@@ -324,6 +325,8 @@ function processEntry(
       ? 0
       : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
+  const diagnostics = footingDiagnostics(effectiveFooting, resolved)
+
   const effectiveStart = stageStartFrame + fall + swapBack + priorGate
 
   // Record this entry's cast frame for later prerequisite lookups.
@@ -338,7 +341,7 @@ function processEntry(
   }
 
   if (resolved.skillType !== "Movement") {
-    fireSkillCast(entry, resolved, ctx, effectiveStart)
+    diagnostics.push(...fireSkillCast(entry, resolved, ctx, effectiveStart))
   }
 
   const actionEvent = buildActionEvent(
@@ -352,6 +355,7 @@ function processEntry(
     fall,
     swapBack,
     priorGate,
+    diagnostics,
   )
   log.push(actionEvent)
 
@@ -368,7 +372,7 @@ function fireSkillCast(
   resolved: ResolvedStage,
   ctx: SimContext,
   frame: number,
-): void {
+): Diagnostic[] {
   const { engine } = ctx
   const result = engine.onEvent({
     kind: "skillCast",
@@ -384,6 +388,7 @@ function fireSkillCast(
   // the action event and apply their resource gains before its cumulativeEnergy
   // snapshot. Offset emits (landingFrame > frame) stay pending for a later drain.
   drainSchedule(ctx, frame)
+  return result.diagnostics
 }
 
 function buildActionEvent(
@@ -397,6 +402,7 @@ function buildActionEvent(
   fall: number = 0,
   swapBack: number = 0,
   priorGate: number = 0,
+  diagnostics: Diagnostic[] = [],
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
   const event: ActionEvent = {
@@ -411,6 +417,7 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
+  if (diagnostics.length > 0) event.diagnostics = diagnostics
   if (
     react > 0 ||
     floor > 0 ||
@@ -451,6 +458,37 @@ function computePriorGatePad(
   if (anchor === undefined) return 0
   const rawPad = Math.max(0, anchor + minDelay - cursorFrame)
   return Math.max(0, rawPad - swapBack)
+}
+
+/**
+ * Warn when an entry begins grounded but its stage requires an airborne entry —
+ * a sustained "air" stage or a { land } with nothing to land from. Impossible in
+ * real play; the sim executes the stage anyway and reports the violation. The
+ * reverse mismatch (airborne meeting a ground-entry stage) is legal — gravity
+ * resolves it as Fall Frames, already visible in the delay breakdown. Intro
+ * Skills ignore incoming footing entirely.
+ */
+function footingDiagnostics(
+  currentFooting: "ground" | "air",
+  resolved: ResolvedStage,
+): Diagnostic[] {
+  const footing = resolved.stage.footing
+  if (
+    resolved.skillType === "Intro Skill" ||
+    currentFooting !== "ground" ||
+    stageEntryFooting(footing) !== "air"
+  ) {
+    return []
+  }
+  const isLand = typeof footing === "object" && "land" in footing
+  return [
+    {
+      kind: "footingViolation",
+      message: isLand
+        ? "Nothing to land from — not currently airborne"
+        : "Launch/Jump required before an aerial stage",
+    },
+  ]
 }
 
 function computeFall(

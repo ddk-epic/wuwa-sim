@@ -82,6 +82,7 @@ export type RenderItem =
 function buildShowMessageIds(
   nodes: TimelineNode[],
   validation: ValidationResult,
+  logWarnings: Map<string, ValidationWarning[]>,
 ): Set<string> {
   const ids = new Set<string>()
   let remaining = 2
@@ -90,7 +91,11 @@ function buildShowMessageIds(
       node.kind === "group" ? node.entries : [node]
     for (const e of entries) {
       if (remaining === 0) return ids
-      if ((validation.rowErrors.get(e.id)?.length ?? 0) > 0) {
+      if (
+        (validation.rowErrors.get(e.id)?.length ?? 0) > 0 ||
+        (validation.rowWarnings.get(e.id)?.length ?? 0) > 0 ||
+        (logWarnings.get(e.id)?.length ?? 0) > 0
+      ) {
         ids.add(e.id)
         remaining--
       }
@@ -104,6 +109,7 @@ function resolveEntryFields(
   slots: Slots,
   loadouts: SlotLoadout[],
   validation: ValidationResult,
+  logWarnings: Map<string, ValidationWarning[]>,
   showMessageIds: Set<string>,
 ): Pick<
   Extract<RenderItem, { type: "entry" }>,
@@ -139,7 +145,12 @@ function resolveEntryFields(
 
   const isInvalid = validation.invalidRowIds.has(entry.id)
   const errors = validation.rowErrors.get(entry.id) ?? []
-  const warnings = validation.rowWarnings.get(entry.id) ?? []
+  // Structural warnings (live, from the validator) + engine Diagnostics (from
+  // the last run's log) share one display channel.
+  const warnings = [
+    ...(validation.rowWarnings.get(entry.id) ?? []),
+    ...(logWarnings.get(entry.id) ?? []),
+  ]
   const showMessage = showMessageIds.has(entry.id)
 
   return {
@@ -163,10 +174,11 @@ export function buildTimelineRenderItems(
   slots: Slots,
   loadouts: SlotLoadout[],
   validation: ValidationResult,
+  logWarnings: Map<string, ValidationWarning[]> = new Map(),
 ): RenderItem[] {
   const items: RenderItem[] = []
   let flatIndex = 0
-  const showMessageIds = buildShowMessageIds(nodes, validation)
+  const showMessageIds = buildShowMessageIds(nodes, validation, logWarnings)
 
   for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
     const node = nodes[nodeIndex]
@@ -208,6 +220,7 @@ export function buildTimelineRenderItems(
               slots,
               loadouts,
               validation,
+              logWarnings,
               showMessageIds,
             ),
           })
@@ -238,6 +251,7 @@ export function buildTimelineRenderItems(
           slots,
           loadouts,
           validation,
+          logWarnings,
           showMessageIds,
         ),
       })

@@ -1,52 +1,13 @@
-import type { Footing, VariantKind } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { findStageByEntry, stageEntryFooting } from "../stage"
+import { findStageByEntry } from "../stage"
 
-function footingExitState(footing: Footing): "ground" | "air" {
-  if (footing === "air") return "air"
-  if (typeof footing === "object" && "launch" in footing) return "air"
-  return "ground"
-}
-
-function isLand(footing: Footing): boolean {
-  return typeof footing === "object" && "land" in footing
-}
-
-// Variant-aware exit footing: for { launch } / { land } stages, the exit depends on whether
-// the variant's actionTime covers the commit frame.
-function resolvedExitFooting(
-  footing: Footing,
-  variantKind: VariantKind | undefined,
-  stage: {
-    actionTime: number
-    variants?: Partial<Record<VariantKind, { actionTime: number }>>
-  },
-): "ground" | "air" {
-  if (footing === "ground") return "ground"
-  if (footing === "air") return "air"
-
-  const commitFrame = "launch" in footing ? footing.launch : footing.land
-  const transitionTarget: "ground" | "air" =
-    "launch" in footing ? "air" : "ground"
-  // A { launch } runs from the ground (reached via a fall if entered airborne), a
-  // { land } from the air; an uncommitted transition returns to that required entry.
-  const requiredEntry: "ground" | "air" = "launch" in footing ? "ground" : "air"
-
-  // swap: transition fires later via trailing window; cursor stays at the required entry
-  if (variantKind === "swap") return requiredEntry
-
-  // cancel/instantCancel: commit only if variant's actionTime covers the commit frame
-  if (variantKind === "cancel" || variantKind === "instantCancel") {
-    const variantActionTime =
-      stage.variants?.[variantKind]?.actionTime ?? stage.actionTime
-    return commitFrame <= variantActionTime ? transitionTarget : requiredEntry
-  }
-
-  // Full / no variant: always exits at transition target
-  return transitionTarget
-}
+// Footing is deliberately NOT validated here. Footing rules are frame-dependent
+// (variant advances, Reaction Delay, trailing-window commits), so a static walk
+// can only mirror the engine approximately — and a previous mirror drifted (it
+// ignored Reaction Delay). The engine emits footing violations as Diagnostics on
+// the ActionEvent of the run that observed them; do not re-add a predictor here.
 
 export interface ValidationError {
   message: string
@@ -167,107 +128,7 @@ export function validateTimeline(
     }
   }
 
-  // Footing-walk pass: team-global cursor + per-character swap-deferred footing.
-  // Statically mirrors the Trailing Window's footingChanges: a swap stage's
-  // launch/land exit is deferred until the same character re-enters.
-  let footingCursor: "ground" | "air" = "ground"
-  const deferredFooting = new Map<number, "ground" | "air">()
-  for (const entry of entries) {
-    if (invalidRowIds.has(entry.id)) {
-      // Skip footing check for already-invalid entries to avoid noise
-      continue
-    }
-    const resolved = findStageByEntry(entry, slots, loadouts)
-    const footing = resolved?.stage.footing
-    if (!footing) continue
-
-    const deferred = deferredFooting.get(entry.characterId) ?? null
-    const effectiveFooting = deferred ?? footingCursor
-    if (deferred !== null) {
-      deferredFooting.delete(entry.characterId)
-      // On-field invariant: the deferred exit commits to team footing on re-entry
-      footingCursor = deferred
-    }
-
-    // Hard error only when grounded and the stage needs an airborne entry with
-    // nothing to put us there. The reverse — airborne meeting a ground-entry stage,
-    // including a { launch } — is legal: gravity lands us first (a soft fall), so it
-    // is handled in the warn pass, not here. Intro Skills are exempt entirely: they
-    // ignore incoming footing and enter on any footing. (See references/footing.md.)
-    const isIntro = resolved.skillType === "Intro Skill"
-    let footingError: string | null = null
-    if (
-      !isIntro &&
-      effectiveFooting === "ground" &&
-      stageEntryFooting(footing) === "air"
-    ) {
-      footingError = isLand(footing)
-        ? "Nothing to land from — not currently airborne"
-        : "Launch/Jump required before an aerial stage"
-    }
-
-    if (footingError) {
-      const existing = internalErrors.get(entry.id) ?? []
-      existing.push({ message: footingError, isConsequence: false })
-      internalErrors.set(entry.id, existing)
-      invalidRowIds.add(entry.id)
-    }
-
-    // Advance team cursor to variant-aware exit footing
-    footingCursor = resolvedExitFooting(
-      footing,
-      entry.variantKind,
-      resolved.stage,
-    )
-
-    // Swap: exit footing is deferred to the trailing window, applied on re-entry
-    if (entry.variantKind === "swap") {
-      deferredFooting.set(entry.characterId, footingExitState(footing))
-    }
-  }
-
-  // Footing-walk pass 2: air→ground soft warning (mirrors the deferral logic)
-  let footingCursorForWarn: "ground" | "air" = "ground"
-  const deferredFootingForWarn = new Map<number, "ground" | "air">()
-  for (const entry of entries) {
-    if (invalidRowIds.has(entry.id)) continue
-    const resolved = findStageByEntry(entry, slots, loadouts)
-    const footing = resolved?.stage.footing
-    if (footing) {
-      const deferred = deferredFootingForWarn.get(entry.characterId) ?? null
-      const effectiveFooting = deferred ?? footingCursorForWarn
-      if (deferred !== null) {
-        deferredFootingForWarn.delete(entry.characterId)
-        // On-field invariant: the deferred exit commits to team footing on re-entry
-        footingCursorForWarn = deferred
-      }
-
-      // Airborne meeting any ground-entry stage (sustained "ground" or a { launch },
-      // which lands you before it re-launches) costs a fall — except an Intro Skill,
-      // which ignores incoming footing and never falls.
-      if (
-        resolved.skillType !== "Intro Skill" &&
-        effectiveFooting === "air" &&
-        stageEntryFooting(footing) === "ground"
-      ) {
-        const existing = rowWarnings.get(entry.id) ?? []
-        existing.push({
-          message: "Fall frames apply (airborne → grounded-entry stage)",
-        })
-        rowWarnings.set(entry.id, existing)
-      }
-      footingCursorForWarn = resolvedExitFooting(
-        footing,
-        entry.variantKind,
-        resolved.stage,
-      )
-      if (entry.variantKind === "swap") {
-        deferredFootingForWarn.set(entry.characterId, footingExitState(footing))
-      }
-    }
-  }
-
-  // Pass 3: build public rowErrors — suppress consequence-only rows
+  // Pass 2: build public rowErrors — suppress consequence-only rows
   const rowErrors = new Map<string, ValidationError[]>()
   for (const [id, errs] of internalErrors) {
     const directErrors = errs
@@ -278,7 +139,7 @@ export function validateTimeline(
     }
   }
 
-  // Pass 4: swap → same-character warnings
+  // Pass 3: swap → same-character warnings
   for (let i = 0; i < entries.length - 1; i++) {
     const entry = entries[i]
     if (
