@@ -4,8 +4,7 @@
 // Run: pnpm gen:sim-flow
 // The content below is hand-authored and changes at ADR cadence — update it when
 // an ADR reshapes the pipeline. Sources: simulation.ts (processAuthoredEntry /
-// processEntry / processHit), docs/engine-overview.md, docs/buff-engine.md,
-// ADR-0028, ADR-0038.
+// processEntry / processHit), docs/engine-overview.md, docs/buff-engine.md.
 import { writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -86,7 +85,7 @@ const STATIONS: Station[] = [
     id: "resolve",
     title: "Resolve Stage",
     module: "stage.ts",
-    desc: "findStageByEntry + resolveStageExecution turn the entry into a ResolvedStage: skill name/type/category, element, the DamageEntry hit list, and stageDuration. The Stage Variant applies here — cancel/instantCancel truncate at actionFrame (independent hits survive, ADR-0008), swap swaps out early, react/floor delays accrue.",
+    desc: "findStageByEntry + resolveStageExecution turn the entry into a ResolvedStage: skill name/type/category, element, the DamageEntry hit list, and stageDuration. The Stage Variant applies here — cancel/instantCancel truncate at actionFrame (independent hits survive), swap swaps out early, react/floor delays accrue.",
     reads: [],
     writes: [],
     branches: [
@@ -165,7 +164,7 @@ const STATIONS: Station[] = [
     id: "partition",
     title: "Partition hits",
     module: "partitionStage · trailing-window.ts",
-    desc: "Every stage splits its hits by actionFrame ≤ stageDuration: immediate ones resolve inline now; trailing ones are background damage that must interleave with later entries, so they enqueue onto the Schedule (ADR-0038). Swap stages also plan footing commits/resets.",
+    desc: "Every stage splits its hits by actionFrame ≤ stageDuration: immediate ones resolve inline now; trailing ones are background damage that must interleave with later entries, so they enqueue onto the Schedule. Swap stages also plan footing commits/resets.",
     reads: [],
     writes: [
       {
