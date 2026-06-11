@@ -79,6 +79,8 @@ A swap stage that declares `{ launch: number }` / `{ land: number }` past its `a
 
 (For now, In-trailing hits remain footing-blind — they resolve no footing-conditional buff against the acting character's live footing; per-character footing is consulted at swap-in for entry footing. Lifting that is a documented follow-up.)
 
+A Trailing Window is **swap-only**, but it is not the only way hits defer. A **non-swap** stage whose hits land past its `actionTime` (an Outro DoT, a delayed drop) also enqueues those hits onto the frame-ordered Schedule — so a later, earlier-framed cast resolves ahead of them instead of the synchronous resolve dragging the engine clock past it — but as **uncollidable `ignore` work**, not trailing residue: they always land, are never dropped or padded by a re-entry, and the owner is **not** [[In-trailing]] for them. Only `swap` opens a Trailing Window (In-trailing state, cancel/pad on same-character re-entry). See ADR-0038.
+
 See ADR-0018, ADR-0022 (per-character footing amendment).
 
 **Schedule**:

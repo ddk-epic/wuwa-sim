@@ -82,13 +82,15 @@ export function partitionStage(ctx: {
     hitFrame: ctx.stageStartFrame + h.actionFrame,
   }))
 
+  // Post-actionTime hits defer for every stage, so a later earlier-framed cast
+  // interleaves ahead of them rather than the clock racing past it.
   const isSwap = ctx.variantKind === "swap"
-  const immediate = isSwap
-    ? allBundles.filter((b) => b.hit.actionFrame <= ctx.stageDuration)
-    : allBundles
-  const trailing = isSwap
-    ? allBundles.filter((b) => b.hit.actionFrame > ctx.stageDuration)
-    : []
+  const immediate = allBundles.filter(
+    (b) => b.hit.actionFrame <= ctx.stageDuration,
+  )
+  const trailing = allBundles.filter(
+    (b) => b.hit.actionFrame > ctx.stageDuration,
+  )
 
   const footingChanges = isSwap
     ? buildFootingChanges(

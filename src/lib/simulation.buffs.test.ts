@@ -180,6 +180,82 @@ describe("runSimulation — buff lifecycle interleaving", () => {
   })
 })
 
+describe("runSimulation — post-actionTime hits resolve in frame order (stacking)", () => {
+  // A hit landing long after its actionTime must not drag the engine clock past
+  // a later, earlier-framed cast — else the buff looks expired and the follow-up
+  // spawns a duplicate instead of stacking.
+  it("a long-tail hit does not prematurely expire a buff a later earlier-framed cast should stack onto", () => {
+    const stackBuff: BuffDef = {
+      id: "char.stack.buff",
+      name: "Stacker",
+      trigger: {
+        event: "skillCast",
+        characterId: 1,
+        skillCategory: "Basic Attack",
+      },
+      target: { kind: "self" },
+      duration: { kind: "seconds", v: 1 }, // 60 frames
+      stacking: { max: 2, onRetrigger: "addStack" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "atkPct" },
+          value: { kind: "const", v: 0.1 },
+        },
+      ],
+    }
+    const char: EnrichedCharacter = {
+      ...charA,
+      buffs: [stackBuff],
+      skills: [
+        {
+          id: 1,
+          name: "Strikes",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Longtail",
+              category: "Basic Attack",
+              newName: "Longtail",
+              value: "100%",
+              actionTime: 10,
+              // hit lands at f=90, far past the 10-frame actionTime
+              damage: [{ ...dmgHit(1), actionFrame: 90 }],
+            },
+            {
+              name: "Followup",
+              category: "Basic Attack",
+              newName: "Followup",
+              value: "100%",
+              actionTime: 10,
+              damage: [dmgHit(1)],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }
+    testCharacters = [char]
+    const entries: TimelineEntry[] = [
+      tlEntry(1, "char.char-a.basic-attack.strikes.longtail::basic-attack"),
+      tlEntry(1, "char.char-a.basic-attack.strikes.followup::basic-attack"),
+    ]
+    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
+
+    const applied = result.filter(
+      (e) => e.kind === "buffApplied" && e.buffId === "char.stack.buff",
+    )
+    const refreshed = result.filter(
+      (e) => e.kind === "buffRefreshed" && e.buffId === "char.stack.buff",
+    )
+    // One instance that stacks to 2 — not two overlapping instances.
+    expect(applied).toHaveLength(1)
+    expect(
+      refreshed.some((e) => e.kind === "buffRefreshed" && e.stacks === 2),
+    ).toBe(true)
+  })
+})
+
 describe("runSimulation — Energy Recharge (#98)", () => {
   const erBuff = (id: number, erPct: number): BuffDef => ({
     id: `char${id}.er`,

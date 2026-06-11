@@ -93,7 +93,10 @@ describe("trailing-window — partitionStage: swap partition cutoff", () => {
 })
 
 describe("trailing-window — partitionStage: non-swap partition", () => {
-  it("all hits go to immediate; trailing empty for non-swap variantKind", () => {
+  it("post-actionTime hits defer to trailing for non-swap stages too (frame-ordered background damage)", () => {
+    // A non-swap stage whose hits outrun its actionTime (e.g. an Outro DoT): the
+    // late hit must defer to the stream so a later earlier-framed cast resolves
+    // ahead of it, instead of synchronously dragging the engine clock past it.
     const result = partitionStage({
       entry: makeEntry(1),
       resolved: stubResolved,
@@ -102,9 +105,25 @@ describe("trailing-window — partitionStage: non-swap partition", () => {
       variantKind: undefined,
       stageDuration: 5,
     })
+    expect(result.immediate).toHaveLength(1)
+    expect(result.immediate[0].hit.actionFrame).toBe(2)
+    expect(result.trailing).toHaveLength(1)
+    expect(result.trailing[0].hit.actionFrame).toBe(6)
+    // footingChanges stay swap-only — the launch/land window is a swap concept.
+    expect(result.footingChanges).toEqual([])
+  })
+
+  it("when all hits fit within actionTime, trailing is empty (no behavior change)", () => {
+    const result = partitionStage({
+      entry: makeEntry(1),
+      resolved: stubResolved,
+      stageStartFrame: 0,
+      hits: [makeDamageEntry(2), makeDamageEntry(4)],
+      variantKind: undefined,
+      stageDuration: 5,
+    })
     expect(result.immediate).toHaveLength(2)
     expect(result.trailing).toHaveLength(0)
-    expect(result.footingChanges).toEqual([])
   })
 })
 

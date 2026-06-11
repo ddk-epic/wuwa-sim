@@ -174,12 +174,14 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     variantKind: entry.variantKind,
     stageDuration,
   })
+  const isSwap = entry.variantKind === "swap"
   for (const t of part.trailing) {
-    // Trailing hits are residue: dropped on a cancel-capable re-entry, padded past on a non-cancel one.
+    // Swap residue is droppable/padded on re-entry; non-swap background hits
+    // (e.g. an Outro DoT) always land, so they enqueue as uncollidable `ignore`.
     ctx.schedule.enqueue({
       frame: t.hitFrame,
-      owner: entry.characterId,
-      arrival: "residue",
+      ...(isSwap ? { owner: entry.characterId } : {}),
+      arrival: isSwap ? "residue" : "ignore",
       payload: { kind: "trailing", bundle: t },
     })
   }
