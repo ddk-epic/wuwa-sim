@@ -249,12 +249,8 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({
-      react: 6,
-      floor: 0,
-      pad: 0,
-      fall: 0,
-      swapBack: 0,
-      priorGate: 0,
+      pad: { reaction: 6, floor: 0, trailing: 0, fall: 0 },
+      wait: 0,
     })
   })
 
@@ -300,8 +296,8 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       (a) => a.characterId === 30 && !a.variantKind,
     )
     // pad = 30 - 16 = 14
-    expect(padAction?.delayBreakdown?.pad).toBe(14)
-    expect(padAction?.delayBreakdown?.react).toBe(0)
+    expect(padAction?.delayBreakdown?.pad.trailing).toBe(14)
+    expect(padAction?.delayBreakdown?.pad.reaction).toBe(0)
   })
 
   it("swap with authored actionTime: react=reactionDelay, pad=0 (no collision)", () => {
@@ -337,12 +333,8 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({
-      react: 6,
-      floor: 0,
-      pad: 0,
-      fall: 0,
-      swapBack: 0,
-      priorGate: 0,
+      pad: { reaction: 6, floor: 0, trailing: 0, fall: 0 },
+      wait: 0,
     })
   })
 })
@@ -506,7 +498,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.swapBack).toBe(40)
+    expect(reentry?.delayBreakdown?.wait).toBe(40)
     // swapBack must advance the engine frame — re-entry actually starts at 40 + 40 = 80
     expect(reentry?.frame).toBe(80)
   })
@@ -557,7 +549,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     // A exited at frame 20, B ends at frame 40, swapBack = 60 - 20 = 40
-    expect(reentry?.delayBreakdown?.swapBack).toBe(40)
+    expect(reentry?.delayBreakdown?.wait).toBe(40)
   })
 
   it("(c) first-ever entry on a character has no swapBack", () => {
@@ -571,7 +563,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     ]
     const log = runSimulation(entries, [50, null, null], emptyLoadouts)
     const actions = actionsFrom(log)
-    expect(actions[0]?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(actions[0]?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 
   it("(d) same-character successive entries skip swapBack (no swap fires)", () => {
@@ -590,7 +582,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     ]
     const log = runSimulation(entries, [50, null, null], emptyLoadouts)
     const actions = actionsFrom(log)
-    expect(actions[1]?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(actions[1]?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 
   it("(e) Movement stages do not affect the swap-back clock", () => {
@@ -623,7 +615,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const log = runSimulation(entries, [50, 51, 52], emptyLoadouts)
     const actions = actionsFrom(log)
     const aReentry = actions.find((a) => a.sourceEntryId === "e4")
-    expect(aReentry?.delayBreakdown?.swapBack).toBe(40)
+    expect(aReentry?.delayBreakdown?.wait).toBe(40)
   })
 
   it("(f) pad is 0 once 60+ frames have elapsed off-field", () => {
@@ -693,7 +685,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     // A exits at frame 80, returns at frame 140 -> 60 - (140 - 80) = 0
-    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 })
 
@@ -822,7 +814,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const liberation = actions.find((a) => a.sourceEntryId === "e3")
-    expect(liberation?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(liberation?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 
   it("(b) off-field teammate CD is eaten when caster uses animationFrames stage", () => {
@@ -876,7 +868,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 
   it("(c) sequential animations accumulate", () => {
@@ -940,7 +932,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e4")
-    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(0)
   })
 
   it("(d) non-animation entries do not advance off-field clocks", () => {
@@ -988,7 +980,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(50)
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(50)
   })
 
   it("(e) stage without animationFrames does not advance clocks", () => {
@@ -1038,6 +1030,6 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(60)
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(60)
   })
 })

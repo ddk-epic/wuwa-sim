@@ -10,12 +10,8 @@ import { findStageByEntry, resolveStageExecution } from "../stage"
 const EMPTY_SLOTS: Slots = [null, null, null]
 const EMPTY_LOADOUTS: SlotLoadout[] = []
 const ZERO_DELAY: DelayBreakdown = {
-  react: 0,
-  floor: 0,
-  pad: 0,
-  fall: 0,
-  swapBack: 0,
-  priorGate: 0,
+  pad: { reaction: 0, floor: 0, trailing: 0, fall: 0 },
+  wait: 0,
 }
 
 export interface TimelineSummaryRow {
@@ -96,9 +92,7 @@ export function getTimelineSummary(
       delay = ae.delayBreakdown ?? ZERO_DELAY
 
       if (nextAe !== undefined) {
-        waitNext =
-          (nextAe.delayBreakdown?.swapBack ?? 0) +
-          (nextAe.delayBreakdown?.priorGate ?? 0)
+        waitNext = nextAe.delayBreakdown?.wait ?? 0
         durationFrames = nextAe.frame - ae.frame - waitNext
       } else {
         const resolved = findStageByEntry(entry, slots, loadouts)
@@ -135,12 +129,13 @@ export function getTimelineSummary(
 
       durationFrames = execution?.advance ?? 0
       delay = {
-        react: execution?.react ?? 0,
-        floor: execution?.floor ?? 0,
-        pad: 0,
-        fall: 0,
-        swapBack: 0,
-        priorGate: 0,
+        pad: {
+          reaction: execution?.react ?? 0,
+          floor: execution?.floor ?? 0,
+          trailing: 0,
+          fall: 0,
+        },
+        wait: 0,
       }
       damage = null
       cumulativeConcerto = null

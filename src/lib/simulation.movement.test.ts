@@ -574,7 +574,7 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+    expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
   })
 
   it("same-character ground stage after ground stage: fall does not fire", () => {
@@ -602,7 +602,7 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const second = actions.find((a) => a.sourceEntryId === "e2")
-    expect(second?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(second?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("aerial stage after launch: fall does not fire (air->air)", () => {
@@ -630,7 +630,7 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const aerialAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(aerialAction?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(aerialAction?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("cross-character air->ground via swap: fall fires on incoming character's row", () => {
@@ -659,7 +659,7 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(charBAction?.delayBreakdown?.fall).toBe(21)
+    expect(charBAction?.delayBreakdown?.pad.fall).toBe(21)
   })
 
   it("fall is additive with pad (both non-zero)", () => {
@@ -696,9 +696,9 @@ describe("runSimulation — fall frames", () => {
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBReentry = actions.find((a) => a.sourceEntryId === "e3")
     // fall=21 (team air from charA's launch + pending footing snapshot promotes)
-    expect(charBReentry?.delayBreakdown?.fall).toBe(21)
+    expect(charBReentry?.delayBreakdown?.pad.fall).toBe(21)
     // pad is non-zero (trailing hit at frame 50 extends entry starting at 36)
-    expect(charBReentry?.delayBreakdown?.pad ?? 0).toBeGreaterThan(0)
+    expect(charBReentry?.delayBreakdown?.pad.trailing ?? 0).toBeGreaterThan(0)
   })
 
   it("fall is NOT subject to variantFloor (fall accumulates independently)", () => {
@@ -728,7 +728,7 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+    expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
   })
 
   it("react/floor mutex preserved alongside fall", () => {
@@ -758,9 +758,9 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(groundAction?.delayBreakdown?.react).toBe(6)
-    expect(groundAction?.delayBreakdown?.floor).toBe(0)
-    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+    expect(groundAction?.delayBreakdown?.pad.reaction).toBe(6)
+    expect(groundAction?.delayBreakdown?.pad.floor).toBe(0)
+    expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
   })
 
   it("footing-transparent stage does not reset footing cursor", () => {
@@ -794,6 +794,6 @@ describe("runSimulation — fall frames", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e3")
-    expect(groundAction?.delayBreakdown?.fall).toBe(21)
+    expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
   })
 })

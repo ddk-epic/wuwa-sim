@@ -101,12 +101,8 @@ describe("prior-gate wait column", () => {
   const waiting: ActionEvent = {
     ...action,
     delayBreakdown: {
-      react: 0,
-      floor: 0,
-      pad: 0,
-      fall: 0,
-      swapBack: 0,
-      priorGate: 42,
+      pad: { reaction: 0, floor: 0, trailing: 0, fall: 0 },
+      wait: 42,
     },
   }
 

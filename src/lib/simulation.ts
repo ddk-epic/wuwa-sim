@@ -4,6 +4,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActionEvent,
   BuffEvent,
+  DelayBreakdown,
   Diagnostic,
   HitEvent,
   SimulationLogEntry,
@@ -140,16 +141,15 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   drainSchedule(ctx, cursor.frame)
   const animFrames = resolved?.stage.animationFrames ?? 0
   if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
-  const swapBack = engine.computeSwapBack(entry.characterId, cursor.frame)
+  const swapBackWait = engine.computeSwapBack(entry.characterId, cursor.frame)
 
   if (!resolved) return
 
-  const priorGate = computePriorGatePad(
-    ctx,
-    entry,
-    resolved,
-    cursor.frame,
-    swapBack,
+  // The two start-floors — swap-back cooldown and the windowed prior-stage gate —
+  // are absolute-frame floors on the same start, so the wait is their max.
+  const wait = Math.max(
+    swapBackWait,
+    computeGateWait(ctx, entry, resolved, cursor.frame),
   )
 
   const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
@@ -158,8 +158,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     resolved,
     ctx,
     arrival.padFrames,
-    swapBack,
-    priorGate,
+    wait,
   )
   if (resolved.skillType === "Intro Skill") {
     // An Intro establishes its own footing regardless of what it entered on.
@@ -289,12 +288,11 @@ function enqueueSynthetic(
 
 function processEntry(
   entry: TimelineEntry,
-  stageStartFrame: number,
+  cursorFrame: number,
   resolved: ResolvedStage,
   ctx: SimContext,
-  padFrames: number = 0,
-  swapBack: number = 0,
-  priorGate: number = 0,
+  trailingPad: number = 0,
+  wait: number = 0,
 ): {
   allHits: DamageEntry[]
   stageDuration: number
@@ -327,7 +325,7 @@ function processEntry(
 
   const diagnostics = footingDiagnostics(effectiveFooting, resolved)
 
-  const effectiveStart = stageStartFrame + fall + swapBack + priorGate
+  const effectiveStart = cursorFrame + fall + wait
 
   // Record this entry's cast frame for later prerequisite lookups.
   ctx.priorCasts.set(`${entry.characterId}:${resolved.stageId}`, effectiveStart)
@@ -349,12 +347,8 @@ function processEntry(
     resolved,
     engine,
     effectiveStart,
-    react,
-    floor,
-    padFrames,
-    fall,
-    swapBack,
-    priorGate,
+    { reaction: react, floor, trailing: trailingPad, fall },
+    wait,
     diagnostics,
   )
   log.push(actionEvent)
@@ -396,12 +390,8 @@ function buildActionEvent(
   resolved: ResolvedStage,
   engine: BuffEngine,
   frame: number,
-  react: number = 0,
-  floor: number = 0,
-  padFrames: number = 0,
-  fall: number = 0,
-  swapBack: number = 0,
-  priorGate: number = 0,
+  pad: DelayBreakdown["pad"] = { reaction: 0, floor: 0, trailing: 0, fall: 0 },
+  wait: number = 0,
   diagnostics: Diagnostic[] = [],
 ): ActionEvent {
   const actorState = engine.getResource(entry.characterId)
@@ -419,36 +409,28 @@ function buildActionEvent(
   }
   if (diagnostics.length > 0) event.diagnostics = diagnostics
   if (
-    react > 0 ||
-    floor > 0 ||
-    padFrames > 0 ||
-    fall > 0 ||
-    swapBack > 0 ||
-    priorGate > 0
+    pad.reaction > 0 ||
+    pad.floor > 0 ||
+    pad.trailing > 0 ||
+    pad.fall > 0 ||
+    wait > 0
   ) {
-    event.delayBreakdown = {
-      react,
-      floor,
-      pad: padFrames,
-      fall,
-      swapBack,
-      priorGate,
-    }
+    event.delayBreakdown = { pad, wait }
   }
   return event
 }
 
 /**
  * Frames the follow-up's start must wait to begin no earlier than
- * `anchorCastFrame + minDelay`, beyond what `swapBack` already forces. Returns 0
- * when `minDelay` is absent or no anchor was recorded.
+ * `anchorCastFrame + minDelay` (the windowed prior-stage gate). Returns 0 when
+ * `minDelay` is absent or no anchor was recorded. The caller `max`-combines this
+ * with the swap-back wait — both are absolute-frame floors on the same start.
  */
-function computePriorGatePad(
+function computeGateWait(
   ctx: SimContext,
   entry: TimelineEntry,
   resolved: ResolvedStage,
   cursorFrame: number,
-  swapBack: number,
 ): number {
   const { requiresPriorStageId, minDelay } = resolved
   if (requiresPriorStageId === undefined || minDelay === undefined) return 0
@@ -456,8 +438,7 @@ function computePriorGatePad(
     `${entry.characterId}:${requiresPriorStageId}`,
   )
   if (anchor === undefined) return 0
-  const rawPad = Math.max(0, anchor + minDelay - cursorFrame)
-  return Math.max(0, rawPad - swapBack)
+  return Math.max(0, anchor + minDelay - cursorFrame)
 }
 
 /**

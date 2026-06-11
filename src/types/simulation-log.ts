@@ -12,17 +12,20 @@ interface SimulationLogBase {
 }
 
 /**
- * Padding Delay breakdown. `react`/`floor` are mutually exclusive (see
- * stage.ts); `pad`/`fall`/`swapBack` are additive. `priorGate` holds the gate's
- * pad beyond what `swapBack` already forces, so the components stay additive.
+ * Padding Delay breakdown. `pad` holds the action-cost components forming the
+ * "+0.Xs" suffix beside the skill: `reaction`/`floor` are mutually exclusive (see
+ * stage.ts), `trailing`/`fall` add on top. `wait` is the idle frames before the
+ * action can begin (the wait badge) — `max(swap-back cooldown, prior-stage gate)`,
+ * a single number since the two floors are never surfaced apart.
  */
 export interface DelayBreakdown {
-  react: number
-  floor: number
-  pad: number
-  fall: number
-  swapBack: number
-  priorGate: number
+  pad: {
+    reaction: number
+    floor: number
+    trailing: number
+    fall: number
+  }
+  wait: number
 }
 
 /**

@@ -24,12 +24,7 @@ export function ActionEventRow({
     <tr className="border-t border-border/60">
       <IndexCell index={index} />
       <FrameCell frame={ev.frame} />
-      {showWait && (
-        <WaitCell
-          swapBack={ev.delayBreakdown?.swapBack}
-          priorGate={ev.delayBreakdown?.priorGate}
-        />
-      )}
+      {showWait && <WaitCell wait={ev.delayBreakdown?.wait} />}
       <td className="px-2 py-2">
         <CharCell id={ev.characterId} />
       </td>

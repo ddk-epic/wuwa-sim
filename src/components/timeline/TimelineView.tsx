@@ -134,9 +134,7 @@ export function TimelineView({
     return summarizeGroups(summary.rows, spans)
   }, [baseRenderItems, summary])
 
-  const showWait = summary.rows.some(
-    (r) => r.delay.swapBack > 0 || r.delay.priorGate > 0,
-  )
+  const showWait = summary.rows.some((r) => r.delay.wait > 0)
 
   if (entries.length === 0 && nodes.length === 0) {
     return (

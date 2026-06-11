@@ -2,24 +2,25 @@ import type { DelayBreakdown } from "#/types/simulation-log"
 import { formatFrames } from "#/lib/format"
 
 /**
- * Sums a Padding Delay breakdown's action costs and renders its tooltip. Returns
- * `null` when there is no delay. `floor`/`react` are mutually exclusive (floor
- * wins); `pad`/`fall` are appended in order. The start floors `swapBack` and
- * `priorGate` are excluded — they're surfaced as waits by `WaitBadge`.
+ * Sums a Padding Delay breakdown's action-cost `pad` components and renders its
+ * tooltip. Returns `null` when there is no delay. `floor`/`reaction` are mutually
+ * exclusive (floor wins); `trailing`/`fall` are appended in order. The `wait`
+ * floor is excluded — it's surfaced separately by `WaitBadge`.
  */
 export function formatPaddingDelay(
   d: DelayBreakdown,
 ): { total: number; tooltip: string } | null {
-  const total = d.react + d.floor + d.pad + d.fall
+  const { reaction, floor, trailing, fall } = d.pad
+  const total = reaction + floor + trailing + fall
   if (total === 0) return null
   const tooltip = [
-    d.floor > 0
-      ? `floor: ${formatFrames(d.floor)}`
-      : d.react > 0
-        ? `react: ${formatFrames(d.react)}`
+    floor > 0
+      ? `floor: ${formatFrames(floor)}`
+      : reaction > 0
+        ? `react: ${formatFrames(reaction)}`
         : "",
-    d.pad > 0 ? `pad: ${formatFrames(d.pad)}` : "",
-    d.fall > 0 ? `fall: ${formatFrames(d.fall)}` : "",
+    trailing > 0 ? `pad: ${formatFrames(trailing)}` : "",
+    fall > 0 ? `fall: ${formatFrames(fall)}` : "",
   ]
     .filter(Boolean)
     .join(" · ")

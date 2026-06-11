@@ -152,8 +152,8 @@ describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
     ])
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(103)
-    expect(follow?.delayBreakdown?.swapBack).toBe(30)
-    expect(follow?.delayBreakdown?.priorGate).toBe(43)
+    // wait = max(swap-back 30, gate 73) = 73
+    expect(follow?.delayBreakdown?.wait).toBe(73)
   })
 
   it("swap-cancelled prerequisite, swap-back after the swap-back CD: only the gate pads", () => {
@@ -167,8 +167,8 @@ describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
     ])
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(103)
-    expect(follow?.delayBreakdown?.swapBack).toBe(0)
-    expect(follow?.delayBreakdown?.priorGate).toBe(43)
+    // wait = max(swap-back 0, gate 43) = 43
+    expect(follow?.delayBreakdown?.wait).toBe(43)
   })
 
   it("re-casting the prerequisite re-arms the anchor to the most recent cast", () => {
@@ -183,7 +183,7 @@ describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
     ])
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(211)
-    expect(follow?.delayBreakdown?.priorGate).toBe(103)
+    expect(follow?.delayBreakdown?.wait).toBe(103)
   })
 })
 

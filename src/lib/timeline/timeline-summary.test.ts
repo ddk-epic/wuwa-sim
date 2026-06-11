@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
-import type { SimulationLogEntry } from "#/types/simulation-log"
+import type { DelayBreakdown, SimulationLogEntry } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
 
 import { emptyStatTable } from "#/types/stat-table"
@@ -188,12 +188,8 @@ describe("getTimelineSummary — single entry", () => {
         timeFrames: 0,
         durationFrames: 60,
         delay: {
-          react: 0,
-          floor: 0,
-          pad: 0,
-          fall: 0,
-          swapBack: 0,
-          priorGate: 0,
+          pad: { reaction: 0, floor: 0, trailing: 0, fall: 0 },
+          wait: 0,
         },
         damage: null,
         cumulativeConcerto: null,
@@ -275,14 +271,7 @@ describe("getTimelineSummary — dps", () => {
 function makeActionEvent(
   entryId: string,
   frame: number,
-  delayBreakdown?: {
-    react: number
-    floor: number
-    pad: number
-    fall: number
-    swapBack: number
-    priorGate: number
-  },
+  delayBreakdown?: DelayBreakdown,
 ): Extract<SimulationLogEntry, { kind: "action" }> {
   return {
     kind: "action",
@@ -333,12 +322,8 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
       makeActionEvent("e1", 0),
       makeHitEvent("e1", 0, 900),
       makeActionEvent("e2", 60, {
-        react: 9,
-        floor: 0,
-        pad: 0,
-        fall: 0,
-        swapBack: 0,
-        priorGate: 0,
+        pad: { reaction: 9, floor: 0, trailing: 0, fall: 0 },
+        wait: 0,
       }),
       makeHitEvent("e2", 60, 1200),
     ]
@@ -347,12 +332,12 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     expect(result.rows[0]).toMatchObject({
       timeFrames: 0,
       durationFrames: 60,
-      delay: { react: 0, pad: 0 },
+      delay: { pad: { reaction: 0, trailing: 0 } },
       damage: 900,
     })
     expect(result.rows[1]).toMatchObject({
       timeFrames: 60,
-      delay: { react: 9, pad: 0 },
+      delay: { pad: { reaction: 9, trailing: 0 } },
       damage: 1200,
     })
     expect(result.totalDamage).toBe(2100)
@@ -364,17 +349,13 @@ describe("getTimelineSummary — log ingestion: all rows matched", () => {
     const e1 = normalAttack(1, "e1")
     const e2 = normalAttack(1, "e2")
 
-    // e2 starts at 60 carrying a 30f wait (swapBack 20 + priorGate 10). The 60f
-    // gap is its wait + e1's own 30f advance.
+    // e2 starts at 60 carrying a 30f wait. The 60f gap is its wait + e1's own
+    // 30f advance.
     const log: SimulationLogEntry[] = [
       makeActionEvent("e1", 0),
       makeActionEvent("e2", 60, {
-        react: 0,
-        floor: 0,
-        pad: 0,
-        fall: 0,
-        swapBack: 20,
-        priorGate: 10,
+        pad: { reaction: 0, floor: 0, trailing: 0, fall: 0 },
+        wait: 30,
       }),
     ]
 
@@ -407,7 +388,7 @@ describe("getTimelineSummary — log ingestion: mixed match/fallback", () => {
     expect(result.rows[1]).toMatchObject({
       timeFrames: 60,
       durationFrames: 60,
-      delay: { react: 0, pad: 0 },
+      delay: { pad: { reaction: 0, trailing: 0 } },
       damage: null, // fallback rows show no estimate
     })
   })
@@ -529,17 +510,13 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     const e1 = normalAttack(1, "e1")
     const log: SimulationLogEntry[] = [
       makeActionEvent("e1", 0, {
-        react: 9,
-        floor: 0,
-        pad: 0,
-        fall: 0,
-        swapBack: 0,
-        priorGate: 0,
+        pad: { reaction: 9, floor: 0, trailing: 0, fall: 0 },
+        wait: 0,
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
-    expect(result.rows[0].delay.react).toBe(9)
-    expect(result.rows[0].delay.floor).toBe(0)
+    expect(result.rows[0].delay.pad.reaction).toBe(9)
+    expect(result.rows[0].delay.pad.floor).toBe(0)
   })
 
   it("floorFrames=variantFloor and reactFrames=0 when floor wins", () => {
@@ -547,17 +524,13 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     const e1 = normalAttack(1, "e1")
     const log: SimulationLogEntry[] = [
       makeActionEvent("e1", 0, {
-        react: 0,
-        floor: 15,
-        pad: 0,
-        fall: 0,
-        swapBack: 0,
-        priorGate: 0,
+        pad: { reaction: 0, floor: 15, trailing: 0, fall: 0 },
+        wait: 0,
       }),
     ]
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)
-    expect(result.rows[0].delay.react).toBe(0)
-    expect(result.rows[0].delay.floor).toBe(15)
+    expect(result.rows[0].delay.pad.reaction).toBe(0)
+    expect(result.rows[0].delay.pad.floor).toBe(15)
   })
 
   it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
@@ -579,7 +552,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
       undefined,
       0,
     )
-    expect(result.rows[0].delay.floor).toBe(0)
-    expect(result.rows[0].delay.react).toBe(0)
+    expect(result.rows[0].delay.pad.floor).toBe(0)
+    expect(result.rows[0].delay.pad.reaction).toBe(0)
   })
 })

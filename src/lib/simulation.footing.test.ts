@@ -317,7 +317,7 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("swap-variant with {launch:N}: re-entry past window -> carried air reset to ground (no fall)", () => {
@@ -355,7 +355,7 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    expect(reentry?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(reentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("different character enters while launch is pending: inherits ground (not yet-committed air)", () => {
@@ -387,7 +387,7 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBAction = actions.find((a) => a.sourceEntryId === "e2")
-    expect(charBAction?.delayBreakdown?.fall ?? 0).toBe(0)
+    expect(charBAction?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("consecutive aerial swap-variants layer per-character snapshots independently", () => {
@@ -428,8 +428,8 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charAReentry = actions.find((a) => a.sourceEntryId === "e3")
     const charBReentry = actions.find((a) => a.sourceEntryId === "e4")
-    expect(charAReentry?.delayBreakdown?.fall).toBe(21)
-    expect(charBReentry?.delayBreakdown?.fall).toBe(21)
+    expect(charAReentry?.delayBreakdown?.pad.fall).toBe(21)
+    expect(charBReentry?.delayBreakdown?.pad.fall).toBe(21)
   })
 })
 
@@ -469,10 +469,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
     expect(
-      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
   })
 
@@ -503,7 +505,7 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
     ).toBe(21)
   })
 
@@ -537,7 +539,8 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
   })
 
@@ -571,8 +574,8 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e2")
-    expect(reentry?.delayBreakdown?.fall).toBe(21)
-    expect(reentry?.delayBreakdown?.pad).toBe(14)
+    expect(reentry?.delayBreakdown?.pad.fall).toBe(21)
+    expect(reentry?.delayBreakdown?.pad.trailing).toBe(14)
   })
 
   it("trailing-window natural expiry does not flip team footing (pending footing dropped, not dispatched)", () => {
@@ -606,7 +609,8 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     // charB enters while charA's pending footing is still in the window (not yet fired)
     // -> charB sees ground -> no fall
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
     // trailing hit from charA fires via drainAll (1 immediate + 1 trailing = 2 total)
     const hits = result.filter((e) => e.kind === "hit")
@@ -651,7 +655,8 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
   })
 
@@ -690,7 +695,7 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.fall,
+      actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.pad.fall,
     ).toBe(21)
   })
 
@@ -723,7 +728,7 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
     ).toBe(21)
   })
 
@@ -755,7 +760,8 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
   })
 
@@ -787,10 +793,11 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
-      actions.find((a) => a.sourceEntryId === "e1")?.delayBreakdown?.fall ?? 0,
+      actions.find((a) => a.sourceEntryId === "e1")?.delayBreakdown?.pad.fall ??
+        0,
     ).toBe(0)
     expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall,
+      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
     ).toBe(21)
   })
 })
