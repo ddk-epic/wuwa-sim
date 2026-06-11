@@ -22,7 +22,7 @@ export function ImportPanel({
     <section className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-gray-300">Import</h3>
       <textarea
-        className="w-full h-42 bg-darkest border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-300 resize-none focus:outline-none focus:border-gray-500 placeholder:text-gray-600"
+        className="w-full h-42 bg-darkest border border-gray-700 rounded px-3 py-2 text-sm font-mono text-gray-300 resize-none focus:outline-none focus:border-gray-500 placeholder:text-gray-600 break-all"
         placeholder="Paste build code here…"
         spellCheck={false}
         value={importValue}
