@@ -94,7 +94,7 @@ export function BuffTimelineSidebar({
 
   return shell(
     <>
-      {/* hero NOW block — current action, subtly tinted in its element color */}
+      {/* current action, tinted in its element color */}
       <div
         className="border-b border-border px-5 py-4"
         style={{
@@ -128,7 +128,7 @@ export function BuffTimelineSidebar({
       </div>
 
       <div className="flex flex-1 flex-col min-h-0">
-        <div className="flex justify-between px-5 pb-1.5 pt-2.5">
+        <div className="flex justify-between overflow-y-hidden px-5 pb-1.5 pt-2.5 [scrollbar-gutter:stable]">
           <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
             active buffs · by source
           </span>
@@ -136,7 +136,7 @@ export function BuffTimelineSidebar({
             {live.length}
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 pb-5">
+        <div className="flex-1 overflow-y-scroll px-5 pb-5">
           {live.length === 0 && (
             <span className="text-detail text-muted-foreground/70">none</span>
           )}
@@ -231,7 +231,7 @@ export function BuffTimelineSidebar({
                     return (
                       <span
                         key={p.id}
-                        className="rounded-full bg-foreground/5 px-2 py-0.5 text-micro text-muted-foreground"
+                        className="rounded-full bg-foreground/5 px-2 py-0.5 text-detail text-muted-foreground"
                         title={srcName}
                       >
                         {p.name}

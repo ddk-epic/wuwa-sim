@@ -19,6 +19,8 @@ function hydrateChar(id: number): Char {
 const PX_PER_SEC = 104
 const FADE_S = 0.15
 const LANE_H = 21
+const PORTRAIT_FADE =
+  "linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%)"
 
 function buffFill(hex: string) {
   return `${hex}33`
@@ -192,15 +194,20 @@ function CharLabel({
         </div>
       ) : (
         <div
-          className="absolute inset-0 transition-[filter,opacity] duration-100"
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 transition-[filter,opacity] duration-100"
           style={{
+            // Square portrait pinned to one size regardless of lane count.
+            height: TL_LABEL_W,
             backgroundImage: `url("${src}")`,
             backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
             backgroundPosition: "top center",
             filter: dimmed
               ? "grayscale(1) contrast(1.08) brightness(1)"
-              : "contrast(1) brightness(1.05) saturate(1.1)",
+              : "contrast(1.05) brightness(1.05) saturate(1.1)",
             opacity: dimmed ? 0.65 : 0.9,
+            maskImage: PORTRAIT_FADE,
+            WebkitMaskImage: PORTRAIT_FADE,
           }}
         />
       )}
