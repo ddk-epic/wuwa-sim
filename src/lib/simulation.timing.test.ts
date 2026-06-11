@@ -284,7 +284,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
         characterId: 31,
         stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
       },
-      // Char 30 Basic Attack starts at frame 16, trailing hit at 30 â†’ padded to 30
+      // Char 30 Basic Attack starts at frame 16, trailing hit at 30 -> padded to 30
       {
         id: "db4",
         characterId: 30,
@@ -484,7 +484,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   }
 
   it("(a) clock starts at off-field-exit frame: full 60-frame cooldown on immediate swap-back", () => {
-    // A (20f) â†’ B (20f) â†’ A: A left at frame 20, arrives back at frame 40 â†’ swapBack = 60 - 20 = 40
+    // A (20f) -> B (20f) -> A: A left at frame 20, arrives back at frame 40 -> swapBack = 60 - 20 = 40
     testCharacters = [swapBackCharA, swapBackCharB]
     const entries = [
       tlEntry(
@@ -512,7 +512,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(b) trailing hits do not advance the clock: swapBack still reflects exit frame", () => {
-    // A with trailing hits (actionTime=20, hit at frame 15) â†’ B (20f) â†’ A
+    // A with trailing hits (actionTime=20, hit at frame 15) -> B (20f) -> A
     // A left at frame 20, B ends at frame 40, swapBack = 60 - 20 = 40
     testCharacters = [swapBackCharA, swapBackCharB]
     const charAWithTrailing: EnrichedCharacter = {
@@ -594,7 +594,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(e) Movement stages do not affect the swap-back clock", () => {
-    // A (20f) â†’ C:Dodge (10f) — no swap inferred for Movement â†’ B (20f) â†’ A
+    // A (20f) -> C:Dodge (10f) — no swap inferred for Movement -> B (20f) -> A
     // Because Dodge doesn't fire skillCast, A stays "on-field" in tracker;
     // B's arrival infers swap from A (sets lastOffFieldFrame[A] = 30), not C.
     // When A comes back at frame 50: swapBack = 60 - (50 - 30) = 40
@@ -613,7 +613,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
         51,
         "char.swap-b.basic-attack.normal-attack._::basic-attack",
         "e3",
-      ), // B at frame 30, swap from Aâ†’B recorded (lastOffFieldFrame[A]=30)
+      ), // B at frame 30, swap from A->B recorded (lastOffFieldFrame[A]=30)
       tlEntry(
         50,
         "char.swap-a.basic-attack.normal-attack._::basic-attack",
@@ -627,10 +627,10 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
   })
 
   it("(f) pad is 0 once 60+ frames have elapsed off-field", () => {
-    // A (80f) â†’ B (20f) â†’ A: A left at frame 80, arrives at frame 100 â†’ 60 - 20 = 40; but if gap â‰¥ 60 â†’ 0
-    // Use actionTime=70 for A so B starts at 70, then after B's 20f, A returns at 90 â†’ 60-(90-70)=40 (still some CD)
-    // For gap â‰¥ 60: A's actionTime=80, B's actionTime=20 â†’ A returns at 100, 60-(100-80)=40 still partial
-    // Use A actionTime=80, B actionTime=60: A exits at 80, B ends at 140 â†’ 60-(140-80) = 60-60 = 0
+    // A (80f) -> B (20f) -> A: A left at frame 80, arrives at frame 100 -> 60 - 20 = 40; but if gap >= 60 -> 0
+    // Use actionTime=70 for A so B starts at 70, then after B's 20f, A returns at 90 -> 60-(90-70)=40 (still some CD)
+    // For gap >= 60: A's actionTime=80, B's actionTime=20 -> A returns at 100, 60-(100-80)=40 still partial
+    // Use A actionTime=80, B actionTime=60: A exits at 80, B ends at 140 -> 60-(140-80) = 60-60 = 0
     const charALong: EnrichedCharacter = {
       ...swapBackCharA,
       skills: [
@@ -692,7 +692,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const log = runSimulation(entries, slots50_51, emptyLoadouts)
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
-    // A exits at frame 80, returns at frame 140 â†’ 60 - (140 - 80) = 0
+    // A exits at frame 80, returns at frame 140 -> 60 - (140 - 80) = 0
     expect(reentry?.delayBreakdown?.swapBack ?? 0).toBe(0)
   })
 })
@@ -779,7 +779,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   it("(a) caster's own residual CD is eaten by animationFrames", () => {
     // A swaps out at frame 20, B acts for 10 frames, A swaps back and casts Liberation
     // Without animation: swapBack = 60 - (30 - 20) = 50
-    // With animation (60f): clock advances 60 before computing â†’ swapBack = 0
+    // With animation (60f): clock advances 60 before computing -> swapBack = 0
     testCharacters = [animCharA, animCharB]
     const charBShort: EnrichedCharacter = {
       ...animCharB,
@@ -817,7 +817,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         60,
         "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
         "e3",
-      ), // A at frame 30, animationFrames=60 advance â†’ swapBack=0
+      ), // A at frame 30, animationFrames=60 advance -> swapBack=0
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
@@ -828,7 +828,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   it("(b) off-field teammate CD is eaten when caster uses animationFrames stage", () => {
     // B exits at frame 20, A casts Liberation at frame 20 (animationFrames=60)
     // Without animation: B's CD = 60 when B returns at frame 20
-    // With animation: advance 60 â†’ B's CD = 0 when B returns at frame 20
+    // With animation: advance 60 -> B's CD = 0 when B returns at frame 20
     const charALib: EnrichedCharacter = {
       ...animCharA,
       skills: [
@@ -880,8 +880,8 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
   })
 
   it("(c) sequential animations accumulate", () => {
-    // B exits at frame 0. A casts two Liberations (animationFrames=60 each) â†’ total 120f advance
-    // B re-enters at frame 0 â†’ swapBack = max(0, 60 - (0 - (0 - 120))) = 0
+    // B exits at frame 0. A casts two Liberations (animationFrames=60 each) -> total 120f advance
+    // B re-enters at frame 0 -> swapBack = max(0, 60 - (0 - (0 - 120))) = 0
     const charADoubleLib: EnrichedCharacter = {
       ...animCharA,
       skills: [
@@ -935,7 +935,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         61,
         "char.anim-b.basic-attack.normal-attack._::basic-attack",
         "e4",
-      ), // B returns at frame 20, 120f advance total â†’ 0
+      ), // B returns at frame 20, 120f advance total -> 0
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)

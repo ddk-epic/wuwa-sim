@@ -270,7 +270,7 @@ describe("getTimelineSummary — dps", () => {
   })
 })
 
-// â”€â”€ Log ingestion (#187) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Log ingestion (#187) -----------------------------------------------------
 
 function makeActionEvent(
   entryId: string,
@@ -562,7 +562,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
 
   it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
     // charA has Normal Attack with actionTime=60, no cancel variant
-    // With no log, fallback to resolveStageExecution with variantFloor=0 â†’ react wins
+    // With no log, fallback to resolveStageExecution with variantFloor=0 -> react wins
     testCharacters = [charA]
     const entry: TimelineEntry = {
       id: "f1",

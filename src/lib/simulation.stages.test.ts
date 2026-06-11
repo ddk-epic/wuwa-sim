@@ -125,7 +125,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     expect(hits).toHaveLength(1)
   })
 
-  it("cancel variant: actionFrame 23 â‰¤ cutoff 42, damage lands", () => {
+  it("cancel variant: actionFrame 23 <= cutoff 42, damage lands", () => {
     testCharacters = [charVariant]
     const entry: TimelineEntry = {
       id: "v1",
