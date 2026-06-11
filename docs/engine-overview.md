@@ -32,6 +32,7 @@ The sidebar's clickable stage catalog (`focused-stage-catalog`) is co-located wi
 
 ## Related
 
+- [sim-flow](sim-flow.html) — this page's flow as an interactive subway map (`pnpm gen:sim-flow` regenerates)
 - [buff-engine](buff-engine.md)
 - [CONTEXT.md § Core simulation](../CONTEXT.md#core-simulation)
 - [CONTEXT.md § The buff system](../CONTEXT.md#the-buff-system)

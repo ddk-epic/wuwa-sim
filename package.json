@@ -18,6 +18,7 @@
     "ralph": "bash scripts/ralph/ralph-once.sh",
     "extract": "tsx scripts/extract.ts",
     "gen:character": "tsx scripts/generate-character.ts",
+    "gen:sim-flow": "tsx scripts/generate-sim-flow.ts",
     "gen:weapon": "tsx scripts/generate-weapon.ts",
     "gen:echo": "tsx scripts/generate-echo.ts"
   },
