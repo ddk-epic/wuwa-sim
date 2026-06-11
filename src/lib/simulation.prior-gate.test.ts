@@ -2,9 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import type { ActionEvent } from "#/types/simulation-log"
+import type { ActionEvent, HitEvent } from "#/types/simulation-log"
 
-import type { HitEvent } from "#/types/simulation-log"
 import { runSimulation } from "./simulation"
 import { dmgHit } from "./simulation.test-fixtures"
 

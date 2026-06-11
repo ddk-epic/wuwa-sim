@@ -3,7 +3,7 @@ import type { Element } from "#/data/elements"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { GLOBAL_TARGET_ID } from "#/types/buff"
 
-export const TEAM_HEX = "#60a5fa" //text-blue-400
+export const TEAM_HEX = "#60a5fa" // text-blue-400
 
 export function elementHex(element: string): string {
   return ELEMENT_HEX[element as Element] ?? "#888"
