@@ -5,7 +5,7 @@ import { isCancelCapable, partitionStage } from "./trailing-window"
 import { makeResolvedStage } from "./stage.test-utils"
 
 /**
- * `trailing-window` is now a pair of pure helpers (ADR-0028 endgame): the
+ * `trailing-window` is now a pair of pure helpers: the
  * stateful per-character Map dissolved onto the simulation's frame-ordered
  * pending stream, so collision drop/pad behavior is covered by the simulation
  * integration tests (`simulation.test.ts` — trailing-window collision). What

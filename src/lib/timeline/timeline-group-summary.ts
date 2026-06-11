@@ -13,7 +13,7 @@ export interface GroupSpan {
 
 /**
  * A Timeline Group's rolled-up totals. A **view-layer derivation** of the flat
- * Timeline Summary — groups are visual-only (ADR-0016) and never reach the
+ * Timeline Summary — groups are visual-only and never reach the
  * engine, so this is computed beside the summary, not as a field on it.
  *
  * `totalDamage` is `null` when no row in the group carried damage (no sim run),

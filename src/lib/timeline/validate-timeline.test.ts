@@ -507,7 +507,7 @@ describe("validateTimeline — window mode (minDelay)", () => {
 })
 
 describe("validateTimeline — cascade suppression", () => {
-  // Chain: Stage 0 â†’ Stage 1 (req Stage 0) â†’ Stage 2 (req Stage 1) â†’ Stage 3 (req Stage 2)
+  // Chain: Stage 0 -> Stage 1 (req Stage 0) -> Stage 2 (req Stage 1) -> Stage 3 (req Stage 2)
   const chainChar = (): EnrichedCharacter =>
     baseChar({
       id: 1,
@@ -562,7 +562,7 @@ describe("validateTimeline — cascade suppression", () => {
     })
 
   it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowErrors", () => {
-    // Stage 0 absent; Stage 1 â†’ direct error; Stage 2, Stage 3 â†’ cascade
+    // Stage 0 absent; Stage 1 -> direct error; Stage 2, Stage 3 -> cascade
     testCharacters = [chainChar()]
     const s1 = entry(
       1,
@@ -601,7 +601,7 @@ describe("validateTimeline — cascade suppression", () => {
       "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "s1",
     )
-    // char 99 not in team â†’ independent error
+    // char 99 not in team -> independent error
     const independent = entry(
       99,
       "char.test.basic-attack.normal-attack._::basic-attack",
@@ -642,7 +642,7 @@ describe("validateTimeline — cascade suppression", () => {
   })
 })
 
-// â”€â”€ Warning channel: swap â†’ same-character rule (ADR-0018 / issue #178) â”€â”€â”€â”€â”€
+// -- Warning channel: swap -> same-character rule (issue #178) -----
 
 const swapChar = (): EnrichedCharacter =>
   baseChar({
@@ -716,7 +716,7 @@ const emptyLoadoutsW: SlotLoadout[] = [
   },
 ]
 
-describe("validateTimeline — swap warning channel (ADR-0018)", () => {
+describe("validateTimeline — swap warning channel", () => {
   it("emits a warning when a swap entry is immediately followed by the same character", () => {
     testCharacters = [swapChar()]
     const result = validateTimeline(
@@ -824,9 +824,9 @@ describe("validateTimeline — swap warning channel (ADR-0018)", () => {
   })
 })
 
-// â”€â”€ Footing walk validation (ADR-0022 slice 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Footing walk validation --------------------------------
 
-describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
+describe("validateTimeline — footing walk", () => {
   const footingChar = (): EnrichedCharacter =>
     baseChar({
       id: 1,
@@ -970,7 +970,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     testCharacters = [footingChar()]
   })
 
-  it("hard error: ground â†’ air ('launch/jump required')", () => {
+  it("hard error: ground -> air ('launch/jump required')", () => {
     const result = validateTimeline(
       [fEntry("char.test.basic-attack.air-move._::basic-attack", "air")],
       [1, null, null],
@@ -982,7 +982,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     ).toBe(true)
   })
 
-  it("soft fall (not an error): air â†’ launch falls to ground, then launches", () => {
+  it("soft fall (not an error): air -> launch falls to ground, then launches", () => {
     // A { launch } entered airborne is legal: gravity lands the character (fall
     // frames), then the launch fires at its commit frame. So a second consecutive
     // launch is valid with a fall warning, not the old "already airborne" hard error.
@@ -1002,7 +1002,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(result.invalidRowIds.has("launch1")).toBe(false)
   })
 
-  it("hard error: ground â†’ land ('nothing to land from')", () => {
+  it("hard error: ground -> land ('nothing to land from')", () => {
     const result = validateTimeline(
       [fEntry("char.test.basic-attack.land-move._::basic-attack", "land")],
       [1, null, null],
@@ -1014,7 +1014,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     ).toBe(true)
   })
 
-  it("valid: Jump (launch) â†’ air â†’ land sequence", () => {
+  it("valid: Jump (launch) -> air -> land sequence", () => {
     const result = validateTimeline(
       [
         fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
@@ -1040,7 +1040,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
       [1, null, null],
       loadouts,
     )
-    // Cursor stays ground through the neutral move â†’ air stage hard-errors
+    // Cursor stays ground through the neutral move -> air stage hard-errors
     expect(result.invalidRowIds.has("air")).toBe(true)
   })
 
@@ -1057,7 +1057,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(result.invalidRowIds.has("land")).toBe(false)
   })
 
-  it("soft warning: air cursor â†’ ground stage emits fall-frames annotation", () => {
+  it("soft warning: air cursor -> ground stage emits fall-frames annotation", () => {
     const result = validateTimeline(
       [
         fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
@@ -1073,7 +1073,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     ).toBe(true)
   })
 
-  it("no warning: ground cursor â†’ ground stage (normal grounded stage)", () => {
+  it("no warning: ground cursor -> ground stage (normal grounded stage)", () => {
     const result = validateTimeline(
       [
         fEntry("char.test.basic-attack.ground-move._::basic-attack", "g1"),
@@ -1085,7 +1085,7 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
     expect(result.rowWarnings.has("g2")).toBe(false)
   })
 
-  it("no warning: air cursor â†’ air stage", () => {
+  it("no warning: air cursor -> air stage", () => {
     const result = validateTimeline(
       [
         fEntry("char.test.basic-attack.launch-move._::basic-attack", "launch"),
@@ -1130,9 +1130,9 @@ describe("validateTimeline — footing walk (ADR-0022 slice 1)", () => {
   })
 })
 
-// â”€â”€ Validator footing snapshot (ADR-0022 slice 3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Validator footing snapshot ---------------------------
 
-describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
+describe("validateTimeline — footing snapshot", () => {
   const snapChar = (id: number): EnrichedCharacter =>
     baseChar({
       id,
@@ -1191,9 +1191,9 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
   })
 
   it("swap-variant footing snapshot: same-char re-entry gets fall warning after charB ground stage", () => {
-    // charA (1) aerial swap â†’ cursor stays "ground" (swap defers), snapshot charA â†’ "air"
-    // charB (2) ground stage â†’ team "ground" (no change)
-    // charA (1) re-enters ground stage â†’ effective footing from snapshot "air" â†’ fall warning
+    // charA (1) aerial swap -> cursor stays "ground" (swap defers), snapshot charA -> "air"
+    // charB (2) ground stage -> team "ground" (no change)
+    // charA (1) re-enters ground stage -> effective footing from snapshot "air" -> fall warning
     const result = validateTimeline(
       [
         fSnap(
@@ -1223,8 +1223,8 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
   })
 
   it("swap-variant footing: different character sees entry footing (no fall warning from swap)", () => {
-    // charA aerial swap â†’ cursor stays "ground" (swap does not advance team cursor)
-    // charB ground stage â†’ charB uses team cursor "ground" â†’ no fall warning
+    // charA aerial swap -> cursor stays "ground" (swap does not advance team cursor)
+    // charB ground stage -> charB uses team cursor "ground" -> no fall warning
     const result = validateTimeline(
       [
         fSnap(
@@ -1247,9 +1247,9 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
   })
 
   it("snapshot consumed on re-entry: second same-char ground stage does not warn again", () => {
-    // charA aerial swap â†’ snapshot "air"
-    // charA ground re-entry â†’ snapshot consumed â†’ team footing now "ground"
-    // charA second ground stage â†’ no snapshot, team footing "ground" â†’ no fall warning
+    // charA aerial swap -> snapshot "air"
+    // charA ground re-entry -> snapshot consumed -> team footing now "ground"
+    // charA second ground stage -> no snapshot, team footing "ground" -> no fall warning
     const result = validateTimeline(
       [
         fSnap(
@@ -1279,9 +1279,9 @@ describe("validateTimeline — footing snapshot (ADR-0022 slice 3)", () => {
   })
 })
 
-// â”€â”€ Variant-aware exit footing for launch/land stages (ADR-0022 amendment) â”€â”€â”€â”€
+// -- Variant-aware exit footing for launch/land stages ----
 
-describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)", () => {
+describe("validateTimeline — variant-aware exit footing", () => {
   // A character with:
   //   LaunchCancel: { launch: 30 } stage, cancel.actionTime: 20, full actionTime: 40
   //   LaunchFull:   { launch: 30 } stage, no explicit cancel variant
@@ -1377,7 +1377,7 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
     testCharacters = [variantChar()]
   })
 
-  // cancel of { launch: 30 } with actionTime 20 < 30 â†’ no launch, stays ground
+  // cancel of { launch: 30 } with actionTime 20 < 30 -> no launch, stays ground
   it("cancel: { launch: N } with actionTime < N exits ground — next ground stage valid", () => {
     const result = validateTimeline(
       [
@@ -1414,11 +1414,11 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
     ).toBe(true)
   })
 
-  // cancel of { land: 25 } with actionTime 20 < 25 â†’ no land, stays air (entered from air)
+  // cancel of { land: 25 } with actionTime 20 < 25 -> no land, stays air (entered from air)
   it("cancel: { land: N } with actionTime < N exits air — next air stage valid", () => {
     const result = validateTimeline(
       [
-        // First get to air via a full launch (actionTime 40 â‰¥ launch frame 30)
+        // First get to air via a full launch (actionTime 40 >= launch frame 30)
         vEntry(
           "char.test.basic-attack.launch-cancel._::basic-attack",
           "launch",
@@ -1459,7 +1459,7 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
     ).toBe(true)
   })
 
-  // Full variant of { launch: 30 } with actionTime 40 â‰¥ 30 â†’ launch commits, exits air
+  // Full variant of { launch: 30 } with actionTime 40 >= 30 -> launch commits, exits air
   it("full: { launch: N } with actionTime >= N exits air — next air stage valid", () => {
     const result = validateTimeline(
       [
@@ -1516,7 +1516,7 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
       [1, 2, null],
       [emptyLoadout, emptyLoadout, emptyLoadout],
     )
-    // charB sees entry footing "ground" â†’ no hard error, no fall warning
+    // charB sees entry footing "ground" -> no hard error, no fall warning
     expect(result.invalidRowIds.has("g2")).toBe(false)
     expect(result.rowWarnings.has("g2")).toBe(false)
   })
@@ -1534,7 +1534,7 @@ describe("validateTimeline — variant-aware exit footing (ADR-0022 amendment)",
       [1, null, null],
       loadouts,
     )
-    // charA re-entry reads snapshot "air" â†’ fall warning on ground stage
+    // charA re-entry reads snapshot "air" -> fall warning on ground stage
     expect(result.invalidRowIds.has("gs")).toBe(false)
     expect(
       result.rowWarnings.get("gs")?.some((w) => /fall/i.test(w.message)),

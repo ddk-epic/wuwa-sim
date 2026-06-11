@@ -8,7 +8,7 @@ import { runSimulation } from "./simulation"
 import { makeChar, stageOf, tlEntry } from "./simulation.test-fixtures"
 
 /**
- * Authored-path HitContext threading (ADR-0029, issue #289).
+ * Authored-path HitContext threading (issue #289).
  *
  * The authored walk (`resolveTrailingBundle`) builds a HitContext from the
  * resolved stage + DamageEntry (`stageId`/`skillCategory`/`skillType`/`element`)

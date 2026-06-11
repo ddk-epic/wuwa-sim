@@ -11,7 +11,7 @@ How `docs/` is maintained.
 - **`docs/`** — project knowledge useful to any contributor; verifiable against source
 - **`CONTEXT.md`** — narrative and language for the project as a whole
 - **`UBIQUITOUS_LANGUAGE.md`** — canonical definitions of domain terms
-- **`docs/adr/`** — append-only records of architectural decisions
+- **`docs/adr/`** — architectural decisions, kept **current** rather than append-only: when a decision is revised, fold the change into the ADR's body and retrofit the superseded design into Considered Options with the reason it changed (no trailing "Amendment" sections). An ADR fully superseded by a later one is deleted and absorbed into its successor's Considered Options. Numbers are never reused — gaps remain; full history lives in git.
 
 Boundary test: _"Useful to a contributor who isn't the user?"_ Yes → docs.
 

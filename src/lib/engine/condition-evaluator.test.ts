@@ -78,7 +78,7 @@ describe("ConditionEvaluator", () => {
       expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
     })
 
-    it("buffActive negate inverts presence (ADR-0033)", () => {
+    it("buffActive negate inverts presence", () => {
       const present = makeWorld({ hasActiveBuff: vi.fn(() => true) })
       const absent = makeWorld({ hasActiveBuff: vi.fn(() => false) })
       const cond: Condition = {

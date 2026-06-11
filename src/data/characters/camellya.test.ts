@@ -240,7 +240,7 @@ describe("Camellya — bonusMultiplier scoped via appliesToHits", () => {
   })
 })
 
-describe("Camellya — pistil drain mints Crimson Buds (resourceStep, ADR-0032)", () => {
+describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
   const BUD = "char.camellya.forte.crimson-bud"
 
   /** A consuming hit: drains `forte` raw and grants the per-hit API concerto. */
@@ -341,7 +341,7 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep, ADR-0032)"
   })
 })
 
-describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks, ADR-0032)", () => {
+describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
   const BUDDING = "char.camellya.forte.budding-mode"
   const BUD = "char.camellya.forte.crimson-bud"
 
@@ -538,7 +538,7 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks, ADR-0032)", (
   })
 })
 
-describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate, ADR-0033)", () => {
+describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate)", () => {
   const BUD = "char.camellya.forte.crimson-bud"
   const BASIC_STAGE =
     "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1"

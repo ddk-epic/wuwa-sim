@@ -266,7 +266,7 @@ describe("Sanhua — S5 Unraveling Fate (Ice Burst Crit DMG +100%)", () => {
   })
 })
 
-describe("Sanhua — Detonate burst honors its actionFrame offset (ADR-0028)", () => {
+describe("Sanhua — Detonate burst honors its actionFrame offset", () => {
   const DETONATE_STAGE =
     "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack"
 

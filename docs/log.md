@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-11 — ADRs squashed: amendments folded in, superseded ADRs absorbed
+
+The ADR set had accreted trailing "Amendment" sections (0028 had five, 0022's two reversed each other) and cross-ADR amendment notes that made reading any one ADR an archaeology exercise. Policy change in conventions.md: ADRs are kept current, not append-only — revisions fold into the body, superseded designs retrofit into Considered Options with the reason they changed, fully superseded ADRs are deleted and absorbed by their successor (numbers never reused; history in git). Applied: 0012/0014/0023 deleted into 0024's Considered Options; 0003/0008/0018/0022/0028 rewritten to their shipped end state; cross-amendments applied into 0015 (`comboAllows` retired per 0036), 0019/0020/0021 (coord/reaction notes), 0029 (lineage matching per 0032), 0036 (In-trailing claim corrected per 0037); 0009 gained its encoding-superseded pointer to 0024.
+
+Pages touched: conventions.md, adr/0003, 0008, 0009, 0015, 0018, 0019, 0020, 0021, 0022, 0024, 0028, 0029, 0036 (0012, 0014, 0023 deleted); CONTEXT.md, src/data/BUFFS.md, src/data/CHARACTERS.md (reference repoints).
+
 ## 2026-06-11 — Swap-back renders as an up-front wait, not a delay component
 
 `swapBack` was buried in the `DelayBadge` `+N` suffix beside the skill, reading as if the re-entering stage got fatter. It's a start _floor_ (the character is idle, waiting out its swap-back CD), the same kind as `priorGate` — so it moves to the up-front wait column, summed with `priorGate` in `WaitBadge` (they `max`-combine, so the sum doesn't double-count). `formatPaddingDelay` now totals only the action costs (`react`/`floor`/`pad`/`fall`); the two start floors are excluded and surfaced as the wait. Applied to both the Timeline and the Simulation Log (engine source of truth, same `DelayBreakdown`). Relocating the wait onto the _next_ character's row (charC, who can't know about charA's timer) was set aside as infeasible; the wait still sits on the held-up entry but reads honestly. Same pass also stopped the wait from double-counting into the **preceding** row's Duration cell: `timeline-summary` computed a row's duration as the raw gap to the next action, which swallowed the next entry's `swapBack`/`priorGate`. Duration now subtracts the next entry's wait, while the real clock (`cumulativeFrames`) and `totalTimeFrames`/DPS keep counting it. Engine behavior unchanged — presentation only.

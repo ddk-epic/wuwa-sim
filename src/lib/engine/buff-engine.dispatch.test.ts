@@ -251,8 +251,8 @@ describe("BuffEngine — phase pipeline as data", () => {
     // Because the resource phase runs first, statBuff's Condition is satisfied
     // when resolveStats later reads concerto, and the +0.5 contribution lands.
     // Buff ids ensure resourceBuff's id sorts BEFORE statBuff's id so that,
-    // even within a single phase, candidates are processed in the lex order
-    // pinned by ADR-0006.
+    // even within a single phase, candidates are processed in the pinned
+    // lex order.
     const resourceBuff: BuffDef = {
       id: "char.test.aResource",
       name: "Adds Concerto",

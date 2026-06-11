@@ -233,7 +233,7 @@ const charSnapA: EnrichedCharacter = {
           actionTime: 30,
           footing: { launch: 15 },
           damage: [
-            snapDmg(3), // immediate (â‰¤ swapFrames=6)
+            snapDmg(3), // immediate (<= swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window
           ],
         },
@@ -281,11 +281,11 @@ function snapSlots(): Slots {
   return [52, 53, null]
 }
 
-describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)", () => {
-  it("aerial swap-variant â†’ long teammate action â†’ charA re-enters past its window â†’ benched to ground (no fall)", () => {
+describe("runSimulation — trailing-window footing snapshot", () => {
+  it("aerial swap-variant -> long teammate action -> charA re-enters past its window -> benched to ground (no fall)", () => {
     // charA aerial swap launches at frame 15 (window [0, actionTime=30)). charB's
-    // ground stage is 50 frames, so charA re-enters well past frame 30 â†’ In-trailing
-    // â†’ In-reserve: its carried "air" reset to "ground" at window-end. No fall.
+    // ground stage is 50 frames, so charA re-enters well past frame 30 -> In-trailing
+    // -> In-reserve: its carried "air" reset to "ground" at window-end. No fall.
     // (The within-window swap-back-pays-fall case is covered below at re-entry frame 6.)
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
@@ -320,11 +320,11 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
     expect(reentry?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
-  it("swap-variant with {launch:N}: re-entry past window â†’ carried air reset to ground (no fall)", () => {
-    // charA Launch swap ({launch:15}, advance=6): launch frame > advance â†’ footing
+  it("swap-variant with {launch:N}: re-entry past window -> carried air reset to ground (no fall)", () => {
+    // charA Launch swap ({launch:15}, advance=6): launch frame > advance -> footing
     // commit on the stream sets charA's carried "air" at frame 15. charB's action
     // pushes charA's re-entry past the window-end (stageStart + actionTime), so the
-    // In-trailing â†’ In-reserve reset returns charA to ground first â†’ no fall.
+    // In-trailing -> In-reserve reset returns charA to ground first -> no fall.
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
       {
@@ -360,7 +360,7 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
 
   it("different character enters while launch is pending: inherits ground (not yet-committed air)", () => {
     // charA swap-cancel before launch frame: team stays ground when charB enters.
-    // charB sees ground footing â†’ no fall. charA's pending footing fires off-field only
+    // charB sees ground footing -> no fall. charA's pending footing fires off-field only
     // on charA's re-entry, not when charB enters.
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
@@ -369,12 +369,12 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
         characterId: 52,
         stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
         variantKind: "swap",
-      }, // {launch:15}, swap advance=6 < 15 â†’ pending; team stays ground
+      }, // {launch:15}, swap advance=6 < 15 -> pending; team stays ground
       tlEntry(
         53,
         "char.snap-b.basic-attack.ground-stage._::basic-attack",
         "e2",
-      ), // charB enters: team=ground â†’ no fall
+      ), // charB enters: team=ground -> no fall
     ]
     const result = runSimulation(
       entries,
@@ -433,12 +433,12 @@ describe("runSimulation — trailing-window footing snapshot (ADR-0022 slice 3)"
   })
 })
 
-describe("runSimulation — footing commit as trailing-window event (ADR-0022 slice 4)", () => {
-  it("early-cancel swap: incoming char inherits ground; charA re-enters past window â†’ ground (no fall)", () => {
-    // charA swaps out before its launch frame 15 â†’ team stays ground â†’ charB inherits
+describe("runSimulation — footing commit as trailing-window event", () => {
+  it("early-cancel swap: incoming char inherits ground; charA re-enters past window -> ground (no fall)", () => {
+    // charA swaps out before its launch frame 15 -> team stays ground -> charB inherits
     // ground. charA's launch commit sets its carried "air" at frame 15, but charB's
-    // 50-frame action pushes charA's re-entry past window-end â†’ carried air reset to
-    // ground â†’ charA enters grounded, no fall.
+    // 50-frame action pushes charA's re-entry past window-end -> carried air reset to
+    // ground -> charA enters grounded, no fall.
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
       {
@@ -476,9 +476,9 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     ).toBe(0)
   })
 
-  it("late-cancel swap: launch fires on-field â†’ team flips to air â†’ incoming char inherits air", () => {
-    // charA non-swap Launch ({launch:15} â‰¤ advance=30) â†’ on-field dispatch â†’ team=air â†’
-    // charB enters after charA's full advance â†’ team=air â†’ charB pays fall
+  it("late-cancel swap: launch fires on-field -> team flips to air -> incoming char inherits air", () => {
+    // charA non-swap Launch ({launch:15} <= advance=30) -> on-field dispatch -> team=air ->
+    // charB enters after charA's full advance -> team=air -> charB pays fall
     testCharacters = [charAerial, charAerialB]
     const entries: TimelineEntry[] = [
       tlEntry(
@@ -508,9 +508,9 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
   })
 
   it("cancel-capable same-char re-entry before pending launch frame: drops footing (no team flip, no snapshot)", () => {
-    // charA swap at frame 0 â†’ pending footing at frame 15
-    // charA Resonance Skill re-entry at frame 6 (< 15) â†’ cancel-capable drop â†’
-    // no snapshot, no team flip; charA's new entry sees team=ground â†’ no fall
+    // charA swap at frame 0 -> pending footing at frame 15
+    // charA Resonance Skill re-entry at frame 6 (< 15) -> cancel-capable drop ->
+    // no snapshot, no team flip; charA's new entry sees team=ground -> no fall
     testCharacters = [charSnapA]
     const entries: TimelineEntry[] = [
       {
@@ -541,11 +541,11 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     ).toBe(0)
   })
 
-  it("non-cancel-capable same-char re-entry: pads to cover launch frame; footing fires â†’ fall on re-entry", () => {
-    // charA swap at frame 0 â†’ pending footing at frame 15, trailing hit at frame 20
-    // charA Normal Attack re-entry at frame 6 â†’ non-cancel-capable â†’
-    // pad = max(hitFrame=20, footingAtFrame=15) - 6 = 14; pendingFooting fires â†’ snapshot â†’
-    // on-field invariant promotes to air â†’ charA pays fall
+  it("non-cancel-capable same-char re-entry: pads to cover launch frame; footing fires -> fall on re-entry", () => {
+    // charA swap at frame 0 -> pending footing at frame 15, trailing hit at frame 20
+    // charA Normal Attack re-entry at frame 6 -> non-cancel-capable ->
+    // pad = max(hitFrame=20, footingAtFrame=15) - 6 = 14; pendingFooting fires -> snapshot ->
+    // on-field invariant promotes to air -> charA pays fall
     testCharacters = [charSnapA]
     const entries: TimelineEntry[] = [
       {
@@ -604,7 +604,7 @@ describe("runSimulation — footing commit as trailing-window event (ADR-0022 sl
     )
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     // charB enters while charA's pending footing is still in the window (not yet fired)
-    // â†’ charB sees ground â†’ no fall
+    // -> charB sees ground -> no fall
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.fall ?? 0,
     ).toBe(0)

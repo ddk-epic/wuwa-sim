@@ -58,7 +58,7 @@ export class ResourceLedger {
     const cap = this.caps.get(characterId)?.[resource]
     const capped =
       cap !== undefined ? Math.min(before + delta, cap) : before + delta
-    // Floor at 0: no resource goes negative regardless of authoring (ADR-0031).
+    // Floor at 0: no resource goes negative regardless of authoring.
     const after = Math.max(0, capped)
     state[resource] = after
     if (before !== after) this.version_++

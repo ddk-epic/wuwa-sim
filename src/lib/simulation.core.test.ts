@@ -519,7 +519,7 @@ describe("runSimulation — healing pipeline", () => {
     expect(result.every((e) => e.kind !== "hit")).toBe(true)
   })
 
-  it("heal amount = (ATK Ã— multiplier + flat) Ã— (1 + healingBonus)", () => {
+  it("heal amount = (ATK x multiplier + flat) x (1 + healingBonus)", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
       [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
@@ -577,10 +577,10 @@ describe("runSimulation — healing pipeline", () => {
   })
 })
 
-// â”€â”€ Trailing-window collision (ADR-0018 / issue #177) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Trailing-window collision (issue #177) -----------------------
 
-// â”€â”€ Fall frames (ADR-0022 slice 2) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Fall frames --------------------------------------------
 
-// â”€â”€ Trailing-window footing snapshot (ADR-0022 slice 3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Trailing-window footing snapshot ---------------------
 
-// â”€â”€ Footing commit as Trailing Window event (ADR-0022 slice 4) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Footing commit as Trailing Window event ---------------

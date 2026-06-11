@@ -724,7 +724,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
   })
 })
 
-describe("BuffEngine — ADR-0011: target collapses to source at trigger time", () => {
+describe("BuffEngine — target collapses to source at trigger time", () => {
   it("nextOnField def with cond.on=target evaluates against source, not nextOnField char", () => {
     const windowBuff: BuffDef = {
       id: "test.window",

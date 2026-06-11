@@ -260,7 +260,7 @@ export function enrichSkill(
     return {
       // Default the input-axis category from the skill grouping when the
       // grouping is itself a category; otherwise from the first hit's damage
-      // type (ADR-0024: the two axes are orthogonal). Correct ~90% of the
+      // type (the two axes are orthogonal). Correct ~90% of the
       // time; off-type stages are fixed by hand in the enriched .ts.
       name: attr.attributeName,
       category: defaultCategory(grouping, matched[0]),

@@ -22,7 +22,11 @@ self additional-damage as a teammate Coordinated Attack via the `coord` pill.)
 the hit lacks **never matches** — a [[Synthetic Hit]] has no `stageId`/`skillCategory`, and an
 authored hit has no `sourceBuffId`. (This is why Sanhua's `{ sourceBuffId: [the three bursts] }`
 excludes the detonate's authored Heavy hits unconditionally: an authored hit can never carry a
-`sourceBuffId`, regardless of whether its path threads a hit context.)
+`sourceBuffId`, regardless of whether its path threads a hit context.) The `stageId` axis matches
+by **lineage prefix** via the same `stageIdMatches` the trigger matcher uses (added by
+[ADR-0032](0032-pistil-bud-conversion-via-resourcestep-and-scaledbystacks.md), unifying a latent
+inconsistency where the Hit Filter required exact equality): an id without a `.<hitIndex>` suffix
+matches every hit of that stage lineage; with the suffix it pins exactly that hit.
 
 The predicate is **buff-level**, not effect-level: one rule per buff, scoping every stat effect
 the buff carries. This keeps the engine change to a single `if (def.appliesToHits)` guard in

@@ -1,5 +1,5 @@
 /**
- * Footing state (ADR-0022, per-character footing amendment). Holds two things:
+ * Footing state. Holds two things:
  *
  * - **team footing** — the field's current vertical state, i.e. the On-field
  *   character's footing. A fresh swap-in inherits it (swap while airborne → the

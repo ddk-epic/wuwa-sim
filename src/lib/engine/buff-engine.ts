@@ -89,7 +89,7 @@ export interface BootstrapInput {
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
 /**
- * Concerto an Outro Skill consumes on cast (ADR-0031). Single source of truth.
+ * Concerto an Outro Skill consumes on cast. Single source of truth.
  * Concerto stays uncapped, so surplus above this is wasted by the full drain.
  */
 export const OUTRO_CONCERTO_COST = 100
@@ -135,7 +135,7 @@ export class BuffEngine {
   }
 
   /**
-   * Trigger-driven phase pipeline (ADR-0006). Phase ordering is a value, not
+   * Trigger-driven phase pipeline. Phase ordering is a value, not
    * inline control flow: changing order means editing this list. Within each
    * phase, candidates are already lex-sorted by `buffDef.id` upstream.
    */
@@ -404,7 +404,7 @@ export class BuffEngine {
             `[BuffEngine] Outro Skill cast by ${name} with insufficient concerto (${concerto} < ${OUTRO_CONCERTO_COST})`,
           )
         }
-        // Full drain — surplus above 100 is wasted by design (ADR-0031).
+        // Full drain — surplus above 100 is wasted by design.
         this.setResource(
           event.characterId,
           "concerto",
@@ -434,7 +434,7 @@ export class BuffEngine {
           return false
       }
       // Reactions have no instance for lazy re-evaluation; evaluate condition
-      // at candidate-selection time (ADR-0011).
+      // at candidate-selection time.
       if (def.condition && def.duration == null) {
         return this.evaluator.evaluateUncached(
           def.condition,
@@ -981,7 +981,7 @@ export class BuffEngine {
   }
 
   /**
-   * Fires `resourceConsumed` on any net decrease (ADR-0031), threshold-free —
+   * Fires `resourceConsumed` on any net decrease, threshold-free —
    * catching both the engine-internal Outro drain and data-authored `op: "sub"`
    * spends. Never fires on accrual (`after >= before`).
    */

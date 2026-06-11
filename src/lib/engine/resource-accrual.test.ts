@@ -46,7 +46,7 @@ describe("accrueForHit — pure resource gain rule (#321)", () => {
     ])
   })
 
-  it("applies negative forte (consumption) raw — FR scales gains only (ADR-0032)", () => {
+  it("applies negative forte (consumption) raw — FR scales gains only", () => {
     const accruals = accrueForHit({ forte: -9.3 }, actor, party)
     expect(accruals).toEqual([
       { characterId: 1, resource: "forte", delta: -9.3 },
@@ -68,7 +68,7 @@ describe("accrueForHit — pure resource gain rule (#321)", () => {
     ])
   })
 
-  it("scales actor energy by (1 + ER) × (1 + energyGainMult) (ADR-0033)", () => {
+  it("scales actor energy by (1 + ER) × (1 + energyGainMult)", () => {
     const [first] = accrueForHit({ energy: 10 }, actor, party, 1.5)
     expect(first).toEqual({
       characterId: 1,

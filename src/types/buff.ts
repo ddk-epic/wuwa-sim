@@ -101,7 +101,7 @@ export type EmitHitEffect = {
 
 /**
  * Like `EmitHitEffect` but the resulting event is never re-entered into the
- * trigger matcher (ADR-0020 non-chain rule). Use for coordinated attack
+ * trigger matcher (the non-chain rule). Use for coordinated attack
  * reactions where coord→coord chaining must be impossible.
  */
 export type CoordHitEffect = {
@@ -201,7 +201,7 @@ export type Trigger =
       characterId?: number
     }
   | {
-      // Fires on any net decrease of a resource, of any size (ADR-0031) —
+      // Fires on any net decrease of a resource, of any size —
       // threshold-free, unlike `resourceCrossed`. The faithful "on spend" hook.
       event: "resourceConsumed"
       resource: ResourceKind
@@ -349,7 +349,7 @@ export interface BuffDef {
   /**
    * When set, this buff's stat effects are excluded from the hit-agnostic
    * resolveStats pass and instead fold into a matching hit's snapshot via a
-   * second sub-pass (ADR-0029). The filter is a conjunction: every present
+   * second sub-pass. The filter is a conjunction: every present
    * axis must match the HitContext; absent = unconstrained.
    */
   appliesToHits?: HitFilter

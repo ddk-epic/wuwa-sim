@@ -15,7 +15,7 @@ function isLand(footing: Footing): boolean {
 }
 
 // Variant-aware exit footing: for { launch } / { land } stages, the exit depends on whether
-// the variant's actionTime covers the commit frame (ADR-0022 amendment).
+// the variant's actionTime covers the commit frame.
 function resolvedExitFooting(
   footing: Footing,
   variantKind: VariantKind | undefined,
@@ -169,7 +169,7 @@ export function validateTimeline(
 
   // Footing-walk pass: team-global cursor + per-character swap-deferred footing.
   // Statically mirrors the Trailing Window's footingChanges: a swap stage's
-  // launch/land exit is deferred until the same character re-enters (ADR-0022).
+  // launch/land exit is deferred until the same character re-enters.
   let footingCursor: "ground" | "air" = "ground"
   const deferredFooting = new Map<number, "ground" | "air">()
   for (const entry of entries) {

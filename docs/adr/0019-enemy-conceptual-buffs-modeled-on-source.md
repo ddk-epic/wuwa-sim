@@ -1,8 +1,6 @@
 # Enemy-conceptual buffs modeled on the source character pending enemy-target support
 
-Buffs whose game-text concept is "a flag/mark on the enemy" (e.g. Verina's Photosynthesis Mark) are authored with `target: self` on the source character — a self-applied presence flag — rather than via an `enemy` `BuffTarget`. The engine has no `enemy` target variant today: `BuffTarget` is `self | team | nextOnField`. Because the simulator is single-target (ADR-0007), "Mark on the enemy" and "the source character has applied a Mark presence" are isomorphic, so the self-flag faithfully reproduces the mechanic while avoiding the cross-cutting work of adding an enemy-target vocabulary.
-
-This supersedes the aspirational line in ADR-0007 that described enemy-targeted buffs as already stored on a singleton enemy: in practice they live on the source.
+Buffs whose game-text concept is "a flag/mark on the enemy" (e.g. Verina's Photosynthesis Mark) are authored with `target: self` on the source character — a self-applied presence flag — rather than via an `enemy` `BuffTarget`. The engine has no `enemy` target variant today: `BuffTarget` is `self | global | nextOnField` (ADR-0025). Because the simulator is single-target (ADR-0007), "Mark on the enemy" and "the source character has applied a Mark presence" are isomorphic, so the self-flag faithfully reproduces the mechanic while avoiding the cross-cutting work of adding an enemy-target vocabulary.
 
 ## Migration trigger
 

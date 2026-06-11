@@ -303,7 +303,7 @@ const charSnapA: EnrichedCharacter = {
           actionTime: 30,
           footing: { launch: 15 },
           damage: [
-            snapDmg(3), // immediate (â‰¤ swapFrames=6)
+            snapDmg(3), // immediate (<= swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window
           ],
         },
@@ -482,7 +482,7 @@ describe("runSimulation — Movement stages", () => {
   })
 })
 
-describe("runSimulation — trailing-window collision (ADR-0018)", () => {
+describe("runSimulation — trailing-window collision", () => {
   it("cancel-capable re-entry: drops trailing hits at or after new-entry start frame", () => {
     testCharacters = [charTrailingBase]
     const entries: TimelineEntry[] = [
@@ -493,7 +493,7 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
           "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
-      // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 â†’ dropped
+      // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 -> dropped
       {
         id: "t2",
         characterId: 30,
@@ -518,13 +518,13 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
           "char.trailing-char.basic-attack.normal-attack._::basic-attack",
         variantKind: "swap",
       },
-      // Char 31: advance=10, frame â†’ 6+10=16
+      // Char 31: advance=10, frame -> 6+10=16
       {
         id: "t2",
         characterId: 31,
         stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
       },
-      // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 â†’ pad to 30
+      // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 -> pad to 30
       {
         id: "t3",
         characterId: 30,
@@ -547,8 +547,8 @@ describe("runSimulation — trailing-window collision (ADR-0018)", () => {
   })
 })
 
-describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
-  it("same-character airâ†’ground: fall fires on grounded stage after launch", () => {
+describe("runSimulation — fall frames", () => {
+  it("same-character air->ground: fall fires on grounded stage after launch", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
       tlEntry(
@@ -605,7 +605,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     expect(second?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
-  it("aerial stage after launch: fall does not fire (airâ†’air)", () => {
+  it("aerial stage after launch: fall does not fire (air->air)", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [
       tlEntry(
@@ -633,9 +633,9 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
     expect(aerialAction?.delayBreakdown?.fall ?? 0).toBe(0)
   })
 
-  it("cross-character airâ†’ground via swap: fall fires on incoming character's row", () => {
+  it("cross-character air->ground via swap: fall fires on incoming character's row", () => {
     testCharacters = [charAerial, charAerialB]
-    // charA launches (team â†’ air), charB does ground stage (fall fires on charB)
+    // charA launches (team -> air), charB does ground stage (fall fires on charB)
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
@@ -663,7 +663,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
   })
 
   it("fall is additive with pad (both non-zero)", () => {
-    // charA full non-swap launch â†’ team air; charB swap with trailing hit â†’ window;
+    // charA full non-swap launch -> team air; charB swap with trailing hit -> window;
     // charB re-enters ground stage: fall fires (team air) + pad fires (trailing hit)
     testCharacters = [charAerial, charSnapA]
     const entries: TimelineEntry[] = [
@@ -671,7 +671,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
         50,
         "char.aerial-char.resonance-skill.launch._::resonance-skill",
         "e1",
-      ), // non-swap: {launch:15} â‰¤ advance=30 â†’ on-field â†’ team=air
+      ), // non-swap: {launch:15} <= advance=30 -> on-field -> team=air
       {
         id: "e2",
         characterId: 52,
@@ -746,7 +746,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
         variantKind: "cancel",
       },
     ]
-    // reactionDelay=6, variantFloor=0 â†’ react wins
+    // reactionDelay=6, variantFloor=0 -> react wins
     const result = runSimulation(
       entries,
       aerialSlots(),
@@ -765,7 +765,7 @@ describe("runSimulation — fall frames (ADR-0022 slice 2)", () => {
 
   it("footing-transparent stage does not reset footing cursor", () => {
     testCharacters = [charAerial]
-    // launch â†’ neutral (transparent, no footing change) â†’ ground â†’ fall fires
+    // launch -> neutral (transparent, no footing change) -> ground -> fall fires
     const entries: TimelineEntry[] = [
       tlEntry(
         50,

@@ -576,7 +576,7 @@ Key points an author trips on:
 - The `::<skillType>` segment is derived from `damage[0].type`, falling back to the stage `category` (Tune Break → Basic Attack). It is **not** the skill's `type` grouping.
 - The `.n` hit suffix is appended at hit emission as `${stageId}.${hitIndex + 1}` — so it lands **after** `::skillType` (`…::basic-attack.3`).
 
-**Matching** (`stageIdMatches`): a trigger id **without** a trailing `.n` is a lineage **prefix** — it matches every hit of that stage (and descendant stages). With a `.n` suffix it pins exactly that hit. So `…frigid-light.stage-5::basic-attack` matches all hits of Stage 5; `…::basic-attack.1` matches only the first. `skillCast` triggers match by exact equality (cast events carry no `.n`). (ADR-0024, ADR-0014.)
+**Matching** (`stageIdMatches`): a trigger id **without** a trailing `.n` is a lineage **prefix** — it matches every hit of that stage (and descendant stages). With a `.n` suffix it pins exactly that hit. So `…frigid-light.stage-5::basic-attack` matches all hits of Stage 5; `…::basic-attack.1` matches only the first. `skillCast` triggers match by exact equality (cast events carry no `.n`). (ADR-0024.)
 
 Echo stages use a shorter scheme: `echo.<echoName>.<stageName>::echo-skill` (`makeEchoStageId`).
 

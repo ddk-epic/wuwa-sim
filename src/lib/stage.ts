@@ -74,7 +74,7 @@ export function stageSkillType(
   return damage?.[0]?.type ?? fallback
 }
 
-/** `char.<charName>.<skill-category>.<skillName>.<stageName>::<skill-type>` (ADR-0024) */
+/** `char.<charName>.<skill-category>.<skillName>.<stageName>::<skill-type>` */
 export function makeCharStageId(
   charName: string,
   skillCategory: SkillCategory,
@@ -85,7 +85,7 @@ export function makeCharStageId(
   return `char.${toKebab(charName)}.${toKebab(skillCategory)}.${toKebab(skillName)}.${toKebab(stageName)}::${toKebab(skillType)}`
 }
 
-/** `echo.<echoName>.<stageName>::echo-skill` (ADR-0024) */
+/** `echo.<echoName>.<stageName>::echo-skill` */
 export function makeEchoStageId(
   echoName: string,
   stageName: string | undefined,
@@ -144,7 +144,7 @@ export function findStageByEntry(
           // Grouping-only labels that are not SkillTypes (Normal Attack,
           // Inherent Skill, Tune Break, Forte Circuit) collapse to "Basic Attack".
           // Independent of skillCategory (the trigger axis); per-hit damage type
-          // lives on each DamageEntry.type. See ADR-0024.
+          // lives on each DamageEntry.type.
           const skillType: SkillType =
             skill.type === "Normal Attack" ||
             skill.type === "Inherent Skill" ||

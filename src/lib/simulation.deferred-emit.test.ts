@@ -57,7 +57,7 @@ const loadouts: SlotLoadout[] = [loadout, loadout, loadout]
 const isSynth = (e: SimulationLogEntry): e is HitEvent =>
   e.kind === "hit" && e.sourceBuffId === "gold.deferred-emit"
 
-describe("deferred emitHit — honor actionFrame (ADR-0028)", () => {
+describe("deferred emitHit — honor actionFrame", () => {
   it("synthetic lands at trigger + actionFrame and interleaves before the later entry", () => {
     testCharacters = [
       makeChar(1, "Gold A", [emitBuff(30)]),
@@ -99,7 +99,7 @@ describe("deferred emitHit — honor actionFrame (ADR-0028)", () => {
   })
 })
 
-describe("deferred emitHit — no overshoot (ADR-0028 endgame item 1)", () => {
+describe("deferred emitHit — no overshoot", () => {
   // A self stat buff applied on Gold A's hit (frame 0) that expires at frame 135.
   const tempAtk: BuffDef = {
     id: "gold.temp-atk",
