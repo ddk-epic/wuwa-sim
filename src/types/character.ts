@@ -169,13 +169,13 @@ type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
 
 export type EnrichedSkillAttribute =
   | (EnrichedSkillAttributeBase & {
-      requiresPriorStageId: string
+      requiresPriorStage: string
       // Frames. Absent ⇒ prerequisite must immediately precede; present ⇒
       // prerequisite need only have cast earlier on the same character.
       minDelay?: number
     })
   | (EnrichedSkillAttributeBase & {
-      requiresPriorStageId?: never
+      requiresPriorStage?: never
     })
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {

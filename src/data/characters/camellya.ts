@@ -19,7 +19,7 @@ export const camellya = {
   forteCap: 100,
   buffs: [
     {
-      id: "char.camellya.inherent.seedbed",
+      id: "char.camellya.seedbed",
       name: "Seedbed",
       description: "Camellya's Havoc DMG Bonus is increased by 15%.",
       trigger: { event: "simStart" },
@@ -34,7 +34,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.inherent.epiphyte",
+      id: "char.camellya.epiphyte",
       name: "Epiphyte",
       description: "Camellya's Basic Attack DMG Bonus is increased by 15%.",
       trigger: { event: "simStart" },
@@ -49,7 +49,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s1.crit-dmg",
+      id: "char.camellya.s1-crit-dmg",
       name: "S1: Somewhere No One Travelled",
       description:
         "After using Intro Skill, Camellya's Crit. DMG increases by 28% for 18s.",
@@ -74,7 +74,7 @@ export const camellya = {
       // Per-skill DMG Multiplier scoped via `appliesToHits`. The always-true
       // `forte >= 0` condition keeps it a per-hit instance instead of being
       // folded into the base table (which would leak it onto every hit).
-      id: "char.camellya.s2.ephemeral-multiplier",
+      id: "char.camellya.s2-ephemeral-multiplier",
       name: "S2: Calling Upon the Silent Rose",
       description: "Ephemeral DMG Multiplier is increased by 120%.",
       requiresSequence: 2,
@@ -88,8 +88,7 @@ export const camellya = {
         on: "source",
       },
       appliesToHits: {
-        stageId:
-          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack.1",
+        stage: "vegetative-universe/ephemeral#1",
       },
       effects: [
         {
@@ -100,7 +99,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s3.fervor-multiplier",
+      id: "char.camellya.s3-fervor-multiplier",
       name: "S3: A Bud Adorned by Thorns (DMG Multiplier)",
       description:
         "Resonance Liberation Fervor Efflorescent DMG Multiplier is increased by 50%.",
@@ -115,8 +114,7 @@ export const camellya = {
         on: "source",
       },
       appliesToHits: {
-        stageId:
-          "char.camellya.resonance-liberation.fervor-efflorescent._::resonance-liberation.1",
+        stage: "fervor-efflorescent/cast#1",
       },
       effects: [
         {
@@ -127,7 +125,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s4.intro-basic-bonus",
+      id: "char.camellya.s4-intro-basic-bonus",
       name: "S4: Roots Set Deep In Eternity",
       description:
         "After using Intro Skill, all team members' Basic Attack DMG Bonus increases by 25% for 30s.",
@@ -148,7 +146,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s5.intro-multiplier",
+      id: "char.camellya.s5-intro-multiplier",
       name: "S5: Infinity Held in Your Palm (Intro)",
       description:
         "Intro Skill Everblooming DMG Multiplier is increased by 303%.",
@@ -172,7 +170,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s5.outro-multiplier",
+      id: "char.camellya.s5-outro-multiplier",
       name: "S5: Infinity Held in Your Palm (Outro)",
       description: "Outro Skill Twining DMG Multiplier is increased by 68%.",
       requiresSequence: 5,
@@ -196,7 +194,7 @@ export const camellya = {
     },
     {
       // Every 10 forte consumed mints one Crimson Bud (capped at 10), read by Sweet Dream.
-      id: "char.camellya.forte.crimson-bud",
+      id: "char.camellya.crimson-bud",
       name: "Crimson Bud",
       description:
         "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), lasting 15s. No Buds are gained while Budding Mode is active.",
@@ -215,7 +213,7 @@ export const camellya = {
       // trigger time.
       condition: {
         kind: "buffActive",
-        buffId: "char.camellya.forte.budding-mode",
+        buff: "budding-mode",
         on: "source",
         negate: true,
       },
@@ -226,26 +224,21 @@ export const camellya = {
       // Budding Mode carries Sweet Dream: a `bonusMultiplier` read off the
       // Crimson Bud count at cast and snapshotted.
       // ends on swap-out or when pistils hit 0 (see budding-mode-end).
-      id: "char.camellya.forte.budding-mode",
+      id: "char.camellya.budding-mode",
       name: "Budding Mode",
       description:
         "Casting Ephemeral consumes all Crimson Buds and enters Budding Mode: core attacks gain a Sweet Dream DMG Multiplier of 50% + 5% per Bud consumed (max 10). Ends on swap-out or when Crimson Pistils reach 0.",
       trigger: {
         event: "skillCast",
         characterId: 1603,
-        stageId:
-          "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack",
+        stage: "vegetative-universe/ephemeral",
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
       expiresOnSourceSwapOut: true,
       stacking: { max: 1, onRetrigger: "replace" },
       appliesToHits: {
-        stageId: [
-          "char.camellya.basic-attack.burgeoning",
-          "char.camellya.heavy-attack.burgeoning",
-          "char.camellya.resonance-skill.valse-of-bloom-and-blight",
-        ],
+        stage: ["burgeoning", "valse-of-bloom-and-blight"],
       },
       effects: [
         {
@@ -253,7 +246,7 @@ export const camellya = {
           path: { stat: "bonusMultiplier" },
           value: {
             kind: "scaledByStacks",
-            buffId: "char.camellya.forte.crimson-bud",
+            buff: "crimson-bud",
             characterId: 1603,
             base: 0.5,
             per: 0.05,
@@ -261,12 +254,12 @@ export const camellya = {
             snapshot: true,
           },
         },
-        { kind: "removeBuffs", ids: ["char.camellya.forte.crimson-bud"] },
+        { kind: "removeBuffs", buffs: ["crimson-bud"] },
       ],
     },
     {
       // Pistil-zero exit: when forte crosses 0 downward, Budding Mode ends.
-      id: "char.camellya.forte.budding-mode-end",
+      id: "char.camellya.budding-mode-end",
       name: "Budding Mode (End)",
       description: "Budding Mode ends when Crimson Pistils reach 0.",
       trigger: {
@@ -276,14 +269,12 @@ export const camellya = {
         direction: "down",
         characterId: 1603,
       },
-      effects: [
-        { kind: "removeBuffs", ids: ["char.camellya.forte.budding-mode"] },
-      ],
+      effects: [{ kind: "removeBuffs", buffs: ["budding-mode"] }],
     },
     {
       // +150% Energy Regen Multiplier on consuming attacks → 2.5× Resonance Energy.
       // While Budding Mode is NOT active.
-      id: "char.camellya.forte.erm",
+      id: "char.camellya.erm",
       name: "150% ER Multiplier",
       description:
         "Camellya's consuming attacks gain +150% Energy Regen Multiplier (×2.5 Resonance Energy). Reduced to 0% during Budding Mode.",
@@ -292,7 +283,7 @@ export const camellya = {
       duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
-        buffId: "char.camellya.forte.budding-mode",
+        buff: "budding-mode",
         on: "source",
         negate: true,
       },
@@ -307,7 +298,7 @@ export const camellya = {
     {
       // While Budding Mode is active, −1.0 to `energyGainMult`.
       // is 1 + (−1.0) = 0.
-      id: "char.camellya.forte.budding-erm",
+      id: "char.camellya.budding-erm",
       name: "Budding Mode (0 ER Multiplier)",
       description:
         "While Budding Mode is active, Camellya's consuming attacks generate no Resonance Energy.",
@@ -316,7 +307,7 @@ export const camellya = {
       duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
-        buffId: "char.camellya.forte.budding-mode",
+        buff: "budding-mode",
         on: "source",
       },
       effects: [
@@ -328,7 +319,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s3.budding-atk",
+      id: "char.camellya.s3-budding-atk",
       name: "S3: A Bud Adorned by Thorns (ATK)",
       description:
         "While Budding Mode is active, Camellya's ATK is increased by 58%.",
@@ -338,7 +329,7 @@ export const camellya = {
       duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
-        buffId: "char.camellya.forte.budding-mode",
+        buff: "budding-mode",
         on: "source",
       },
       effects: [
@@ -350,7 +341,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s6.sweet-dream-rider",
+      id: "char.camellya.s6-sweet-dream-rider",
       name: "S6: Bloom For You Thousand Times Over",
       description:
         "While Budding Mode is active, the Sweet Dream DMG Multiplier is increased by an additional 150%.",
@@ -360,15 +351,11 @@ export const camellya = {
       duration: { kind: "permanent" },
       condition: {
         kind: "buffActive",
-        buffId: "char.camellya.forte.budding-mode",
+        buff: "budding-mode",
         on: "source",
       },
       appliesToHits: {
-        stageId: [
-          "char.camellya.basic-attack.burgeoning",
-          "char.camellya.heavy-attack.burgeoning",
-          "char.camellya.resonance-skill.valse-of-bloom-and-blight",
-        ],
+        stage: ["burgeoning", "valse-of-bloom-and-blight"],
       },
       effects: [
         {

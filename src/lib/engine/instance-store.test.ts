@@ -441,7 +441,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-      sourceBuffId: "char.sanhua.ice-prism-burst",
+      sourceBuff: "char.sanhua.ice-prism-burst",
     }
     expect(
       matchesTrigger(
@@ -457,7 +457,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-      sourceBuffId: "char.sanhua.ice-prism-burst",
+      sourceBuff: "char.sanhua.ice-prism-burst",
     }
     expect(
       matchesTrigger(
@@ -473,7 +473,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-      sourceBuffId: "char.sanhua.ice-prism-burst",
+      sourceBuff: "char.sanhua.ice-prism-burst",
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
@@ -483,10 +483,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-      sourceBuffId: [
-        "char.sanhua.ice-prism-burst",
-        "char.sanhua.glacier-burst",
-      ],
+      sourceBuff: ["char.sanhua.ice-prism-burst", "char.sanhua.glacier-burst"],
     }
     expect(
       matchesTrigger(
@@ -502,10 +499,7 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       event: "hitLanded",
       actor: "self",
       source: "synthetic",
-      sourceBuffId: [
-        "char.sanhua.ice-prism-burst",
-        "char.sanhua.glacier-burst",
-      ],
+      sourceBuff: ["char.sanhua.ice-prism-burst", "char.sanhua.glacier-burst"],
     }
     expect(
       matchesTrigger(

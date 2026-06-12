@@ -1,3 +1,4 @@
+import type { BuffDef } from "#/types/buff"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import {
@@ -34,6 +35,17 @@ export const baseChar = (
 })
 
 export const slotsOf = (id: number): Slots => [id, null, null]
+
+/** Defined so a buff key resolves, but sequence-gated so it never activates. */
+export const inactiveBuff = (id: string): BuffDef => ({
+  id,
+  name: id,
+  requiresSequence: 9,
+  trigger: { event: "simStart" },
+  target: { kind: "self" },
+  duration: { kind: "permanent" },
+  effects: [],
+})
 
 export const emptyLoadout: SlotLoadout = {
   weaponId: null,

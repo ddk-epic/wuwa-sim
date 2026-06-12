@@ -583,7 +583,7 @@ export class BuffEngine {
     for (const { def } of ctx.candidates) {
       for (const effect of def.effects) {
         if (effect.kind !== "removeBuffs") continue
-        this.store.removeBuffsById(effect.ids, ctx.event.frame, ctx.out)
+        this.store.removeBuffsById(effect.buffs, ctx.event.frame, ctx.out)
       }
     }
   }

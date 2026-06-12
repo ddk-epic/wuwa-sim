@@ -92,7 +92,7 @@ const holdHit = (frame: number): HitLandedEvent => ({
   frame,
 })
 
-const BUFF_ID = "echo.inferno-rider.tap.fusion-basic-bonus"
+const BUFF_ID = "echo.inferno-rider.fusion-basic-bonus"
 
 function makeEngine() {
   testCharacters = [testChar]

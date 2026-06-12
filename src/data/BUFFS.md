@@ -4,7 +4,7 @@ How to write `BuffDef` entries on characters, weapons, echoes, and echo sets. St
 
 The authoritative type is `src/types/buff.ts`. This doc explains semantics that the type can't.
 
-For the rest of a character file — skills, stages, timing, and the stageId a trigger references — see [CHARACTERS.md](CHARACTERS.md).
+For the rest of a character file — skills, stages, timing, and the stage a trigger references — see [CHARACTERS.md](CHARACTERS.md).
 
 ---
 
@@ -338,19 +338,17 @@ Concept-grouped lookup. Tables first, prose only where the type doesn't tell the
 
 ### Naming `id`
 
-`id` is a freeform string but used as a dedupe key, condition reference (`buffActive.buffId`), and log label. Pick something stable, kebab-case, and namespaced by source.
+`id` is the buff's stable identity: a dedupe key, log label, and the target of buff cross-references. Keep it kebab-case and namespaced by source. The **last segment is the buff key** — cross-references (`condition.buff`, `appliesToHits.sourceBuff`, `duration.inherit.buff`, `removeBuffs.buffs`, `scaledByStacks.buff`) name a buff by this key, unique within its source.
 
-| Source     | Pattern                                    | Example                                        |
-| ---------- | ------------------------------------------ | ---------------------------------------------- |
-| Character  | `char.<name>.<slot>.<short-kebab>`         | `char.sanhua.outro.silversnow`                 |
-| Weapon     | `weapon.<name>.<short-kebab>`              | `weapon.emerald-of-genesis.atk-passive`        |
-| Echo       | `echo.<name>.<short-kebab>`                | `echo.impermanence-heron.flux`                 |
-| Echo set   | `echo-set.<name>.<2pc\|5pc>.<short-kebab>` | `echo-set.moonlit-clouds.5pc.tailwind`         |
-| Skill tree | `skill-tree.<characterId>.<nodeName>`      | `skill-tree.1102.Glacio DMG Bonus` (generated) |
+| Source     | Pattern                               | Example                                        |
+| ---------- | ------------------------------------- | ---------------------------------------------- |
+| Character  | `char.<name>.<key>`                   | `char.sanhua.silversnow`                       |
+| Weapon     | `weapon.<name>.<key>`                 | `weapon.emerald-of-genesis.atk-passive`        |
+| Echo       | `echo.<name>.<key>`                   | `echo.impermanence-heron.window`               |
+| Echo set   | `echo-set.<name>.<2pc\|5pc>.<key>`    | `echo-set.moonlit-clouds.5pc.tailwind`         |
+| Skill tree | `skill-tree.<characterId>.<nodeName>` | `skill-tree.1102.Glacio DMG Bonus` (generated) |
 
-Slot for character buffs is one of: `intro`, `outro`, `passive`, `forte`, `liberation`, `skill`, `s1`–`s6` for sequence buffs.
-
-Don't include version numbers, balance patches, or character IDs (in human-authored ids) — they go stale. Don't reuse an id across sources.
+Keys are flat (no grouping prefix) and match `^[a-z][a-z0-9]*(-[a-z0-9]+)*$`. A sequence buff folds the tag into the key: `char.camellya.s3-budding-atk`. Don't include version numbers or balance patches, and don't reuse an id across sources.
 
 ### Naming `name`
 
@@ -394,14 +392,14 @@ SkillType short forms:
 
 ### Triggers
 
-| `event`           | When it fires                                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `simStart`        | Once at sim start. Used for permanent passives.                                                                                    |
-| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                                                |
-| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stageId`, `sourceBuffId`, `targetHasStatus`. |
-| `swapIn`          | A character swaps to on-field.                                                                                                     |
-| `swapOut`         | A character swaps off-field.                                                                                                       |
-| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                                              |
+| `event`           | When it fires                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `simStart`        | Once at sim start. Used for permanent passives.                                                                                |
+| `skillCast`       | A skill is cast. Filter by `actor`, `characterId`, `skillCategory`.                                                            |
+| `hitLanded`       | A hit lands. Filter by `actor`, `characterId`, `skillCategory`, `dmgType`, `source`, `stage`, `sourceBuff`, `targetHasStatus`. |
+| `swapIn`          | A character swaps to on-field.                                                                                                 |
+| `swapOut`         | A character swaps off-field.                                                                                                   |
+| `resourceCrossed` | A resource crosses `threshold` in `direction`. One-shot per crossing.                                                          |
 
 Triggers filter on `skillCategory` — the **player action** (e.g. "when casting Heavy Attack"), see **SkillCategory values** below — **never** on the damage-calc `skillType`. The two are independent axes (ADR-0024): a stage's `skillCategory` and its damage `SkillType` can differ by design, and triggers always key on the action. `"Normal Attack"` is not a valid `skillCategory` (TypeScript will catch it).
 
@@ -409,7 +407,7 @@ Triggers filter on `skillCategory` — the **player action** (e.g. "when casting
 
 `source` on `hitLanded`: `"self"` = real hits the character performed, `"synthetic"` = injected via `emitHit`, `"any"` = both. Use `"self"` to avoid feedback loops where a buff-triggered synthetic hit re-triggers the same buff.
 
-`stageId` / `skill` / `hitIndex` on `hitLanded` (and `healLanded`/`skillCast`): three independent stage axes, each a conjunction with the others (ADR-0039). `stageId` is the full lineage id (`char.<name>.<category>.<skillKey>.<stageKey>::<skill-type>`, `echo.<name>.<stageKey>::echo-skill`) matched by **exact equality** — no prefixes; accepts a single string or array (OR within the axis). `skill` scopes by skill key (e.g. `skill: "burgeoning"` — every hit of every stage of that skill). `hitIndex` pins the Nth hit (1-based, DamageEntry order): `stageId: "echo.inferno-rider.tap::echo-skill", hitIndex: 3` matches only the 3rd Tap hit. A `stageId` that doesn't resolve to a real stage throws at bootstrap. Synthetic hits carry no stage axes; a trigger constraining any of them never matches synthetics.
+`stage` on `hitLanded` (and `healLanded`/`skillCast`): the authored stage reference, lowered at bootstrap into the structured `stageId` / `skill` / `hitIndex` axes the matcher compares (ADR-0039). Write `"skill/stage"` for one stage, `"skill/stage#n"` to pin the 1-based Nth hit, or a bare `"skill"` for the whole-skill axis (every stage of that skill); an array is an OR within the axis. Echo refs drop the skill: `"tap"` / `"tap#3"`. `skillCategory` stays its own axis, so "basic attacks of Burgeoning" is `{ stage: "burgeoning", skillCategory: "Basic Attack" }`. A ref that doesn't resolve throws at bootstrap. Synthetic hits carry no stage axes; a trigger constraining the stage never matches synthetics. Full grammar: [CHARACTERS.md → stageId lineage](CHARACTERS.md#stageid-lineage).
 
 `targetHasStatus` on `hitLanded`: a `NegStatusType` that fires the trigger only when the hit lands on a target currently carrying that status (e.g. `targetHasStatus: "Aero Erosion"`). This is a **trigger-time** gate — the target's statuses are read at the moment of the hit, and the resulting buff then runs free for its full `duration`. Reach for this when the in-game text reads "hitting a target with X" and the buff should snapshot on a qualifying hit. For a buff whose contribution must instead _follow_ a status across a window (winking off if the status drops), use the continuous `condition: { kind: "targetHasNegStatus", status }` gate instead — see **Status & identity gating**.
 
@@ -486,7 +484,7 @@ A buff's `effects` is an array; entries can mix kinds.
 | `onField`            | The buff's _target_ is currently on field.                                                                     |
 | `actorIsOnField`     | The buff's _source_ is currently on field.                                                                     |
 | `actorIsOffField`    | The buff's _source_ is currently off field.                                                                    |
-| `buffActive`         | A specific buff (`buffId`) is active on `target` or `source`.                                                  |
+| `buffActive`         | A specific buff (`buff`, its key) is active on `target` or `source`.                                           |
 | `resourceAtLeast`    | A resource is ≥ `n` on `target` or `source`.                                                                   |
 | `targetHasNegStatus` | The target has a negative status. Optionally narrowed to one type via `status?: NegStatusType` (absent = any). |
 

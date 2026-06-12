@@ -23,21 +23,27 @@ const hitStageId = (kebab: string, hitIndex: number) =>
   `${stageOf(kebab)}.${hitIndex + 1}`
 
 /** A self stat buff that scopes its `allDmgBonus` to a single authored hit's stageId. */
-const stageScopedBonus = (stageId: string): BuffDef => ({
-  id: "gold.stage-scoped-bonus",
-  name: "Stage Scoped Bonus",
-  trigger: { event: "skillCast", characterId: 1, actor: "self" },
-  target: { kind: "self" },
-  duration: { kind: "permanent" },
-  appliesToHits: { stageId },
-  effects: [
-    {
-      kind: "stat",
-      path: { stat: "allDmgBonus" },
-      value: { kind: "const", v: 0.2 },
-    },
-  ],
-})
+const stageScopedBonus = (stageId: string): BuffDef => {
+  const hit = /\.(\d+)$/.exec(stageId)
+  const appliesToHits = hit
+    ? { stageId: stageId.slice(0, hit.index), hitIndex: Number(hit[1]) }
+    : { stageId }
+  return {
+    id: "gold.stage-scoped-bonus",
+    name: "Stage Scoped Bonus",
+    trigger: { event: "skillCast", characterId: 1, actor: "self" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    appliesToHits,
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "allDmgBonus" },
+        value: { kind: "const", v: 0.2 },
+      },
+    ],
+  }
+}
 
 let testCharacters: EnrichedCharacter[] = []
 vi.mock("./loadout/catalog", () => ({

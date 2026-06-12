@@ -213,7 +213,7 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
       characterId: 1,
       skillCategory: "Outro Skill",
     },
-    condition: { kind: "buffActive", buffId: "test.window", on: "source" },
+    condition: { kind: "buffActive", buff: "window", on: "source" },
     effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
   }
 
@@ -440,8 +440,7 @@ describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId:
-          "char.test.resonance-skill.botany-experiment.cast::resonance-skill.1",
+        stage: "botany-experiment/cast#1",
       },
       effects: [
         {
@@ -527,7 +526,7 @@ describe("Global buffs — Binary Butterfly", () => {
       (e) =>
         e.kind === "buffApplied" &&
         "buffId" in e &&
-        e.buffId === "char.shorekeeper.outro.binary-butterfly",
+        e.buffId === "char.shorekeeper.binary-butterfly",
     )
     expect(applied).toHaveLength(1)
 
@@ -554,7 +553,7 @@ describe("Global buffs — Binary Butterfly", () => {
       (e) =>
         e.kind === "buffApplied" &&
         "buffId" in e &&
-        e.buffId === "char.shorekeeper.outro.binary-butterfly",
+        e.buffId === "char.shorekeeper.binary-butterfly",
     )
     expect(applied).toHaveLength(0)
   })
@@ -587,7 +586,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       frame: 0,
     })
     expect(engine.activeBuffIds(shorekeeperId)).toContain(
-      "char.shorekeeper.lib.outer-stellarealm",
+      "char.shorekeeper.outer-stellarealm",
     )
 
     // Teammate casts Intro Skill → triggers Inner Stellarealm
@@ -598,7 +597,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       frame: 60,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
-      "char.shorekeeper.lib.inner-stellarealm",
+      "char.shorekeeper.inner-stellarealm",
     )
 
     // Self Gravitation fires with Liberation and adds +10% ER to Shorekeeper
@@ -631,7 +630,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       frame: 60,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
-      "char.shorekeeper.lib.inner-stellarealm",
+      "char.shorekeeper.inner-stellarealm",
     )
     // Second Intro → Supernal Stellarealm
     engine.onEvent({
@@ -641,7 +640,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
       frame: 120,
     })
     expect(engine.activeBuffIds(teammateId)).toContain(
-      "char.shorekeeper.lib.supernal-stellarealm",
+      "char.shorekeeper.supernal-stellarealm",
     )
 
     // Self Gravitation fires with Liberation and adds +10% ER to Shorekeeper
@@ -664,7 +663,7 @@ describe("Global buffs — Inner/Supernal Stellarealm (scaledByStat)", () => {
     // Inner may be applied but expires immediately (inherits Outer duration = none)
     engine.tickToFrame(1)
     expect(engine.activeBuffIds(teammateId)).not.toContain(
-      "char.shorekeeper.lib.inner-stellarealm",
+      "char.shorekeeper.inner-stellarealm",
     )
   })
 })

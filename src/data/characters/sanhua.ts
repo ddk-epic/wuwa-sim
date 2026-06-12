@@ -19,7 +19,7 @@ export const sanhua = {
   recommendedSkillDmgPriority: "Resonance Liberation",
   buffs: [
     {
-      id: "char.sanhua.outro.silversnow",
+      id: "char.sanhua.silversnow",
       name: "Silversnow",
       description:
         "After Sanhua uses Outro, the next on-field Resonator's Basic Attack DMG is amplified by 38% for 14s.",
@@ -39,7 +39,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.passive.condensation",
+      id: "char.sanhua.condensation",
       name: "Condensation",
       description:
         "After casting Sanhua's Intro Skill, Resonance Skill DMG is increased by 20% for 8s.",
@@ -59,23 +59,19 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.passive.avalanche",
+      id: "char.sanhua.avalanche",
       name: "Avalanche",
       description:
         "Damage dealt by Sanhua's Forte Circuit Ice Burst is increased by 20% for 8s after casting Basic Attack 5.",
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
+        stage: "frigid-light/stage-5",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 8 },
       appliesToHits: {
-        sourceBuffId: [
-          "char.sanhua.ice-thorn-burst",
-          "char.sanhua.ice-prism-burst",
-          "char.sanhua.ice-glacier-burst",
-        ],
+        sourceBuff: ["ice-thorn-burst", "ice-prism-burst", "ice-glacier-burst"],
       },
       effects: [
         {
@@ -86,7 +82,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.flag.ice-thorn",
+      id: "char.sanhua.ice-thorn",
       name: "Ice Thorn",
       description: "Presence flag: Ice Thorn is ready to detonate.",
       trigger: {
@@ -95,7 +91,7 @@ export const sanhua = {
         skillCategory: "Intro Skill",
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
+      duration: { kind: "seconds", v: 8 },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
@@ -105,7 +101,7 @@ export const sanhua = {
       effects: [],
     },
     {
-      id: "char.sanhua.flag.ice-prism",
+      id: "char.sanhua.ice-prism",
       name: "Ice Prism",
       description: "Presence flag: Ice Prism is ready to detonate.",
       trigger: {
@@ -114,7 +110,7 @@ export const sanhua = {
         skillCategory: "Resonance Skill",
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
+      duration: { kind: "seconds", v: 5 },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
@@ -124,7 +120,7 @@ export const sanhua = {
       effects: [],
     },
     {
-      id: "char.sanhua.flag.ice-glacier",
+      id: "char.sanhua.ice-glacier",
       name: "Ice Glacier",
       description: "Presence flag: Ice Glacier is ready to detonate.",
       trigger: {
@@ -133,7 +129,7 @@ export const sanhua = {
         skillCategory: "Resonance Liberation",
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
+      duration: { kind: "seconds", v: 5 },
       consumedBy: {
         event: "hitLanded",
         characterId: 1102,
@@ -150,13 +146,12 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+        stage: "clarity-of-mind/detonate",
         source: "self",
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-thorn",
+        buff: "ice-thorn",
         on: "source",
       },
       effects: [
@@ -185,13 +180,12 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+        stage: "clarity-of-mind/detonate",
         source: "self",
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-prism",
+        buff: "ice-prism",
         on: "source",
       },
       effects: [
@@ -220,13 +214,12 @@ export const sanhua = {
       trigger: {
         event: "hitLanded",
         characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+        stage: "clarity-of-mind/detonate",
         source: "self",
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.sanhua.flag.ice-glacier",
+        buff: "ice-glacier",
         on: "source",
       },
       effects: [
@@ -248,7 +241,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.sequence.s1",
+      id: "char.sanhua.s1",
       name: "S1: Solitude's Embrace",
       description:
         "After casting Frigid Light Stage 5, Crit Rate +15% for 10s. Requires Sequence 1.",
@@ -256,7 +249,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
+        stage: "frigid-light/stage-5",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -269,7 +262,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.sequence.s4.energy",
+      id: "char.sanhua.s4-energy",
       name: "S4: Blade Mastery (Energy)",
       description:
         "After Resonance Liberation hits, restore 10 Energy. Requires Sequence 4.",
@@ -290,7 +283,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.sequence.s4.heavy-dmg",
+      id: "char.sanhua.s4-heavy-dmg",
       name: "S4: Blade Mastery (Heavy DMG)",
       description:
         "Detonate Heavy Attack DMG +120% for 0.5s. Requires Sequence 4.",
@@ -298,8 +291,7 @@ export const sanhua = {
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stageId:
-          "char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack",
+        stage: "clarity-of-mind/detonate",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -312,7 +304,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.s5.unraveling-fate",
+      id: "char.sanhua.s5-unraveling-fate",
       name: "S5: Unraveling Fate",
       description:
         "Crit DMG of Forte Circuit Ice Burst +100%. Requires Sequence 5.",
@@ -321,11 +313,7 @@ export const sanhua = {
       target: { kind: "self" },
       duration: { kind: "permanent" },
       appliesToHits: {
-        sourceBuffId: [
-          "char.sanhua.ice-thorn-burst",
-          "char.sanhua.ice-prism-burst",
-          "char.sanhua.ice-glacier-burst",
-        ],
+        sourceBuff: ["ice-thorn-burst", "ice-prism-burst", "ice-glacier-burst"],
       },
       effects: [
         {
@@ -336,7 +324,7 @@ export const sanhua = {
       ],
     },
     {
-      id: "char.sanhua.sequence.s6",
+      id: "char.sanhua.s6",
       name: "S6: Daybreak Radiance",
       description:
         "Detonating Ice Prism or Ice Glacier grants all team members ATK +10% for 20s, stacking up to 2 times. Requires Sequence 6.",
@@ -345,10 +333,7 @@ export const sanhua = {
         event: "hitLanded",
         characterId: 1102,
         source: "synthetic",
-        sourceBuffId: [
-          "char.sanhua.ice-prism-burst",
-          "char.sanhua.ice-glacier-burst",
-        ],
+        sourceBuff: ["ice-prism-burst", "ice-glacier-burst"],
       },
       target: { kind: "global" },
       duration: { kind: "seconds", v: 20 },
@@ -396,8 +381,7 @@ export const sanhua = {
           name: "Stage 2 DMG",
           category: "Basic Attack",
           newName: "Stage 2",
-          requiresPriorStageId:
-            "char.sanhua.basic-attack.frigid-light.stage-1::basic-attack",
+          requiresPriorStage: "frigid-light/stage-1",
           value: "73.76%",
           actionTime: 31,
           variants: {
@@ -422,8 +406,7 @@ export const sanhua = {
           name: "Stage 3 DMG",
           category: "Basic Attack",
           newName: "Stage 3",
-          requiresPriorStageId:
-            "char.sanhua.basic-attack.frigid-light.stage-2::basic-attack",
+          requiresPriorStage: "frigid-light/stage-2",
           value: "21.58%*4",
           actionTime: 39,
           variants: {
@@ -481,8 +464,7 @@ export const sanhua = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Stage 4",
-          requiresPriorStageId:
-            "char.sanhua.basic-attack.frigid-light.stage-3::basic-attack",
+          requiresPriorStage: "frigid-light/stage-3",
           value: "39.67%*2",
           actionTime: 37,
           variants: {
@@ -518,8 +500,7 @@ export const sanhua = {
           name: "Stage 5 DMG",
           category: "Basic Attack",
           newName: "Stage 5",
-          requiresPriorStageId:
-            "char.sanhua.basic-attack.frigid-light.stage-4::basic-attack",
+          requiresPriorStage: "frigid-light/stage-4",
           value: "233.81%",
           actionTime: 108,
           variants: {

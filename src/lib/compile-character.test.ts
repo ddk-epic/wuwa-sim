@@ -203,15 +203,11 @@ describe("compileCharacter — keys and ids", () => {
 })
 
 describe("compileCharacter — reference lowering", () => {
-  it("maps a legacy newName-derived ref to the key-derived id", () => {
+  it("lowers a skill/stage token to the stage id", () => {
     const char = baseChar({
       buffs: [
         reaction({
-          trigger: {
-            event: "hitLanded",
-            stageId:
-              "char.test-char.basic-attack.normal-attack._::basic-attack",
-          },
+          trigger: { event: "hitLanded", stage: "normal-attack/stage-1" },
         }),
       ],
     })
@@ -221,9 +217,13 @@ describe("compileCharacter — reference lowering", () => {
     })
   })
 
-  it("passes a current-form ref through unchanged", () => {
+  it("lowers a named stage token", () => {
     const char = baseChar({
-      buffs: [reaction({ trigger: { event: "hitLanded", stageId: NAMED_ID } })],
+      buffs: [
+        reaction({
+          trigger: { event: "hitLanded", stage: "normal-attack/named" },
+        }),
+      ],
     })
     expect(compileCharacter(char).buffs[0].trigger).toEqual({
       event: "hitLanded",
@@ -235,7 +235,7 @@ describe("compileCharacter — reference lowering", () => {
     const char = baseChar({
       buffs: [
         reaction({
-          trigger: { event: "hitLanded", stageId: `${NAMED_ID}.2` },
+          trigger: { event: "hitLanded", stage: "normal-attack/named#2" },
         }),
       ],
     })
@@ -246,14 +246,11 @@ describe("compileCharacter — reference lowering", () => {
     })
   })
 
-  it("lowers a category-scoped skill prefix to the skill axis", () => {
+  it("lowers a bare skill token to the skill axis", () => {
     const char = baseChar({
       buffs: [
         reaction({
-          trigger: {
-            event: "hitLanded",
-            stageId: "char.test-char.basic-attack.normal-attack",
-          },
+          trigger: { event: "hitLanded", stage: "normal-attack" },
         }),
       ],
     })
@@ -263,15 +260,31 @@ describe("compileCharacter — reference lowering", () => {
     })
   })
 
+  it("lowers a buff key reference to the full buff id", () => {
+    const char = baseChar({
+      buffs: [
+        reaction({ id: "char.test-char.flag" }),
+        reaction({
+          trigger: { event: "simStart" },
+          condition: { kind: "buffActive", buff: "flag", on: "source" },
+        }),
+      ],
+    })
+    const cond = compileCharacter(char).buffs[1].condition
+    expect(cond).toEqual({
+      kind: "buffActive",
+      buff: "char.test-char.flag",
+      on: "source",
+    })
+  })
+
   it("lowers appliesToHits and consumedBy the same way", () => {
     const char = baseChar({
       buffs: [
         reaction({
           trigger: { event: "simStart" },
-          consumedBy: { event: "hitLanded", stageId: `${STAGE_1_ID}.1` },
-          appliesToHits: {
-            stageId: "char.test-char.basic-attack.normal-attack",
-          },
+          consumedBy: { event: "hitLanded", stage: "normal-attack/stage-1#1" },
+          appliesToHits: { stage: "normal-attack" },
         }),
       ],
     })
@@ -284,15 +297,27 @@ describe("compileCharacter — reference lowering", () => {
     expect(def.appliesToHits).toEqual({ skill: "normal-attack" })
   })
 
-  it("throws on an unresolvable ref", () => {
+  it("throws on an unresolvable stage ref", () => {
     const char = baseChar({
       buffs: [
         reaction({
-          trigger: { event: "hitLanded", stageId: "char.test-char.nope" },
+          trigger: { event: "hitLanded", stage: "normal-attack/nope" },
         }),
       ],
     })
     expect(() => compileCharacter(char)).toThrow(/unresolvable stage reference/)
+  })
+
+  it("throws on an unresolvable buff ref", () => {
+    const char = baseChar({
+      buffs: [
+        reaction({
+          trigger: { event: "simStart" },
+          condition: { kind: "buffActive", buff: "nope", on: "source" },
+        }),
+      ],
+    })
+    expect(() => compileCharacter(char)).toThrow(/unresolvable buff reference/)
   })
 
   it("throws on mixed skill/stage granularity in one array", () => {
@@ -301,7 +326,7 @@ describe("compileCharacter — reference lowering", () => {
         reaction({
           trigger: {
             event: "hitLanded",
-            stageId: [STAGE_1_ID, "char.test-char.basic-attack.normal-attack"],
+            stage: ["normal-attack/stage-1", "normal-attack"],
           },
         }),
       ],
@@ -315,19 +340,18 @@ describe("compileCharacter — reference lowering", () => {
     const char = baseChar({
       buffs: [
         reaction({
-          trigger: { event: "skillCast", stageId: `${STAGE_1_ID}.1` },
+          trigger: { event: "skillCast", stage: "normal-attack/stage-1#1" },
         }),
       ],
     })
     expect(() => compileCharacter(char)).toThrow(/cannot pin a hit index/)
   })
 
-  it("resolves requiresPriorStageId and rejects unresolvable ones", () => {
+  it("resolves requiresPriorStage and rejects unresolvable ones", () => {
     const char = baseChar()
     char.skills[0].stages[1] = {
       ...char.skills[0].stages[1],
-      requiresPriorStageId:
-        "char.test-char.basic-attack.normal-attack._::basic-attack",
+      requiresPriorStage: "normal-attack/stage-1",
     }
     const info = compileCharacter(char).stageIndex.get(NAMED_ID)
     expect(info?.requiresPriorStageId).toBe(STAGE_1_ID)
@@ -335,7 +359,7 @@ describe("compileCharacter — reference lowering", () => {
     const bad = baseChar()
     bad.skills[0].stages[1] = {
       ...bad.skills[0].stages[1],
-      requiresPriorStageId: "char.test-char.basic-attack.gone._::basic-attack",
+      requiresPriorStage: "normal-attack/gone",
     }
     expect(() => compileCharacter(bad)).toThrow(/unresolvable stage reference/)
   })
@@ -352,11 +376,8 @@ describe("compileEcho", () => {
       },
       buffs: [
         reaction({
-          id: "echo.test-echo.tap.bonus",
-          trigger: {
-            event: "hitLanded",
-            stageId: "echo.test-echo._::echo-skill.3",
-          },
+          id: "echo.test-echo.bonus",
+          trigger: { event: "hitLanded", stage: "tap#3" },
         }),
       ],
     })
@@ -404,8 +425,7 @@ describe("findStageByEntry — character skill", () => {
     const char = baseChar()
     char.skills[0].stages[1] = {
       ...char.skills[0].stages[1],
-      requiresPriorStageId:
-        "char.test-char.basic-attack.normal-attack._::basic-attack",
+      requiresPriorStage: "normal-attack/stage-1",
     }
     testCharacters = [char]
     const entry = { id: "e5", characterId: 1, stageId: NAMED_ID }

@@ -15,6 +15,7 @@ import {
   BASE_CR,
   baseChar,
   emptyLoadout,
+  inactiveBuff,
   slotsOf,
 } from "./buff-engine.test-fixtures"
 
@@ -659,7 +660,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     },
     target: { kind: "nextOnField" },
     duration: { kind: "seconds", v: 15 },
-    condition: { kind: "buffActive", buffId: "test.window", on: "source" },
+    condition: { kind: "buffActive", buff: "window", on: "source" },
     effects: [
       {
         kind: "stat",
@@ -749,7 +750,7 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
-      condition: { kind: "buffActive", buffId: "test.window", on: "target" },
+      condition: { kind: "buffActive", buff: "window", on: "target" },
       effects: [
         {
           kind: "stat",
@@ -798,7 +799,7 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
-      condition: { kind: "buffActive", buffId: "test.absent", on: "target" },
+      condition: { kind: "buffActive", buff: "absent", on: "target" },
       effects: [
         {
           kind: "stat",
@@ -808,7 +809,7 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
       ],
     }
     testCharacters = [
-      baseChar({ id: 1, buffs: [nextOnFieldDef] }),
+      baseChar({ id: 1, buffs: [nextOnFieldDef, inactiveBuff("test.absent")] }),
       baseChar({ id: 2, buffs: [] }),
     ]
     const engine = new BuffEngine()

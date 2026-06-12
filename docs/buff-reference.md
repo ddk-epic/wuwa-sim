@@ -82,34 +82,28 @@ Damage computed from that snapshot therefore reflects the per-hit bonus. The log
 
 ### `HitFilter` axes (conjunction)
 
-All present axes must match; absent = unconstrained. An axis the hit lacks (e.g. `sourceBuffId` on an authored hit) never matches a constrained filter.
+All present axes must match; absent = unconstrained. An axis the hit lacks (e.g. a hit with no source buff) never matches a constrained filter. The authored `stage` and `sourceBuff` tokens are lowered to the structured axes the matcher compares (ADR-0039).
 
-Stage scope is expressed through three independent axes (ADR-0039): `stageId` matches the lineage id by **exact equality**; `skill` matches by skill key — every hit of every stage of that skill, regardless of category (Camellya's Sweet Dream scope is just `["burgeoning", "valse-of-bloom-and-blight"]` once lowered); `hitIndex` pins the Nth hit (1-based, DamageEntry order).
+| Axis            | Type                       | Notes                                         |
+| --------------- | -------------------------- | --------------------------------------------- |
+| `stage`         | `string \| string[]`       | `"skill/stage"`, `"skill/stage#n"`, `"skill"` |
+| `sourceBuff`    | `string \| string[]`       | Buff key; only synthetic hits carry a source  |
+| `skillType`     | `SkillType \| SkillType[]` |                                               |
+| `skillCategory` | `SkillCategory \| ...`     | Orthogonal to `stage`                         |
+| `element`       | `Element \| Element[]`     |                                               |
 
-| Axis            | Type                       | Notes                          |
-| --------------- | -------------------------- | ------------------------------ |
-| `sourceBuffId`  | `string \| string[]`       | Only synthetic hits carry this |
-| `stageId`       | `string \| string[]`       | Exact lineage id               |
-| `skill`         | `string \| string[]`       | Skill key                      |
-| `hitIndex`      | `number \| number[]`       | 1-based, DamageEntry order     |
-| `skillType`     | `SkillType \| SkillType[]` |                                |
-| `skillCategory` | `SkillCategory \| ...`     |                                |
-| `element`       | `Element \| Element[]`     |                                |
+Camellya's Sweet Dream scope is the whole-skill form `stage: ["burgeoning", "valse-of-bloom-and-blight"]`.
 
 ### Example — Sanhua Avalanche
 
 ```ts
 {
-  id: "char.sanhua.passive.avalanche",
-  trigger: { event: "skillCast", stageId: "...frigid-light.stage-5::basic-attack" },
+  id: "char.sanhua.avalanche",
+  trigger: { event: "skillCast", stage: "frigid-light/stage-5" },
   target: { kind: "self" },
   duration: { kind: "seconds", v: 8 },
   appliesToHits: {
-    sourceBuffId: [
-      "char.sanhua.ice-thorn-burst",
-      "char.sanhua.ice-prism-burst",
-      "char.sanhua.ice-glacier-burst",
-    ],
+    sourceBuff: ["ice-thorn-burst", "ice-prism-burst", "ice-glacier-burst"],
   },
   effects: [{ kind: "stat", path: { stat: "allDmgBonus" }, value: { kind: "const", v: 0.2 } }],
 }

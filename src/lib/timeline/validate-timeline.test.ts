@@ -300,8 +300,7 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresPriorStageId:
-                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+              requiresPriorStage: "normal-attack/stage-1",
             },
           ],
           damage: [],
@@ -427,7 +426,7 @@ describe("validateTimeline — window mode (minDelay)", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresPriorStageId: STAGE_1,
+              requiresPriorStage: "normal-attack/stage-1",
               minDelay: 50,
             },
           ],
@@ -542,8 +541,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresPriorStageId:
-                "char.test.basic-attack.normal-attack.stage-0::basic-attack",
+              requiresPriorStage: "normal-attack/stage-0",
             },
             {
               name: "Stage 2",
@@ -552,8 +550,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresPriorStageId:
-                "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+              requiresPriorStage: "normal-attack/stage-1",
             },
             {
               name: "Stage 3",
@@ -562,8 +559,7 @@ describe("validateTimeline — cascade suppression", () => {
               value: "1",
               actionTime: 30,
               damage: [],
-              requiresPriorStageId:
-                "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+              requiresPriorStage: "normal-attack/stage-2",
             },
           ],
           damage: [],
@@ -807,8 +803,7 @@ describe("validateTimeline — swap warning channel", () => {
                 actionTime: 30,
                 damage: [],
                 newName: "second",
-                requiresPriorStageId:
-                  "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+                requiresPriorStage: "normal-attack/stage-1",
               },
             ],
             damage: [],

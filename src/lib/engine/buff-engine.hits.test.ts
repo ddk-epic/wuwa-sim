@@ -12,6 +12,7 @@ import {
   baseChar,
   dmg,
   emptyLoadout,
+  inactiveBuff,
   slotsOf,
 } from "./buff-engine.test-fixtures"
 
@@ -676,7 +677,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
         event: "hitLanded",
         source: "synthetic",
         characterId: 1,
-        sourceBuffId: "char.emitter-a",
+        sourceBuff: "emitter-a",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -716,7 +717,7 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
         event: "hitLanded",
         source: "any",
         characterId: 1,
-        sourceBuffId: "char.emitter-a",
+        sourceBuff: "emitter-a",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -728,7 +729,9 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
         },
       ],
     }
-    testCharacters = [baseChar({ id: 1, buffs: [chainBuff] })]
+    testCharacters = [
+      baseChar({ id: 1, buffs: [chainBuff, inactiveBuff("char.emitter-a")] }),
+    ]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),
@@ -760,7 +763,7 @@ describe("BuffEngine — activeContributions gate: listed = contributed (#320)",
       target: { kind: "self" },
       duration: { kind: "frames", v: 600 },
       // Gated on a buff that is never active → condition is false at read time.
-      condition: { kind: "buffActive", buffId: "test.never", on: "source" },
+      condition: { kind: "buffActive", buff: "never", on: "source" },
       effects: [
         {
           kind: "stat",
@@ -769,7 +772,9 @@ describe("BuffEngine — activeContributions gate: listed = contributed (#320)",
         },
       ],
     }
-    testCharacters = [baseChar({ id: 1, buffs: [condBuff] })]
+    testCharacters = [
+      baseChar({ id: 1, buffs: [condBuff, inactiveBuff("test.never")] }),
+    ]
     const engine = new BuffEngine()
     engine.bootstrap({
       slots: slotsOf(1),

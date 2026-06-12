@@ -19,15 +19,14 @@ export const encore = {
   recommendedSkillDmgPriority: "Resonance Liberation",
   buffs: [
     {
-      id: "char.encore.passive.angry-cosmos",
+      id: "char.encore.angry-cosmos",
       name: "Angry Cosmos",
       description:
         "During Cosmos Rave, Encore's All DMG Bonus increases by 10%. (HP > 70% condition omitted — HP tracking not yet implemented.)",
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId:
-          "char.encore.resonance-liberation.cosmos-rave._::resonance-liberation",
+        stage: "cosmos-rave/cast",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -41,7 +40,7 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.passive.woolies-cheer-dance",
+      id: "char.encore.woolies-cheer-dance",
       name: "Woolies Cheer Dance",
       description:
         "After Encore uses a Resonance Skill (including Cosmos Rampage during Cosmos Rave), she gains +10% Fusion DMG Bonus for 10s.",
@@ -62,15 +61,14 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.liberation.cosmos-rave",
+      id: "char.encore.cosmos-rave",
       name: "Cosmos Rave",
       description:
         "Presence flag: active while Encore's Cosmos Rave liberation window is open (10s). Used as a condition by other buffs.",
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId:
-          "char.encore.resonance-liberation.cosmos-rave._::resonance-liberation",
+        stage: "cosmos-rave/cast",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
@@ -78,7 +76,7 @@ export const encore = {
       effects: [],
     },
     {
-      id: "char.encore.s1.woolys-fairy-tale",
+      id: "char.encore.s1-woolys-fairy-tale",
       name: "S1: Wooly's Fairy Tale",
       description:
         "When Encore uses a Basic Attack, she gains 1 stack of Wooly's Fairy Tale, up to 4 stacks. Each stack increases Fusion DMG Bonus by 3% for 6s.",
@@ -101,7 +99,7 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.s2.sheep-counting-lullaby",
+      id: "char.encore.s2-sheep-counting-lullaby",
       name: "S2: Sheep-counting Lullaby",
       description:
         "When Encore uses Wooly Strike or Energetic Welcome, she gains +10 Resonance Energy. This effect can trigger once every 10s.",
@@ -109,10 +107,7 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId: [
-          "char.encore.basic-attack.wooly-attack.stage-5-wooly-strike::basic-attack",
-          "char.encore.resonance-skill.flaming-woolies.energetic-welcome::resonance-skill",
-        ],
+        stage: ["wooly-attack/stage-5", "flaming-woolies/energetic-welcome"],
       },
       cooldown: 10,
       effects: [
@@ -125,7 +120,7 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.s4.adventure-lets-go",
+      id: "char.encore.s4-adventure-lets-go",
       name: "S4: Adventure? Let's go!",
       description:
         "When Encore uses Cosmos Rupture, all team members gain +20% Fusion DMG Bonus for 30s.",
@@ -133,8 +128,7 @@ export const encore = {
       trigger: {
         event: "skillCast",
         characterId: 1203,
-        stageId:
-          "char.encore.heavy-attack.black-white-woolies.cosmos-rupture::resonance-liberation",
+        stage: "black-white-woolies/cosmos-rupture",
       },
       target: { kind: "global" },
       duration: { kind: "seconds", v: 30 },
@@ -148,7 +142,7 @@ export const encore = {
       ],
     },
     {
-      id: "char.encore.s6.woolies-save-the-world",
+      id: "char.encore.s6-woolies-save-the-world",
       name: "S6: Woolies Save the World!",
       description:
         "During Cosmos Rave, each hit Encore lands grants 1 stack (up to 5), each increasing ATK by 5% for 10s.",
@@ -159,7 +153,7 @@ export const encore = {
       stacking: { max: 5, onRetrigger: "addStack" },
       condition: {
         kind: "buffActive",
-        buffId: "char.encore.liberation.cosmos-rave",
+        buff: "cosmos-rave",
         on: "target",
       },
       effects: [
@@ -205,8 +199,7 @@ export const encore = {
           name: "Stage 2 DMG",
           category: "Basic Attack",
           newName: "Stage 2",
-          requiresPriorStageId:
-            "char.encore.basic-attack.wooly-attack.stage-1::basic-attack",
+          requiresPriorStage: "wooly-attack/stage-1",
           value: "66.20%",
           actionTime: 28,
           variants: {
@@ -231,8 +224,7 @@ export const encore = {
           name: "Stage 3 DMG",
           category: "Basic Attack",
           newName: "Stage 3",
-          requiresPriorStageId:
-            "char.encore.basic-attack.wooly-attack.stage-2::basic-attack",
+          requiresPriorStage: "wooly-attack/stage-2",
           value: "66.30%*2",
           actionTime: 39,
           variants: {
@@ -268,8 +260,7 @@ export const encore = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Stage 4",
-          requiresPriorStageId:
-            "char.encore.basic-attack.wooly-attack.stage-3::basic-attack",
+          requiresPriorStage: "wooly-attack/stage-3",
           value: "38.27%*4",
           actionTime: 45,
           variants: {
@@ -327,8 +318,7 @@ export const encore = {
           name: "Stage 5 DMG",
           category: "Basic Attack",
           newName: "Stage 5 - Wooly Strike",
-          requiresPriorStageId:
-            "char.encore.basic-attack.wooly-attack.stage-4::basic-attack",
+          requiresPriorStage: "wooly-attack/stage-4",
           value: "238.57%",
           actionTime: 81,
           variants: {
@@ -545,8 +535,7 @@ export const encore = {
           name: "Energetic Welcome Damage",
           category: "Resonance Skill",
           newName: "Energetic Welcome",
-          requiresPriorStageId:
-            "char.encore.resonance-skill.flaming-woolies.flaming-woolies::resonance-skill",
+          requiresPriorStage: "flaming-woolies/flaming-woolies",
           minDelay: 103,
           value: "339.16%",
           concerto: 5,
@@ -629,8 +618,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 2 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 2",
-          requiresPriorStageId:
-            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-1::basic-attack",
+          requiresPriorStage: "cosmos-rave/cosmos-frolicking-stage-1",
           value: "56.40%*3",
           actionTime: 54,
           variants: {
@@ -677,8 +665,7 @@ export const encore = {
           name: "Cosmos: Frolicking Stage 3 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 3",
-          requiresPriorStageId:
-            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-2::basic-attack",
+          requiresPriorStage: "cosmos-rave/cosmos-frolicking-stage-2",
           value: "65.99%*4",
           actionTime: 48,
           variants: {
@@ -736,8 +723,7 @@ export const encore = {
           name: "Stage 4 DMG",
           category: "Basic Attack",
           newName: "Cosmos: Frolicking Stage 4",
-          requiresPriorStageId:
-            "char.encore.basic-attack.cosmos-rave.cosmos-frolicking-stage-3::basic-attack",
+          requiresPriorStage: "cosmos-rave/cosmos-frolicking-stage-3",
           value: "194.01%*3",
           actionTime: 107,
           variants: {

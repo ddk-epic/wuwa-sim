@@ -11,7 +11,8 @@ import type { ScalarStatKey } from "./stat-table"
  * hit) never matches a constrained filter.
  */
 export interface HitFilter {
-  sourceBuffId?: string | string[]
+  sourceBuff?: string | string[]
+  stage?: string | string[]
   stageId?: string | string[]
   skill?: string | string[]
   hitIndex?: number | number[]
@@ -60,10 +61,10 @@ export type ValueExpr =
       base?: number
     }
   | {
-      // `base + per × min(stacks_of(buffId on characterId), max)`. With
+      // `base + per × min(stacks_of(buff on characterId), max)`. With
       // `snapshot: true` the stack count is frozen at apply time.
       kind: "scaledByStacks"
-      buffId: string
+      buff: string
       characterId: number
       per: number
       base: number
@@ -128,7 +129,7 @@ export type ResourceEffect = {
 
 export type RemoveBuffsEffect = {
   kind: "removeBuffs"
-  ids: string[]
+  buffs: string[]
 }
 
 export type NegStatusEffect = {
@@ -162,6 +163,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillCategory?: SkillCategory | SkillCategory[]
+      stage?: string | string[]
       stageId?: string | string[]
       skill?: string | string[]
     }
@@ -172,10 +174,11 @@ export type Trigger =
       skillCategory?: SkillCategory | SkillCategory[]
       dmgType?: string
       source?: TriggerSource
+      stage?: string | string[]
+      sourceBuff?: string | string[]
       stageId?: string | string[]
       skill?: string | string[]
       hitIndex?: number | number[]
-      sourceBuffId?: string | string[]
       /**
        * Fire only when the hit lands on a target that currently has this
        * negative status. Evaluated once at trigger time (the target's statuses
@@ -198,6 +201,7 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
       skillCategory?: SkillCategory | SkillCategory[]
+      stage?: string | string[]
       stageId?: string | string[]
       skill?: string | string[]
       hitIndex?: number | number[]
@@ -255,7 +259,7 @@ export const GLOBAL_TARGET_ID = 0
 export type Condition =
   | {
       kind: "buffActive"
-      buffId: string
+      buff: string
       on: "target" | "source"
       /** When true, the condition is satisfied while the buff is ABSENT. */
       negate?: boolean
@@ -290,7 +294,7 @@ export type Duration =
   | { kind: "permanent" }
   | { kind: "frames"; v: number }
   | { kind: "seconds"; v: number }
-  | { kind: "inherit"; buffId: string }
+  | { kind: "inherit"; buff: string }
 
 export type StackingPolicy = {
   max: number

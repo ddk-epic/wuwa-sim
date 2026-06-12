@@ -8,7 +8,7 @@ export const nightmareCrownless = {
   sets: ["Havoc Eclipse"],
   buffs: [
     {
-      id: "echo.nightmare-crownless.main.havoc-basic-bonus",
+      id: "echo.nightmare-crownless.havoc-basic-bonus",
       name: "Nightmare: Crownless (Havoc & Basic)",
       description:
         "While equipped in the main Echo slot, the Resonator gains +12% Havoc DMG and +12% Basic Attack DMG.",
@@ -29,7 +29,7 @@ export const nightmareCrownless = {
       ],
     },
     {
-      id: "echo.nightmare-crownless.skill.self-amp",
+      id: "echo.nightmare-crownless.self-amp",
       name: "Nightmare: Crownless (Skill DMG)",
       description:
         "When Nightmare: Crownless hits a target, its Echo Skill DMG is increased by 20% for 2s. Does not stack.",
@@ -59,13 +59,14 @@ export const nightmareCrownless = {
       {
         name: "Tap",
         newName: "",
-        actionTime: 0,
+        actionTime: 72,
+        footing: { launch: 30 },
         damage: [
           {
             type: "Echo Skill",
             dmgType: "Damage",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 60,
             value: 2.646,
             energy: 3.67,
             concerto: 0,

@@ -51,9 +51,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    expect(engine.activeBuffIds(1102)).toContain(
-      "char.sanhua.passive.avalanche",
-    )
+    expect(engine.activeBuffIds(1102)).toContain("char.sanhua.avalanche")
     // Avalanche is appliesToHits — hit-agnostic pass must not see it
     const stats = engine.resolveStats(1102)
     expect(stats.allDmgBonus).toBeCloseTo(0)
@@ -185,9 +183,7 @@ describe("Sanhua — Avalanche (Forte Circuit Ice Burst +20%)", () => {
       stageId: "char.sanhua.basic-attack.frigid-light.stage-5::basic-attack",
       frame: 0,
     })
-    expect(engine.activeBuffIds(1102)).toContain(
-      "char.sanhua.passive.avalanche",
-    )
+    expect(engine.activeBuffIds(1102)).toContain("char.sanhua.avalanche")
     // Hit-agnostic pass must NOT fold the appliesToHits buff
     const stats = engine.resolveStats(1102)
     expect(stats.allDmgBonus).toBeCloseTo(0)
@@ -254,7 +250,7 @@ describe("Sanhua — S5 Unraveling Fate (Ice Burst Crit DMG +100%)", () => {
   it("is excluded from the hit-agnostic stat pass at S5 (not pre-folded into base, never leaks onto the detonate Heavy tap)", () => {
     const engine = makeEngineSeq(5)
     expect(engine.activeBuffIds(1102)).toContain(
-      "char.sanhua.s5.unraveling-fate",
+      "char.sanhua.s5-unraveling-fate",
     )
     const burstCritDmg = (
       resolveThornBurst(makeEngineSeq(5)).event as {

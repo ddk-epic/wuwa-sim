@@ -70,7 +70,7 @@ export const sanhua = {
           // ── STAGE ───────────────────────────────────────────
           name: "Skill DMG", // "Skill DMG" marks the CAST stage (see Reference).
           category: "Resonance Skill", // SkillCategory — the trigger axis (what action fired this).
-          newName: "", // Display label + the <stage> stageId segment ("" → "_").
+          newName: "", // Display label only; the stage key comes from `name` ("Skill DMG" → "cast").
           value: "359.85%", // Human-readable scaling string, UI only.
           actionTime: 64, // Frames this stage advances the timeline.
           variants: {
@@ -211,9 +211,9 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 3.
 
 **When to use**: a Normal Attack / Forte chain — several stages under one skill, played in sequence (Stage 1 → 2 → 3 …).
 
-**Key fields**: multiple entries in `stages[]`, each its own stage with a distinct `newName` (`"Stage 1"`, `"Stage 2"`, …). They share the parent skill's `name`, so their stageIds differ only in the `<stage>` segment. **`requiresPriorStageId`** enforces the order: gate every stage after the first on its predecessor's full lineage stageId (exact match), and leave stage 1 ungated. The chain only advances when the prior stage was the one that just played.
+**Key fields**: multiple entries in `stages[]`, each its own stage with a distinct `name` (its key derives from `name`, not `newName`). They share the parent skill, so their stage keys differ only by stage. **`requiresPriorStage`** enforces the order: gate every stage after the first on its predecessor's `"skill/stage"` token, and leave stage 1 ungated. The chain only advances when the prior stage was the one that just played.
 
-**Gotchas**: `newName` is what disambiguates the stages in both the UI label and the stageId. Two stages with the same `category` **and** the same `newName` would collide on stageId — keep `newName` unique within a skill. `requiresPriorStageId` matches the predecessor's id **exactly** (not by prefix).
+**Gotchas**: each stage's key comes from its `name` (`deriveKey`), so two stages of one skill must have distinct names (or an explicit `key`). `requiresPriorStage` names exactly one stage with a `"skill/stage"` token — see [stageId lineage](#stageid-lineage).
 
 ```ts
 {
@@ -234,7 +234,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 3.
       category: "Basic Attack",
       newName: "Stage 2",
       // only reachable after Stage 1 played:
-      requiresPriorStageId: "char.sanhua.basic-attack.frigid-light.stage-1::basic-attack",
+      requiresPriorStage: "frigid-light/stage-1",
       actionTime: 31,
       value: "73.76%",
       damage: [/* … */],
@@ -251,7 +251,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
 
 **When to use**: a stage that follows a prerequisite cast but is **not** a strict combo link — it stays available after swaps and the actor's own other actions, and only becomes castable a fixed time after the prerequisite. Encore's Energetic Welcome (castable ~103 frames after Flaming Woolies, surviving a swap-out) is the canonical case.
 
-**Key fields**: same `requiresPriorStageId` gate as the combo chain (recipe 3), **plus** a sibling `minDelay` (frames). Presence of `minDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + minDelay`, surfaced as a `prior-gate` Padding Delay component.
+**Key fields**: same `requiresPriorStage` gate as the combo chain (recipe 3), **plus** a sibling `minDelay` (frames). Presence of `minDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + minDelay`, surfaced as a `prior-gate` Padding Delay component.
 
 **Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `minDelay`, the pad is **0**. Set `minDelay` to the prerequisite's "castable-after" delay (Energetic Welcome uses `103`, Flaming Woolies' last-hit `actionFrame`). See ADR-0036.
 
@@ -262,8 +262,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
   newName: "Energetic Welcome",
   // Window-mode follow-up to Flaming Woolies: castable ~103 frames after its
   // cast, staying available across a swap-out. Timing pad is computed sim-side.
-  requiresPriorStageId:
-    "char.encore.resonance-skill.flaming-woolies.flaming-woolies::resonance-skill",
+  requiresPriorStage: "flaming-woolies/flaming-woolies",
   minDelay: 103,
   value: "339.16%",
   actionTime: 51,
@@ -419,7 +418,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Dodge Counter.
 }
 ```
 
-The buff that wires a flag onto this stage references `char.sanhua.heavy-attack.clarity-of-mind.detonate::heavy-attack` — see how that id is built in [stageId lineage](#stageid-lineage).
+The buff that wires a flag onto this stage references it as `stage: "clarity-of-mind/detonate"` — see [stageId lineage](#stageid-lineage) for the token grammar.
 
 See: `src/data/characters/sanhua.ts` — Clarity of Mind.
 
@@ -511,20 +510,20 @@ Concept-grouped lookup, organized by tier: **Character shell → Skill → Stage
 
 A stage is an `EnrichedSkillAttribute`.
 
-| Field                  | Drives                                                                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                 | Raw stage name. `"Skill DMG"` (the `STAGE_CAST_NAME` constant) marks the **cast stage** — the one that collects the skill-level `concerto`.                                                                              |
-| `category`             | `SkillCategory` — the player action / **trigger** axis.                                                                                                                                                                  |
-| `newName`              | Display label only — never part of the stageId. Renaming it is always safe.                                                                                                                                              |
-| `key`                  | Explicit stage-key override for the rare within-skill `deriveKey(name)` collision (e.g. Camellya's held Basic Attack 4 → `basic-attack-4-hold`). Normally omit — the key derives from `name`.                            |
-| `value`                | Human-readable scaling string (`"233.81%"`, `"21.58%*4"`). UI only — the engine reads `damage[].value`.                                                                                                                  |
-| `actionTime`           | Frames the stage advances the timeline. **Scaffolded as `0` — you author the real value.** See [timing model](#stage-timing-model).                                                                                      |
-| `damage`               | `DamageEntry[]` — the hits (see below).                                                                                                                                                                                  |
-| `variants`             | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                       |
-| `hidden`               | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                       |
-| `footing`              | Entry footing — `"ground"`, `"air"`, `{ launch: n }`, `{ land: n }`.                                                                                                                                                     |
-| `requiresPriorStageId` | Combo-string gating — this stage only follows the given predecessor stageId (exact match).                                                                                                                               |
-| `minDelay`             | Frames. Only alongside `requiresPriorStageId`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + minDelay`. See Cookbook recipe 4. |
+| Field                | Drives                                                                                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | Raw stage name. `"Skill DMG"` (the `STAGE_CAST_NAME` constant) marks the **cast stage** — the one that collects the skill-level `concerto`.                                                                            |
+| `category`           | `SkillCategory` — the player action / **trigger** axis.                                                                                                                                                                |
+| `newName`            | Display label only — never part of the stageId. Renaming it is always safe.                                                                                                                                            |
+| `key`                | Explicit stage-key override for the rare within-skill `deriveKey(name)` collision (e.g. Camellya's held Basic Attack 4 → `basic-attack-4-hold`). Normally omit — the key derives from `name`.                          |
+| `value`              | Human-readable scaling string (`"233.81%"`, `"21.58%*4"`). UI only — the engine reads `damage[].value`.                                                                                                                |
+| `actionTime`         | Frames the stage advances the timeline. **Scaffolded as `0` — you author the real value.** See [timing model](#stage-timing-model).                                                                                    |
+| `damage`             | `DamageEntry[]` — the hits (see below).                                                                                                                                                                                |
+| `variants`           | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                     |
+| `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                     |
+| `footing`            | Entry footing — `"ground"`, `"air"`, `{ launch: n }`, `{ land: n }`.                                                                                                                                                   |
+| `requiresPriorStage` | Combo gating — this stage only follows the predecessor named by a `"skill/stage"` token.                                                                                                                               |
+| `minDelay`           | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + minDelay`. See Cookbook recipe 4. |
 
 **Rare fields:**
 
@@ -573,9 +572,9 @@ Key points an author trips on:
 - The `::<skillType>` segment is derived from `damage[0].type`, falling back to the stage `category` (Tune Break → Basic Attack). It is **not** the skill's `type` grouping.
 - A specific hit is targeted with the `hitIndex` trigger/filter axis (1-based, DamageEntry order) — not by a suffix on the id.
 
-**Matching**: `stageId` matches by **exact equality**; scope a whole skill with the `skill` axis (the skill key, e.g. `skill: "burgeoning"`); pin a hit with `hitIndex`. Every present axis must match (conjunction); an array is an OR within its axis. A reference that doesn't resolve to a real stage throws at bootstrap. (ADR-0039; lineage format from ADR-0024.)
+**Referencing a stage**: you never write the lineage id. Author references — `requiresPriorStage`, a buff's `trigger.stage`, `appliesToHits.stage` — use a **`"skill/stage"` token** (both keys from `deriveKey`). Append `#n` to pin the 1-based Nth hit (`"frigid-light/stage-5#1"`), or write a bare `"skill"` for the whole-skill axis — every stage of that skill, regardless of category (`skill: "burgeoning"`). An array is an OR within the axis; `skillCategory` stays its own field. The compile pass lowers the token to the structured `stageId` / `skill` / `hitIndex` axes and throws on any unresolved reference (ADR-0039).
 
-Echo stages use a shorter scheme: `echo.<echoName>.<stageKey>::echo-skill`.
+Echo stages have one implicit skill, so a reference is just `"stage"` / `"stage#n"`; the resolved id is `echo.<echoName>.<stageKey>::echo-skill`.
 
 ### Stage timing model
 

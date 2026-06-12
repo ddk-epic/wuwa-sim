@@ -367,7 +367,7 @@ describe("runSimulation — inherit duration", () => {
       skillCategory: "Basic Attack",
     },
     target: { kind: "self" },
-    duration: { kind: "inherit", buffId: "test.parent" },
+    duration: { kind: "inherit", buff: "parent" },
     effects: [
       {
         kind: "stat",
@@ -435,7 +435,7 @@ describe("runSimulation — removeBuffs effect", () => {
       characterId: 1,
       skillCategory: "Resonance Skill",
     },
-    effects: [{ kind: "removeBuffs", ids: ["test.marker"] }],
+    effects: [{ kind: "removeBuffs", buffs: ["marker"] }],
   }
 
   const charWithRemove: EnrichedCharacter = {

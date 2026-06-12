@@ -8,7 +8,7 @@ export const infernoRider = {
   sets: ["Molten Rift"],
   buffs: [
     {
-      id: "echo.inferno-rider.tap.fusion-basic-bonus",
+      id: "echo.inferno-rider.fusion-basic-bonus",
       name: "Inferno Rider (Fusion & Basic)",
       description:
         "After the 3rd Tap hit, the current Resonator gains +12% Fusion DMG and +12% Basic Attack DMG for 15s.",
@@ -16,7 +16,7 @@ export const infernoRider = {
         event: "hitLanded",
         actor: "self",
         source: "self",
-        stageId: "echo.inferno-rider._::echo-skill.3",
+        stage: "tap#3",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
@@ -79,6 +79,10 @@ export const infernoRider = {
             weakness: 0,
           },
         ],
+        variants: {
+          cancel: { actionTime: 121 },
+          swap: { actionTime: 45 },
+        },
       },
       {
         name: "Hold",

@@ -62,9 +62,7 @@ describe("Verina — Outro Blossom (amp all +15%)", () => {
       skillCategory: "Outro Skill",
       frame: 0,
     })
-    expect(engine.activeBuffIds(1503)).toContain(
-      "char.verina.outro.blossom-amp",
-    )
+    expect(engine.activeBuffIds(1503)).toContain("char.verina.blossom-amp")
     expect(engine.resolveStats(1503).allAmp).toBeCloseTo(0.15)
   })
 })
@@ -98,9 +96,7 @@ describe("Verina — Gift of Nature (team ATK +20%)", () => {
         stageId,
         frame: 0,
       })
-      expect(engine.activeBuffIds(1503)).toContain(
-        "char.verina.inherent.gift-of-nature",
-      )
+      expect(engine.activeBuffIds(1503)).toContain("char.verina.gift-of-nature")
       expect(engine.resolveStats(1503).atkPct).toBeCloseTo(baseAtkPct + 0.2)
     },
   )
@@ -259,7 +255,7 @@ describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
         frame: 0,
       })
       expect(engine.activeBuffIds(1503)).toContain(
-        "char.verina.s4.blossoming-embrace",
+        "char.verina.s4-blossoming-embrace",
       )
       expect(engine.resolveStats(1503).elementBonus["Spectro"]).toBeCloseTo(
         baseSpectro + 0.15,
@@ -296,7 +292,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
     expect(result.syntheticEvents.length).toBeGreaterThan(0)
     const synthHit = result.syntheticEvents[0]
     expect(synthHit.synthetic).toBe(true)
-    expect(synthHit.sourceBuffId).toBe("char.verina.s6.joyous-harvest-coord")
+    expect(synthHit.sourceBuffId).toBe("char.verina.s6-joyous-harvest-coord")
   })
 
   it("Coord. Attack not emitted at sequence 0", () => {
@@ -366,7 +362,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(12)
     const healHit = result.syntheticEvents.find(
-      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+      (h) => h.sourceBuffId === "char.verina.starflower-consume",
     )
     expect(healHit).toBeDefined()
   })
@@ -382,7 +378,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(0)
     const healHit = result.syntheticEvents.find(
-      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+      (h) => h.sourceBuffId === "char.verina.starflower-consume",
     )
     expect(healHit).toBeUndefined()
   })
@@ -398,7 +394,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
     expect(engine.getResource(1503).forte).toBe(0)
     expect(engine.getResource(1503).concerto).toBe(12)
     const healCount = result.syntheticEvents.filter(
-      (h) => h.sourceBuffId === "char.verina.forte.starflower-consume",
+      (h) => h.sourceBuffId === "char.verina.starflower-consume",
     ).length
     expect(healCount).toBe(1)
   })
@@ -472,7 +468,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const engine = makeTwoCharEngine()
     libHitLanded(engine, 0)
     expect(engine.activeBuffIds(1503)).toContain(
-      "char.verina.lib.photosynthesis-mark",
+      "char.verina.photosynthesis-mark",
     )
   })
 
@@ -482,12 +478,12 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const result = teammateHit(engine, 10)
     const dmgCoord = result.syntheticEvents.find(
       (h) =>
-        h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
+        h.sourceBuffId === "char.verina.mark-coord-reaction" &&
         h.kind === "hit",
     )
     const healCoord = result.syntheticEvents.find(
       (h) =>
-        h.sourceBuffId === "char.verina.lib.mark-coord-reaction" &&
+        h.sourceBuffId === "char.verina.mark-coord-reaction" &&
         h.kind === "sustain",
     )
     expect(dmgCoord).toBeDefined()
@@ -499,7 +495,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const result = teammateHit(engine, 0)
     expect(
       result.syntheticEvents.filter(
-        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+        (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
       ),
     ).toHaveLength(0)
   })
@@ -510,7 +506,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const result = teammateHit(engine, 10, true)
     expect(
       result.syntheticEvents.filter(
-        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+        (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
       ),
     ).toHaveLength(0)
   })
@@ -521,10 +517,10 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const r1 = teammateHit(engine, 10)
     const r2 = teammateHit(engine, 30)
     const coordsR1 = r1.syntheticEvents.filter(
-      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
     ).length
     const coordsR2 = r2.syntheticEvents.filter(
-      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
     ).length
     expect(coordsR1).toBe(2)
     expect(coordsR2).toBe(0)
@@ -537,7 +533,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const r2 = teammateHit(engine, 71)
     expect(
       r2.syntheticEvents.filter(
-        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+        (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
       ).length,
     ).toBe(2)
   })
@@ -549,7 +545,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     const result = teammateHit(engine, 721)
     expect(
       result.syntheticEvents.filter(
-        (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+        (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
       ),
     ).toHaveLength(0)
   })
@@ -559,7 +555,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
     libHitLanded(engine, 0)
     const result = teammateHit(engine, 10)
     const coord = result.syntheticEvents.find(
-      (h) => h.sourceBuffId === "char.verina.lib.mark-coord-reaction",
+      (h) => h.sourceBuffId === "char.verina.mark-coord-reaction",
     )
     expect(coord?.characterId).toBe(1503)
   })
@@ -576,7 +572,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
       frame: 100,
     })
     const s6Coord = result.syntheticEvents.find(
-      (h) => h.sourceBuffId === "char.verina.s6.joyous-harvest-coord",
+      (h) => h.sourceBuffId === "char.verina.s6-joyous-harvest-coord",
     )
     expect(s6Coord).toBeDefined()
   })
@@ -584,7 +580,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
 
 describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () => {
   const TEAMMATE_ID = 9999
-  const COORD_ID = "char.verina.lib.mark-coord-reaction"
+  const COORD_ID = "char.verina.mark-coord-reaction"
 
   const makeTeammate = (): EnrichedCharacter => ({
     id: TEAMMATE_ID,

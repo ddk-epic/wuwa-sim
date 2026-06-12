@@ -40,7 +40,7 @@ export const impermanenceHeron = {
       duration: { kind: "seconds", v: 15 },
       condition: {
         kind: "buffActive",
-        buffId: "echo.impermanence-heron.window",
+        buff: "window",
         on: "source",
       },
       effects: [
@@ -74,6 +74,9 @@ export const impermanenceHeron = {
             weakness: 0,
           },
         ],
+        variants: {
+          swap: { actionTime: 0 },
+        },
       },
       {
         name: "Hold",

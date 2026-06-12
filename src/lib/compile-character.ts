@@ -5,7 +5,7 @@ import type {
   SkillType,
 } from "#/types/character"
 import type { EnrichedEcho, EnrichedEchoStage } from "#/types/echo"
-import type { BuffDef, HitFilter, Trigger } from "#/types/buff"
+import type { BuffDef, Effect, HitFilter, Trigger } from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./loadout/catalog"
@@ -73,47 +73,27 @@ type LoweredRefs = {
   hitIndex?: number
 }
 
+type StageRef = { stageId: string; hitIndex?: number } | { skill: string }
 type RefLowerer = (refs: string | string[]) => LoweredRefs
+type BuffResolver = (key: string) => string
 
-/**
- * Lower hand-written stage references into structured axes. A ref with `::` is
- * an exact stage (optionally hit-pinned with a trailing `.<n>`), resolved
- * against current ids first, then the legacy `newName`-derived ids. A ref
- * without `::` is a legacy category-scoped skill prefix and lowers to the
- * skill axis. Unresolvable refs throw.
- */
-function makeRefLowerer(
+function parseHit(
   owner: string,
-  currentIds: ReadonlySet<string>,
-  legacyIds: ReadonlyMap<string, string>,
-  legacySkillPrefixes: ReadonlyMap<string, string>,
+  ref: string,
+): { base: string; hitIndex?: number } {
+  const hash = ref.indexOf("#")
+  if (hash < 0) return { base: ref }
+  const hitIndex = Number(ref.slice(hash + 1))
+  if (!Number.isInteger(hitIndex) || hitIndex < 1) {
+    throw new Error(`${owner}: invalid hit index in "${ref}"`)
+  }
+  return { base: ref.slice(0, hash), hitIndex }
+}
+
+function combineRefs(
+  owner: string,
+  lowerOne: (ref: string) => StageRef,
 ): RefLowerer {
-  const resolveExact = (ref: string): string => {
-    if (currentIds.has(ref)) return ref
-    const mapped = legacyIds.get(ref)
-    if (mapped !== undefined) return mapped
-    throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
-  }
-
-  const lowerOne = (
-    ref: string,
-  ): { stageId: string; hitIndex?: number } | { skill: string } => {
-    if (ref.includes("::")) {
-      const hitMatch = /\.(\d+)$/.exec(ref)
-      const base = hitMatch ? ref.slice(0, hitMatch.index) : ref
-      const out: { stageId: string; hitIndex?: number } = {
-        stageId: resolveExact(base),
-      }
-      if (hitMatch) out.hitIndex = Number(hitMatch[1])
-      return out
-    }
-    const skillKey = legacySkillPrefixes.get(ref)
-    if (skillKey === undefined) {
-      throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
-    }
-    return { skill: skillKey }
-  }
-
   return (refs) => {
     const list = Array.isArray(refs) ? refs : [refs]
     const lowered = list.map(lowerOne)
@@ -144,54 +124,177 @@ function makeRefLowerer(
   }
 }
 
-function lowerTrigger(t: Trigger, owner: string, lower: RefLowerer): Trigger {
-  if (t.event === "skillCast" && t.stageId !== undefined) {
-    const axes = lower(t.stageId)
+/**
+ * `"skill/stage"`, `"skill/stage#n"`, or a bare `"skill"` (whole-skill axis).
+ */
+function makeStageLowerer(
+  owner: string,
+  refIndex: ReadonlyMap<string, ReadonlyMap<string, string>>,
+): RefLowerer {
+  return combineRefs(owner, (ref) => {
+    const { base, hitIndex } = parseHit(owner, ref)
+    const slash = base.indexOf("/")
+    if (slash < 0) {
+      if (hitIndex !== undefined) {
+        throw new Error(`${owner}: skill reference "${ref}" cannot pin a hit`)
+      }
+      if (!refIndex.has(base)) {
+        throw new Error(`${owner}: unresolvable skill reference "${base}"`)
+      }
+      return { skill: base }
+    }
+    const stageId = refIndex
+      .get(base.slice(0, slash))
+      ?.get(base.slice(slash + 1))
+    if (stageId === undefined) {
+      throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
+    }
+    return hitIndex === undefined ? { stageId } : { stageId, hitIndex }
+  })
+}
+
+/** Echoes have a single implicit skill, so a ref is just `"stage"` or `"stage#n"`. */
+function makeEchoStageLowerer(
+  owner: string,
+  stageByKey: ReadonlyMap<string, string>,
+): RefLowerer {
+  return combineRefs(owner, (ref) => {
+    const { base, hitIndex } = parseHit(owner, ref)
+    if (base.includes("/")) {
+      throw new Error(`${owner}: echo stage reference "${ref}" has no skill`)
+    }
+    const stageId = stageByKey.get(base)
+    if (stageId === undefined) {
+      throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
+    }
+    return hitIndex === undefined ? { stageId } : { stageId, hitIndex }
+  })
+}
+
+function makeBuffResolver(
+  owner: string,
+  buffKeys: ReadonlyMap<string, string>,
+): BuffResolver {
+  return (key) => {
+    const id = buffKeys.get(key)
+    if (id === undefined) {
+      throw new Error(`${owner}: unresolvable buff reference "${key}"`)
+    }
+    return id
+  }
+}
+
+function resolveBuffRefs(
+  refs: string | string[],
+  resolve: BuffResolver,
+): string | string[] {
+  return Array.isArray(refs) ? refs.map(resolve) : resolve(refs)
+}
+
+function lowerTrigger(
+  t: Trigger,
+  owner: string,
+  lowerStage: RefLowerer,
+  resolveBuff: BuffResolver,
+): Trigger {
+  if (t.event === "skillCast" && t.stage !== undefined) {
+    const axes = lowerStage(t.stage)
     if (axes.hitIndex !== undefined) {
       throw new Error(`${owner}: skillCast trigger cannot pin a hit index`)
     }
     const next = { ...t }
-    delete next.stageId
+    delete next.stage
     if (axes.stageId !== undefined) next.stageId = axes.stageId
     if (axes.skill !== undefined) next.skill = axes.skill
     return next
   }
-  if (
-    (t.event === "hitLanded" || t.event === "healLanded") &&
-    t.stageId !== undefined
-  ) {
-    const axes = lower(t.stageId)
-    const next = { ...t }
-    delete next.stageId
-    if (axes.stageId !== undefined) next.stageId = axes.stageId
-    if (axes.skill !== undefined) next.skill = axes.skill
-    if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+  if (t.event === "hitLanded" || t.event === "healLanded") {
+    let next = t
+    if (t.stage !== undefined) {
+      const axes = lowerStage(t.stage)
+      next = { ...next }
+      delete next.stage
+      if (axes.stageId !== undefined) next.stageId = axes.stageId
+      if (axes.skill !== undefined) next.skill = axes.skill
+      if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+    }
+    if (next.event === "hitLanded" && next.sourceBuff !== undefined) {
+      next = {
+        ...next,
+        sourceBuff: resolveBuffRefs(next.sourceBuff, resolveBuff),
+      }
+    }
     return next
   }
   return t
 }
 
-function lowerHitFilter(f: HitFilter, lower: RefLowerer): HitFilter {
-  if (f.stageId === undefined) return f
-  const axes = lower(f.stageId)
-  const next = { ...f }
-  delete next.stageId
-  if (axes.stageId !== undefined) next.stageId = axes.stageId
-  if (axes.skill !== undefined) next.skill = axes.skill
-  if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+function lowerHitFilter(
+  f: HitFilter,
+  lowerStage: RefLowerer,
+  resolveBuff: BuffResolver,
+): HitFilter {
+  let next = f
+  if (f.stage !== undefined) {
+    const axes = lowerStage(f.stage)
+    next = { ...next }
+    delete next.stage
+    if (axes.stageId !== undefined) next.stageId = axes.stageId
+    if (axes.skill !== undefined) next.skill = axes.skill
+    if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+  }
+  if (next.sourceBuff !== undefined) {
+    next = {
+      ...next,
+      sourceBuff: resolveBuffRefs(next.sourceBuff, resolveBuff),
+    }
+  }
   return next
 }
 
-function lowerBuffDef(def: BuffDef, lower: RefLowerer): BuffDef {
+function lowerEffect(effect: Effect, resolveBuff: BuffResolver): Effect {
+  if (effect.kind === "removeBuffs") {
+    return { ...effect, buffs: effect.buffs.map(resolveBuff) }
+  }
+  if (effect.kind === "stat" && effect.value.kind === "scaledByStacks") {
+    return {
+      ...effect,
+      value: { ...effect.value, buff: resolveBuff(effect.value.buff) },
+    }
+  }
+  return effect
+}
+
+function lowerBuffDef(
+  def: BuffDef,
+  lowerStage: RefLowerer,
+  resolveBuff: BuffResolver,
+): BuffDef {
   const next: BuffDef = {
     ...def,
-    trigger: lowerTrigger(def.trigger, def.id, lower),
+    trigger: lowerTrigger(def.trigger, def.id, lowerStage, resolveBuff),
+    effects: def.effects.map((e) => lowerEffect(e, resolveBuff)),
   }
   if (def.consumedBy !== undefined) {
-    next.consumedBy = lowerTrigger(def.consumedBy, def.id, lower)
+    next.consumedBy = lowerTrigger(
+      def.consumedBy,
+      def.id,
+      lowerStage,
+      resolveBuff,
+    )
   }
   if (def.appliesToHits !== undefined) {
-    next.appliesToHits = lowerHitFilter(def.appliesToHits, lower)
+    next.appliesToHits = lowerHitFilter(
+      def.appliesToHits,
+      lowerStage,
+      resolveBuff,
+    )
+  }
+  if (def.condition?.kind === "buffActive") {
+    next.condition = { ...def.condition, buff: resolveBuff(def.condition.buff) }
+  }
+  if (def.duration?.kind === "inherit") {
+    next.duration = { ...def.duration, buff: resolveBuff(def.duration.buff) }
   }
   return next
 }
@@ -200,6 +303,7 @@ function buildBuffKeys(buffs: BuffDef[], owner: string): Map<string, string> {
   const keys = new Map<string, string>()
   for (const def of buffs) {
     const key = def.id.slice(def.id.lastIndexOf(".") + 1)
+    assertKey(key, `${owner}, buff "${def.id}"`)
     const existing = keys.get(key)
     // Sequence-gated variants of one buff share an id; only two distinct
     // ids colliding on a key is ambiguous.
@@ -220,8 +324,6 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
 
   const stageIndex = new Map<string, StageInfo>()
   const refIndex = new Map<string, Map<string, string>>()
-  const legacyIds = new Map<string, string>()
-  const legacySkillPrefixes = new Map<string, string>()
 
   for (const skill of char.skills) {
     if (skill.stages.length === 0) continue
@@ -261,32 +363,20 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
         skill,
         stage,
       })
-      legacyIds.set(
-        `char.${charSlug}.${categorySlug}.${toKebab(skill.name)}.${toKebab(stage.newName)}::${toKebab(skillType)}`,
-        stageId,
-      )
-      legacySkillPrefixes.set(
-        `char.${charSlug}.${categorySlug}.${toKebab(skill.name)}`,
-        skillKey,
-      )
     }
   }
 
-  const currentIds = new Set(stageIndex.keys())
-  const lower = makeRefLowerer(
-    owner,
-    currentIds,
-    legacyIds,
-    legacySkillPrefixes,
-  )
+  const buffKeys = buildBuffKeys(char.buffs, owner)
+  const lowerStage = makeStageLowerer(owner, refIndex)
+  const resolveBuff = makeBuffResolver(owner, buffKeys)
 
   for (const info of stageIndex.values()) {
-    const ref = info.stage.requiresPriorStageId
+    const ref = info.stage.requiresPriorStage
     if (ref === undefined) continue
-    const axes = lower(ref)
+    const axes = lowerStage(ref)
     if (typeof axes.stageId !== "string" || axes.hitIndex !== undefined) {
       throw new Error(
-        `${owner}: requiresPriorStageId must name exactly one stage, got "${ref}"`,
+        `${owner}: requiresPriorStage must name exactly one stage, got "${ref}"`,
       )
     }
     info.requiresPriorStageId = axes.stageId
@@ -295,8 +385,8 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
   return {
     stageIndex,
     refIndex,
-    buffKeys: buildBuffKeys(char.buffs, owner),
-    buffs: char.buffs.map((def) => lowerBuffDef(def, lower)),
+    buffKeys,
+    buffs: char.buffs.map((def) => lowerBuffDef(def, lowerStage, resolveBuff)),
   }
 }
 
@@ -306,7 +396,7 @@ function compileEchoData(echo: EnrichedEcho): CompiledEcho {
   assertKey(echoSlug, owner)
 
   const stageIndex = new Map<string, EchoStageInfo>()
-  const legacyIds = new Map<string, string>()
+  const stageByKey = new Map<string, string>()
 
   for (const stage of echo.skill.stages) {
     const stageKey = stage.key ?? deriveKey(stage.name)
@@ -316,23 +406,15 @@ function compileEchoData(echo: EnrichedEcho): CompiledEcho {
       throw new Error(`${owner}: duplicate stage key "${stageKey}"`)
     }
     stageIndex.set(stageId, { stageId, stageKey, stage })
-    legacyIds.set(
-      `echo.${echoSlug}.${toKebab(stage.newName)}::echo-skill`,
-      stageId,
-    )
+    stageByKey.set(stageKey, stageId)
   }
 
-  const lower = makeRefLowerer(
-    owner,
-    new Set(stageIndex.keys()),
-    legacyIds,
-    new Map(),
-  )
-  buildBuffKeys(echo.buffs, owner)
+  const lowerStage = makeEchoStageLowerer(owner, stageByKey)
+  const resolveBuff = makeBuffResolver(owner, buildBuffKeys(echo.buffs, owner))
 
   return {
     stageIndex,
-    buffs: echo.buffs.map((def) => lowerBuffDef(def, lower)),
+    buffs: echo.buffs.map((def) => lowerBuffDef(def, lowerStage, resolveBuff)),
   }
 }
 
@@ -412,7 +494,7 @@ export function findStageByEntry(
         : stageLabel(skill.name, stage.newName),
       requiresPriorStageId: info.requiresPriorStageId,
       minDelay:
-        stage.requiresPriorStageId !== undefined ? stage.minDelay : undefined,
+        stage.requiresPriorStage !== undefined ? stage.minDelay : undefined,
     }
   }
 

@@ -65,7 +65,7 @@ function matchesLabelAxis(
 /** Returns true when every present axis in `filter` matches `ctx`. */
 export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
   return (
-    matchesAxis(filter.sourceBuffId, ctx.sourceBuffId) &&
+    matchesAxis(filter.sourceBuff, ctx.sourceBuffId) &&
     matchesAxis(filter.stageId, ctx.stageId) &&
     matchesAxis(filter.skill, ctx.skill) &&
     matchesAxis(filter.hitIndex, ctx.hitIndex) &&
@@ -125,7 +125,7 @@ export function freezeSnapshots(
     if (!value.snapshot) continue
     let frozen: number
     if (value.kind === "scaledByStacks") {
-      const n = getBuffStacks?.(value.characterId, value.buffId) ?? 0
+      const n = getBuffStacks?.(value.characterId, value.buff) ?? 0
       frozen = value.base + value.per * Math.min(n, value.max)
     } else {
       frozen = value.kind === "perStack" ? value.v * stacks : value.v
@@ -159,7 +159,7 @@ function resolveValue(
       return Math.min((statVal / value.per) * value.scale, value.max)
     }
     case "scaledByStacks": {
-      const n = getBuffStacks?.(value.characterId, value.buffId) ?? 0
+      const n = getBuffStacks?.(value.characterId, value.buff) ?? 0
       return value.base + value.per * Math.min(n, value.max)
     }
     case "fromStatusStacks": {

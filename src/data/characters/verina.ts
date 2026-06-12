@@ -19,7 +19,7 @@ export const verina = {
   skillTreeBonuses: ["Healing Bonus", "ATK"],
   buffs: [
     {
-      id: "char.verina.outro.blossom-amp",
+      id: "char.verina.blossom-amp",
       name: "Blossom",
       description:
         "Outro Skill Blossom amplifies All DMG for all Resonators by 15% for 30s. 6s HoT portion is deferred (no HoT primitive).",
@@ -39,20 +39,20 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.inherent.gift-of-nature",
+      id: "char.verina.gift-of-nature",
       name: "Gift of Nature",
       description:
         "When Verina casts Heavy Attack Starflower Blooms, Mid-air Attack Starflower Blooms, Resonance Liberation Arboreal Flourish or Outro Skill Blossom, all team ATK +20% for 20s.",
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        stageId: [
-          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
-          "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation",
-          "char.verina.outro-skill.blossom._::outro-skill",
+        stage: [
+          "starflower-blooms/heavy-attack-starflower-blooms",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
+          "arboreal-flourish/cast",
+          "blossom/cast",
         ],
       },
       target: { kind: "global" },
@@ -66,7 +66,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s1.moment-of-emergence",
+      id: "char.verina.s1-moment-of-emergence",
       name: "S1: Moment of Emergence",
       description:
         "Outro Skill Blossom grants the next character continuous healing (20% ATK every 5s for 30s). Heal portion is deferred — no HoT primitive in the engine yet.",
@@ -81,22 +81,21 @@ export const verina = {
       effects: [],
     },
     {
-      id: "char.verina.lib.photosynthesis-mark",
+      id: "char.verina.photosynthesis-mark",
       name: "Photosynthesis Mark",
       description:
         "Arboreal Flourish applies a Photosynthesis Mark presence flag on Verina for 12s. Enables coordinated attack reactions.",
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId:
-          "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation.1",
+        stage: "arboreal-flourish/cast#1",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 12 },
       effects: [],
     },
     {
-      id: "char.verina.lib.mark-coord-reaction",
+      id: "char.verina.mark-coord-reaction",
       name: "Arboreal Flourish",
       description:
         "While Photosynthesis Mark is active, any non-synthetic teammate hit triggers Verina's coordinated attack (DMG + heal). ICD: 1s each.",
@@ -107,7 +106,7 @@ export const verina = {
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.verina.lib.photosynthesis-mark",
+        buff: "photosynthesis-mark",
         on: "source",
       },
       effects: [
@@ -117,7 +116,7 @@ export const verina = {
             type: "Resonance Liberation",
             dmgType: "Damage",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 60,
             value: 0.0995,
             energy: 0,
             concerto: 0,
@@ -133,7 +132,7 @@ export const verina = {
             type: "Basic Attack",
             dmgType: "Heal",
             scalingStat: "ATK",
-            actionFrame: 0,
+            actionFrame: 60,
             flat: 428,
             value: 0.1071,
             energy: 0,
@@ -147,18 +146,18 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.forte.starflower-consume",
+      id: "char.verina.starflower-consume",
       name: "Forte: Starflower Blooms (Consume)",
       description:
         "Heavy/Mid-air Starflower Blooms consumes 1 Forte, restores 12 Concerto, and heals the team. Skipped when Forte = 0.",
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        stageId: [
-          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
+        stage: [
+          "starflower-blooms/heavy-attack-starflower-blooms",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
         ],
       },
       condition: {
@@ -200,7 +199,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s2.concerto-grant",
+      id: "char.verina.s2-concerto-grant",
       name: "S2: Sprouting Reflections",
       description:
         "Botany Experiment landing restores 10 Concerto Energy once per cast (hit 1).",
@@ -208,8 +207,7 @@ export const verina = {
       trigger: {
         event: "hitLanded",
         characterId: 1503,
-        stageId:
-          "char.verina.resonance-skill.botany-experiment._::resonance-skill.1",
+        stage: "botany-experiment/cast#1",
       },
       effects: [
         {
@@ -221,7 +219,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s3.choice-to-flourish",
+      id: "char.verina.s3-choice-to-flourish",
       name: "S3: The Choice to Flourish",
       description:
         "Resonance Liberation Photosynthesis Mark healing +12% (modeled as global healingBonus; per-stage scoping deferred).",
@@ -238,7 +236,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s4.blossoming-embrace",
+      id: "char.verina.s4-blossoming-embrace",
       name: "S4: Blossoming Embrace",
       description:
         "Heavy Attack Starflower Blooms, Mid-air Attack Starflower Blooms, Resonance Liberation Arboreal Flourish and Outro Skill Blossom grant team Spectro DMG +15% for 24s.",
@@ -246,13 +244,13 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        stageId: [
-          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
-          "char.verina.resonance-liberation.arboreal-flourish._::resonance-liberation",
-          "char.verina.outro-skill.blossom._::outro-skill",
+        stage: [
+          "starflower-blooms/heavy-attack-starflower-blooms",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
+          "arboreal-flourish/cast",
+          "blossom/cast",
         ],
       },
       target: { kind: "global" },
@@ -266,7 +264,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s6.joyous-harvest-dmg",
+      id: "char.verina.s6-joyous-harvest-dmg",
       name: "S6: Joyous Harvest (DMG)",
       description:
         "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms deal 20% more DMG.",
@@ -274,11 +272,11 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        stageId: [
-          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
+        stage: [
+          "starflower-blooms/heavy-attack-starflower-blooms",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
         ],
       },
       target: { kind: "self" },
@@ -292,7 +290,7 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s6.joyous-harvest-coord",
+      id: "char.verina.s6-joyous-harvest-coord",
       name: "S6: Joyous Harvest (Coord)",
       description:
         "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms trigger an extra Coordinated Attack (same DMG as Liberation Photosynthesis Mark).",
@@ -300,11 +298,11 @@ export const verina = {
       trigger: {
         event: "skillCast",
         characterId: 1503,
-        stageId: [
-          "char.verina.heavy-attack.starflower-blooms.heavy-attack::heavy-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-1::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-2::basic-attack",
-          "char.verina.basic-attack.starflower-blooms.mid-air-attack-stage-3::basic-attack",
+        stage: [
+          "starflower-blooms/heavy-attack-starflower-blooms",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
+          "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
         ],
       },
       effects: [

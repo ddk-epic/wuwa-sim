@@ -254,7 +254,7 @@ describe("BuffEngine — phase pipeline as data", () => {
     // even within a single phase, candidates are processed in the pinned
     // lex order.
     const resourceBuff: BuffDef = {
-      id: "char.test.aResource",
+      id: "char.test.a-resource",
       name: "Adds Concerto",
       trigger: {
         event: "skillCast",
@@ -274,7 +274,7 @@ describe("BuffEngine — phase pipeline as data", () => {
       ],
     }
     const statBuff: BuffDef = {
-      id: "char.test.bStat",
+      id: "char.test.b-stat",
       name: "Conditional ATK%",
       trigger: {
         event: "skillCast",

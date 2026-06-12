@@ -69,7 +69,7 @@ const windowChar: EnrichedCharacter = {
           newName: "Follow",
           value: "100%",
           actionTime: 51,
-          requiresPriorStageId: PREREQ,
+          requiresPriorStage: "woolies/prereq",
           minDelay: MIN_DELAY,
           damage: [dmgHit(1, 0, 0, "Resonance Skill")],
         },

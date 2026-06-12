@@ -95,7 +95,7 @@ export class ConditionEvaluator {
           cond.on === "source"
             ? subject.sourceCharacterId
             : subject.targetCharacterId
-        const present = this.world.hasActiveBuff(cond.buffId, id)
+        const present = this.world.hasActiveBuff(cond.buff, id)
         return cond.negate ? !present : present
       }
       case "onField":

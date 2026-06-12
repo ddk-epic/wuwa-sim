@@ -55,7 +55,7 @@ describe("ConditionEvaluator", () => {
       const evaluator = new ConditionEvaluator(world)
       const cond: Condition = {
         kind: "buffActive",
-        buffId: "buff1",
+        buff: "buff1",
         on: "target",
       }
       const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
@@ -71,7 +71,7 @@ describe("ConditionEvaluator", () => {
       const evaluator = new ConditionEvaluator(world)
       const cond: Condition = {
         kind: "buffActive",
-        buffId: "buff2",
+        buff: "buff2",
         on: "source",
       }
       const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
@@ -83,7 +83,7 @@ describe("ConditionEvaluator", () => {
       const absent = makeWorld({ hasActiveBuff: vi.fn(() => false) })
       const cond: Condition = {
         kind: "buffActive",
-        buffId: "budding",
+        buff: "budding",
         on: "source",
         negate: true,
       }

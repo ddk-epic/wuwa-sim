@@ -16,7 +16,7 @@ export const bellBorneGeochelone = {
         event: "skillCast",
         actor: "self",
         skillCategory: "Echo Skill",
-        stageId: "echo.bell-borne-geochelone._::echo-skill",
+        stage: "tap",
       },
       target: { kind: "global" },
       duration: { kind: "seconds", v: 15 },

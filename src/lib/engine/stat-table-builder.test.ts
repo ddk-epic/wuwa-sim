@@ -233,7 +233,7 @@ describe("freezeSnapshots", () => {
           path: { stat: "bonusMultiplier" },
           value: {
             kind: "scaledByStacks",
-            buffId: "other",
+            buff: "other",
             characterId: 1,
             base: 0.5,
             per: 0.05,
@@ -257,7 +257,7 @@ describe("scaledByStacks ValueExpr", () => {
           path: { stat: "bonusMultiplier" },
           value: {
             kind: "scaledByStacks",
-            buffId: "buds",
+            buff: "buds",
             characterId: 1,
             base: 0.5,
             per: 0.05,
@@ -492,28 +492,28 @@ describe("matchesHit", () => {
   })
 
   it("matches when every specified axis matches — scalar form", () => {
-    const f: HitFilter = { sourceBuffId: "buff.a", element: "Glacio" }
+    const f: HitFilter = { sourceBuff: "buff.a", element: "Glacio" }
     expect(matchesHit(f, ctx)).toBe(true)
   })
 
   it("matches when axis value is in array form", () => {
-    const f: HitFilter = { sourceBuffId: ["buff.x", "buff.a"] }
+    const f: HitFilter = { sourceBuff: ["buff.x", "buff.a"] }
     expect(matchesHit(f, ctx)).toBe(true)
   })
 
   it("fails when scalar axis does not match", () => {
-    const f: HitFilter = { sourceBuffId: "buff.other" }
+    const f: HitFilter = { sourceBuff: "buff.other" }
     expect(matchesHit(f, ctx)).toBe(false)
   })
 
   it("fails when array axis does not contain value", () => {
-    const f: HitFilter = { sourceBuffId: ["buff.x", "buff.y"] }
+    const f: HitFilter = { sourceBuff: ["buff.x", "buff.y"] }
     expect(matchesHit(f, ctx)).toBe(false)
   })
 
   it("fails when constrained axis is absent from hit", () => {
     const noSource: HitContext = { skillType: "Basic Attack" }
-    const f: HitFilter = { sourceBuffId: "buff.a" }
+    const f: HitFilter = { sourceBuff: "buff.a" }
     expect(matchesHit(f, noSource)).toBe(false)
   })
 
@@ -525,7 +525,7 @@ describe("matchesHit", () => {
   })
 
   it("fails on any mismatched axis even if others match", () => {
-    const f: HitFilter = { sourceBuffId: "buff.a", element: "Fusion" }
+    const f: HitFilter = { sourceBuff: "buff.a", element: "Fusion" }
     expect(matchesHit(f, ctx)).toBe(false)
   })
 

@@ -606,7 +606,7 @@ export function matchesTrigger(
     if (!matchesAxis(trigger.stageId, event.stageId)) return false
     if (!matchesAxis(trigger.skill, event.skill)) return false
     if (!matchesAxis(trigger.hitIndex, event.hitIndex)) return false
-    if (!matchesAxis(trigger.sourceBuffId, event.sourceBuffId)) return false
+    if (!matchesAxis(trigger.sourceBuff, event.sourceBuffId)) return false
     if (
       trigger.targetHasStatus &&
       !event.targetStatuses?.includes(trigger.targetHasStatus)
@@ -702,6 +702,6 @@ function computeEndTime(
     case "seconds":
       return frame + def.duration.v * 60
     case "inherit":
-      return getParentEndTime(def.duration.buffId, targetCharacterId) ?? frame
+      return getParentEndTime(def.duration.buff, targetCharacterId) ?? frame
   }
 }

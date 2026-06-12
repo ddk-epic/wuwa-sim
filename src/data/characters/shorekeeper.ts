@@ -18,7 +18,7 @@ export const shorekeeper = {
   skillTreeBonuses: ["Healing Bonus", "HP"],
   buffs: [
     {
-      id: "char.shorekeeper.inherent.self-gravitation",
+      id: "char.shorekeeper.self-gravitation",
       name: "Self Gravitation",
       description:
         "Resonance Liberation grants Energy Regen +10% for Outer Stellarealm duration.",
@@ -30,7 +30,7 @@ export const shorekeeper = {
       target: { kind: "self" },
       duration: {
         kind: "inherit",
-        buffId: "char.shorekeeper.lib.outer-stellarealm",
+        buff: "outer-stellarealm",
       },
       effects: [
         {
@@ -41,38 +41,36 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.intro.discernment-consume",
+      id: "char.shorekeeper.discernment-consume",
       name: "Discernment Consume",
       description: "Discernment cast removes all Stellarealm buffs (S0 only).",
       maxSequence: 0,
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId:
-          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
+        stage: "proof-of-existence/discernment",
       },
       effects: [
         {
           kind: "removeBuffs",
-          ids: [
-            "char.shorekeeper.lib.outer-stellarealm",
-            "char.shorekeeper.lib.inner-stellarealm",
-            "char.shorekeeper.lib.supernal-stellarealm",
-            "char.shorekeeper.inherent.self-gravitation",
+          buffs: [
+            "outer-stellarealm",
+            "inner-stellarealm",
+            "supernal-stellarealm",
+            "self-gravitation",
           ],
         },
       ],
     },
     {
-      id: "char.shorekeeper.s3.infinity-awaits-me",
+      id: "char.shorekeeper.s3-infinity-awaits-me",
       name: "S3: Infinity Awaits Me",
       description: "End Loop cast restores 20 Concerto once per 25s.",
       requiresSequence: 3,
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId:
-          "char.shorekeeper.resonance-liberation.end-loop._::resonance-liberation",
+        stage: "end-loop/cast",
       },
       cooldown: 25,
       effects: [
@@ -85,7 +83,7 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.s4.overflowing-quietude",
+      id: "char.shorekeeper.s4-overflowing-quietude",
       name: "S4: Overflowing Quietude",
       description: "Resonance Skill cast grants Healing Bonus +70% for 0.5s.",
       requiresSequence: 4,
@@ -105,15 +103,14 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.s6.discernment-dmg",
+      id: "char.shorekeeper.s6-discernment-dmg",
       name: "S6: To the New World (DMG)",
       description: "Discernment cast grants Bonus Multiplier +42% for 0.5s.",
       requiresSequence: 6,
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId:
-          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
+        stage: "proof-of-existence/discernment",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -126,15 +123,14 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.s6.discernment-critdmg",
+      id: "char.shorekeeper.s6-discernment-critdmg",
       name: "S6: To the New World (Crit DMG)",
       description: "Discernment cast grants Crit DMG +500% for 0.5s.",
       requiresSequence: 6,
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId:
-          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
+        stage: "proof-of-existence/discernment",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -147,14 +143,13 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.intro.guaranteed-crit",
+      id: "char.shorekeeper.guaranteed-crit",
       name: "Intro: Guaranteed Crit",
       description: "Discernment cast grants Crit Rate +100% for 0.5s.",
       trigger: {
         event: "skillCast",
         characterId: 1505,
-        stageId:
-          "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
+        stage: "proof-of-existence/discernment",
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 0.5 },
@@ -167,7 +162,7 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.lib.outer-stellarealm",
+      id: "char.shorekeeper.outer-stellarealm",
       name: "Outer Stellarealm",
       description:
         "Resonance Liberation creates Outer Stellarealm for 30s (S0 only).",
@@ -182,7 +177,7 @@ export const shorekeeper = {
       effects: [],
     },
     {
-      id: "char.shorekeeper.lib.outer-stellarealm",
+      id: "char.shorekeeper.outer-stellarealm",
       name: "Outer Stellarealm",
       description:
         "Resonance Liberation creates Outer Stellarealm for 40s (S1+).",
@@ -197,7 +192,7 @@ export const shorekeeper = {
       effects: [],
     },
     {
-      id: "char.shorekeeper.s2.outer-stellarealm-atk",
+      id: "char.shorekeeper.s2-outer-stellarealm-atk",
       name: "S2: Night's Gift and Refusal",
       description:
         "Resonance Liberation grants team ATK +40% for Outer Stellarealm duration.",
@@ -210,7 +205,7 @@ export const shorekeeper = {
       target: { kind: "global" },
       duration: {
         kind: "inherit",
-        buffId: "char.shorekeeper.lib.outer-stellarealm",
+        buff: "outer-stellarealm",
       },
       effects: [
         {
@@ -221,7 +216,7 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.lib.inner-stellarealm",
+      id: "char.shorekeeper.inner-stellarealm",
       name: "Inner Stellarealm",
       description:
         "Team Intro while Outer Stellarealm is active grants team Crit. Rate scaling with Shorekeeper's Energy Regen (max 12.5%), inheriting Outer Stellarealm's duration.",
@@ -233,13 +228,13 @@ export const shorekeeper = {
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.shorekeeper.lib.outer-stellarealm",
+        buff: "outer-stellarealm",
         on: "source",
       },
       target: { kind: "global" },
       duration: {
         kind: "inherit",
-        buffId: "char.shorekeeper.lib.outer-stellarealm",
+        buff: "outer-stellarealm",
       },
       effects: [
         {
@@ -258,7 +253,7 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.lib.supernal-stellarealm",
+      id: "char.shorekeeper.supernal-stellarealm",
       name: "Supernal Stellarealm",
       description:
         "Team Intro while Inner Stellarealm is active grants team Crit. DMG scaling with Shorekeeper's Energy Regen (max 25%), inheriting Inner Stellarealm's duration.",
@@ -270,13 +265,13 @@ export const shorekeeper = {
       },
       condition: {
         kind: "buffActive",
-        buffId: "char.shorekeeper.lib.inner-stellarealm",
+        buff: "inner-stellarealm",
         on: "source",
       },
       target: { kind: "global" },
       duration: {
         kind: "inherit",
-        buffId: "char.shorekeeper.lib.inner-stellarealm",
+        buff: "inner-stellarealm",
       },
       effects: [
         {
@@ -295,7 +290,7 @@ export const shorekeeper = {
       ],
     },
     {
-      id: "char.shorekeeper.outro.binary-butterfly",
+      id: "char.shorekeeper.binary-butterfly",
       name: "Binary Butterfly",
       description: "Outro Skill grants all team members allAmp +15% for 30s.",
       trigger: {
@@ -391,6 +386,7 @@ export const shorekeeper = {
               concerto: 1.18,
               toughness: 0.1173,
               weakness: 0.1955,
+              independent: true,
             },
             {
               type: "Basic Attack",
@@ -402,6 +398,7 @@ export const shorekeeper = {
               concerto: 1.18,
               toughness: 0.1173,
               weakness: 0.1955,
+              independent: true,
             },
             {
               type: "Basic Attack",
@@ -413,6 +410,7 @@ export const shorekeeper = {
               concerto: 1.18,
               toughness: 0.1173,
               weakness: 0.1955,
+              independent: true,
             },
           ],
         },
