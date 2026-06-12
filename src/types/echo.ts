@@ -39,6 +39,8 @@ export interface EchoSet {
 }
 
 export interface EnrichedEchoStage {
+  /** Override for `deriveKey(name)` collisions. */
+  key?: string
   name: string
   newName: string
   actionTime: number

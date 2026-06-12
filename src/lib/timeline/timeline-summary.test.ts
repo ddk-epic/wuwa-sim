@@ -39,7 +39,7 @@ const charA: EnrichedCharacter = {
       type: "Normal Attack",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "1",
           actionTime: 60,
@@ -54,7 +54,7 @@ const charA: EnrichedCharacter = {
       type: "Normal Attack",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "1",
           actionTime: 30,
@@ -69,7 +69,7 @@ const charA: EnrichedCharacter = {
       type: "Resonance Skill",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "1",
           actionTime: 90,
@@ -84,7 +84,7 @@ const charA: EnrichedCharacter = {
       type: "Forte Circuit",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "0",
           actionTime: 60,
@@ -99,7 +99,7 @@ const charA: EnrichedCharacter = {
       type: "Resonance Skill",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "1",
           actionTime: 0,
@@ -126,7 +126,7 @@ const charB: EnrichedCharacter = {
       type: "Normal Attack",
       stages: [
         {
-          name: "",
+          name: "Stage",
           category: "Basic Attack",
           value: "1",
           actionTime: 60,
@@ -162,7 +162,7 @@ function normalAttack(characterId: number, id?: string): TimelineEntry {
   const charName = characterId === 2 ? "test-b" : "test-a"
   return tlEntry(
     characterId,
-    `char.${charName}.basic-attack.normal-attack._::basic-attack`,
+    `char.${charName}.basic-attack.normal-attack.stage::basic-attack`,
     id,
   )
 }
@@ -204,7 +204,10 @@ describe("getTimelineSummary — single entry", () => {
   it("damage is null when stage has no damage entries", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "char.test-a.basic-attack.no-damage-skill._::basic-attack"),
+      tlEntry(
+        1,
+        "char.test-a.basic-attack.no-damage-skill.stage::basic-attack",
+      ),
     ])
     expect(result.rows[0].damage).toBeNull()
     expect(result.totalDamage).toBe(0)
@@ -216,10 +219,14 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
       normalAttack(1, "a"),
-      tlEntry(1, "char.test-a.basic-attack.heavy-attack._::basic-attack", "b"),
       tlEntry(
         1,
-        "char.test-a.basic-attack.resonance-skill._::basic-attack",
+        "char.test-a.basic-attack.heavy-attack.stage::basic-attack",
+        "b",
+      ),
+      tlEntry(
+        1,
+        "char.test-a.basic-attack.resonance-skill.stage::basic-attack",
         "c",
       ),
     ])
@@ -242,7 +249,7 @@ describe("getTimelineSummary — zero-damage rule", () => {
     const result = getTimelineSummary([
       tlEntry(
         1,
-        "char.test-a.basic-attack.no-damage-skill._::basic-attack",
+        "char.test-a.basic-attack.no-damage-skill.stage::basic-attack",
         "a",
       ),
       normalAttack(1, "b"),
@@ -258,7 +265,10 @@ describe("getTimelineSummary — dps", () => {
   it("dps is 0 without a simulation log", () => {
     testCharacters = [charA]
     const result = getTimelineSummary([
-      tlEntry(1, "char.test-a.basic-attack.resonance-skill._::basic-attack"),
+      tlEntry(
+        1,
+        "char.test-a.basic-attack.resonance-skill.stage::basic-attack",
+      ),
     ])
     expect(result.totalTimeFrames).toBe(90)
     expect(result.totalDamage).toBe(0)
@@ -400,7 +410,7 @@ describe("getTimelineSummary — log ingestion: trailing-window damage", () => {
     const swapEntry: TimelineEntry = {
       id: "swap-e",
       characterId: 1,
-      stageId: "char.test-a.basic-attack.normal-attack._::basic-attack",
+      stageId: "char.test-a.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
     const nextEntry = normalAttack(1, "next-e")
@@ -540,7 +550,7 @@ describe("getTimelineSummary — variantFloor / floorFrames", () => {
     const entry: TimelineEntry = {
       id: "f1",
       characterId: 1,
-      stageId: "char.test-a.basic-attack.normal-attack._::basic-attack",
+      stageId: "char.test-a.basic-attack.normal-attack.stage::basic-attack",
       variantKind: undefined,
     }
     const result = getTimelineSummary(

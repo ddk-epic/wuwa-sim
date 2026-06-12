@@ -1,0 +1,442 @@
+import type {
+  EnrichedCharacter,
+  EnrichedSkill,
+  EnrichedSkillAttribute,
+  SkillType,
+} from "#/types/character"
+import type { EnrichedEcho, EnrichedEchoStage } from "#/types/echo"
+import type { BuffDef, HitFilter, Trigger } from "#/types/buff"
+import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { TimelineEntry } from "#/types/timeline"
+import { getCharacterById, getEchoById } from "./loadout/catalog"
+import type { ResolvedStage } from "./stage"
+import {
+  STAGE_CAST_NAME,
+  deriveKey,
+  stageLabel,
+  stageSkillType,
+  toKebab,
+} from "./stage"
+
+const KEY_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+
+export interface StageInfo {
+  stageId: string
+  skillKey: string
+  stageKey: string
+  skillType: SkillType
+  skill: EnrichedSkill
+  stage: EnrichedSkillAttribute
+  requiresPriorStageId?: string
+}
+
+export interface CompiledCharacter {
+  stageIndex: Map<string, StageInfo>
+  /** skillKey → stageKey → stageId */
+  refIndex: Map<string, Map<string, string>>
+  /** buff key (last id segment) → full buff id */
+  buffKeys: Map<string, string>
+  buffs: BuffDef[]
+}
+
+export interface EchoStageInfo {
+  stageId: string
+  stageKey: string
+  stage: EnrichedEchoStage
+}
+
+export interface CompiledEcho {
+  stageIndex: Map<string, EchoStageInfo>
+  buffs: BuffDef[]
+}
+
+/** `char.<char>.<skill-category>.<skillKey>.<stageKey>::<skill-type>` */
+function makeStageId(
+  charSlug: string,
+  categorySlug: string,
+  skillKey: string,
+  stageKey: string,
+  skillType: SkillType,
+): string {
+  return `char.${charSlug}.${categorySlug}.${skillKey}.${stageKey}::${toKebab(skillType)}`
+}
+
+function assertKey(key: string, owner: string): void {
+  if (!KEY_RE.test(key)) {
+    throw new Error(`${owner}: invalid key "${key}"`)
+  }
+}
+
+type LoweredRefs = {
+  stageId?: string | string[]
+  skill?: string | string[]
+  hitIndex?: number
+}
+
+type RefLowerer = (refs: string | string[]) => LoweredRefs
+
+/**
+ * Lower hand-written stage references into structured axes. A ref with `::` is
+ * an exact stage (optionally hit-pinned with a trailing `.<n>`), resolved
+ * against current ids first, then the legacy `newName`-derived ids. A ref
+ * without `::` is a legacy category-scoped skill prefix and lowers to the
+ * skill axis. Unresolvable refs throw.
+ */
+function makeRefLowerer(
+  owner: string,
+  currentIds: ReadonlySet<string>,
+  legacyIds: ReadonlyMap<string, string>,
+  legacySkillPrefixes: ReadonlyMap<string, string>,
+): RefLowerer {
+  const resolveExact = (ref: string): string => {
+    if (currentIds.has(ref)) return ref
+    const mapped = legacyIds.get(ref)
+    if (mapped !== undefined) return mapped
+    throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
+  }
+
+  const lowerOne = (
+    ref: string,
+  ): { stageId: string; hitIndex?: number } | { skill: string } => {
+    if (ref.includes("::")) {
+      const hitMatch = /\.(\d+)$/.exec(ref)
+      const base = hitMatch ? ref.slice(0, hitMatch.index) : ref
+      const out: { stageId: string; hitIndex?: number } = {
+        stageId: resolveExact(base),
+      }
+      if (hitMatch) out.hitIndex = Number(hitMatch[1])
+      return out
+    }
+    const skillKey = legacySkillPrefixes.get(ref)
+    if (skillKey === undefined) {
+      throw new Error(`${owner}: unresolvable stage reference "${ref}"`)
+    }
+    return { skill: skillKey }
+  }
+
+  return (refs) => {
+    const list = Array.isArray(refs) ? refs : [refs]
+    const lowered = list.map(lowerOne)
+    const skills: string[] = []
+    const exact: { stageId: string; hitIndex?: number }[] = []
+    for (const l of lowered) {
+      if ("skill" in l) skills.push(l.skill)
+      else exact.push(l)
+    }
+    if (skills.length > 0 && exact.length > 0) {
+      throw new Error(
+        `${owner}: mixed skill/stage granularity in ${JSON.stringify(refs)}`,
+      )
+    }
+    if (skills.length > 0) {
+      return { skill: skills.length === 1 ? skills[0] : skills }
+    }
+    const pinned = exact.filter((e) => e.hitIndex !== undefined)
+    if (pinned.length > 0 && exact.length > 1) {
+      throw new Error(
+        `${owner}: a hit-pinned reference must stand alone in ${JSON.stringify(refs)}`,
+      )
+    }
+    const ids = exact.map((e) => e.stageId)
+    const out: LoweredRefs = { stageId: ids.length === 1 ? ids[0] : ids }
+    if (pinned.length === 1) out.hitIndex = pinned[0].hitIndex
+    return out
+  }
+}
+
+function lowerTrigger(t: Trigger, owner: string, lower: RefLowerer): Trigger {
+  if (t.event === "skillCast" && t.stageId !== undefined) {
+    const axes = lower(t.stageId)
+    if (axes.hitIndex !== undefined) {
+      throw new Error(`${owner}: skillCast trigger cannot pin a hit index`)
+    }
+    const next = { ...t }
+    delete next.stageId
+    if (axes.stageId !== undefined) next.stageId = axes.stageId
+    if (axes.skill !== undefined) next.skill = axes.skill
+    return next
+  }
+  if (
+    (t.event === "hitLanded" || t.event === "healLanded") &&
+    t.stageId !== undefined
+  ) {
+    const axes = lower(t.stageId)
+    const next = { ...t }
+    delete next.stageId
+    if (axes.stageId !== undefined) next.stageId = axes.stageId
+    if (axes.skill !== undefined) next.skill = axes.skill
+    if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+    return next
+  }
+  return t
+}
+
+function lowerHitFilter(f: HitFilter, lower: RefLowerer): HitFilter {
+  if (f.stageId === undefined) return f
+  const axes = lower(f.stageId)
+  const next = { ...f }
+  delete next.stageId
+  if (axes.stageId !== undefined) next.stageId = axes.stageId
+  if (axes.skill !== undefined) next.skill = axes.skill
+  if (axes.hitIndex !== undefined) next.hitIndex = axes.hitIndex
+  return next
+}
+
+function lowerBuffDef(def: BuffDef, lower: RefLowerer): BuffDef {
+  const next: BuffDef = {
+    ...def,
+    trigger: lowerTrigger(def.trigger, def.id, lower),
+  }
+  if (def.consumedBy !== undefined) {
+    next.consumedBy = lowerTrigger(def.consumedBy, def.id, lower)
+  }
+  if (def.appliesToHits !== undefined) {
+    next.appliesToHits = lowerHitFilter(def.appliesToHits, lower)
+  }
+  return next
+}
+
+function buildBuffKeys(buffs: BuffDef[], owner: string): Map<string, string> {
+  const keys = new Map<string, string>()
+  for (const def of buffs) {
+    const key = def.id.slice(def.id.lastIndexOf(".") + 1)
+    const existing = keys.get(key)
+    // Sequence-gated variants of one buff share an id; only two distinct
+    // ids colliding on a key is ambiguous.
+    if (existing !== undefined && existing !== def.id) {
+      throw new Error(
+        `${owner}: buff key "${key}" is ambiguous ("${existing}" vs "${def.id}")`,
+      )
+    }
+    keys.set(key, def.id)
+  }
+  return keys
+}
+
+function compile(char: EnrichedCharacter): CompiledCharacter {
+  const owner = `char ${char.name}`
+  const charSlug = toKebab(char.name)
+  assertKey(charSlug, owner)
+
+  const stageIndex = new Map<string, StageInfo>()
+  const refIndex = new Map<string, Map<string, string>>()
+  const legacyIds = new Map<string, string>()
+  const legacySkillPrefixes = new Map<string, string>()
+
+  for (const skill of char.skills) {
+    if (skill.stages.length === 0) continue
+    const skillKey = skill.key ?? deriveKey(skill.name)
+    assertKey(skillKey, `${owner}, skill "${skill.name}"`)
+    if (refIndex.has(skillKey)) {
+      throw new Error(`${owner}: duplicate skill key "${skillKey}"`)
+    }
+    const stageKeys = new Map<string, string>()
+    refIndex.set(skillKey, stageKeys)
+
+    for (const stage of skill.stages) {
+      // Empty-name stages are raw-data placeholders: unkeyed and unreachable.
+      if (stage.name === "" && stage.key === undefined) continue
+      const stageKey = stage.key ?? deriveKey(stage.name)
+      assertKey(stageKey, `${owner}, stage "${stage.name}" of "${skill.name}"`)
+      if (stageKeys.has(stageKey)) {
+        throw new Error(
+          `${owner}: duplicate stage key "${stageKey}" in skill "${skill.name}"`,
+        )
+      }
+      const skillType = stageSkillType(stage.category, stage.damage)
+      const categorySlug = toKebab(stage.category)
+      const stageId = makeStageId(
+        charSlug,
+        categorySlug,
+        skillKey,
+        stageKey,
+        skillType,
+      )
+      stageKeys.set(stageKey, stageId)
+      stageIndex.set(stageId, {
+        stageId,
+        skillKey,
+        stageKey,
+        skillType,
+        skill,
+        stage,
+      })
+      legacyIds.set(
+        `char.${charSlug}.${categorySlug}.${toKebab(skill.name)}.${toKebab(stage.newName)}::${toKebab(skillType)}`,
+        stageId,
+      )
+      legacySkillPrefixes.set(
+        `char.${charSlug}.${categorySlug}.${toKebab(skill.name)}`,
+        skillKey,
+      )
+    }
+  }
+
+  const currentIds = new Set(stageIndex.keys())
+  const lower = makeRefLowerer(
+    owner,
+    currentIds,
+    legacyIds,
+    legacySkillPrefixes,
+  )
+
+  for (const info of stageIndex.values()) {
+    const ref = info.stage.requiresPriorStageId
+    if (ref === undefined) continue
+    const axes = lower(ref)
+    if (typeof axes.stageId !== "string" || axes.hitIndex !== undefined) {
+      throw new Error(
+        `${owner}: requiresPriorStageId must name exactly one stage, got "${ref}"`,
+      )
+    }
+    info.requiresPriorStageId = axes.stageId
+  }
+
+  return {
+    stageIndex,
+    refIndex,
+    buffKeys: buildBuffKeys(char.buffs, owner),
+    buffs: char.buffs.map((def) => lowerBuffDef(def, lower)),
+  }
+}
+
+function compileEchoData(echo: EnrichedEcho): CompiledEcho {
+  const owner = `echo ${echo.name}`
+  const echoSlug = toKebab(echo.name)
+  assertKey(echoSlug, owner)
+
+  const stageIndex = new Map<string, EchoStageInfo>()
+  const legacyIds = new Map<string, string>()
+
+  for (const stage of echo.skill.stages) {
+    const stageKey = stage.key ?? deriveKey(stage.name)
+    assertKey(stageKey, `${owner}, stage "${stage.name}"`)
+    const stageId = `echo.${echoSlug}.${stageKey}::echo-skill`
+    if (stageIndex.has(stageId)) {
+      throw new Error(`${owner}: duplicate stage key "${stageKey}"`)
+    }
+    stageIndex.set(stageId, { stageId, stageKey, stage })
+    legacyIds.set(
+      `echo.${echoSlug}.${toKebab(stage.newName)}::echo-skill`,
+      stageId,
+    )
+  }
+
+  const lower = makeRefLowerer(
+    owner,
+    new Set(stageIndex.keys()),
+    legacyIds,
+    new Map(),
+  )
+  buildBuffKeys(echo.buffs, owner)
+
+  return {
+    stageIndex,
+    buffs: echo.buffs.map((def) => lowerBuffDef(def, lower)),
+  }
+}
+
+const compiledCharacters = new WeakMap<EnrichedCharacter, CompiledCharacter>()
+const compiledEchoes = new WeakMap<EnrichedEcho, CompiledEcho>()
+
+export function compileCharacter(char: EnrichedCharacter): CompiledCharacter {
+  let compiled = compiledCharacters.get(char)
+  if (!compiled) {
+    compiled = compile(char)
+    compiledCharacters.set(char, compiled)
+  }
+  return compiled
+}
+
+export function compileEcho(echo: EnrichedEcho): CompiledEcho {
+  let compiled = compiledEchoes.get(echo)
+  if (!compiled) {
+    compiled = compileEchoData(echo)
+    compiledEchoes.set(echo, compiled)
+  }
+  return compiled
+}
+
+export function getCompiledCharacter(
+  characterId: number,
+): CompiledCharacter | null {
+  const char = getCharacterById(characterId)
+  return char ? compileCharacter(char) : null
+}
+
+export function getCompiledEcho(echoId: number): CompiledEcho | null {
+  const echo = getEchoById(echoId)
+  return echo ? compileEcho(echo) : null
+}
+
+export function findStageByEntry(
+  entry: TimelineEntry,
+  slots: Slots,
+  loadouts: SlotLoadout[],
+): ResolvedStage | null {
+  const character = getCharacterById(entry.characterId)
+  const info = character
+    ? compileCharacter(character).stageIndex.get(entry.stageId)
+    : undefined
+
+  if (character && info) {
+    const { skill, stage } = info
+    const isCastStage = stage.name === STAGE_CAST_NAME
+    // Stage-level skillType, collapsed from the parent skill grouping.
+    // Grouping-only labels that are not SkillTypes (Normal Attack,
+    // Inherent Skill, Tune Break, Forte Circuit) collapse to "Basic Attack".
+    // Independent of skillCategory (the trigger axis); per-hit damage type
+    // lives on each DamageEntry.type.
+    const skillType: SkillType =
+      skill.type === "Normal Attack" ||
+      skill.type === "Inherent Skill" ||
+      skill.type === "Tune Break" ||
+      skill.type === "Forte Circuit"
+        ? "Basic Attack"
+        : skill.type
+    return {
+      stage,
+      stageId: info.stageId,
+      stageName: stage.name,
+      skillKey: info.skillKey,
+      element: character.element,
+      concerto:
+        (stage.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
+      resonanceCost: skill.resonanceCost,
+      damage: stage.damage ?? [],
+      skillGrouping: skill.type,
+      skillCategory: stage.category,
+      skillType,
+      skillName: isCastStage
+        ? skill.name
+        : stageLabel(skill.name, stage.newName),
+      requiresPriorStageId: info.requiresPriorStageId,
+      minDelay:
+        stage.requiresPriorStageId !== undefined ? stage.minDelay : undefined,
+    }
+  }
+
+  const slotIndex = slots.findIndex((id) => id === entry.characterId)
+  const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
+  const echo = echoId !== null ? getEchoById(echoId) : null
+  const echoInfo = echo
+    ? compileEcho(echo).stageIndex.get(entry.stageId)
+    : undefined
+  if (echo && echoInfo) {
+    const { stage } = echoInfo
+    return {
+      stage,
+      stageId: echoInfo.stageId,
+      stageName: stage.name,
+      element: echo.element,
+      concerto: 0,
+      damage: stage.damage,
+      skillGrouping: "Echo Skill",
+      skillCategory: "Echo Skill",
+      skillType: "Echo Skill",
+      skillName: stageLabel(echo.name, stage.newName),
+    }
+  }
+
+  return null
+}

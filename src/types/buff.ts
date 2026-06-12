@@ -13,6 +13,8 @@ import type { ScalarStatKey } from "./stat-table"
 export interface HitFilter {
   sourceBuffId?: string | string[]
   stageId?: string | string[]
+  skill?: string | string[]
+  hitIndex?: number | number[]
   skillType?: SkillType | SkillType[]
   skillCategory?: SkillCategory | SkillCategory[]
   element?: Element | Element[]
@@ -27,6 +29,9 @@ export interface HitFilter {
 export interface HitContext {
   sourceBuffId?: string
   stageId?: string
+  skill?: string
+  /** 1-based (DamageEntry order). */
+  hitIndex?: number
   skillType?: SkillType
   skillCategory?: SkillCategory
   element?: Element
@@ -158,6 +163,7 @@ export type Trigger =
       characterId?: number
       skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
+      skill?: string | string[]
     }
   | {
       event: "hitLanded"
@@ -167,6 +173,8 @@ export type Trigger =
       dmgType?: string
       source?: TriggerSource
       stageId?: string | string[]
+      skill?: string | string[]
+      hitIndex?: number | number[]
       sourceBuffId?: string | string[]
       /**
        * Fire only when the hit lands on a target that currently has this
@@ -191,6 +199,8 @@ export type Trigger =
       characterId?: number
       skillCategory?: SkillCategory | SkillCategory[]
       stageId?: string | string[]
+      skill?: string | string[]
+      hitIndex?: number | number[]
     }
   | {
       event: "resourceCrossed"

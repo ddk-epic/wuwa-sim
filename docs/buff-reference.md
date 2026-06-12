@@ -84,15 +84,17 @@ Damage computed from that snapshot therefore reflects the per-hit bonus. The log
 
 All present axes must match; absent = unconstrained. An axis the hit lacks (e.g. `sourceBuffId` on an authored hit) never matches a constrained filter.
 
-The `stageId` axis is **lineage-prefix matched** (`stageIdMatches`), with three depths: a full per-hit id `…::skill-type.N` pins the Nth hit; dropping the `.N` suffix matches any hit of that stage; and a strict ancestor prefix matches a **whole skill group** — e.g. `char.camellya.basic-attack.burgeoning` matches every Basic-Attack-category stage under Burgeoning in one entry. Gotcha: the second stageId segment is the **stage's `category`**, not the parent skill node, so a group spanning categories needs one prefix per category. Camellya's Sweet Dream scope splits into `…basic-attack.burgeoning` and `…heavy-attack.burgeoning` (Heavy Pruning is a Heavy-Attack-category stage retagged to Basic Attack DMG by Seedbed) plus `…valse-of-bloom-and-blight` — see the `appliesToHits` filters in `camellya.ts`.
+Stage scope is expressed through three independent axes (ADR-0039): `stageId` matches the lineage id by **exact equality**; `skill` matches by skill key — every hit of every stage of that skill, regardless of category (Camellya's Sweet Dream scope is just `["burgeoning", "valse-of-bloom-and-blight"]` once lowered); `hitIndex` pins the Nth hit (1-based, DamageEntry order).
 
-| Axis            | Type                       | Notes                                                             |
-| --------------- | -------------------------- | ----------------------------------------------------------------- |
-| `sourceBuffId`  | `string \| string[]`       | Only synthetic hits carry this                                    |
-| `stageId`       | `string \| string[]`       | Only authored hits carry this; lineage-prefix matched (see below) |
-| `skillType`     | `SkillType \| SkillType[]` |                                                                   |
-| `skillCategory` | `SkillCategory \| ...`     |                                                                   |
-| `element`       | `Element \| Element[]`     |                                                                   |
+| Axis            | Type                       | Notes                          |
+| --------------- | -------------------------- | ------------------------------ |
+| `sourceBuffId`  | `string \| string[]`       | Only synthetic hits carry this |
+| `stageId`       | `string \| string[]`       | Exact lineage id               |
+| `skill`         | `string \| string[]`       | Skill key                      |
+| `hitIndex`      | `number \| number[]`       | 1-based, DamageEntry order     |
+| `skillType`     | `SkillType \| SkillType[]` |                                |
+| `skillCategory` | `SkillCategory \| ...`     |                                |
+| `element`       | `Element \| Element[]`     |                                |
 
 ### Example — Sanhua Avalanche
 

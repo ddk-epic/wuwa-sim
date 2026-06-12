@@ -11,6 +11,7 @@ import {
   getEchoSetById,
   getWeaponById,
 } from "./loadout/catalog"
+import { compileCharacter, compileEcho } from "./compile-character"
 import { resolveEchoSets } from "./loadout/resolve-echo-sets"
 import {
   accumulateStatEffects,
@@ -78,7 +79,7 @@ export function buildCharacterBuffDefs(
   sequence: number,
 ): BuffDef[] {
   const buffs: BuffDef[] = []
-  for (const def of char.buffs) {
+  for (const def of compileCharacter(char).buffs) {
     if (
       (def.requiresSequence ?? 0) <= sequence &&
       (def.maxSequence === undefined || sequence <= def.maxSequence)
@@ -103,7 +104,7 @@ export function buildWeaponBuffDefs(
 }
 
 export function buildEchoBuffDefs(echo: EnrichedEcho): BuffDef[] {
-  return echo.buffs
+  return compileEcho(echo).buffs
 }
 
 export function buildEchoSetBuffDefs(

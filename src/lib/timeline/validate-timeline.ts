@@ -1,7 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { findStageByEntry } from "../stage"
+import { findStageByEntry } from "../compile-character"
 
 // Footing is deliberately NOT validated here. Footing rules are frame-dependent
 // (variant advances, Reaction Delay, trailing-window commits), so a static walk

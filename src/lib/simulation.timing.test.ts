@@ -243,7 +243,8 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const entry: TimelineEntry = {
       id: "db1",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -258,7 +259,7 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     testCharacters = [charVariant]
     const entry = tlEntry(
       10,
-      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
@@ -272,20 +273,21 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
         id: "db2",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
         variantKind: "swap",
       },
       {
         id: "db3",
         characterId: 31,
-        stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
+        stageId:
+          "char.other-char.basic-attack.normal-attack.stage::basic-attack",
       },
       // Char 30 Basic Attack starts at frame 16, trailing hit at 30 -> padded to 30
       {
         id: "db4",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
       },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
@@ -327,7 +329,8 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
     const entry: TimelineEntry = {
       id: "db5",
       characterId: 13,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -344,12 +347,12 @@ describe("runSimulation — sourceEntryId (#186)", () => {
     testCharacters = [charA]
     const e1 = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
       "entry-1",
     )
     const e2 = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
       "entry-2",
     )
     const result = runSimulation([e1, e2], emptySlots, emptyLoadouts)
@@ -366,7 +369,7 @@ describe("runSimulation — sourceEntryId (#186)", () => {
         id: "swap-entry",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
         variantKind: "swap",
       },
     ]
@@ -398,7 +401,7 @@ describe("runSimulation — sourceEntryId (#186)", () => {
     testCharacters = [charWithCoord]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
       "trigger-entry",
     )
     const result = runSimulation([entry], [1, null, null], emptyLoadouts)
@@ -481,17 +484,17 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ),
       tlEntry(
         51,
-        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "char.swap-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ),
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ),
     ]
@@ -531,17 +534,17 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ),
       tlEntry(
         51,
-        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "char.swap-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ),
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ),
     ]
@@ -557,7 +560,7 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ),
     ]
@@ -571,12 +574,12 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ),
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ),
     ]
@@ -597,18 +600,18 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // A at frame 0, ends frame 20
-      tlEntry(52, "char.swap-c.movement.dodge._::movement", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
+      tlEntry(52, "char.swap-c.movement.dodge.dodge::movement", "e2"), // C:Dodge at frame 20, ends frame 30 (no swap inferred)
       tlEntry(
         51,
-        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "char.swap-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ), // B at frame 30, swap from A->B recorded (lastOffFieldFrame[A]=30)
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e4",
       ), // A at frame 50, swapBack = 60 - 20 = 40
     ]
@@ -667,17 +670,17 @@ describe("runSimulation — Swap-back Cooldown (#241)", () => {
     const entries = [
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ),
       tlEntry(
         51,
-        "char.swap-b.basic-attack.normal-attack._::basic-attack",
+        "char.swap-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ),
       tlEntry(
         50,
-        "char.swap-a.basic-attack.normal-attack._::basic-attack",
+        "char.swap-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ),
     ]
@@ -797,17 +800,17 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const entries = [
       tlEntry(
         60,
-        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "char.anim-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // A 0–20, A exits at 20
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ), // B 20–30
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
+        "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
         "e3",
       ), // A at frame 30, animationFrames=60 advance -> swapBack=0
     ]
@@ -851,17 +854,17 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const entries = [
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
+        "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
         "e2",
       ), // A at frame 20, animationFrames=60
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ), // B returns: expects 0 swapBack
     ]
@@ -894,6 +897,7 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
             },
             {
               name: "Skill DMG",
+              key: "cast-2",
               category: "Resonance Liberation",
               newName: "Liberation2",
               value: "",
@@ -910,22 +914,22 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const entries = [
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
+        "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
         "e2",
       ), // A at frame 20, +60 advance
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation2::resonance-liberation",
+        "char.anim-a.resonance-liberation.liberation.cast-2::resonance-liberation",
         "e3",
       ), // A at frame 20 still, +60 advance
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e4",
       ), // B returns at frame 20, 120f advance total -> 0
     ]
@@ -963,17 +967,17 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const entries = [
       tlEntry(
         60,
-        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "char.anim-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // A 0–20
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e2",
       ), // B 20–30
       tlEntry(
         60,
-        "char.anim-a.basic-attack.normal-attack._::basic-attack",
+        "char.anim-a.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ), // A at 30, no animation
     ]
@@ -1013,17 +1017,17 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const entries = [
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e1",
       ), // B 0–20, B exits at 20
       tlEntry(
         60,
-        "char.anim-a.resonance-liberation.liberation.liberation::resonance-liberation",
+        "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
         "e2",
       ), // A at 20, NO animation advance
       tlEntry(
         61,
-        "char.anim-b.basic-attack.normal-attack._::basic-attack",
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
         "e3",
       ), // B at 20, swapBack = 60 - 0 = 60
     ]

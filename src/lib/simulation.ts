@@ -16,11 +16,8 @@ import { BuffEngine } from "./engine/buff-engine"
 import type { ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { buildHitEvent, buildSustainEvent } from "./engine/log-event-builders"
-import {
-  findStageByEntry,
-  resolveStageExecution,
-  stageEntryFooting,
-} from "./stage"
+import { findStageByEntry } from "./compile-character"
+import { resolveStageExecution, stageEntryFooting } from "./stage"
 import type { ResolvedStage } from "./stage"
 import { resolveHealTargets } from "./heal-targets"
 import { Schedule } from "./schedule"
@@ -373,6 +370,7 @@ function fireSkillCast(
     characterId: entry.characterId,
     skillCategory: resolved.skillCategory,
     stageId: resolved.stageId,
+    skill: resolved.skillKey,
     frame,
     concerto: resolved.concerto,
     resonanceCost: resolved.resonanceCost,
@@ -498,11 +496,13 @@ function processHit(bundle: TrailingHit, ctx: SimContext): void {
 function resolveTrailingBundle(bundle: TrailingHit, ctx: SimContext): void {
   const { hit, hitIndex, entry, resolved, hitFrame } = bundle
   const { engine, log } = ctx
-  // Thread the same axes the hitLanded event carries so a `stageId`-scoped
+  // Thread the same axes the hitLanded event carries so a stage-scoped
   // `appliesToHits` bonus folds into this hit's snapshot and non-matching
   // hit-scoped buffs drop from its `activeBuffs`.
   const hitContext: HitContext = {
-    stageId: `${resolved.stageId}.${hitIndex + 1}`,
+    stageId: resolved.stageId,
+    skill: resolved.skillKey,
+    hitIndex: hitIndex + 1,
     skillCategory: resolved.skillCategory,
     skillType: hit.type,
     element: resolved.element,
@@ -537,7 +537,9 @@ function processHeal(
     characterId: entry.characterId,
     skillCategory: resolved.skillCategory,
     frame: hitFrame,
-    stageId: `${resolved.stageId}.${hitIndex + 1}`,
+    stageId: resolved.stageId,
+    skill: resolved.skillKey,
+    hitIndex: hitIndex + 1,
   })
   const sustainEvent = buildSustainEvent(
     {
@@ -596,7 +598,9 @@ function processDamageHit(
     skillCategory: resolved.skillCategory,
     dmgType: hit.dmgType,
     frame: hitFrame,
-    stageId: `${resolved.stageId}.${hitIndex + 1}`,
+    stageId: resolved.stageId,
+    skill: resolved.skillKey,
+    hitIndex: hitIndex + 1,
     energy: hit.energy,
     concerto: hit.concerto,
     forte: hit.forte,

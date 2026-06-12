@@ -109,7 +109,8 @@ const filler = (actionTime: number): EnrichedCharacter => ({
     },
   ],
 })
-const FILLER_STAGE = "char.filler.basic-attack.normal-attack._::basic-attack"
+const FILLER_STAGE =
+  "char.filler.basic-attack.normal-attack.stage-1::basic-attack"
 
 const ent = (
   characterId: number,

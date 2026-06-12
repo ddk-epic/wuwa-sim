@@ -52,26 +52,34 @@ function makeEngine(sequence = 0) {
 const EPHEMERAL_STAGE =
   "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack"
 const EPHEMERAL_HIT: HitContext = {
-  stageId: `${EPHEMERAL_STAGE}.1`,
+  stageId: EPHEMERAL_STAGE,
+  skill: "vegetative-universe",
+  hitIndex: 1,
   skillCategory: "Resonance Skill",
   skillType: "Basic Attack",
   element: "Havoc",
 }
 const FERVOR_HIT: HitContext = {
   stageId:
-    "char.camellya.resonance-liberation.fervor-efflorescent._::resonance-liberation.1",
+    "char.camellya.resonance-liberation.fervor-efflorescent.cast::resonance-liberation",
+  skill: "fervor-efflorescent",
+  hitIndex: 1,
   skillCategory: "Resonance Liberation",
   skillType: "Resonance Liberation",
   element: "Havoc",
 }
 const INTRO_HIT: HitContext = {
-  stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+  stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
+  skill: "everblooming",
+  hitIndex: 1,
   skillCategory: "Intro Skill",
   skillType: "Intro Skill",
   element: "Havoc",
 }
 const OUTRO_HIT: HitContext = {
-  stageId: "char.camellya.outro-skill.twining._::outro-skill.1",
+  stageId: "char.camellya.outro-skill.twining.cast::outro-skill",
+  skill: "twining",
+  hitIndex: 1,
   skillCategory: "Outro Skill",
   skillType: "Outro Skill",
   element: "Havoc",
@@ -256,7 +264,7 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
       skillCategory: "Basic Attack",
       dmgType: "Damage",
       stageId:
-        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
       frame,
       energy: 0,
       concerto,
@@ -271,7 +279,7 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
       characterId: CAMELLYA,
       skillCategory: "Intro Skill",
       dmgType: "Damage",
-      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
       frame,
       energy: 0,
       concerto: 0,
@@ -347,14 +355,18 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
 
   const CORE_HIT: HitContext = {
     stageId:
-      "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+      "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+    skill: "burgeoning",
+    hitIndex: 1,
     skillCategory: "Basic Attack",
     skillType: "Basic Attack",
     element: "Havoc",
   }
   const CRIMSON_BLOSSOM_HIT: HitContext = {
     stageId:
-      "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack.2",
+      "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
+    skill: "valse-of-bloom-and-blight",
+    hitIndex: 2,
     skillCategory: "Resonance Skill",
     skillType: "Basic Attack",
     element: "Havoc",
@@ -367,7 +379,7 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
       characterId: CAMELLYA,
       skillCategory: "Intro Skill",
       dmgType: "Damage",
-      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
       frame: 0,
       forte: 100,
     })
@@ -377,7 +389,7 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
       skillCategory: "Basic Attack",
       dmgType: "Damage",
       stageId:
-        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
       frame: 1,
       forte: -10 * buds,
     })
@@ -465,7 +477,7 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
       skillCategory: "Basic Attack",
       dmgType: "Damage",
       stageId:
-        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1",
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
       frame: 3,
       forte: -70,
     })
@@ -501,37 +513,59 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
     expect(budStacks(engine)).toBe(3)
   })
 
-  // Pins the lineage-prefix scope (stageIdMatches depth 3): the Sweet Dream
-  // recipients are declared as skill-group prefixes, so the whole Normal Attack
-  // group — including stages omitted from the old explicit tuple (Heavy Pruning,
-  // Mid-air, Dodge Counter, Atonement) — gains Sweet Dream, while Ephemeral
-  // (a sibling Resonance Skill under vegetative-universe) stays excluded.
-  it("Sweet Dream covers the whole Normal Attack group via lineage prefix", () => {
-    const hit = (stageId: string): HitContext => ({
+  // Pins the skill-axis scope: the Sweet Dream recipients are declared per
+  // skill, so the whole Normal Attack group — including stages omitted from
+  // the old explicit tuple (Heavy Pruning, Mid-air, Dodge Counter, Atonement)
+  // — gains Sweet Dream, while Ephemeral (a sibling Resonance Skill under
+  // vegetative-universe) stays excluded.
+  it("Sweet Dream covers the whole Normal Attack group via the skill axis", () => {
+    const hit = (skill: string, stageId: string): HitContext => ({
       stageId,
+      skill,
       skillCategory: "Basic Attack",
       skillType: "Basic Attack",
       element: "Havoc",
     })
-    const covered = [
-      "char.camellya.basic-attack.burgeoning.mid-air-attack::basic-attack.1",
-      "char.camellya.basic-attack.burgeoning.dodge-counter::basic-attack.2",
-      "char.camellya.basic-attack.burgeoning.atonement::basic-attack.1",
-      "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack.10",
-      "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack.1",
-      "char.camellya.heavy-attack.burgeoning.heavy-attack::basic-attack.2",
-      "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack.3",
+    const covered: [string, string][] = [
+      [
+        "burgeoning",
+        "char.camellya.basic-attack.burgeoning.mid-air-attack::basic-attack",
+      ],
+      [
+        "burgeoning",
+        "char.camellya.basic-attack.burgeoning.dodge-counter::basic-attack",
+      ],
+      [
+        "burgeoning",
+        "char.camellya.basic-attack.burgeoning.atonement::basic-attack",
+      ],
+      [
+        "burgeoning",
+        "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
+      ],
+      [
+        "burgeoning",
+        "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack",
+      ],
+      [
+        "burgeoning",
+        "char.camellya.heavy-attack.burgeoning.heavy-attack::basic-attack",
+      ],
+      [
+        "valse-of-bloom-and-blight",
+        "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
+      ],
     ]
     const engine = makeEngine()
     mintBuds(engine, 3)
     castEphemeral(engine, 2)
-    for (const stageId of covered) {
+    for (const [skill, stageId] of covered) {
       expect(
-        engine.resolveStats(CAMELLYA, hit(stageId)).bonusMultiplier,
+        engine.resolveStats(CAMELLYA, hit(skill, stageId)).bonusMultiplier,
       ).toBeCloseTo(0.65)
     }
-    // Ephemeral shares the "Basic Attack" hit type but a different lineage —
-    // it must not be swept in by the group prefix.
+    // Ephemeral shares the "Basic Attack" hit type but belongs to a different
+    // skill — it must not be swept in by the skill axis.
     expect(
       engine.resolveStats(CAMELLYA, EPHEMERAL_HIT).bonusMultiplier,
     ).toBeCloseTo(0)
@@ -541,7 +575,7 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
 describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate)", () => {
   const BUD = "char.camellya.forte.crimson-bud"
   const BASIC_STAGE =
-    "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack.1"
+    "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack"
 
   function refillForte(engine: ReturnType<typeof makeEngine>, frame: number) {
     engine.onEvent({
@@ -549,7 +583,7 @@ describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate)", (
       characterId: CAMELLYA,
       skillCategory: "Intro Skill",
       dmgType: "Damage",
-      stageId: "char.camellya.intro-skill.everblooming._::intro-skill.1",
+      stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
       frame,
       forte: 100,
     })

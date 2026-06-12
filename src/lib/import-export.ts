@@ -3,7 +3,7 @@ import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
 import { ALL_WEAPONS } from "#/data/weapons"
-import { makeCharStageId, makeEchoStageId, stageSkillType } from "#/lib/stage"
+import { compileCharacter, compileEcho } from "#/lib/compile-character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 
@@ -25,28 +25,14 @@ const COST4_MAINS = ["scaling", "cr", "cd"] as const
 const COST3_MAINS = ["scaling", "er", "elemDmg"] as const
 const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
 
-// Sorted list of all stageIds produced by makeCharStageId/makeEchoStageId across all characters and echoes.
+// Sorted list of all stageIds across all characters and echoes.
 const ALL_STAGE_IDS: readonly string[] = (() => {
   const ids = new Set<string>()
   for (const char of ALL_CHARACTERS) {
-    for (const skill of char.skills) {
-      for (const stage of skill.stages) {
-        ids.add(
-          makeCharStageId(
-            char.name,
-            stage.category,
-            skill.name,
-            stage.newName,
-            stageSkillType(stage.category, stage.damage),
-          ),
-        )
-      }
-    }
+    for (const id of compileCharacter(char).stageIndex.keys()) ids.add(id)
   }
   for (const echo of ALL_ECHOES) {
-    for (const stage of echo.skill.stages) {
-      ids.add(makeEchoStageId(echo.name, stage.newName))
-    }
+    for (const id of compileEcho(echo).stageIndex.keys()) ids.add(id)
   }
   return [...ids].sort()
 })()

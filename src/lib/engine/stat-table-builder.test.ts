@@ -539,20 +539,34 @@ describe("matchesHit", () => {
     expect(matchesHit({ label: "Aero Erosion" }, { labels: [] })).toBe(false)
   })
 
-  it("stageId axis matches every hit of a lineage filter (no hit suffix)", () => {
-    const hit: HitContext = { stageId: "char.x.skill.stage::basic-attack.3" }
-    // Lineage filter (no `.<hit>` suffix) matches any hit index.
-    expect(
-      matchesHit({ stageId: "char.x.skill.stage::basic-attack" }, hit),
-    ).toBe(true)
-    // An exact per-hit filter still requires the exact hit index.
-    expect(
-      matchesHit({ stageId: "char.x.skill.stage::basic-attack.1" }, hit),
-    ).toBe(false)
-    // Array form: any lineage id matching is enough.
+  it("stage axes: stageId is exact, hitIndex and skill are independent", () => {
+    const hit: HitContext = {
+      stageId: "char.x.basic-attack.skill.stage::basic-attack",
+      skill: "skill",
+      hitIndex: 3,
+    }
+    // A stageId-only filter matches any hit index of that stage.
     expect(
       matchesHit(
-        { stageId: ["char.x.other::basic-attack", "char.x.skill.stage"] },
+        { stageId: "char.x.basic-attack.skill.stage::basic-attack" },
+        hit,
+      ),
+    ).toBe(true)
+    // A hitIndex constraint requires the exact hit position.
+    expect(matchesHit({ hitIndex: 3 }, hit)).toBe(true)
+    expect(matchesHit({ hitIndex: 1 }, hit)).toBe(false)
+    // The skill axis matches every stage of the skill.
+    expect(matchesHit({ skill: "skill" }, hit)).toBe(true)
+    expect(matchesHit({ skill: "other" }, hit)).toBe(false)
+    // Array form: any listed id matching is enough.
+    expect(
+      matchesHit(
+        {
+          stageId: [
+            "char.x.basic-attack.other.stage::basic-attack",
+            "char.x.basic-attack.skill.stage::basic-attack",
+          ],
+        },
         hit,
       ),
     ).toBe(true)

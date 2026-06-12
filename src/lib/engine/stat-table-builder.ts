@@ -18,7 +18,6 @@ import { emptyStatTable } from "#/types/stat-table"
 import type { NegStatusType } from "#/data/neg-status-types"
 import type { HitLabel } from "#/data/hit-labels"
 import type { WeaponData } from "#/types/weapon"
-import { stageIdMatches } from "../stage"
 import {
   DEFAULT_SUBSTAT_ROLLS,
   ECHO_BUILD_LAYOUT,
@@ -42,7 +41,7 @@ export type StatContribution = {
   snapshots?: Record<number, number>
 }
 
-function matchesAxis<T>(
+export function matchesAxis<T>(
   filterVal: T | T[] | undefined,
   ctxVal: T | undefined,
 ): boolean {
@@ -51,21 +50,6 @@ function matchesAxis<T>(
   return Array.isArray(filterVal)
     ? filterVal.includes(ctxVal)
     : filterVal === ctxVal
-}
-
-/**
- * Match the `stageId` Hit Filter axis. Unlike the other axes (exact/includes),
- * a filter id without a `.<hitIndex>` suffix matches any hit of that stage
- * lineage — the same semantics trigger matching uses (see `stageIdMatches`).
- */
-function matchesStageIdAxis(
-  filterVal: string | string[] | undefined,
-  ctxVal: string | undefined,
-): boolean {
-  if (filterVal === undefined) return true
-  if (ctxVal === undefined) return false
-  const ids = Array.isArray(filterVal) ? filterVal : [filterVal]
-  return ids.some((t) => stageIdMatches(t, ctxVal))
 }
 
 function matchesLabelAxis(
@@ -82,7 +66,9 @@ function matchesLabelAxis(
 export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
   return (
     matchesAxis(filter.sourceBuffId, ctx.sourceBuffId) &&
-    matchesStageIdAxis(filter.stageId, ctx.stageId) &&
+    matchesAxis(filter.stageId, ctx.stageId) &&
+    matchesAxis(filter.skill, ctx.skill) &&
+    matchesAxis(filter.hitIndex, ctx.hitIndex) &&
     matchesAxis(filter.skillType, ctx.skillType) &&
     matchesAxis(filter.skillCategory, ctx.skillCategory) &&
     matchesAxis(filter.element, ctx.element) &&

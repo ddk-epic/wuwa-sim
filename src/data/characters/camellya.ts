@@ -571,6 +571,7 @@ export const camellya = {
         },
         {
           name: "Basic Attack 4 DMG",
+          key: "basic-attack-4-hold",
           category: "Basic Attack",
           newName: "Basic Attack 4 (Hold)",
           value: "24.70%*20",

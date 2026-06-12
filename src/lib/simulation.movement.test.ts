@@ -380,7 +380,7 @@ describe("runSimulation — Movement stages", () => {
   it("Dodge produces an Action Event in the log", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
+      [tlEntry(99, "char.movement-char.movement.dodge.dodge::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -393,7 +393,7 @@ describe("runSimulation — Movement stages", () => {
   it("Dodge produces only an Action Event — no hit events", () => {
     testCharacters = [charWithMovement]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
+      [tlEntry(99, "char.movement-char.movement.dodge.dodge::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -407,9 +407,9 @@ describe("runSimulation — Movement stages", () => {
       [
         tlEntry(
           99,
-          "char.movement-char.basic-attack.normal-attack._::basic-attack",
+          "char.movement-char.basic-attack.normal-attack.stage-1::basic-attack",
         ), // gains concerto from hit
-        tlEntry(99, "char.movement-char.movement.dodge._::movement"),
+        tlEntry(99, "char.movement-char.movement.dodge.dodge::movement"),
       ],
       emptySlots,
       emptyLoadouts,
@@ -432,9 +432,9 @@ describe("runSimulation — Movement stages", () => {
       [
         tlEntry(
           99,
-          "char.movement-char.basic-attack.normal-attack._::basic-attack",
+          "char.movement-char.basic-attack.normal-attack.stage-1::basic-attack",
         ), // accumulates energy via hit
-        tlEntry(99, "char.movement-char.movement.dodge._::movement"),
+        tlEntry(99, "char.movement-char.movement.dodge.dodge::movement"),
       ],
       emptySlots,
       emptyLoadouts,
@@ -473,7 +473,7 @@ describe("runSimulation — Movement stages", () => {
     }
     testCharacters = [charWithBuff]
     const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge._::movement")],
+      [tlEntry(99, "char.movement-char.movement.dodge.dodge::movement")],
       emptySlots,
       emptyLoadouts,
     )
@@ -490,7 +490,7 @@ describe("runSimulation — trailing-window collision", () => {
         id: "t1",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
         variantKind: "swap",
       },
       // Resonance Skill starts at frame 6; trailing hits at 15 and 30 >= 6 -> dropped
@@ -498,7 +498,7 @@ describe("runSimulation — trailing-window collision", () => {
         id: "t2",
         characterId: 30,
         stageId:
-          "char.trailing-char.resonance-skill.resonance-skill._::resonance-skill",
+          "char.trailing-char.resonance-skill.resonance-skill.stage::resonance-skill",
       },
     ]
     const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
@@ -515,21 +515,22 @@ describe("runSimulation — trailing-window collision", () => {
         id: "t1",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
         variantKind: "swap",
       },
       // Char 31: advance=10, frame -> 6+10=16
       {
         id: "t2",
         characterId: 31,
-        stageId: "char.other-char.basic-attack.normal-attack._::basic-attack",
+        stageId:
+          "char.other-char.basic-attack.normal-attack.stage::basic-attack",
       },
       // Char 30 full (non-cancel-capable): would start at 16, but trailing hit 30 >= 16 -> pad to 30
       {
         id: "t3",
         characterId: 30,
         stageId:
-          "char.trailing-char.basic-attack.normal-attack._::basic-attack",
+          "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
       },
     ]
     const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
@@ -553,12 +554,12 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -582,12 +583,12 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -610,12 +611,12 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "char.aerial-char.basic-attack.aerial-attack.aerial-stage::basic-attack",
         "e2",
       ),
     ]
@@ -639,12 +640,12 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char-b.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -669,18 +670,19 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ), // non-swap: {launch:15} <= advance=30 -> on-field -> team=air
       {
         id: "e2",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       }, // trailing hit at hitFrame=30+20=50; pendingFooting atFrame=30+15=45; swap advance=6
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ), // charB re-enters at frame 36
     ]
@@ -706,13 +708,14 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       {
         id: "e2",
         characterId: 50,
-        stageId: "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        stageId:
+          "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         variantKind: "cancel",
       },
     ]
@@ -736,13 +739,14 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       {
         id: "e2",
         characterId: 50,
-        stageId: "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        stageId:
+          "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         variantKind: "cancel",
       },
     ]
@@ -769,17 +773,17 @@ describe("runSimulation — fall frames", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.neutral._::basic-attack",
+        "char.aerial-char.basic-attack.neutral.neutral-stage::basic-attack",
         "e2",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         "e3",
       ),
     ]

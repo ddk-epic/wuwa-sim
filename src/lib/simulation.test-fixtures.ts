@@ -51,7 +51,7 @@ export const healHit = (
 })
 
 export const stageOf = (kebab: string) =>
-  `char.${kebab}.basic-attack.normal-attack._::basic-attack`
+  `char.${kebab}.basic-attack.normal-attack.stage-1::basic-attack`
 
 export const tlEntry = (
   characterId: number,

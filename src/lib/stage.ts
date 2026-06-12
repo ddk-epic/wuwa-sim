@@ -8,9 +8,6 @@ import type {
   VariantKind,
   StageVariant,
 } from "#/types/character"
-import type { Slots, SlotLoadout } from "#/types/loadout"
-import type { TimelineEntry } from "#/types/timeline"
-import { getCharacterById, getEchoById } from "./loadout/catalog"
 
 export const STAGE_CAST_NAME = "Skill DMG"
 
@@ -30,7 +27,7 @@ export function stageEntryFooting(
   return "ground" // sustained "ground" or { launch }
 }
 
-function toKebab(s: string | undefined): string {
+export function toKebab(s: string | undefined): string {
   if (!s) return "_"
   const k = s
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
@@ -38,6 +35,14 @@ function toKebab(s: string | undefined): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
   return k || "_"
+}
+
+const CAST_STAGE_NAMES = new Set([STAGE_CAST_NAME, "Outro DMG"])
+
+/** Stage/skill key from the API `name`: trailing " DMG"/" Damage" stripped, cast stages normalized to `cast`. */
+export function deriveKey(name: string): string {
+  if (CAST_STAGE_NAMES.has(name)) return "cast"
+  return toKebab(name.replace(/ (DMG|Damage)$/, ""))
 }
 
 export interface ActionTimeStage {
@@ -52,6 +57,7 @@ export interface ResolvedStage {
   stage: ActionTimeStage & { damage?: DamageEntry[] }
   stageId: string
   stageName: string
+  skillKey?: string
   element: Element
   concerto: number
   resonanceCost?: number
@@ -74,131 +80,10 @@ export function stageSkillType(
   return damage?.[0]?.type ?? fallback
 }
 
-/** `char.<charName>.<skill-category>.<skillName>.<stageName>::<skill-type>` */
-export function makeCharStageId(
-  charName: string,
-  skillCategory: SkillCategory,
-  skillName: string,
-  stageName: string | undefined,
-  skillType: SkillType,
-): string {
-  return `char.${toKebab(charName)}.${toKebab(skillCategory)}.${toKebab(skillName)}.${toKebab(stageName)}::${toKebab(skillType)}`
-}
-
-/** `echo.<echoName>.<stageName>::echo-skill` */
-export function makeEchoStageId(
-  echoName: string,
-  stageName: string | undefined,
-): string {
-  return `echo.${toKebab(echoName)}.${toKebab(stageName)}::echo-skill`
-}
-
-/**
- * Match a stageId filter `t` against a concrete hit stageId `sid`. A `t` that
- * ends in a `.<hitIndex>` suffix requires an exact match; otherwise `t` is a
- * lineage prefix that matches every hit of the stage (and of descendant
- * stages).
- */
-export function stageIdMatches(t: string, sid: string): boolean {
-  if (sid === t) return true
-  // Trigger `.<digits>` suffix targets a specific hit — require exact match.
-  if (/\.\d+$/.test(t)) return false
-  const sidNoHit = sid.replace(/\.\d+$/, "")
-  if (sidNoHit === t) return true
-  const sidLineage = sidNoHit.includes("::")
-    ? sidNoHit.slice(0, sidNoHit.indexOf("::"))
-    : sidNoHit
-  const tLineage = t.includes("::") ? t.slice(0, t.indexOf("::")) : t
-  if (sidLineage === tLineage) return true
-  return sidLineage.startsWith(tLineage + ".")
-}
-
 export function stageLabel(skillName: string, newName?: string): string {
   if (!newName) return skillName
   if (newName.startsWith("(")) return `${skillName} ${newName}`
   return `${skillName} · ${newName}`
-}
-
-export function findStageByEntry(
-  entry: TimelineEntry,
-  slots: Slots,
-  loadouts: SlotLoadout[],
-): ResolvedStage | null {
-  const character = getCharacterById(entry.characterId)
-
-  if (character) {
-    for (const skill of character.skills) {
-      for (const s of skill.stages) {
-        const stageType = stageSkillType(s.category, s.damage)
-        if (
-          makeCharStageId(
-            character.name,
-            s.category,
-            skill.name,
-            s.newName,
-            stageType,
-          ) === entry.stageId
-        ) {
-          const isCastStage = s.name === STAGE_CAST_NAME
-          // Stage-level skillType, collapsed from the parent skill grouping.
-          // Grouping-only labels that are not SkillTypes (Normal Attack,
-          // Inherent Skill, Tune Break, Forte Circuit) collapse to "Basic Attack".
-          // Independent of skillCategory (the trigger axis); per-hit damage type
-          // lives on each DamageEntry.type.
-          const skillType: SkillType =
-            skill.type === "Normal Attack" ||
-            skill.type === "Inherent Skill" ||
-            skill.type === "Tune Break" ||
-            skill.type === "Forte Circuit"
-              ? "Basic Attack"
-              : skill.type
-          return {
-            stage: s,
-            stageId: entry.stageId,
-            stageName: s.name,
-            element: character.element,
-            concerto:
-              (s.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
-            resonanceCost: skill.resonanceCost,
-            damage: s.damage ?? [],
-            skillGrouping: skill.type,
-            skillCategory: s.category,
-            skillType,
-            skillName: isCastStage
-              ? skill.name
-              : stageLabel(skill.name, s.newName),
-            requiresPriorStageId: s.requiresPriorStageId,
-            minDelay:
-              s.requiresPriorStageId !== undefined ? s.minDelay : undefined,
-          }
-        }
-      }
-    }
-  }
-
-  const slotIndex = slots.findIndex((id) => id === entry.characterId)
-  const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
-  const echo = echoId !== null ? getEchoById(echoId) : null
-  if (echo) {
-    for (const s of echo.skill.stages) {
-      if (makeEchoStageId(echo.name, s.newName) === entry.stageId) {
-        return {
-          stage: s,
-          stageId: entry.stageId,
-          stageName: s.name,
-          element: echo.element,
-          concerto: 0,
-          damage: s.damage,
-          skillGrouping: "Echo Skill",
-          skillCategory: "Echo Skill",
-          skillType: "Echo Skill",
-          skillName: stageLabel(echo.name, s.newName),
-        }
-      }
-    }
-  }
-
-  return null
 }
 
 export function resolveStageExecution(

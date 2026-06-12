@@ -12,8 +12,7 @@ import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
-import { stageIdMatches } from "../stage"
-import { cloneStats, freezeSnapshots } from "./stat-table-builder"
+import { cloneStats, freezeSnapshots, matchesAxis } from "./stat-table-builder"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 
@@ -21,9 +20,9 @@ export type EngineEvent =
   | {
       kind: "skillCast"
       characterId: number
-      /** Player input/action category — the sole skill axis for trigger matching. */
       skillCategory: SkillCategory
       stageId?: string
+      skill?: string
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
       concerto?: number
@@ -38,6 +37,9 @@ export type EngineEvent =
       synthetic?: boolean
       frame: number
       stageId?: string
+      skill?: string
+      /** 1-based (DamageEntry order). */
+      hitIndex?: number
       /** Per-hit energy gained by the actor. Implicit `resource` effect. */
       energy?: number
       /** Per-hit concerto gained by the actor. Implicit `resource` effect. */
@@ -55,6 +57,8 @@ export type EngineEvent =
       skillCategory: SkillCategory
       frame: number
       stageId?: string
+      skill?: string
+      hitIndex?: number
     }
   | { kind: "swapIn"; characterId: number; frame: number }
   | { kind: "swapOut"; characterId: number; frame: number }
@@ -559,20 +563,9 @@ export function matchesTrigger(
     ) {
       return false
     }
-    if (trigger.skillCategory !== undefined) {
-      const cats = Array.isArray(trigger.skillCategory)
-        ? trigger.skillCategory
-        : [trigger.skillCategory]
-      if (!cats.includes(event.skillCategory)) return false
-    }
-    if (trigger.stageId !== undefined) {
-      const sid = event.stageId
-      if (!sid) return false
-      const ids = Array.isArray(trigger.stageId)
-        ? trigger.stageId
-        : [trigger.stageId]
-      if (!ids.includes(sid)) return false
-    }
+    if (!matchesAxis(trigger.skillCategory, event.skillCategory)) return false
+    if (!matchesAxis(trigger.stageId, event.stageId)) return false
+    if (!matchesAxis(trigger.skill, event.skill)) return false
     return true
   }
 
@@ -606,29 +599,14 @@ export function matchesTrigger(
     ) {
       return false
     }
-    if (trigger.skillCategory !== undefined) {
-      const cats = Array.isArray(trigger.skillCategory)
-        ? trigger.skillCategory
-        : [trigger.skillCategory]
-      if (!cats.includes(event.skillCategory)) return false
-    }
+    if (!matchesAxis(trigger.skillCategory, event.skillCategory)) return false
     if (trigger.dmgType && trigger.dmgType !== event.dmgType) {
       return false
     }
-    if (trigger.stageId !== undefined) {
-      const sid = event.stageId
-      if (!sid) return false
-      const ids = Array.isArray(trigger.stageId)
-        ? trigger.stageId
-        : [trigger.stageId]
-      if (!ids.some((t) => stageIdMatches(t, sid))) return false
-    }
-    if (trigger.sourceBuffId !== undefined) {
-      const ids = Array.isArray(trigger.sourceBuffId)
-        ? trigger.sourceBuffId
-        : [trigger.sourceBuffId]
-      if (!ids.includes(event.sourceBuffId ?? "")) return false
-    }
+    if (!matchesAxis(trigger.stageId, event.stageId)) return false
+    if (!matchesAxis(trigger.skill, event.skill)) return false
+    if (!matchesAxis(trigger.hitIndex, event.hitIndex)) return false
+    if (!matchesAxis(trigger.sourceBuffId, event.sourceBuffId)) return false
     if (
       trigger.targetHasStatus &&
       !event.targetStatuses?.includes(trigger.targetHasStatus)
@@ -648,20 +626,10 @@ export function matchesTrigger(
     ) {
       return false
     }
-    if (trigger.skillCategory !== undefined) {
-      const cats = Array.isArray(trigger.skillCategory)
-        ? trigger.skillCategory
-        : [trigger.skillCategory]
-      if (!cats.includes(event.skillCategory)) return false
-    }
-    if (trigger.stageId !== undefined) {
-      const sid = event.stageId
-      if (!sid) return false
-      const ids = Array.isArray(trigger.stageId)
-        ? trigger.stageId
-        : [trigger.stageId]
-      if (!ids.some((t) => stageIdMatches(t, sid))) return false
-    }
+    if (!matchesAxis(trigger.skillCategory, event.skillCategory)) return false
+    if (!matchesAxis(trigger.stageId, event.stageId)) return false
+    if (!matchesAxis(trigger.skill, event.skill)) return false
+    if (!matchesAxis(trigger.hitIndex, event.hitIndex)) return false
     return true
   }
 

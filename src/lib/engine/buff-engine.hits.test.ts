@@ -581,7 +581,7 @@ describe("BuffEngine — emitHit (#60)", () => {
 
   it("phase pipeline: lex tiebreak by buffDef.id is deterministic", () => {
     const z: BuffDef = {
-      id: "z.coord",
+      id: "z.coord-z",
       name: "Z",
       trigger: { event: "hitLanded", characterId: 1, source: "self" },
       target: { kind: "self" },
@@ -589,7 +589,7 @@ describe("BuffEngine — emitHit (#60)", () => {
       effects: [{ kind: "emitHit", damage: dmg({ value: 0.1 }), icdFrames: 0 }],
     }
     const a: BuffDef = {
-      id: "a.coord",
+      id: "a.coord-a",
       name: "A",
       trigger: { event: "hitLanded", characterId: 1, source: "self" },
       target: { kind: "self" },
@@ -612,8 +612,8 @@ describe("BuffEngine — emitHit (#60)", () => {
     })
     const synthetics = drainSynthetics(engine, deferredEmits)
     expect(synthetics.map((h) => h.sourceBuffId)).toEqual([
-      "a.coord",
-      "z.coord",
+      "a.coord-a",
+      "z.coord-z",
     ])
   })
 

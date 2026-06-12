@@ -292,17 +292,18 @@ describe("runSimulation — trailing-window footing snapshot", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ),
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ),
     ]
@@ -330,17 +331,18 @@ describe("runSimulation — trailing-window footing snapshot", () => {
       {
         id: "e1",
         characterId: 50,
-        stageId: "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        stageId:
+          "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char-b.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
         "e3",
       ),
     ]
@@ -367,12 +369,13 @@ describe("runSimulation — trailing-window footing snapshot", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       }, // {launch:15}, swap advance=6 < 15 -> pending; team stays ground
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ), // charB enters: team=ground -> no fall
     ]
@@ -396,23 +399,25 @@ describe("runSimulation — trailing-window footing snapshot", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       {
         id: "e2",
         characterId: 53,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ),
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e4",
       ),
     ]
@@ -444,17 +449,18 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ),
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ),
     ]
@@ -485,12 +491,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char-b.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -518,13 +524,15 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       {
         id: "e2",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
     ]
@@ -554,12 +562,13 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -587,12 +596,13 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -630,17 +640,18 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
         53,
-        "char.snap-b.basic-attack.ground-stage._::basic-attack",
+        "char.snap-b.basic-attack.ground-stage.ground-stage::basic-attack",
         "e2",
       ),
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ),
     ]
@@ -674,13 +685,18 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       {
         id: "e1",
         characterId: 52,
-        stageId: "char.snap-a.resonance-skill.aerial-swap._::resonance-skill",
+        stageId:
+          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
-      tlEntry(53, "char.snap-b.basic-attack.land-stage._::basic-attack", "e2"),
+      tlEntry(
+        53,
+        "char.snap-b.basic-attack.land-stage.land-stage::basic-attack",
+        "e2",
+      ),
       tlEntry(
         52,
-        "char.snap-a.basic-attack.ground-stage._::basic-attack",
+        "char.snap-a.basic-attack.ground-stage.ground-stage::basic-attack",
         "e3",
       ),
     ]
@@ -708,12 +724,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e2",
       ),
     ]
@@ -740,12 +756,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.ground-intro._::basic-attack",
+        "char.aerial-char-b.basic-attack.ground-intro.ground-intro-stage::basic-attack",
         "e2",
       ),
     ]
@@ -773,12 +789,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.air-intro._::basic-attack",
+        "char.aerial-char-b.basic-attack.air-intro.air-intro-stage::basic-attack",
         "e1",
       ),
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.ground-attack._::basic-attack",
+        "char.aerial-char-b.basic-attack.ground-attack.ground-stage::basic-attack",
         "e2",
       ),
     ]
@@ -817,7 +833,7 @@ describe("runSimulation — footing violation diagnostics", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "char.aerial-char.basic-attack.aerial-attack.aerial-stage::basic-attack",
         "e1",
       ),
     ]
@@ -840,7 +856,11 @@ describe("runSimulation — footing violation diagnostics", () => {
   it("grounded entry into a { land } stage reports 'nothing to land from'", () => {
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
-      tlEntry(52, "char.snap-a.basic-attack.land-stage._::basic-attack", "e1"),
+      tlEntry(
+        52,
+        "char.snap-a.basic-attack.land-stage.land-stage::basic-attack",
+        "e1",
+      ),
     ]
     const result = runSimulation(
       entries,
@@ -862,12 +882,12 @@ describe("runSimulation — footing violation diagnostics", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         50,
-        "char.aerial-char.resonance-skill.launch._::resonance-skill",
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
         "e1",
       ),
       tlEntry(
         50,
-        "char.aerial-char.basic-attack.aerial-attack._::basic-attack",
+        "char.aerial-char.basic-attack.aerial-attack.aerial-stage::basic-attack",
         "e2",
       ),
     ]
@@ -889,7 +909,7 @@ describe("runSimulation — footing violation diagnostics", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         51,
-        "char.aerial-char-b.basic-attack.air-intro._::basic-attack",
+        "char.aerial-char-b.basic-attack.air-intro.air-intro-stage::basic-attack",
         "e1",
       ),
     ]
@@ -932,7 +952,7 @@ describe("runSimulation — footing violation diagnostics", () => {
     const entries: TimelineEntry[] = [
       tlEntry(
         60,
-        "char.lib-char.resonance-liberation.big-burst._::resonance-liberation",
+        "char.lib-char.resonance-liberation.big-burst.burst-stage::resonance-liberation",
         "e1",
       ),
     ]

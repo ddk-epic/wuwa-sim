@@ -11,14 +11,14 @@ const CHAR_A = {
     {
       name: "Normal Attack",
       stages: [
-        { newName: "Stage 1", category: "Basic Attack" },
-        { newName: "Stage 2", category: "Basic Attack" },
-        { newName: undefined, category: "Basic Attack" },
+        { name: "Stage 1 DMG", category: "Basic Attack" },
+        { name: "Stage 2 DMG", category: "Basic Attack" },
+        { name: "Stage 3 DMG", category: "Basic Attack" },
       ],
     },
     {
       name: "Resonance Skill",
-      stages: [{ newName: undefined, category: "Resonance Skill" }],
+      stages: [{ name: "Skill DMG", category: "Resonance Skill" }],
     },
   ],
   buffs: [],
@@ -29,7 +29,7 @@ const CHAR_B = {
   skills: [
     {
       name: "Heavy Attack",
-      stages: [{ newName: "Charge", category: "Heavy Attack" }],
+      stages: [{ name: "Charge DMG", category: "Heavy Attack" }],
     },
   ],
   buffs: [],
@@ -39,7 +39,8 @@ const WEAPON_A = { id: 21020015 }
 const ECHO_A = {
   id: 390080007,
   name: "Inferno Rider",
-  skill: { stages: [{ newName: undefined }, { newName: "(Hold)" }] },
+  skill: { stages: [{ name: "Tap" }, { name: "Hold" }] },
+  buffs: [],
 }
 const ECHO_SET_A = { id: 2 }
 const ECHO_SET_B = { id: 7 }
@@ -253,7 +254,7 @@ describe("timeline encoding", () => {
           kind: "entry" as const,
           id: "y",
           characterId: CHAR_A.id,
-          stageId: "echo.inferno-rider._::echo-skill",
+          stageId: "echo.inferno-rider.tap::echo-skill",
           variantKind: undefined,
         },
       ],
@@ -261,7 +262,7 @@ describe("timeline encoding", () => {
     const decoded = decodePayload(encodePayload(payload))
     expect(
       decoded.timeline![0].kind === "entry" && decoded.timeline![0].stageId,
-    ).toBe("echo.inferno-rider._::echo-skill")
+    ).toBe("echo.inferno-rider.tap::echo-skill")
   })
 
   it("roundtrips group node — regenerates ids, preserves entries", () => {
@@ -308,7 +309,8 @@ describe("timeline encoding", () => {
           kind: "entry" as const,
           id: "e1",
           characterId: CHAR_A.id,
-          stageId: "char.sanhua.basic-attack.normal-attack._::basic-attack",
+          stageId:
+            "char.sanhua.basic-attack.normal-attack.stage-3::basic-attack",
           variantKind: undefined,
         },
         {

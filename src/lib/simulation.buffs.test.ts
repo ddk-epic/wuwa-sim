@@ -156,8 +156,11 @@ describe("runSimulation — buff lifecycle interleaving", () => {
     }
     testCharacters = [charWithIntro]
     const entries: TimelineEntry[] = [
-      tlEntry(1, "char.char-a.intro-skill.intro._::intro-skill"),
-      tlEntry(1, "char.char-a.resonance-skill.resonance._::resonance-skill"),
+      tlEntry(1, "char.char-a.intro-skill.intro.skill::intro-skill"),
+      tlEntry(
+        1,
+        "char.char-a.resonance-skill.resonance.skill::resonance-skill",
+      ),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const kinds = result.map((e) => e.kind)
@@ -317,7 +320,12 @@ describe("runSimulation — Energy Recharge (#98)", () => {
     }
     testCharacters = [charOnField, charOffField]
     const result = runSimulation(
-      [tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack")],
+      [
+        tlEntry(
+          1,
+          "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+        ),
+      ],
       [1, 2, null],
       emptyLoadouts,
     )
@@ -372,7 +380,10 @@ describe("runSimulation — inherit duration", () => {
   it("child buff inherits endTime from parent buff applied in the same event", () => {
     testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const buffEvents = result.filter((e) => e.kind === "buffApplied")
@@ -390,7 +401,10 @@ describe("runSimulation — inherit duration", () => {
   it("child buff with inherit duration expires at the same time as parent", () => {
     testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const hitEvent = result.find((e) => e.kind === "hit")
@@ -450,8 +464,11 @@ describe("runSimulation — removeBuffs effect", () => {
   it("removeBuffs effect removes active instances of listed buff IDs", () => {
     testCharacters = [charWithRemove]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
-      tlEntry(1, "char.char-a.resonance-skill.skill._::resonance-skill"),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
+      tlEntry(1, "char.char-a.resonance-skill.skill.skill::resonance-skill"),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const applied = result.filter(
@@ -471,7 +488,7 @@ describe("runSimulation — removeBuffs effect", () => {
   it("removeBuffs is a no-op when referenced buff is not active", () => {
     testCharacters = [charWithRemove]
     const entries = [
-      tlEntry(1, "char.char-a.resonance-skill.skill._::resonance-skill"),
+      tlEntry(1, "char.char-a.resonance-skill.skill.skill::resonance-skill"),
     ]
     const result = runSimulation(entries, [1, null, null], emptyLoadouts)
     const consumed = result.filter(

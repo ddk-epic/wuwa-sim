@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
@@ -76,7 +76,7 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
   emptyLoadout,
 ]
 
-describe("validateTimeline â€” empty", () => {
+describe("validateTimeline — empty", () => {
   it("returns empty result for empty entries", () => {
     const result = validateTimeline([], slots, loadouts)
     expect(result.rowErrors.size).toBe(0)
@@ -84,10 +84,13 @@ describe("validateTimeline â€” empty", () => {
   })
 })
 
-describe("validateTimeline â€” character in team", () => {
+describe("validateTimeline — character in team", () => {
   it("marks entry invalid when characterId is not in any slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(99, "char.test.basic-attack.normal-attack._::basic-attack")
+    const e = entry(
+      99,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+    )
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
     expect(result.rowErrors.get(e.id)?.length).toBeGreaterThan(0)
@@ -95,14 +98,17 @@ describe("validateTimeline â€” character in team", () => {
 
   it("does not mark entry invalid when characterId is in a slot", () => {
     testCharacters = [baseChar()]
-    const e = entry(1, "char.test.basic-attack.normal-attack._::basic-attack")
+    const e = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+    )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
     expect(result.rowErrors.get(e.id)).toBeUndefined()
   })
 })
 
-describe("validateTimeline â€” skill existence", () => {
+describe("validateTimeline — skill existence", () => {
   it("marks entry invalid when stageId does not match any stage", () => {
     testCharacters = [baseChar()]
     const e = entry(
@@ -114,7 +120,7 @@ describe("validateTimeline â€” skill existence", () => {
   })
 })
 
-describe("validateTimeline â€” echo skill", () => {
+describe("validateTimeline — echo skill", () => {
   it("marks Echo Skill invalid when no echo is equipped", () => {
     testCharacters = [baseChar()]
     const e = entry(1, "echo.test-echo.tap::echo-skill")
@@ -123,17 +129,17 @@ describe("validateTimeline â€” echo skill", () => {
   })
 })
 
-describe("validateTimeline â€” multiple entries", () => {
+describe("validateTimeline — multiple entries", () => {
   it("validates each entry independently", () => {
     testCharacters = [baseChar()]
     const valid = entry(
       1,
-      "char.test.basic-attack.normal-attack._::basic-attack",
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "valid",
     )
     const invalid = entry(
       99,
-      "char.test.basic-attack.normal-attack._::basic-attack",
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "invalid",
     )
     const result = validateTimeline([valid, invalid], slots, loadouts)
@@ -142,7 +148,7 @@ describe("validateTimeline â€” multiple entries", () => {
   })
 })
 
-describe("validateTimeline â€” swap-legality (Intro must follow Outro)", () => {
+describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
   const charWithAll = (id: number): EnrichedCharacter =>
     baseChar({
       id,
@@ -207,7 +213,7 @@ describe("validateTimeline â€” swap-legality (Intro must follow Outro)", ()
     testCharacters = [charWithAll(1), charWithAll(2)]
     const intro = entry(
       1,
-      "char.char1.basic-attack.intro-skill._::basic-attack",
+      "char.char1.basic-attack.intro-skill.intro-skill::basic-attack",
       "intro",
     )
     const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
@@ -219,12 +225,12 @@ describe("validateTimeline â€” swap-legality (Intro must follow Outro)", ()
     testCharacters = [charWithAll(1), charWithAll(2)]
     const normal = entry(
       1,
-      "char.char1.basic-attack.normal-attack._::basic-attack",
+      "char.char1.basic-attack.normal-attack.stage-1::basic-attack",
       "normal",
     )
     const intro = entry(
       2,
-      "char.char2.basic-attack.intro-skill._::basic-attack",
+      "char.char2.basic-attack.intro-skill.intro-skill::basic-attack",
       "intro",
     )
     const result = validateTimeline(
@@ -240,12 +246,12 @@ describe("validateTimeline â€” swap-legality (Intro must follow Outro)", ()
     testCharacters = [charWithAll(1), charWithAll(2)]
     const outro = entry(
       1,
-      "char.char1.basic-attack.outro-skill._::basic-attack",
+      "char.char1.basic-attack.outro-skill.outro-skill::basic-attack",
       "outro",
     )
     const intro = entry(
       2,
-      "char.char2.basic-attack.intro-skill._::basic-attack",
+      "char.char2.basic-attack.intro-skill.intro-skill::basic-attack",
       "intro",
     )
     const result = validateTimeline(
@@ -261,7 +267,7 @@ describe("validateTimeline â€” swap-legality (Intro must follow Outro)", ()
     testCharacters = [charWithAll(1)]
     const outro = entry(
       1,
-      "char.char1.basic-attack.outro-skill._::basic-attack",
+      "char.char1.basic-attack.outro-skill.outro-skill::basic-attack",
       "outro",
     )
     const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
@@ -269,7 +275,7 @@ describe("validateTimeline â€” swap-legality (Intro must follow Outro)", ()
   })
 })
 
-describe("validateTimeline â€” stage-reachability (requiresPriorStageId)", () => {
+describe("validateTimeline — stage-reachability (requiresPriorStageId)", () => {
   const charWithPrereq = (id: number): EnrichedCharacter =>
     baseChar({
       id,
@@ -363,7 +369,7 @@ describe("validateTimeline â€” stage-reachability (requiresPriorStageId)", 
     )
     const other = entry(
       2,
-      "char.test.basic-attack.normal-attack._::basic-attack",
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "other",
     )
     const s2 = entry(
@@ -389,13 +395,13 @@ describe("validateTimeline â€” stage-reachability (requiresPriorStageId)", 
   })
 })
 
-describe("validateTimeline â€” window mode (minDelay)", () => {
+describe("validateTimeline — window mode (minDelay)", () => {
   const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
   const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"
-  const SKILL = "char.test.basic-attack.resonance-skill._::basic-attack"
+  const SKILL = "char.test.basic-attack.resonance-skill.skill::basic-attack"
 
   // Stage 2 is a window-mode follow-up to Stage 1: requires a prior Stage 1 on
-  // the same character at any distance; minDelay present â‡’ intervening entries
+  // the same character at any distance; minDelay present ⇒ intervening entries
   // (swaps, teammate entries, own actions) do not break the gate.
   const windowChar = (id: number): EnrichedCharacter =>
     baseChar({
@@ -460,7 +466,11 @@ describe("validateTimeline â€” window mode (minDelay)", () => {
     const result = validateTimeline(
       [
         entry(1, STAGE_1, "s1"),
-        entry(2, "char.test.basic-attack.normal-attack._::basic-attack", "tm"),
+        entry(
+          2,
+          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+          "tm",
+        ),
         entry(1, STAGE_2, "s2"),
       ],
       [1, 2, null],
@@ -495,7 +505,7 @@ describe("validateTimeline â€” window mode (minDelay)", () => {
 
   it("does not let a teammate's colliding prerequisite satisfy the gate", () => {
     // Both characters share the "Test" name, so their Stage 1 stageIds are
-    // byte-identical â€” only the same-character scoping keeps them apart.
+    // byte-identical — only the same-character scoping keeps them apart.
     testCharacters = [windowChar(1), windowChar(2)]
     const result = validateTimeline(
       [entry(2, STAGE_1, "tm-s1"), entry(1, STAGE_2, "s2")],
@@ -506,7 +516,7 @@ describe("validateTimeline â€” window mode (minDelay)", () => {
   })
 })
 
-describe("validateTimeline â€” cascade suppression", () => {
+describe("validateTimeline — cascade suppression", () => {
   // Chain: Stage 0 -> Stage 1 (req Stage 0) -> Stage 2 (req Stage 1) -> Stage 3 (req Stage 2)
   const chainChar = (): EnrichedCharacter =>
     baseChar({
@@ -518,7 +528,7 @@ describe("validateTimeline â€” cascade suppression", () => {
           type: "Normal Attack",
           stages: [
             {
-              name: "S0",
+              name: "Stage 0",
               category: "Basic Attack",
               newName: "Stage 0",
               value: "1",
@@ -526,7 +536,7 @@ describe("validateTimeline â€” cascade suppression", () => {
               damage: [],
             },
             {
-              name: "S1",
+              name: "Stage 1",
               category: "Basic Attack",
               newName: "Stage 1",
               value: "1",
@@ -536,7 +546,7 @@ describe("validateTimeline â€” cascade suppression", () => {
                 "char.test.basic-attack.normal-attack.stage-0::basic-attack",
             },
             {
-              name: "S2",
+              name: "Stage 2",
               category: "Basic Attack",
               newName: "Stage 2",
               value: "1",
@@ -546,7 +556,7 @@ describe("validateTimeline â€” cascade suppression", () => {
                 "char.test.basic-attack.normal-attack.stage-1::basic-attack",
             },
             {
-              name: "S3",
+              name: "Stage 3",
               category: "Basic Attack",
               newName: "Stage 3",
               value: "1",
@@ -604,7 +614,7 @@ describe("validateTimeline â€” cascade suppression", () => {
     // char 99 not in team -> independent error
     const independent = entry(
       99,
-      "char.test.basic-attack.normal-attack._::basic-attack",
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "ind",
     )
     const result = validateTimeline(
@@ -670,14 +680,14 @@ const swapChar = (): EnrichedCharacter =>
 const swapEntry = (id: string): TimelineEntry => ({
   id,
   characterId: 1,
-  stageId: "char.test.basic-attack.normal-attack._::basic-attack",
+  stageId: "char.test.basic-attack.normal-attack.stage-1::basic-attack",
   variantKind: "swap",
 })
 
 const fullEntry = (id: string, characterId = 1): TimelineEntry => ({
   id,
   characterId,
-  stageId: "char.test.basic-attack.normal-attack._::basic-attack",
+  stageId: "char.test.basic-attack.normal-attack.stage-1::basic-attack",
 })
 
 const emptyLoadoutsW: SlotLoadout[] = [
@@ -716,7 +726,7 @@ const emptyLoadoutsW: SlotLoadout[] = [
   },
 ]
 
-describe("validateTimeline â€” swap warning channel", () => {
+describe("validateTimeline — swap warning channel", () => {
   it("emits a warning when a swap entry is immediately followed by the same character", () => {
     testCharacters = [swapChar()]
     const result = validateTimeline(
@@ -798,7 +808,7 @@ describe("validateTimeline â€” swap warning channel", () => {
                 damage: [],
                 newName: "second",
                 requiresPriorStageId:
-                  "char.test.basic-attack.normal-attack.first::basic-attack",
+                  "char.test.basic-attack.normal-attack.stage-1::basic-attack",
               },
             ],
             damage: [],
@@ -809,13 +819,13 @@ describe("validateTimeline â€” swap warning channel", () => {
     const e1: TimelineEntry = {
       id: "e1",
       characterId: 1,
-      stageId: "char.test.basic-attack.normal-attack.first::basic-attack",
+      stageId: "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       variantKind: "swap",
     }
     const e2: TimelineEntry = {
       id: "e2",
       characterId: 1,
-      stageId: "char.test.basic-attack.normal-attack.second::basic-attack",
+      stageId: "char.test.basic-attack.normal-attack.stage-2::basic-attack",
     }
     const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
     // swap variant on the preceding entry still satisfies requiresPriorStageId

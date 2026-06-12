@@ -158,7 +158,8 @@ export type MovementKind = "Dodge" | "Jump"
 export type Footing = "ground" | "air" | { launch: number } | { land: number }
 
 type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
-  id?: string
+  /** Override for `deriveKey(name)` collisions. */
+  key?: string
   actionTime: number
   hidden?: boolean
   newName?: string
@@ -178,6 +179,7 @@ export type EnrichedSkillAttribute =
     })
 
 export interface EnrichedSkill extends Omit<Skill, "stages"> {
+  key?: string
   stages: EnrichedSkillAttribute[]
   animationLock?: number
   hidden?: boolean

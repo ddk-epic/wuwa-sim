@@ -167,7 +167,7 @@ describe("runSimulation — single hit", () => {
     testCharacters = [charA]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -202,7 +202,7 @@ describe("runSimulation — single hit", () => {
     ]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -257,11 +257,17 @@ describe("runSimulation — multi-character accumulation", () => {
   it("accumulates energy and concerto separately per character", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
-      tlEntry(2, "char.char-b.basic-attack.normal-attack._::basic-attack"),
       tlEntry(
         1,
-        "char.char-a.basic-attack.normal-attack._::basic-attack",
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
+      tlEntry(
+        2,
+        "char.char-b.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
         "1-na-2",
       ),
     ]
@@ -290,8 +296,14 @@ describe("runSimulation — multi-character accumulation", () => {
   it("computes damage using each character's own maxAtk", () => {
     testCharacters = [charA, charB]
     const entries = [
-      tlEntry(1, "char.char-a.basic-attack.normal-attack._::basic-attack"),
-      tlEntry(2, "char.char-b.basic-attack.normal-attack._::basic-attack"),
+      tlEntry(
+        1,
+        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
+      tlEntry(
+        2,
+        "char.char-b.basic-attack.normal-attack.stage-1::basic-attack",
+      ),
     ]
     const result = runSimulation(entries, emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
@@ -340,7 +352,7 @@ describe("runSimulation — echo skill entries", () => {
         cost3Mains: ["elemDmg", "elemDmg"],
       },
     ]
-    const entry = tlEntry(1, "echo.echo-one.hit::echo-skill")
+    const entry = tlEntry(1, "echo.echo-one.echo-hit::echo-skill")
     const result = runSimulation([entry], slots, loadouts)
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({
@@ -369,7 +381,7 @@ describe("runSimulation — missing character", () => {
     testCharacters = []
     const entry = tlEntry(
       99,
-      "char.unknown.basic-attack.normal-attack._::basic-attack",
+      "char.unknown.basic-attack.normal-attack.stage-1::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toEqual([])
@@ -394,12 +406,12 @@ describe("runSimulation — frame tracking", () => {
     const entry1: TimelineEntry = {
       id: "e1",
       characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack._::basic-attack",
+      stageId: "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     }
     const entry2: TimelineEntry = {
       id: "e2",
       characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack._::basic-attack",
+      stageId: "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     }
     const result = runSimulation([entry1, entry2], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(4)
@@ -416,7 +428,8 @@ describe("runSimulation — action event concerto", () => {
     const entry: TimelineEntry = {
       id: "d1",
       characterId: 4,
-      stageId: "char.char-d.basic-attack.heavy-attack._::basic-attack",
+      stageId:
+        "char.char-d.basic-attack.heavy-attack.heavy-attack::basic-attack",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result).toHaveLength(2)
@@ -461,7 +474,7 @@ describe("runSimulation — discriminated union", () => {
     testCharacters = [charA]
     const entry = tlEntry(
       1,
-      "char.char-a.basic-attack.normal-attack._::basic-attack",
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts)
     expect(result[0].kind).toBe("action")
@@ -509,7 +522,12 @@ describe("runSimulation — healing pipeline", () => {
   it("heal stage produces a SustainEvent instead of a HitEvent", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
+      [
+        tlEntry(
+          20,
+          "char.healer.resonance-skill.heal-skill.heal-stage::basic-attack",
+        ),
+      ],
       emptySlots,
       emptyLoadouts,
     )
@@ -522,7 +540,12 @@ describe("runSimulation — healing pipeline", () => {
   it("heal amount = (ATK x multiplier + flat) x (1 + healingBonus)", () => {
     testCharacters = [charHealer]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
+      [
+        tlEntry(
+          20,
+          "char.healer.resonance-skill.heal-skill.heal-stage::basic-attack",
+        ),
+      ],
       emptySlots,
       emptyLoadouts,
     )
@@ -535,7 +558,12 @@ describe("runSimulation — healing pipeline", () => {
     testCharacters = [charHealer]
     const slots: Slots = [20, null, null]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
+      [
+        tlEntry(
+          20,
+          "char.healer.resonance-skill.heal-skill.heal-stage::basic-attack",
+        ),
+      ],
       slots,
       emptyLoadouts,
     )
@@ -565,7 +593,12 @@ describe("runSimulation — healing pipeline", () => {
     testCharacters = [healerWithBuff]
     const slots: Slots = [20, null, null]
     const result = runSimulation(
-      [tlEntry(20, "char.healer.resonance-skill.heal-skill._::basic-attack")],
+      [
+        tlEntry(
+          20,
+          "char.healer.resonance-skill.heal-skill.heal-stage::basic-attack",
+        ),
+      ],
       slots,
       emptyLoadouts,
     )

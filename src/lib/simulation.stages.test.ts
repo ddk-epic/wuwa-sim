@@ -118,7 +118,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     testCharacters = [charVariant]
     const entry = tlEntry(
       10,
-      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
     const hits = result.filter((e) => e.kind === "hit")
@@ -130,7 +130,8 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v1",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -143,7 +144,8 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v2",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "instantCancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -158,7 +160,8 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "v3",
       characterId: 10,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
@@ -170,7 +173,7 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     testCharacters = [charVariant]
     const entry = tlEntry(
       10,
-      "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
@@ -218,7 +221,8 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "sw1",
       characterId: 11,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -267,7 +271,8 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const entry: TimelineEntry = {
       id: "sw2",
       characterId: 12,
-      stageId: "char.variant-char.basic-attack.normal-attack._::basic-attack",
+      stageId:
+        "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
     const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
@@ -480,11 +485,11 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       [
         tlEntry(
           51,
-          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+          "char.heavy-char.basic-attack.normal-attack.stage-1::basic-attack",
         ),
         tlEntry(
           51,
-          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+          "char.heavy-char.basic-attack.normal-attack.stage-1::basic-attack",
           "2",
         ),
       ],
@@ -503,7 +508,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       [
         tlEntry(
           51,
-          "char.heavy-char.basic-attack.normal-attack._::basic-attack",
+          "char.heavy-char.basic-attack.normal-attack.stage-1::basic-attack",
         ),
         tlEntry(
           51,

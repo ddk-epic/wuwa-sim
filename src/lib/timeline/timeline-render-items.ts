@@ -9,7 +9,7 @@ import type {
 } from "#/lib/timeline/validate-timeline"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
-import { findStageByEntry } from "#/lib/stage"
+import { findStageByEntry } from "#/lib/compile-character"
 import {
   buildGroupGradient,
   getDominantHex,

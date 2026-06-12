@@ -304,28 +304,21 @@ describe("matchesTrigger — synthetic source filtering", () => {
   })
 })
 
-describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
+describe("matchesTrigger — stage axes (stageId / skill / hitIndex)", () => {
   const BASE_STAGE =
-    "char.encore.basic-attack.wooly-attack.stage-5-wooly-strike"
+    "char.encore.basic-attack.wooly-attack.stage-5::basic-attack"
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
     skillCategory: "Basic Attack",
     dmgType: "Damage",
     frame: 0,
-    stageId: `${BASE_STAGE}.3`,
+    stageId: BASE_STAGE,
+    skill: "wooly-attack",
+    hitIndex: 3,
   }
 
-  it("positive match: trigger stageId is exact hit stageId", () => {
-    const trigger: Trigger = {
-      event: "hitLanded",
-      actor: "self",
-      stageId: `${BASE_STAGE}.3`,
-    }
-    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
-  })
-
-  it("positive match: trigger stageId is base (prefix) — matches any hit", () => {
+  it("positive match: exact stageId matches regardless of hit index", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
@@ -334,13 +327,32 @@ describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
   })
 
-  it("positive match: stageId array includes base stage prefix", () => {
+  it("positive match: stageId + matching hitIndex", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      stageId: BASE_STAGE,
+      hitIndex: 3,
+    }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
+  })
+
+  it("positive match: skill axis matches every stage of the skill", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      skill: "wooly-attack",
+    }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
+  })
+
+  it("positive match: stageId array includes the event's stage", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
       stageId: [
         BASE_STAGE,
-        "char.encore.basic-attack.wooly-attack.heavy-attack",
+        "char.encore.basic-attack.wooly-attack.heavy-attack::heavy-attack",
       ],
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
@@ -350,7 +362,16 @@ describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: "echo.impermanence-heron._",
+      stageId: "echo.impermanence-heron.tap::echo-skill",
+    }
+    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
+  })
+
+  it("negative match: wrong skill", () => {
+    const trigger: Trigger = {
+      event: "hitLanded",
+      actor: "self",
+      skill: "cosmos-rave",
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
@@ -366,16 +387,17 @@ describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
     ).toBe(false)
   })
 
-  it("negative match: trigger requires specific hit index but event is different hit", () => {
+  it("negative match: trigger requires a different hit index", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
-      stageId: `${BASE_STAGE}.2`,
+      stageId: BASE_STAGE,
+      hitIndex: 2,
     }
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
 
-  it("no-filter passthrough: absent stageId matches any event", () => {
+  it("no-filter passthrough: absent axes match any event", () => {
     const trigger: Trigger = {
       event: "hitLanded",
       actor: "self",
@@ -384,7 +406,7 @@ describe("matchesTrigger — stageId filters (hit index in stageId)", () => {
     expect(
       matchesTrigger(
         trigger,
-        { ...baseEvent, stageId: "echo.inferno-rider._.1" },
+        { ...baseEvent, stageId: "echo.inferno-rider.tap::echo-skill" },
         1,
       ),
     ).toBe(true)

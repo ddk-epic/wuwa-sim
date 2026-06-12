@@ -1,19 +1,10 @@
-import type {
-  EnrichedSkillAttribute,
-  SkillCategory,
-  SkillGrouping,
-  SkillType,
-} from "#/types/character"
-import type { EnrichedEchoStage } from "#/types/echo"
+import type { SkillCategory, SkillGrouping, SkillType } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "../../lib/loadout/catalog"
-import {
-  makeCharStageId,
-  makeEchoStageId,
-  stageSkillType,
-} from "../../lib/stage"
+import type { EchoStageInfo, StageInfo } from "../../lib/compile-character"
+import { compileCharacter, compileEcho } from "../../lib/compile-character"
 
 export interface FocusedStage {
   key: string
@@ -49,28 +40,19 @@ export function getFocusedStageCatalog(
   const echo = echoId !== null ? getEchoById(echoId) : null
 
   const echoStages: FocusedStage[] = echo
-    ? echo.skill.stages
-        .filter((stage) => !stage.hidden)
-        .map((stage, i) =>
-          buildEchoStage(echo.name, character.id, stage, `echo-${i}`),
-        )
+    ? [...compileEcho(echo).stageIndex.values()]
+        .filter((info) => !info.stage.hidden)
+        .map((info) => buildEchoStage(echo.name, character.id, info))
     : []
 
-  const allCharacterStages: FocusedStage[] = character.skills
-    .filter((skill) => !skill.hidden)
-    .flatMap((skill) =>
-      skill.stages
-        .filter((stage) => stage.name !== "" && !stage.hidden)
-        .map((stage, i) =>
-          buildCharacterStage(
-            character.name,
-            skill,
-            character.id,
-            stage,
-            `${skill.id}-${i}`,
-          ),
-        ),
+  const allCharacterStages: FocusedStage[] = [
+    ...compileCharacter(character).stageIndex.values(),
+  ]
+    .filter(
+      (info) =>
+        !info.skill.hidden && !info.stage.hidden && info.stage.name !== "",
     )
+    .map((info) => buildCharacterStage(character.id, info))
 
   const introStages = allCharacterStages.filter(
     (s) => s.skillType === "Intro Skill",
@@ -89,53 +71,36 @@ export function getFocusedStageCatalog(
 function buildEchoStage(
   echoName: string,
   characterId: number,
-  stage: EnrichedEchoStage,
-  key: string,
+  info: EchoStageInfo,
 ): FocusedStage {
+  const { stage } = info
   const skillType = stage.damage[0]?.type ?? "Echo Skill"
-  const label = skillLabel(echoName, stage.newName)
   return {
-    key,
-    label,
+    key: info.stageId,
+    label: skillLabel(echoName, stage.newName),
     typeLabel: STAGE_TYPE_LABELS["Echo Skill"],
     skillType,
     skillGrouping: "Echo Skill",
     skillCategory: "Echo Skill",
     durationFrames: stage.actionTime,
-    clickPayload: {
-      characterId,
-      stageId: makeEchoStageId(echoName, stage.newName),
-    },
+    clickPayload: { characterId, stageId: info.stageId },
   }
 }
 
 function buildCharacterStage(
-  charName: string,
-  skill: { name: string; type: SkillGrouping },
   characterId: number,
-  stage: EnrichedSkillAttribute,
-  key: string,
+  info: StageInfo,
 ): FocusedStage {
-  const skillType = stageSkillType(stage.category, stage.damage)
-  const label = skillLabel(skill.name, stage.newName)
+  const { skill, stage } = info
   return {
-    key,
-    label,
+    key: info.stageId,
+    label: skillLabel(skill.name, stage.newName),
     typeLabel: STAGE_TYPE_LABELS[stage.category],
-    skillType,
+    skillType: info.skillType,
     skillGrouping: skill.type,
     skillCategory: stage.category,
     durationFrames: stage.actionTime,
-    clickPayload: {
-      characterId,
-      stageId: makeCharStageId(
-        charName,
-        stage.category,
-        skill.name,
-        stage.newName,
-        skillType,
-      ),
-    },
+    clickPayload: { characterId, stageId: info.stageId },
   }
 }
 

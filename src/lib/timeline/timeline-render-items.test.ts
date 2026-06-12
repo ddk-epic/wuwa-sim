@@ -16,7 +16,7 @@ vi.mock("../loadout/catalog", () => ({
     testCharacters.find((c) => c.id === id) ?? null,
 }))
 
-vi.mock("#/lib/stage", () => ({
+vi.mock("#/lib/compile-character", () => ({
   findStageByEntry: (entry: { stageId: string }) =>
     resolvedStages.get(entry.stageId) ?? null,
 }))
