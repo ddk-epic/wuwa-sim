@@ -1,6 +1,6 @@
 # UI preferences live in a store separate from simulation Settings
 
-The auto-run toggle — and any future app/UI behaviour preference — lives in a new `useUiPreferences` store keyed on `wuwa.preferences`, not in the existing `Settings` object. `Settings` continues to hold only values that feed `runSimulation` (`reactionDelay`, `swapFrames`, `variantFloor`, `fallFrames`).
+The auto-run toggle — and any future app/UI behaviour preference — lives in a new `useUiPreferences` store keyed on `wuwa.preferences`, not in the `Settings` object. `Settings` holds only values that feed `runSimulation` (the frame knobs plus `startWithFullEnergy`); the dividing line is _engine input vs. UI preference_, not _number vs. boolean_ (see ADR-0040, which later moved `Settings` onto the team and added the boolean).
 
 `Settings` is, deliberately, a bag of _simulation parameters_: every field is a frame count, clamped 0–60, and passed straight into `runSimulation`. The store has a matching shape — numeric `mergeWithDefaults`, a `clamp()` patch path — that only makes sense for sim knobs. `autoRun` is a different kind of thing: it changes how the _app_ responds to edits and never reaches the engine. Folding it into `Settings` would put a boolean through number-shaped plumbing and erode the "Settings = sim parameters" boundary that lets a reader trust the type at a glance.
 

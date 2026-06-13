@@ -3,7 +3,6 @@ import { useTeam } from "#/hooks/useTeam"
 import { useLibrary } from "#/hooks/useLibrary"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog, computeSignature } from "#/hooks/useSimulationLog"
-import { useSettings } from "#/hooks/useSettings"
 import { useUiPreferences } from "#/hooks/useUiPreferences"
 import { useAutoRun } from "#/hooks/useAutoRun"
 import { useModalToggle } from "#/hooks/useModalToggle"
@@ -27,8 +26,17 @@ import type { ImportExportPayload } from "#/lib/import-export"
 
 export function SimulatorPage() {
   const team = useTeam()
-  const { name, slots, loadouts, focusedId, originId, setOriginId, loadTeam } =
-    team
+  const {
+    name,
+    slots,
+    loadouts,
+    focusedId,
+    originId,
+    settings,
+    setSettings,
+    setOriginId,
+    loadTeam,
+  } = team
   const { saveCurrent } = useLibrary()
 
   const { log, storedSignature, setLog, clearLog } = useSimulationLog()
@@ -54,11 +62,8 @@ export function SimulatorPage() {
     loadNodes,
   } = useTimeline()
 
-  const [settings, setSettings] = useSettings()
   const [preferences, setPreferences] = useUiPreferences()
   const autoRun = preferences.autoRun
-
-  const [startWithFullEnergy, setStartWithFullEnergy] = useState(false)
 
   const currentSignature = computeSignature(entries, slots, loadouts, settings)
   const stale = log.length > 0 && storedSignature !== currentSignature
@@ -69,12 +74,10 @@ export function SimulatorPage() {
   const slotsRef = useRef(slots)
   const loadoutsRef = useRef(loadouts)
   const settingsRef = useRef(settings)
-  const startWithFullEnergyRef = useRef(startWithFullEnergy)
   entriesRef.current = entries
   slotsRef.current = slots
   loadoutsRef.current = loadouts
   settingsRef.current = settings
-  startWithFullEnergyRef.current = startWithFullEnergy
 
   useEffect(() => {
     if (entries.length === 0) clearLog()
@@ -97,7 +100,7 @@ export function SimulatorPage() {
           settingsRef.current.swapFrames,
           settingsRef.current.variantFloor,
           settingsRef.current.fallFrames,
-          startWithFullEnergyRef.current,
+          settingsRef.current.startWithFullEnergy,
         ),
         sig,
       )
@@ -121,15 +124,6 @@ export function SimulatorPage() {
     }
     scheduleRun()
   }, [entries])
-
-  const fullEnergyMountRef = useRef(false)
-  useEffect(() => {
-    if (!fullEnergyMountRef.current) {
-      fullEnergyMountRef.current = true
-      return
-    }
-    if (entriesRef.current.length > 0) tryRunSimulation()
-  }, [startWithFullEnergy])
 
   const teamModal = useModalToggle({
     onOpen: onModalOpen,
@@ -163,7 +157,12 @@ export function SimulatorPage() {
   )
 
   function applyImport(payload: ImportExportPayload) {
-    loadTeam(payload.team.slots, payload.team.loadouts, payload.team.focusedId)
+    loadTeam(
+      payload.team.slots,
+      payload.team.loadouts,
+      payload.team.focusedId,
+      payload.team.settings,
+    )
     loadNodes(payload.timeline ?? [])
     clearLog()
   }
@@ -207,7 +206,7 @@ export function SimulatorPage() {
         settings.swapFrames,
         settings.variantFloor,
         settings.fallFrames,
-        startWithFullEnergy,
+        settings.startWithFullEnergy,
       ),
       currentSignature,
     )
@@ -236,10 +235,6 @@ export function SimulatorPage() {
                 saveDisabled={slots.every((id) => id === null)}
                 autoRun={autoRun}
                 needsRun={needsRun}
-                startWithFullEnergy={startWithFullEnergy}
-                onToggleStartWithFullEnergy={() =>
-                  setStartWithFullEnergy((prev) => !prev)
-                }
                 exportString={exportString}
                 onImport={handleImport}
                 importError={importError}

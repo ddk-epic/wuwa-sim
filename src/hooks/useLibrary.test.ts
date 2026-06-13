@@ -4,6 +4,7 @@ import { renderHook, act } from "@testing-library/react"
 import type { SlotLoadout } from "#/types/loadout"
 import { encodePayload } from "#/lib/import-export"
 import type { ImportExportPayload } from "#/lib/import-export"
+import { DEFAULT_SETTINGS } from "#/lib/settings"
 import { moveDraftToLive, useLibrary } from "./useLibrary"
 
 beforeEach(() => {
@@ -44,6 +45,7 @@ function seedLive(opts: {
   loadouts?: unknown
   focusedId?: unknown
   originId?: unknown
+  settings?: unknown
   timeline?: unknown
   log?: unknown
 }) {
@@ -53,6 +55,7 @@ function seedLive(opts: {
     loadouts: opts.loadouts ?? [emptyLoadout(), emptyLoadout(), emptyLoadout()],
     focusedId: opts.focusedId ?? null,
     originId: opts.originId ?? null,
+    ...(opts.settings !== undefined ? { settings: opts.settings } : {}),
   }
   localStorage.setItem("wuwa.team", JSON.stringify(team))
   if (opts.timeline !== undefined)
@@ -281,6 +284,60 @@ describe("useLibrary", () => {
     seedLive({ name: "Scratch", slots: [null, null, null] })
     act(() => result.current.load(id))
     expect(readLiveTeam().name).toBe("Hypercarry")
+  })
+
+  it("round-trips per-team settings through save then load", () => {
+    seedLive({
+      name: "Tuned",
+      slots: [1102, null, null],
+      settings: {
+        reactionDelay: 12,
+        swapFrames: 9,
+        variantFloor: 21,
+        fallFrames: 3,
+        startWithFullEnergy: true,
+      },
+    })
+    const { result } = renderHook(() => useLibrary())
+    act(() => result.current.saveCurrent(null))
+    const id = result.current.teams[0].id
+    expect(result.current.teams[0].payload.team.settings).toEqual({
+      reactionDelay: 12,
+      swapFrames: 9,
+      variantFloor: 21,
+      fallFrames: 3,
+      startWithFullEnergy: true,
+    })
+
+    // Live settings drift; loading restores the saved ones.
+    seedLive({ name: "Scratch", slots: [null, null, null] })
+    act(() => result.current.load(id))
+    expect(readLiveTeam().settings).toEqual({
+      reactionDelay: 12,
+      swapFrames: 9,
+      variantFloor: 21,
+      fallFrames: 3,
+      startWithFullEnergy: true,
+    })
+  })
+
+  it("loading a legacy saved team (no settings) restores the defaults", () => {
+    localStorage.setItem(
+      "wuwa.library",
+      JSON.stringify([
+        {
+          id: "legacy",
+          name: "Legacy",
+          updated: 1,
+          pinned: false,
+          payload: emptyPayload("Legacy"),
+          stats: { dmgByChar: {}, typeMix: {}, concertoEnd: 0, resEnd: 0 },
+        },
+      ]),
+    )
+    const { result } = renderHook(() => useLibrary())
+    act(() => result.current.load("legacy"))
+    expect(readLiveTeam().settings).toEqual(DEFAULT_SETTINGS)
   })
 
   it("load stamps the loaded entry's id as the live Origin", () => {

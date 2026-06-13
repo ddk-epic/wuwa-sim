@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
 import type { ReactNode } from "react"
-import type { Settings } from "./useSettings"
+import type { Settings } from "#/lib/settings"
 
 interface SettingsActions {
   setSettings: (patch: Partial<Settings>) => void

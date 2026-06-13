@@ -2,6 +2,12 @@ import type { ActiveTeam, Slots, SlotLoadout } from "#/types/loadout"
 import { useLocalStorage } from "./useLocalStorage"
 import { emptyLoadout } from "#/lib/loadout/template"
 import { applySlotPatch, toggleCharacter } from "#/lib/loadout/team-ops"
+import {
+  DEFAULT_SETTINGS,
+  applySettingsPatch,
+  reviveSettings,
+} from "#/lib/settings"
+import type { Settings } from "#/lib/settings"
 
 export const TEAM_KEY = "wuwa.team"
 
@@ -13,6 +19,7 @@ export function defaultActiveTeam(): ActiveTeam {
     loadouts: [emptyLoadout(), emptyLoadout(), emptyLoadout()],
     focusedId: null,
     originId: null,
+    settings: { ...DEFAULT_SETTINGS },
   }
 }
 
@@ -33,6 +40,7 @@ export function reviveActiveTeam(stored: unknown): ActiveTeam {
     })) as [SlotLoadout, SlotLoadout, SlotLoadout],
     focusedId: typeof t.focusedId === "number" ? t.focusedId : base.focusedId,
     originId: typeof t.originId === "string" ? t.originId : base.originId,
+    settings: reviveSettings(t.settings),
   }
 }
 
@@ -42,7 +50,7 @@ export function useTeam() {
     defaultActiveTeam(),
     reviveActiveTeam,
   )
-  const { name, slots, loadouts, focusedId, originId } = team
+  const { name, slots, loadouts, focusedId, originId, settings } = team
 
   // Per-field setters patch the single consolidated object; the composition
   // rules live in the shared team-ops transforms.
@@ -61,11 +69,18 @@ export function useTeam() {
   function setSlotPatch(slotIndex: number, patch: Partial<SlotLoadout>) {
     setTeam((prev) => applySlotPatch(prev, slotIndex, patch))
   }
+  function setSettings(patch: Partial<Settings>) {
+    setTeam((prev) => ({
+      ...prev,
+      settings: applySettingsPatch(prev.settings, patch),
+    }))
+  }
 
   function loadTeam(
     newSlots: Slots,
     newLoadouts: [SlotLoadout, SlotLoadout, SlotLoadout],
     newFocusedId: number | null,
+    newSettings: Settings = DEFAULT_SETTINGS,
   ) {
     // An imported team is unsaved — it has no Library Origin until a Save.
     setTeam((prev) => ({
@@ -74,6 +89,7 @@ export function useTeam() {
       loadouts: newLoadouts,
       focusedId: newFocusedId,
       originId: null,
+      settings: reviveSettings(newSettings),
     }))
   }
 
@@ -83,9 +99,11 @@ export function useTeam() {
     loadouts,
     focusedId,
     originId,
+    settings,
     selectedCount: slots.filter((s) => s !== null).length,
     setName,
     setOriginId,
+    setSettings,
     toggleCharacter: toggleCharacterFn,
     focusCharacter,
     setSlotPatch,

@@ -1,6 +1,7 @@
 import { Modal } from "#/components/ui/Modal"
 import { Stepper } from "#/components/ui/Stepper"
-import type { Settings } from "#/hooks/useSettings"
+import { DEFAULT_SETTINGS } from "#/lib/settings"
+import type { Settings } from "#/lib/settings"
 import {
   useSettingsValue,
   useSettingsActions,
@@ -14,7 +15,11 @@ import {
 /** Frame values step 3 at a time, 0–30 (≤0.5s). All defaults land on this grid. */
 const FRAME_OPTIONS: number[] = Array.from({ length: 11 }, (_, i) => i * 3)
 
-const FRAME_FIELDS: { key: keyof Settings; label: string }[] = [
+type FrameField = {
+  [K in keyof Settings]: Settings[K] extends number ? K : never
+}[keyof Settings]
+
+const FRAME_FIELDS: { key: FrameField; label: string }[] = [
   { key: "reactionDelay", label: "Reaction Delay (frames)" },
   { key: "swapFrames", label: "Swap Frames (frames)" },
   { key: "variantFloor", label: "Variant Floor (frames)" },
@@ -44,6 +49,25 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       ))}
+      <label className="flex items-center gap-1 mb-4 cursor-pointer select-none">
+        <span className="flex-1 text-sm text-gray-400">
+          Start with full energy
+        </span>
+        <input
+          type="checkbox"
+          className="accent-yellow-400 mr-1"
+          checked={settings.startWithFullEnergy}
+          onChange={(e) =>
+            setSettings({ startWithFullEnergy: e.target.checked })
+          }
+        />
+      </label>
+      <button
+        className="w-full mb-1 px-2.5 py-1.5 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
+        onClick={() => setSettings(DEFAULT_SETTINGS)}
+      >
+        Reset to defaults
+      </button>
       <div className="border-t border-border my-4" />
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-400">Run mode</span>

@@ -33,8 +33,6 @@ interface HeaderProps {
   saveDisabled: boolean
   autoRun: boolean
   needsRun: boolean
-  startWithFullEnergy: boolean
-  onToggleStartWithFullEnergy: () => void
   exportString: string
   onImport: (value: string) => void
   importError: string | null
@@ -52,8 +50,6 @@ export function Header({
   saveDisabled,
   autoRun,
   needsRun,
-  startWithFullEnergy,
-  onToggleStartWithFullEnergy,
   exportString,
   onImport,
   importError,
@@ -91,15 +87,6 @@ export function Header({
         </div>
         <TeamButton slots={slots} onClick={onEditTeam} />
         <div className="ml-auto flex items-center gap-2">
-          <label className="flex items-center gap-1.5 px-2.5 py-1.25 font-mono text-sm text-muted-foreground hover:text-foreground cursor-pointer select-none">
-            <input
-              type="checkbox"
-              className="accent-yellow-400"
-              checked={startWithFullEnergy}
-              onChange={onToggleStartWithFullEnergy}
-            />
-            <span>Full energy</span>
-          </label>
           <button
             className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
             disabled={simulateDisabled}

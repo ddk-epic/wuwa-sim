@@ -4,6 +4,7 @@ import { renderHook, act } from "@testing-library/react"
 import { useTeam } from "./useTeam"
 import { loadoutFromTemplate } from "#/lib/loadout/template"
 import { getCharacterById } from "#/lib/loadout/catalog"
+import { DEFAULT_SETTINGS } from "#/lib/settings"
 
 beforeEach(() => {
   localStorage.clear()
@@ -72,6 +73,57 @@ describe("useTeam — focusCharacter", () => {
       result.current.focusCharacter(1)
     })
     expect(result.current.focusedId).toBe(1)
+  })
+})
+
+describe("useTeam — per-team settings", () => {
+  it("a fresh team starts at the constant defaults", () => {
+    const { result } = renderHook(() => useTeam())
+    expect(result.current.settings).toEqual(DEFAULT_SETTINGS)
+  })
+
+  it("setSettings patches a frame knob, clamps, and persists", () => {
+    const { result, unmount } = renderHook(() => useTeam())
+    act(() => {
+      result.current.setSettings({ reactionDelay: 99 })
+    })
+    expect(result.current.settings.reactionDelay).toBe(60)
+    expect(result.current.settings.swapFrames).toBe(DEFAULT_SETTINGS.swapFrames)
+    unmount()
+
+    const { result: reloaded } = renderHook(() => useTeam())
+    expect(reloaded.current.settings.reactionDelay).toBe(60)
+  })
+
+  it("setSettings toggles startWithFullEnergy", () => {
+    const { result } = renderHook(() => useTeam())
+    act(() => {
+      result.current.setSettings({ startWithFullEnergy: true })
+    })
+    expect(result.current.settings.startWithFullEnergy).toBe(true)
+  })
+
+  it("patching with the full defaults resets every field", () => {
+    const { result } = renderHook(() => useTeam())
+    act(() => {
+      result.current.setSettings({
+        reactionDelay: 30,
+        startWithFullEnergy: true,
+      })
+    })
+    act(() => {
+      result.current.setSettings(DEFAULT_SETTINGS)
+    })
+    expect(result.current.settings).toEqual(DEFAULT_SETTINGS)
+  })
+
+  it("a stored team lacking settings hydrates to the defaults", () => {
+    localStorage.setItem(
+      "wuwa.team",
+      JSON.stringify({ name: "Legacy", slots: [1203, null, null] }),
+    )
+    const { result } = renderHook(() => useTeam())
+    expect(result.current.settings).toEqual(DEFAULT_SETTINGS)
   })
 })
 

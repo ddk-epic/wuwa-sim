@@ -1,3 +1,5 @@
+import type { Settings } from "#/lib/settings"
+
 export type Slots = [number | null, number | null, number | null]
 
 export type EchoBuild = "4-3-3-1-1" | "4-4-1-1-1"
@@ -30,4 +32,5 @@ export interface ActiveTeam {
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
   focusedId: number | null
   originId: string | null
+  settings: Settings
 }

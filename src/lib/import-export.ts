@@ -6,6 +6,7 @@ import { ALL_WEAPONS } from "#/data/weapons"
 import { compileCharacter, compileEcho } from "#/lib/compile-character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
+import type { Settings } from "#/lib/settings"
 
 export interface ImportExportPayload {
   team: {
@@ -14,6 +15,7 @@ export interface ImportExportPayload {
     slots: Slots
     loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
     focusedId: number | null
+    settings?: Settings
   }
   timeline: TimelineNode[] | null
 }

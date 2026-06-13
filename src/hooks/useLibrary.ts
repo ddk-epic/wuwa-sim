@@ -7,6 +7,7 @@ import { defaultActiveTeam, reviveActiveTeam, TEAM_KEY } from "./useTeam"
 import { LOG_KEY, normalizeStoredLog } from "./useSimulationLog"
 import type { ActiveTeam } from "#/types/loadout"
 import type { TimelineNode } from "#/types/timeline"
+import { reviveSettings } from "#/lib/settings"
 
 /**
  * One saved team in the Library. `payload` reuses the import/export bundle as the
@@ -74,6 +75,7 @@ function snapshotLive(): {
         slots: team.slots,
         loadouts: team.loadouts,
         focusedId: team.focusedId,
+        settings: team.settings,
       },
       timeline: nodes.length > 0 ? nodes : null,
     },
@@ -98,6 +100,7 @@ function writeLive(
     loadouts: payload.team.loadouts,
     focusedId: payload.team.focusedId,
     originId,
+    settings: reviveSettings(payload.team.settings),
   }
   writeJSON(LIVE.team, team)
   writeJSON(LIVE.timeline, payload.timeline ?? [])
