@@ -27,6 +27,7 @@ const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
 
 // A stage encodes as an ordinal into its character's own stages, with echo
 // stages appended as a shared suffix; appending a character shifts neither.
+// Append-only — see docs/loadout.md "Share codes".
 const CHAR_STAGE_IDS: readonly (readonly string[])[] = ALL_CHARACTERS.map(
   (char) => [...compileCharacter(char).stageIndex.keys()],
 )

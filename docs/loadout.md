@@ -34,6 +34,24 @@ id up in the `ALL_*` registries (see [data](data.md)) and return the
 This is why a loadout can be serialized, shared, and reloaded without carrying
 the data itself.
 
+### Share codes
+
+`import-export.ts` packs a team **plus its timeline** into a Base91 string for
+sharing. To stay short it stores **array positions, not id values**: a character
+is its index in `ALL_CHARACTERS`, a weapon its index in `ALL_WEAPONS`, and so on.
+A timeline entry's stage is an ordinal into **its own character's** flattened
+stage list (echo stages share one suffix after every character's stages), keyed
+off the entry's character byte.
+
+This makes the format **append-only**. Appending a character, echo, weapon, etc.
+at the **end** of its registry — or a stage at the end of a character's stage
+list — leaves every existing code decoding to the same things. But **inserting,
+removing, or reordering** an entry mid-registry (or mid stage-list) renumbers the
+positions after it and silently makes already-shared codes decode to the wrong
+data. Such an edit is a breaking wire change: bump the `VERSION` byte (the decoder
+rejects versions it doesn't recognise). The current version is `3`; older codes
+are rejected, not migrated — stale codes are simply re-exported.
+
 ### Templates
 
 A new slot is seeded from a `CharacterTemplate` — the recommended weapon / echo /
