@@ -58,6 +58,8 @@ export function SimulatorPage() {
   const [preferences, setPreferences] = useUiPreferences()
   const autoRun = preferences.autoRun
 
+  const [startWithFullEnergy, setStartWithFullEnergy] = useState(false)
+
   const currentSignature = computeSignature(entries, slots, loadouts, settings)
   const stale = log.length > 0 && storedSignature !== currentSignature
   const needsRun = entries.length > 0 && (log.length === 0 || stale)
@@ -67,10 +69,12 @@ export function SimulatorPage() {
   const slotsRef = useRef(slots)
   const loadoutsRef = useRef(loadouts)
   const settingsRef = useRef(settings)
+  const startWithFullEnergyRef = useRef(startWithFullEnergy)
   entriesRef.current = entries
   slotsRef.current = slots
   loadoutsRef.current = loadouts
   settingsRef.current = settings
+  startWithFullEnergyRef.current = startWithFullEnergy
 
   useEffect(() => {
     if (entries.length === 0) clearLog()
@@ -93,6 +97,7 @@ export function SimulatorPage() {
           settingsRef.current.swapFrames,
           settingsRef.current.variantFloor,
           settingsRef.current.fallFrames,
+          startWithFullEnergyRef.current,
         ),
         sig,
       )
@@ -116,6 +121,15 @@ export function SimulatorPage() {
     }
     scheduleRun()
   }, [entries])
+
+  const fullEnergyMountRef = useRef(false)
+  useEffect(() => {
+    if (!fullEnergyMountRef.current) {
+      fullEnergyMountRef.current = true
+      return
+    }
+    if (entriesRef.current.length > 0) tryRunSimulation()
+  }, [startWithFullEnergy])
 
   const teamModal = useModalToggle({
     onOpen: onModalOpen,
@@ -193,6 +207,7 @@ export function SimulatorPage() {
         settings.swapFrames,
         settings.variantFloor,
         settings.fallFrames,
+        startWithFullEnergy,
       ),
       currentSignature,
     )
@@ -221,6 +236,10 @@ export function SimulatorPage() {
                 saveDisabled={slots.every((id) => id === null)}
                 autoRun={autoRun}
                 needsRun={needsRun}
+                startWithFullEnergy={startWithFullEnergy}
+                onToggleStartWithFullEnergy={() =>
+                  setStartWithFullEnergy((prev) => !prev)
+                }
                 exportString={exportString}
                 onImport={handleImport}
                 importError={importError}

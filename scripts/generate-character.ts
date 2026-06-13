@@ -173,9 +173,7 @@ function formatSkill(
 }
 
 export function formatCharacter(char: Character, varName: string): string {
-  // Walk the skills, formatting each and capturing the liberation cost inline
-  // (source of truth for the top-level maxEnergy field). Real API data always
-  // carries it; default to 0 so a reviewer notices when it is missing.
+  // Default to 0 so a reviewer notices when the liberation cost is missing.
   let maxEnergy = 0
   const skillLines: string[] = []
   for (const skill of char.skills) {

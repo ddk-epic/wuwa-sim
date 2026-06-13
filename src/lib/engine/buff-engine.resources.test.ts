@@ -1030,3 +1030,49 @@ describe("BuffEngine — cooldown (#90)", () => {
     expect(engine.getResource(1).energy).toBe(afterFirst + 10)
   })
 })
+
+describe("BuffEngine — start with full energy", () => {
+  const allEmpty = [emptyLoadout, emptyLoadout, emptyLoadout]
+
+  it("seeds each occupied slot to its own maxEnergy", () => {
+    testCharacters = [
+      baseChar({ id: 1, maxEnergy: 125 }),
+      baseChar({ id: 2, maxEnergy: 100 }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: allEmpty,
+      startWithFullEnergy: true,
+    })
+    expect(engine.getResource(1).energy).toBe(125)
+    expect(engine.getResource(2).energy).toBe(100)
+  })
+
+  it("leaves energy at 0 when disabled (default behaviour)", () => {
+    testCharacters = [baseChar({ id: 1, maxEnergy: 125 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({ slots: slotsOf(1), loadouts: allEmpty })
+    expect(engine.getResource(1).energy).toBe(0)
+  })
+
+  it("seeds before grants accrue, so a later gain stacks on top of the full bar (uncapped)", () => {
+    testCharacters = [baseChar({ id: 1, maxEnergy: 100 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: allEmpty,
+      startWithFullEnergy: true,
+    })
+    expect(engine.getResource(1).energy).toBe(100)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      energy: 20,
+    })
+    expect(engine.getResource(1).energy).toBeGreaterThan(100)
+  })
+})

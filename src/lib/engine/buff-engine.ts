@@ -85,6 +85,8 @@ interface PhaseHandler {
 export interface BootstrapInput {
   slots: Slots
   loadouts: SlotLoadout[]
+  /** Seed each occupied slot's energy to its own `maxEnergy` before sim start. */
+  startWithFullEnergy?: boolean
 }
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
@@ -278,6 +280,10 @@ export class BuffEngine {
       }
       this.foldedBuffsMap.set(slot.charId, slot.foldedBuffs)
       this.resources.ensureState(slot.charId)
+      // Seed before sim-start so grants stack on top; energy is uncapped.
+      if (input.startWithFullEnergy && character) {
+        this.resources.applyDelta(charId, "energy", character.maxEnergy)
+      }
     }
     this.store.setSlots(slots)
 

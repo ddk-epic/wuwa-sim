@@ -252,6 +252,32 @@ describe("runSimulation — multi-hit stage", () => {
       cumulativeConcerto: 2,
     })
   })
+
+  it("startWithFullEnergy seeds the occupied slot's energy before hits accrue", () => {
+    testCharacters = [charA]
+    const slots: Slots = [1, null, null]
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+    )
+    const baseline = runSimulation([entry], slots, emptyLoadouts)
+    const seeded = runSimulation(
+      [entry],
+      slots,
+      emptyLoadouts,
+      9,
+      6,
+      0,
+      21,
+      true,
+    )
+    const baseHit = baseline[1]
+    const seededHit = seeded[1]
+    if (baseHit.kind !== "hit" || seededHit.kind !== "hit")
+      throw new Error("expected hit rows")
+    // charA.maxEnergy === 100: the seeded run's first hit reads 100 higher.
+    expect(seededHit.cumulativeEnergy).toBe(baseHit.cumulativeEnergy + 100)
+  })
 })
 
 describe("runSimulation — multi-character accumulation", () => {

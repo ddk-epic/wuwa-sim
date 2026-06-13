@@ -78,10 +78,11 @@ export function runSimulation(
   swapFrames: number = 6,
   variantFloor: number = 0,
   fallFrames: number = 21,
+  startWithFullEnergy: boolean = false,
 ): SimulationLogEntry[] {
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
-  engine.bootstrap({ slots, loadouts })
+  engine.bootstrap({ slots, loadouts, startWithFullEnergy })
 
   const ctx: SimContext = {
     engine,
