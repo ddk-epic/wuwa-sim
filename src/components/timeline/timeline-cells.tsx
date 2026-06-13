@@ -1,5 +1,6 @@
 import { formatFrames } from "#/lib/format"
-import { PoolValue, type PoolResource } from "../ui/PoolValue"
+import { PoolValue } from "../ui/PoolValue"
+import type { PoolResource } from "../ui/PoolValue"
 import { WaitBadge } from "../ui/WaitBadge"
 
 /** Leading time cell, accented in the damage color. */
