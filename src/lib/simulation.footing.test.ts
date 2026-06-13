@@ -805,8 +805,9 @@ describe("runSimulation — footing violation diagnostics", () => {
     const action = actionFor(result, "e1")
     expect(action).toBeDefined()
     expect(action?.diagnostics).toHaveLength(1)
-    expect(action?.diagnostics?.[0].kind).toBe("footingViolation")
-    expect(action?.diagnostics?.[0].message).toContain("Launch/Jump required")
+    const d = action?.diagnostics?.[0]
+    if (d?.kind !== "footingViolation") throw new Error("unreachable")
+    expect(d.isLand).toBe(false)
   })
 
   it("grounded entry into a { land } stage reports 'nothing to land from'", () => {
@@ -826,8 +827,9 @@ describe("runSimulation — footing violation diagnostics", () => {
     })
     const action = actionFor(result, "e1")
     expect(action?.diagnostics).toHaveLength(1)
-    expect(action?.diagnostics?.[0].kind).toBe("footingViolation")
-    expect(action?.diagnostics?.[0].message).toContain("Nothing to land from")
+    const d = action?.diagnostics?.[0]
+    if (d?.kind !== "footingViolation") throw new Error("unreachable")
+    expect(d.isLand).toBe(true)
   })
 
   it("an air stage after a launch raises no diagnostic", () => {

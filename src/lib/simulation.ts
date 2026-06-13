@@ -482,14 +482,7 @@ function footingDiagnostics(
     return []
   }
   const isLand = typeof footing === "object" && "land" in footing
-  return [
-    {
-      kind: "footingViolation",
-      message: isLand
-        ? "Nothing to land from — not currently airborne"
-        : "Launch/Jump required before an aerial stage",
-    },
-  ]
+  return [{ kind: "footingViolation", isLand }]
 }
 
 function computeFall(

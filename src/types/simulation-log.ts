@@ -32,12 +32,18 @@ export interface DelayBreakdown {
  * An engine-emitted warning about an executed action — the action proceeded,
  * but the simulation observed something a real play could not do (impossible
  * entry footing) or would not allow (casting below a resource cost). Carried on
- * the action's ActionEvent and surfaced on its timeline row.
+ * the action's ActionEvent and surfaced on its timeline row. Stores the data
+ * each finding needs; the wording lives in the row-messages catalog.
  */
-export interface Diagnostic {
-  kind: "footingViolation" | "insufficientEnergy" | "insufficientConcerto"
-  message: string
-}
+export type Diagnostic =
+  | { kind: "footingViolation"; isLand: boolean }
+  | { kind: "insufficientEnergy"; actor: string; energy: number; cost: number }
+  | {
+      kind: "insufficientConcerto"
+      actor: string
+      concerto: number
+      cost: number
+    }
 
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"

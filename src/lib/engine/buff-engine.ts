@@ -396,7 +396,9 @@ export class BuffEngine {
           const name = character ? character.name : `id ${event.characterId}`
           this.diagnostics.push({
             kind: "insufficientEnergy",
-            message: `${name} cast Liberation below cost (${Math.floor(energy)} / ${cost} energy)`,
+            actor: name,
+            energy,
+            cost,
           })
         }
         this.setResource(
@@ -416,7 +418,9 @@ export class BuffEngine {
           const name = character ? character.name : `id ${event.characterId}`
           this.diagnostics.push({
             kind: "insufficientConcerto",
-            message: `${name} cast Outro below cost (${Math.floor(concerto)} / ${OUTRO_CONCERTO_COST} concerto)`,
+            actor: name,
+            concerto,
+            cost: OUTRO_CONCERTO_COST,
           })
         }
         // Full drain — surplus above 100 is wasted by design.

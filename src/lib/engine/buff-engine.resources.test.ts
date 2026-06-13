@@ -154,9 +154,10 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 0,
     })
     expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics[0].kind).toBe("insufficientEnergy")
-    expect(result.diagnostics[0].message).toContain("Test Character")
-    expect(result.diagnostics[0].message).toContain("0")
+    const d = result.diagnostics[0]
+    if (d.kind !== "insufficientEnergy") throw new Error("unreachable")
+    expect(d.actor).toBe("Test Character")
+    expect(d.energy).toBe(0)
     expect(engine.getResource(1).energy).toBe(0)
   })
 
@@ -235,8 +236,9 @@ describe("BuffEngine — resource state (#58)", () => {
       resonanceCost: 125,
     })
     expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics[0].kind).toBe("insufficientEnergy")
-    expect(result.diagnostics[0].message).toContain("125")
+    const d = result.diagnostics[0]
+    if (d.kind !== "insufficientEnergy") throw new Error("unreachable")
+    expect(d.cost).toBe(125)
     expect(engine.getResource(1).energy).toBe(0)
   })
 
@@ -313,8 +315,10 @@ describe("BuffEngine — resource state (#58)", () => {
       frame: 1,
     })
     expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics[0].kind).toBe("insufficientConcerto")
-    expect(result.diagnostics[0].message).toContain("Test Character")
+    const d = result.diagnostics[0]
+    if (d.kind !== "insufficientConcerto") throw new Error("unreachable")
+    expect(d.actor).toBe("Test Character")
+    expect(d.concerto).toBe(50)
     expect(engine.getResource(1).concerto).toBe(0)
   })
 
