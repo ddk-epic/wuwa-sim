@@ -156,7 +156,7 @@ describe("team encoding", () => {
     }
   })
 
-  it("roundtrips the team name (VERSION 2)", () => {
+  it("roundtrips the team name", () => {
     const payload = basePayload()
     payload.team.name = "Sanhua Hypercarry"
     expect(decodePayload(encodePayload(payload)).team.name).toBe(
@@ -170,17 +170,10 @@ describe("team encoding", () => {
     expect(decodePayload(encodePayload(payload)).team.name).toBe("凍結 ❄️ team")
   })
 
-  it("decodes a v1 code (no name) with the name defaulting to empty string", () => {
-    // A v2 encode of name="" is bytes [2, 0, …]; the equivalent v1 buffer is
-    // [1, …rest] (no version-2 name byte). Reconstruct one and decode it.
-    const payload = basePayload()
-    payload.team.name = ""
-    const v2Bytes = base91Decode(encodePayload(payload))
-    const v1Bytes = new Uint8Array([1, ...v2Bytes.slice(2)])
-    const decoded = decodePayload(base91Encode(v1Bytes))
-    expect(decoded.team.name).toBe("")
-    expect(decoded.team.slots).toEqual(payload.team.slots)
-    expect(decoded.team.focusedId).toBe(payload.team.focusedId)
+  it("rejects a superseded v2 code", () => {
+    const bytes = base91Decode(encodePayload(basePayload()))
+    const v2Bytes = new Uint8Array([2, ...bytes.slice(1)])
+    expect(() => decodePayload(base91Encode(v2Bytes))).toThrow(/version/i)
   })
 })
 
@@ -299,6 +292,58 @@ describe("timeline encoding", () => {
         "char.encore.heavy-attack.heavy-attack.charge::heavy-attack",
       )
     }
+  })
+
+  it("appending a character leaves existing codes decoding to the same stages", async () => {
+    const code = encodePayload({
+      ...basePayload(),
+      timeline: [
+        {
+          kind: "entry" as const,
+          id: "e1",
+          characterId: CHAR_A.id,
+          stageId:
+            "char.sanhua.basic-attack.normal-attack.stage-2::basic-attack",
+          variantKind: undefined,
+        },
+        {
+          kind: "entry" as const,
+          id: "e2",
+          characterId: CHAR_B.id,
+          stageId: "char.encore.heavy-attack.heavy-attack.charge::heavy-attack",
+          variantKind: undefined,
+        },
+      ],
+    })
+
+    // A new character whose ids sort ahead of the others — under a global sorted
+    // index this would have reindexed CHAR_A/CHAR_B's stages.
+    const CHAR_C = {
+      id: 9999,
+      name: "Aalto",
+      skills: [
+        {
+          name: "Normal Attack",
+          stages: [{ name: "Aaa DMG", category: "Basic Attack" }],
+        },
+      ],
+      buffs: [],
+    }
+    vi.resetModules()
+    vi.doMock("#/data/characters", () => ({
+      ALL_CHARACTERS: [CHAR_A, CHAR_B, CHAR_C],
+    }))
+    const { decodePayload: decodeWithAppended } =
+      await import("#/lib/import-export")
+
+    const decoded = decodeWithAppended(code)
+    const ids = decoded.timeline!.map((n) => n.kind === "entry" && n.stageId)
+    expect(ids).toEqual([
+      "char.sanhua.basic-attack.normal-attack.stage-2::basic-attack",
+      "char.encore.heavy-attack.heavy-attack.charge::heavy-attack",
+    ])
+    vi.doUnmock("#/data/characters")
+    vi.resetModules()
   })
 
   it("roundtrips mixed entry and group nodes", () => {

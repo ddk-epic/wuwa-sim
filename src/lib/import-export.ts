@@ -25,17 +25,14 @@ const COST4_MAINS = ["scaling", "cr", "cd"] as const
 const COST3_MAINS = ["scaling", "er", "elemDmg"] as const
 const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
 
-// Sorted list of all stageIds across all characters and echoes.
-const ALL_STAGE_IDS: readonly string[] = (() => {
-  const ids = new Set<string>()
-  for (const char of ALL_CHARACTERS) {
-    for (const id of compileCharacter(char).stageIndex.keys()) ids.add(id)
-  }
-  for (const echo of ALL_ECHOES) {
-    for (const id of compileEcho(echo).stageIndex.keys()) ids.add(id)
-  }
-  return [...ids].sort()
-})()
+// A stage encodes as an ordinal into its character's own stages, with echo
+// stages appended as a shared suffix; appending a character shifts neither.
+const CHAR_STAGE_IDS: readonly (readonly string[])[] = ALL_CHARACTERS.map(
+  (char) => [...compileCharacter(char).stageIndex.keys()],
+)
+const ECHO_STAGE_IDS: readonly string[] = ALL_ECHOES.flatMap((echo) => [
+  ...compileEcho(echo).stageIndex.keys(),
+])
 
 // ---- Byte writer / reader ----
 class Writer {
@@ -97,16 +94,21 @@ const echoSetIdx = (id: number | null) => {
   if (i < 0) throw new Error(`Unknown echo set id ${id}`)
   return i
 }
-const stageIdx = (stageId: string) => {
-  const i = ALL_STAGE_IDS.indexOf(stageId)
-  if (i < 0) throw new Error(`Unknown stageId "${stageId}"`)
-  return i
+const stageIdx = (charByte: number, stageId: string) => {
+  const own = CHAR_STAGE_IDS[charByte]
+  const i = own.indexOf(stageId)
+  if (i >= 0) return i
+  const j = ECHO_STAGE_IDS.indexOf(stageId)
+  if (j >= 0) return own.length + j
+  throw new Error(`Unknown stageId "${stageId}"`)
+}
+const stageId = (charByte: number, ord: number) => {
+  const own = CHAR_STAGE_IDS[charByte]
+  return ord < own.length ? own[ord] : ECHO_STAGE_IDS[ord - own.length]
 }
 
 // ---- Encode ----
-// VERSION 2 adds team.name right after the version byte; v1 codes (no name)
-// stay decodable, defaulting the name to "".
-const VERSION = 2
+const VERSION = 3
 
 export function encodePayload(payload: ImportExportPayload): string {
   const w = new Writer()
@@ -140,8 +142,9 @@ export function encodePayload(payload: ImportExportPayload): string {
     for (const node of timeline) {
       if (node.kind === "entry") {
         w.push(0)
-        w.push(charIdx(node.characterId))
-        w.push(stageIdx(node.stageId))
+        const ci = charIdx(node.characterId)
+        w.push(ci)
+        w.push(stageIdx(ci, node.stageId))
         w.push(
           node.variantKind ? VARIANT_KINDS.indexOf(node.variantKind) + 1 : 0,
         )
@@ -151,8 +154,9 @@ export function encodePayload(payload: ImportExportPayload): string {
         w.str(node.label)
         w.push(node.entries.length)
         for (const e of node.entries) {
-          w.push(charIdx(e.characterId))
-          w.push(stageIdx(e.stageId))
+          const ci = charIdx(e.characterId)
+          w.push(ci)
+          w.push(stageIdx(ci, e.stageId))
           w.push(e.variantKind ? VARIANT_KINDS.indexOf(e.variantKind) + 1 : 0)
         }
       }
@@ -170,7 +174,7 @@ function readEntry(r: Reader): TimelineEntry {
   return {
     id: crypto.randomUUID(),
     characterId: ALL_CHARACTERS[ci].id,
-    stageId: ALL_STAGE_IDS[si],
+    stageId: stageId(ci, si),
     variantKind: vk === 0 ? undefined : VARIANT_KINDS[vk - 1],
   }
 }
@@ -186,11 +190,10 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const r = new Reader(data)
 
   const version = r.next()
-  if (version !== 1 && version !== 2)
+  if (version !== VERSION)
     throw new Error(`Unsupported format version ${version}`)
 
-  // VERSION 2 carries the team name right after the version byte; v1 has none.
-  const name = version >= 2 ? r.str() : ""
+  const name = r.str()
 
   const focusedIdx = r.nullable()
   const focusedId = focusedIdx === null ? null : ALL_CHARACTERS[focusedIdx].id
