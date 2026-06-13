@@ -35,4 +35,36 @@ describe("renderMessage", () => {
       }),
     ).toBe("Test Character cast Outro below cost (50 / 100 concerto)")
   })
+
+  it("renders validator findings with raw stage IDs", () => {
+    expect(renderMessage({ kind: "introNeedsOutro" })).toBe(
+      "Intro Skill must immediately follow an Outro Skill",
+    )
+    expect(renderMessage({ kind: "characterNotInTeam" })).toBe(
+      "Character is not in the team",
+    )
+    expect(renderMessage({ kind: "unknownCharacter" })).toBe(
+      "Unknown character",
+    )
+    expect(renderMessage({ kind: "stageNotFound", stageId: "a::b" })).toBe(
+      'Stage "a::b" not found',
+    )
+    expect(
+      renderMessage({
+        kind: "missingChainPrereq",
+        stageId: "a::b",
+        requiredStageId: "a::pre",
+      }),
+    ).toBe('Stage "a::b" requires "a::pre" to immediately precede it')
+    expect(
+      renderMessage({
+        kind: "missingWindowedPrereq",
+        stageId: "a::b",
+        requiredStageId: "a::pre",
+      }),
+    ).toBe('Stage "a::b" requires a prior "a::pre" on the same character')
+    expect(renderMessage({ kind: "swapForcesDifferentChar" })).toBe(
+      "Swap forces the next entry to be a different character",
+    )
+  })
 })

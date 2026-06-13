@@ -2,6 +2,7 @@ import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
 import { findStageByEntry } from "../compile-character"
+import { renderMessage, type ValidatorMessage } from "./row-messages"
 
 // Footing is deliberately NOT validated here. Footing rules are frame-dependent
 // (variant advances, Reaction Delay, trailing-window commits), so a static walk
@@ -24,7 +25,7 @@ export interface ValidationResult {
 }
 
 interface InternalError {
-  message: string
+  finding: ValidatorMessage
   isConsequence: boolean
 }
 
@@ -53,7 +54,7 @@ export function validateTimeline(
         : null
       if (prevSkillType !== "Outro Skill") {
         errors.push({
-          message: "Intro Skill must immediately follow an Outro Skill",
+          finding: { kind: "introNeedsOutro" },
           isConsequence: false,
         })
       }
@@ -62,16 +63,19 @@ export function validateTimeline(
     const slotIndex = slots.indexOf(entry.characterId)
     if (slotIndex === -1) {
       errors.push({
-        message: "Character is not in the team",
+        finding: { kind: "characterNotInTeam" },
         isConsequence: false,
       })
     } else if (skillType === null) {
       const character = getCharacterById(entry.characterId)
       if (!character) {
-        errors.push({ message: "Unknown character", isConsequence: false })
+        errors.push({
+          finding: { kind: "unknownCharacter" },
+          isConsequence: false,
+        })
       } else {
         errors.push({
-          message: `Stage "${entry.stageId}" not found`,
+          finding: { kind: "stageNotFound", stageId: entry.stageId },
           isConsequence: false,
         })
       }
@@ -90,12 +94,20 @@ export function validateTimeline(
         }
         if (!anchor) {
           errors.push({
-            message: `Stage "${entry.stageId}" requires a prior "${requiredStageId}" on the same character`,
+            finding: {
+              kind: "missingWindowedPrereq",
+              stageId: entry.stageId,
+              requiredStageId,
+            },
             isConsequence: false,
           })
         } else if (invalidRowIds.has(anchor.id)) {
           errors.push({
-            message: `Stage "${entry.stageId}" requires a prior "${requiredStageId}" on the same character`,
+            finding: {
+              kind: "missingWindowedPrereq",
+              stageId: entry.stageId,
+              requiredStageId,
+            },
             isConsequence: true,
           })
         }
@@ -110,12 +122,20 @@ export function validateTimeline(
         }
         if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
           errors.push({
-            message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
+            finding: {
+              kind: "missingChainPrereq",
+              stageId: entry.stageId,
+              requiredStageId,
+            },
             isConsequence: false,
           })
         } else if (invalidRowIds.has(effectivePrev.id)) {
           errors.push({
-            message: `Stage "${entry.stageId}" requires "${requiredStageId}" to immediately precede it`,
+            finding: {
+              kind: "missingChainPrereq",
+              stageId: entry.stageId,
+              requiredStageId,
+            },
             isConsequence: true,
           })
         }
@@ -133,7 +153,7 @@ export function validateTimeline(
   for (const [id, errs] of internalErrors) {
     const directErrors = errs
       .filter((e) => !e.isConsequence)
-      .map((e) => ({ message: e.message }))
+      .map((e) => ({ message: renderMessage(e.finding) }))
     if (directErrors.length > 0) {
       rowErrors.set(id, directErrors)
     }
@@ -148,7 +168,7 @@ export function validateTimeline(
     ) {
       const existing = rowWarnings.get(entry.id) ?? []
       existing.push({
-        message: "Swap forces the next entry to be a different character",
+        message: renderMessage({ kind: "swapForcesDifferentChar" }),
       })
       rowWarnings.set(entry.id, existing)
     }
