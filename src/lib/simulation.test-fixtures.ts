@@ -70,6 +70,7 @@ export function makeChar(
     element: "Fusion",
     weaponType: "Sword",
     rarity: "5",
+    maxEnergy: 100,
     stats: {
       base: { hp: 0, atk: 0, def: 0 },
       max: { hp: 0, atk: 1000, def: 0 },

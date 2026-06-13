@@ -6,6 +6,7 @@ export const shorekeeper = {
   element: "Spectro",
   weaponType: "Rectifier",
   rarity: "SSR",
+  maxEnergy: 175,
   template: {
     weapon: "Stellar Symphony",
     echo: "Fallacy of No Return",

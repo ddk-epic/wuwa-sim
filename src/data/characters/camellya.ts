@@ -6,6 +6,7 @@ export const camellya = {
   element: "Havoc",
   weaponType: "Sword",
   rarity: "SSR",
+  maxEnergy: 125,
   template: {
     weapon: "Red Spring",
     echo: "Nightmare: Crownless",

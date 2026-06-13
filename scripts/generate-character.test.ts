@@ -81,6 +81,7 @@ const charWithSkills: Character = {
       id: 4,
       name: "Cosmos Rave",
       type: "Resonance Liberation",
+      resonanceCost: 125,
       stages: [
         {
           name: "Cosmos: Frolicking Stage 1 DMG",
@@ -128,6 +129,11 @@ describe("formatCharacter", () => {
     const out = formatCharacter(charWithBonuses, "testHero")
     expect(out).toContain('"Fusion DMG Bonus",')
     expect(out).toContain('"ATK",')
+  })
+
+  it("captures maxEnergy from the liberation skill's resonanceCost", () => {
+    const out = formatCharacter(charWithSkills, "testHero")
+    expect(out).toContain("maxEnergy: 125,")
   })
 
   it("emits stats base and max", () => {

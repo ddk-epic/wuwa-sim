@@ -173,6 +173,16 @@ function formatSkill(
 }
 
 export function formatCharacter(char: Character, varName: string): string {
+  // Walk the skills, formatting each and capturing the liberation cost inline
+  // (source of truth for the top-level maxEnergy field). Real API data always
+  // carries it; default to 0 so a reviewer notices when it is missing.
+  let maxEnergy = 0
+  const skillLines: string[] = []
+  for (const skill of char.skills) {
+    if (skill.resonanceCost !== undefined) maxEnergy = skill.resonanceCost
+    skillLines.push(formatSkill(skill, 2) + ",")
+  }
+
   const lines: string[] = [
     `import type { EnrichedCharacter } from '#/types/character'`,
     ``,
@@ -182,6 +192,7 @@ export function formatCharacter(char: Character, varName: string): string {
     `  element: ${s(char.element)},`,
     `  weaponType: ${s(char.weaponType)},`,
     `  rarity: ${s(char.rarity)},`,
+    `  maxEnergy: ${maxEnergy},`,
     `  template: {`,
     `    weapon: '',`,
     `    echo: '',`,
@@ -196,15 +207,11 @@ export function formatCharacter(char: Character, varName: string): string {
     `  ],`,
     `  buffs: [],`,
     `  skills: [`,
+    ...skillLines,
+    `  ],`,
+    `} satisfies EnrichedCharacter`,
+    ``,
   ]
-
-  for (const skill of char.skills) {
-    lines.push(formatSkill(skill, 2) + ",")
-  }
-
-  lines.push(`  ],`)
-  lines.push(`} satisfies EnrichedCharacter`)
-  lines.push(``)
 
   return lines.join("\n")
 }

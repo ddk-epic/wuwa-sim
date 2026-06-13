@@ -6,6 +6,7 @@ export const sanhua = {
   element: "Glacio",
   weaponType: "Sword",
   rarity: "SR",
+  maxEnergy: 100,
   template: {
     weapon: "Emerald of Genesis",
     echo: "Impermanence Heron",

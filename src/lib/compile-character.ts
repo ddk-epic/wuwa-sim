@@ -322,6 +322,13 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
   const charSlug = toKebab(char.name)
   assertKey(charSlug, owner)
 
+  const liberation = char.skills.find((s) => s.resonanceCost !== undefined)
+  if (liberation && liberation.resonanceCost !== char.maxEnergy) {
+    throw new Error(
+      `${char.name}: liberation resonanceCost (${liberation.resonanceCost}) disagrees with maxEnergy (${char.maxEnergy})`,
+    )
+  }
+
   const stageIndex = new Map<string, StageInfo>()
   const refIndex = new Map<string, Map<string, string>>()
 

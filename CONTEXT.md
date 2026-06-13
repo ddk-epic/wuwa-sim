@@ -229,6 +229,9 @@ The per-character resource that gates **Resonance Liberation**. Two gain channel
   Sim deliberately does not cap energy — overflow is a useful optimization signal indicating the user has spare ER they could redirect to other stats.
   _Avoid_: confusing with the **Resonance** resource, a separate per-character counter on `ResourceState`.
 
+**Max Energy**:
+`EnrichedCharacter.maxEnergy` — the full-bar energy value for a character's Resonance, equal to its Resonance Liberation cost (sourced from the API json; the generator lifts the liberation skill's `resonanceCost` into this required top-level field). A _nominal ceiling_ (the "full" value), **not** an enforced runtime cap — energy may still overflow past it (see no-cap note above). Used to seed energy when "start with full energy" is enabled, and as the canonical max for a character. The liberation skill retains a `resonanceCost` annotation for skimmability; it must equal `maxEnergy`.
+
 **Shared Energy**:
 Each non-synthetic Damage Entry distributes 50% of the actor's **post-ER** gain to every teammate: `teammateGain = entryEnergy × 0.5 × (1 + actorER)`. The teammate's own ER does not apply to the shared portion. For flat Intro Skill energy the share is also flat (`entryEnergy × 0.5`, no ER). Synthetic hits do not share energy. Buff-driven (flat) energy grants do not share.
 

@@ -6,6 +6,7 @@ export const cartethyia = {
   element: "Aero",
   weaponType: "Sword",
   rarity: "SSR",
+  maxEnergy: 125,
   template: {
     weapon: "Defier's Thorn",
     echo: "Reminiscence: Fleurdelys",

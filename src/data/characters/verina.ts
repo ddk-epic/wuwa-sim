@@ -6,6 +6,7 @@ export const verina = {
   element: "Spectro",
   weaponType: "Rectifier",
   rarity: "SSR",
+  maxEnergy: 175,
   forteCap: 4,
   template: {
     weapon: "Variation",

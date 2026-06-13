@@ -6,6 +6,7 @@ export const encore = {
   element: "Fusion",
   weaponType: "Rectifier",
   rarity: "SSR",
+  maxEnergy: 125,
   template: {
     weapon: "Stringmaster",
     echo: "Inferno Rider",

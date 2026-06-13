@@ -204,6 +204,8 @@ export interface CharacterTemplate {
 }
 
 export interface EnrichedCharacter extends Omit<Character, "skills" | "buffs"> {
+  /** Full-bar energy value, equal to the Resonance Liberation cost. */
+  maxEnergy: number
   skills: EnrichedSkill[]
   buffs: BuffDef[]
   forteCap?: number

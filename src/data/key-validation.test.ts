@@ -15,6 +15,15 @@ describe("key validation", () => {
     for (const e of ALL_ECHOES) expect(() => compileEcho(e)).not.toThrow()
   })
 
+  it("throws when liberation resonanceCost disagrees with maxEnergy", () => {
+    const withCost = ALL_CHARACTERS.find((c) =>
+      c.skills.some((s) => s.resonanceCost !== undefined),
+    )
+    expect(withCost).toBeDefined()
+    const drifted = { ...withCost!, maxEnergy: withCost!.maxEnergy + 1 }
+    expect(() => compileCharacter(drifted)).toThrow(/disagrees with maxEnergy/)
+  })
+
   it("character and echo slugs are globally unique and well-formed", () => {
     const slugs = [
       ...ALL_CHARACTERS.map((c) => toKebab(c.name)),
