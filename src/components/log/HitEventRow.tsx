@@ -12,6 +12,7 @@ import {
   WaitCell,
 } from "./log-cells"
 import { PoolValue } from "../ui/PoolValue"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import { HitEventDetail } from "./HitEventDetail"
 import {
   formatDMGPctCell,
@@ -34,6 +35,7 @@ export function HitEventRow({
   showWait?: boolean
 }) {
   const snap = ev.statsSnapshot
+  const maxEnergy = getCharacterById(ev.characterId)?.maxEnergy ?? 100
   return (
     <Fragment>
       <tr
@@ -54,10 +56,18 @@ export function HitEventRow({
           <SkillNameSuffix ev={ev} />
         </td>
         <td className={numCell}>
-          <PoolValue value={ev.cumulativeConcerto} color="var(--ui-concerto)" />
+          <PoolValue
+            value={ev.cumulativeConcerto}
+            resource="concerto"
+            threshold={100}
+          />
         </td>
         <td className={numCell}>
-          <PoolValue value={ev.cumulativeEnergy} color="var(--ui-resonance)" />
+          <PoolValue
+            value={ev.cumulativeEnergy}
+            resource="energy"
+            threshold={maxEnergy}
+          />
         </td>
         <td className={numCell}>
           <span className="font-semibold text-sm text-yellow-400">

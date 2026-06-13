@@ -28,6 +28,8 @@ export type RenderItem =
       gradient: string
       dominantHex: string
       distinctCharIds: number[]
+      /** Character id of the group's last entry — drives the endpoint energy threshold. */
+      lastCharId: number | null
       /** Index of this group among all top-level nodes */
       containerIndex: number
       /** Set by applyDragPreview to collapse the entire group block while dragging. */
@@ -199,6 +201,7 @@ export function buildTimelineRenderItems(
         gradient,
         dominantHex,
         distinctCharIds,
+        lastCharId: node.entries.at(-1)?.characterId ?? null,
         containerIndex: nodeIndex,
       })
       if (isExpanded) {

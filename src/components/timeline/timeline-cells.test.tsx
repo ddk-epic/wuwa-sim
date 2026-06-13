@@ -29,11 +29,13 @@ describe("timeline-cells", () => {
 
   it("PoolCell adds opacity-40 only when stale", () => {
     expect(
-      renderCell(<PoolCell value={50} color="var(--ui-concerto)" />).className,
+      renderCell(<PoolCell value={50} resource="concerto" threshold={100} />)
+        .className,
     ).not.toContain("opacity-40")
     expect(
-      renderCell(<PoolCell value={50} color="var(--ui-concerto)" stale />)
-        .className,
+      renderCell(
+        <PoolCell value={50} resource="concerto" threshold={100} stale />,
+      ).className,
     ).toContain("opacity-40")
   })
 })

@@ -11,6 +11,7 @@ import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
 import { HexPill } from "#/components/ui/HexPill"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { useRenamingGroup } from "#/hooks/useRenamingGroup"
 import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
@@ -54,6 +55,7 @@ export function TimelineGroupHeader({
     entryCount,
     dominantHex,
     distinctCharIds,
+    lastCharId,
     gradient,
     containerIndex,
   } = item
@@ -66,6 +68,9 @@ export function TimelineGroupHeader({
   const totalDamage = gs?.totalDamage ?? null
   const lastConVal = isExpanded ? null : (gs?.endConcerto ?? null)
   const lastResVal = isExpanded ? null : (gs?.endEnergy ?? null)
+  const lastMaxEnergy =
+    (lastCharId !== null ? getCharacterById(lastCharId)?.maxEnergy : null) ??
+    100
 
   function handleToggleExpand(e: React.MouseEvent) {
     e.stopPropagation()
@@ -158,8 +163,12 @@ export function TimelineGroupHeader({
         </div>
       </td>
       <DurationCell frames={totalDurFrames} />
-      <PoolCell value={lastConVal} color="var(--ui-concerto)" />
-      <PoolCell value={lastResVal} color="var(--ui-resonance)" />
+      <PoolCell value={lastConVal} resource="concerto" threshold={100} />
+      <PoolCell
+        value={lastResVal}
+        resource="energy"
+        threshold={lastMaxEnergy}
+      />
       <td className="px-1 py-1.5 font-semibold text-right font-mono">
         {totalDamage !== null ? (
           isExpanded ? (

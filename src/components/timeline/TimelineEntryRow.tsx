@@ -6,6 +6,7 @@ import { formatVariantKind } from "#/lib/format-variant-kind"
 import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
 import { DelayBadge } from "#/components/ui/DelayBadge"
+import { getCharacterById } from "#/lib/loadout/catalog"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -77,6 +78,7 @@ export function TimelineEntryRow({
 
   const conVal = row.cumulativeConcerto
   const resVal = row.cumulativeEnergy
+  const maxEnergy = getCharacterById(entry.characterId)?.maxEnergy ?? 100
 
   const charSwitched =
     prevEntry === null || prevEntry.characterId !== entry.characterId
@@ -180,8 +182,18 @@ export function TimelineEntryRow({
         </div>
       </td>
       <DurationCell frames={row.durationFrames} />
-      <PoolCell value={conVal} color="var(--ui-concerto)" stale={stale} />
-      <PoolCell value={resVal} color="var(--ui-resonance)" stale={stale} />
+      <PoolCell
+        value={conVal}
+        resource="concerto"
+        threshold={100}
+        stale={stale}
+      />
+      <PoolCell
+        value={resVal}
+        resource="energy"
+        threshold={maxEnergy}
+        stale={stale}
+      />
       <td
         className={`px-1 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
       >

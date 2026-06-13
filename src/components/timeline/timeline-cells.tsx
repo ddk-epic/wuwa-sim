@@ -1,5 +1,5 @@
 import { formatFrames } from "#/lib/format"
-import { PoolValue } from "../ui/PoolValue"
+import { PoolValue, type PoolResource } from "../ui/PoolValue"
 import { WaitBadge } from "../ui/WaitBadge"
 
 /** Leading time cell, accented in the damage color. */
@@ -35,18 +35,20 @@ export function DurationCell({ frames }: { frames: number }) {
 /** Concerto/resonance pool cell. `stale` dims the entry row when the log is out of date. */
 export function PoolCell({
   value,
-  color,
+  resource,
+  threshold,
   stale,
 }: {
   value: number | null
-  color: string
+  resource: PoolResource
+  threshold: number
   stale?: boolean
 }) {
   return (
     <td
       className={`px-2 py-2 text-right font-mono${stale ? " opacity-40" : ""}`}
     >
-      <PoolValue value={value} color={color} />
+      <PoolValue value={value} resource={resource} threshold={threshold} />
     </td>
   )
 }

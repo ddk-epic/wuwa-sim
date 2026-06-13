@@ -17,6 +17,7 @@ function groupHeaderItem(
     gradient: "",
     dominantHex: "#888",
     distinctCharIds: [],
+    lastCharId: null,
     containerIndex: 0,
     ...opts,
   }

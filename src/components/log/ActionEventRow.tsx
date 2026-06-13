@@ -10,6 +10,7 @@ import {
   StatPad,
 } from "./log-cells"
 import { PoolValue } from "../ui/PoolValue"
+import { getCharacterById } from "#/lib/loadout/catalog"
 
 export function ActionEventRow({
   ev,
@@ -20,6 +21,7 @@ export function ActionEventRow({
   index: number
   showWait?: boolean
 }) {
+  const maxEnergy = getCharacterById(ev.characterId)?.maxEnergy ?? 100
   return (
     <tr className="border-t border-border/60">
       <IndexCell index={index} />
@@ -36,10 +38,18 @@ export function ActionEventRow({
         <SkillNameSuffix ev={ev} />
       </td>
       <td className={numCell}>
-        <PoolValue value={ev.cumulativeConcerto} color="var(--ui-concerto)" />
+        <PoolValue
+          value={ev.cumulativeConcerto}
+          resource="concerto"
+          threshold={100}
+        />
       </td>
       <td className={numCell}>
-        <PoolValue value={ev.cumulativeEnergy} color="var(--ui-resonance)" />
+        <PoolValue
+          value={ev.cumulativeEnergy}
+          resource="energy"
+          threshold={maxEnergy}
+        />
       </td>
       <td className={numCell}>
         <span className="text-muted-foreground/40">—</span>
