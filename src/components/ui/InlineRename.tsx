@@ -24,19 +24,38 @@ export interface InlineRenameProps {
   title?: string
   /** Sizing / typography applied to the text + input (e.g. "text-3xl font-bold"). */
   className?: string
+  /** Extra classes applied only to the <input> while editing (e.g. a width). */
+  inputClassName?: string
   /**
    * Styling for the box that wraps the field — padding, rounding, and (for a
    * fixed writing area) width. Defaults to a tight, slightly-rounded box.
    */
   wrapperClassName?: string
+  /**
+   * Wrapper classes applied only when the field is interactive (not read-only).
+   * Carries the underline + any hover/focus width animation; supplying it moves
+   * the accent underline from the text to the wrapper box so it spans the full
+   * (possibly animating) width, and enables width-keyword interpolation.
+   */
+  activeWrapperClassName?: string
+  /** Render as static text: no underline, no hover, no click-to-edit. */
+  readOnly?: boolean
+  /**
+   * Uncontrolled only: start (or enter) edit mode when this becomes true — e.g.
+   * a just-created row that should accept a name immediately. Ignored when
+   * `editing` is supplied.
+   */
+  autoEdit?: boolean
   style?: React.CSSProperties
 }
 
 /**
  * Inline-editable text label. A padded box wraps the field; on hover or while
- * editing an accent underline eases in inside it. Click the text to edit;
- * Enter/blur commits, Escape reverts. Works controlled (pass editing/
- * onEditingChange) or uncontrolled.
+ * editing an accent underline eases in. Click the text to edit; Enter/blur
+ * commits, Escape reverts. Works controlled (pass editing/onEditingChange) or
+ * uncontrolled. Pass `activeWrapperClassName` to put the underline on the box
+ * and animate its width (e.g. content-width at rest, expanding to an edit
+ * width on hover); pass `readOnly` to render it as static, uneditable text.
  */
 export function InlineRename({
   value,
@@ -49,11 +68,17 @@ export function InlineRename({
   ariaLabel,
   title,
   className = "",
+  inputClassName = "",
   wrapperClassName = "rounded-sm px-1.5 py-0.5 -mx-1.5",
+  activeWrapperClassName,
+  readOnly = false,
+  autoEdit = false,
   style,
 }: InlineRenameProps) {
-  const [internalEditing, setInternalEditing] = useState(false)
   const isControlled = editing !== undefined
+  const [internalEditing, setInternalEditing] = useState(
+    () => !isControlled && autoEdit,
+  )
   const isEditing = isControlled ? editing : internalEditing
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -65,28 +90,66 @@ export function InlineRename({
   }
 
   useEffect(() => {
+    if (!isControlled && autoEdit) setInternalEditing(true)
+  }, [autoEdit, isControlled])
+
+  useEffect(() => {
     if (isEditing && autoFocus) {
       inputRef.current?.focus()
       inputRef.current?.select()
     }
   }, [isEditing, autoFocus])
 
-  // The accent underline sits inside the field box — transparent at rest (its 1px
-  // space reserved so nothing reflows), revealed on hover / focus-within.
-  const wrapperClass =
-    "group inline-flex items-center border border-transparent " +
-    "transition-colors duration-300 cursor-text " +
-    wrapperClassName
-  const innerClass =
-    "min-w-0 bg-transparent outline-none border-b border-transparent " +
-    "transition-colors duration-300 " +
-    "group-hover:border-[var(--rename-accent)] " +
-    "group-focus-within:border-[var(--rename-accent)] " +
-    className
-
   const wrapperStyle = {
     "--rename-accent": accentColor ?? DEFAULT_ACCENT,
   } as React.CSSProperties
+
+  if (readOnly) {
+    // Reserve the same transparent bottom border as the editable box so toggling
+    // lock neither shifts by 1px nor flashes a fading underline (the reused DOM
+    // node would otherwise animate border-color from currentColor to transparent).
+    return (
+      <span
+        className={`inline-flex items-center border-b border-transparent ${wrapperClassName}`}
+        style={wrapperStyle}
+        title={title}
+      >
+        <span className={`min-w-0 block truncate ${className}`} style={style}>
+          {value || (
+            <span className="italic text-muted font-normal">
+              {placeholder ?? ""}
+            </span>
+          )}
+        </span>
+      </span>
+    )
+  }
+
+  // `box` mode (activeWrapperClassName present): the underline lives on the
+  // wrapper so it spans the full, possibly-animating width; the caller's classes
+  // supply the hover/focus width. `text` mode: the underline sits under the text
+  // and its 1px is reserved so nothing reflows.
+  const box = activeWrapperClassName !== undefined
+
+  if (box) {
+    ;(wrapperStyle as Record<string, string>).interpolateSize = "allow-keywords"
+  }
+
+  const wrapperClass = box
+    ? "group inline-flex items-center cursor-text " +
+      "border-b border-transparent transition-[border-color,width] duration-300 " +
+      "hover:border-[var(--rename-accent)] focus-within:border-[var(--rename-accent)] " +
+      `${wrapperClassName} ${activeWrapperClassName}`
+    : "group inline-flex items-center border border-transparent " +
+      "transition-colors duration-300 cursor-text " +
+      wrapperClassName
+
+  const innerUnderline = box
+    ? ""
+    : "border-b border-transparent transition-colors duration-300 " +
+      "group-hover:border-[var(--rename-accent)] " +
+      "group-focus-within:border-[var(--rename-accent)] "
+  const innerClass = `min-w-0 bg-transparent outline-none ${innerUnderline}${className}`
 
   return (
     <span className={wrapperClass} style={wrapperStyle} title={title}>
@@ -96,7 +159,7 @@ export function InlineRename({
           defaultValue={value}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          className={innerClass}
+          className={`${innerClass} ${inputClassName}`}
           style={style}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

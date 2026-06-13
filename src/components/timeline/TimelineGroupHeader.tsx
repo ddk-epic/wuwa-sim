@@ -59,8 +59,7 @@ export function TimelineGroupHeader({
     gradient,
     containerIndex,
   } = item
-  const { renamingGroupId, startRename, endRename } = useRenamingGroup()
-  const isRenaming = renamingGroupId === groupId
+  const { renamingGroupId, endRename } = useRenamingGroup()
   const isDraggingThisGroup = drag.draggedId === groupId
 
   const gs = groupSummaries.get(groupId)
@@ -145,19 +144,20 @@ export function TimelineGroupHeader({
         <div className="flex items-center gap-2 min-w-0">
           <InlineRename
             value={label}
-            editing={!locked || isRenaming}
-            autoFocus={isRenaming}
+            readOnly={locked}
+            autoEdit={renamingGroupId === groupId}
             onEditingChange={(next) => {
-              if (next) startRename(groupId)
-              else endRename()
+              if (!next) endRename()
             }}
             onCommit={(l) => onGroupLabelCommit(groupId, l)}
             placeholder="unnamed"
-            title="Click to rename"
-            wrapperClassName="rounded-xl px-2 py-0.75 -m-2 w-44"
-            className="text-sm font-bold w-40"
+            title={locked ? undefined : "Click to rename"}
+            wrapperClassName="px-2 -ml-2 py-0.75 -my-2"
+            activeWrapperClassName="hover:w-40 focus-within:w-40"
+            className="text-sm font-bold"
+            inputClassName="w-full"
           />
-          <span className="text-gray-500 text-xs font-mono ml-1 shrink-0">
+          <span className="text-gray-500 text-xs font-mono shrink-0">
             {entryCount} actions
           </span>
         </div>
