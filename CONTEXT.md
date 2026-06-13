@@ -31,7 +31,7 @@ A log entry representing a single damage instance. Carries the Stat Table snapsh
 
 **Diagnostic**:
 An engine-emitted warning attached to an [[Action Event]] (`diagnostics` field) reporting that the executed action was impossible or under-resourced in real play. Three kinds: `footingViolation` (grounded entry into an air-entry stage), `insufficientEnergy` (Liberation cast below [[Resonance Cost]]), `insufficientConcerto` (Outro cast below 100 Concerto). Warn-but-proceed — the action executes unchanged; a Diagnostic is an observation, not a gate. Surfaced on the Timeline row merged into the warning channel with [[validate-timeline]]'s structural warnings, under the stale regime (it describes the last run, not the current edit). The layer split: validation stays frame-agnostic (existence, ordering); every frame-flavored or resource-dependent check lives engine-side and reports through the [[Simulation Log]] — predicting these statically means mirroring engine rules in a second place, which is how the old footing validator drifted. See ADR-0022 (run-time Diagnostics amendment), ADR-0036.
-_Avoid_: "error" (Diagnostics never invalidate a row; hard errors are the validator's structural findings), "console warning" (the console is not a transport — Diagnostics ride the log).
+_Avoid_: "error" (Diagnostics never invalidate a row; hard invalidity is the validator's structural finding), "console warning" (the console is not a transport — Diagnostics ride the log).
 
 **Stage**:
 The named sub-phase of a skill that contains the actual Damage Entries (e.g. "Stage 1", "Stage 2", "Detonate"). One Timeline Entry resolves to exactly one Stage.

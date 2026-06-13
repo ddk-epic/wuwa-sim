@@ -80,7 +80,7 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
 describe("validateTimeline — empty", () => {
   it("returns empty result for empty entries", () => {
     const result = validateTimeline([], slots, loadouts)
-    expect(result.rowErrors.size).toBe(0)
+    expect(result.rowInvalid.size).toBe(0)
     expect(result.invalidRowIds.size).toBe(0)
   })
 })
@@ -94,7 +94,7 @@ describe("validateTimeline — character in team", () => {
     )
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
-    expect(result.rowErrors.get(e.id)?.length).toBeGreaterThan(0)
+    expect(result.rowInvalid.get(e.id)?.length).toBeGreaterThan(0)
   })
 
   it("does not mark entry invalid when characterId is in a slot", () => {
@@ -105,7 +105,7 @@ describe("validateTimeline — character in team", () => {
     )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
-    expect(result.rowErrors.get(e.id)).toBeUndefined()
+    expect(result.rowInvalid.get(e.id)).toBeUndefined()
   })
 })
 
@@ -219,7 +219,7 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
     )
     const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
     expect(result.invalidRowIds.has("intro")).toBe(true)
-    expect(result.rowErrors.get("intro")?.length).toBeGreaterThan(0)
+    expect(result.rowInvalid.get("intro")?.length).toBeGreaterThan(0)
   })
 
   it("flags Intro not immediately preceded by an Outro", () => {
@@ -319,7 +319,7 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     const result = validateTimeline([s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(true)
     expect(
-      result.rowErrors.get("s2")?.some((e) => e.message.includes("requires")),
+      result.rowInvalid.get("s2")?.some((e) => e.message.includes("requires")),
     ).toBe(true)
   })
 
@@ -568,8 +568,8 @@ describe("validateTimeline — cascade suppression", () => {
       ],
     })
 
-  it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowErrors", () => {
-    // Stage 0 absent; Stage 1 -> direct error; Stage 2, Stage 3 -> cascade
+  it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowInvalid", () => {
+    // Stage 0 absent; Stage 1 -> direct invalidation; Stage 2, Stage 3 -> cascade
     testCharacters = [chainChar()]
     const s1 = entry(
       1,
@@ -588,27 +588,27 @@ describe("validateTimeline — cascade suppression", () => {
     )
     const result = validateTimeline([s1, s2, s3], [1, null, null], loadouts)
 
-    // Stage 1 has a direct error
+    // Stage 1 has a direct invalidation
     expect(result.invalidRowIds.has("s1")).toBe(true)
-    expect(result.rowErrors.get("s1")?.length).toBeGreaterThan(0)
+    expect(result.rowInvalid.get("s1")?.length).toBeGreaterThan(0)
 
     // Stage 2 is red but message-less
     expect(result.invalidRowIds.has("s2")).toBe(true)
-    expect(result.rowErrors.has("s2")).toBe(false)
+    expect(result.rowInvalid.has("s2")).toBe(false)
 
     // Stage 3 is red but message-less
     expect(result.invalidRowIds.has("s3")).toBe(true)
-    expect(result.rowErrors.has("s3")).toBe(false)
+    expect(result.rowInvalid.has("s3")).toBe(false)
   })
 
-  it("an independent error on a later row is not suppressed", () => {
+  it("an independent invalidation on a later row is not suppressed", () => {
     testCharacters = [chainChar(), baseChar({ id: 2 })]
     const s1 = entry(
       1,
       "char.test.basic-attack.normal-attack.stage-1::basic-attack",
       "s1",
     )
-    // char 99 not in team -> independent error
+    // char 99 not in team -> independent invalidation
     const independent = entry(
       99,
       "char.test.basic-attack.normal-attack.stage-1::basic-attack",
@@ -620,10 +620,10 @@ describe("validateTimeline — cascade suppression", () => {
       loadouts,
     )
 
-    // s1 has direct error (no Stage 0 before it)
-    expect(result.rowErrors.has("s1")).toBe(true)
-    // independent error is not suppressed
-    expect(result.rowErrors.has("ind")).toBe(true)
+    // s1 has direct invalidation (no Stage 0 before it)
+    expect(result.rowInvalid.has("s1")).toBe(true)
+    // independent invalidation is not suppressed
+    expect(result.rowInvalid.has("ind")).toBe(true)
   })
 
   it("accepts Stage 2 when Stage 1 is valid (no cascade)", () => {
@@ -645,7 +645,7 @@ describe("validateTimeline — cascade suppression", () => {
     )
     const result = validateTimeline([s0, s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.size).toBe(0)
-    expect(result.rowErrors.size).toBe(0)
+    expect(result.rowInvalid.size).toBe(0)
   })
 })
 
@@ -766,7 +766,7 @@ describe("validateTimeline — swap warning channel", () => {
     expect(result.rowWarnings.get("e1")).toBeUndefined()
   })
 
-  it("warnings do not affect invalidRowIds or rowErrors", () => {
+  it("warnings do not affect invalidRowIds or rowInvalid", () => {
     testCharacters = [swapChar()]
     const result = validateTimeline(
       [swapEntry("e1"), fullEntry("e2")],
@@ -774,7 +774,7 @@ describe("validateTimeline — swap warning channel", () => {
       emptyLoadoutsW,
     )
     expect(result.invalidRowIds.size).toBe(0)
-    expect(result.rowErrors.size).toBe(0)
+    expect(result.rowInvalid.size).toBe(0)
     expect(result.rowWarnings.size).toBe(1)
   })
 
@@ -825,7 +825,7 @@ describe("validateTimeline — swap warning channel", () => {
     }
     const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
     // swap variant on the preceding entry still satisfies requiresPriorStageId
-    expect(result.rowErrors.has("e2")).toBe(false)
+    expect(result.rowInvalid.has("e2")).toBe(false)
     expect(result.invalidRowIds.has("e2")).toBe(false)
   })
 })

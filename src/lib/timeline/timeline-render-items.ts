@@ -4,7 +4,7 @@ import type { SkillType } from "#/types/character"
 import type { ActionTimeStage } from "#/lib/stage"
 import type {
   ValidationResult,
-  ValidationError,
+  Invalidation,
   ValidationWarning,
 } from "#/lib/timeline/validate-timeline"
 import { getCharacterById } from "#/lib/loadout/catalog"
@@ -51,7 +51,7 @@ export type RenderItem =
       skillName: string | null
       stageWithVariants: ActionTimeStage | null
       isInvalid: boolean
-      errors: ValidationError[]
+      errors: Invalidation[]
       warnings: ValidationWarning[]
       showMessage: boolean
       /**
@@ -92,7 +92,7 @@ function buildShowMessageIds(
     for (const e of entries) {
       if (remaining === 0) return ids
       if (
-        (validation.rowErrors.get(e.id)?.length ?? 0) > 0 ||
+        (validation.rowInvalid.get(e.id)?.length ?? 0) > 0 ||
         (validation.rowWarnings.get(e.id)?.length ?? 0) > 0 ||
         (logWarnings.get(e.id)?.length ?? 0) > 0
       ) {
@@ -144,7 +144,7 @@ function resolveEntryFields(
       : null
 
   const isInvalid = validation.invalidRowIds.has(entry.id)
-  const errors = validation.rowErrors.get(entry.id) ?? []
+  const errors = validation.rowInvalid.get(entry.id) ?? []
   // Structural warnings (live, from the validator) + engine Diagnostics (from
   // the last run's log) share one display channel.
   const warnings = [

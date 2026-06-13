@@ -10,7 +10,7 @@ import { renderMessage, type ValidatorMessage } from "./row-messages"
 // ignored Reaction Delay). The engine emits footing violations as Diagnostics on
 // the ActionEvent of the run that observed them; do not re-add a predictor here.
 
-export interface ValidationError {
+export interface Invalidation {
   message: string
 }
 
@@ -19,12 +19,12 @@ export interface ValidationWarning {
 }
 
 export interface ValidationResult {
-  rowErrors: Map<string, ValidationError[]>
+  rowInvalid: Map<string, Invalidation[]>
   rowWarnings: Map<string, ValidationWarning[]>
   invalidRowIds: Set<string>
 }
 
-interface InternalError {
+interface InternalInvalidation {
   finding: ValidatorMessage
   isConsequence: boolean
 }
@@ -34,13 +34,13 @@ export function validateTimeline(
   slots: Slots,
   loadouts: SlotLoadout[],
 ): ValidationResult {
-  const internalErrors = new Map<string, InternalError[]>()
+  const internalInvalid = new Map<string, InternalInvalidation[]>()
   const invalidRowIds = new Set<string>()
   const rowWarnings = new Map<string, ValidationWarning[]>()
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
-    const errors: InternalError[] = []
+    const invalidations: InternalInvalidation[] = []
 
     const resolved = findStageByEntry(entry, slots, loadouts)
     const skillType = resolved?.skillType ?? null
@@ -53,7 +53,7 @@ export function validateTimeline(
         ? (findStageByEntry(prev, slots, loadouts)?.skillType ?? null)
         : null
       if (prevSkillType !== "Outro Skill") {
-        errors.push({
+        invalidations.push({
           finding: { kind: "introNeedsOutro" },
           isConsequence: false,
         })
@@ -62,19 +62,19 @@ export function validateTimeline(
 
     const slotIndex = slots.indexOf(entry.characterId)
     if (slotIndex === -1) {
-      errors.push({
+      invalidations.push({
         finding: { kind: "characterNotInTeam" },
         isConsequence: false,
       })
     } else if (skillType === null) {
       const character = getCharacterById(entry.characterId)
       if (!character) {
-        errors.push({
+        invalidations.push({
           finding: { kind: "unknownCharacter" },
           isConsequence: false,
         })
       } else {
-        errors.push({
+        invalidations.push({
           finding: { kind: "stageNotFound", stageId: entry.stageId },
           isConsequence: false,
         })
@@ -93,7 +93,7 @@ export function validateTimeline(
           }
         }
         if (!anchor) {
-          errors.push({
+          invalidations.push({
             finding: {
               kind: "missingWindowedPrereq",
               stageId: entry.stageId,
@@ -102,7 +102,7 @@ export function validateTimeline(
             isConsequence: false,
           })
         } else if (invalidRowIds.has(anchor.id)) {
-          errors.push({
+          invalidations.push({
             finding: {
               kind: "missingWindowedPrereq",
               stageId: entry.stageId,
@@ -121,7 +121,7 @@ export function validateTimeline(
           break
         }
         if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
-          errors.push({
+          invalidations.push({
             finding: {
               kind: "missingChainPrereq",
               stageId: entry.stageId,
@@ -130,7 +130,7 @@ export function validateTimeline(
             isConsequence: false,
           })
         } else if (invalidRowIds.has(effectivePrev.id)) {
-          errors.push({
+          invalidations.push({
             finding: {
               kind: "missingChainPrereq",
               stageId: entry.stageId,
@@ -142,20 +142,20 @@ export function validateTimeline(
       }
     }
 
-    if (errors.length > 0) {
-      internalErrors.set(entry.id, errors)
+    if (invalidations.length > 0) {
+      internalInvalid.set(entry.id, invalidations)
       invalidRowIds.add(entry.id)
     }
   }
 
-  // Pass 2: build public rowErrors — suppress consequence-only rows
-  const rowErrors = new Map<string, ValidationError[]>()
-  for (const [id, errs] of internalErrors) {
-    const directErrors = errs
+  // Pass 2: build public rowInvalid — suppress consequence-only rows
+  const rowInvalid = new Map<string, Invalidation[]>()
+  for (const [id, entryInvalidations] of internalInvalid) {
+    const directInvalidations = entryInvalidations
       .filter((e) => !e.isConsequence)
       .map((e) => ({ message: renderMessage(e.finding) }))
-    if (directErrors.length > 0) {
-      rowErrors.set(id, directErrors)
+    if (directInvalidations.length > 0) {
+      rowInvalid.set(id, directInvalidations)
     }
   }
 
@@ -174,5 +174,5 @@ export function validateTimeline(
     }
   }
 
-  return { rowErrors, rowWarnings, invalidRowIds }
+  return { rowInvalid, rowWarnings, invalidRowIds }
 }

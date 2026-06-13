@@ -66,7 +66,7 @@ const group = (
 const slots: Slots = [1, 2, 3]
 const loadouts: SlotLoadout[] = []
 const emptyValidation = (): ValidationResult => ({
-  rowErrors: new Map(),
+  rowInvalid: new Map(),
   rowWarnings: new Map(),
   invalidRowIds: new Set(),
 })
