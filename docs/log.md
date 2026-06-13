@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-13 — Per-team Settings serialized into the share code (wire v4)
+
+Settings now travel in the share code so a shared build reproduces the inputs that produced its numbers. `encodePayload` appends five trailing bytes after the timeline (four frame knobs + `startWithFullEnergy` as 0/1) and bumps `VERSION` to 4. Crucially this is a pure append, so the decoder was relaxed to accept **both** v3 and v4: a v3 code is a v4 code minus those bytes, and decodes with `DEFAULT_SETTINGS` filled in (back-compat) — a deliberate change from the old "reject any non-current version" rule, justified because the change is additive. Versions outside {3,4} still throw. The runSimulation positional-signature cleanup from the handoff doc was split out to its own issue (#360 — SimConfig object) rather than bundled here.
+
+Pages touched: docs/loadout.md (Share codes → v4 + back-compat), CONTEXT.md (Settings term: wire note).
+
 ## 2026-06-13 — Simulation Settings move from a global tier to per-team state
 
 The four delay knobs plus `startWithFullEnergy` now live on `ActiveTeam` (`wuwa.team.settings`) instead of a global `wuwa.settings` localStorage tier, so a team's numbers belong to the team rather than the viewer. `startWithFullEnergy` was folded in from its `SimulatorPage` `useState` + Header checkbox into `Settings`, so it flows through `computeSignature` like every other input and its dedicated re-run effect is gone; the toggle now lives in `SettingsModal` alongside a new Reset to defaults button. `Settings`/helpers moved out of the deleted `useSettings` hook into `src/lib/settings.ts` (`DEFAULT_SETTINGS`, `reviveSettings`, `applySettingsPatch`). Settings ride in `ImportExportPayload.team` (optional, in-memory only) so Save/Load round-trips them; the share-code wire encoding is a separate slice and currently decodes to defaults. This relaxes ADR-0027's "Settings = frame counts only" framing — the live boundary is engine-input vs. UI-preference.

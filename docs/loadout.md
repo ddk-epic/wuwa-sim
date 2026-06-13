@@ -49,8 +49,16 @@ list — leaves every existing code decoding to the same things. But **inserting
 removing, or reordering** an entry mid-registry (or mid stage-list) renumbers the
 positions after it and silently makes already-shared codes decode to the wrong
 data. Such an edit is a breaking wire change: bump the `VERSION` byte (the decoder
-rejects versions it doesn't recognise). The current version is `3`; older codes
-are rejected, not migrated — stale codes are simply re-exported.
+rejects versions it doesn't recognise).
+
+The current version is `4`. After the timeline it appends the team's
+[[Settings]] as five trailing bytes — the four frame knobs followed by
+`startWithFullEnergy` (`0`/`1`). This is a pure **append**: a `v3` code is a `v4`
+code minus those five bytes, so the decoder still accepts `v3` and fills the
+missing settings with `DEFAULT_SETTINGS` (back-compat). Versions outside `{3, 4}`
+are rejected, not migrated — a stale code is simply re-exported. A future
+trailing field should follow the same pattern (append + keep accepting the
+shorter prior version); only a mid-stream renumber forces a hard version cut.
 
 ### Templates
 

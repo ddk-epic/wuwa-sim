@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { SlotLoadout } from "#/types/loadout"
 import type { ImportExportPayload } from "#/lib/import-export"
 import { encode as base91Encode, decode as base91Decode } from "#/lib/base91"
+import { DEFAULT_SETTINGS } from "#/lib/settings"
 
 // Minimal stubs — only the fields the codec actually reads.
 const CHAR_A = {
@@ -174,6 +175,44 @@ describe("team encoding", () => {
     const bytes = base91Decode(encodePayload(basePayload()))
     const v2Bytes = new Uint8Array([2, ...bytes.slice(1)])
     expect(() => decodePayload(base91Encode(v2Bytes))).toThrow(/version/i)
+  })
+})
+
+describe("settings encoding", () => {
+  const NON_DEFAULT = {
+    reactionDelay: 12,
+    swapFrames: 9,
+    variantFloor: 0,
+    fallFrames: 30,
+    startWithFullEnergy: true,
+  }
+
+  it("round-trips non-default settings exactly", () => {
+    const payload = basePayload()
+    payload.team.settings = NON_DEFAULT
+    expect(decodePayload(encodePayload(payload)).team.settings).toEqual(
+      NON_DEFAULT,
+    )
+  })
+
+  it("encodes the constant defaults when a payload carries no settings", () => {
+    // basePayload() omits settings; the encoder falls back to DEFAULT_SETTINGS.
+    expect(decodePayload(encodePayload(basePayload())).team.settings).toEqual(
+      DEFAULT_SETTINGS,
+    )
+  })
+
+  it("decodes a settings-less v3 code to the constant defaults (back-compat)", () => {
+    // A genuine v3 code is a v4 code minus the 5 trailing settings bytes, with
+    // the version byte rolled back to 3.
+    const payload = basePayload()
+    payload.team.settings = NON_DEFAULT
+    const v4 = base91Decode(encodePayload(payload))
+    const v3 = new Uint8Array([3, ...v4.slice(1, v4.length - 5)])
+    const decoded = decodePayload(base91Encode(v3))
+    expect(decoded.team.settings).toEqual(DEFAULT_SETTINGS)
+    // The rest of the team still decodes correctly.
+    expect(decoded.team.slots).toEqual(payload.team.slots)
   })
 })
 
@@ -389,7 +428,7 @@ describe("error handling", () => {
   })
 
   it("throws on an unsupported (too-new) format version", () => {
-    // Craft a buffer whose version byte is 99 (neither v1 nor v2).
+    // Craft a buffer whose version byte is 99 — outside the supported {3, 4}.
     const code = base91Encode(new Uint8Array([99, 0, 0xff]))
     expect(() => decodePayload(code)).toThrow(/version/i)
   })

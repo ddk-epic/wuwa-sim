@@ -6,6 +6,7 @@ import { ALL_WEAPONS } from "#/data/weapons"
 import { compileCharacter, compileEcho } from "#/lib/compile-character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
+import { DEFAULT_SETTINGS } from "#/lib/settings"
 import type { Settings } from "#/lib/settings"
 
 export interface ImportExportPayload {
@@ -111,7 +112,9 @@ const stageId = (charByte: number, ord: number) => {
 }
 
 // ---- Encode ----
-const VERSION = 3
+// v4 appends the per-team Settings block (5 bytes) after the timeline. Older
+// codes lack it and decode to DEFAULT_SETTINGS — an append, not a break.
+const VERSION = 4
 
 export function encodePayload(payload: ImportExportPayload): string {
   const w = new Writer()
@@ -166,6 +169,13 @@ export function encodePayload(payload: ImportExportPayload): string {
     }
   }
 
+  const s = team.settings ?? DEFAULT_SETTINGS
+  w.push(s.reactionDelay)
+  w.push(s.swapFrames)
+  w.push(s.variantFloor)
+  w.push(s.fallFrames)
+  w.push(s.startWithFullEnergy ? 1 : 0)
+
   return base91Encode(w.bytes())
 }
 
@@ -193,7 +203,7 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const r = new Reader(data)
 
   const version = r.next()
-  if (version !== VERSION)
+  if (version !== 3 && version !== 4)
     throw new Error(`Unsupported format version ${version}`)
 
   const name = r.str()
@@ -262,5 +272,16 @@ export function decodePayload(encoded: string): ImportExportPayload {
     }
   }
 
-  return { team: { name, slots, loadouts, focusedId }, timeline }
+  const settings: Settings =
+    version >= 4
+      ? {
+          reactionDelay: r.next(),
+          swapFrames: r.next(),
+          variantFloor: r.next(),
+          fallFrames: r.next(),
+          startWithFullEnergy: r.next() === 1,
+        }
+      : { ...DEFAULT_SETTINGS }
+
+  return { team: { name, slots, loadouts, focusedId, settings }, timeline }
 }
