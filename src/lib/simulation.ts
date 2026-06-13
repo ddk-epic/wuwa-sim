@@ -70,16 +70,37 @@ interface SimContext {
   priorCasts: Map<string, number>
 }
 
+/** Tuning knobs for a run; omitted fields fall back to {@link SIM_DEFAULTS}. */
+export interface SimConfig {
+  reactionDelay?: number
+  swapFrames?: number
+  variantFloor?: number
+  fallFrames?: number
+  startWithFullEnergy?: boolean
+}
+
+const SIM_DEFAULTS = {
+  reactionDelay: 9,
+  swapFrames: 6,
+  variantFloor: 0,
+  fallFrames: 21,
+  startWithFullEnergy: false,
+} as const
+
 export function runSimulation(
   entries: TimelineEntry[],
   slots: Slots,
   loadouts: SlotLoadout[],
-  reactionDelay: number = 9,
-  swapFrames: number = 6,
-  variantFloor: number = 0,
-  fallFrames: number = 21,
-  startWithFullEnergy: boolean = false,
+  config: SimConfig = {},
 ): SimulationLogEntry[] {
+  const {
+    reactionDelay,
+    swapFrames,
+    variantFloor,
+    fallFrames,
+    startWithFullEnergy,
+  } = { ...SIM_DEFAULTS, ...config }
+
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
   engine.bootstrap({ slots, loadouts, startWithFullEnergy })

@@ -251,7 +251,10 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
         "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({
       pad: { reaction: 6, floor: 0, trailing: 0, fall: 0 },
@@ -265,7 +268,10 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
       10,
       "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toBeUndefined()
   })
@@ -294,7 +300,10 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
           "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
       },
     ]
-    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
+    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const padActions = result.filter(
       (e): e is ActionEvent => e.kind === "action",
     )
@@ -337,7 +346,10 @@ describe("runSimulation — delayBreakdown on ActionEvent", () => {
         "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.delayBreakdown).toEqual({
       pad: { reaction: 6, floor: 0, trailing: 0, fall: 0 },
@@ -377,7 +389,10 @@ describe("runSimulation — sourceEntryId (#186)", () => {
         variantKind: "swap",
       },
     ]
-    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits.length).toBeGreaterThan(0)
     for (const hit of hits) {

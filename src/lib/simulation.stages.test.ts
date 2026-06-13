@@ -121,7 +121,9 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
       10,
       "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 9,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(1)
   })
@@ -135,7 +137,9 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
         "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 9,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(1)
   })
@@ -149,7 +153,9 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
         "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "instantCancel",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 9,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     const actions = result.filter((e) => e.kind === "action")
     expect(hits).toHaveLength(0)
@@ -165,7 +171,9 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
         "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
       variantKind: "cancel",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 9,
+    })
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBe("cancel")
   })
@@ -176,7 +184,9 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
       10,
       "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
     )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 9)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 9,
+    })
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBeUndefined()
   })
@@ -226,7 +236,10 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
         "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     // actionFrame 23 > advance 16 but swap does NOT filter — hit lands
     expect(hits).toHaveLength(1)
@@ -276,7 +289,10 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
         "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
       variantKind: "swap",
     }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, 6, 6)
+    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     // actionFrame 40 > swapFrames 6 but swap does NOT filter — hit lands
     expect(hits).toHaveLength(1)

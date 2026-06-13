@@ -96,11 +96,7 @@ export function SimulatorPage() {
           entriesRef.current,
           slotsRef.current,
           loadoutsRef.current,
-          settingsRef.current.reactionDelay,
-          settingsRef.current.swapFrames,
-          settingsRef.current.variantFloor,
-          settingsRef.current.fallFrames,
-          settingsRef.current.startWithFullEnergy,
+          settingsRef.current,
         ),
         sig,
       )
@@ -197,19 +193,7 @@ export function SimulatorPage() {
   }
 
   function handleSimulate() {
-    setLog(
-      runSimulation(
-        entries,
-        slots,
-        loadouts,
-        settings.reactionDelay,
-        settings.swapFrames,
-        settings.variantFloor,
-        settings.fallFrames,
-        settings.startWithFullEnergy,
-      ),
-      currentSignature,
-    )
+    setLog(runSimulation(entries, slots, loadouts, settings), currentSignature)
   }
 
   return (

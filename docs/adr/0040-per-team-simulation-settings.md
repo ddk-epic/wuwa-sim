@@ -4,7 +4,7 @@ The four frame-delay knobs (`reactionDelay`, `swapFrames`, `variantFloor`, `fall
 
 A team's simulated numbers must be a property of the team, not of whoever happens to be viewing it. Under the old global tier, two users with different delay knobs got different DPS for the "same" shared build, with nothing on screen explaining the divergence. Folding the knobs into the team closes that gap: the inputs that produced a result are now part of the thing being shared, which is also what lets the share code reproduce them (the encoding itself is a later slice).
 
-`startWithFullEnergy` joins the same bag. It already feeds `runSimulation` as a positional parameter; keeping it as an ad-hoc `useState` in `SimulatorPage` while the other sim inputs became per-team would have left one engine input out of the team and out of staleness tracking. Now `computeSignature` sees it like any other setting, so toggling it marks the log stale and re-runs through the normal path — the dedicated effect it used to need is gone.
+`startWithFullEnergy` joins the same bag. It already feeds `runSimulation`; keeping it as an ad-hoc `useState` in `SimulatorPage` while the other sim inputs became per-team would have left one engine input out of the team and out of staleness tracking. Now `computeSignature` sees it like any other setting, so toggling it marks the log stale and re-runs through the normal path — the dedicated effect it used to need is gone.
 
 The `SettingsModal` edits the current team's settings and offers **Reset to defaults** (a patch with the full `DEFAULT_SETTINGS`). UI preferences (auto-run, default log) stay in their own `wuwa.preferences` store and remain global — that separation is unchanged.
 

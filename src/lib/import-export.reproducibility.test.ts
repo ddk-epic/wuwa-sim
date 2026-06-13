@@ -110,11 +110,7 @@ function simulate(p: ImportExportPayload, s: Settings) {
     flattenNodes(p.timeline ?? []),
     p.team.slots,
     p.team.loadouts,
-    s.reactionDelay,
-    s.swapFrames,
-    s.variantFloor,
-    s.fallFrames,
-    s.startWithFullEnergy,
+    s,
   )
 }
 

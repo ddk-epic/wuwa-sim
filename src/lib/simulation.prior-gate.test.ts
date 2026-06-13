@@ -128,7 +128,7 @@ const actionFor = (log: ReturnType<typeof runSimulation>, id: string) =>
 
 // reactionDelay 0 keeps the frame arithmetic exact (no variant react padding).
 const run = (entries: TimelineEntry[]) =>
-  runSimulation(entries, slots, loadouts, 0)
+  runSimulation(entries, slots, loadouts, { reactionDelay: 0 })
 
 describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
   it("full-cast prerequisite → follow-up needs no pad (priorGate 0)", () => {

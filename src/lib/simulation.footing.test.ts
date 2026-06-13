@@ -308,15 +308,12 @@ describe("runSimulation — trailing-window footing snapshot", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     expect(reentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
@@ -347,15 +344,12 @@ describe("runSimulation — trailing-window footing snapshot", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     expect(reentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
@@ -380,15 +374,12 @@ describe("runSimulation — trailing-window footing snapshot", () => {
         "e2",
       ), // charB enters: team=ground -> no fall
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(charBAction?.delayBreakdown?.pad.fall ?? 0).toBe(0)
@@ -422,15 +413,12 @@ describe("runSimulation — trailing-window footing snapshot", () => {
         "e4",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charAReentry = actions.find((a) => a.sourceEntryId === "e3")
     const charBReentry = actions.find((a) => a.sourceEntryId === "e4")
@@ -465,15 +453,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
@@ -501,15 +486,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
@@ -537,15 +519,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         variantKind: "swap",
       },
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
@@ -573,15 +552,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e2")
     expect(reentry?.delayBreakdown?.pad.fall).toBe(21)
@@ -607,15 +583,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     // charB enters while charA's pending footing is still in the window (not yet fired)
     // -> charB sees ground -> no fall
@@ -656,15 +629,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      20,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 20,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.pad.fall ??
@@ -701,15 +671,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      20,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 20,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e3")?.delayBreakdown?.pad.fall,
@@ -734,15 +701,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
@@ -766,15 +730,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall ??
@@ -799,15 +760,12 @@ describe("runSimulation — footing commit as trailing-window event", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     expect(
       actions.find((a) => a.sourceEntryId === "e1")?.delayBreakdown?.pad.fall ??
@@ -838,15 +796,12 @@ describe("runSimulation — footing violation diagnostics", () => {
         "e1",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const action = actionFor(result, "e1")
     expect(action).toBeDefined()
     expect(action?.diagnostics).toHaveLength(1)
@@ -863,15 +818,12 @@ describe("runSimulation — footing violation diagnostics", () => {
         "e1",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      snapSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, snapSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const action = actionFor(result, "e1")
     expect(action?.diagnostics).toHaveLength(1)
     expect(action?.diagnostics?.[0].kind).toBe("footingViolation")
@@ -892,15 +844,12 @@ describe("runSimulation — footing violation diagnostics", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
     expect(actionFor(result, "e2")?.diagnostics).toBeUndefined()
   })
@@ -914,15 +863,12 @@ describe("runSimulation — footing violation diagnostics", () => {
         "e1",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
   })
 
@@ -957,15 +903,12 @@ describe("runSimulation — footing violation diagnostics", () => {
         "e1",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      [60, null, null],
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, [60, null, null], emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const action = actionFor(result, "e1")
     expect(action?.diagnostics).toHaveLength(1)
     expect(action?.diagnostics?.[0].kind).toBe("insufficientEnergy")

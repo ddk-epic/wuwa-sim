@@ -261,16 +261,9 @@ describe("runSimulation — multi-hit stage", () => {
       "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
     )
     const baseline = runSimulation([entry], slots, emptyLoadouts)
-    const seeded = runSimulation(
-      [entry],
-      slots,
-      emptyLoadouts,
-      9,
-      6,
-      0,
-      21,
-      true,
-    )
+    const seeded = runSimulation([entry], slots, emptyLoadouts, {
+      startWithFullEnergy: true,
+    })
     const baseHit = baseline[1]
     const seededHit = seeded[1]
     if (baseHit.kind !== "hit" || seededHit.kind !== "hit")

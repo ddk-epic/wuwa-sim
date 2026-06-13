@@ -505,7 +505,10 @@ describe("runSimulation — trailing-window collision", () => {
           "char.trailing-char.resonance-skill.resonance-skill.stage::resonance-skill",
       },
     ]
-    const result = runSimulation(entries, [30, null, null], emptyLoadouts, 6, 6)
+    const result = runSimulation(entries, [30, null, null], emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const hits = result.filter((e) => e.kind === "hit")
     expect(hits).toHaveLength(1) // only immediate hit at frame 3 survives
     expect(hits[0].frame).toBe(3)
@@ -537,7 +540,10 @@ describe("runSimulation — trailing-window collision", () => {
           "char.trailing-char.basic-attack.normal-attack.stage::basic-attack",
       },
     ]
-    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, 6, 6)
+    const result = runSimulation(entries, [30, 31, null], emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+    })
     const actions = result.filter((e) => e.kind === "action")
     // t3 action: trailing-window pad to 30 + swapBack 36 (char 30 off-field since frame 6) = 66
     const t3Action = actions.find((a) => a.characterId === 30 && !a.variantKind)
@@ -567,16 +573,12 @@ describe("runSimulation — fall frames", () => {
         "e2",
       ),
     ]
-    // reactionDelay=0, swapFrames=6, variantFloor=0, fallFrames=21
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
@@ -596,15 +598,12 @@ describe("runSimulation — fall frames", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const second = actions.find((a) => a.sourceEntryId === "e2")
     expect(second?.delayBreakdown?.pad.fall ?? 0).toBe(0)
@@ -624,15 +623,12 @@ describe("runSimulation — fall frames", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const aerialAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(aerialAction?.delayBreakdown?.pad.fall ?? 0).toBe(0)
@@ -653,15 +649,12 @@ describe("runSimulation — fall frames", () => {
         "e2",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(charBAction?.delayBreakdown?.pad.fall).toBe(21)
@@ -690,15 +683,12 @@ describe("runSimulation — fall frames", () => {
         "e3",
       ), // charB re-enters at frame 36
     ]
-    const result = runSimulation(
-      entries,
-      [50, 52, null],
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, [50, 52, null], emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const charBReentry = actions.find((a) => a.sourceEntryId === "e3")
     // fall=21 (team air from charA's launch + pending footing snapshot promotes)
@@ -723,16 +713,13 @@ describe("runSimulation — fall frames", () => {
         variantKind: "cancel",
       },
     ]
-    // variantFloor=30, fallFrames=21 — fall should be 21 regardless of floor=30
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      30,
-      21,
-    )
+    // fall should be 21 regardless of the variantFloor
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 30,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
@@ -754,16 +741,13 @@ describe("runSimulation — fall frames", () => {
         variantKind: "cancel",
       },
     ]
-    // reactionDelay=6, variantFloor=0 -> react wins
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      6,
-      6,
-      0,
-      21,
-    )
+    // react wins over the floor
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 6,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(groundAction?.delayBreakdown?.pad.reaction).toBe(6)
@@ -791,15 +775,12 @@ describe("runSimulation — fall frames", () => {
         "e3",
       ),
     ]
-    const result = runSimulation(
-      entries,
-      aerialSlots(),
-      emptyLoadouts,
-      0,
-      6,
-      0,
-      21,
-    )
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e3")
     expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)

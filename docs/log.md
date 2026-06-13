@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-13 — runSimulation's trailing tuning knobs collapse into a SimConfig object
+
+`runSimulation(entries, slots, loadouts, config?)` replaces the five trailing positional params (`reactionDelay`, `swapFrames`, `variantFloor`, `fallFrames`, `startWithFullEnergy`). `SimConfig` is a standalone interface in `simulation.ts` (not the UI `Settings` type — the engine shouldn't depend on the app's settings module), with its own `SIM_DEFAULTS` (9/6/0/21/false, unchanged from the old positional defaults — distinct from `DEFAULT_SETTINGS`'s 6/6/15/15). A full `Settings` object is structurally assignable to `SimConfig`, so `SimulatorPage` just passes `settings` straight through. Pure mechanical refactor — behaviour unchanged, full suite green. Closes the deferred handoff note.
+
+Pages touched: CONTEXT.md (Start With Full Energy: SimConfig field), ADR-0040 (positional wording).
+
 ## 2026-06-13 — Per-team Settings serialized into the share code (wire v4)
 
 Settings now travel in the share code so a shared build reproduces the inputs that produced its numbers. `encodePayload` appends five trailing bytes after the timeline (four frame knobs + `startWithFullEnergy` as 0/1) and bumps `VERSION` to 4. Crucially this is a pure append, so the decoder was relaxed to accept **both** v3 and v4: a v3 code is a v4 code minus those bytes, and decodes with `DEFAULT_SETTINGS` filled in (back-compat) — a deliberate change from the old "reject any non-current version" rule, justified because the change is additive. Versions outside {3,4} still throw. The runSimulation positional-signature cleanup from the handoff doc was split out to its own issue (#360 — SimConfig object) rather than bundled here.
