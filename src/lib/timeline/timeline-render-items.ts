@@ -128,7 +128,7 @@ function resolveEntryFields(
   | "showMessage"
 > {
   const char = getCharacterById(entry.characterId)
-  const charHex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+  const charHex = (char?.element && ELEMENT_HEX[char.element]) ?? "#888888"
   const charName = char?.name ?? "—"
   const elementLetter = char?.element[0] ?? "?"
 

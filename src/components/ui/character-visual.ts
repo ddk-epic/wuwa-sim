@@ -6,7 +6,7 @@ import { GLOBAL_TARGET_ID } from "#/types/buff"
 export const TEAM_HEX = "#60a5fa" // text-blue-400
 
 export function elementHex(element: string): string {
-  return ELEMENT_HEX[element as Element] ?? "#888"
+  return ELEMENT_HEX[element as Element] ?? "#888888"
 }
 
 export function portraitSrc(name: string): string {
@@ -54,7 +54,7 @@ export function characterVisual(id: number): CharacterVisual {
     return {
       name,
       element: "",
-      hex: "#888",
+      hex: "#888888",
       portraitSrc: portraitSrc(name),
       initial: "?",
       letter: "?",

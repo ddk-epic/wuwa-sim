@@ -69,21 +69,21 @@ describe("getDistinctCharsBySlot", () => {
 })
 
 describe("getDominantHex", () => {
-  it("returns #888 for empty entries", () => {
-    expect(getDominantHex([])).toBe("#888")
+  it("returns #888888 for empty entries", () => {
+    expect(getDominantHex([])).toBe("#888888")
   })
 
   it("returns hex of most frequent character", () => {
     testCharacters = [makeChar(1, "Fusion"), makeChar(2, "Glacio")]
     const entries = [entry("a", 1), entry("b", 1), entry("c", 2)]
     const result = getDominantHex(entries)
-    expect(result).not.toBe("#888")
+    expect(result).not.toBe("#888888")
     expect(result).toContain("#")
   })
 
-  it("falls back to #888 when character not found", () => {
+  it("falls back to #888888 when character not found", () => {
     const entries = [entry("a", 99)]
-    expect(getDominantHex(entries)).toBe("#888")
+    expect(getDominantHex(entries)).toBe("#888888")
   })
 
   it("on tie, favors first encountered character", () => {
@@ -100,21 +100,21 @@ describe("getDominantHex", () => {
 })
 
 describe("getGroupFirstCharHex", () => {
-  it("returns #888 for empty entries", () => {
-    expect(getGroupFirstCharHex([], slots)).toBe("#888")
+  it("returns #888888 for empty entries", () => {
+    expect(getGroupFirstCharHex([], slots)).toBe("#888888")
   })
 
   it("returns hex of first char by slot order", () => {
     testCharacters = [makeChar(1, "Fusion"), makeChar(2, "Glacio")]
     const entries = [entry("a", 2), entry("b", 1)]
     const result = getGroupFirstCharHex(entries, slots)
-    expect(result).not.toBe("#888")
+    expect(result).not.toBe("#888888")
     expect(result).toContain("#")
   })
 
-  it("falls back to #888 when character not found", () => {
+  it("falls back to #888888 when character not found", () => {
     const entries = [entry("a", 99)]
-    expect(getGroupFirstCharHex(entries, slots)).toBe("#888")
+    expect(getGroupFirstCharHex(entries, slots)).toBe("#888888")
   })
 })
 

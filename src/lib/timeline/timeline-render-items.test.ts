@@ -200,7 +200,7 @@ describe("buildTimelineRenderItems", () => {
     testCharacters = [makeChar(1, "Fusion")]
     const items = call([topEntry("e1", 1)])
     const hex = entryItems(items)[0].charHex
-    expect(hex).not.toBe("#888")
+    expect(hex).not.toBe("#888888")
     expect(hex).toMatch(/^#/)
   })
 

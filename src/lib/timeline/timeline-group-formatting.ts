@@ -30,7 +30,7 @@ export function buildGroupGradient(
   const charIds = getDistinctCharsBySlot(groupEntries, slots)
   const hexes = charIds.map((id) => {
     const char = getCharacterById(id)
-    return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+    return (char?.element && ELEMENT_HEX[char.element]) ?? "#888888"
   })
   if (hexes.length === 0) return "transparent"
   if (hexes.length === 1)
@@ -54,13 +54,13 @@ export function getGroupFirstCharHex(
   slots: Slots,
 ): string {
   const charIds = getDistinctCharsBySlot(groupEntries, slots)
-  if (charIds.length === 0) return "#888"
+  if (charIds.length === 0) return "#888888"
   const char = getCharacterById(charIds[0])
-  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888888"
 }
 
 export function getDominantHex(groupEntries: TimelineEntry[]): string {
-  if (groupEntries.length === 0) return "#888"
+  if (groupEntries.length === 0) return "#888888"
   const counts = new Map<number, number>()
   for (const e of groupEntries) {
     counts.set(e.characterId, (counts.get(e.characterId) ?? 0) + 1)
@@ -74,5 +74,5 @@ export function getDominantHex(groupEntries: TimelineEntry[]): string {
     }
   }
   const char = getCharacterById(dominantId)
-  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888"
+  return (char?.element && ELEMENT_HEX[char.element]) ?? "#888888"
 }
