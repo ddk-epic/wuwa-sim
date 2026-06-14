@@ -1,6 +1,7 @@
-import { Fragment, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { Plus, Trash2, Film, X } from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "./stages"
+import { loadClips, saveClips } from "./storage"
 import { CUES, clipDisplayName, sections } from "./types"
 import type { Clip, CueTag, HitMark, StageRef } from "./types"
 
@@ -67,24 +68,42 @@ export function FramesPage() {
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
   const clip = clips.find((c) => c.id === selectedId) ?? null
 
+  // Hydrate the initial character's saved clips after mount — client-only, so SSR
+  // (which has no localStorage) and the first client render stay identical.
+  useEffect(() => {
+    loadInto(characterName)
+  }, [])
+
+  function loadInto(name: string) {
+    const loaded = loadClips(name)
+    setClips(loaded)
+    setSelectedId(loaded[0]?.id ?? null)
+  }
+
+  // Persisting writer: every clip mutation funnels through here, so storage stays
+  // in sync without a save-effect racing the load on character switch.
+  function commit(next: Clip[]) {
+    setClips(next)
+    saveClips(characterName, next)
+  }
+
   function pickCharacter(name: string) {
     setCharacterName(name)
-    setClips([])
-    setSelectedId(null)
+    loadInto(name)
   }
 
   function addClip() {
     const c = emptyClip()
-    setClips((cs) => [...cs, c])
+    commit([...clips, c])
     setSelectedId(c.id)
   }
 
   function patchClip(id: string, patch: Partial<Clip>) {
-    setClips((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+    commit(clips.map((c) => (c.id === id ? { ...c, ...patch } : c)))
   }
 
   function removeClip(id: string) {
-    setClips((cs) => cs.filter((c) => c.id !== id))
+    commit(clips.filter((c) => c.id !== id))
     if (selectedId === id) setSelectedId(null)
   }
 
