@@ -5,6 +5,7 @@ import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "../../lib/loadout/catalog"
 import type { EchoStageInfo, StageInfo } from "../../lib/compile-character"
 import { compileCharacter, compileEcho } from "../../lib/compile-character"
+import { stageLabel } from "../../lib/stage"
 
 export interface FocusedStage {
   key: string
@@ -77,7 +78,7 @@ function buildEchoStage(
   const skillType = stage.damage[0]?.type ?? "Echo Skill"
   return {
     key: info.stageId,
-    label: skillLabel(echoName, stage.newName),
+    label: stageLabel(echoName, stage.newName),
     typeLabel: STAGE_TYPE_LABELS["Echo Skill"],
     skillType,
     skillGrouping: "Echo Skill",
@@ -94,7 +95,7 @@ function buildCharacterStage(
   const { skill, stage } = info
   return {
     key: info.stageId,
-    label: skillLabel(skill.name, stage.newName),
+    label: stageLabel(skill.name, stage.newName),
     typeLabel: STAGE_TYPE_LABELS[stage.category],
     skillType: info.skillType,
     skillGrouping: skill.type,
@@ -102,10 +103,4 @@ function buildCharacterStage(
     durationFrames: stage.actionTime,
     clickPayload: { characterId, stageId: info.stageId },
   }
-}
-
-function skillLabel(skillName: string, newName?: string): string {
-  if (!newName) return skillName
-  if (newName.startsWith("(")) return `${skillName} ${newName}`
-  return `${skillName} · ${newName}`
 }
