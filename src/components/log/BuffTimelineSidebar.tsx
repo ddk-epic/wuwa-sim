@@ -1,7 +1,7 @@
-import { Clock } from "lucide-react"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { formatSkillType } from "#/data/skill-types"
 import { characterVisual } from "#/components/ui/character-visual"
+import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { TL_RULER_H } from "./BuffTimelineLog"
 import type { Char } from "./BuffTimelineLog"
 import type { Buff, BuffTimelineModel } from "./build-buff-timeline-model"
@@ -75,14 +75,10 @@ export function BuffTimelineSidebar({
 
   if (!hover) {
     return shell(
-      <div className="flex flex-1 flex-col items-center justify-center gap-3.5 p-7 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground/70">
-          <Clock size={18} />
-        </div>
-        <div className="max-w-50 text-detail leading-normal text-muted-foreground">
-          Hover over the timeline entries for more action details
-        </div>
-      </div>,
+      <EmptyStatement
+        statement="No action selected"
+        description="Hover over the timeline entries for more action details."
+      />,
     )
   }
 
@@ -138,7 +134,9 @@ export function BuffTimelineSidebar({
         </div>
         <div className="flex-1 overflow-y-scroll px-5 pb-5">
           {live.length === 0 && (
-            <span className="text-detail text-muted-foreground/70">none</span>
+            <div className="mb-3 text-detail text-muted-foreground/70">
+              none
+            </div>
           )}
           {groupBySource(live, t).map((g) => {
             const src = characterVisual(g.sourceId)
