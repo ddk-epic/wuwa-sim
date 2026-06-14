@@ -2,7 +2,14 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { Plus, Trash2, Film, X } from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "./stages"
 import { loadClips, saveClips } from "./storage"
-import { CUES, clipDisplayName, sections } from "./types"
+import {
+  CUES,
+  appendStage,
+  clipDisplayName,
+  removeStageAt,
+  sections,
+  stageIndexOf,
+} from "./types"
 import type { Clip, CueTag, HitMark, StageRef } from "./types"
 
 const uid = () => Math.random().toString(36).slice(2, 9)
@@ -108,19 +115,9 @@ export function FramesPage() {
   }
 
   function addStage(target: Clip, ref: StageRef) {
-    const stageRefs = [...target.stageRefs, ref]
-    let boundaries = target.boundaries
-    if (target.stageRefs.length >= 1) {
-      const prev = target.boundaries.length
-        ? target.boundaries[target.boundaries.length - 1].frame
-        : target.start
-      const frame = Math.round((prev + target.end) / 2)
-      boundaries = [
-        ...target.boundaries,
-        { id: uid(), frame, cue: "animationBreak" },
-      ]
-    }
-    patchClip(target.id, { stageRefs, boundaries })
+    commit(
+      clips.map((c) => (c.id === target.id ? appendStage(c, ref, uid()) : c)),
+    )
   }
 
   return (
@@ -229,13 +226,8 @@ function ClipEditor({
   const [mode, setMode] = useState<Mode>("boundary")
 
   function removeStage(i: number) {
-    const stageRefs = clip.stageRefs.filter((_, idx) => idx !== i)
-    let boundaries = clip.boundaries
-    if (clip.boundaries.length > 0) {
-      const bi = i >= clip.boundaries.length ? clip.boundaries.length - 1 : i
-      boundaries = clip.boundaries.filter((_, idx) => idx !== bi)
-    }
-    onPatch({ stageRefs, boundaries })
+    const next = removeStageAt(clip, i)
+    onPatch({ stageRefs: next.stageRefs, boundaries: next.boundaries })
   }
 
   return (
@@ -363,11 +355,7 @@ function MarksTable({
       {secs.map((sec, i) => {
         const last = i === secs.length - 1
         const hits = clip.hits
-          .filter(
-            (h) =>
-              h.frame >= sec.start &&
-              (last ? h.frame <= sec.end : h.frame < sec.end),
-          )
+          .filter((h) => stageIndexOf(clip, h.frame) === i)
           .sort((a, b) => a.frame - b.frame)
         const divider = last ? null : clip.boundaries[i]
         return (

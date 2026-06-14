@@ -81,3 +81,55 @@ export function clipDisplayName(clip: Clip): string {
   if (clip.stageRefs.length === 0) return "Untitled"
   return clip.stageRefs.map((s) => s.stage).join(" → ")
 }
+
+/**
+ * Append a stage. A new divider is inserted at the midpoint of the old last
+ * section so the new stage has room; the first stage adds no divider. Keeps
+ * the invariant `boundaries.length === max(0, stageRefs.length - 1)`.
+ */
+export function appendStage(
+  clip: Clip,
+  ref: StageRef,
+  boundaryId: string,
+): Clip {
+  const stageRefs = [...clip.stageRefs, ref]
+  if (clip.stageRefs.length === 0) return { ...clip, stageRefs }
+  const prev = clip.boundaries.length
+    ? clip.boundaries[clip.boundaries.length - 1].frame
+    : clip.start
+  const frame = Math.round((prev + clip.end) / 2)
+  return {
+    ...clip,
+    stageRefs,
+    boundaries: [
+      ...clip.boundaries,
+      { id: boundaryId, frame, cue: "animationBreak" },
+    ],
+  }
+}
+
+/** Remove stage `i`, dropping the divider that adjoined it so the boundary-count invariant holds. */
+export function removeStageAt(clip: Clip, i: number): Clip {
+  const stageRefs = clip.stageRefs.filter((_, idx) => idx !== i)
+  if (clip.boundaries.length === 0) return { ...clip, stageRefs }
+  const bi = i >= clip.boundaries.length ? clip.boundaries.length - 1 : i
+  return {
+    ...clip,
+    stageRefs,
+    boundaries: clip.boundaries.filter((_, idx) => idx !== bi),
+  }
+}
+
+/**
+ * Which section (stage index) a frame falls in, or -1 if outside the clip. A
+ * frame sitting exactly on a divider belongs to the later stage it opens; the
+ * last stage owns its end frame.
+ */
+export function stageIndexOf(clip: Clip, frame: number): number {
+  const secs = sections(clip)
+  return secs.findIndex(
+    (s, i) =>
+      frame >= s.start &&
+      (i === secs.length - 1 ? frame <= s.end : frame < s.end),
+  )
+}
