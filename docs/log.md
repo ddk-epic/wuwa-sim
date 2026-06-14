@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-14 — Frame Tool design (`/dev/frames`) for empirical stage timing
+
+A dev-only, `DEV`-gated, pure client-side route for deriving `actionTime`/`actionFrame` from gameplay. Core model: **Clips** (action strings of known length) hold **marks** (cutoffs + hits) stored as absolute clip-frames — the single source of truth, with `actionTime`/`actionFrame` as derived projections. **Stages** are shared unknowns across clips; a small **linear solver** combines clip totals, cutoffs, and cross-clip differences, reporting under-determined and conflicting stages. **Confidence** auto-derives from a per-mark **cue tag** (`impactFlash` > `vfxEdge` > `animationBreak` > `estimate`) × corroboration. Variants are derived not marked (`cancel` = last hit's actionFrame; `swap` = 0 or pinned hit). 60fps-only for now; mp4 frame-stepping deferred to phase 2. Reads the bundled character registry; emit is copy/download (no `.ts` writes). Clip set persists to localStorage per character. Deliberately not named "extract" (collides with the API-pull sense).
+
+Pages touched: docs/dev/frames.md (new), docs/index.md (entry).
+
 ## 2026-06-14 — Single wording rule for timeline row messages
 
 All diagnostic and validator messages collapse onto one template: an impersonal declarative requirement statement that omits anything the row already shows (character, current resource value) and keeps only what it doesn't (the required cost). Diagnostics stop naming the actor and stop echoing the current pool; `insufficientEnergy`/`insufficientConcerto` now render as "Liberation requires 120 energy" / "Outro requires {n} concerto", reading only `cost`. The cryptic footing message becomes "Airborne state required before a landing stage", parallel to its aerial sibling. No em-dashes, sentence case, no trailing period.

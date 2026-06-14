@@ -23,6 +23,10 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 - [CHARACTERS.md](../src/data/CHARACTERS.md) — authoring guide: the character-file shell, skills, stages, timing, and stageId lineage
 - [BUFFS.md](../src/data/BUFFS.md) — authoring guide: writing `BuffDef` entries on characters, weapons, echoes, and echo sets
 
+## Dev tools
+
+- [dev/frames](dev/frames.md) — the `/dev/frames` Frame Tool: deriving stage `actionTime`/`actionFrame` empirically from gameplay by marking action-string clips and solving across them
+
 ## Decisions
 
 - [adr/](adr/) — architectural decisions, referenced by number (ADR-0001 onward)
