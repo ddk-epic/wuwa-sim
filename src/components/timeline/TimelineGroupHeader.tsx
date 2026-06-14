@@ -152,7 +152,7 @@ export function TimelineGroupHeader({
             onCommit={(l) => onGroupLabelCommit(groupId, l)}
             placeholder="unnamed"
             title={locked ? undefined : "Click to rename"}
-            wrapperClassName="px-2 -ml-2 py-0.75 -my-2"
+            wrapperClassName="pr-2 py-0.75 -my-2"
             activeWrapperClassName="hover:w-40 focus-within:w-40"
             className="text-sm font-bold"
             inputClassName="w-full"

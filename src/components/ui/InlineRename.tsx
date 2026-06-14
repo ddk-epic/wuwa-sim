@@ -114,7 +114,10 @@ export function InlineRename({
         style={wrapperStyle}
         title={title}
       >
-        <span className={`min-w-0 block truncate ${className}`} style={style}>
+        <span
+          className={`min-w-0 block truncate pr-0.5 ${className}`}
+          style={style}
+        >
           {value || (
             <span className="italic text-muted font-normal">
               {placeholder ?? ""}
@@ -159,7 +162,7 @@ export function InlineRename({
           defaultValue={value}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          className={`${innerClass} ${inputClassName}`}
+          className={`${innerClass} placeholder:italic placeholder:font-normal placeholder:text-muted ${inputClassName}`}
           style={style}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -180,9 +183,11 @@ export function InlineRename({
           }}
         />
       ) : (
+        // pr-0.5: the italic placeholder's last glyph overhangs the truncate
+        // clip box; without it the final letter is shaved.
         <span
           onClick={() => setEditing(true)}
-          className={`${innerClass} block truncate`}
+          className={`${innerClass} block truncate pr-0.5`}
           style={style}
         >
           {value || (
