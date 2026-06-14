@@ -231,6 +231,7 @@ export function TimelineView({
           })}
         </tbody>
       </table>
+      <div aria-hidden className="h-20" />
       {deletingGroupId !== null && (
         <ConfirmModal
           message="Delete this group and all its entries? This cannot be undone."
