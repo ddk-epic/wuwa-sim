@@ -21,14 +21,20 @@ export type RowMessage = ValidatorMessage | Diagnostic
 
 export function renderMessage(m: RowMessage): string {
   switch (m.kind) {
+    // --- Diagnostic (engine runtime findings) ---
+    // Actor and current resource value are omitted: both already appear on the
+    // timeline row (character cell, resource cells), so the wording carries only
+    // the required cost, which the row does not show.
     case "footingViolation":
       return m.isLand
-        ? "Nothing to land from — not currently airborne"
+        ? "Airborne state required before a landing stage"
         : "Launch/Jump required before an aerial stage"
     case "insufficientEnergy":
-      return `${m.actor} cast Liberation below cost (${Math.floor(m.energy)} / ${m.cost} energy)`
+      return `Liberation requires ${m.cost} energy`
     case "insufficientConcerto":
-      return `${m.actor} cast Outro below cost (${Math.floor(m.concerto)} / ${m.cost} concerto)`
+      return `Outro requires ${m.cost} concerto`
+
+    // --- ValidatorMessage (structural validator findings) ---
     case "introNeedsOutro":
       return "Intro Skill must immediately follow an Outro Skill"
     case "characterNotInTeam":

@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-14 — Single wording rule for timeline row messages
+
+All diagnostic and validator messages collapse onto one template: an impersonal declarative requirement statement that omits anything the row already shows (character, current resource value) and keeps only what it doesn't (the required cost). Diagnostics stop naming the actor and stop echoing the current pool; `insufficientEnergy`/`insufficientConcerto` now render as "Liberation requires 120 energy" / "Outro requires {n} concerto", reading only `cost`. The cryptic footing message becomes "Airborne state required before a landing stage", parallel to its aerial sibling. No em-dashes, sentence case, no trailing period.
+
+Pages touched: docs/row-messages.md (new), docs/index.md (entry).
+
 ## 2026-06-13 — runSimulation's trailing tuning knobs collapse into a SimConfig object
 
 `runSimulation(entries, slots, loadouts, config?)` replaces the five trailing positional params (`reactionDelay`, `swapFrames`, `variantFloor`, `fallFrames`, `startWithFullEnergy`). `SimConfig` is a standalone interface in `simulation.ts` (not the UI `Settings` type — the engine shouldn't depend on the app's settings module), with its own `SIM_DEFAULTS` (9/6/0/21/false, unchanged from the old positional defaults — distinct from `DEFAULT_SETTINGS`'s 6/6/15/15). A full `Settings` object is structurally assignable to `SimConfig`, so `SimulatorPage` just passes `settings` straight through. Pure mechanical refactor — behaviour unchanged, full suite green. Closes the deferred handoff note.
