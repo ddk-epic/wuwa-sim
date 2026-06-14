@@ -466,11 +466,11 @@ describe("getTimelineSummary — post-stage cumulatives", () => {
   it("falls back to action event cumulatives when no hits exist for the entry", () => {
     testCharacters = [charA]
     const e1 = normalAttack(1, "e1")
-    const actionEvent = {
-      kind: "action" as const,
+    const actionEvent: SimulationLogEntry = {
+      kind: "action",
       characterId: 1,
-      skillType: "Basic Attack" as const,
-      skillCategory: "Basic Attack" as const,
+      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
       skillName: "Normal Attack",
       frame: 0,
       cumulativeConcerto: 15,

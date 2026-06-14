@@ -229,11 +229,11 @@ describe("timeline encoding", () => {
   })
 
   it("roundtrips entry node — regenerates id, preserves all other fields", () => {
-    const payload = {
+    const payload: ImportExportPayload = {
       ...basePayload(),
       timeline: [
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "original-id",
           characterId: CHAR_A.id,
           stageId:
@@ -257,11 +257,11 @@ describe("timeline encoding", () => {
 
   it("roundtrips variantKind — all three values", () => {
     for (const vk of ["cancel", "instantCancel", "swap"] as const) {
-      const payload = {
+      const payload: ImportExportPayload = {
         ...basePayload(),
         timeline: [
           {
-            kind: "entry" as const,
+            kind: "entry",
             id: "x",
             characterId: CHAR_A.id,
             stageId:
@@ -279,11 +279,11 @@ describe("timeline encoding", () => {
   })
 
   it("roundtrips echo stageId", () => {
-    const payload = {
+    const payload: ImportExportPayload = {
       ...basePayload(),
       timeline: [
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "y",
           characterId: CHAR_A.id,
           stageId: "echo.inferno-rider.tap::echo-skill",
@@ -298,11 +298,11 @@ describe("timeline encoding", () => {
   })
 
   it("roundtrips group node — regenerates ids, preserves entries", () => {
-    const payload = {
+    const payload: ImportExportPayload = {
       ...basePayload(),
       timeline: [
         {
-          kind: "group" as const,
+          kind: "group",
           id: "group-original",
           label: "My Rotation",
           locked: true,
@@ -338,7 +338,7 @@ describe("timeline encoding", () => {
       ...basePayload(),
       timeline: [
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "e1",
           characterId: CHAR_A.id,
           stageId:
@@ -346,7 +346,7 @@ describe("timeline encoding", () => {
           variantKind: undefined,
         },
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "e2",
           characterId: CHAR_B.id,
           stageId: "char.encore.heavy-attack.heavy-attack.charge::heavy-attack",
@@ -386,11 +386,11 @@ describe("timeline encoding", () => {
   })
 
   it("roundtrips mixed entry and group nodes", () => {
-    const payload = {
+    const payload: ImportExportPayload = {
       ...basePayload(),
       timeline: [
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "e1",
           characterId: CHAR_A.id,
           stageId:
@@ -398,7 +398,7 @@ describe("timeline encoding", () => {
           variantKind: undefined,
         },
         {
-          kind: "group" as const,
+          kind: "group",
           id: "g1",
           label: "Burst Window",
           locked: false,
@@ -446,11 +446,11 @@ describe("error handling", () => {
   })
 
   it("throws when encoding an unknown stageId", () => {
-    const payload = {
+    const payload: ImportExportPayload = {
       ...basePayload(),
       timeline: [
         {
-          kind: "entry" as const,
+          kind: "entry",
           id: "x",
           characterId: CHAR_A.id,
           stageId: "Not A Real Stage::foo",

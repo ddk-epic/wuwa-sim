@@ -372,6 +372,7 @@ export class InstanceStore {
         snapshots: freezeSnapshots(def, 1, (cid, buffId) =>
           this.buffStacksOnTarget(buffId, cid),
         ),
+        // global is typed `?: true`; the assertion stops it widening to boolean.
         ...(isGlobal ? { global: true as const } : {}),
       })
       this.version_++

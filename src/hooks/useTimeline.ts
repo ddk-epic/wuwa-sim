@@ -35,7 +35,7 @@ export function useTimeline(onShapeChange?: () => void) {
   }
 
   function addEntry(entry: NewEntry) {
-    setNodes((prev) => {
+    setNodes((prev): TimelineNode[] => {
       const openGroupIndex = prev.findIndex(
         (n): n is TimelineGroup => n.kind === "group" && !n.locked,
       )
@@ -49,23 +49,20 @@ export function useTimeline(onShapeChange?: () => void) {
             : n,
         )
       }
-      return [
-        ...prev,
-        { kind: "entry" as const, ...entry, id: crypto.randomUUID() },
-      ]
+      return [...prev, { kind: "entry", ...entry, id: crypto.randomUUID() }]
     })
     onShapeChange?.()
   }
 
   function addGroup(): string {
     const id = crypto.randomUUID()
-    setNodes((prev) => {
+    setNodes((prev): TimelineNode[] => {
       const updated = prev.map((n) =>
         n.kind === "group" && !n.locked ? { ...n, locked: true } : n,
       )
       return [
         ...updated,
-        { kind: "group" as const, id, label: "", locked: false, entries: [] },
+        { kind: "group", id, label: "", locked: false, entries: [] },
       ]
     })
     onShapeChange?.()

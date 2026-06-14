@@ -41,13 +41,13 @@ export function migrateEntries(raw: unknown[]): TimelineEntry[] {
 }
 
 export function migrateNodes(raw: unknown[]): TimelineNode[] {
-  return raw.map((r) => {
+  return raw.map((r): TimelineNode => {
     // Boundary: untyped legacy node; shape is probed via kind then field-checked.
     const item = r as { kind?: string }
     if (item.kind === "group") {
       const g = r as Partial<TimelineGroup>
       return {
-        kind: "group" as const,
+        kind: "group",
         id: typeof g.id === "string" ? g.id : crypto.randomUUID(),
         label: typeof g.label === "string" ? g.label : "",
         locked: typeof g.locked === "boolean" ? g.locked : true,
@@ -56,6 +56,6 @@ export function migrateNodes(raw: unknown[]): TimelineNode[] {
     }
     // Legacy TimelineEntry (no kind) or already a {kind:"entry"} node
     const migrated = migrateEntries([r])[0]
-    return { kind: "entry" as const, ...migrated }
+    return { kind: "entry", ...migrated }
   })
 }

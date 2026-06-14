@@ -130,6 +130,7 @@ export function buildSyntheticEvent(
     kind: "synthetic",
     skillName: input.def.name,
     sourceBuffId: input.def.id,
+    // coord is typed `?: true`; the assertion stops it widening to boolean.
     ...(input.effect.kind === "coordHit" && { coord: true as const }),
   }
   const activeBuffs = host.activeBuffs(input.sourceCharacterId, hitCtx)

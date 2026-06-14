@@ -2,6 +2,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { flattenNodes } from "#/types/timeline"
+import type { TimelineNode } from "#/types/timeline"
 import { migrateNodes } from "#/lib/timeline/migrate-timeline"
 import { useTimeline } from "./useTimeline"
 
@@ -88,8 +89,8 @@ describe("flattenNodes", () => {
   })
 
   it("flattens top-level entry nodes", () => {
-    const node = {
-      kind: "entry" as const,
+    const node: TimelineNode = {
+      kind: "entry",
       id: "a",
       characterId: 1,
       stageId: "Normal Attack::Stage 1",
@@ -105,8 +106,8 @@ describe("flattenNodes", () => {
   })
 
   it("flattens group entries inline", () => {
-    const group = {
-      kind: "group" as const,
+    const group: TimelineNode = {
+      kind: "group",
       id: "g1",
       label: "Group",
       locked: false,
@@ -122,16 +123,16 @@ describe("flattenNodes", () => {
   })
 
   it("preserves order: entry, group entries, entry", () => {
-    const nodes = [
-      { kind: "entry" as const, id: "top1", characterId: 1, stageId: "S::1" },
+    const nodes: TimelineNode[] = [
+      { kind: "entry", id: "top1", characterId: 1, stageId: "S::1" },
       {
-        kind: "group" as const,
+        kind: "group",
         id: "g1",
         label: "G",
         locked: false,
         entries: [{ id: "g1e1", characterId: 2, stageId: "S::2" }],
       },
-      { kind: "entry" as const, id: "top2", characterId: 3, stageId: "S::3" },
+      { kind: "entry", id: "top2", characterId: 3, stageId: "S::3" },
     ]
     const flat = flattenNodes(nodes)
     expect(flat.map((e) => e.id)).toEqual(["top1", "g1e1", "top2"])

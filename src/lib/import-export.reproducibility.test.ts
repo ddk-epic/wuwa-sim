@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { flattenNodes } from "#/types/timeline"
 import { DEFAULT_SETTINGS } from "#/lib/settings"
 import type { ImportExportPayload } from "#/lib/import-export"
+import type { SlotLoadout } from "#/types/loadout"
 import type { EnrichedCharacter } from "#/types/character"
 
 // One synthetic character drives both the codec (via #/data) and the engine (via
@@ -67,7 +68,7 @@ const { encodePayload, decodePayload } = await import("#/lib/import-export")
 const { compileCharacter } = await import("#/lib/compile-character")
 const { runSimulation } = await import("./simulation")
 
-function emptyLoadout() {
+function emptyLoadout(): SlotLoadout {
   return {
     weaponId: null,
     weaponRank: 1,
@@ -75,9 +76,9 @@ function emptyLoadout() {
     echoSetSlot1Id: null,
     echoSetSlot2Id: null,
     sequence: 0,
-    echoBuild: "4-3-3-1-1" as const,
-    cost4Mains: ["cd" as const],
-    cost3Mains: ["elemDmg" as const, "elemDmg" as const],
+    echoBuild: "4-3-3-1-1",
+    cost4Mains: ["cd"],
+    cost3Mains: ["elemDmg", "elemDmg"],
   }
 }
 

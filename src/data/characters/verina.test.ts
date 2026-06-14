@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EnrichedCharacter } from "#/types/character"
+import type {
+  EnrichedCharacter,
+  EnrichedSkillAttribute,
+  SkillCategory,
+} from "#/types/character"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { HitEvent, SustainEvent } from "#/types/simulation-log"
@@ -68,20 +72,20 @@ describe("Verina — Outro Blossom (amp all +15%)", () => {
 })
 
 describe("Verina — Gift of Nature (team ATK +20%)", () => {
-  it.each([
+  it.each<[string, SkillCategory, string]>([
     [
       "Forte Circuit (Starflower Blooms Heavy)",
-      "Heavy Attack" as const,
+      "Heavy Attack",
       "char.verina.heavy-attack.starflower-blooms.heavy-attack-starflower-blooms::heavy-attack",
     ],
     [
       "Resonance Liberation (Arboreal Flourish)",
-      "Resonance Liberation" as const,
+      "Resonance Liberation",
       "char.verina.resonance-liberation.arboreal-flourish.cast::resonance-liberation",
     ],
     [
       "Outro Skill (Blossom)",
-      "Outro Skill" as const,
+      "Outro Skill",
       "char.verina.outro-skill.blossom.cast::outro-skill",
     ],
   ])(
@@ -226,20 +230,20 @@ describe("Verina — S3 The Choice to Flourish (healingBonus +12%)", () => {
 })
 
 describe("Verina — S4 Blossoming Embrace (team Spectro DMG +15%)", () => {
-  it.each([
+  it.each<[string, SkillCategory, string]>([
     [
       "Forte Circuit (Starflower Blooms Heavy)",
-      "Heavy Attack" as const,
+      "Heavy Attack",
       "char.verina.heavy-attack.starflower-blooms.heavy-attack-starflower-blooms::heavy-attack",
     ],
     [
       "Resonance Liberation (Arboreal Flourish)",
-      "Resonance Liberation" as const,
+      "Resonance Liberation",
       "char.verina.resonance-liberation.arboreal-flourish.cast::resonance-liberation",
     ],
     [
       "Outro Skill (Blossom)",
-      "Outro Skill" as const,
+      "Outro Skill",
       "char.verina.outro-skill.blossom.cast::outro-skill",
     ],
   ])(
@@ -309,7 +313,7 @@ describe("Verina — S6 Joyous Harvest (DMG + Coord. Attack)", () => {
   })
 })
 
-describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
+describe("Verina — Starflower Blooms Forte consumption", () => {
   const STARFLOWER_STAGES = [
     "char.verina.heavy-attack.starflower-blooms.heavy-attack-starflower-blooms::heavy-attack",
     "char.verina.basic-attack.starflower-blooms.mid-air-attack-starflower-blooms-stage-1::basic-attack",
@@ -400,7 +404,7 @@ describe("Verina — Starflower Blooms Forte consumption (#215)", () => {
   })
 })
 
-describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () => {
+describe("Verina — Arboreal Flourish Photosynthesis Mark + coord", () => {
   const TEAMMATE_ID = 9999
 
   function makeTwoCharEngine(sequence = 0) {
@@ -579,7 +583,7 @@ describe("Verina — Arboreal Flourish Photosynthesis Mark + coord (#216)", () =
   })
 })
 
-describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () => {
+describe("Verina — Arboreal Flourish + teammate combo, end-to-end", () => {
   const TEAMMATE_ID = 9999
   const COORD_ID = "char.verina.mark-coord-reaction"
 
@@ -602,26 +606,28 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
         id: 1,
         name: "Normal Attack",
         type: "Normal Attack",
-        stages: (["S1", "S2", "S3"] as const).map((label) => ({
-          name: label,
-          newName: label,
-          category: "Basic Attack" as const,
-          value: label,
-          actionTime: 62,
-          damage: [
-            {
-              type: "Basic Attack" as const,
-              dmgType: "Fusion",
-              scalingStat: "atk",
-              actionFrame: 15,
-              value: 1.0,
-              energy: 0,
-              concerto: 0,
-              toughness: 0,
-              weakness: 0,
-            },
-          ],
-        })),
+        stages: ["S1", "S2", "S3"].map(
+          (label): EnrichedSkillAttribute => ({
+            name: label,
+            newName: label,
+            category: "Basic Attack",
+            value: label,
+            actionTime: 62,
+            damage: [
+              {
+                type: "Basic Attack",
+                dmgType: "Fusion",
+                scalingStat: "atk",
+                actionFrame: 15,
+                value: 1.0,
+                energy: 0,
+                concerto: 0,
+                toughness: 0,
+                weakness: 0,
+              },
+            ],
+          }),
+        ),
         damage: [],
       },
     ],
@@ -637,7 +643,7 @@ describe("Verina — Arboreal Flourish + teammate combo, end-to-end (#216)", () 
       { ...emptyLoadout },
     ]
 
-    const combo = ["S1", "S2", "S3"] as const
+    const combo = ["S1", "S2", "S3"]
     const timeline: TimelineEntry[] = [
       {
         id: "lib",
