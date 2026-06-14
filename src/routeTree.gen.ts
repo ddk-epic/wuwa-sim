@@ -8,58 +8,58 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as SimRouteImport } from "./routes/sim"
-import { Route as LibraryRouteImport } from "./routes/library"
-import { Route as IndexRouteImport } from "./routes/index"
-import { Route as DevFramesRouteImport } from "./routes/dev.frames"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SimRouteImport } from './routes/sim'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevFramesRouteImport } from './routes/dev.frames'
 
 const SimRoute = SimRouteImport.update({
-  id: "/sim",
-  path: "/sim",
+  id: '/sim',
+  path: '/sim',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
-  id: "/library",
-  path: "/library",
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevFramesRoute = DevFramesRouteImport.update({
-  id: "/dev/frames",
-  path: "/dev/frames",
+  id: '/dev/frames',
+  path: '/dev/frames',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
-  "/library": typeof LibraryRoute
-  "/sim": typeof SimRoute
-  "/dev/frames": typeof DevFramesRoute
+  '/': typeof IndexRoute
+  '/library': typeof LibraryRoute
+  '/sim': typeof SimRoute
+  '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
-  "/library": typeof LibraryRoute
-  "/sim": typeof SimRoute
-  "/dev/frames": typeof DevFramesRoute
+  '/': typeof IndexRoute
+  '/library': typeof LibraryRoute
+  '/sim': typeof SimRoute
+  '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
-  "/library": typeof LibraryRoute
-  "/sim": typeof SimRoute
-  "/dev/frames": typeof DevFramesRoute
+  '/': typeof IndexRoute
+  '/library': typeof LibraryRoute
+  '/sim': typeof SimRoute
+  '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/library" | "/sim" | "/dev/frames"
+  fullPaths: '/' | '/library' | '/sim' | '/dev/frames'
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/library" | "/sim" | "/dev/frames"
-  id: "__root__" | "/" | "/library" | "/sim" | "/dev/frames"
+  to: '/' | '/library' | '/sim' | '/dev/frames'
+  id: '__root__' | '/' | '/library' | '/sim' | '/dev/frames'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -69,33 +69,33 @@ export interface RootRouteChildren {
   DevFramesRoute: typeof DevFramesRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/sim": {
-      id: "/sim"
-      path: "/sim"
-      fullPath: "/sim"
+    '/sim': {
+      id: '/sim'
+      path: '/sim'
+      fullPath: '/sim'
       preLoaderRoute: typeof SimRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/library": {
-      id: "/library"
-      path: "/library"
-      fullPath: "/library"
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
       preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/dev/frames": {
-      id: "/dev/frames"
-      path: "/dev/frames"
-      fullPath: "/dev/frames"
+    '/dev/frames': {
+      id: '/dev/frames'
+      path: '/dev/frames'
+      fullPath: '/dev/frames'
       preLoaderRoute: typeof DevFramesRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -112,9 +112,9 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx"
-import type { createStart } from "@tanstack/react-start"
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
