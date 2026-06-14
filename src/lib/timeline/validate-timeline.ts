@@ -1,7 +1,7 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { findStageByEntry } from "../compile-character"
+import { buildStageLabels, findStageByEntry } from "../compile-character"
 import { renderMessage } from "./row-messages"
 import type { ValidatorMessage } from "./row-messages"
 
@@ -38,6 +38,10 @@ export function validateTimeline(
   const internalInvalid = new Map<string, InternalInvalidation[]>()
   const invalidRowIds = new Set<string>()
   const rowWarnings = new Map<string, ValidationWarning[]>()
+
+  const stageLabels = buildStageLabels(slots, loadouts)
+  const resolveStageName = (stageId: string): string =>
+    stageLabels.get(stageId) ?? stageId
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
@@ -154,7 +158,7 @@ export function validateTimeline(
   for (const [id, entryInvalidations] of internalInvalid) {
     const directInvalidations = entryInvalidations
       .filter((e) => !e.isConsequence)
-      .map((e) => ({ message: renderMessage(e.finding) }))
+      .map((e) => ({ message: renderMessage(e.finding, resolveStageName) }))
     if (directInvalidations.length > 0) {
       rowInvalid.set(id, directInvalidations)
     }
@@ -169,7 +173,10 @@ export function validateTimeline(
     ) {
       const existing = rowWarnings.get(entry.id) ?? []
       existing.push({
-        message: renderMessage({ kind: "swapForcesDifferentChar" }),
+        message: renderMessage(
+          { kind: "swapForcesDifferentChar" },
+          resolveStageName,
+        ),
       })
       rowWarnings.set(entry.id, existing)
     }

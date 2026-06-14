@@ -19,8 +19,16 @@ One template for all messages: an **impersonal declarative requirement statement
 
 - **State the requirement, not the fix.** "Intro Skill must immediately follow an Outro Skill" — never "Add an Outro…", never address the user as "you".
 - **Omit anything the row already displays.** The character (CharCell) and the current resource value (energy/concerto cells) are visible on the row, so they never appear in the text. A diagnostic keeps only what the row does _not_ show — the required cost.
-- **"Skill" is the user-facing noun**, used loosely; proper ability names (Intro Skill, Outro Skill, Liberation, Outro) stay capitalized. "Stage" and stage IDs are engine-facing and surface only where a raw ID is shown.
+- **"Skill" is the user-facing noun**, used loosely; proper ability names (Intro Skill, Outro Skill, Liberation, Outro) stay capitalized. "Stage" and stage IDs are engine-facing and must never reach a rendered message (see the resolver seam below).
 - **Sentence case, no trailing period, no em-dashes.** Use parallel construction for paired cases (e.g. the two footing cases share "… required before a … stage").
+
+## The resolver seam
+
+Stage-bearing validator findings (`missingChainPrereq`, `missingWindowedPrereq`, `stageNotFound`) carry **raw engine stage IDs** — the catalog does no name resolution itself. `renderMessage` takes a required `resolveStageName: (stageId) => string`; the validator builds it from `buildStageLabels(slots, loadouts)` (in `compile-character.ts`), which maps every team-reachable character and echo stage ID to the same `stageLabel(skill.name, stage.newName)` the Timeline row shows. Messages quote the resolved label so the name stands out.
+
+This is a hard seam: a raw stage ID must never reach a rendered message. A new stage-bearing finding must route every ID through the resolver. `stageNotFound` carries no ID into its text at all — the authored stage no longer resolves, so its slug is meaningless to a reader.
+
+`log-diagnostics.ts` and footing-case tests pass an identity resolver: Diagnostics never carry stage IDs, so the resolver is never consulted there.
 
 ## Gotchas
 

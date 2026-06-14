@@ -16,7 +16,9 @@ export function deriveRowDiagnostics(
     if (e.kind !== "action" || !e.diagnostics || e.sourceEntryId === undefined)
       continue
     const existing = byEntry.get(e.sourceEntryId) ?? []
-    for (const d of e.diagnostics) existing.push({ message: renderMessage(d) })
+    // Diagnostics never carry stage ids, so the resolver is never consulted.
+    for (const d of e.diagnostics)
+      existing.push({ message: renderMessage(d, (id) => id) })
     byEntry.set(e.sourceEntryId, existing)
   }
   return byEntry

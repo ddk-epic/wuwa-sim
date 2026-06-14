@@ -319,8 +319,23 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     const result = validateTimeline([s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(true)
     expect(
-      result.rowInvalid.get("s2")?.some((e) => e.message.includes("requires")),
+      result.rowInvalid
+        .get("s2")
+        ?.some((e) => e.message.includes("must immediately follow")),
     ).toBe(true)
+  })
+
+  it("renders the missing prerequisite with quoted resolved labels", () => {
+    testCharacters = [charWithPrereq(1)]
+    const s2 = entry(
+      1,
+      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      "s2",
+    )
+    const result = validateTimeline([s2], [1, null, null], loadouts)
+    expect(result.rowInvalid.get("s2")?.[0].message).toBe(
+      '"Normal Attack · Stage 2" must immediately follow "Normal Attack · Stage 1"',
+    )
   })
 
   it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {

@@ -19,7 +19,10 @@ export type ValidatorMessage =
  */
 export type RowMessage = ValidatorMessage | Diagnostic
 
-export function renderMessage(m: RowMessage): string {
+export function renderMessage(
+  m: RowMessage,
+  resolveStageName: (stageId: string) => string,
+): string {
   switch (m.kind) {
     // --- Diagnostic (engine runtime findings) ---
     // Actor and current resource value are omitted: both already appear on the
@@ -42,11 +45,11 @@ export function renderMessage(m: RowMessage): string {
     case "unknownCharacter":
       return "Unknown character"
     case "stageNotFound":
-      return `Stage "${m.stageId}" not found`
+      return "This skill is no longer available for this character"
     case "missingChainPrereq":
-      return `Stage "${m.stageId}" requires "${m.requiredStageId}" to immediately precede it`
+      return `"${resolveStageName(m.stageId)}" must immediately follow "${resolveStageName(m.requiredStageId)}"`
     case "missingWindowedPrereq":
-      return `Stage "${m.stageId}" requires a prior "${m.requiredStageId}" on the same character`
+      return `"${resolveStageName(m.stageId)}" requires an earlier "${resolveStageName(m.requiredStageId)}" on this character`
     case "swapForcesDifferentChar":
       return "Swap forces the next entry to be a different character"
   }

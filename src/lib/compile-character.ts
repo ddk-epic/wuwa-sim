@@ -529,3 +529,37 @@ export function findStageByEntry(
 
   return null
 }
+
+/**
+ * Map every stage id reachable by a team (characters and equipped echoes) to
+ * the user-facing label its Timeline row shows. Sourced from the same
+ * `stageLabel(skill.name, stage.newName)` that `findStageByEntry` uses, so the
+ * validator can name stages exactly as the rows do instead of leaking raw ids.
+ */
+export function buildStageLabels(
+  slots: Slots,
+  loadouts: SlotLoadout[],
+): Map<string, string> {
+  const labels = new Map<string, string>()
+  for (let i = 0; i < slots.length; i++) {
+    const characterId = slots[i]
+    if (characterId === null) continue
+    const character = getCharacterById(characterId)
+    if (character) {
+      for (const info of compileCharacter(character).stageIndex.values()) {
+        labels.set(
+          info.stageId,
+          stageLabel(info.skill.name, info.stage.newName),
+        )
+      }
+    }
+    const echoId = loadouts[i]?.echoId ?? null
+    const echo = echoId !== null ? getEchoById(echoId) : null
+    if (echo) {
+      for (const info of compileEcho(echo).stageIndex.values()) {
+        labels.set(info.stageId, stageLabel(echo.name, info.stage.newName))
+      }
+    }
+  }
+  return labels
+}
