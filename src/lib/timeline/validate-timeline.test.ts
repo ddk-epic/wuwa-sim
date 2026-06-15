@@ -4,6 +4,12 @@ import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { validateTimeline } from "./validate-timeline"
+import type { ValidationResult } from "./validate-timeline"
+
+const errorsOf = (r: ValidationResult, id: string) =>
+  (r.findings.get(id) ?? []).filter((f) => f.severity === "invalid")
+const warningsOf = (r: ValidationResult, id: string) =>
+  (r.findings.get(id) ?? []).filter((f) => f.severity === "warning")
 
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
@@ -80,7 +86,7 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
 describe("validateTimeline — empty", () => {
   it("returns empty result for empty entries", () => {
     const result = validateTimeline([], slots, loadouts)
-    expect(result.rowInvalid.size).toBe(0)
+    expect(result.findings.size).toBe(0)
     expect(result.invalidRowIds.size).toBe(0)
   })
 })
@@ -94,7 +100,7 @@ describe("validateTimeline — character in team", () => {
     )
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
-    expect(result.rowInvalid.get(e.id)?.length).toBeGreaterThan(0)
+    expect(errorsOf(result, e.id).length).toBeGreaterThan(0)
   })
 
   it("does not mark entry invalid when characterId is in a slot", () => {
@@ -105,7 +111,7 @@ describe("validateTimeline — character in team", () => {
     )
     const result = validateTimeline([e], slots, loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(false)
-    expect(result.rowInvalid.get(e.id)).toBeUndefined()
+    expect(result.findings.get(e.id)).toBeUndefined()
   })
 })
 
@@ -219,7 +225,7 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
     )
     const result = validateTimeline([intro], twoCharSlots, twoCharLoadouts)
     expect(result.invalidRowIds.has("intro")).toBe(true)
-    expect(result.rowInvalid.get("intro")?.length).toBeGreaterThan(0)
+    expect(errorsOf(result, "intro").length).toBeGreaterThan(0)
   })
 
   it("flags Intro not immediately preceded by an Outro", () => {
@@ -319,13 +325,13 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     const result = validateTimeline([s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(true)
     expect(
-      result.rowInvalid
-        .get("s2")
-        ?.some((e) => e.message.includes("must immediately follow")),
+      errorsOf(result, "s2").some(
+        (f) => f.message.kind === "missingChainPrereq",
+      ),
     ).toBe(true)
   })
 
-  it("renders the missing prerequisite with quoted resolved labels", () => {
+  it("carries the prerequisite stage ids on the finding", () => {
     testCharacters = [charWithPrereq(1)]
     const s2 = entry(
       1,
@@ -333,9 +339,12 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
       "s2",
     )
     const result = validateTimeline([s2], [1, null, null], loadouts)
-    expect(result.rowInvalid.get("s2")?.[0].message).toBe(
-      '"Normal Attack · Stage 2" must immediately follow "Normal Attack · Stage 1"',
-    )
+    expect(errorsOf(result, "s2")[0].message).toEqual({
+      kind: "missingChainPrereq",
+      stageId: "char.test.basic-attack.normal-attack.stage-2::basic-attack",
+      requiredStageId:
+        "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+    })
   })
 
   it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {
@@ -583,7 +592,7 @@ describe("validateTimeline — cascade suppression", () => {
       ],
     })
 
-  it("Stage 1 broken: Stage 2 and Stage 3 are in invalidRowIds but have no rowInvalid", () => {
+  it("Stage 1 broken: Stage 2 and Stage 3 are invalid but carry no displayable finding", () => {
     // Stage 0 absent; Stage 1 -> direct invalidation; Stage 2, Stage 3 -> cascade
     testCharacters = [chainChar()]
     const s1 = entry(
@@ -605,15 +614,15 @@ describe("validateTimeline — cascade suppression", () => {
 
     // Stage 1 has a direct invalidation
     expect(result.invalidRowIds.has("s1")).toBe(true)
-    expect(result.rowInvalid.get("s1")?.length).toBeGreaterThan(0)
+    expect(errorsOf(result, "s1").length).toBeGreaterThan(0)
 
     // Stage 2 is red but message-less
     expect(result.invalidRowIds.has("s2")).toBe(true)
-    expect(result.rowInvalid.has("s2")).toBe(false)
+    expect(result.findings.has("s2")).toBe(false)
 
     // Stage 3 is red but message-less
     expect(result.invalidRowIds.has("s3")).toBe(true)
-    expect(result.rowInvalid.has("s3")).toBe(false)
+    expect(result.findings.has("s3")).toBe(false)
   })
 
   it("an independent invalidation on a later row is not suppressed", () => {
@@ -636,9 +645,9 @@ describe("validateTimeline — cascade suppression", () => {
     )
 
     // s1 has direct invalidation (no Stage 0 before it)
-    expect(result.rowInvalid.has("s1")).toBe(true)
+    expect(result.findings.has("s1")).toBe(true)
     // independent invalidation is not suppressed
-    expect(result.rowInvalid.has("ind")).toBe(true)
+    expect(result.findings.has("ind")).toBe(true)
   })
 
   it("accepts Stage 2 when Stage 1 is valid (no cascade)", () => {
@@ -660,11 +669,11 @@ describe("validateTimeline — cascade suppression", () => {
     )
     const result = validateTimeline([s0, s1, s2], [1, null, null], loadouts)
     expect(result.invalidRowIds.size).toBe(0)
-    expect(result.rowInvalid.size).toBe(0)
+    expect(result.findings.size).toBe(0)
   })
 })
 
-// -- Warning channel: swap -> same-character rule (issue #178) -----
+// Warning channel: swap -> same-character rule
 
 const swapChar = (): EnrichedCharacter =>
   baseChar({
@@ -746,9 +755,9 @@ describe("validateTimeline — swap warning channel", () => {
       [1, null, null],
       emptyLoadoutsW,
     )
-    const warnings = result.rowWarnings.get("e1") ?? []
+    const warnings = warningsOf(result, "e1")
     expect(warnings).toHaveLength(1)
-    expect(warnings[0].message).toMatch(/different character/i)
+    expect(warnings[0].message.kind).toBe("swapForcesDifferentChar")
   })
 
   it("emits no warning when the next entry is a different character", () => {
@@ -758,7 +767,7 @@ describe("validateTimeline — swap warning channel", () => {
       [1, 2, null],
       emptyLoadoutsW,
     )
-    expect(result.rowWarnings.get("e1")).toBeUndefined()
+    expect(warningsOf(result, "e1")).toHaveLength(0)
   })
 
   it("emits no warning when the swap entry is the last entry", () => {
@@ -768,7 +777,7 @@ describe("validateTimeline — swap warning channel", () => {
       [1, null, null],
       emptyLoadoutsW,
     )
-    expect(result.rowWarnings.get("e2")).toBeUndefined()
+    expect(warningsOf(result, "e2")).toHaveLength(0)
   })
 
   it("emits no warning for a non-swap entry followed by the same character", () => {
@@ -778,10 +787,10 @@ describe("validateTimeline — swap warning channel", () => {
       [1, null, null],
       emptyLoadoutsW,
     )
-    expect(result.rowWarnings.get("e1")).toBeUndefined()
+    expect(warningsOf(result, "e1")).toHaveLength(0)
   })
 
-  it("warnings do not affect invalidRowIds or rowInvalid", () => {
+  it("warnings do not affect invalidRowIds or invalid findings", () => {
     testCharacters = [swapChar()]
     const result = validateTimeline(
       [swapEntry("e1"), fullEntry("e2")],
@@ -789,8 +798,8 @@ describe("validateTimeline — swap warning channel", () => {
       emptyLoadoutsW,
     )
     expect(result.invalidRowIds.size).toBe(0)
-    expect(result.rowInvalid.size).toBe(0)
-    expect(result.rowWarnings.size).toBe(1)
+    expect(errorsOf(result, "e1")).toHaveLength(0)
+    expect(result.findings.size).toBe(1)
   })
 
   it("requiresPriorStageId is satisfied by a swap-variant preceding entry", () => {
@@ -840,7 +849,7 @@ describe("validateTimeline — swap warning channel", () => {
     }
     const result = validateTimeline([e1, e2], [1, null, null], emptyLoadoutsW)
     // swap variant on the preceding entry still satisfies requiresPriorStageId
-    expect(result.rowInvalid.has("e2")).toBe(false)
+    expect(result.findings.has("e2")).toBe(false)
     expect(result.invalidRowIds.has("e2")).toBe(false)
   })
 })

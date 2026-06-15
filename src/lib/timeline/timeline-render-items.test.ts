@@ -3,6 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { Element } from "#/data/elements"
 import type { TimelineNode } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { Diagnostic } from "#/types/simulation-log"
 import type { ValidationResult } from "./validate-timeline"
 import type { ResolvedStage } from "../stage"
 import { buildTimelineRenderItems } from "./timeline-render-items"
@@ -19,6 +20,7 @@ vi.mock("../loadout/catalog", () => ({
 vi.mock("#/lib/compile-character", () => ({
   findStageByEntry: (entry: { stageId: string }) =>
     resolvedStages.get(entry.stageId) ?? null,
+  buildStageLabels: () => new Map<string, string>(),
 }))
 
 afterEach(() => {
@@ -66,8 +68,7 @@ const group = (
 const slots: Slots = [1, 2, 3]
 const loadouts: SlotLoadout[] = []
 const emptyValidation = (): ValidationResult => ({
-  rowInvalid: new Map(),
-  rowWarnings: new Map(),
+  findings: new Map(),
   invalidRowIds: new Set(),
 })
 
@@ -75,8 +76,16 @@ const call = (
   nodes: TimelineNode[],
   expandedGroupIds: Set<string> = new Set(),
   validation: ValidationResult = emptyValidation(),
+  logWarnings: Map<string, Diagnostic[]> = new Map(),
 ) =>
-  buildTimelineRenderItems(nodes, expandedGroupIds, slots, loadouts, validation)
+  buildTimelineRenderItems(
+    nodes,
+    expandedGroupIds,
+    slots,
+    loadouts,
+    validation,
+    logWarnings,
+  )
 
 const entryItems = (items: ReturnType<typeof call>) =>
   items.filter(
@@ -264,5 +273,42 @@ describe("buildTimelineRenderItems", () => {
     resolvedStages.set("s1", stage)
     const items = call([topEntry("e1", 1, "s1")])
     expect(entryItems(items)[0].stageWithVariants).toBeNull()
+  })
+
+  // Findings → rendered messages
+  it("renders an invalid finding into errors and a warning finding into warnings", () => {
+    const validation: ValidationResult = {
+      findings: new Map([
+        [
+          "e1",
+          [
+            { message: { kind: "characterNotInTeam" }, severity: "invalid" },
+            {
+              message: { kind: "swapForcesDifferentChar" },
+              severity: "warning",
+            },
+          ],
+        ],
+      ]),
+      invalidRowIds: new Set(["e1"]),
+    }
+    const e = entryItems(call([topEntry("e1")], new Set(), validation))[0]
+    expect(e.isInvalid).toBe(true)
+    expect(e.errors).toEqual([{ message: "Character is not in the team" }])
+    expect(e.warnings).toEqual([
+      { message: "Swap forces the next entry to be a different character" },
+    ])
+  })
+
+  it("merges engine Diagnostics into the warning channel", () => {
+    const logWarnings = new Map<string, Diagnostic[]>([
+      ["e1", [{ kind: "footingViolation", isLand: false }]],
+    ])
+    const e = entryItems(
+      call([topEntry("e1")], new Set(), emptyValidation(), logWarnings),
+    )[0]
+    expect(e.warnings).toEqual([
+      { message: "Launch/Jump required before an aerial stage" },
+    ])
   })
 })

@@ -1,8 +1,8 @@
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
-import { buildStageLabels, findStageByEntry } from "../compile-character"
-import { renderMessage } from "./row-messages"
+import { findStageByEntry } from "../compile-character"
+import type { ResolvedStage } from "../stage"
 import type { ValidatorMessage } from "./row-messages"
 
 // Footing is deliberately NOT validated here. Footing rules are frame-dependent
@@ -11,23 +11,53 @@ import type { ValidatorMessage } from "./row-messages"
 // ignored Reaction Delay). The engine emits footing violations as Diagnostics on
 // the ActionEvent of the run that observed them; do not re-add a predictor here.
 
-export interface Invalidation {
-  message: string
-}
-
-export interface ValidationWarning {
-  message: string
+/**
+ * A structural problem the validator found on a row. The message is structured —
+ * the validator never renders English. Severity drives styling; the view turns
+ * the message into text via the row-messages catalog.
+ */
+export interface RowFinding {
+  message: ValidatorMessage
+  severity: "invalid" | "warning"
 }
 
 export interface ValidationResult {
-  rowInvalid: Map<string, Invalidation[]>
-  rowWarnings: Map<string, ValidationWarning[]>
+  /** Displayable findings per row; consequence-only invalidations are dropped. */
+  findings: Map<string, RowFinding[]>
+  /** Every invalid row — roots and cascade consequences — for red styling. */
   invalidRowIds: Set<string>
 }
 
-interface InternalInvalidation {
-  finding: ValidatorMessage
-  isConsequence: boolean
+// `consequence` is internal to the walk: a row invalid only because an upstream
+// prerequisite is itself broken. It counts toward invalidRowIds (the cascade
+// stays red) but its message is suppressed so only the root row carries text.
+type RawFinding = RowFinding & { consequence: boolean }
+
+const invalid = (message: ValidatorMessage): RawFinding => ({
+  message,
+  severity: "invalid",
+  consequence: false,
+})
+const consequence = (message: ValidatorMessage): RawFinding => ({
+  message,
+  severity: "invalid",
+  consequence: true,
+})
+const warning = (message: ValidatorMessage): RawFinding => ({
+  message,
+  severity: "warning",
+  consequence: false,
+})
+
+interface WalkContext {
+  entries: TimelineEntry[]
+  resolved: (ResolvedStage | null)[]
+  slots: Slots
+  invalidRowIds: Set<string>
+  /** Immediately preceding entry of each character, as of the current row. */
+  lastByChar: Map<number, TimelineEntry>
+  /** Per character, the last occurrence of each stage id seen so far. */
+  stagesByChar: Map<number, Map<string, TimelineEntry>>
 }
 
 export function validateTimeline(
@@ -35,152 +65,100 @@ export function validateTimeline(
   slots: Slots,
   loadouts: SlotLoadout[],
 ): ValidationResult {
-  const internalInvalid = new Map<string, InternalInvalidation[]>()
-  const invalidRowIds = new Set<string>()
-  const rowWarnings = new Map<string, ValidationWarning[]>()
+  const ctx: WalkContext = {
+    entries,
+    resolved: entries.map((e) => findStageByEntry(e, slots, loadouts)),
+    slots,
+    invalidRowIds: new Set(),
+    lastByChar: new Map(),
+    stagesByChar: new Map(),
+  }
 
-  const stageLabels = buildStageLabels(slots, loadouts)
-  const resolveStageName = (stageId: string): string =>
-    stageLabels.get(stageId) ?? stageId
+  const findings = new Map<string, RowFinding[]>()
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
-    const invalidations: InternalInvalidation[] = []
+    const raw = [
+      ...checkIntroFollowsOutro(i, ctx),
+      ...checkReachability(i, ctx),
+      ...checkSwapForcesDifferentChar(i, ctx),
+    ]
 
-    const resolved = findStageByEntry(entry, slots, loadouts)
-    const skillType = resolved?.skillType ?? null
-    const requiredStageId = resolved?.requiresPriorStageId
-
-    // Intro Skill must follow Outro Skill
-    if (skillType === "Intro Skill") {
-      const prev = i > 0 ? entries[i - 1] : null
-      const prevSkillType = prev
-        ? (findStageByEntry(prev, slots, loadouts)?.skillType ?? null)
-        : null
-      if (prevSkillType !== "Outro Skill") {
-        invalidations.push({
-          finding: { kind: "introNeedsOutro" },
-          isConsequence: false,
-        })
-      }
+    if (raw.some((f) => f.severity === "invalid")) {
+      ctx.invalidRowIds.add(entry.id)
     }
+    const visible = raw
+      .filter((f) => !f.consequence)
+      .map(({ consequence: _omit, ...f }) => f)
+    if (visible.length > 0) findings.set(entry.id, visible)
 
-    const slotIndex = slots.indexOf(entry.characterId)
-    if (slotIndex === -1) {
-      invalidations.push({
-        finding: { kind: "characterNotInTeam" },
-        isConsequence: false,
-      })
-    } else if (skillType === null) {
-      const character = getCharacterById(entry.characterId)
-      if (!character) {
-        invalidations.push({
-          finding: { kind: "unknownCharacter" },
-          isConsequence: false,
-        })
-      } else {
-        invalidations.push({
-          finding: { kind: "stageNotFound", stageId: entry.stageId },
-          isConsequence: false,
-        })
-      }
-    } else if (skillType !== "Echo Skill" && requiredStageId !== undefined) {
-      const minDelay = resolved?.minDelay
-      if (minDelay !== undefined) {
-        // Scan back for any earlier matching prerequisite on the same character.
-        let anchor: TimelineEntry | undefined
-        for (let j = i - 1; j >= 0; j--) {
-          const prev = entries[j]
-          if (prev.characterId !== entry.characterId) continue
-          if (prev.stageId === requiredStageId) {
-            anchor = prev
-            break
-          }
-        }
-        if (!anchor) {
-          invalidations.push({
-            finding: {
-              kind: "missingWindowedPrereq",
-              stageId: entry.stageId,
-              requiredStageId,
-            },
-            isConsequence: false,
-          })
-        } else if (invalidRowIds.has(anchor.id)) {
-          invalidations.push({
-            finding: {
-              kind: "missingWindowedPrereq",
-              stageId: entry.stageId,
-              requiredStageId,
-            },
-            isConsequence: true,
-          })
-        }
-      } else {
-        // The prerequisite must be the immediately preceding same-character entry.
-        let effectivePrev: TimelineEntry | undefined
-        for (let j = i - 1; j >= 0; j--) {
-          const prev = entries[j]
-          if (prev.characterId !== entry.characterId) continue
-          effectivePrev = prev
-          break
-        }
-        if (!effectivePrev || effectivePrev.stageId !== requiredStageId) {
-          invalidations.push({
-            finding: {
-              kind: "missingChainPrereq",
-              stageId: entry.stageId,
-              requiredStageId,
-            },
-            isConsequence: false,
-          })
-        } else if (invalidRowIds.has(effectivePrev.id)) {
-          invalidations.push({
-            finding: {
-              kind: "missingChainPrereq",
-              stageId: entry.stageId,
-              requiredStageId,
-            },
-            isConsequence: true,
-          })
-        }
-      }
-    }
-
-    if (invalidations.length > 0) {
-      internalInvalid.set(entry.id, invalidations)
-      invalidRowIds.add(entry.id)
-    }
+    // Advance running state only after this row's rules have read "prior":
+    // the maps must reflect strictly-earlier entries when a rule consults them.
+    ctx.lastByChar.set(entry.characterId, entry)
+    const seen = ctx.stagesByChar.get(entry.characterId) ?? new Map()
+    seen.set(entry.stageId, entry)
+    ctx.stagesByChar.set(entry.characterId, seen)
   }
 
-  // Pass 2: build public rowInvalid — suppress consequence-only rows
-  const rowInvalid = new Map<string, Invalidation[]>()
-  for (const [id, entryInvalidations] of internalInvalid) {
-    const directInvalidations = entryInvalidations
-      .filter((e) => !e.isConsequence)
-      .map((e) => ({ message: renderMessage(e.finding, resolveStageName) }))
-    if (directInvalidations.length > 0) {
-      rowInvalid.set(id, directInvalidations)
-    }
+  return { findings, invalidRowIds: ctx.invalidRowIds }
+}
+
+function checkIntroFollowsOutro(i: number, ctx: WalkContext): RawFinding[] {
+  if (ctx.resolved[i]?.skillType !== "Intro Skill") return []
+  const prevType = i > 0 ? (ctx.resolved[i - 1]?.skillType ?? null) : null
+  return prevType === "Outro Skill"
+    ? []
+    : [invalid({ kind: "introNeedsOutro" })]
+}
+
+function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
+  const entry = ctx.entries[i]
+  const resolved = ctx.resolved[i]
+  const skillType = resolved?.skillType ?? null
+
+  if (!ctx.slots.includes(entry.characterId)) {
+    return [invalid({ kind: "characterNotInTeam" })]
+  }
+  if (skillType === null) {
+    return getCharacterById(entry.characterId)
+      ? [invalid({ kind: "stageNotFound", stageId: entry.stageId })]
+      : [invalid({ kind: "unknownCharacter" })]
   }
 
-  // Pass 3: swap → same-character warnings
-  for (let i = 0; i < entries.length - 1; i++) {
-    const entry = entries[i]
-    if (
-      entry.variantKind === "swap" &&
-      entries[i + 1].characterId === entry.characterId
-    ) {
-      const existing = rowWarnings.get(entry.id) ?? []
-      existing.push({
-        message: renderMessage(
-          { kind: "swapForcesDifferentChar" },
-          resolveStageName,
-        ),
-      })
-      rowWarnings.set(entry.id, existing)
-    }
-  }
+  const requiredStageId = resolved?.requiresPriorStageId
+  if (skillType === "Echo Skill" || requiredStageId === undefined) return []
 
-  return { rowInvalid, rowWarnings, invalidRowIds }
+  // Window mode: any earlier matching stage on this character satisfies the gate,
+  // regardless of intervening entries. Chain mode: the immediately preceding
+  // same-character entry must BE the prerequisite.
+  const windowed = resolved?.minDelay !== undefined
+  const anchor = windowed
+    ? ctx.stagesByChar.get(entry.characterId)?.get(requiredStageId)
+    : pickChainAnchor(ctx.lastByChar.get(entry.characterId), requiredStageId)
+
+  const message: ValidatorMessage = {
+    kind: windowed ? "missingWindowedPrereq" : "missingChainPrereq",
+    stageId: entry.stageId,
+    requiredStageId,
+  }
+  if (!anchor) return [invalid(message)]
+  return ctx.invalidRowIds.has(anchor.id) ? [consequence(message)] : []
+}
+
+function pickChainAnchor(
+  prev: TimelineEntry | undefined,
+  requiredStageId: string,
+): TimelineEntry | undefined {
+  return prev?.stageId === requiredStageId ? prev : undefined
+}
+
+function checkSwapForcesDifferentChar(
+  i: number,
+  ctx: WalkContext,
+): RawFinding[] {
+  const entry = ctx.entries[i]
+  if (i + 1 >= ctx.entries.length || entry.variantKind !== "swap") return []
+  return ctx.entries[i + 1].characterId === entry.characterId
+    ? [warning({ kind: "swapForcesDifferentChar" })]
+    : []
 }

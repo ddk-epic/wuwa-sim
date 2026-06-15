@@ -75,6 +75,12 @@ describe("renderMessage", () => {
     ).toBe("Outro requires 100 concerto")
   })
 
+  it("renders the swap-forces-different-character warning", () => {
+    expect(renderMessage({ kind: "swapForcesDifferentChar" }, identity)).toBe(
+      "Swap forces the next entry to be a different character",
+    )
+  })
+
   it("renders stageNotFound without leaking the stage id", () => {
     const message = renderMessage(
       {

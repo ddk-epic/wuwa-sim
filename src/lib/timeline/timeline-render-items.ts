@@ -1,21 +1,24 @@
 import type { TimelineNode, TimelineEntry } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { SkillType } from "#/types/character"
+import type { Diagnostic } from "#/types/simulation-log"
 import type { ActionTimeStage } from "#/lib/stage"
-import type {
-  ValidationResult,
-  Invalidation,
-  ValidationWarning,
-} from "#/lib/timeline/validate-timeline"
+import type { ValidationResult } from "#/lib/timeline/validate-timeline"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { ELEMENT_HEX } from "#/data/elements"
-import { findStageByEntry } from "#/lib/compile-character"
+import { findStageByEntry, buildStageLabels } from "#/lib/compile-character"
+import { renderMessage } from "./row-messages"
 import {
   buildGroupGradient,
   getDominantHex,
   getDistinctCharsBySlot,
   getGroupFirstCharHex,
 } from "./timeline-group-formatting"
+
+/** A row message rendered to text — the view-facing shape of a finding. */
+export interface RowMessageText {
+  message: string
+}
 
 export type RenderItem =
   | {
@@ -53,8 +56,8 @@ export type RenderItem =
       skillName: string | null
       stageWithVariants: ActionTimeStage | null
       isInvalid: boolean
-      errors: Invalidation[]
-      warnings: ValidationWarning[]
+      errors: RowMessageText[]
+      warnings: RowMessageText[]
       showMessage: boolean
       /**
        * Index within the item's container: node index for top-level entries,
@@ -84,7 +87,7 @@ export type RenderItem =
 function buildShowMessageIds(
   nodes: TimelineNode[],
   validation: ValidationResult,
-  logWarnings: Map<string, ValidationWarning[]>,
+  logWarnings: Map<string, Diagnostic[]>,
 ): Set<string> {
   const ids = new Set<string>()
   let remaining = 2
@@ -94,8 +97,7 @@ function buildShowMessageIds(
     for (const e of entries) {
       if (remaining === 0) return ids
       if (
-        (validation.rowInvalid.get(e.id)?.length ?? 0) > 0 ||
-        (validation.rowWarnings.get(e.id)?.length ?? 0) > 0 ||
+        (validation.findings.get(e.id)?.length ?? 0) > 0 ||
         (logWarnings.get(e.id)?.length ?? 0) > 0
       ) {
         ids.add(e.id)
@@ -111,8 +113,9 @@ function resolveEntryFields(
   slots: Slots,
   loadouts: SlotLoadout[],
   validation: ValidationResult,
-  logWarnings: Map<string, ValidationWarning[]>,
+  logWarnings: Map<string, Diagnostic[]>,
   showMessageIds: Set<string>,
+  resolveStageName: (stageId: string) => string,
 ): Pick<
   Extract<RenderItem, { type: "entry" }>,
   | "charName"
@@ -146,13 +149,17 @@ function resolveEntryFields(
       : null
 
   const isInvalid = validation.invalidRowIds.has(entry.id)
-  const errors = validation.rowInvalid.get(entry.id) ?? []
+  const findings = validation.findings.get(entry.id) ?? []
+  const errors = findings
+    .filter((f) => f.severity === "invalid")
+    .map((f) => ({ message: renderMessage(f.message, resolveStageName) }))
   // Structural warnings (live, from the validator) + engine Diagnostics (from
-  // the last run's log) share one display channel.
+  // the last run's log) share one display channel — collect both as structured
+  // messages, then render once.
   const warnings = [
-    ...(validation.rowWarnings.get(entry.id) ?? []),
+    ...findings.filter((f) => f.severity === "warning").map((f) => f.message),
     ...(logWarnings.get(entry.id) ?? []),
-  ]
+  ].map((m) => ({ message: renderMessage(m, resolveStageName) }))
   const showMessage = showMessageIds.has(entry.id)
 
   return {
@@ -176,11 +183,14 @@ export function buildTimelineRenderItems(
   slots: Slots,
   loadouts: SlotLoadout[],
   validation: ValidationResult,
-  logWarnings: Map<string, ValidationWarning[]> = new Map(),
+  logWarnings: Map<string, Diagnostic[]> = new Map(),
 ): RenderItem[] {
   const items: RenderItem[] = []
   let flatIndex = 0
   const showMessageIds = buildShowMessageIds(nodes, validation, logWarnings)
+  const stageLabels = buildStageLabels(slots, loadouts)
+  const resolveStageName = (stageId: string): string =>
+    stageLabels.get(stageId) ?? stageId
 
   for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
     const node = nodes[nodeIndex]
@@ -225,6 +235,7 @@ export function buildTimelineRenderItems(
               validation,
               logWarnings,
               showMessageIds,
+              resolveStageName,
             ),
           })
         })
@@ -256,6 +267,7 @@ export function buildTimelineRenderItems(
           validation,
           logWarnings,
           showMessageIds,
+          resolveStageName,
         ),
       })
     }

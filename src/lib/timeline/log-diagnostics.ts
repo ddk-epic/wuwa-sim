@@ -1,24 +1,21 @@
-import type { SimulationLogEntry } from "#/types/simulation-log"
-import { renderMessage } from "./row-messages"
-import type { ValidationWarning } from "./validate-timeline"
+import type { Diagnostic, SimulationLogEntry } from "#/types/simulation-log"
 
 /**
  * Fold engine-emitted Diagnostics out of a Simulation Log, keyed by the
  * Timeline Entry that produced them. View-layer derivation: rows display these
- * alongside the validator's structural warnings, under the stale regime —
- * they describe the last run, not the current edit state.
+ * alongside the validator's structural warnings, under the stale regime — they
+ * describe the last run, not the current edit state. Findings are returned
+ * structured; the render-items builder turns them into text via row-messages.
  */
 export function deriveRowDiagnostics(
   log: SimulationLogEntry[],
-): Map<string, ValidationWarning[]> {
-  const byEntry = new Map<string, ValidationWarning[]>()
+): Map<string, Diagnostic[]> {
+  const byEntry = new Map<string, Diagnostic[]>()
   for (const e of log) {
     if (e.kind !== "action" || !e.diagnostics || e.sourceEntryId === undefined)
       continue
     const existing = byEntry.get(e.sourceEntryId) ?? []
-    // Diagnostics never carry stage ids, so the resolver is never consulted.
-    for (const d of e.diagnostics)
-      existing.push({ message: renderMessage(d, (id) => id) })
+    existing.push(...e.diagnostics)
     byEntry.set(e.sourceEntryId, existing)
   }
   return byEntry
