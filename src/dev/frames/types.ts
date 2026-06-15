@@ -79,7 +79,7 @@ export function sections(clip: Clip): Section[] {
 export function clipDisplayName(clip: Clip): string {
   if (clip.name.trim()) return clip.name
   if (clip.stageRefs.length === 0) return "Untitled"
-  return clip.stageRefs.map((s) => s.stage).join(" → ")
+  return clip.stageRefs.map((s) => s.stage).join("›")
 }
 
 /**
@@ -132,4 +132,129 @@ export function stageIndexOf(clip: Clip, frame: number): number {
       frame >= s.start &&
       (i === secs.length - 1 ? frame <= s.end : frame < s.end),
   )
+}
+
+/** How many hits currently land in stage `i`, by their frame position. */
+export function hitsInStage(clip: Clip, stageIdx: number): number {
+  return clip.hits.filter((h) => stageIndexOf(clip, h.frame) === stageIdx)
+    .length
+}
+
+/** The hit capacity of stage `i` — its reference's recorded hit count, or 0. */
+export function stageCapacity(clip: Clip, stageIdx: number): number {
+  return clip.stageRefs[stageIdx]?.hitCount ?? 0
+}
+
+/** Hits grouped by the stage their frame lands in, each group ordered by frame. Index = stage index. */
+export function hitsByStage(clip: Clip): HitMark[][] {
+  const groups: HitMark[][] = clip.stageRefs.map(() => [])
+  for (const h of clip.hits) {
+    const i = stageIndexOf(clip, h.frame)
+    if (i !== -1) groups[i].push(h)
+  }
+  for (const g of groups) g.sort((a, b) => a.frame - b.frame)
+  return groups
+}
+
+/** Ids of the surplus hits — within each stage, the ones past its capacity, ordered by frame. */
+export function exceedingHitIds(clip: Clip): Set<string> {
+  const over = new Set<string>()
+  hitsByStage(clip).forEach((hits, i) => {
+    hits.slice(stageCapacity(clip, i)).forEach((h) => over.add(h.id))
+  })
+  return over
+}
+
+const clamp = (v: number, lo: number, hi: number) =>
+  Math.min(hi, Math.max(lo, v))
+
+/**
+ * Every clip mutation, as a closed set. `applyClipEdit` is the only door to the
+ * model — the editor never reshapes a Clip in place — so structural invariants
+ * (boundary count, hit capacity, divider ordering) are enforced in one place.
+ * Frames arriving here are raw (the caller converts pixels to frames); clamping
+ * to the legal range is the edit's job, not the caller's.
+ */
+export type ClipEdit =
+  | { type: "setName"; name: string }
+  | { type: "setStart"; frame: number }
+  | { type: "setEnd"; frame: number }
+  | { type: "addStage"; ref: StageRef; boundaryId: string }
+  | { type: "removeStage"; index: number }
+  | { type: "addHit"; hit: HitMark }
+  | { type: "removeHit"; id: string }
+  | { type: "moveHit"; id: string; frame: number }
+  | { type: "setHitCue"; id: string; cue: CueTag }
+  | { type: "moveBoundary"; index: number; frame: number }
+  | { type: "setBoundaryCue"; id: string; cue: CueTag }
+
+/** Apply one edit. Returns the clip unchanged when the edit is illegal (over capacity, no room for the divider). */
+export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
+  switch (edit.type) {
+    case "setName":
+      return { ...clip, name: edit.name }
+    case "setStart":
+      return { ...clip, start: edit.frame }
+    case "setEnd":
+      return { ...clip, end: edit.frame }
+    case "addStage":
+      return appendStage(clip, edit.ref, edit.boundaryId)
+    case "removeStage":
+      return removeStageAt(clip, edit.index)
+    case "addHit": {
+      const frame = clamp(edit.hit.frame, clip.start, clip.end)
+      const stage = stageIndexOf(clip, frame)
+      if (
+        stage === -1 ||
+        hitsInStage(clip, stage) >= stageCapacity(clip, stage)
+      )
+        return clip
+      return { ...clip, hits: [...clip.hits, { ...edit.hit, frame }] }
+    }
+    case "removeHit":
+      return { ...clip, hits: clip.hits.filter((h) => h.id !== edit.id) }
+    case "moveHit": {
+      const hit = clip.hits.find((h) => h.id === edit.id)
+      if (!hit) return clip
+      const frame = clamp(edit.frame, clip.start, clip.end)
+      const from = stageIndexOf(clip, hit.frame)
+      const to = stageIndexOf(clip, frame)
+      if (to !== from && hitsInStage(clip, to) >= stageCapacity(clip, to))
+        return clip
+      return {
+        ...clip,
+        hits: clip.hits.map((h) => (h.id === edit.id ? { ...h, frame } : h)),
+      }
+    }
+    case "setHitCue":
+      return {
+        ...clip,
+        hits: clip.hits.map((h) =>
+          h.id === edit.id ? { ...h, cue: edit.cue } : h,
+        ),
+      }
+    case "moveBoundary": {
+      const { index: i } = edit
+      const min = (i > 0 ? clip.boundaries[i - 1].frame : clip.start) + 1
+      const max =
+        (i < clip.boundaries.length - 1
+          ? clip.boundaries[i + 1].frame
+          : clip.end) - 1
+      if (max < min) return clip
+      const frame = clamp(edit.frame, min, max)
+      return {
+        ...clip,
+        boundaries: clip.boundaries.map((b, idx) =>
+          idx === i ? { ...b, frame } : b,
+        ),
+      }
+    }
+    case "setBoundaryCue":
+      return {
+        ...clip,
+        boundaries: clip.boundaries.map((b) =>
+          b.id === edit.id ? { ...b, cue: edit.cue } : b,
+        ),
+      }
+  }
 }

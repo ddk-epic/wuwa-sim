@@ -1,16 +1,33 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react"
-import { Plus, Trash2, Film, X } from "lucide-react"
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+import {
+  Plus,
+  Trash2,
+  Film,
+  X,
+  ChevronDown,
+  ChevronRight,
+  ChevronsDownUp,
+  Check,
+} from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "./stages"
+import type { StageGroup } from "./stages"
 import { loadClips, saveClips } from "./storage"
 import {
   CUES,
-  appendStage,
+  applyClipEdit,
   clipDisplayName,
-  removeStageAt,
+  exceedingHitIds,
+  hitsByStage,
   sections,
-  stageIndexOf,
 } from "./types"
-import type { Clip, CueTag, HitMark, StageRef } from "./types"
+import type { Clip, ClipEdit, CueTag, HitMark, StageRef } from "./types"
 
 const uid = () => Math.random().toString(36).slice(2, 9)
 
@@ -22,37 +39,6 @@ const CUE_COLOR: Record<CueTag, string> = {
 }
 
 type Selected = { type: "boundary" | "hit"; id: string } | null
-type Mode = "boundary" | "hit"
-
-function ModeToggle({
-  mode,
-  setMode,
-}: {
-  mode: Mode
-  setMode: (m: Mode) => void
-}) {
-  const opts: { value: Mode; label: string }[] = [
-    { value: "boundary", label: "Boundaries" },
-    { value: "hit", label: "Hits" },
-  ]
-  return (
-    <div
-      className="flex h-7 overflow-hidden rounded-sm border border-zinc-700 text-sm"
-      role="group"
-    >
-      {opts.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => setMode(o.value)}
-          aria-pressed={mode === o.value}
-          className={`px-3 transition-colors ${mode === o.value ? "bg-zinc-100 font-semibold text-zinc-900" : "text-zinc-400 hover:text-zinc-100"}`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 function emptyClip(): Clip {
   return {
@@ -105,31 +91,28 @@ export function FramesPage() {
     setSelectedId(c.id)
   }
 
-  function patchClip(id: string, patch: Partial<Clip>) {
-    commit(clips.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+  function editClip(id: string, edit: ClipEdit): Clip {
+    const next = applyClipEdit(clips.find((c) => c.id === id)!, edit)
+    commit(clips.map((c) => (c.id === id ? next : c)))
+    return next
   }
 
   function removeClip(id: string) {
-    commit(clips.filter((c) => c.id !== id))
-    if (selectedId === id) setSelectedId(null)
-  }
-
-  function addStage(target: Clip, ref: StageRef) {
-    commit(
-      clips.map((c) => (c.id === target.id ? appendStage(c, ref, uid()) : c)),
-    )
+    const next = clips.filter((c) => c.id !== id)
+    commit(next)
+    if (selectedId === id) setSelectedId(next[next.length - 1]?.id ?? null)
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="flex items-center gap-3 border-b border-zinc-800 px-5 py-3">
-        <Film className="size-5 text-zinc-400" />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="flex items-center gap-3 border-b border-border px-5 py-3">
+        <Film className="size-5 text-muted-foreground" />
         <h1 className="text-sm font-semibold tracking-wide">Frame Tool</h1>
-        <span className="text-xs text-zinc-500">
-          /dev/frames — step 1: clips &amp; marking
+        <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
+          /dev/frames
         </span>
         <select
-          className="ml-auto rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm"
+          className="ml-auto rounded border border-border bg-card px-2 py-1 text-sm"
           value={characterName}
           onChange={(e) => pickCharacter(e.target.value)}
         >
@@ -142,68 +125,49 @@ export function FramesPage() {
       </header>
 
       <div className="grid grid-cols-[16rem_1fr]">
-        <aside className="h-[calc(100vh-49px)] overflow-y-auto border-r border-zinc-800 p-3">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-            Stages
-          </p>
-          {!clip && (
-            <p className="text-xs text-zinc-600">
-              Add a clip to build its sequence.
-            </p>
-          )}
-          {clip &&
-            groups.map((g) => (
-              <div key={g.skill} className="mb-3">
-                <p className="mb-1 text-xs font-medium text-zinc-400">
-                  {g.skill}
-                </p>
-                <div className="flex flex-col gap-1">
-                  {g.stages.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => addStage(clip, s)}
-                      className="flex items-center justify-between rounded border border-zinc-800 px-2 py-1 text-left text-xs hover:border-zinc-600 hover:bg-zinc-900"
-                    >
-                      <span>{s.stage}</span>
-                      <span className="text-zinc-600">
-                        {s.hitCount} hit{s.hitCount === 1 ? "" : "s"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+        <aside className="h-[calc(100vh-49px)] overflow-y-auto border-r border-border p-3">
+          <StageOverview groups={groups} clip={clip} />
         </aside>
 
         <main className="h-[calc(100vh-49px)] overflow-y-auto p-5">
-          <h2 className="mb-4 text-2xl font-bold tracking-tight">
+          <h2 className="mb-4 text-title font-bold tracking-tight">
             {characterName}
           </h2>
 
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            {clips.map((c) => (
+          <div className="rounded-lg border border-border bg-card p-3">
+            <p className="mb-2 text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
+              Clips
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {clips.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedId(c.id)}
+                  className={`max-w-56 truncate rounded border px-3 py-1 text-sm transition-colors ${c.id === selectedId ? "border-transparent bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-card hover:text-foreground"}`}
+                >
+                  {clipDisplayName(c)}
+                </button>
+              ))}
               <button
-                key={c.id}
-                onClick={() => setSelectedId(c.id)}
-                className={`max-w-56 truncate rounded px-3 py-1 text-sm ${c.id === selectedId ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800"}`}
+                onClick={addClip}
+                className="flex items-center gap-1 rounded border border-dashed border-gray-700 px-3 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
               >
-                {clipDisplayName(c)}
+                <Plus className="size-4" /> Clip
               </button>
-            ))}
-            <button
-              onClick={addClip}
-              className="flex items-center gap-1 rounded border border-dashed border-zinc-700 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
-            >
-              <Plus className="size-4" /> Clip
-            </button>
+            </div>
           </div>
 
-          {!clip && <p className="text-sm text-zinc-500">No clip selected.</p>}
+          <hr className="my-6 border-border" />
+
+          {!clip && (
+            <p className="text-sm text-muted-foreground">No clip selected.</p>
+          )}
           {clip && (
             <ClipEditor
               key={clip.id}
               clip={clip}
-              onPatch={(patch) => patchClip(clip.id, patch)}
+              groups={groups}
+              onEdit={(edit) => editClip(clip.id, edit)}
               onRemove={() => removeClip(clip.id)}
             />
           )}
@@ -215,88 +179,77 @@ export function FramesPage() {
 
 function ClipEditor({
   clip,
-  onPatch,
+  groups,
+  onEdit,
   onRemove,
 }: {
   clip: Clip
-  onPatch: (patch: Partial<Clip>) => void
+  groups: StageGroup[]
+  onEdit: (edit: ClipEdit) => Clip
   onRemove: () => void
 }) {
   const [selected, setSelected] = useState<Selected>(null)
-  const [mode, setMode] = useState<Mode>("boundary")
 
-  function removeStage(i: number) {
-    const next = removeStageAt(clip, i)
-    onPatch({ stageRefs: next.stageRefs, boundaries: next.boundaries })
+  function addStage(ref: StageRef) {
+    onEdit({ type: "addStage", ref, boundaryId: uid() })
   }
 
   return (
     <div className="space-y-5" onPointerDown={() => setSelected(null)}>
       <div className="flex flex-wrap items-end gap-3">
-        <label className="text-xs text-zinc-400">
+        <label className="text-detail text-muted-foreground">
           Name
           <input
-            className="mt-1 block w-56 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 placeholder:text-zinc-600"
+            className="mt-1 block w-56 rounded border border-border bg-card px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground/50"
             value={clip.name}
             placeholder={clipDisplayName(clip)}
-            onChange={(e) => onPatch({ name: e.target.value })}
+            onChange={(e) => onEdit({ type: "setName", name: e.target.value })}
           />
         </label>
         <FrameField
           label="Start"
           value={clip.start}
-          onChange={(v) => onPatch({ start: v })}
+          onChange={(v) => onEdit({ type: "setStart", frame: v })}
         />
         <FrameField
           label="End"
           value={clip.end}
-          onChange={(v) => onPatch({ end: v })}
+          onChange={(v) => onEdit({ type: "setEnd", frame: v })}
         />
-        <span className="pb-1 text-xs text-zinc-500">
-          length {clip.end - clip.start}f
-        </span>
+        <AddStagePopover groups={groups} onAdd={addStage} />
         <button
           onClick={onRemove}
-          className="ml-auto flex items-center gap-1 rounded border border-zinc-800 px-2 py-1 text-xs text-zinc-400 hover:border-red-900 hover:text-red-400"
+          className="ml-auto flex items-center gap-1 rounded border border-border px-3 py-1 text-sm text-muted-foreground hover:border-destructive hover:text-destructive"
         >
           <Trash2 className="size-3.5" /> Delete clip
         </button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <ModeToggle mode={mode} setMode={setMode} />
-        <p className="text-xs text-zinc-600">
-          {mode === "boundary"
-            ? "Drag a divider to resize the adjacent stages · click empty space to deselect"
-            : "Click the ruler to drop a hit · drag a hit to move it"}
+      <div className="space-y-1">
+        <Ruler
+          clip={clip}
+          selected={selected}
+          setSelected={setSelected}
+          onEdit={onEdit}
+        />
+
+        <p className="pl-1.25 text-detail text-muted-foreground/60">
+          Click the ruler to add a hit (dividers/hits are draggable)
         </p>
       </div>
-
-      <Ruler
-        clip={clip}
-        mode={mode}
-        selected={selected}
-        setSelected={setSelected}
-        onPatch={onPatch}
-        onRemoveStage={removeStage}
-      />
-
-      <p className="text-xs text-zinc-600">
-        Click a stage on the left to extend the sequence.
-      </p>
 
       <MarksTable
         clip={clip}
         selected={selected}
         setSelected={setSelected}
-        onPatch={onPatch}
+        onEdit={onEdit}
       />
     </div>
   )
 }
 
 const COLS =
-  "grid grid-cols-[1fr_7rem_3.5rem_5rem_1.25rem] items-center gap-1 px-2 py-1"
+  "grid grid-cols-[1fr_7rem_3.5rem_5rem_auto] items-center gap-1 py-1 pl-2 pr-1"
 
 function CueCell({
   cue,
@@ -311,10 +264,10 @@ function CueCell({
       <select
         value={cue}
         onChange={(e) => onChange(e.target.value as CueTag)}
-        className="cursor-pointer bg-transparent text-zinc-300 outline-none"
+        className="cursor-pointer bg-transparent text-muted-foreground outline-none"
       >
         {CUES.map((c) => (
-          <option key={c.tag} value={c.tag} className="bg-zinc-900">
+          <option key={c.tag} value={c.tag} className="bg-card">
             {c.label}
           </option>
         ))}
@@ -327,69 +280,85 @@ function MarksTable({
   clip,
   selected,
   setSelected,
-  onPatch,
+  onEdit,
 }: {
   clip: Clip
   selected: Selected
   setSelected: (s: Selected) => void
-  onPatch: (patch: Partial<Clip>) => void
+  onEdit: (edit: ClipEdit) => Clip
 }) {
   if (clip.stageRefs.length === 0) {
     return (
-      <p className="text-xs text-zinc-600">Add stages to see their marks.</p>
+      <p className="text-detail text-muted-foreground/60">
+        Add stages to see their marks.
+      </p>
     )
   }
 
   const secs = sections(clip)
+  const byStage = hitsByStage(clip)
+  const exceeding = exceedingHitIds(clip)
   const setHitCue = (id: string, cue: CueTag) =>
-    onPatch({ hits: clip.hits.map((h) => (h.id === id ? { ...h, cue } : h)) })
+    onEdit({ type: "setHitCue", id, cue })
   const setBoundaryCue = (id: string, cue: CueTag) =>
-    onPatch({
-      boundaries: clip.boundaries.map((b) => (b.id === id ? { ...b, cue } : b)),
-    })
-  const removeHit = (id: string) =>
-    onPatch({ hits: clip.hits.filter((h) => h.id !== id) })
+    onEdit({ type: "setBoundaryCue", id, cue })
+  const removeHit = (id: string) => onEdit({ type: "removeHit", id })
 
   return (
     <div className="w-2/5 space-y-2">
       {secs.map((sec, i) => {
         const last = i === secs.length - 1
-        const hits = clip.hits
-          .filter((h) => stageIndexOf(clip, h.frame) === i)
-          .sort((a, b) => a.frame - b.frame)
+        const hits = byStage[i]
         const divider = last ? null : clip.boundaries[i]
         return (
           <Fragment key={i}>
-            <div className="overflow-hidden rounded border border-zinc-800 text-xs">
-              <div className={`${COLS} bg-zinc-900`}>
-                <span className="truncate font-medium text-zinc-200">
-                  Stage {i + 1} · {sec.ref.stage}
-                  <span className="font-normal text-zinc-500">
-                    {" "}
-                    · {sec.end - sec.start}f
+            <div className="overflow-hidden rounded border border-border text-detail">
+              <div className={`${COLS} bg-card`}>
+                <span className="min-w-20 truncate font-medium text-foreground">
+                  Stage {i + 1}
+                  <span className="px-1.5 font-normal text-muted-foreground/70">
+                    {sec.end - sec.start}f
+                  </span>
+                  <span
+                    className={`font-mono font-normal ${hits.length > sec.ref.hitCount ? "text-destructive" : "text-muted-foreground/70"}`}
+                    title="hits / recorded hit count"
+                  >
+                    {hits.length}/{sec.ref.hitCount}
                   </span>
                 </span>
-                <span className="text-zinc-500">cue</span>
-                <span className="text-right text-zinc-500">frame</span>
-                <span className="text-right text-zinc-500">actionFrame</span>
-                <span />
+                <span className="text-muted-foreground/70">cue</span>
+                <span className="text-right text-muted-foreground/70">
+                  frame
+                </span>
+                <span className="text-right text-muted-foreground/70">
+                  actionFrame
+                </span>
+                <span className="w-4" />
               </div>
               {hits.length === 0 ? (
-                <p className="px-2 py-1 text-zinc-600">no hits</p>
+                <p className="px-2 py-1 text-muted-foreground/60">no hits</p>
               ) : (
-                hits.map((h) => (
+                hits.map((h, idx) => (
                   <div
                     key={h.id}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => setSelected({ type: "hit", id: h.id })}
-                    className={`${COLS} border-t border-zinc-900 ${selected?.id === h.id ? "bg-zinc-800/60" : "hover:bg-zinc-900"}`}
+                    className={`${COLS} border-t border-border/60 ${
+                      selected?.id === h.id
+                        ? "bg-border"
+                        : exceeding.has(h.id)
+                          ? "bg-destructive/15 hover:bg-destructive/25"
+                          : "hover:bg-card"
+                    }`}
                   >
-                    <span />
+                    <span className="min-w-20 font-mono text-muted-foreground/70">
+                      hit [{idx + 1}]
+                    </span>
                     <CueCell cue={h.cue} onChange={(c) => setHitCue(h.id, c)} />
-                    <span className="text-right tabular-nums text-zinc-300">
+                    <span className="text-right font-mono tabular-nums text-foreground">
                       {h.frame}
                     </span>
-                    <span className="text-right tabular-nums text-zinc-400">
+                    <span className="text-right font-mono tabular-nums text-muted-foreground">
                       {h.frame - sec.start}
                     </span>
                     <button
@@ -397,7 +366,7 @@ function MarksTable({
                         e.stopPropagation()
                         removeHit(h.id)
                       }}
-                      className="text-zinc-600 hover:text-red-400"
+                      className="pl-0.5 text-muted-foreground/60 hover:text-destructive"
                       title="delete hit"
                     >
                       <Trash2 className="size-3.5" />
@@ -413,7 +382,7 @@ function MarksTable({
                 onClick={() =>
                   setSelected({ type: "boundary", id: divider.id })
                 }
-                className={`${COLS} overflow-hidden rounded border border-zinc-800 text-xs text-zinc-400 ${selected?.id === divider.id ? "bg-zinc-800/60" : "hover:bg-zinc-900"}`}
+                className={`${COLS} overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.id === divider.id ? "bg-border" : "hover:bg-card"}`}
               >
                 <span className="truncate">
                   {sec.ref.stage} ┃ {secs[i + 1]?.ref.stage}
@@ -422,9 +391,11 @@ function MarksTable({
                   cue={divider.cue}
                   onChange={(c) => setBoundaryCue(divider.id, c)}
                 />
-                <span className="text-right tabular-nums">{divider.frame}</span>
-                <span className="text-right text-zinc-600">—</span>
-                <span />
+                <span className="text-right font-mono tabular-nums">
+                  {divider.frame}
+                </span>
+                <span className="text-right text-muted-foreground/60">—</span>
+                <span className="w-4" />
               </div>
             )}
           </Fragment>
@@ -436,23 +407,20 @@ function MarksTable({
 
 function Ruler({
   clip,
-  mode,
   selected,
   setSelected,
-  onPatch,
-  onRemoveStage,
+  onEdit,
 }: {
   clip: Clip
-  mode: Mode
   selected: Selected
   setSelected: (s: Selected) => void
-  onPatch: (patch: Partial<Clip>) => void
-  onRemoveStage: (i: number) => void
+  onEdit: (edit: ClipEdit) => Clip
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const span = Math.max(1, clip.end - clip.start)
   const pct = (f: number) => ((f - clip.start) / span) * 100
   const secs = sections(clip)
+  const exceeding = exceedingHitIds(clip)
 
   function frameAt(clientX: number) {
     const rect = ref.current!.getBoundingClientRect()
@@ -460,31 +428,15 @@ function Ruler({
     return Math.round(clip.start + ratio * span)
   }
 
-  function moveBoundary(i: number, clientX: number) {
-    const min = (i > 0 ? clip.boundaries[i - 1].frame : clip.start) + 1
-    const max =
-      (i < clip.boundaries.length - 1
-        ? clip.boundaries[i + 1].frame
-        : clip.end) - 1
-    if (max < min) return
-    const frame = Math.min(max, Math.max(min, frameAt(clientX)))
-    onPatch({
-      boundaries: clip.boundaries.map((b, idx) =>
-        idx === i ? { ...b, frame } : b,
-      ),
-    })
-  }
-
-  function moveHit(id: string, clientX: number) {
-    const frame = Math.min(clip.end, Math.max(clip.start, frameAt(clientX)))
-    onPatch({ hits: clip.hits.map((h) => (h.id === id ? { ...h, frame } : h)) })
-  }
-
   function addHit(clientX: number) {
-    const frame = Math.min(clip.end, Math.max(clip.start, frameAt(clientX)))
-    const h: HitMark = { id: uid(), frame, cue: "impactFlash" }
-    onPatch({ hits: [...clip.hits, h] })
-    setSelected({ type: "hit", id: h.id })
+    const h: HitMark = {
+      id: uid(),
+      frame: frameAt(clientX),
+      cue: "impactFlash",
+    }
+    const next = onEdit({ type: "addHit", hit: h })
+    if (next.hits.some((x) => x.id === h.id))
+      setSelected({ type: "hit", id: h.id })
   }
 
   return (
@@ -492,15 +444,14 @@ function Ruler({
       ref={ref}
       onPointerDown={(e) => {
         e.stopPropagation()
-        if (mode === "hit") addHit(e.clientX)
-        else setSelected(null)
+        addHit(e.clientX)
       }}
-      className={`relative h-20 select-none rounded border border-zinc-800 bg-zinc-900 ${mode === "hit" ? "cursor-crosshair" : ""}`}
+      className="relative h-20 cursor-crosshair select-none rounded border border-border bg-border"
     >
       {secs.map((sec, i) => (
         <div
           key={i}
-          className={`absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden border-r border-zinc-700/50 ${i % 2 ? "bg-zinc-800/30" : "bg-zinc-800/10"}`}
+          className={`absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden border-r border-border ${i % 2 ? "bg-border/40" : "bg-border/20"}`}
           style={{
             left: `${pct(sec.start)}%`,
             width: `${pct(sec.end) - pct(sec.start)}%`,
@@ -508,16 +459,16 @@ function Ruler({
         >
           <button
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onRemoveStage(i)}
-            className="absolute right-1 top-1 text-zinc-600 hover:text-red-400"
+            onClick={() => onEdit({ type: "removeStage", index: i })}
+            className="absolute right-1 top-1 text-muted-foreground/60 hover:text-destructive"
             title="remove stage"
           >
             <X className="size-3" />
           </button>
-          <span className="truncate px-1 text-xs font-medium text-zinc-200">
+          <span className="truncate px-1 text-detail font-medium text-foreground">
             {sec.ref.stage}
           </span>
-          <span className="text-[10px] tabular-nums text-zinc-500">
+          <span className="font-mono text-detail tabular-nums text-muted-foreground/70">
             {sec.end - sec.start}f
           </span>
         </div>
@@ -529,19 +480,21 @@ function Ruler({
           onPointerDown={(e) => {
             e.stopPropagation()
             setSelected({ type: "boundary", id: b.id })
-            if (mode === "boundary")
-              e.currentTarget.setPointerCapture(e.pointerId)
+            e.currentTarget.setPointerCapture(e.pointerId)
           }}
           onPointerMove={(e) => {
-            if (mode === "boundary" && e.buttons) moveBoundary(i, e.clientX)
+            if (e.buttons)
+              onEdit({
+                type: "moveBoundary",
+                index: i,
+                frame: frameAt(e.clientX),
+              })
           }}
-          className={`absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 items-stretch justify-center ${mode === "boundary" ? "cursor-ew-resize" : "cursor-pointer"}`}
+          className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
           style={{ left: `${pct(b.frame)}%` }}
           title={`boundary @ ${b.frame} (${b.cue})`}
         >
-          <div
-            className={`w-0.5 ${CUE_COLOR[b.cue]} ${selected?.id === b.id ? "ring-2 ring-white" : ""}`}
-          />
+          <div className={`w-0.5 ${CUE_COLOR[b.cue]}`} />
         </div>
       ))}
 
@@ -551,27 +504,301 @@ function Ruler({
           onPointerDown={(e) => {
             e.stopPropagation()
             setSelected({ type: "hit", id: h.id })
-            if (mode === "hit") e.currentTarget.setPointerCapture(e.pointerId)
+            e.currentTarget.setPointerCapture(e.pointerId)
           }}
           onPointerMove={(e) => {
-            if (mode === "hit" && e.buttons) moveHit(h.id, e.clientX)
+            if (e.buttons)
+              onEdit({ type: "moveHit", id: h.id, frame: frameAt(e.clientX) })
           }}
-          className={`absolute bottom-2 z-20 -translate-x-1/2 ${mode === "hit" ? "cursor-grab" : "cursor-pointer"}`}
+          className="absolute bottom-2 z-20 -translate-x-1/2 cursor-grab"
           style={{ left: `${pct(h.frame)}%` }}
           title={`hit @ ${h.frame} (${h.cue})`}
         >
           <div
-            className={`size-3.5 rounded-full border border-zinc-950 ${CUE_COLOR[h.cue]} ${selected?.id === h.id ? "ring-2 ring-white" : ""}`}
+            className={`size-3.5 rounded-full ${exceeding.has(h.id) ? "border-2 border-destructive" : "border border-background"} ${CUE_COLOR[h.cue]} ${selected?.id === h.id ? "ring-2 ring-foreground" : ""}`}
           />
         </div>
       ))}
 
-      <span className="pointer-events-none absolute bottom-0.5 left-1 text-[10px] text-zinc-600">
+      <span className="pointer-events-none absolute bottom-0.5 left-1 font-mono text-detail text-muted-foreground/60">
         {clip.start}
       </span>
-      <span className="pointer-events-none absolute bottom-0.5 right-1 text-[10px] text-zinc-600">
+      <span className="pointer-events-none absolute bottom-0.5 right-1 font-mono text-detail text-muted-foreground/60">
         {clip.end}
       </span>
+    </div>
+  )
+}
+
+// Anchored, stays-open-while-picking catalog. Adding never dismisses it; Esc, the
+// X, or an outside click do. Duplicates are intentional — an action string can
+// repeat a stage — so a click always appends.
+function AddStagePopover({
+  groups,
+  onAdd,
+}: {
+  groups: StageGroup[]
+  onAdd: (ref: StageRef) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [flashId, setFlashId] = useState<string | null>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: PointerEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("pointerdown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  // Open centred on the button but clamped into the page (below the 49px header,
+  // above the viewport bottom) so a tall catalog never rides off-screen — it
+  // scrolls internally instead. Re-place on scroll/resize to stay anchored.
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null)
+      return
+    }
+    const HEADER = 49
+    const GAP = 20
+    function place() {
+      const btn = buttonRef.current
+      const pop = popoverRef.current
+      if (!btn || !pop) return
+      const b = btn.getBoundingClientRect()
+      const h = pop.offsetHeight
+      const min = HEADER + GAP
+      const max = window.innerHeight - h - GAP
+      const centred = b.top + b.height / 2 - h / 2
+      setPos({
+        top: Math.max(min, Math.min(max, centred)),
+        left: b.right + GAP,
+      })
+    }
+    place()
+    window.addEventListener("resize", place)
+    window.addEventListener("scroll", place, true)
+    return () => {
+      window.removeEventListener("resize", place)
+      window.removeEventListener("scroll", place, true)
+    }
+  }, [open])
+
+  function add(stage: StageRef) {
+    onAdd(stage)
+    setFlashId(stage.id)
+    clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => setFlashId(null), 300)
+  }
+
+  return (
+    <div ref={ref}>
+      <button
+        ref={buttonRef}
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 rounded border border-dashed border-gray-700 px-3 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+      >
+        <Plus className="size-4" /> Stage
+      </button>
+      {open && (
+        <div
+          ref={popoverRef}
+          style={
+            pos ? { top: pos.top, left: pos.left } : { visibility: "hidden" }
+          }
+          className="fixed z-30 max-h-[calc(100vh-81px)] w-64 overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-lg"
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
+              Add stage
+            </span>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-muted-foreground/60 hover:text-foreground"
+              title="Close"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+          {groups.map((g) => (
+            <div key={g.skill} className="mb-2">
+              <p className="mb-1 text-detail font-medium text-muted-foreground">
+                {g.skill}
+              </p>
+              <div className="flex flex-col gap-1">
+                {g.stages.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => add(s)}
+                    className={`flex items-center justify-between rounded border px-2 py-1 text-left text-detail transition-colors ${flashId === s.id ? "border-ui-heal/60 bg-ui-heal/15" : "border-border hover:border-muted-foreground/40 hover:bg-border"}`}
+                  >
+                    <span className="truncate">{s.stage}</span>
+                    <span className="text-muted-foreground/60">
+                      {s.hitCount} hit{s.hitCount === 1 ? "" : "s"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Read-only progress mirror over the character's whole stage catalog (grouped by
+// skill). Each stage's progress is measured against the selected clip; a stage not
+// in the clip reads as untouched. Open-state is keyed by catalog stage id and
+// deliberately survives clip switches — collapse-all is the only thing that clears it.
+function StageOverview({
+  groups,
+  clip,
+}: {
+  groups: StageGroup[]
+  clip: Clip | null
+}) {
+  const [open, setOpen] = useState<Set<string>>(new Set())
+
+  function toggle(id: string) {
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  return (
+    <>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
+          Stages
+        </p>
+        <button
+          onClick={() => setOpen(new Set())}
+          className="text-muted-foreground/60 hover:text-foreground"
+          title="Collapse all"
+        >
+          <ChevronsDownUp className="size-3.5" />
+        </button>
+      </div>
+
+      {groups.map((g) => (
+        <div key={g.skill} className="mb-3">
+          <p className="mb-1 text-detail font-medium text-muted-foreground">
+            {g.skill}
+          </p>
+          <div className="flex flex-col gap-1">
+            {g.stages.map((s) => (
+              <StageRow
+                key={s.id}
+                stage={s}
+                clip={clip}
+                open={open.has(s.id)}
+                onToggle={() => toggle(s.id)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+// One catalog stage's progress row. Aggregates hits across every occurrence of this
+// stage in the clip (an action string may repeat a stage), so capacity scales with
+// the occurrence count; actionFrame stays relative to each occurrence's start.
+function StageRow({
+  stage,
+  clip,
+  open,
+  onToggle,
+}: {
+  stage: StageRef
+  clip: Clip | null
+  open: boolean
+  onToggle: () => void
+}) {
+  const cl = clip
+  const secs = cl ? sections(cl) : []
+  const byStage = cl ? hitsByStage(cl) : []
+  const occ = secs
+    .map((sec, i) => ({ sec, i }))
+    .filter(({ sec }) => sec.ref.id === stage.id)
+  const hits = occ.flatMap(({ sec, i }) =>
+    byStage[i].map((h) => ({ id: h.id, cue: h.cue, af: h.frame - sec.start })),
+  )
+
+  const count = hits.length
+  const capacity = (occ.length || 1) * stage.hitCount
+  const canOpen = count > 0
+  const isOpen = open && canOpen
+  const finished = capacity > 0 && count === capacity
+
+  let tone = "text-muted-foreground/60"
+  if (capacity > 0 && count > capacity) tone = "text-destructive"
+  else if (finished) tone = "text-ui-heal"
+  else if (count > 0) tone = "text-foreground"
+
+  return (
+    <div>
+      <button
+        disabled={!canOpen}
+        onClick={() => canOpen && onToggle()}
+        className={`flex w-full items-center justify-between rounded border border-border px-2 py-1 text-left text-detail ${canOpen ? "hover:border-muted-foreground/40 hover:bg-card" : "cursor-default"} ${tone}`}
+      >
+        <span className="flex min-w-0 items-center gap-1">
+          {canOpen ? (
+            isOpen ? (
+              <ChevronDown className="size-3 shrink-0" />
+            ) : (
+              <ChevronRight className="size-3 shrink-0" />
+            )
+          ) : (
+            <span className="size-3 shrink-0" />
+          )}
+          <span className="truncate">{stage.stage}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1 font-mono">
+          {finished && <Check className="size-3 text-ui-heal" />}
+          <span>{capacity === 0 ? "—" : `${count}/${capacity}`}</span>
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+          {hits.map((h, idx) => (
+            <div
+              key={h.id}
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-detail"
+            >
+              <span className="font-mono text-muted-foreground/70">
+                hit [{idx + 1}]
+              </span>
+              <span className={`size-2 rounded-full ${CUE_COLOR[h.cue]}`} />
+              <span className="pr-2 text-right font-mono tabular-nums text-foreground">
+                {h.af}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -586,11 +813,11 @@ function FrameField({
   onChange: (v: number) => void
 }) {
   return (
-    <label className="text-xs text-zinc-400">
+    <label className="text-detail text-muted-foreground">
       {label}
       <input
         type="number"
-        className="mt-1 block w-24 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm tabular-nums text-zinc-100"
+        className="mt-1 block w-18 rounded border border-border bg-card px-2 py-1 text-sm tabular-nums text-foreground"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />

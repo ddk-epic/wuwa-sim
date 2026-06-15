@@ -85,6 +85,7 @@ A full frame-stepping player with mp4 (or similar) upload, layered onto the same
 - **Contiguity assumes tight execution.** `clipLength = Σ actionTimes` breaks if you dawdle between inputs; record clips at combo speed.
 - **Marks are truth; timings are projections.** Never persist `actionTime`/`actionFrame` — always re-derive from absolute marks so an upstream refinement propagates.
 - **Conflicts are a feature.** An over-determined inconsistency is a miscount signal, not an error to suppress.
+- **One door for every clip mutation.** All edits flow through the closed `ClipEdit` set and the pure `applyClipEdit` reducer (in `src/dev/frames/types.ts`) — editors dispatch an edit and never reshape a `Clip` in place. That single door is where the structural invariants live: the boundary-count rule (`boundaries.length === max(0, stageRefs.length − 1)`) and per-stage hit capacity. An illegal edit (over capacity, no room for a divider) returns the clip unchanged rather than throwing, so callers may dispatch optimistically and check the returned clip.
 
 ## Related
 

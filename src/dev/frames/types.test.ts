@@ -1,12 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { appendStage, removeStageAt, sections, stageIndexOf } from "./types"
+import {
+  appendStage,
+  applyClipEdit,
+  exceedingHitIds,
+  hitsByStage,
+  hitsInStage,
+  removeStageAt,
+  sections,
+  stageCapacity,
+  stageIndexOf,
+} from "./types"
 import type { Clip, StageRef } from "./types"
 
-const stage = (name: string): StageRef => ({
+const stage = (name: string, hitCount = 0): StageRef => ({
   id: `skill::${name}`,
   skill: "skill",
   stage: name,
-  hitCount: 0,
+  hitCount,
 })
 
 function clip(over: Partial<Clip> = {}): Clip {
@@ -94,5 +104,140 @@ describe("stageIndexOf", () => {
 
   it("the last stage owns the clip end frame", () => {
     expect(stageIndexOf(threeStage, 100)).toBe(2)
+  })
+})
+
+describe("hitsInStage", () => {
+  it("counts hits by the stage their frame falls in", () => {
+    const c = clip({
+      ...threeStage,
+      hits: [
+        { id: "h0", frame: 10, cue: "impactFlash" },
+        { id: "h1", frame: 20, cue: "impactFlash" },
+        { id: "h2", frame: 50, cue: "impactFlash" },
+      ],
+    })
+    expect(hitsInStage(c, 0)).toBe(2)
+    expect(hitsInStage(c, 1)).toBe(1)
+    expect(hitsInStage(c, 2)).toBe(0)
+  })
+})
+
+describe("exceedingHitIds", () => {
+  it("flags the surplus hits past each stage's capacity, keeping the earliest", () => {
+    const c = clip({
+      stageRefs: [stage("A", 1), stage("B", 2), stage("C", 0)],
+      boundaries: [
+        { id: "b0", frame: 30, cue: "animationBreak" },
+        { id: "b1", frame: 70, cue: "animationBreak" },
+      ],
+      hits: [
+        { id: "a0", frame: 5, cue: "impactFlash" },
+        { id: "a1", frame: 25, cue: "impactFlash" },
+        { id: "b0", frame: 40, cue: "impactFlash" },
+        { id: "c0", frame: 80, cue: "impactFlash" },
+      ],
+    })
+    // A keeps the earliest (a0) and flags a1; B is within its cap of 2; C allows none.
+    expect([...exceedingHitIds(c)].sort()).toEqual(["a1", "c0"])
+  })
+})
+
+describe("stageCapacity", () => {
+  it("reads the stage reference's hit count, or 0 when out of range", () => {
+    const c = clip({ stageRefs: [stage("A", 3), stage("B", 0)] })
+    expect(stageCapacity(c, 0)).toBe(3)
+    expect(stageCapacity(c, 1)).toBe(0)
+    expect(stageCapacity(c, 5)).toBe(0)
+  })
+})
+
+describe("hitsByStage", () => {
+  it("groups hits into their stage, each group ordered by frame", () => {
+    const c = clip({
+      ...threeStage,
+      hits: [
+        { id: "late", frame: 25, cue: "impactFlash" },
+        { id: "early", frame: 5, cue: "impactFlash" },
+        { id: "mid", frame: 50, cue: "impactFlash" },
+      ],
+    })
+    expect(hitsByStage(c).map((g) => g.map((h) => h.id))).toEqual([
+      ["early", "late"],
+      ["mid"],
+      [],
+    ])
+  })
+})
+
+describe("applyClipEdit", () => {
+  const capped = clip({
+    stageRefs: [stage("A", 1), stage("B", 0), stage("C", 2)],
+    boundaries: [
+      { id: "b0", frame: 30, cue: "animationBreak" },
+      { id: "b1", frame: 70, cue: "animationBreak" },
+    ],
+  })
+
+  it("clamps a moved boundary between its neighbours", () => {
+    const hi = applyClipEdit(threeStage, {
+      type: "moveBoundary",
+      index: 0,
+      frame: 999,
+    })
+    expect(hi.boundaries[0].frame).toBe(69)
+    const lo = applyClipEdit(threeStage, {
+      type: "moveBoundary",
+      index: 0,
+      frame: -999,
+    })
+    expect(lo.boundaries[0].frame).toBe(1)
+  })
+
+  it("leaves a boundary unchanged when its neighbours leave no room", () => {
+    const tight = clip({
+      start: 0,
+      end: 1,
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 1, cue: "animationBreak" }],
+    })
+    expect(
+      applyClipEdit(tight, { type: "moveBoundary", index: 0, frame: 0 }),
+    ).toBe(tight)
+  })
+
+  it("appends a hit within capacity and clamps it into the clip", () => {
+    const next = applyClipEdit(capped, {
+      type: "addHit",
+      hit: { id: "h", frame: 999, cue: "impactFlash" },
+    })
+    expect(next.hits).toEqual([{ id: "h", frame: 100, cue: "impactFlash" }])
+  })
+
+  it("rejects a hit that would exceed the stage's capacity", () => {
+    const filled = applyClipEdit(capped, {
+      type: "addHit",
+      hit: { id: "h0", frame: 10, cue: "impactFlash" },
+    })
+    const rejected = applyClipEdit(filled, {
+      type: "addHit",
+      hit: { id: "h1", frame: 20, cue: "impactFlash" },
+    })
+    expect(rejected).toBe(filled)
+  })
+
+  it("refuses to move a hit into a stage already at capacity", () => {
+    const withHit = applyClipEdit(capped, {
+      type: "addHit",
+      hit: { id: "h", frame: 10, cue: "impactFlash" },
+    })
+    const blocked = applyClipEdit(withHit, {
+      type: "moveHit",
+      id: "h",
+      frame: 50,
+    })
+    expect(blocked).toBe(withHit)
+    const ok = applyClipEdit(withHit, { type: "moveHit", id: "h", frame: 20 })
+    expect(ok.hits[0].frame).toBe(20)
   })
 })
