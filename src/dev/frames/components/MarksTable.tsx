@@ -1,0 +1,186 @@
+import { Fragment } from "react"
+import { Trash2 } from "lucide-react"
+import { CUE_COLOR } from "../shared"
+import type { Selected } from "../shared"
+import {
+  CUES,
+  exceedingHitIds,
+  hitsByStage,
+  sections,
+  stageIndexOf,
+} from "../types"
+import type { Clip, ClipEdit, CueTag } from "../types"
+
+const COLS =
+  "grid grid-cols-[1fr_7rem_3.5rem_5rem_auto] items-center gap-1 py-1 pl-2 pr-1"
+
+function CueCell({
+  cue,
+  onChange,
+}: {
+  cue: CueTag
+  onChange: (c: CueTag) => void
+}) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`size-2 shrink-0 rounded-full ${CUE_COLOR[cue]}`} />
+      <select
+        value={cue}
+        onChange={(e) => onChange(e.target.value as CueTag)}
+        className="cursor-pointer bg-transparent text-muted-foreground outline-none"
+      >
+        {CUES.map((c) => (
+          <option key={c.tag} value={c.tag} className="bg-card">
+            {c.label}
+          </option>
+        ))}
+      </select>
+    </span>
+  )
+}
+
+export function MarksTable({
+  clip,
+  selected,
+  setSelected,
+  onEdit,
+}: {
+  clip: Clip
+  selected: Selected
+  setSelected: (s: Selected) => void
+  onEdit: (edit: ClipEdit) => Clip
+}) {
+  if (clip.stageRefs.length === 0) {
+    return (
+      <p className="text-detail text-muted-foreground/60">
+        Add stages to see their marks.
+      </p>
+    )
+  }
+
+  const secs = sections(clip)
+  const byStage = hitsByStage(clip)
+  const exceeding = exceedingHitIds(clip)
+  const setHitCue = (id: string, cue: CueTag) =>
+    onEdit({ type: "setHitCue", id, cue })
+  const setBoundaryCue = (id: string, cue: CueTag) =>
+    onEdit({ type: "setBoundaryCue", id, cue })
+  const removeHit = (id: string) => onEdit({ type: "removeHit", id })
+
+  return (
+    <div className="w-2/5 space-y-2">
+      {secs.map((sec, i) => {
+        const last = i === secs.length - 1
+        const hits = byStage[i]
+        const divider = last ? null : clip.boundaries[i]
+        return (
+          <Fragment key={i}>
+            <div className="overflow-hidden rounded border border-border text-detail">
+              <div className={`${COLS} bg-card`}>
+                <span className="min-w-20 truncate font-medium text-foreground">
+                  Stage {i + 1}
+                  <span className="px-1.5 font-normal text-muted-foreground/70">
+                    {sec.end - sec.start}f
+                  </span>
+                  <span
+                    className={`font-mono font-normal ${hits.length > sec.ref.hitCount ? "text-destructive" : "text-muted-foreground/70"}`}
+                    title="hits / recorded hit count"
+                  >
+                    {hits.length}/{sec.ref.hitCount}
+                  </span>
+                </span>
+                <span className="text-muted-foreground/70">cue</span>
+                <span className="text-right text-muted-foreground/70">
+                  frame
+                </span>
+                <span className="text-right text-muted-foreground/70">
+                  actionFrame
+                </span>
+                <span className="w-4" />
+              </div>
+              {hits.length === 0 ? (
+                <p className="px-2 py-1 text-muted-foreground/60">no hits</p>
+              ) : (
+                hits.map((h, idx) => {
+                  const posIdx = stageIndexOf(clip, h.frame)
+                  // Displaced = the frame sits in a different real stage than its
+                  // owner. In the rest zone (posIdx === -1) there's no stage, so no badge.
+                  const displaced = posIdx !== -1 && posIdx !== i
+                  return (
+                    <div
+                      key={h.id}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => setSelected({ type: "hit", id: h.id })}
+                      className={`${COLS} border-t border-border/60 ${
+                        selected?.id === h.id
+                          ? "bg-border"
+                          : exceeding.has(h.id)
+                            ? "bg-destructive/15 hover:bg-destructive/25"
+                            : "hover:bg-card"
+                      }`}
+                    >
+                      <span className="flex min-w-20 items-center gap-1.5 font-mono text-muted-foreground/70">
+                        hit [{idx + 1}]
+                        {displaced && (
+                          <span
+                            className="rounded bg-amber-500/15 px-1 text-micro text-amber-500"
+                            title={`delayed — frame lands in stage ${posIdx + 1}`}
+                          >
+                            ⤶ S{posIdx + 1}
+                          </span>
+                        )}
+                      </span>
+                      <CueCell
+                        cue={h.cue}
+                        onChange={(c) => setHitCue(h.id, c)}
+                      />
+                      <span className="text-right font-mono tabular-nums text-foreground">
+                        {h.frame}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-muted-foreground">
+                        {h.frame - sec.start}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeHit(h.id)
+                        }}
+                        className="justify-self-end pl-0.5 text-muted-foreground/60 hover:text-destructive"
+                        title="delete hit"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {divider && (
+              <div
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() =>
+                  setSelected({ type: "boundary", id: divider.id })
+                }
+                className={`${COLS} overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.id === divider.id ? "bg-border" : "hover:bg-card"}`}
+              >
+                <span className="truncate">
+                  {sec.ref.stage} ┃ {secs[i + 1]?.ref.stage}
+                </span>
+                <CueCell
+                  cue={divider.cue}
+                  onChange={(c) => setBoundaryCue(divider.id, c)}
+                />
+                <span className="text-right font-mono tabular-nums">
+                  {divider.frame}
+                </span>
+                <span className="text-right text-muted-foreground/60">—</span>
+                <span className="w-4" />
+              </div>
+            )}
+          </Fragment>
+        )
+      })}
+    </div>
+  )
+}
