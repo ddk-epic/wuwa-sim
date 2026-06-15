@@ -2,9 +2,7 @@
 
 A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit `actionFrame` — **empirically from gameplay**, the numbers `gen:character` can't know and that today are hand-counted by eye. You define **clips** (recorded action strings) of known length, mark stage cutoffs and hits inside them, tag each mark with the visual cue you used, and the tool **solves** for each stage's timing across all clips, scoring every result by confidence. Output is copy/download — you paste it into the character file by hand.
 
-This is a spec for an unbuilt tool; the model below is the agreed design.
-
-**Source files (planned):** `src/routes/dev.frames.tsx` (and supporting `src/dev/frames/`) — a `DEV`-gated, pure client-side route. No node/server side.
+**Source files:** `src/routes/dev.frames.tsx` (and supporting `src/dev/frames/`) — a `DEV`-gated, pure client-side route. No node/server side.
 
 ## Why it exists
 
@@ -18,7 +16,9 @@ Note the term collision: `pnpm extract` already means "pull raw character JSON f
 
 - **Mark** — a point in a Clip. Two structural roles decide _what it constrains_:
   - **cutoff mark** — where one stage hands off to the next (a stage boundary).
-  - **hit mark** — where a hit connects (becomes an `actionFrame`).
+  - **hit mark** — where a hit connects (becomes an `actionFrame`). A hit's frame places it, but its **owning stage** is a separate, sticky fact: delayed (trailing) damage lands inside a later stage's frames while it is caused by an earlier one. A hit stores an absolute `owner` stage index, **set at placement** (you click inside the stage that causes it) and never changed by dragging — dragging moves only the frame, so dragging a hit across a boundary makes it delayed (the table keeps it under its owner and shows a displacement badge). Re-owning is delete-and-replace; there is no reassign gesture. Capacity, grouping, and `actionFrame` (`hitFrame − owningStageStart`, which legitimately exceeds the owning stage's length for trailing damage) all key off the owner, not position. Authorship is manual: no rule recovers ownership, since a later stage's own hit can land before the earlier stage's trailing one.
+
+    A hit can also sit in the **rest zone** — the placeholder tail `(restStart, end]` that opens when the last stage is deleted, so the survivor keeps its measured length instead of stretching over the gap. The rest zone is not a stage: it owns nothing, shows no badge, and is overwritten when a stage is appended. Its left edge (`restStart`) is a draggable divider that doubles as the last stage's end, so that stage stays resizable. A trailing hit orphaned there keeps its real owner and a large `actionFrame`.
 
   Plus the Clip's own `start`/`end` act as boundary constraints. **Every mark is stored as an absolute clip-frame — this is the single source of truth.** `actionTime` and `actionFrame` are _derived projections_, recomputed on every solve, never stored. So a hit measured once survives forever as its absolute frame: if a later revisit refines a fuzzy `actionTime` (shifting where its stage starts), the projected `actionFrame = absoluteHitFrame − stageStart` updates automatically — you never re-watch footage to re-measure the hit.
 

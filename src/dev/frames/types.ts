@@ -40,11 +40,19 @@ export interface Boundary {
   cue: CueTag
 }
 
-/** A hit landing, at an absolute clip-frame. Its stage membership derives from position. */
+/** A hit landing, at an absolute clip-frame. */
 export interface HitMark {
   id: string
   frame: number
   cue: CueTag
+  /**
+   * The stage that caused this hit, as an absolute stage index — sticky, set when
+   * the hit is placed and never moved by dragging the frame. Delayed (trailing)
+   * damage lands inside a later stage's frames while owned by an earlier one, so
+   * ownership can't be read off position; dragging a hit across a boundary leaves
+   * the owner put and surfaces the displacement as a badge.
+   */
+  owner: number
 }
 
 /** One action string: a contiguous stage sequence of known length, plus its marks. */
@@ -58,6 +66,14 @@ export interface Clip {
   /** Internal dividers, positionally aligned: `boundaries[i]` splits stage i from i+1. Length = max(0, stageRefs.length - 1). */
   boundaries: Boundary[]
   hits: HitMark[]
+  /**
+   * Where the stage sequence stops and the trailing rest zone begins, when one
+   * exists. Born only when the last stage is deleted (the vacated boundary's
+   * frame), so the survivor doesn't stretch over the gap; `(restStart, end]` is a
+   * placeholder that owns nothing and is overwritten when a stage is appended.
+   * Absent means the last stage fills to `end` (the common, no-recovery case).
+   */
+  restStart?: number
 }
 
 export interface Section {
@@ -66,9 +82,14 @@ export interface Section {
   end: number
 }
 
-/** Project the sequence onto the ruler as contiguous sections, bounded by start/dividers/end. */
+/**
+ * Project the sequence onto the ruler as contiguous sections, bounded by
+ * start/dividers and then `restStart` (when a rest zone exists) or `end`. The
+ * rest zone itself is not a section — it owns nothing and is rendered separately.
+ */
 export function sections(clip: Clip): Section[] {
-  const bounds = [clip.start, ...clip.boundaries.map((b) => b.frame), clip.end]
+  const tail = clip.restStart ?? clip.end
+  const bounds = [clip.start, ...clip.boundaries.map((b) => b.frame), tail]
   return clip.stageRefs.map((ref, i) => ({
     ref,
     start: bounds[i],
@@ -134,10 +155,20 @@ export function stageIndexOf(clip: Clip, frame: number): number {
   )
 }
 
-/** How many hits currently land in stage `i`, by their frame position. */
+/**
+ * The stage a hit is owned by — its stored `owner`, clamped to the clip's stages
+ * as a guard against a stale index. Returns -1 only when the clip has no stages.
+ * This is the membership everything downstream counts against, independent of
+ * where the hit's frame currently sits.
+ */
+export function ownerIndexOf(clip: Clip, hit: HitMark): number {
+  if (clip.stageRefs.length === 0) return -1
+  return clamp(hit.owner, 0, clip.stageRefs.length - 1)
+}
+
+/** How many hits are owned by stage `i`. */
 export function hitsInStage(clip: Clip, stageIdx: number): number {
-  return clip.hits.filter((h) => stageIndexOf(clip, h.frame) === stageIdx)
-    .length
+  return clip.hits.filter((h) => ownerIndexOf(clip, h) === stageIdx).length
 }
 
 /** The hit capacity of stage `i` — its reference's recorded hit count, or 0. */
@@ -145,11 +176,11 @@ export function stageCapacity(clip: Clip, stageIdx: number): number {
   return clip.stageRefs[stageIdx]?.hitCount ?? 0
 }
 
-/** Hits grouped by the stage their frame lands in, each group ordered by frame. Index = stage index. */
+/** Hits grouped by the stage that owns them, each group ordered by frame. Index = stage index. */
 export function hitsByStage(clip: Clip): HitMark[][] {
   const groups: HitMark[][] = clip.stageRefs.map(() => [])
   for (const h of clip.hits) {
-    const i = stageIndexOf(clip, h.frame)
+    const i = ownerIndexOf(clip, h)
     if (i !== -1) groups[i].push(h)
   }
   for (const g of groups) g.sort((a, b) => a.frame - b.frame)
@@ -181,11 +212,13 @@ export type ClipEdit =
   | { type: "setEnd"; frame: number }
   | { type: "addStage"; ref: StageRef; boundaryId: string }
   | { type: "removeStage"; index: number }
-  | { type: "addHit"; hit: HitMark }
+  | { type: "addHit"; hit: Omit<HitMark, "owner"> }
   | { type: "removeHit"; id: string }
   | { type: "moveHit"; id: string; frame: number }
   | { type: "setHitCue"; id: string; cue: CueTag }
   | { type: "moveBoundary"; index: number; frame: number }
+  | { type: "moveRestStart"; frame: number }
+  | { type: "removeRestZone" }
   | { type: "setBoundaryCue"; id: string; cue: CueTag }
 
 /** Apply one edit. Returns the clip unchanged when the edit is illegal (over capacity, no room for the divider). */
@@ -195,32 +228,81 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
       return { ...clip, name: edit.name }
     case "setStart":
       return { ...clip, start: edit.frame }
-    case "setEnd":
-      return { ...clip, end: edit.frame }
-    case "addStage":
+    case "setEnd": {
+      // End can't cross inward of the content: the last divider, the rest-zone
+      // start, or any hit — else the rest zone inverts or a hit orphans off-ruler.
+      const lastBoundary = clip.boundaries.length
+        ? clip.boundaries[clip.boundaries.length - 1].frame
+        : clip.start
+      const maxHit = clip.hits.reduce(
+        (m, h) => Math.max(m, h.frame),
+        clip.start,
+      )
+      const floor =
+        Math.max(lastBoundary, clip.restStart ?? clip.start, maxHit) + 1
+      return { ...clip, end: Math.max(edit.frame, floor) }
+    }
+    case "addStage": {
+      // A rest zone is a placeholder: an appended stage overwrites it, taking
+      // `[restStart, end]` with the old rest-start becoming its leading divider.
+      if (clip.restStart != null && clip.stageRefs.length > 0) {
+        return {
+          ...clip,
+          stageRefs: [...clip.stageRefs, edit.ref],
+          boundaries: [
+            ...clip.boundaries,
+            {
+              id: edit.boundaryId,
+              frame: clip.restStart,
+              cue: "animationBreak",
+            },
+          ],
+          restStart: undefined,
+        }
+      }
       return appendStage(clip, edit.ref, edit.boundaryId)
-    case "removeStage":
-      return removeStageAt(clip, edit.index)
+    }
+    case "removeStage": {
+      const i = edit.index
+      const isLast = i === clip.stageRefs.length - 1
+      const sole = clip.stageRefs.length === 1
+      // Removing the last stage leaves its leading divider as the rest-zone start
+      // so the survivor keeps its measured length instead of stretching over the gap.
+      const vacated =
+        isLast && !sole
+          ? clip.boundaries[clip.boundaries.length - 1].frame
+          : undefined
+      const reshaped = removeStageAt(clip, i)
+      // Drop hits owned by the removed stage; shift owners past it down by one.
+      const hits = clip.hits
+        .filter((h) => ownerIndexOf(clip, h) !== i)
+        .map((h) => {
+          const o = ownerIndexOf(clip, h)
+          return o > i ? { ...h, owner: o - 1 } : h
+        })
+      const restStart = sole ? undefined : isLast ? vacated : clip.restStart
+      return { ...reshaped, hits, restStart }
+    }
     case "addHit": {
+      // Placement sets ownership: a hit is born owned by the stage it lands in,
+      // so clicking the rest zone (no stage) is rejected.
       const frame = clamp(edit.hit.frame, clip.start, clip.end)
-      const stage = stageIndexOf(clip, frame)
+      const owner = stageIndexOf(clip, frame)
       if (
-        stage === -1 ||
-        hitsInStage(clip, stage) >= stageCapacity(clip, stage)
+        owner === -1 ||
+        hitsInStage(clip, owner) >= stageCapacity(clip, owner)
       )
         return clip
-      return { ...clip, hits: [...clip.hits, { ...edit.hit, frame }] }
+      return { ...clip, hits: [...clip.hits, { ...edit.hit, frame, owner }] }
     }
     case "removeHit":
       return { ...clip, hits: clip.hits.filter((h) => h.id !== edit.id) }
     case "moveHit": {
+      // Dragging moves only the frame; ownership is sticky, so a hit can cross a
+      // boundary (becoming delayed) without re-homing and without a capacity check.
       const hit = clip.hits.find((h) => h.id === edit.id)
       if (!hit) return clip
       const frame = clamp(edit.frame, clip.start, clip.end)
-      const from = stageIndexOf(clip, hit.frame)
-      const to = stageIndexOf(clip, frame)
-      if (to !== from && hitsInStage(clip, to) >= stageCapacity(clip, to))
-        return clip
       return {
         ...clip,
         hits: clip.hits.map((h) => (h.id === edit.id ? { ...h, frame } : h)),
@@ -236,10 +318,11 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
     case "moveBoundary": {
       const { index: i } = edit
       const min = (i > 0 ? clip.boundaries[i - 1].frame : clip.start) + 1
-      const max =
-        (i < clip.boundaries.length - 1
+      const upper =
+        i < clip.boundaries.length - 1
           ? clip.boundaries[i + 1].frame
-          : clip.end) - 1
+          : (clip.restStart ?? clip.end)
+      const max = upper - 1
       if (max < min) return clip
       const frame = clamp(edit.frame, min, max)
       return {
@@ -249,6 +332,22 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
         ),
       }
     }
+    case "moveRestStart": {
+      // The rest-zone start doubles as the last stage's end divider, so dragging
+      // it resizes that stage. Clamp between the last real boundary and the end.
+      if (clip.restStart == null) return clip
+      const min =
+        (clip.boundaries.length
+          ? clip.boundaries[clip.boundaries.length - 1].frame
+          : clip.start) + 1
+      const max = clip.end - 1
+      if (max < min) return clip
+      return { ...clip, restStart: clamp(edit.frame, min, max) }
+    }
+    case "removeRestZone":
+      // The last stage reclaims the tail up to `end`; any hit parked in the zone
+      // now falls inside that stage (a displaced/delayed hit) by its frame.
+      return { ...clip, restStart: undefined }
     case "setBoundaryCue":
       return {
         ...clip,

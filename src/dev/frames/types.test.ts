@@ -5,12 +5,13 @@ import {
   exceedingHitIds,
   hitsByStage,
   hitsInStage,
+  ownerIndexOf,
   removeStageAt,
   sections,
   stageCapacity,
   stageIndexOf,
 } from "./types"
-import type { Clip, StageRef } from "./types"
+import type { Clip, HitMark, StageRef } from "./types"
 
 const stage = (name: string, hitCount = 0): StageRef => ({
   id: `skill::${name}`,
@@ -18,6 +19,13 @@ const stage = (name: string, hitCount = 0): StageRef => ({
   stage: name,
   hitCount,
 })
+
+const hit = (
+  id: string,
+  frame: number,
+  owner: number,
+  cue: HitMark["cue"] = "impactFlash",
+): HitMark => ({ id, frame, cue, owner })
 
 function clip(over: Partial<Clip> = {}): Clip {
   return {
@@ -48,6 +56,20 @@ describe("sections", () => {
       ["A", 0, 30],
       ["B", 30, 70],
       ["C", 70, 100],
+    ])
+  })
+
+  it("bounds the last stage at restStart, leaving the tail as rest", () => {
+    const withRest = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
+    })
+    expect(
+      sections(withRest).map((s) => [s.ref.stage, s.start, s.end]),
+    ).toEqual([
+      ["A", 0, 30],
+      ["B", 30, 70],
     ])
   })
 })
@@ -105,26 +127,52 @@ describe("stageIndexOf", () => {
   it("the last stage owns the clip end frame", () => {
     expect(stageIndexOf(threeStage, 100)).toBe(2)
   })
+
+  it("returns -1 for a frame in the rest zone", () => {
+    const withRest = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
+    })
+    expect(stageIndexOf(withRest, 70)).toBe(1)
+    expect(stageIndexOf(withRest, 85)).toBe(-1)
+  })
 })
 
-describe("hitsInStage", () => {
-  it("counts hits by the stage their frame falls in", () => {
+describe("ownerIndexOf", () => {
+  it("reads the stored owner, independent of where the frame sits", () => {
+    expect(ownerIndexOf(threeStage, hit("h", 90, 0))).toBe(0)
+  })
+
+  it("clamps a stale owner into the clip's stages, and is -1 with no stages", () => {
+    expect(ownerIndexOf(threeStage, hit("h", 10, 9))).toBe(2)
+    expect(ownerIndexOf(clip(), hit("h", 10, 0))).toBe(-1)
+  })
+})
+
+describe("hitsInStage / hitsByStage", () => {
+  it("count and group by owner, not by frame position", () => {
     const c = clip({
       ...threeStage,
       hits: [
-        { id: "h0", frame: 10, cue: "impactFlash" },
-        { id: "h1", frame: 20, cue: "impactFlash" },
-        { id: "h2", frame: 50, cue: "impactFlash" },
+        hit("own", 10, 0),
+        // Frame sits in stage 1 but it is owned by (trailing from) stage 0.
+        hit("trailing", 50, 0),
+        hit("mid", 55, 1),
       ],
     })
     expect(hitsInStage(c, 0)).toBe(2)
     expect(hitsInStage(c, 1)).toBe(1)
-    expect(hitsInStage(c, 2)).toBe(0)
+    expect(hitsByStage(c).map((g) => g.map((h) => h.id))).toEqual([
+      ["own", "trailing"],
+      ["mid"],
+      [],
+    ])
   })
 })
 
 describe("exceedingHitIds", () => {
-  it("flags the surplus hits past each stage's capacity, keeping the earliest", () => {
+  it("flags the surplus hits past each owner's capacity, keeping the earliest", () => {
     const c = clip({
       stageRefs: [stage("A", 1), stage("B", 2), stage("C", 0)],
       boundaries: [
@@ -132,13 +180,12 @@ describe("exceedingHitIds", () => {
         { id: "b1", frame: 70, cue: "animationBreak" },
       ],
       hits: [
-        { id: "a0", frame: 5, cue: "impactFlash" },
-        { id: "a1", frame: 25, cue: "impactFlash" },
-        { id: "b0", frame: 40, cue: "impactFlash" },
-        { id: "c0", frame: 80, cue: "impactFlash" },
+        hit("a0", 5, 0),
+        hit("a1", 25, 0),
+        hit("b0", 40, 1),
+        hit("c0", 80, 2),
       ],
     })
-    // A keeps the earliest (a0) and flags a1; B is within its cap of 2; C allows none.
     expect([...exceedingHitIds(c)].sort()).toEqual(["a1", "c0"])
   })
 })
@@ -149,24 +196,6 @@ describe("stageCapacity", () => {
     expect(stageCapacity(c, 0)).toBe(3)
     expect(stageCapacity(c, 1)).toBe(0)
     expect(stageCapacity(c, 5)).toBe(0)
-  })
-})
-
-describe("hitsByStage", () => {
-  it("groups hits into their stage, each group ordered by frame", () => {
-    const c = clip({
-      ...threeStage,
-      hits: [
-        { id: "late", frame: 25, cue: "impactFlash" },
-        { id: "early", frame: 5, cue: "impactFlash" },
-        { id: "mid", frame: 50, cue: "impactFlash" },
-      ],
-    })
-    expect(hitsByStage(c).map((g) => g.map((h) => h.id))).toEqual([
-      ["early", "late"],
-      ["mid"],
-      [],
-    ])
   })
 })
 
@@ -186,35 +215,79 @@ describe("applyClipEdit", () => {
       frame: 999,
     })
     expect(hi.boundaries[0].frame).toBe(69)
-    const lo = applyClipEdit(threeStage, {
-      type: "moveBoundary",
-      index: 0,
-      frame: -999,
-    })
-    expect(lo.boundaries[0].frame).toBe(1)
   })
 
-  it("leaves a boundary unchanged when its neighbours leave no room", () => {
-    const tight = clip({
-      start: 0,
-      end: 1,
+  it("drags restStart to resize the last stage, clamped past the last boundary", () => {
+    const single = clip({ stageRefs: [stage("A")], restStart: 70 })
+    expect(
+      applyClipEdit(single, { type: "moveRestStart", frame: 40 }).restStart,
+    ).toBe(40)
+    expect(
+      applyClipEdit(single, { type: "moveRestStart", frame: 999 }).restStart,
+    ).toBe(99)
+
+    const withBoundary = clip({
       stageRefs: [stage("A"), stage("B")],
-      boundaries: [{ id: "b0", frame: 1, cue: "animationBreak" }],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
     })
     expect(
-      applyClipEdit(tight, { type: "moveBoundary", index: 0, frame: 0 }),
-    ).toBe(tight)
+      applyClipEdit(withBoundary, { type: "moveRestStart", frame: 10 })
+        .restStart,
+    ).toBe(31)
   })
 
-  it("appends a hit within capacity and clamps it into the clip", () => {
+  it("removing the rest zone lets the last stage reclaim the tail to end", () => {
+    const withRest = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
+    })
+    const next = applyClipEdit(withRest, { type: "removeRestZone" })
+    expect(next.restStart).toBeUndefined()
+    expect(sections(next)[1].end).toBe(100)
+  })
+
+  it("clamps the last boundary against restStart, not end", () => {
+    const withRest = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
+    })
+    const moved = applyClipEdit(withRest, {
+      type: "moveBoundary",
+      index: 0,
+      frame: 999,
+    })
+    expect(moved.boundaries[0].frame).toBe(69)
+  })
+
+  it("places a hit owned by the stage it lands in, clamped into the clip", () => {
     const next = applyClipEdit(capped, {
       type: "addHit",
-      hit: { id: "h", frame: 999, cue: "impactFlash" },
+      hit: { id: "h", frame: 10, cue: "impactFlash" },
     })
-    expect(next.hits).toEqual([{ id: "h", frame: 100, cue: "impactFlash" }])
+    expect(next.hits[0]).toEqual({
+      id: "h",
+      frame: 10,
+      cue: "impactFlash",
+      owner: 0,
+    })
   })
 
-  it("rejects a hit that would exceed the stage's capacity", () => {
+  it("rejects a hit placed in the rest zone", () => {
+    const withRest = clip({
+      stageRefs: [stage("A", 2)],
+      restStart: 40,
+    })
+    const rejected = applyClipEdit(withRest, {
+      type: "addHit",
+      hit: { id: "h", frame: 60, cue: "impactFlash" },
+    })
+    expect(rejected).toBe(withRest)
+  })
+
+  it("rejects a hit that would exceed the owning stage's capacity", () => {
     const filled = applyClipEdit(capped, {
       type: "addHit",
       hit: { id: "h0", frame: 10, cue: "impactFlash" },
@@ -226,18 +299,80 @@ describe("applyClipEdit", () => {
     expect(rejected).toBe(filled)
   })
 
-  it("refuses to move a hit into a stage already at capacity", () => {
-    const withHit = applyClipEdit(capped, {
-      type: "addHit",
-      hit: { id: "h", frame: 10, cue: "impactFlash" },
+  it("drags a hit across a boundary without re-homing or a capacity check", () => {
+    const c = clip({
+      stageRefs: [stage("A", 1), stage("B", 1)],
+      boundaries: [{ id: "b0", frame: 50, cue: "animationBreak" }],
+      hits: [hit("a", 10, 0), hit("b", 60, 1)],
     })
-    const blocked = applyClipEdit(withHit, {
-      type: "moveHit",
-      id: "h",
-      frame: 50,
+    // Drag A's hit into B's frames; B is full, but ownership is sticky so it holds.
+    const next = applyClipEdit(c, { type: "moveHit", id: "a", frame: 70 })
+    const moved = next.hits.find((h) => h.id === "a")!
+    expect(moved.frame).toBe(70)
+    expect(moved.owner).toBe(0)
+    expect(hitsInStage(next, 0)).toBe(1)
+    expect(hitsInStage(next, 1)).toBe(1)
+  })
+
+  it("removing a middle stage drops its hits and shifts later owners down", () => {
+    const c = clip({
+      ...threeStage,
+      hits: [hit("a", 10, 0), hit("b", 50, 1), hit("c", 80, 2)],
     })
-    expect(blocked).toBe(withHit)
-    const ok = applyClipEdit(withHit, { type: "moveHit", id: "h", frame: 20 })
-    expect(ok.hits[0].frame).toBe(20)
+    const next = applyClipEdit(c, { type: "removeStage", index: 1 })
+    expect(next.hits.map((h) => [h.id, h.owner])).toEqual([
+      ["a", 0],
+      ["c", 1],
+    ])
+  })
+
+  it("removing the last stage opens a rest zone and keeps trailing hits there", () => {
+    const c = clip({
+      ...threeStage,
+      hits: [hit("a", 10, 0), hit("trailing", 80, 0), hit("c", 90, 2)],
+    })
+    const next = applyClipEdit(c, { type: "removeStage", index: 2 })
+    expect(next.restStart).toBe(70)
+    expect(next.end).toBe(100)
+    // c (owned by the removed stage) is dropped; the trailing hit survives in rest.
+    expect(next.hits.map((h) => h.id).sort()).toEqual(["a", "trailing"])
+    expect(stageIndexOf(next, 80)).toBe(-1)
+  })
+
+  it("removing the sole stage clears the rest zone and its hits", () => {
+    const c = clip({ stageRefs: [stage("A")], hits: [hit("a", 10, 0)] })
+    const next = applyClipEdit(c, { type: "removeStage", index: 0 })
+    expect(next.stageRefs).toHaveLength(0)
+    expect(next.hits).toHaveLength(0)
+    expect(next.restStart).toBeUndefined()
+  })
+
+  it("appending a stage overwrites the rest zone with the new stage", () => {
+    const c = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      restStart: 70,
+      hits: [hit("trailing", 80, 0)],
+    })
+    const next = applyClipEdit(c, {
+      type: "addStage",
+      ref: stage("D"),
+      boundaryId: "b1",
+    })
+    expect(next.restStart).toBeUndefined()
+    expect(next.boundaries.map((b) => b.frame)).toEqual([30, 70])
+    // The new stage takes [70,100]; the trailing hit is now displaced into it.
+    expect(stageIndexOf(next, 80)).toBe(2)
+    expect(next.hits[0].owner).toBe(0)
+  })
+
+  it("clamps End so it cannot cross inward of a hit", () => {
+    const c = clip({
+      stageRefs: [stage("A"), stage("B")],
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      hits: [hit("h", 90, 1)],
+    })
+    const next = applyClipEdit(c, { type: "setEnd", frame: 50 })
+    expect(next.end).toBe(91)
   })
 })

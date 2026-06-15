@@ -26,6 +26,7 @@ import {
   exceedingHitIds,
   hitsByStage,
   sections,
+  stageIndexOf,
 } from "./types"
 import type { Clip, ClipEdit, CueTag, HitMark, StageRef } from "./types"
 
@@ -104,8 +105,8 @@ export function FramesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-3 border-b border-border px-5 py-3">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+      <header className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-3">
         <Film className="size-5 text-muted-foreground" />
         <h1 className="text-sm font-semibold tracking-wide">Frame Tool</h1>
         <span className="font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
@@ -124,12 +125,12 @@ export function FramesPage() {
         </select>
       </header>
 
-      <div className="grid grid-cols-[16rem_1fr]">
-        <aside className="h-[calc(100vh-49px)] overflow-y-auto border-r border-border p-3">
+      <div className="grid min-h-0 flex-1 grid-cols-[16rem_1fr]">
+        <aside className="min-h-0 overflow-hidden border-r border-border">
           <StageOverview groups={groups} clip={clip} />
         </aside>
 
-        <main className="h-[calc(100vh-49px)] overflow-y-auto p-5">
+        <main className="overflow-y-auto p-5">
           <h2 className="mb-4 text-title font-bold tracking-tight">
             {characterName}
           </h2>
@@ -338,41 +339,58 @@ function MarksTable({
               {hits.length === 0 ? (
                 <p className="px-2 py-1 text-muted-foreground/60">no hits</p>
               ) : (
-                hits.map((h, idx) => (
-                  <div
-                    key={h.id}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => setSelected({ type: "hit", id: h.id })}
-                    className={`${COLS} border-t border-border/60 ${
-                      selected?.id === h.id
-                        ? "bg-border"
-                        : exceeding.has(h.id)
-                          ? "bg-destructive/15 hover:bg-destructive/25"
-                          : "hover:bg-card"
-                    }`}
-                  >
-                    <span className="min-w-20 font-mono text-muted-foreground/70">
-                      hit [{idx + 1}]
-                    </span>
-                    <CueCell cue={h.cue} onChange={(c) => setHitCue(h.id, c)} />
-                    <span className="text-right font-mono tabular-nums text-foreground">
-                      {h.frame}
-                    </span>
-                    <span className="text-right font-mono tabular-nums text-muted-foreground">
-                      {h.frame - sec.start}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeHit(h.id)
-                      }}
-                      className="pl-0.5 text-muted-foreground/60 hover:text-destructive"
-                      title="delete hit"
+                hits.map((h, idx) => {
+                  const posIdx = stageIndexOf(clip, h.frame)
+                  // Displaced = the frame sits in a different real stage than its
+                  // owner. In the rest zone (posIdx === -1) there's no stage, so no badge.
+                  const displaced = posIdx !== -1 && posIdx !== i
+                  return (
+                    <div
+                      key={h.id}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => setSelected({ type: "hit", id: h.id })}
+                      className={`${COLS} border-t border-border/60 ${
+                        selected?.id === h.id
+                          ? "bg-border"
+                          : exceeding.has(h.id)
+                            ? "bg-destructive/15 hover:bg-destructive/25"
+                            : "hover:bg-card"
+                      }`}
                     >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                ))
+                      <span className="flex min-w-20 items-center gap-1.5 font-mono text-muted-foreground/70">
+                        hit [{idx + 1}]
+                        {displaced && (
+                          <span
+                            className="rounded bg-amber-500/15 px-1 text-micro text-amber-500"
+                            title={`delayed — frame lands in stage ${posIdx + 1}`}
+                          >
+                            ⤶ S{posIdx + 1}
+                          </span>
+                        )}
+                      </span>
+                      <CueCell
+                        cue={h.cue}
+                        onChange={(c) => setHitCue(h.id, c)}
+                      />
+                      <span className="text-right font-mono tabular-nums text-foreground">
+                        {h.frame}
+                      </span>
+                      <span className="text-right font-mono tabular-nums text-muted-foreground">
+                        {h.frame - sec.start}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeHit(h.id)
+                        }}
+                        className="justify-self-end pl-0.5 text-muted-foreground/60 hover:text-destructive"
+                        title="delete hit"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  )
+                })
               )}
             </div>
 
@@ -429,7 +447,7 @@ function Ruler({
   }
 
   function addHit(clientX: number) {
-    const h: HitMark = {
+    const h: Omit<HitMark, "owner"> = {
       id: uid(),
       frame: frameAt(clientX),
       cue: "impactFlash",
@@ -473,6 +491,47 @@ function Ruler({
           </span>
         </div>
       ))}
+
+      {clip.restStart != null && clip.restStart < clip.end && (
+        <>
+          <div
+            className="absolute top-0 h-full"
+            style={{
+              left: `${pct(clip.restStart)}%`,
+              width: `${pct(clip.end) - pct(clip.restStart)}%`,
+              background:
+                "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted-foreground) 15%, transparent) 0 8px, transparent 8px 16px)",
+            }}
+          >
+            <span className="absolute left-1 top-1 font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
+              end
+            </span>
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => onEdit({ type: "removeRestZone" })}
+              className="absolute right-1 top-1 z-20 text-muted-foreground/60 hover:text-destructive"
+              title="remove rest zone (last stage expands to the end)"
+            >
+              <X className="size-3" />
+            </button>
+          </div>
+          <div
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={(e) => {
+              if (e.buttons)
+                onEdit({ type: "moveRestStart", frame: frameAt(e.clientX) })
+            }}
+            className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
+            style={{ left: `${pct(clip.restStart)}%` }}
+            title={`rest starts @ ${clip.restStart}`}
+          >
+            <div className="w-0.5 bg-muted-foreground/50" />
+          </div>
+        </>
+      )}
 
       {clip.boundaries.map((b, i) => (
         <div
@@ -621,9 +680,9 @@ function AddStagePopover({
           style={
             pos ? { top: pos.top, left: pos.left } : { visibility: "hidden" }
           }
-          className="fixed z-30 max-h-[calc(100vh-81px)] w-64 overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-lg"
+          className="fixed z-30 flex max-h-[calc(100vh-81px)] w-64 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
         >
-          <div className="mb-1 flex items-center justify-between">
+          <div className="flex items-center justify-between px-2 pb-1 pt-2">
             <span className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
               Add stage
             </span>
@@ -635,27 +694,32 @@ function AddStagePopover({
               <X className="size-3.5" />
             </button>
           </div>
-          {groups.map((g) => (
-            <div key={g.skill} className="mb-2">
-              <p className="mb-1 text-detail font-medium text-muted-foreground">
-                {g.skill}
-              </p>
-              <div className="flex flex-col gap-1">
-                {g.stages.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => add(s)}
-                    className={`flex items-center justify-between rounded border px-2 py-1 text-left text-detail transition-colors ${flashId === s.id ? "border-ui-heal/60 bg-ui-heal/15" : "border-border hover:border-muted-foreground/40 hover:bg-border"}`}
-                  >
-                    <span className="truncate">{s.stage}</span>
-                    <span className="text-muted-foreground/60">
-                      {s.hitCount} hit{s.hitCount === 1 ? "" : "s"}
-                    </span>
-                  </button>
-                ))}
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {groups.map((g) => (
+              <div key={g.skill} className="mb-2">
+                <p className="mb-1 text-detail font-medium text-muted-foreground">
+                  {g.skill}
+                </p>
+                <div className="flex flex-col gap-1">
+                  {g.stages.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => add(s)}
+                      className={`flex items-center justify-between rounded border px-2 py-1 text-left text-detail transition-colors ${flashId === s.id ? "border-foreground/60 bg-foreground/10" : "border-border hover:border-muted-foreground/40 hover:bg-border"}`}
+                    >
+                      <span className="truncate">{s.stage}</span>
+                      <span className="text-muted-foreground/60">
+                        {s.hitCount} hit{s.hitCount === 1 ? "" : "s"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          <div className="h-1.5 shrink-0" />
         </div>
       )}
     </div>
@@ -685,8 +749,8 @@ function StageOverview({
   }
 
   return (
-    <>
-      <div className="mb-2 flex items-center justify-between">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between px-3 pb-2 pt-3">
         <p className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
           Stages
         </p>
@@ -699,25 +763,27 @@ function StageOverview({
         </button>
       </div>
 
-      {groups.map((g) => (
-        <div key={g.skill} className="mb-3">
-          <p className="mb-1 text-detail font-medium text-muted-foreground">
-            {g.skill}
-          </p>
-          <div className="flex flex-col gap-1">
-            {g.stages.map((s) => (
-              <StageRow
-                key={s.id}
-                stage={s}
-                clip={clip}
-                open={open.has(s.id)}
-                onToggle={() => toggle(s.id)}
-              />
-            ))}
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+        {groups.map((g) => (
+          <div key={g.skill} className="mb-3">
+            <p className="mb-1 text-detail font-medium text-muted-foreground">
+              {g.skill}
+            </p>
+            <div className="flex flex-col gap-1">
+              {g.stages.map((s) => (
+                <StageRow
+                  key={s.id}
+                  stage={s}
+                  clip={clip}
+                  open={open.has(s.id)}
+                  onToggle={() => toggle(s.id)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -803,6 +869,9 @@ function StageRow({
   )
 }
 
+// Commits on blur/Enter, not per keystroke: the parent clamps the value (End
+// floors to its content), and an eager per-keystroke commit would clamp the first
+// typed digit and clobber the rest of the number mid-edit.
 function FrameField({
   label,
   value,
@@ -812,14 +881,34 @@ function FrameField({
   value: number
   onChange: (v: number) => void
 }) {
+  const [draft, setDraft] = useState(String(value))
+  const [editing, setEditing] = useState(false)
+
+  // Mirror external changes only while the user isn't mid-edit.
+  useEffect(() => {
+    if (!editing) setDraft(String(value))
+  }, [value, editing])
+
+  function commit() {
+    setEditing(false)
+    const n = Number(draft)
+    if (draft.trim() === "" || !Number.isFinite(n)) setDraft(String(value))
+    else onChange(n)
+  }
+
   return (
     <label className="text-detail text-muted-foreground">
       {label}
       <input
         type="number"
         className="mt-1 block w-18 rounded border border-border bg-card px-2 py-1 text-sm tabular-nums text-foreground"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        value={draft}
+        onFocus={() => setEditing(true)}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur()
+        }}
       />
     </label>
   )
