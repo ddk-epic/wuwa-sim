@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Film, Plus } from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "./stages"
-import { loadClips, saveClips } from "./storage"
+import {
+  loadClips,
+  loadSelectedCharacter,
+  saveClips,
+  saveSelectedCharacter,
+} from "./storage"
 import { applyClipEdit, clipDisplayName } from "./types"
 import type { Clip, ClipEdit } from "./types"
 import { uid } from "./shared"
@@ -33,10 +38,13 @@ export function FramesPage() {
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
   const clip = clips.find((c) => c.id === selectedId) ?? null
 
-  // Hydrate the initial character's saved clips after mount — client-only, so SSR
-  // (which has no localStorage) and the first client render stay identical.
+  // Restore the saved character + clips after mount, not at init, so SSR and the
+  // first client render stay identical. Unknown stored name falls back.
   useEffect(() => {
-    loadInto(characterName)
+    const saved = loadSelectedCharacter()
+    const name = (saved && findCharacter(saved)?.name) || characterName
+    setCharacterName(name)
+    loadInto(name)
   }, [])
 
   function loadInto(name: string) {
@@ -56,6 +64,7 @@ export function FramesPage() {
 
   function pickCharacter(name: string) {
     setCharacterName(name)
+    saveSelectedCharacter(name)
     loadInto(name)
   }
 
