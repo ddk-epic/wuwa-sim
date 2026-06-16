@@ -13,7 +13,7 @@ export interface Change {
   after: unknown
 }
 
-export interface EmitResult {
+export interface ExportResult {
   /** The whole character object, cloned and sparse-patched with the clip's measurements. */
   patched: EnrichedCharacter
   ts: string
@@ -46,7 +46,7 @@ function duplicateOccurrences(clip: Clip): Set<number> {
 
 /**
  * The cancel track resolves to either `cancel` or `instantCancel` (pin to start);
- * swap resolves to `swap`. Returns the emitted key so the patch can clear the
+ * swap resolves to `swap`. Returns the resolved key so the patch can clear the
  * cancel-track sibling it didn't pick.
  */
 function variantKeyFor(
@@ -64,10 +64,7 @@ function variantKeyFor(
  * clip repeats can't patch one slot twice, so it is skipped with a warning. The
  * registry's untouched fields stay byte-equal, keeping the diff tight.
  */
-export function patchCharacter(
-  char: EnrichedCharacter,
-  clip: Clip,
-): EmitResult {
+export function buildExport(char: EnrichedCharacter, clip: Clip): ExportResult {
   const patched = structuredClone(char)
   const changes: Change[] = []
   const warnings: string[] = []
@@ -164,31 +161,56 @@ export function patchCharacter(
 }
 
 const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/
+const PRINT_WIDTH = 80
 
-/** Render a value as a TS literal: unquoted identifier keys, double-quoted strings, trailing commas. */
-function toTsLiteral(value: unknown, indent: string): string {
+const tsKey = (k: string) => (IDENTIFIER.test(k) ? k : JSON.stringify(k))
+
+const objectEntries = (value: object): [string, unknown][] =>
+  Object.entries(value as Record<string, unknown>).filter(
+    ([, v]) => v !== undefined,
+  )
+
+/** Single-line rendering — used to test whether a value fits within the print width. */
+function inlineLiteral(value: unknown): string {
   if (value === null) return "null"
   if (typeof value === "number" || typeof value === "boolean")
     return String(value)
   if (typeof value === "string") return JSON.stringify(value)
-  const inner = indent + "  "
   if (Array.isArray(value)) {
     if (value.length === 0) return "[]"
-    const items = value.map((v) => inner + toTsLiteral(v, inner))
-    return `[\n${items.join(",\n")},\n${indent}]`
+    return `[${value.map(inlineLiteral).join(", ")}]`
   }
   if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).filter(
-      ([, v]) => v !== undefined,
-    )
+    const entries = objectEntries(value)
     if (entries.length === 0) return "{}"
-    const lines = entries.map(
-      ([k, v]) =>
-        `${inner}${IDENTIFIER.test(k) ? k : JSON.stringify(k)}: ${toTsLiteral(v, inner)}`,
-    )
-    return `{\n${lines.join(",\n")},\n${indent}}`
+    return `{ ${entries.map(([k, v]) => `${tsKey(k)}: ${inlineLiteral(v)}`).join(", ")} }`
   }
   return "null"
+}
+
+/**
+ * Render a TS literal, strongly preferring one line: a value stays inline unless
+ * its flat form would push `col` past the print width, in which case the
+ * container breaks and each child is re-tried inline. Matches the repo's prettier
+ * settings (width 80, trailing commas, double quotes) so a paste needs no reflow.
+ */
+function toTsLiteral(value: unknown, pad: string, col: number): string {
+  const flat = inlineLiteral(value)
+  if (col + flat.length <= PRINT_WIDTH) return flat
+  const inner = pad + "  "
+  if (Array.isArray(value)) {
+    const items = value.map((v) => inner + toTsLiteral(v, inner, inner.length))
+    return `[\n${items.join(",\n")},\n${pad}]`
+  }
+  if (typeof value === "object" && value !== null) {
+    const lines = objectEntries(value).map(([k, v]) => {
+      const key = tsKey(k)
+      return `${inner}${key}: ${toTsLiteral(v, inner, inner.length + key.length + 2)}`
+    })
+    return `{\n${lines.join(",\n")},\n${pad}}`
+  }
+  // A primitive too long for the budget (e.g. a long string) can't break.
+  return flat
 }
 
 /** camelCase the character name for the `export const` binding (e.g. "Inferno Rider" → "infernoRider"). */
@@ -205,5 +227,5 @@ function constName(name: string): string {
 
 /** Serialize a character to a paste-ready `.ts` literal — the diff's two sides go through this same path, so the diff is noise-free. */
 export function characterToTs(char: EnrichedCharacter): string {
-  return `import type { EnrichedCharacter } from "#/types/character"\n\nexport const ${constName(char.name)} = ${toTsLiteral(char, "")} satisfies EnrichedCharacter\n`
+  return `import type { EnrichedCharacter } from "#/types/character"\n\nexport const ${constName(char.name)} = ${toTsLiteral(char, "", `export const ${constName(char.name)} = `.length)} satisfies EnrichedCharacter\n`
 }

@@ -216,9 +216,9 @@ function optionLabel(v: string, track: VariantTrack): string {
   return `hit ${v.slice(4)}`
 }
 
-// The emitted variant kind for a resolved pin: swap always swaps; cancel pinned
+// The variant kind a resolved pin produces: swap always swaps; cancel pinned
 // to start becomes instantCancel, otherwise cancel.
-function emitKind(track: VariantTrack, target: VariantTarget): string {
+function resolvedKind(track: VariantTrack, target: VariantTarget): string {
   if (track === "swap") return "swap"
   return target.kind === "start" ? "instant" : "cancel"
 }
@@ -307,7 +307,7 @@ function VariantPicker({
       {target &&
         (resolved?.ok ? (
           <span className="font-mono tabular-nums text-muted-foreground">
-            → {emitKind(track, target)} {resolved.actionTime}f
+            → {resolvedKind(track, target)} {resolved.actionTime}f
           </span>
         ) : (
           <span className="text-amber-500" title={resolved?.reason}>

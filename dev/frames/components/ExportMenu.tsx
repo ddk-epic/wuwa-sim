@@ -4,7 +4,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import { Modal } from "#/components/ui/Modal"
 import { diffHunks } from "../diff"
 import type { Cell } from "../diff"
-import { characterToTs, patchCharacter } from "../emit"
+import { buildExport, characterToTs } from "../export"
 import { snapshotMarkdown } from "../snapshot"
 import type { Clip } from "../types"
 
@@ -67,10 +67,7 @@ function ExportModal({
   setTab: (t: Tab) => void
   onClose: () => void
 }) {
-  const { ts, warnings } = useMemo(
-    () => patchCharacter(char, clip),
-    [char, clip],
-  )
+  const { ts, warnings } = useMemo(() => buildExport(char, clip), [char, clip])
   const before = useMemo(() => characterToTs(char), [char])
   const md = useMemo(() => snapshotMarkdown(char, clip), [char, clip])
   const text = tab === "ts" ? ts : md

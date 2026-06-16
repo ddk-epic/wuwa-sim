@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
-import { patchCharacter } from "./emit"
+import { buildExport } from "./export"
 import type { Clip, HitMark, StageRef } from "./types"
 
 const ref = (name: string, hitCount: number): StageRef => ({
@@ -58,9 +58,9 @@ function baseClip(over: Partial<Clip> = {}): Clip {
 const stageOf = (char: EnrichedCharacter, name: string) =>
   char.skills[0].stages.find((s) => s.name === name)!
 
-describe("patchCharacter", () => {
+describe("buildExport", () => {
   it("patches actionTime from section width and actionFrame positionally", () => {
-    const { patched } = patchCharacter(character(), baseClip())
+    const { patched } = buildExport(character(), baseClip())
     const a = stageOf(patched, "A")
     const b = stageOf(patched, "B")
     expect(a.actionTime).toBe(40)
@@ -71,7 +71,7 @@ describe("patchCharacter", () => {
 
   it("leaves the original registry object untouched", () => {
     const char = character()
-    patchCharacter(char, baseClip())
+    buildExport(char, baseClip())
     expect(stageOf(char, "A").actionTime).toBe(0)
   })
 
@@ -82,18 +82,18 @@ describe("patchCharacter", () => {
         1: { swap: { kind: "start" } },
       },
     })
-    const { patched } = patchCharacter(character(), clip)
+    const { patched } = buildExport(character(), clip)
     expect(stageOf(patched, "A").variants).toEqual({
       cancel: { actionTime: 25 },
     })
     expect(stageOf(patched, "B").variants).toEqual({ swap: { actionTime: 0 } })
   })
 
-  it("a cancel pinned to start emits instantCancel and drops a stale cancel sibling", () => {
+  it("a cancel pinned to start produces instantCancel and drops a stale cancel sibling", () => {
     const char = character()
     stageOf(char, "A").variants = { cancel: { actionTime: 99 } }
     const clip = baseClip({ variants: { 0: { cancel: { kind: "start" } } } })
-    const { patched, changes } = patchCharacter(char, clip)
+    const { patched, changes } = buildExport(char, clip)
     expect(stageOf(patched, "A").variants).toEqual({
       instantCancel: { actionTime: 0 },
     })
@@ -103,7 +103,7 @@ describe("patchCharacter", () => {
 
   it("warns and skips an unresolved variant rather than writing it", () => {
     const clip = baseClip({ variants: { 0: { swap: { kind: "hit", n: 5 } } } })
-    const { patched, warnings } = patchCharacter(character(), clip)
+    const { patched, warnings } = buildExport(character(), clip)
     expect(stageOf(patched, "A").variants).toEqual({})
     expect(warnings.some((w) => w.includes("unresolved"))).toBe(true)
   })
@@ -113,14 +113,14 @@ describe("patchCharacter", () => {
       stageRefs: [ref("A", 2), ref("A", 2)],
       hits: [hit("a0", 10, 0), hit("a1", 50, 1)],
     })
-    const { patched, warnings, changes } = patchCharacter(character(), clip)
+    const { patched, warnings, changes } = buildExport(character(), clip)
     expect(stageOf(patched, "A").actionTime).toBe(0)
     expect(changes).toHaveLength(0)
     expect(warnings.filter((w) => w.includes("more than once"))).toHaveLength(1)
   })
 
-  it("emits a TS literal with unquoted keys and the wrapper", () => {
-    const { ts } = patchCharacter(character(), baseClip())
+  it("produces a TS literal with unquoted keys and the wrapper", () => {
+    const { ts } = buildExport(character(), baseClip())
     expect(ts).toContain(
       'import type { EnrichedCharacter } from "#/types/character"',
     )
@@ -128,5 +128,12 @@ describe("patchCharacter", () => {
     expect(ts).toContain("satisfies EnrichedCharacter")
     expect(ts).toContain("actionTime: 40,")
     expect(ts).not.toContain('"actionTime"')
+  })
+
+  it("keeps small objects inline, breaking only what overflows the width", () => {
+    const { ts } = buildExport(character(), baseClip())
+    // A short damage entry fits on one line; the whole character does not.
+    expect(ts).toContain("{ actionFrame: 10, value: 1 }")
+    expect(ts).toMatch(/export const testChar = \{\n/)
   })
 })

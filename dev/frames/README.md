@@ -46,7 +46,7 @@ The tool solves the small linear system (a skill is ~4–10 stages, a handful of
 - **solved** — determined, with a confidence score.
 - **conflicting** — over-determined and inconsistent (two measurements disagree). Surfaced rather than silently averaged: for empirical frame-counting this is how a miscount is caught, so redundant clips are cross-checks, not waste.
 
-> **MVP status.** The solver and confidence scoring are deferred — they are a second layer. Until they land, `actionTime`/`actionFrame` are projected from a **single selected clip** at face value (section widths and hit offsets, no cross-clip reconciliation). The variant and emit steps below are built against that single-clip projection; the solver later replaces "section width" with a reconciled value without changing the emit shape.
+> **MVP status.** The solver and confidence scoring are deferred — they are a second layer. Until they land, `actionTime`/`actionFrame` are projected from a **single selected clip** at face value (section widths and hit offsets, no cross-clip reconciliation). The variant and export steps below are built against that single-clip projection; the solver later replaces "section width" with a reconciled value without changing the export shape.
 
 ## Confidence
 
@@ -76,16 +76,16 @@ Cancel/swap timings need **no new measurement** — they project off the hit mar
 target = "start" | "last" | { hit: n }
 ```
 
-- **`cancel`** — default `last`; pins over `{start} ∪ hits`. Pin to a hit → emit `cancel = { actionTime: hit.actionFrame }`; pin to `start` → emit `instantCancel = { actionTime: 0 }`. The UI shows which kind it currently is. There is deliberately no `independent` flag: cancel defaults to the literal last hit, and the author overrides to an earlier hit (and hand-adds `DamageEntry.independent` on paste) when trailing hits fire either way.
+- **`cancel`** — default `last`; pins over `{start} ∪ hits`. Pin to a hit → produces `cancel = { actionTime: hit.actionFrame }`; pin to `start` → produces `instantCancel = { actionTime: 0 }`. The UI shows which kind it currently is. There is deliberately no `independent` flag: cancel defaults to the literal last hit, and the author overrides to an earlier hit (and hand-adds `DamageEntry.independent` on paste) when trailing hits fire either way.
 - **`swap`** — default `start` (`actionTime: 0`, the [ADR-0018](../../docs/adr/0018-swap-variant-as-trailing-window.md) `swapFrames` fallback); pins over `{start} ∪ hits`. The override case is a multi-hit stage that commits the swap on a specific hit (Inferno Rider — swap starts the frame the 3rd hit lands).
 
-`last` is a live sentinel — it resolves to the highest-`actionFrame` **placed** hit at emit time, so it auto-tracks as hits are added (not a frozen ordinal). Resolution: `start` always resolves; `last` resolves iff ≥1 hit; `{ hit: n }` resolves iff that hit exists. An opted-in variant whose target is absent (dangling pin, or `last` with no hits) is **excluded from emit and warned** — never written, never auto-shifted.
+`last` is a live sentinel — it resolves to the highest-`actionFrame` **placed** hit at export time, so it auto-tracks as hits are added (not a frozen ordinal). Resolution: `start` always resolves; `last` resolves iff ≥1 hit; `{ hit: n }` resolves iff that hit exists. An opted-in variant whose target is absent (dangling pin, or `last` with no hits) is **excluded from the export and warned** — never written, never auto-shifted.
 
 The opt-in + ordinal target is **authored state**, not a measurement, so it is stored on the `Clip` keyed by stage-occurrence index (ordinal targets only, never a frame — the marks-are-truth invariant holds), mutated through the closed `ClipEdit` set, and authored in the marks table (the read-only stage overview can't host it). Per-occurrence storage is an MVP simplification; cross-clip identity reconciliation is the solver's concern.
 
 ## Output
 
-Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so emit is **clone the whole character object → sparse-patch the selected clip's measurements → serialize**:
+Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so the export is **clone the whole character object → sparse-patch the selected clip's measurements → serialize**:
 
 - `stage.actionTime` ← the stage's section width (rest-zone-aware at the tail).
 - `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries.
@@ -113,7 +113,7 @@ A full frame-stepping player with mp4 (or similar) upload, layered onto the same
 - **Marks are truth; timings are projections.** Never persist `actionTime`/`actionFrame` — always re-derive from absolute marks so an upstream refinement propagates. Variants store an ordinal target, not a frame, for the same reason.
 - **Conflicts are a feature.** An over-determined inconsistency is a miscount signal, not an error to suppress.
 - **One door for every clip mutation.** All edits flow through the closed `ClipEdit` set and the pure `applyClipEdit` reducer (in `types.ts`) — editors dispatch an edit and never reshape a `Clip` in place. That single door is where the structural invariants live: the boundary-count rule (`boundaries.length === max(0, stageRefs.length − 1)`) and per-stage hit capacity. An illegal edit (over capacity, no room for a divider) returns the clip unchanged rather than throwing, so callers may dispatch optimistically and check the returned clip.
-- **`variants` may be absent at runtime.** The optional field is dropped from enriched stages that author no variant; the emit patch must `variants ??= {}` before writing.
+- **`variants` may be absent at runtime.** The optional field is dropped from enriched stages that author no variant; the export patch must `variants ??= {}` before writing.
 
 ## Related
 

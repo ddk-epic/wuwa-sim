@@ -229,7 +229,7 @@ export type VariantResolution =
  * Project a variant pin to its `actionTime` against the clip's own hits. `start`
  * is always 0; `last`/`hit` read the owner's placed hits (sorted by frame) and
  * fail (`ok: false`) when the target hit isn't present — an opted-in but
- * unresolved variant the caller drops from emit and surfaces as a warning.
+ * unresolved variant the caller drops from the export and surfaces as a warning.
  */
 export function resolveVariantTarget(
   clip: Clip,
