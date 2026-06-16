@@ -130,9 +130,10 @@ export function FramesPage() {
           {!clip && (
             <p className="text-sm text-muted-foreground">No clip selected.</p>
           )}
-          {clip && (
+          {clip && char && (
             <ClipEditor
               key={clip.id}
+              char={char}
               clip={clip}
               groups={groups}
               onEdit={(edit) => editClip(clip.id, edit)}

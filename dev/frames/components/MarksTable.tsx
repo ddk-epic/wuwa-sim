@@ -6,10 +6,17 @@ import {
   CUES,
   exceedingHitIds,
   hitsByStage,
+  resolveVariantTarget,
   sections,
   stageIndexOf,
 } from "../types"
-import type { Clip, ClipEdit, CueTag } from "../types"
+import type {
+  Clip,
+  ClipEdit,
+  CueTag,
+  VariantTarget,
+  VariantTrack,
+} from "../types"
 
 const COLS =
   "grid grid-cols-[1fr_7rem_3.5rem_5rem_auto] items-center gap-1 py-1 pl-2 pr-1"
@@ -98,6 +105,12 @@ export function MarksTable({
                 </span>
                 <span className="w-4" />
               </div>
+              <VariantRow
+                clip={clip}
+                stageIndex={i}
+                hitCount={hits.length}
+                onEdit={onEdit}
+              />
               {hits.length === 0 ? (
                 <p className="px-2 py-1 text-muted-foreground/60">no hits</p>
               ) : (
@@ -182,5 +195,125 @@ export function MarksTable({
         )
       })}
     </div>
+  )
+}
+
+function targetToValue(t: VariantTarget | undefined): string {
+  if (!t) return "off"
+  return t.kind === "hit" ? `hit:${t.n}` : t.kind
+}
+
+function valueToTarget(v: string): VariantTarget | null {
+  if (v === "start" || v === "last") return { kind: v }
+  const m = /^hit:(\d+)$/.exec(v)
+  return m ? { kind: "hit", n: Number(m[1]) } : null
+}
+
+function optionLabel(v: string, track: VariantTrack): string {
+  if (v === "off") return "off"
+  if (v === "start") return track === "cancel" ? "start (instant)" : "start (0)"
+  if (v === "last") return "last hit"
+  return `hit ${v.slice(4)}`
+}
+
+// The emitted variant kind for a resolved pin: swap always swaps; cancel pinned
+// to start becomes instantCancel, otherwise cancel.
+function emitKind(track: VariantTrack, target: VariantTarget): string {
+  if (track === "swap") return "swap"
+  return target.kind === "start" ? "instant" : "cancel"
+}
+
+// Variant authoring lives here because the stage-overview sidebar is read-only.
+// The granularity is per clip-occurrence; cross-clip reconciliation is the solver's.
+function VariantRow({
+  clip,
+  stageIndex,
+  hitCount,
+  onEdit,
+}: {
+  clip: Clip
+  stageIndex: number
+  hitCount: number
+  onEdit: (edit: ClipEdit) => Clip
+}) {
+  return (
+    <div className="flex items-center gap-4 border-t border-border/60 bg-card/40 px-2 py-1 text-detail">
+      <span className="text-micro uppercase tracking-[1px] text-muted-foreground/50">
+        variants
+      </span>
+      <VariantPicker
+        track="cancel"
+        clip={clip}
+        stageIndex={stageIndex}
+        hitCount={hitCount}
+        onEdit={onEdit}
+      />
+      <VariantPicker
+        track="swap"
+        clip={clip}
+        stageIndex={stageIndex}
+        hitCount={hitCount}
+        onEdit={onEdit}
+      />
+    </div>
+  )
+}
+
+function VariantPicker({
+  track,
+  clip,
+  stageIndex,
+  hitCount,
+  onEdit,
+}: {
+  track: VariantTrack
+  clip: Clip
+  stageIndex: number
+  hitCount: number
+  onEdit: (edit: ClipEdit) => Clip
+}) {
+  const target = clip.variants?.[stageIndex]?.[track]
+  const resolved = target
+    ? resolveVariantTarget(clip, stageIndex, target)
+    : null
+  const hitOpts = Array.from({ length: hitCount }, (_, k) => `hit:${k + 1}`)
+  // cancel leads with `last` (its default); swap leads with `start` (its default).
+  const options =
+    track === "cancel"
+      ? ["off", "last", ...hitOpts, "start"]
+      : ["off", "start", "last", ...hitOpts]
+
+  function onChange(raw: string) {
+    const next = valueToTarget(raw)
+    if (!next) onEdit({ type: "clearVariant", stageIndex, track })
+    else onEdit({ type: "setVariant", stageIndex, track, target: next })
+  }
+
+  return (
+    <span className="flex items-center gap-1 text-muted-foreground/70">
+      <span className="font-mono">{track}</span>
+      <select
+        value={targetToValue(target)}
+        onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        className="cursor-pointer rounded border border-border bg-transparent px-1 text-foreground outline-none"
+      >
+        {options.map((v) => (
+          <option key={v} value={v} className="bg-card">
+            {optionLabel(v, track)}
+          </option>
+        ))}
+      </select>
+      {target &&
+        (resolved?.ok ? (
+          <span className="font-mono tabular-nums text-muted-foreground">
+            → {emitKind(track, target)} {resolved.actionTime}f
+          </span>
+        ) : (
+          <span className="text-amber-500" title={resolved?.reason}>
+            unresolved
+          </span>
+        ))}
+    </span>
   )
 }

@@ -25,7 +25,7 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 
 ## Dev tools
 
-- [dev/frames](dev/frames.md) — the `/dev/frames` Frame Tool: deriving stage `actionTime`/`actionFrame` empirically from gameplay by marking action-string clips and solving across them
+- [dev/frames](../dev/frames/README.md) — the `/dev/frames` Frame Tool: deriving stage `actionTime`/`actionFrame` empirically from gameplay by marking action-string clips and solving across them (the tool owns its own docs, co-located with its source)
 
 ## Decisions
 

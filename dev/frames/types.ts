@@ -55,6 +55,25 @@ export interface HitMark {
   owner: number
 }
 
+/** The two authorable variant tracks. `instantCancel` is derived (cancel pinned to start), never authored directly. */
+export type VariantTrack = "cancel" | "swap"
+
+/**
+ * Where a variant commits, as an ordinal — never a frame. `last` is a live
+ * sentinel (the highest-`actionFrame` placed hit at resolve time), so it tracks
+ * hits as they're added; `start` resolves to `actionTime: 0`. Storing an ordinal
+ * (not a derived frame) keeps the marks-are-truth invariant intact.
+ */
+export type VariantTarget =
+  | { kind: "start" }
+  | { kind: "last" }
+  | { kind: "hit"; n: number } // 1-based ordinal within the owning stage
+
+export interface StageVariantPins {
+  cancel?: VariantTarget
+  swap?: VariantTarget
+}
+
 /** One action string: a contiguous stage sequence of known length, plus its marks. */
 export interface Clip {
   id: string
@@ -74,6 +93,12 @@ export interface Clip {
    * Absent means the last stage fills to `end` (the common, no-recovery case).
    */
   restStart?: number
+  /**
+   * Authored variant pins, keyed by stage-occurrence index. Ordinal targets only
+   * (no frames), so the marks-are-truth invariant holds. Per-occurrence is an MVP
+   * simplification — cross-clip identity reconciliation is the solver's concern.
+   */
+  variants?: Record<number, StageVariantPins>
 }
 
 export interface Section {
@@ -196,6 +221,53 @@ export function exceedingHitIds(clip: Clip): Set<string> {
   return over
 }
 
+export type VariantResolution =
+  | { ok: true; actionTime: number }
+  | { ok: false; reason: string }
+
+/**
+ * Project a variant pin to its `actionTime` against the clip's own hits. `start`
+ * is always 0; `last`/`hit` read the owner's placed hits (sorted by frame) and
+ * fail (`ok: false`) when the target hit isn't present — an opted-in but
+ * unresolved variant the caller drops from emit and surfaces as a warning.
+ */
+export function resolveVariantTarget(
+  clip: Clip,
+  stageIndex: number,
+  target: VariantTarget,
+): VariantResolution {
+  if (target.kind === "start") return { ok: true, actionTime: 0 }
+  const secs = sections(clip)
+  if (stageIndex < 0 || stageIndex >= secs.length)
+    return { ok: false, reason: "stage out of range" }
+  const hits = hitsByStage(clip)[stageIndex]
+  const index = target.kind === "last" ? hits.length - 1 : target.n - 1
+  if (index < 0 || index >= hits.length)
+    return {
+      ok: false,
+      reason:
+        target.kind === "last"
+          ? "no hits to pin to"
+          : `hit ${target.n} not placed`,
+    }
+  return { ok: true, actionTime: hits[index].frame - secs[stageIndex].start }
+}
+
+/** Drop the removed stage's pins and shift higher occurrence keys down by one. */
+function remapVariantsForRemoval(
+  variants: Record<number, StageVariantPins> | undefined,
+  removed: number,
+): Record<number, StageVariantPins> | undefined {
+  if (!variants) return undefined
+  const next: Record<number, StageVariantPins> = {}
+  for (const [key, pins] of Object.entries(variants)) {
+    const idx = Number(key)
+    if (idx === removed) continue
+    next[idx > removed ? idx - 1 : idx] = pins
+  }
+  return Object.keys(next).length ? next : undefined
+}
+
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v))
 
@@ -220,6 +292,13 @@ export type ClipEdit =
   | { type: "moveRestStart"; frame: number }
   | { type: "removeRestZone" }
   | { type: "setBoundaryCue"; id: string; cue: CueTag }
+  | {
+      type: "setVariant"
+      stageIndex: number
+      track: VariantTrack
+      target: VariantTarget
+    }
+  | { type: "clearVariant"; stageIndex: number; track: VariantTrack }
 
 /** Apply one edit. Returns the clip unchanged when the edit is illegal (over capacity, no room for the divider). */
 export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
@@ -281,7 +360,8 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
           return o > i ? { ...h, owner: o - 1 } : h
         })
       const restStart = sole ? undefined : isLast ? vacated : clip.restStart
-      return { ...reshaped, hits, restStart }
+      const variants = remapVariantsForRemoval(clip.variants, i)
+      return { ...reshaped, hits, restStart, variants }
     }
     case "addHit": {
       // Placement sets ownership: a hit is born owned by the stage it lands in,
@@ -355,5 +435,28 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
           b.id === edit.id ? { ...b, cue: edit.cue } : b,
         ),
       }
+    case "setVariant": {
+      if (edit.stageIndex < 0 || edit.stageIndex >= clip.stageRefs.length)
+        return clip
+      const variants = { ...clip.variants }
+      variants[edit.stageIndex] = {
+        ...variants[edit.stageIndex],
+        [edit.track]: edit.target,
+      }
+      return { ...clip, variants }
+    }
+    case "clearVariant": {
+      const pins = clip.variants?.[edit.stageIndex]
+      if (!pins?.[edit.track]) return clip
+      const nextPins = { ...pins }
+      delete nextPins[edit.track]
+      const variants = { ...clip.variants }
+      if (Object.keys(nextPins).length === 0) delete variants[edit.stageIndex]
+      else variants[edit.stageIndex] = nextPins
+      return {
+        ...clip,
+        variants: Object.keys(variants).length ? variants : undefined,
+      }
+    }
   }
 }

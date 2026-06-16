@@ -7,6 +7,7 @@ import {
   hitsInStage,
   ownerIndexOf,
   removeStageAt,
+  resolveVariantTarget,
   sections,
   stageCapacity,
   stageIndexOf,
@@ -374,5 +375,81 @@ describe("applyClipEdit", () => {
     })
     const next = applyClipEdit(c, { type: "setEnd", frame: 50 })
     expect(next.end).toBe(91)
+  })
+
+  it("sets and clears a variant pin, dropping the empty record", () => {
+    const set = applyClipEdit(threeStage, {
+      type: "setVariant",
+      stageIndex: 1,
+      track: "swap",
+      target: { kind: "hit", n: 2 },
+    })
+    expect(set.variants).toEqual({ 1: { swap: { kind: "hit", n: 2 } } })
+    const cleared = applyClipEdit(set, {
+      type: "clearVariant",
+      stageIndex: 1,
+      track: "swap",
+    })
+    expect(cleared.variants).toBeUndefined()
+  })
+
+  it("ignores a variant edit on an out-of-range stage", () => {
+    const next = applyClipEdit(threeStage, {
+      type: "setVariant",
+      stageIndex: 9,
+      track: "cancel",
+      target: { kind: "last" },
+    })
+    expect(next).toBe(threeStage)
+  })
+
+  it("drops a removed stage's pins and shifts higher occurrences down", () => {
+    const c = clip({
+      ...threeStage,
+      variants: {
+        0: { cancel: { kind: "last" } },
+        1: { swap: { kind: "start" } },
+        2: { cancel: { kind: "hit", n: 1 } },
+      },
+    })
+    const next = applyClipEdit(c, { type: "removeStage", index: 1 })
+    expect(next.variants).toEqual({
+      0: { cancel: { kind: "last" } },
+      1: { cancel: { kind: "hit", n: 1 } },
+    })
+  })
+})
+
+describe("resolveVariantTarget", () => {
+  const c = clip({
+    stageRefs: [stage("A", 3)],
+    hits: [hit("h1", 10, 0), hit("h2", 25, 0), hit("h3", 60, 0)],
+  })
+
+  it("start resolves to 0", () => {
+    expect(resolveVariantTarget(c, 0, { kind: "start" })).toEqual({
+      ok: true,
+      actionTime: 0,
+    })
+  })
+
+  it("last tracks the highest-frame placed hit, relative to the stage start", () => {
+    expect(resolveVariantTarget(c, 0, { kind: "last" })).toEqual({
+      ok: true,
+      actionTime: 60,
+    })
+  })
+
+  it("a hit ordinal resolves to that hit's actionFrame", () => {
+    expect(resolveVariantTarget(c, 0, { kind: "hit", n: 2 })).toEqual({
+      ok: true,
+      actionTime: 25,
+    })
+  })
+
+  it("fails when the pinned hit isn't placed", () => {
+    expect(resolveVariantTarget(c, 0, { kind: "hit", n: 4 }).ok).toBe(false)
+    const empty = clip({ stageRefs: [stage("A", 2)] })
+    expect(resolveVariantTarget(empty, 0, { kind: "last" }).ok).toBe(false)
   })
 })

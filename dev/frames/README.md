@@ -1,8 +1,13 @@
-# Frame Tool (`/dev/frames`)
+# `/dev/frames` — Frame Tool
 
 A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit `actionFrame` — **empirically from gameplay**, the numbers `gen:character` can't know and that today are hand-counted by eye. You define **clips** (recorded action strings) of known length, mark stage cutoffs and hits inside them, tag each mark with the visual cue you used, and the tool **solves** for each stage's timing across all clips, scoring every result by confidence. Output is copy/download — you paste it into the character file by hand.
 
-**Source files:** `src/routes/dev.frames.tsx` (and supporting `src/dev/frames/`) — a `DEV`-gated, pure client-side route. No node/server side.
+**Source files:** `src/routes/dev.frames.tsx` (and supporting `dev/frames/` at the repo root) — a `DEV`-gated, pure client-side route. No node/server side.
+
+- `types.ts` — the `Clip` model and the single mutation door, `applyClipEdit`. Marks are stored as absolute clip-frames; stage membership and per-hit `actionFrame` are derived projections, never stored.
+- `stages.ts` — flattens the bundled character registry into pickable `StageRef`s.
+- `storage.ts` — localStorage persistence, keyed per character.
+- `FramesPage.tsx` — the editor (ruler, marks table, stage overview).
 
 ## Why it exists
 
@@ -41,6 +46,8 @@ The tool solves the small linear system (a skill is ~4–10 stages, a handful of
 - **solved** — determined, with a confidence score.
 - **conflicting** — over-determined and inconsistent (two measurements disagree). Surfaced rather than silently averaged: for empirical frame-counting this is how a miscount is caught, so redundant clips are cross-checks, not waste.
 
+> **MVP status.** The solver and confidence scoring are deferred — they are a second layer. Until they land, `actionTime`/`actionFrame` are projected from a **single selected clip** at face value (section widths and hit offsets, no cross-clip reconciliation). The variant and emit steps below are built against that single-clip projection; the solver later replaces "section width" with a reconciled value without changing the emit shape.
+
 ## Confidence
 
 Confidence splits cleanly into two inputs, and is **auto-derived** — no manual override:
@@ -63,14 +70,29 @@ Final confidence = best contributing cue × corroboration, surfaced as **high / 
 
 ## Variants (derived, not marked)
 
-Cancel/swap timings need **no new measurement** — they project off the hit marks:
+Cancel/swap timings need **no new measurement** — they project off the hit marks. A variant is an **ordinal pin to a target**, resolving to that target's `actionFrame` (0 for `start`):
 
-- **`cancel`** → `actionTime` = the stage's last hit's `actionFrame` (the documented rule of thumb). Computed.
-- **`swap`** → `actionTime: 0` by default. The lone exception is a multi-hit stage that commits the swap on a specific hit (Inferno Rider — swap starts the frame the 3rd hit lands): a per-stage "swap pins to hit #N" toggle sets `swap.actionTime` = that hit's `actionFrame`.
+```
+target = "start" | "last" | { hit: n }
+```
+
+- **`cancel`** — default `last`; pins over `{start} ∪ hits`. Pin to a hit → emit `cancel = { actionTime: hit.actionFrame }`; pin to `start` → emit `instantCancel = { actionTime: 0 }`. The UI shows which kind it currently is. There is deliberately no `independent` flag: cancel defaults to the literal last hit, and the author overrides to an earlier hit (and hand-adds `DamageEntry.independent` on paste) when trailing hits fire either way.
+- **`swap`** — default `start` (`actionTime: 0`, the [ADR-0018](../../docs/adr/0018-swap-variant-as-trailing-window.md) `swapFrames` fallback); pins over `{start} ∪ hits`. The override case is a multi-hit stage that commits the swap on a specific hit (Inferno Rider — swap starts the frame the 3rd hit lands).
+
+`last` is a live sentinel — it resolves to the highest-`actionFrame` **placed** hit at emit time, so it auto-tracks as hits are added (not a frozen ordinal). Resolution: `start` always resolves; `last` resolves iff ≥1 hit; `{ hit: n }` resolves iff that hit exists. An opted-in variant whose target is absent (dangling pin, or `last` with no hits) is **excluded from emit and warned** — never written, never auto-shifted.
+
+The opt-in + ordinal target is **authored state**, not a measurement, so it is stored on the `Clip` keyed by stage-occurrence index (ordinal targets only, never a frame — the marks-are-truth invariant holds), mutated through the closed `ClipEdit` set, and authored in the marks table (the read-only stage overview can't host it). Per-occurrence storage is an MVP simplification; cross-clip identity reconciliation is the solver's concern.
 
 ## Output
 
-Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. After solving, **copy or download** a paste-ready TS block keyed by stage, carrying each stage's `actionTime`, its hits' `actionFrame`s, the computed `cancel`, and `swap`. You paste it into the character file by hand — the tool never reads or writes a `.ts` on disk.
+Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so emit is **clone the whole character object → sparse-patch the selected clip's measurements → serialize**:
+
+- `stage.actionTime` ← the stage's section width (rest-zone-aware at the tail).
+- `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries.
+- `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).
+- A stage the selected clip **repeats** can't patch one slot twice — detect the duplicate identity and **skip it with a warning** rather than silently picking an occurrence.
+
+Two faithful formats, both **copy + download**: **JSON** (`JSON.stringify` of the patched object) and **regenerated TS** (the same literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate). A **diff surface** shows the changed paths (old → new) plus any unresolved-variant / repeated-stage warnings — the real transcription aid. You paste into the character file by hand; the tool never reads or writes a `.ts` on disk.
 
 ## Persistence
 
@@ -83,12 +105,14 @@ A full frame-stepping player with mp4 (or similar) upload, layered onto the same
 ## Gotchas
 
 - **Contiguity assumes tight execution.** `clipLength = Σ actionTimes` breaks if you dawdle between inputs; record clips at combo speed.
-- **Marks are truth; timings are projections.** Never persist `actionTime`/`actionFrame` — always re-derive from absolute marks so an upstream refinement propagates.
+- **Marks are truth; timings are projections.** Never persist `actionTime`/`actionFrame` — always re-derive from absolute marks so an upstream refinement propagates. Variants store an ordinal target, not a frame, for the same reason.
 - **Conflicts are a feature.** An over-determined inconsistency is a miscount signal, not an error to suppress.
-- **One door for every clip mutation.** All edits flow through the closed `ClipEdit` set and the pure `applyClipEdit` reducer (in `src/dev/frames/types.ts`) — editors dispatch an edit and never reshape a `Clip` in place. That single door is where the structural invariants live: the boundary-count rule (`boundaries.length === max(0, stageRefs.length − 1)`) and per-stage hit capacity. An illegal edit (over capacity, no room for a divider) returns the clip unchanged rather than throwing, so callers may dispatch optimistically and check the returned clip.
+- **One door for every clip mutation.** All edits flow through the closed `ClipEdit` set and the pure `applyClipEdit` reducer (in `types.ts`) — editors dispatch an edit and never reshape a `Clip` in place. That single door is where the structural invariants live: the boundary-count rule (`boundaries.length === max(0, stageRefs.length − 1)`) and per-stage hit capacity. An illegal edit (over capacity, no room for a divider) returns the clip unchanged rather than throwing, so callers may dispatch optimistically and check the returned clip.
+- **`variants` may be absent at runtime.** The optional field is dropped from enriched stages that author no variant; the emit patch must `variants ??= {}` before writing.
 
 ## Related
 
 - [CHARACTERS.md](../../src/data/CHARACTERS.md) — the stage timing model these numbers feed (`actionTime`, `actionFrame`, variants).
-- [enriched-model](../enriched-model.md) — why timing is a manual enrichment step over raw extraction.
-- [ADR-0008](../adr/0008-stage-variants-as-actionframe-truncation.md) — the cancel/swap truncation contract the derived variants conform to.
+- [enriched-model](../../docs/enriched-model.md) — why timing is a manual enrichment step over raw extraction.
+- [ADR-0008](../../docs/adr/0008-stage-variants-as-actionframe-truncation.md) — the cancel/swap truncation contract the derived variants conform to.
+- [ADR-0018](../../docs/adr/0018-swap-variant-as-trailing-window.md) — swap's trailing-window semantics and the `swapFrames` default.

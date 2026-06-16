@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react"
 import { Trash2 } from "lucide-react"
+import type { EnrichedCharacter } from "#/types/character"
 import { uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
 import { clipDisplayName } from "../types"
 import type { Clip, ClipEdit, StageRef } from "../types"
 import { AddStagePopover } from "./AddStagePopover"
+import { EmitPanel } from "./EmitPanel"
 import { MarksTable } from "./MarksTable"
 import { Ruler } from "./Ruler"
 
 export function ClipEditor({
+  char,
   clip,
   groups,
   onEdit,
   onRemove,
 }: {
+  char: EnrichedCharacter
   clip: Clip
   groups: StageGroup[]
   onEdit: (edit: ClipEdit) => Clip
@@ -76,6 +80,8 @@ export function ClipEditor({
         setSelected={setSelected}
         onEdit={onEdit}
       />
+
+      <EmitPanel char={char} clip={clip} />
     </div>
   )
 }

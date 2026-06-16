@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { FramesPage } from "#/dev/frames/FramesPage"
+import { FramesPage } from "../../dev/frames/FramesPage"
 
 function DevFrames() {
   if (!import.meta.env.DEV) {
