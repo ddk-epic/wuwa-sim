@@ -92,7 +92,9 @@ Read-only against the **bundled character registry** (the compiled character mod
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).
 - A stage the selected clip **repeats** can't patch one slot twice — detect the duplicate identity and **skip it with a warning** rather than silently picking an occurrence.
 
-Two faithful formats, both **copy + download**: **JSON** (`JSON.stringify` of the patched object) and **regenerated TS** (the same literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate). A **diff surface** shows the changed paths (old → new) plus any unresolved-variant / repeated-stage warnings — the real transcription aid. You paste into the character file by hand; the tool never reads or writes a `.ts` on disk.
+Two faithful **paste** formats, both **copy + download**: **JSON** (`JSON.stringify` of the patched object) and **regenerated TS** (the same literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate). A **diff surface** shows the changed paths (old → new) plus any unresolved-variant / repeated-stage warnings — the real transcription aid. You paste into the character file by hand; the tool never reads or writes a `.ts` on disk.
+
+A third **markdown snapshot** is a shareable read-out rather than paste source: the read-only sidebar's view as a table — the whole stage catalog, measured against the selected clip, with each stage's `actionTime` and resolved `cancel`/`swap` and a row per hit slot up to capacity. Unmeasured hits (and stages absent from the clip) render as an em-dash, so it doubles as a checklist of what's left to count.
 
 ## Persistence
 

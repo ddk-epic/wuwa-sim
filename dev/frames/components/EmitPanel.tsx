@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { AlertTriangle, Check, Copy, Download } from "lucide-react"
 import type { EnrichedCharacter } from "#/types/character"
 import { patchCharacter } from "../emit"
+import { snapshotMarkdown } from "../snapshot"
 import type { Clip } from "../types"
 
 function render(value: unknown): string {
@@ -33,6 +34,7 @@ export function EmitPanel({
     () => patchCharacter(char, clip),
     [char, clip],
   )
+  const md = useMemo(() => snapshotMarkdown(char, clip), [char, clip])
   const slug = char.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")
 
   return (
@@ -52,6 +54,12 @@ export function EmitPanel({
           text={ts}
           filename={`${slug}.ts`}
           mime="text/plain"
+        />
+        <Artifact
+          label="MD"
+          text={md}
+          filename={`${slug}.md`}
+          mime="text/markdown"
         />
       </div>
 

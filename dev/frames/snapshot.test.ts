@@ -1,0 +1,69 @@
+import { describe, expect, it } from "vitest"
+import type { EnrichedCharacter } from "#/types/character"
+import { snapshotMarkdown } from "./snapshot"
+import type { Clip, HitMark, StageRef } from "./types"
+
+const ref = (name: string, hitCount: number): StageRef => ({
+  id: `skill::${name}`,
+  skill: "skill",
+  stage: name,
+  hitCount,
+})
+
+const hit = (id: string, frame: number, owner: number): HitMark => ({
+  id,
+  frame,
+  cue: "impactFlash",
+  owner,
+})
+
+// A (2 hits), B (1 hit), and C (1 hit) — C is in the catalog but absent from the clip.
+const char = {
+  name: "Test Char",
+  skills: [
+    {
+      name: "skill",
+      type: "Resonance Skill",
+      stages: [
+        { name: "A", actionTime: 0, damage: [{}, {}] },
+        { name: "B", actionTime: 0, damage: [{}] },
+        { name: "C", actionTime: 0, damage: [{}] },
+      ],
+    },
+  ],
+} as unknown as EnrichedCharacter
+
+// A over [0,40] with one of two hits placed; B over [40,100] with none.
+const clip: Clip = {
+  id: "c1",
+  name: "Combo",
+  start: 0,
+  end: 100,
+  stageRefs: [ref("A", 2), ref("B", 1)],
+  boundaries: [{ id: "b0", frame: 40, cue: "animationBreak" }],
+  hits: [hit("a0", 10, 0)],
+  variants: { 0: { cancel: { kind: "last" } }, 1: { swap: { kind: "start" } } },
+}
+
+describe("snapshotMarkdown", () => {
+  const md = snapshotMarkdown(char, clip)
+
+  it("titles the snapshot and names the source clip", () => {
+    expect(md).toContain("# Test Char — frame snapshot")
+    expect(md).toContain("Source clip: Combo")
+  })
+
+  it("carries actionTime and resolved variants on each stage line", () => {
+    expect(md).toContain("**A** — actionTime `40` · cancel `10` · swap `—`")
+    expect(md).toContain("**B** — actionTime `60` · cancel `—` · swap `0`")
+  })
+
+  it("lists every hit slot, with an em-dash for the unmeasured ones", () => {
+    expect(md).toContain("| 1 | 10 | impactFlash |")
+    expect(md).toContain("| 2 | — | — |")
+  })
+
+  it("renders a catalog stage absent from the clip as untouched", () => {
+    expect(md).toContain("**C** — actionTime `—` · cancel `—` · swap `—`")
+  })
+})
