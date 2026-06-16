@@ -29,7 +29,7 @@ export function StageOverview({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between px-3 pb-2 pt-3">
+      <div className="flex items-center justify-between pl-3 pr-5.5 pb-2 pt-3">
         <p className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
           Stages
         </p>

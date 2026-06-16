@@ -199,7 +199,7 @@ export function MarksTable({
 }
 
 function targetToValue(t: VariantTarget | undefined): string {
-  if (!t) return "off"
+  if (!t) return "none"
   return t.kind === "hit" ? `hit:${t.n}` : t.kind
 }
 
@@ -210,7 +210,7 @@ function valueToTarget(v: string): VariantTarget | null {
 }
 
 function optionLabel(v: string, track: VariantTrack): string {
-  if (v === "off") return "off"
+  if (v === "none") return "none"
   if (v === "start") return track === "cancel" ? "start (instant)" : "start (0)"
   if (v === "last") return "last hit"
   return `hit ${v.slice(4)}`
@@ -280,8 +280,8 @@ function VariantPicker({
   // cancel leads with `last` (its default); swap leads with `start` (its default).
   const options =
     track === "cancel"
-      ? ["off", "last", ...hitOpts, "start"]
-      : ["off", "start", "last", ...hitOpts]
+      ? ["none", "last", ...hitOpts, "start"]
+      : ["none", "start", "last", ...hitOpts]
 
   function onChange(raw: string) {
     const next = valueToTarget(raw)

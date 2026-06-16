@@ -5,7 +5,7 @@ A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit 
 **Source files:** `src/routes/dev.frames.tsx` (and supporting `dev/frames/` at the repo root) — a `DEV`-gated, pure client-side route. No node/server side.
 
 - `types.ts` — the `Clip` model and the single mutation door, `applyClipEdit`. Marks are stored as absolute clip-frames; stage membership and per-hit `actionFrame` are derived projections, never stored.
-- `stages.ts` — flattens the bundled character registry into pickable `StageRef`s.
+- `stages.ts` — flattens the bundled character registry into pickable `StageRef`s, applying the same catalog-visibility filter the main app uses (skips hidden skills, hidden stages, and empty-named stages).
 - `storage.ts` — localStorage persistence, keyed per character.
 - `FramesPage.tsx` — the editor (ruler, marks table, stage overview).
 
@@ -114,6 +114,7 @@ A full frame-stepping player with mp4 (or similar) upload, layered onto the same
 - **Conflicts are a feature.** An over-determined inconsistency is a miscount signal, not an error to suppress.
 - **One door for every clip mutation.** All edits flow through the closed `ClipEdit` set and the pure `applyClipEdit` reducer (in `types.ts`) — editors dispatch an edit and never reshape a `Clip` in place. That single door is where the structural invariants live: the boundary-count rule (`boundaries.length === max(0, stageRefs.length − 1)`) and per-stage hit capacity. An illegal edit (over capacity, no room for a divider) returns the clip unchanged rather than throwing, so callers may dispatch optimistically and check the returned clip.
 - **`variants` may be absent at runtime.** The optional field is dropped from enriched stages that author no variant; the export patch must `variants ??= {}` before writing.
+- **The stage catalog must mirror the main app's visibility filter.** `stageGroups` drops hidden skills, hidden stages, and empty-named stages — the same predicate the main app's stage catalog (`focused-stage-catalog.ts`) applies. If the two drift, the frames tool and the real app disagree on which stages exist; keep them in lockstep. A previously-added stage that later becomes hidden stays in saved clips (no migration), so it can still show in the marks table while absent from the sidebar.
 
 ## Related
 
