@@ -23,13 +23,19 @@ export async function openVideoSource(file: File): Promise<VideoSource> {
     formats: ALL_FORMATS,
     source: new BlobSource(file),
   })
-  const track = await input.getPrimaryVideoTrack()
-  if (!track) {
+  // Any failure between here and the returned handle must dispose `input`, or the
+  // decode pipeline (and the BlobSource over the File) leaks — a corrupt or
+  // unsupported mp4 reaches the stats/sink steps, not just the no-track branch.
+  let stats, sink
+  try {
+    const track = await input.getPrimaryVideoTrack()
+    if (!track) throw new Error("No video track found in this file.")
+    stats = await track.computePacketStats()
+    sink = new CanvasSink(track)
+  } catch (e) {
     input.dispose()
-    throw new Error("No video track found in this file.")
+    throw e
   }
-  const stats = await track.computePacketStats()
-  const sink = new CanvasSink(track)
   // Held on an object so the post-await guard reads a live boolean — `dispose`
   // may fire (clip switch) while a decode is in flight.
   const state = { disposed: false }

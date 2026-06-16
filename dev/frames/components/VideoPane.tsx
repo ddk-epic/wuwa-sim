@@ -55,6 +55,8 @@ export function VideoPane({
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [half, setHalf] = useState(false)
+  const mounted = useRef(true)
+  useEffect(() => () => void (mounted.current = false), [])
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d")
@@ -65,11 +67,16 @@ export function VideoPane({
     setBusy(true)
     setError(null)
     try {
-      onAttach(await openVideoSource(file))
+      const source = await openVideoSource(file)
+      // A clip switch can unmount us mid-decode; the resolved source would never
+      // reach state, so the owner's dispose-on-replace effect can't reclaim it.
+      if (mounted.current) onAttach(source)
+      else source.dispose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read this file.")
+      if (mounted.current)
+        setError(e instanceof Error ? e.message : "Could not read this file.")
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
