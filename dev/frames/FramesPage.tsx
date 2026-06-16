@@ -6,6 +6,7 @@ import { applyClipEdit, clipDisplayName } from "./types"
 import type { Clip, ClipEdit } from "./types"
 import { uid } from "./shared"
 import { ClipEditor } from "./components/ClipEditor"
+import { ExportMenu } from "./components/ExportMenu"
 import { StageOverview } from "./components/StageOverview"
 
 function emptyClip(): Clip {
@@ -98,9 +99,12 @@ export function FramesPage() {
         </aside>
 
         <main className="overflow-y-auto p-5">
-          <h2 className="mb-4 text-title font-bold tracking-tight">
-            {characterName}
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-title font-bold tracking-tight">
+              {characterName}
+            </h2>
+            {char && <ExportMenu char={char} clip={clip} />}
+          </div>
 
           <div className="rounded-lg border border-border bg-card p-3">
             <p className="mb-2 text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
@@ -130,10 +134,9 @@ export function FramesPage() {
           {!clip && (
             <p className="text-sm text-muted-foreground">No clip selected.</p>
           )}
-          {clip && char && (
+          {clip && (
             <ClipEditor
               key={clip.id}
-              char={char}
               clip={clip}
               groups={groups}
               onEdit={(edit) => editClip(clip.id, edit)}

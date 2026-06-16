@@ -92,9 +92,12 @@ Read-only against the **bundled character registry** (the compiled character mod
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).
 - A stage the selected clip **repeats** can't patch one slot twice — detect the duplicate identity and **skip it with a warning** rather than silently picking an occurrence.
 
-Two faithful **paste** formats, both **copy + download**: **JSON** (`JSON.stringify` of the patched object) and **regenerated TS** (the same literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate). A **diff surface** shows the changed paths (old → new) plus any unresolved-variant / repeated-stage warnings — the real transcription aid. You paste into the character file by hand; the tool never reads or writes a `.ts` on disk.
+The **export menu** sits beside the character name (character-scoped, though still fed by the selected clip — disabled until one is picked) and is **copy-only**, two kinds, each opening a tabbed modal:
 
-A third **markdown snapshot** is a shareable read-out rather than paste source: the read-only sidebar's view as a table — the whole stage catalog, measured against the selected clip, with each stage's `actionTime` and resolved `cancel`/`swap` and a row per hit slot up to capacity. Unmeasured hits (and stages absent from the clip) render as an em-dash, so it doubles as a checklist of what's left to count.
+- **TS** — a GitHub-style diff: `characterToTs(registry)` vs `characterToTs(patched)`. Both sides go through the **same serializer** (object literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate), so the diff is noise-free — only patched values and added variant lines show. A self-rolled LCS line diff renders changed hunks with context in a split view; unresolved-variant / repeated-stage **warnings** banner above it. You paste the result into the character file by hand; the tool never reads or writes a `.ts` on disk.
+- **MD** — a shareable read-out, not paste source: the read-only sidebar's view as a table — the whole stage catalog, measured against the selected clip, with each stage's `actionTime` and resolved `cancel`/`swap` and a row per hit slot up to capacity. Unmeasured hits (and stages absent from the clip) render as an em-dash, so it doubles as a checklist of what's left to count. Shown as raw markdown (no renderer dependency).
+
+(JSON and a download button were considered and dropped — the diff is the transcription aid, and the markdown is the shareable artifact.)
 
 ## Persistence
 

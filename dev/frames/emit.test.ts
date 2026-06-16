@@ -119,9 +119,8 @@ describe("patchCharacter", () => {
     expect(warnings.filter((w) => w.includes("more than once"))).toHaveLength(1)
   })
 
-  it("emits faithful JSON and a TS literal with unquoted keys and the wrapper", () => {
-    const { json, ts } = patchCharacter(character(), baseClip())
-    expect(JSON.parse(json).skills[0].stages[0].actionTime).toBe(40)
+  it("emits a TS literal with unquoted keys and the wrapper", () => {
+    const { ts } = patchCharacter(character(), baseClip())
     expect(ts).toContain(
       'import type { EnrichedCharacter } from "#/types/character"',
     )

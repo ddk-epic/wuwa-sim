@@ -16,7 +16,6 @@ export interface Change {
 export interface EmitResult {
   /** The whole character object, cloned and sparse-patched with the clip's measurements. */
   patched: EnrichedCharacter
-  json: string
   ts: string
   changes: Change[]
   warnings: string[]
@@ -158,8 +157,7 @@ export function patchCharacter(
 
   return {
     patched,
-    json: JSON.stringify(patched, null, 2),
-    ts: wrapTs(patched),
+    ts: characterToTs(patched),
     changes,
     warnings,
   }
@@ -205,6 +203,7 @@ function constName(name: string): string {
     .join("")
 }
 
-function wrapTs(char: EnrichedCharacter): string {
+/** Serialize a character to a paste-ready `.ts` literal — the diff's two sides go through this same path, so the diff is noise-free. */
+export function characterToTs(char: EnrichedCharacter): string {
   return `import type { EnrichedCharacter } from "#/types/character"\n\nexport const ${constName(char.name)} = ${toTsLiteral(char, "")} satisfies EnrichedCharacter\n`
 }
