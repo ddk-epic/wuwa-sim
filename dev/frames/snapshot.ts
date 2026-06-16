@@ -10,9 +10,8 @@ import type { Clip, VariantTrack } from "./types"
 
 const DASH = "—"
 
-// The resolved label for a stage's variant pin, read off the selected clip:
-// a number for a hit/last pin, "instant" for a cancel pinned to start, "—" when
-// the variant isn't opted in, or "unresolved" for a dangling pin.
+// Resolved variant label: a number, "instant" (cancel pinned to start), "—"
+// (not opted in), or "unresolved" (dangling pin).
 function variantLabel(
   clip: Clip,
   occurrence: number,
@@ -27,11 +26,9 @@ function variantLabel(
 }
 
 /**
- * A shareable markdown read-out of the whole stage catalog, measured against the
- * selected clip — the read-only sidebar's view as a table. Every hit slot up to
- * capacity is listed even when unmeasured (em-dash), so the snapshot doubles as a
- * checklist of what's left to count. Stages absent from the clip read as
- * untouched. Single-clip, like the sidebar; the solver later feeds the same table.
+ * The read-only sidebar's view as a shareable markdown table: the whole catalog
+ * measured against the selected clip, every hit slot up to capacity (unmeasured
+ * ones as em-dash) so it doubles as a checklist. Single-clip, like the sidebar.
  */
 export function snapshotMarkdown(char: EnrichedCharacter, clip: Clip): string {
   const secs = sections(clip)

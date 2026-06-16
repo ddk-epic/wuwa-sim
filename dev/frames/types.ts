@@ -59,10 +59,9 @@ export interface HitMark {
 export type VariantTrack = "cancel" | "swap"
 
 /**
- * Where a variant commits, as an ordinal — never a frame. `last` is a live
- * sentinel (the highest-`actionFrame` placed hit at resolve time), so it tracks
- * hits as they're added; `start` resolves to `actionTime: 0`. Storing an ordinal
- * (not a derived frame) keeps the marks-are-truth invariant intact.
+ * Where a variant commits, as an ordinal — never a frame, so the marks-are-truth
+ * invariant holds. `last` is a live sentinel (the highest-`actionFrame` placed hit
+ * at resolve time), tracking hits as they're added; `start` resolves to 0.
  */
 export type VariantTarget =
   | { kind: "start" }

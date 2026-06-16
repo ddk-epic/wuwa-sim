@@ -1,6 +1,5 @@
-// A minimal line diff for the export preview. The two sides come from the same
-// serializer, so they differ only at patched values — an LCS over lines yields
-// tight hunks. Common prefix/suffix are trimmed before the DP to keep it cheap.
+// A minimal LCS line diff for the export preview. Both sides share a serializer,
+// so only patched values differ; trimming the common prefix/suffix keeps it cheap.
 
 type Op = { t: "eq" | "del" | "add"; text: string }
 

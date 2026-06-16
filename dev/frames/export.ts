@@ -6,7 +6,6 @@ import type {
 import { hitsByStage, resolveVariantTarget, sections } from "./types"
 import type { Clip, StageRef, VariantTrack } from "./types"
 
-/** One leaf the patch overwrites, for the diff surface. */
 export interface Change {
   path: string
   before: unknown
@@ -14,14 +13,13 @@ export interface Change {
 }
 
 export interface ExportResult {
-  /** The whole character object, cloned and sparse-patched with the clip's measurements. */
   patched: EnrichedCharacter
   ts: string
   changes: Change[]
   warnings: string[]
 }
 
-/** Find the registry stage matching a clip's `StageRef`, by the same id derivation `stages.ts` uses. */
+/** Same id derivation as `stages.ts`, so a clip's `StageRef` finds its registry stage. */
 function locateStage(
   char: EnrichedCharacter,
   ref: StageRef,
@@ -32,7 +30,6 @@ function locateStage(
   )
 }
 
-/** Stage-occurrence indices whose `StageRef.id` appears more than once in the clip. */
 function duplicateOccurrences(clip: Clip): Set<number> {
   const counts = new Map<string, number>()
   for (const ref of clip.stageRefs)
@@ -44,11 +41,7 @@ function duplicateOccurrences(clip: Clip): Set<number> {
   return dupes
 }
 
-/**
- * The cancel track resolves to either `cancel` or `instantCancel` (pin to start);
- * swap resolves to `swap`. Returns the resolved key so the patch can clear the
- * cancel-track sibling it didn't pick.
- */
+/** A cancel pinned to start becomes `instantCancel`; otherwise the track's own key. */
 function variantKeyFor(
   track: VariantTrack,
   target: { kind: string },
@@ -58,11 +51,9 @@ function variantKeyFor(
 }
 
 /**
- * Clone the character and sparse-patch only what the selected clip measured:
- * each contained stage's `actionTime` (section width), its hits' `actionFrame`s
- * (positional, capped at the entry count), and its resolved variants. A stage the
- * clip repeats can't patch one slot twice, so it is skipped with a warning. The
- * registry's untouched fields stay byte-equal, keeping the diff tight.
+ * Clone the character and sparse-patch only what the clip measured, leaving the
+ * rest byte-equal so the diff stays tight. A repeated stage can't patch one slot
+ * twice, so it's skipped with a warning.
  */
 export function buildExport(char: EnrichedCharacter, clip: Clip): ExportResult {
   const patched = structuredClone(char)
@@ -170,7 +161,7 @@ const objectEntries = (value: object): [string, unknown][] =>
     ([, v]) => v !== undefined,
   )
 
-/** Single-line rendering — used to test whether a value fits within the print width. */
+/** Single-line rendering, for the width-fit test. */
 function inlineLiteral(value: unknown): string {
   if (value === null) return "null"
   if (typeof value === "number" || typeof value === "boolean")
@@ -188,24 +179,67 @@ function inlineLiteral(value: unknown): string {
   return "null"
 }
 
+const isNonEmptyObject = (v: unknown): boolean =>
+  typeof v === "object" &&
+  v !== null &&
+  !Array.isArray(v) &&
+  objectEntries(v).length > 0
+
+// Smallest buffs-section object that must break one key per line.
+const BUFFS_BREAK_KEYS = 3
+
 /**
- * Render a TS literal, strongly preferring one line: a value stays inline unless
- * its flat form would push `col` past the print width, in which case the
- * container breaks and each child is re-tried inline. Matches the repo's prettier
- * settings (width 80, trailing commas, double quotes) so a paste needs no reflow.
+ * Layout breaks independent of width, to match the authored files: the `variants`
+ * map always breaks, and a `buffs` object with 3+ keys breaks. Propagates, so a
+ * container can't inline a descendant that must break.
  */
-function toTsLiteral(value: unknown, pad: string, col: number): string {
+function mustBreak(value: unknown, inBuffs: boolean): boolean {
+  if (Array.isArray(value)) return value.some((v) => mustBreak(v, inBuffs))
+  if (typeof value === "object" && value !== null) {
+    const entries = objectEntries(value)
+    if (inBuffs && entries.length >= BUFFS_BREAK_KEYS) return true
+    return entries.some(
+      ([k, v]) =>
+        (k === "variants" && isNonEmptyObject(v)) ||
+        mustBreak(v, inBuffs || k === "buffs"),
+    )
+  }
+  return false
+}
+
+/**
+ * Render a TS literal, preferring one line: a value stays inline unless it would
+ * overflow `col` past the print width or it `mustBreak`s, then the container
+ * breaks and each child is re-tried. Tuned to prettier's defaults so a paste
+ * needs no reflow.
+ */
+function toTsLiteral(
+  value: unknown,
+  pad: string,
+  col: number,
+  inBuffs = false,
+  forceBreak = false,
+): string {
   const flat = inlineLiteral(value)
-  if (col + flat.length <= PRINT_WIDTH) return flat
+  if (
+    !forceBreak &&
+    !mustBreak(value, inBuffs) &&
+    col + flat.length <= PRINT_WIDTH
+  )
+    return flat
   const inner = pad + "  "
   if (Array.isArray(value)) {
-    const items = value.map((v) => inner + toTsLiteral(v, inner, inner.length))
+    const items = value.map(
+      (v) => inner + toTsLiteral(v, inner, inner.length, inBuffs),
+    )
     return `[\n${items.join(",\n")},\n${pad}]`
   }
   if (typeof value === "object" && value !== null) {
     const lines = objectEntries(value).map(([k, v]) => {
       const key = tsKey(k)
-      return `${inner}${key}: ${toTsLiteral(v, inner, inner.length + key.length + 2)}`
+      const childInBuffs = inBuffs || k === "buffs"
+      const breakChild = k === "variants" && isNonEmptyObject(v)
+      return `${inner}${key}: ${toTsLiteral(v, inner, inner.length + key.length + 2, childInBuffs, breakChild)}`
     })
     return `{\n${lines.join(",\n")},\n${pad}}`
   }
@@ -225,7 +259,15 @@ function constName(name: string): string {
     .join("")
 }
 
-/** Serialize a character to a paste-ready `.ts` literal — the diff's two sides go through this same path, so the diff is noise-free. */
+/**
+ * Serialize to a paste-ready `.ts` literal. Drops the injected Movement skills
+ * (Dodge/Jump) — added to the runtime object at load, not authored in the file.
+ */
 export function characterToTs(char: EnrichedCharacter): string {
-  return `import type { EnrichedCharacter } from "#/types/character"\n\nexport const ${constName(char.name)} = ${toTsLiteral(char, "", `export const ${constName(char.name)} = `.length)} satisfies EnrichedCharacter\n`
+  const authored = {
+    ...char,
+    skills: char.skills.filter((s) => s.type !== "Movement"),
+  }
+  const binding = `export const ${constName(char.name)} = `
+  return `import type { EnrichedCharacter } from "#/types/character"\n\n${binding}${toTsLiteral(authored, "", binding.length)} satisfies EnrichedCharacter\n`
 }

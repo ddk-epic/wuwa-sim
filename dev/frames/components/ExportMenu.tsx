@@ -10,9 +10,8 @@ import type { Clip } from "../types"
 
 type Tab = "ts" | "md"
 
-// Character-scoped export, sourced from the selected clip (single-clip MVP). The
-// preview lives in a modal, not on the page; TS shows a diff against the
-// registry, MD a raw snapshot. Disabled until a clip is selected.
+// Character-scoped export from the selected clip; the preview lives in a modal,
+// not on the page. Disabled until a clip is selected.
 export function ExportMenu({
   char,
   clip,
