@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Film, Plus } from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "./stages"
 import { loadClips, saveClips } from "./storage"
@@ -25,6 +25,9 @@ export function FramesPage() {
   const [characterName, setCharacterName] = useState(CHARACTERS[0]?.name ?? "")
   const [clips, setClips] = useState<Clip[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // Mirrors `clips` synchronously so several edits dispatched in one handler
+  // compose instead of racing on a stale state closure.
+  const clipsRef = useRef<Clip[]>([])
 
   const char = findCharacter(characterName)
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
@@ -38,6 +41,7 @@ export function FramesPage() {
 
   function loadInto(name: string) {
     const loaded = loadClips(name)
+    clipsRef.current = loaded
     setClips(loaded)
     setSelectedId(loaded[0]?.id ?? null)
   }
@@ -45,6 +49,7 @@ export function FramesPage() {
   // Persisting writer: every clip mutation funnels through here, so storage stays
   // in sync without a save-effect racing the load on character switch.
   function commit(next: Clip[]) {
+    clipsRef.current = next
     setClips(next)
     saveClips(characterName, next)
   }
@@ -56,18 +61,18 @@ export function FramesPage() {
 
   function addClip() {
     const c = emptyClip()
-    commit([...clips, c])
+    commit([...clipsRef.current, c])
     setSelectedId(c.id)
   }
 
   function editClip(id: string, edit: ClipEdit): Clip {
-    const next = applyClipEdit(clips.find((c) => c.id === id)!, edit)
-    commit(clips.map((c) => (c.id === id ? next : c)))
+    const next = applyClipEdit(clipsRef.current.find((c) => c.id === id)!, edit)
+    commit(clipsRef.current.map((c) => (c.id === id ? next : c)))
     return next
   }
 
   function removeClip(id: string) {
-    const next = clips.filter((c) => c.id !== id)
+    const next = clipsRef.current.filter((c) => c.id !== id)
     commit(next)
     if (selectedId === id) setSelectedId(next[next.length - 1]?.id ?? null)
   }

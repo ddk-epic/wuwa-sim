@@ -48,11 +48,6 @@ const clip: Clip = {
 describe("snapshotMarkdown", () => {
   const md = snapshotMarkdown(char, clip)
 
-  it("titles the snapshot and names the source clip", () => {
-    expect(md).toContain("# Test Char — frame snapshot")
-    expect(md).toContain("Source clip: Combo")
-  })
-
   it("carries actionTime and resolved variants on each stage line", () => {
     expect(md).toContain("**A** — actionTime `40` · cancel `10` · swap `—`")
     expect(md).toContain("**B** — actionTime `60` · cancel `—` · swap `0`")
@@ -61,9 +56,5 @@ describe("snapshotMarkdown", () => {
   it("lists every hit slot, with an em-dash for the unmeasured ones", () => {
     expect(md).toContain("| 1 | 10 | impactFlash |")
     expect(md).toContain("| 2 | — | — |")
-  })
-
-  it("renders a catalog stage absent from the clip as untouched", () => {
-    expect(md).toContain("**C** — actionTime `—` · cancel `—` · swap `—`")
   })
 })

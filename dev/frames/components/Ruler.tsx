@@ -1,20 +1,24 @@
 import { useRef } from "react"
 import { X } from "lucide-react"
-import { CUE_COLOR, uid } from "../shared"
+import { CUE_COLOR } from "../shared"
 import type { Selected } from "../shared"
 import { exceedingHitIds, sections } from "../types"
-import type { Clip, ClipEdit, HitMark } from "../types"
+import type { Clip, ClipEdit } from "../types"
 
 export function Ruler({
   clip,
   selected,
   setSelected,
   onEdit,
+  playhead,
+  onSeek,
 }: {
   clip: Clip
   selected: Selected
   setSelected: (s: Selected) => void
   onEdit: (edit: ClipEdit) => Clip
+  playhead?: number
+  onSeek?: (frame: number) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const span = Math.max(1, clip.end - clip.start)
@@ -28,25 +32,18 @@ export function Ruler({
     return Math.round(clip.start + ratio * span)
   }
 
-  function addHit(clientX: number) {
-    const h: Omit<HitMark, "owner"> = {
-      id: uid(),
-      frame: frameAt(clientX),
-      cue: "impactFlash",
-    }
-    const next = onEdit({ type: "addHit", hit: h })
-    if (next.hits.some((x) => x.id === h.id))
-      setSelected({ type: "hit", id: h.id })
-  }
-
   return (
     <div
       ref={ref}
       onPointerDown={(e) => {
         e.stopPropagation()
-        addHit(e.clientX)
+        onSeek?.(frameAt(e.clientX))
+        e.currentTarget.setPointerCapture(e.pointerId)
       }}
-      className="relative h-20 cursor-crosshair select-none rounded border border-border bg-border"
+      onPointerMove={(e) => {
+        if (e.buttons) onSeek?.(frameAt(e.clientX))
+      }}
+      className="relative h-20 cursor-ew-resize select-none rounded border border-border bg-border"
     >
       {secs.map((sec, i) => (
         <div
@@ -160,6 +157,13 @@ export function Ruler({
           />
         </div>
       ))}
+
+      {playhead != null && playhead >= clip.start && playhead <= clip.end && (
+        <div
+          className="pointer-events-none absolute top-0 z-30 h-full w-px -translate-x-1/2 bg-foreground"
+          style={{ left: `${pct(playhead)}%` }}
+        />
+      )}
 
       <span className="pointer-events-none absolute bottom-0.5 left-1 font-mono text-detail text-muted-foreground/60">
         {clip.start}

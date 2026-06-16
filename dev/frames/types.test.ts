@@ -9,7 +9,6 @@ import {
   removeStageAt,
   resolveVariantTarget,
   sections,
-  stageCapacity,
   stageIndexOf,
 } from "./types"
 import type { Clip, HitMark, StageRef } from "./types"
@@ -191,15 +190,6 @@ describe("exceedingHitIds", () => {
   })
 })
 
-describe("stageCapacity", () => {
-  it("reads the stage reference's hit count, or 0 when out of range", () => {
-    const c = clip({ stageRefs: [stage("A", 3), stage("B", 0)] })
-    expect(stageCapacity(c, 0)).toBe(3)
-    expect(stageCapacity(c, 1)).toBe(0)
-    expect(stageCapacity(c, 5)).toBe(0)
-  })
-})
-
 describe("applyClipEdit", () => {
   const capped = clip({
     stageRefs: [stage("A", 1), stage("B", 0), stage("C", 2)],
@@ -207,6 +197,37 @@ describe("applyClipEdit", () => {
       { id: "b0", frame: 30, cue: "animationBreak" },
       { id: "b1", frame: 70, cue: "animationBreak" },
     ],
+  })
+
+  it("normalizes length to 0-based on lock, capturing the in-cut as the offset", () => {
+    const scoped = clip({ start: 1830, end: 1920 })
+    const locked = applyClipEdit(scoped, { type: "lockScope" })
+    expect([locked.start, locked.end, locked.offset]).toEqual([0, 90, 1830])
+  })
+
+  it("re-scope lifts the window back to absolute frames; lock restores it — marks never move", () => {
+    const locked = clip({
+      start: 0,
+      end: 90,
+      offset: 1830,
+      boundaries: [{ id: "b0", frame: 30, cue: "impactFlash" }],
+      hits: [hit("h", 15, 0)],
+    })
+    const reopened = applyClipEdit(locked, { type: "enterScope" })
+    expect([reopened.start, reopened.end, reopened.offset]).toEqual([
+      1830,
+      1920,
+      undefined,
+    ])
+    // Marks stay in 0-based clip space throughout — only the window moves.
+    expect(reopened.boundaries[0].frame).toBe(30)
+    expect(reopened.hits[0].frame).toBe(15)
+
+    const relocked = applyClipEdit(reopened, { type: "lockScope" })
+    expect([relocked.start, relocked.end, relocked.offset]).toEqual([
+      0, 90, 1830,
+    ])
+    expect(relocked.hits[0].frame).toBe(15)
   })
 
   it("clamps a moved boundary between its neighbours", () => {
@@ -424,13 +445,6 @@ describe("resolveVariantTarget", () => {
   const c = clip({
     stageRefs: [stage("A", 3)],
     hits: [hit("h1", 10, 0), hit("h2", 25, 0), hit("h3", 60, 0)],
-  })
-
-  it("start resolves to 0", () => {
-    expect(resolveVariantTarget(c, 0, { kind: "start" })).toEqual({
-      ok: true,
-      actionTime: 0,
-    })
   })
 
   it("last tracks the highest-frame placed hit, relative to the stage start", () => {

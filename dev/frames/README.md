@@ -7,6 +7,7 @@ A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit 
 - `types.ts` — the `Clip` model and the single mutation door, `applyClipEdit`. Marks are stored as absolute clip-frames; stage membership and per-hit `actionFrame` are derived projections, never stored.
 - `stages.ts` — flattens the bundled character registry into pickable `StageRef`s, applying the same catalog-visibility filter the main app uses (skips hidden skills, hidden stages, and empty-named stages).
 - `storage.ts` — localStorage persistence, keyed per character.
+- `video.ts` — the throwaway mediabunny decode pipeline behind the frame stepper (session-only, per clip).
 - `FramesPage.tsx` — the editor (ruler, marks table, stage overview).
 
 ## Why it exists
@@ -17,7 +18,7 @@ Note the term collision: `pnpm extract` already means "pull raw character JSON f
 
 ## Core model
 
-- **Clip** — one action string: an ordered, _contiguous_ run of stage references with a `start`/`end` (its total length in frames), plus internal **marks**. A Clip exists as pure numbers first; an mp4 backing is an optional measurement aid layered on later (phase 2), never a separate mode. Contiguity means `clipLength = Σ (its stages' actionTimes)` — which holds only under tight execution (no dawdling between inputs), an assumption the whole differencing method already rests on. A Clip may chain stages from **different skills** (a basic string flowing into a resonance skill is one action string).
+- **Clip** — one action string: an ordered, _contiguous_ run of stage references with a `start`/`end` (its total length in frames), plus internal **marks**. A Clip exists as pure numbers first; an mp4 backing is an optional, throwaway measurement aid (the video frame stepper), never a separate mode and never persisted. Contiguity means `clipLength = Σ (its stages' actionTimes)` — which holds only under tight execution (no dawdling between inputs), an assumption the whole differencing method already rests on. A Clip may chain stages from **different skills** (a basic string flowing into a resonance skill is one action string).
 
 - **Mark** — a point in a Clip. Two structural roles decide _what it constrains_:
   - **cutoff mark** — where one stage hands off to the next (a stage boundary).
@@ -29,7 +30,7 @@ Note the term collision: `pnpm extract` already means "pull raw character JSON f
 
 - **Stage** — the unknown being solved for. A stage is a **shared identity across clips** (a real stage key from the bundled character registry): "Basic 1" has one true `actionTime`, and every clip containing it is one observation constraining that single unknown. This is what makes differencing valid.
 
-- **Frame unit** — every number is a **60fps engine frame**, matching the simulator's timing model. Only 60fps input is supported for now; the phase-2 video path will carry a per-clip source-fps and convert on import (`engineFrame = videoFrame × 60 / sourceFps`), but that seam is deferred.
+- **Frame unit** — every number is a **60fps engine frame**, matching the simulator's timing model. Recordings are 60fps CFR, so a video frame is an engine frame 1:1 and the anticipated source-fps conversion seam (`engineFrame = videoFrame × 60 / sourceFps`) collapses to identity; only ~60fps input is supported, verified on attach.
 
 ## The solver
 
@@ -103,9 +104,17 @@ The **export menu** sits beside the character name (character-scoped, though sti
 
 The clip set persists to **localStorage, keyed per character**, so a reload doesn't wipe a measurement campaign (the accumulation of clips is the whole point of differencing).
 
-## Phase 2 (deferred)
+## The video frame stepper (phase 2, built)
 
-A full frame-stepping player with mp4 (or similar) upload, layered onto the same Clip entity: scrub/step to find frame numbers, mark on the video timeline. This is where the per-clip source-fps → 60fps conversion seam activates. The phase-1 data model is built to absorb it without reshaping (marks already store absolute clip-frames).
+The editor is a **manual timing tool first** — set a length, add stages, place hits/dividers by clicking the ruler and typing frame numbers, with no recording involved. The mp4 stepper is an **optional overlay** bolted on top: attach footage to read exact frame numbers off it instead of counting by eye. Source files: `video.ts` (the decode pipeline) and `components/VideoPane.tsx` (canvas + transport). There is **one always-on editor** (`ClipEditor.tsx`), not a mode gate.
+
+- **Clips are 0-based.** A clip is always `[0, length]`; marks are absolute clip-frames within it. A manually-timed clip is born 0-based; a clip scoped from footage is **normalized on lock-in** (`lockScope` sets `length = out − in` and keeps the in-cut as `offset`). Marks are **never shifted** — they're only ever authored in 0-based work space, so scoping moves only the window, not the marks. The video alignment is metadata, never a coordinate: `clip.offset` is the absolute video frame that clip-frame 0 maps to (`videoFrame = clipFrame + offset`). `enterScope` (Re-scope) lifts the window back to absolute frames; it's the inverse.
+- **Footage assumption.** Recordings are 60fps CFR H.264, roughly cut, throwaway. So **a video frame is an engine frame, 1:1** — the anticipated source-fps → 60fps seam collapses to identity and is not built. The container fps is verified on attach and warns if it isn't ~60.
+- **Decode path.** [mediabunny](https://mediabunny.dev) (zero-dep WebCodecs demux + decode). `Input`/`BlobSource` parses the file; `CanvasSink.getCanvas(frame / 60)` does the keyframe-seek-and-decode-forward internally and returns a rasterized canvas — frame-exact rather than `currentTime`-approximate, with `VideoFrame.close()` the library's job. `computePacketStats()` gives the exact frame count and fps.
+- **Throwaway, per-clip.** The blob/decode pipeline is **session-only, never persisted**, scoped per clip — `ClipEditor` mounts with `key={clip.id}`, so switching clips unmounts the editor and `dispose()`s the pipeline. The new clip starts with no video until re-attached. Only the filename (`clip.source`) and `offset` persist, as alignment metadata — a re-attach of a different file warns.
+- **Scoping is the recording's on-ramp, not a gate.** Attaching a recording drops into a transient scoping step: the scrub spans the whole recording with draggable in/out cut handles and a live span readout; "Lock in (normalize)" sets the length and offset and returns to the editor. Re-scope re-opens it. A clip with no recording never scopes.
+- **Playhead is the driver, additive to direct manipulation.** Clicking the ruler/scrub moves the playhead; `+ Hit` drops a hit there. Dragging hits/dividers still works and live-drives the video preview to that frame. Precise repositioning lives in the marks table — an editable frame field per row (no video needed) plus a snap-to-current-frame button when a recording is attached. The video only ever _reads_ frames and _captures_ the playhead into the existing `ClipEdit` set; it is never a second source of truth.
+- **Layout.** Canvas full width (100%/50% toggle) on top, then two vertically-aligned tracks via the shared `TRACK_COLS` grid: stepper + scrub above, context buttons + ruler below, so the playhead lines up. Marks table beneath.
 
 ## Gotchas
 

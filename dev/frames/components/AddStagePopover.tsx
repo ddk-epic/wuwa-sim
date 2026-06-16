@@ -84,7 +84,7 @@ export function AddStagePopover({
       <button
         ref={buttonRef}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 rounded border border-dashed border-gray-700 px-3 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+        className="flex items-center gap-0.5 rounded border border-dashed border-gray-700 pl-2 pr-2.5 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
       >
         <Plus className="size-4" /> Stage
       </button>
@@ -94,7 +94,7 @@ export function AddStagePopover({
           style={
             pos ? { top: pos.top, left: pos.left } : { visibility: "hidden" }
           }
-          className="fixed z-30 flex max-h-[calc(100vh-81px)] w-64 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+          className="fixed z-50 flex max-h-[calc(100vh-81px)] w-64 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg"
         >
           <div className="flex items-center justify-between px-2 pb-1 pt-2">
             <span className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">

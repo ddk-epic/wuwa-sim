@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { Trash2 } from "lucide-react"
+import { ChevronLast, Trash2 } from "lucide-react"
 import { CUE_COLOR } from "../shared"
 import type { Selected } from "../shared"
 import {
@@ -18,8 +18,11 @@ import type {
   VariantTrack,
 } from "../types"
 
+// The trailing column (delete button, or empty) is fixed (not `auto`) so it holds
+// the same width on every row — otherwise the 1fr first column absorbs the
+// difference and the headers drift between cards. Snap lives in the actionFrame col.
 const COLS =
-  "grid grid-cols-[1fr_7rem_3.5rem_5rem_auto] items-center gap-1 py-1 pl-2 pr-1"
+  "grid grid-cols-[1fr_7rem_3.5rem_5rem_1rem] items-center gap-1 py-1 pl-2 pr-1"
 
 function CueCell({
   cue,
@@ -46,16 +49,35 @@ function CueCell({
   )
 }
 
+function SnapButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      className="text-muted-foreground/60 hover:text-foreground"
+      title="snap to current frame"
+    >
+      <ChevronLast className="size-3.5" />
+    </button>
+  )
+}
+
 export function MarksTable({
   clip,
   selected,
   setSelected,
   onEdit,
+  playhead,
+  hasVideo,
 }: {
   clip: Clip
   selected: Selected
   setSelected: (s: Selected) => void
   onEdit: (edit: ClipEdit) => Clip
+  playhead: number
+  hasVideo: boolean
 }) {
   if (clip.stageRefs.length === 0) {
     return (
@@ -82,9 +104,9 @@ export function MarksTable({
         const divider = last ? null : clip.boundaries[i]
         return (
           <Fragment key={i}>
-            <div className="overflow-hidden rounded border border-border text-detail">
+            <div className="min-w-108 overflow-hidden rounded border border-border text-detail">
               <div className={`${COLS} bg-card`}>
-                <span className="min-w-20 truncate font-medium text-foreground">
+                <span className="min-w-28 truncate font-medium text-foreground">
                   Stage {i + 1}
                   <span className="px-1.5 font-normal text-muted-foreground/70">
                     {sec.end - sec.start}f
@@ -103,7 +125,7 @@ export function MarksTable({
                 <span className="text-right text-muted-foreground/70">
                   actionFrame
                 </span>
-                <span className="w-4" />
+                <span className="w-2" />
               </div>
               <VariantRow
                 clip={clip}
@@ -132,7 +154,7 @@ export function MarksTable({
                             : "hover:bg-card"
                       }`}
                     >
-                      <span className="flex min-w-20 items-center gap-1.5 font-mono text-muted-foreground/70">
+                      <span className="flex min-w-28 items-center gap-1.5 font-mono text-muted-foreground/70">
                         hit [{idx + 1}]
                         {displaced && (
                           <span
@@ -150,15 +172,26 @@ export function MarksTable({
                       <span className="text-right font-mono tabular-nums text-foreground">
                         {h.frame}
                       </span>
-                      <span className="text-right font-mono tabular-nums text-muted-foreground">
+                      <span className="flex items-center justify-end gap-1.5 font-mono tabular-nums text-muted-foreground">
                         {h.frame - sec.start}
+                        {hasVideo && (
+                          <SnapButton
+                            onClick={() =>
+                              onEdit({
+                                type: "moveHit",
+                                id: h.id,
+                                frame: playhead,
+                              })
+                            }
+                          />
+                        )}
                       </span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           removeHit(h.id)
                         }}
-                        className="justify-self-end pl-0.5 text-muted-foreground/60 hover:text-destructive"
+                        className="text-muted-foreground/60 hover:text-destructive"
                         title="delete hit"
                       >
                         <Trash2 className="size-3.5" />
@@ -175,9 +208,9 @@ export function MarksTable({
                 onClick={() =>
                   setSelected({ type: "boundary", id: divider.id })
                 }
-                className={`${COLS} overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.id === divider.id ? "bg-border" : "hover:bg-card"}`}
+                className={`${COLS} min-w-108 overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.id === divider.id ? "bg-border" : "hover:bg-card"}`}
               >
-                <span className="truncate">
+                <span className="min-w-28 truncate">
                   {sec.ref.stage} ┃ {secs[i + 1]?.ref.stage}
                 </span>
                 <CueCell
@@ -187,8 +220,20 @@ export function MarksTable({
                 <span className="text-right font-mono tabular-nums">
                   {divider.frame}
                 </span>
-                <span className="text-right text-muted-foreground/60">—</span>
-                <span className="w-4" />
+                <span className="flex items-center justify-end gap-1.5 text-muted-foreground/60">
+                  —
+                  {hasVideo && (
+                    <SnapButton
+                      onClick={() =>
+                        onEdit({
+                          type: "moveBoundary",
+                          index: i,
+                          frame: playhead,
+                        })
+                      }
+                    />
+                  )}
+                </span>
               </div>
             )}
           </Fragment>

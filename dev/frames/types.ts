@@ -98,6 +98,19 @@ export interface Clip {
    * simplification — cross-clip identity reconciliation is the solver's concern.
    */
   variants?: Record<number, StageVariantPins>
+  /**
+   * Filename of the recording these frames were read against — provenance only.
+   * The video itself is throwaway and never persisted; this label survives reload
+   * so a re-attach can be checked against the file the marks actually came from.
+   */
+  source?: string
+  /**
+   * Video-alignment metadata, never a clip coordinate: the absolute video frame
+   * that clip-frame 0 maps to (`videoFrame = clipFrame + offset`), captured at
+   * scope lock-in. The clip itself is always 0-based; this only realigns the
+   * overlay so a re-attach of the same recording doesn't need re-scoping.
+   */
+  offset?: number
 }
 
 export interface Section {
@@ -279,6 +292,9 @@ const clamp = (v: number, lo: number, hi: number) =>
  */
 export type ClipEdit =
   | { type: "setName"; name: string }
+  | { type: "setSource"; source: string }
+  | { type: "enterScope" }
+  | { type: "lockScope" }
   | { type: "setStart"; frame: number }
   | { type: "setEnd"; frame: number }
   | { type: "addStage"; ref: StageRef; boundaryId: string }
@@ -304,6 +320,29 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
   switch (edit.type) {
     case "setName":
       return { ...clip, name: edit.name }
+    case "setSource":
+      return { ...clip, source: edit.source }
+    case "enterScope":
+      // Re-scope: lift start/end into absolute video-frame space so the cut
+      // handles sit where the recording does. Marks stay in 0-based clip space —
+      // they're only ever authored there, never in absolute space. Inverse of lock.
+      return clip.offset != null
+        ? {
+            ...clip,
+            start: clip.start + clip.offset,
+            end: clip.end + clip.offset,
+            offset: undefined,
+          }
+        : clip
+    case "lockScope":
+      // Normalize: clip-frame 0 becomes the in-cut (kept as offset so the overlay
+      // aligns), length becomes out − in. Marks are untouched.
+      return {
+        ...clip,
+        start: 0,
+        end: clip.end - clip.start,
+        offset: clip.start,
+      }
     case "setStart":
       return { ...clip, start: edit.frame }
     case "setEnd": {
