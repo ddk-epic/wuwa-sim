@@ -3,7 +3,7 @@ import { Crop, Plus, Trash2 } from "lucide-react"
 import { TRACK_COLS, uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
-import { clipDisplayName } from "../types"
+import { clipDisplayName, stageIndexOf } from "../types"
 import type { Clip, ClipEdit, StageRef } from "../types"
 import type { VideoSource } from "../video"
 import { AddStagePopover } from "./AddStagePopover"
@@ -86,6 +86,18 @@ export function ClipEditor({
     if (next.hits.some((h) => h.id === id)) setSelected({ type: "hit", id })
   }
 
+  function addSplitHere() {
+    const stageIndex = stageIndexOf(clip, playhead)
+    if (stageIndex === -1) return
+    onEdit({
+      type: "setAnimationSplit",
+      stageIndex,
+      frame: playhead,
+      cue: "vfxEdge",
+    })
+    setSelected({ type: "split", index: stageIndex })
+  }
+
   // During scope the clip frames are absolute video frames (offset cleared), so
   // the canvas frame is the playhead itself; afterwards it's offset into the file.
   const videoFrame = playhead + (clip.offset ?? 0)
@@ -150,19 +162,28 @@ export function ClipEditor({
       {!scoping && (
         <>
           <div className={`${TRACK_COLS} items-start`}>
-            <div className="flex items-center gap-3">
-              <AddStagePopover
-                groups={groups}
-                onAdd={(ref: StageRef) =>
-                  onEdit({ type: "addStage", ref, boundaryId: uid() })
-                }
-              />
+            <div className="flex w-fit flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <AddStagePopover
+                  groups={groups}
+                  onAdd={(ref: StageRef) =>
+                    onEdit({ type: "addStage", ref, boundaryId: uid() })
+                  }
+                />
+                <button
+                  onClick={addHitHere}
+                  className="flex items-center gap-0.5 rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground"
+                  title="drop a hit at the playhead"
+                >
+                  <Plus className="size-4" /> Hit
+                </button>
+              </div>
               <button
-                onClick={addHitHere}
-                className="flex items-center gap-0.5 rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground"
-                title="drop a hit at the playhead"
+                onClick={addSplitHere}
+                className="flex items-center gap-0.5 self-end rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground"
+                title="drop an animation split at the playhead"
               >
-                <Plus className="size-4" /> Hit
+                <Plus className="size-4" /> Anim split
               </button>
             </div>
             <div className="space-y-1">

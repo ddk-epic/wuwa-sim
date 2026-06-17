@@ -15,7 +15,6 @@ import type {
   Clip,
   ClipEdit,
   CueTag,
-  Section,
   VariantTarget,
   VariantTrack,
 } from "../types"
@@ -138,7 +137,6 @@ export function MarksTable({
               <SplitRow
                 clip={clip}
                 stageIndex={i}
-                sec={sec}
                 selected={selected}
                 setSelected={setSelected}
                 onEdit={onEdit}
@@ -319,7 +317,6 @@ function VariantRow({
 function SplitRow({
   clip,
   stageIndex,
-  sec,
   selected,
   setSelected,
   onEdit,
@@ -328,7 +325,6 @@ function SplitRow({
 }: {
   clip: Clip
   stageIndex: number
-  sec: Section
   selected: Selected
   setSelected: (s: Selected) => void
   onEdit: (edit: ClipEdit) => Clip
@@ -336,24 +332,7 @@ function SplitRow({
   hasVideo: boolean
 }) {
   const split = clip.animationSplits?.[stageIndex] ?? null
-  if (!split) {
-    return (
-      <button
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() =>
-          onEdit({
-            type: "setAnimationSplit",
-            stageIndex,
-            frame: Math.round((sec.start + sec.end) / 2),
-            cue: "vfxEdge",
-          })
-        }
-        className="block w-full border-t border-border/60 bg-card/40 px-2 py-1 text-left text-micro uppercase tracking-[1px] text-muted-foreground/40 hover:text-muted-foreground"
-      >
-        + animation split
-      </button>
-    )
-  }
+  if (!split) return null
   const { animationFrames } = stageTiming(clip, stageIndex)
   const isSel = selected?.type === "split" && selected.index === stageIndex
   return (
