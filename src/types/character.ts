@@ -181,7 +181,6 @@ export type EnrichedSkillAttribute =
 export interface EnrichedSkill extends Omit<Skill, "stages"> {
   key?: string
   stages: EnrichedSkillAttribute[]
-  animationLock?: number
   hidden?: boolean
 }
 

@@ -158,8 +158,6 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   // ahead of it in frame order. A surviving footing commit sets this character's
   // footing before its stage reads it for Fall Frames.
   drainSchedule(ctx, cursor.frame)
-  const animFrames = resolved?.stage.animationFrames ?? 0
-  if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
   const swapBackWait = engine.computeSwapBack(entry.characterId, cursor.frame)
 
   if (!resolved) return
@@ -179,6 +177,14 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     arrival.padFrames,
     wait,
   )
+
+  // A cutscene animation freezes the stage timer while real time elapses. Credited
+  // only now, after the cast's swap has resolved: the caster is on-field and so
+  // excluded (its own swap-back CD is not cleared by its own cast), while the
+  // character it benched recovers the animation's worth of swap-back CD.
+  const animFrames = resolved.stage.animationFrames ?? 0
+  if (animFrames > 0) engine.advanceOffFieldClocks(animFrames)
+
   if (resolved.skillType === "Intro Skill") {
     // An Intro establishes its own footing regardless of what it entered on.
     engine.footing.enterIntro(resolved.stage.footing)

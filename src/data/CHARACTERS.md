@@ -64,7 +64,7 @@ export const sanhua = {
       type: "Resonance Skill", // SkillGrouping — the UI sidebar section (NOT a trigger axis).
       cooldown: 10, // Skill-level cooldown, seconds.
       concerto: 15, // Concerto granted by the skill's CAST stage.
-      // resonanceCost, duration, animationLock, hidden — see Reference.
+      // resonanceCost, duration, hidden — see Reference.
       stages: [
         {
           // ── STAGE ───────────────────────────────────────────
@@ -502,7 +502,6 @@ Concept-grouped lookup, organized by tier: **Character shell → Skill → Stage
 | `concerto`      | Concerto granted by the skill's **cast** stage (the `"Skill DMG"`-named stage), added on top of per-hit concerto.                                                                                                                                                      |
 | `resonanceCost` | Liberation resonance cost.                                                                                                                                                                                                                                             |
 | `stages`        | `EnrichedSkillAttribute[]` — the actual schedulable actions.                                                                                                                                                                                                           |
-| `animationLock` | Skill-level lock frames (enriched-only).                                                                                                                                                                                                                               |
 | `hidden`        | Hide the whole skill from the sidebar.                                                                                                                                                                                                                                 |
 | `damage`        | **Enrichment leftover bucket.** Raw extraction puts all hit objects here; enrichment distributes them into stages. **Empty `[]` means every hit was assigned**; a non-empty array means there are unassigned remainders still to place. Always `[]` in finished files. |
 
@@ -527,7 +526,7 @@ A stage is an `EnrichedSkillAttribute`.
 
 **Rare fields:**
 
-- `instantCancel` variant, `animationLock`, `animationFrames` — see [timing model](#stage-timing-model).
+- `instantCancel` variant, `animationFrames` — see [timing model](#stage-timing-model).
 
 ### DamageEntry fields
 
@@ -586,7 +585,6 @@ Four numbers govern a stage's clock. Authored from the player's seat:
 | `damage[].actionFrame`      | engine frames    | When **within** the stage a hit connects. Must satisfy `actionFrame ≤ actionTime` (or `independent`). |
 | `variants[kind].actionTime` | engine frames    | A shortened `actionTime` when the stage is `cancel`/`instantCancel`/`swap`-cut.                       |
 | `animationFrames`           | wall-clock 60fps | Cutscene length during which the **engine clock does not advance** (e.g. a Liberation animation).     |
-| skill `animationLock`       | engine frames    | Skill-level lock applied around its stages.                                                           |
 
 The relationship in one line: a stage advances `actionTime` frames; each hit lands at its `actionFrame` inside that window; a `cancel`/`instantCancel` variant **replaces** `actionTime` with a smaller number and any hit whose `actionFrame` now exceeds the advance is **dropped unless `independent`**. `swap` is the exception — it advances by its `actionTime` but **keeps all hits** (`resolveStageExecution`).
 

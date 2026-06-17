@@ -31,11 +31,11 @@ load.
 
 ### Raw → enriched by noun
 
-| Noun      | Raw type    | Enriched type       | What enrichment adds                                                                                                                                                                                                                  |
-| --------- | ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Character | `Character` | `EnrichedCharacter` | per-stage `actionTime`, `variants` (cancel/instantCancel/swap), `footing`, `animationLock`, stage `key`/`newName`, combo lineage (`requiresPriorStageId`); `buffs` go from name scaffolds to `BuffDef[]`; adds `forteCap`, `template` |
-| Weapon    | `Weapon`    | `WeaponData`        | hand-built `buffs: WeaponBuffDef[]` derived from the passive description + `params`; drops `rarity` and the passive `description`                                                                                                     |
-| Echo      | `Echo`      | `EnrichedEcho`      | skill `hits` become timed `stages` (`actionTime`, `newName`)                                                                                                                                                                          |
+| Noun      | Raw type    | Enriched type       | What enrichment adds                                                                                                                                                                                                                    |
+| --------- | ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Character | `Character` | `EnrichedCharacter` | per-stage `actionTime`, `variants` (cancel/instantCancel/swap), `footing`, `animationFrames`, stage `key`/`newName`, combo lineage (`requiresPriorStageId`); `buffs` go from name scaffolds to `BuffDef[]`; adds `forteCap`, `template` |
+| Weapon    | `Weapon`    | `WeaponData`        | hand-built `buffs: WeaponBuffDef[]` derived from the passive description + `params`; drops `rarity` and the passive `description`                                                                                                       |
+| Echo      | `Echo`      | `EnrichedEcho`      | skill `hits` become timed `stages` (`actionTime`, `newName`)                                                                                                                                                                            |
 
 The common theme: the raw shape is **what the game tells us** (stats,
 descriptions, API names), and enrichment supplies **what the engine needs to
@@ -56,7 +56,8 @@ names of Inherent Skills and Resonance Chain nodes (see the comment on
 Extraction yields per-hit `actionFrame` data but not the **stage action time**
 the timeline scheduler needs. Enriched stages carry a required `actionTime`,
 optional `variants` (alternate action times when a stage is cancelled or swapped
-out), `footing` (ground/air/launch/land), and `animationLock`. Movement is the
+out), `footing` (ground/air/launch/land), and `animationFrames` (cutscene length).
+Movement is the
 limiting case: `src/data/movement.ts` defines `DODGE_SKILL` and `JUMP_SKILL`
 directly as `EnrichedSkill`s — there is no raw source for them — and the
 character registry's `injectMovement` appends them to every character at load.

@@ -792,10 +792,10 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     return log.filter((e): e is ActionEvent => e.kind === "action")
   }
 
-  it("(a) caster's own residual CD is eaten by animationFrames", () => {
+  it("(a) caster's own residual swap-back CD is not cleared by its own animation", () => {
     // A swaps out at frame 20, B acts for 10 frames, A swaps back and casts Liberation
-    // Without animation: swapBack = 60 - (30 - 20) = 50
-    // With animation (60f): clock advances 60 before computing -> swapBack = 0
+    // at frame 30 with 50 frames of swap-back CD left. A is on-field for its own
+    // cutscene, so the animation credits no one here — A waits out its real CD.
     testCharacters = [animCharA, animCharB]
     const charBShort: EnrichedCharacter = {
       ...animCharB,
@@ -833,12 +833,12 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
         60,
         "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
         "e3",
-      ), // A at frame 30, animationFrames=60 advance -> swapBack=0
+      ), // A returns at frame 30 with 50 frames of swap-back CD remaining
     ]
     const log = runSimulation(entries, slotsAB, emptyLoadouts)
     const actions = actionsFrom(log)
     const liberation = actions.find((a) => a.sourceEntryId === "e3")
-    expect(liberation?.delayBreakdown?.wait ?? 0).toBe(0)
+    expect(liberation?.delayBreakdown?.wait ?? 0).toBe(50)
   })
 
   it("(b) off-field teammate CD is eaten when caster uses animationFrames stage", () => {
@@ -1056,5 +1056,38 @@ describe("runSimulation — animationFrames: off-field clock advance", () => {
     const actions = actionsFrom(log)
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     expect(reentry?.delayBreakdown?.wait ?? 0).toBe(60)
+  })
+
+  it("(f) animation credit does not reach a swap-out in a later entry", () => {
+    // A casts its cutscene at frame 0 while on-field, then keeps acting. A only
+    // benches at frame 40 (an unrelated B swap) and returns at 60 — 20 frames later,
+    // with no cutscene in between. The animation must not credit that later bench.
+    testCharacters = [animCharA, animCharB]
+    const entries = [
+      tlEntry(
+        60,
+        "char.anim-a.resonance-liberation.liberation.cast::resonance-liberation",
+        "e1",
+      ), // A casts cutscene at frame 0, on-field, no one benched
+      tlEntry(
+        60,
+        "char.anim-a.basic-attack.normal-attack.stage-1::basic-attack",
+        "e2",
+      ), // A 0–20, still on-field
+      tlEntry(
+        61,
+        "char.anim-b.basic-attack.normal-attack.stage-1::basic-attack",
+        "e3",
+      ), // B at 20, benches A; B 20–40
+      tlEntry(
+        60,
+        "char.anim-a.basic-attack.normal-attack.stage-1::basic-attack",
+        "e4",
+      ), // A returns at 40: swapBack = 60 - (40 - 20) = 40
+    ]
+    const log = runSimulation(entries, slotsAB, emptyLoadouts)
+    const actions = actionsFrom(log)
+    const reentry = actions.find((a) => a.sourceEntryId === "e4")
+    expect(reentry?.delayBreakdown?.wait ?? 0).toBe(40)
   })
 })
