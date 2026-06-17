@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
+import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
 import { hitsByStage, sections } from "../types"
@@ -42,11 +43,15 @@ export function StageOverview({
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+      <div className="min-h-0 flex-1 overflow-y-scroll pl-3 pr-1.5 pb-3">
         {groups.map((g) => (
           <div key={g.skill} className="mb-3">
-            <p className="mb-1 text-detail font-medium text-muted-foreground">
-              {g.skill}
+            <p className="mb-1 flex items-baseline gap-1.5 text-detail font-medium text-muted-foreground">
+              <span>{g.skill}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-micro tracking-[1px] text-muted-foreground/60">
+                {STAGE_TYPE_LABELS[g.type]}
+              </span>
             </p>
             <div className="flex flex-col gap-1">
               {g.stages.map((s) => (

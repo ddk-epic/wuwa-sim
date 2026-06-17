@@ -34,7 +34,7 @@ export function ExportMenu({
             disabled={disabled}
             onClick={() => setTab(t)}
             title={disabled ? "select a clip" : `${t.toUpperCase()} export`}
-            className="px-2.5 py-1 text-detail font-medium uppercase text-muted-foreground hover:bg-card hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="px-2.5 py-1 text-detail font-medium uppercase text-muted-foreground hover:bg-card hover:text-foreground disabled:opacity-40"
           >
             {t}
           </button>

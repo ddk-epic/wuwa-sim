@@ -371,6 +371,7 @@ export const encore = {
           newName: "Mid-air Attack",
           value: "123.26%",
           actionTime: 56,
+          footing: { land: 30 },
           variants: {
             cancel: { actionTime: 38 },
             swap: { actionTime: 0 },

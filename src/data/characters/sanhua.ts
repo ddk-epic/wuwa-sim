@@ -596,6 +596,7 @@ export const sanhua = {
           newName: "Mid-air Attack",
           value: "86.29%",
           actionTime: 56,
+          footing: { land: 30 },
           variants: {
             cancel: { actionTime: 28 },
             swap: { actionTime: 0 },

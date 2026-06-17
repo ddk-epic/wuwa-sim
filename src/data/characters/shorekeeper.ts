@@ -463,6 +463,7 @@ export const shorekeeper = {
           newName: "Plunging Attack",
           value: "73.96%",
           actionTime: 0,
+          footing: { land: 30 },
           variants: {},
           damage: [
             {
@@ -847,6 +848,7 @@ export const shorekeeper = {
           category: "Basic Attack",
           newName: "Flare Star Butterfly",
           value: "37.29%",
+          hidden: true,
           actionTime: 0,
           variants: {},
           damage: [

@@ -9,9 +9,12 @@ import {
 } from "./storage"
 import { applyClipEdit, clipDisplayName } from "./types"
 import type { Clip, ClipEdit } from "./types"
+import { planClips } from "./planner"
+import type { SuggestedClip } from "./planner"
 import { uid } from "./shared"
 import { ClipEditor } from "./components/ClipEditor"
 import { ExportMenu } from "./components/ExportMenu"
+import { PlannerPanel } from "./components/PlannerPanel"
 import { StageOverview } from "./components/StageOverview"
 
 function emptyClip(): Clip {
@@ -36,6 +39,7 @@ export function FramesPage() {
 
   const char = findCharacter(characterName)
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
+  const suggestions = useMemo(() => (char ? planClips(char) : []), [char])
   const clip = clips.find((c) => c.id === selectedId) ?? null
 
   // Restore the saved character + clips after mount, not at init, so SSR and the
@@ -70,6 +74,17 @@ export function FramesPage() {
 
   function addClip() {
     const c = emptyClip()
+    commit([...clipsRef.current, c])
+    setSelectedId(c.id)
+  }
+
+  // Seed a clip from a suggestion: pre-load its stage sequence through the one
+  // mutation door. The sentinel is a recording instruction, never a stored stage.
+  function seedFromSuggestion(s: SuggestedClip) {
+    let c: Clip = { ...emptyClip(), end: Math.max(60, s.stages.length * 60) }
+    for (const ps of s.stages) {
+      c = applyClipEdit(c, { type: "addStage", ref: ps.ref, boundaryId: uid() })
+    }
     commit([...clipsRef.current, c])
     setSelectedId(c.id)
   }
@@ -124,6 +139,13 @@ export function FramesPage() {
             <p className="mb-2 text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
               Clips
             </p>
+
+            <PlannerPanel
+              suggestions={suggestions}
+              clips={clips}
+              onSeed={seedFromSuggestion}
+            />
+
             <div className="flex flex-wrap items-center gap-2">
               {clips.map((c) => (
                 <button
