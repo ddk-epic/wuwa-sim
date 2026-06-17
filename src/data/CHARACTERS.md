@@ -588,6 +588,8 @@ Four numbers govern a stage's clock. Authored from the player's seat:
 
 The relationship in one line: a stage advances `actionTime` frames; each hit lands at its `actionFrame` inside that window; a `cancel`/`instantCancel` variant **replaces** `actionTime` with a smaller number and any hit whose `actionFrame` now exceeds the advance is **dropped unless `independent`**. `swap` is the exception — it advances by its `actionTime` but **keeps all hits** (`resolveStageExecution`).
 
+A cutscene stage carries **both**: it plays `animationFrames` of frozen animation first (engine clock paused — only off-field swap-back CDs recover), **then** advances `actionTime` as the action lock. `actionTime: 0` is a real value (the character acts the instant the cutscene ends), distinct from omitting `animationFrames` (a non-cutscene stage). `actionFrame` is measured from the lock's start, so a cutscene stage's hits sit at `0`.
+
 **Worked example** — Stage 5 has `actionTime: 108` with its hit at `actionFrame: 32`. Played in full it advances 108 frames and connects at frame 32. Cancelled (`cancel: { actionTime: 32 }`) it advances only 32 frames; the hit at 32 still lands (`32 ≤ 32`). Swap-cut (`swap: { actionTime: 0 }`) advances 0 frames but **still deals the hit** — `swap` never drops hits, so the damage buffers out as you swap away.
 
 ---
