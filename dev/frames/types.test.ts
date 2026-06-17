@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  animationSplitOf,
   appendStage,
   applyClipEdit,
   exceedingHitIds,
@@ -10,6 +11,7 @@ import {
   resolveVariantTarget,
   sections,
   stageIndexOf,
+  stageTiming,
 } from "./types"
 import type { Clip, HitMark, StageRef } from "./types"
 
@@ -438,6 +440,90 @@ describe("applyClipEdit", () => {
       0: { cancel: { kind: "last" } },
       1: { cancel: { kind: "hit", n: 1 } },
     })
+  })
+})
+
+describe("animation splits", () => {
+  // threeStage sections: A 0–30, B 30–70, C 70–100.
+  const splitAt = (i: number, frame: number) =>
+    applyClipEdit(threeStage, {
+      type: "setAnimationSplit",
+      stageIndex: i,
+      frame,
+      cue: "vfxEdge",
+    })
+
+  it("splits a section into animationFrames + actionTime at the split frame", () => {
+    expect(stageTiming(splitAt(0, 12), 0)).toEqual({
+      animEnd: 12,
+      animationFrames: 12,
+      actionTime: 18,
+    })
+  })
+
+  it("reports the full width and zero animationFrames when unsplit", () => {
+    expect(stageTiming(threeStage, 1)).toEqual({
+      animEnd: 30,
+      animationFrames: 0,
+      actionTime: 40,
+    })
+  })
+
+  it("clamps the split inside its section: animationFrames ≥ 1, lock may be 0", () => {
+    expect(animationSplitOf(splitAt(1, 0), 1)?.frame).toBe(31)
+    expect(animationSplitOf(splitAt(1, 999), 1)?.frame).toBe(70)
+  })
+
+  it("moves keeping the cue; a cue edit keeps the frame", () => {
+    const moved = applyClipEdit(splitAt(2, 80), {
+      type: "moveAnimationSplit",
+      stageIndex: 2,
+      frame: 90,
+    })
+    expect(animationSplitOf(moved, 2)).toEqual({ frame: 90, cue: "vfxEdge" })
+    const recued = applyClipEdit(moved, {
+      type: "setAnimationSplitCue",
+      stageIndex: 2,
+      cue: "estimate",
+    })
+    expect(animationSplitOf(recued, 2)).toEqual({ frame: 90, cue: "estimate" })
+  })
+
+  it("clearing the last split collapses the array to undefined", () => {
+    const cleared = applyClipEdit(splitAt(0, 10), {
+      type: "clearAnimationSplit",
+      stageIndex: 0,
+    })
+    expect(cleared.animationSplits).toBeUndefined()
+  })
+
+  it("rides with its stage on removal — owned, not remapped", () => {
+    const next = applyClipEdit(splitAt(2, 80), {
+      type: "removeStage",
+      index: 1,
+    })
+    expect(next.stageRefs.map((s) => s.stage)).toEqual(["A", "C"])
+    expect(animationSplitOf(next, 0)).toBeNull()
+    expect(animationSplitOf(next, 1)).toEqual({ frame: 80, cue: "vfxEdge" })
+  })
+
+  it("drops when its own stage is removed", () => {
+    const next = applyClipEdit(splitAt(1, 50), {
+      type: "removeStage",
+      index: 1,
+    })
+    expect(next.animationSplits).toBeUndefined()
+  })
+
+  it("stays aligned when a stage is appended", () => {
+    const next = applyClipEdit(splitAt(0, 10), {
+      type: "addStage",
+      ref: stage("D"),
+      boundaryId: "b2",
+    })
+    expect(next.animationSplits).toHaveLength(4)
+    expect(animationSplitOf(next, 0)?.frame).toBe(10)
+    expect(animationSplitOf(next, 3)).toBeNull()
   })
 })
 

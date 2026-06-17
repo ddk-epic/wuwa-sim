@@ -114,12 +114,34 @@ target = "start" | "last" | { hit: n }
 
 The opt-in + ordinal target is **authored state**, not a measurement, so it is stored on the `Clip` keyed by stage-occurrence index (ordinal targets only, never a frame — the marks-are-truth invariant holds), mutated through the closed `ClipEdit` set, and authored in the marks table (the read-only stage overview can't host it). Per-occurrence storage is an MVP simplification; cross-clip identity reconciliation is the solver's concern.
 
+## Animation splits
+
+A cutscene stage (a Liberation opener, an intro animation) holds two timings: the
+**`animationFrames`** the cutscene plays for — during which the engine stage timer
+is **frozen** — followed by the **`actionTime`** action lock. On the ruler that whole
+window is one section, so a stage may carry one **animation split**: a divider
+_inside_ its section at the "control returns" frame. Footage left of it is the frozen
+`animationFrames`; footage right of it is the running `actionTime`. Without a split a
+stage is all `actionTime`, as before.
+
+- **Available on every stage** — the tool doesn't infer which stages are cutscenes;
+  the author places a split where one belongs. The discriminator in the exported file
+  is simply the presence of `animationFrames`, so a stage that gets a split gains the
+  field and a stage without one never does.
+- **Owned by its stage** — splits are stored aligned to `stageRefs` (a parallel array,
+  not the occurrence-keyed Record `variants` use), so removing a stage splices its
+  split out with it; no remap.
+- **Hits resolve to `actionFrame: 0`** — a split stage's hits land inside the frozen
+  animation, so they export at 0 (the engine measures `actionFrame` from the lock's
+  start). The "skills act during the animation" case is deferred.
+
 ## Output
 
 Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so the export is **clone the whole character object → sparse-patch the selected clip's measurements → serialize**:
 
-- `stage.actionTime` ← the stage's section width (rest-zone-aware at the tail).
-- `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries.
+- `stage.actionTime` ← the stage's section width (rest-zone-aware at the tail), minus any leading animation when the stage carries an [animation split](#animation-splits).
+- `stage.animationFrames` ← the frozen leading slice, written only for a stage that has an animation split.
+- `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries. A split stage's hits resolve to `0` (they land inside the frozen animation).
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).
 - A stage the selected clip **repeats** can't patch one slot twice — detect the duplicate identity and **skip it with a warning** rather than silently picking an occurrence.
 

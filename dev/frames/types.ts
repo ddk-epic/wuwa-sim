@@ -55,6 +55,12 @@ export interface HitMark {
   owner: number
 }
 
+/** Per-stage split: footage left of `frame` is frozen `animationFrames`, right is the running `actionTime`. */
+export interface AnimationSplit {
+  frame: number
+  cue: CueTag
+}
+
 /** The two authorable variant tracks. `instantCancel` is derived (cancel pinned to start), never authored directly. */
 export type VariantTrack = "cancel" | "swap"
 
@@ -98,6 +104,8 @@ export interface Clip {
    * simplification — cross-clip identity reconciliation is the solver's concern.
    */
   variants?: Record<number, StageVariantPins>
+  /** Splits aligned to `stageRefs`; a plain array (not a Record) so removal splices the slot out — no remap. */
+  animationSplits?: (AnimationSplit | null)[]
   /**
    * Filename of the recording these frames were read against — provenance only.
    * The video itself is throwaway and never persisted; this label survives reload
@@ -134,6 +142,33 @@ export function sections(clip: Clip): Section[] {
   }))
 }
 
+export function animationSplitOf(clip: Clip, i: number): AnimationSplit | null {
+  return clip.animationSplits?.[i] ?? null
+}
+
+export interface StageTiming {
+  /** The split frame — the stage's engine-clock origin; the section start when unsplit. */
+  animEnd: number
+  animationFrames: number
+  actionTime: number
+}
+
+/** Split a stage's section at `animEnd`; unsplit, `animationFrames` is 0 and `actionTime` the full width. */
+export function stageTiming(
+  clip: Clip,
+  i: number,
+  secs: Section[] = sections(clip),
+): StageTiming {
+  const sec = secs[i]
+  const split = clip.animationSplits?.[i] ?? null
+  const animEnd = split ? clamp(split.frame, sec.start, sec.end) : sec.start
+  return {
+    animEnd,
+    animationFrames: animEnd - sec.start,
+    actionTime: sec.end - animEnd,
+  }
+}
+
 export function clipDisplayName(clip: Clip): string {
   if (clip.name.trim()) return clip.name
   if (clip.stageRefs.length === 0) return "Untitled"
@@ -151,7 +186,9 @@ export function appendStage(
   boundaryId: string,
 ): Clip {
   const stageRefs = [...clip.stageRefs, ref]
-  if (clip.stageRefs.length === 0) return { ...clip, stageRefs }
+  const animationSplits = appendSplitSlot(clip.animationSplits)
+  if (clip.stageRefs.length === 0)
+    return { ...clip, stageRefs, animationSplits }
   const prev = clip.boundaries.length
     ? clip.boundaries[clip.boundaries.length - 1].frame
     : clip.start
@@ -159,6 +196,7 @@ export function appendStage(
   return {
     ...clip,
     stageRefs,
+    animationSplits,
     boundaries: [
       ...clip.boundaries,
       { id: boundaryId, frame, cue: "animationBreak" },
@@ -166,14 +204,33 @@ export function appendStage(
   }
 }
 
+function appendSplitSlot(
+  splits: (AnimationSplit | null)[] | undefined,
+): (AnimationSplit | null)[] | undefined {
+  return splits ? [...splits, null] : undefined
+}
+
+/** Drop stage `i`'s slot, collapsing to absent once no split remains. */
+function removeSplitSlot(
+  splits: (AnimationSplit | null)[] | undefined,
+  i: number,
+): (AnimationSplit | null)[] | undefined {
+  if (!splits) return undefined
+  const next = splits.filter((_, idx) => idx !== i)
+  return next.some((s) => s != null) ? next : undefined
+}
+
 /** Remove stage `i`, dropping the divider that adjoined it so the boundary-count invariant holds. */
 export function removeStageAt(clip: Clip, i: number): Clip {
   const stageRefs = clip.stageRefs.filter((_, idx) => idx !== i)
-  if (clip.boundaries.length === 0) return { ...clip, stageRefs }
+  const animationSplits = removeSplitSlot(clip.animationSplits, i)
+  if (clip.boundaries.length === 0)
+    return { ...clip, stageRefs, animationSplits }
   const bi = i >= clip.boundaries.length ? clip.boundaries.length - 1 : i
   return {
     ...clip,
     stageRefs,
+    animationSplits,
     boundaries: clip.boundaries.filter((_, idx) => idx !== bi),
   }
 }
@@ -283,6 +340,21 @@ function remapVariantsForRemoval(
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v))
 
+/** Write stage `i`'s split, clamped inside its section so `animationFrames ≥ 1` (the lock may be 0). */
+function placeSplit(clip: Clip, i: number, frame: number, cue: CueTag): Clip {
+  if (i < 0 || i >= clip.stageRefs.length) return clip
+  const sec = sections(clip)[i]
+  if (sec.end <= sec.start) return clip
+  const slot: AnimationSplit = {
+    frame: clamp(frame, sec.start + 1, sec.end),
+    cue,
+  }
+  const slots = clip.stageRefs.map((_, idx) =>
+    idx === i ? slot : (clip.animationSplits?.[idx] ?? null),
+  )
+  return { ...clip, animationSplits: slots }
+}
+
 /**
  * Every clip mutation, as a closed set. `applyClipEdit` is the only door to the
  * model — the editor never reshapes a Clip in place — so structural invariants
@@ -314,6 +386,15 @@ export type ClipEdit =
       target: VariantTarget
     }
   | { type: "clearVariant"; stageIndex: number; track: VariantTrack }
+  | {
+      type: "setAnimationSplit"
+      stageIndex: number
+      frame: number
+      cue: CueTag
+    }
+  | { type: "moveAnimationSplit"; stageIndex: number; frame: number }
+  | { type: "setAnimationSplitCue"; stageIndex: number; cue: CueTag }
+  | { type: "clearAnimationSplit"; stageIndex: number }
 
 /** Apply one edit. Returns the clip unchanged when the edit is illegal (over capacity, no room for the divider). */
 export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
@@ -366,6 +447,7 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
         return {
           ...clip,
           stageRefs: [...clip.stageRefs, edit.ref],
+          animationSplits: appendSplitSlot(clip.animationSplits),
           boundaries: [
             ...clip.boundaries,
             {
@@ -494,6 +576,28 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
       return {
         ...clip,
         variants: Object.keys(variants).length ? variants : undefined,
+      }
+    }
+    case "setAnimationSplit":
+      return placeSplit(clip, edit.stageIndex, edit.frame, edit.cue)
+    case "moveAnimationSplit": {
+      const existing = clip.animationSplits?.[edit.stageIndex]
+      if (!existing) return clip
+      return placeSplit(clip, edit.stageIndex, edit.frame, existing.cue)
+    }
+    case "setAnimationSplitCue": {
+      const existing = clip.animationSplits?.[edit.stageIndex]
+      if (!existing) return clip
+      return placeSplit(clip, edit.stageIndex, existing.frame, edit.cue)
+    }
+    case "clearAnimationSplit": {
+      if (!clip.animationSplits?.[edit.stageIndex]) return clip
+      const slots = clip.animationSplits.map((s, idx) =>
+        idx === edit.stageIndex ? null : s,
+      )
+      return {
+        ...clip,
+        animationSplits: slots.some((s) => s != null) ? slots : undefined,
       }
     }
   }

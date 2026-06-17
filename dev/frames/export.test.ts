@@ -119,6 +119,23 @@ describe("buildExport", () => {
     expect(warnings.filter((w) => w.includes("more than once"))).toHaveLength(1)
   })
 
+  it("writes animationFrames from a split, rebases actionTime, and zeroes split-stage hit frames", () => {
+    const clip = baseClip({
+      animationSplits: [{ frame: 12, cue: "vfxEdge" }, null],
+    })
+    const { patched, changes } = buildExport(character(), clip)
+    const a = stageOf(patched, "A")
+    expect(a.animationFrames).toBe(12)
+    expect(a.actionTime).toBe(28)
+    expect(a.damage?.map((d) => d.actionFrame)).toEqual([0, 0])
+    expect(changes.map((c) => c.path)).toContain("A.animationFrames")
+    // B has no split — unchanged behaviour, no animationFrames written.
+    const b = stageOf(patched, "B")
+    expect(b.animationFrames).toBeUndefined()
+    expect(b.actionTime).toBe(60)
+    expect(b.damage?.map((d) => d.actionFrame)).toEqual([30])
+  })
+
   it("produces a TS literal with unquoted keys and the wrapper", () => {
     const { ts } = buildExport(character(), baseClip())
     expect(ts).toContain(

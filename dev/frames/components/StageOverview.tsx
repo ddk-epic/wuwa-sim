@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
-import { hitsByStage, sections } from "../types"
+import { hitsByStage, sections, stageTiming } from "../types"
 import type { Clip, StageRef } from "../types"
 
 // Read-only progress mirror over the character's whole stage catalog (grouped by
@@ -91,9 +91,14 @@ function StageRow({
   const occ = secs
     .map((sec, i) => ({ sec, i }))
     .filter(({ sec }) => sec.ref.id === stage.id)
-  const hits = occ.flatMap(({ sec, i }) =>
-    byStage[i].map((h) => ({ id: h.id, cue: h.cue, af: h.frame - sec.start })),
-  )
+  const hits = occ.flatMap(({ sec, i }) => {
+    const split = cl ? stageTiming(cl, i, secs).animationFrames > 0 : false
+    return byStage[i].map((h) => ({
+      id: h.id,
+      cue: h.cue,
+      af: split ? 0 : h.frame - sec.start,
+    }))
+  })
 
   const count = hits.length
   const capacity = (occ.length || 1) * stage.hitCount

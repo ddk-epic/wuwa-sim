@@ -3,7 +3,12 @@ import type {
   EnrichedSkillAttribute,
   StageVariant,
 } from "#/types/character"
-import { hitsByStage, resolveVariantTarget, sections } from "./types"
+import {
+  hitsByStage,
+  resolveVariantTarget,
+  sections,
+  stageTiming,
+} from "./types"
 import type { Clip, StageRef, VariantTrack } from "./types"
 
 export interface Change {
@@ -82,21 +87,31 @@ export function buildExport(char: EnrichedCharacter, clip: Clip): ExportResult {
     }
 
     const sec = secs[i]
-    const width = sec.end - sec.start
-    if (stage.actionTime !== width) {
+    const split = clip.animationSplits?.[i] ?? null
+    const { animationFrames, actionTime } = stageTiming(clip, i, secs)
+    if (stage.actionTime !== actionTime) {
       changes.push({
         path: `${ref.stage}.actionTime`,
         before: stage.actionTime,
-        after: width,
+        after: actionTime,
       })
-      stage.actionTime = width
+      stage.actionTime = actionTime
+    }
+    if (split && stage.animationFrames !== animationFrames) {
+      changes.push({
+        path: `${ref.stage}.animationFrames`,
+        before: stage.animationFrames,
+        after: animationFrames,
+      })
+      stage.animationFrames = animationFrames
     }
 
     const hits = byStage[i] ?? []
     const damage = stage.damage ?? []
     const n = Math.min(hits.length, damage.length)
     for (let k = 0; k < n; k++) {
-      const actionFrame = hits[k].frame - sec.start
+      // Split-stage hits land in the frozen animation → actionFrame 0.
+      const actionFrame = split ? 0 : hits[k].frame - sec.start
       if (damage[k].actionFrame !== actionFrame) {
         changes.push({
           path: `${ref.stage}.damage[${k}].actionFrame`,

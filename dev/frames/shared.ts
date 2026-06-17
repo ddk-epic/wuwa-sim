@@ -9,7 +9,10 @@ export const CUE_COLOR: Record<CueTag, string> = {
   estimate: "bg-zinc-500",
 }
 
-export type Selected = { type: "boundary" | "hit"; id: string } | null
+export type Selected =
+  | { type: "boundary" | "hit"; id: string }
+  | { type: "split"; index: number }
+  | null
 
 /**
  * Shared grid columns for the two stacked tracks (stepper+scrub above,

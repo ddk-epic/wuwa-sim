@@ -9,11 +9,13 @@ import {
   resolveVariantTarget,
   sections,
   stageIndexOf,
+  stageTiming,
 } from "../types"
 import type {
   Clip,
   ClipEdit,
   CueTag,
+  Section,
   VariantTarget,
   VariantTrack,
 } from "../types"
@@ -133,6 +135,16 @@ export function MarksTable({
                 hitCount={hits.length}
                 onEdit={onEdit}
               />
+              <SplitRow
+                clip={clip}
+                stageIndex={i}
+                sec={sec}
+                selected={selected}
+                setSelected={setSelected}
+                onEdit={onEdit}
+                playhead={playhead}
+                hasVideo={hasVideo}
+              />
               {hits.length === 0 ? (
                 <p className="px-2 py-1 text-muted-foreground/60">no hits</p>
               ) : (
@@ -147,7 +159,7 @@ export function MarksTable({
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => setSelected({ type: "hit", id: h.id })}
                       className={`${COLS} border-t border-border/60 ${
-                        selected?.id === h.id
+                        selected?.type === "hit" && selected.id === h.id
                           ? "bg-border"
                           : exceeding.has(h.id)
                             ? "bg-destructive/15 hover:bg-destructive/25"
@@ -208,7 +220,7 @@ export function MarksTable({
                 onClick={() =>
                   setSelected({ type: "boundary", id: divider.id })
                 }
-                className={`${COLS} min-w-108 overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.id === divider.id ? "bg-border" : "hover:bg-card"}`}
+                className={`${COLS} min-w-108 overflow-hidden rounded border border-border text-detail text-muted-foreground ${selected?.type === "boundary" && selected.id === divider.id ? "bg-border" : "hover:bg-card"}`}
               >
                 <span className="min-w-28 truncate">
                   {sec.ref.stage} ┃ {secs[i + 1]?.ref.stage}
@@ -300,6 +312,95 @@ function VariantRow({
         hitCount={hitCount}
         onEdit={onEdit}
       />
+    </div>
+  )
+}
+
+function SplitRow({
+  clip,
+  stageIndex,
+  sec,
+  selected,
+  setSelected,
+  onEdit,
+  playhead,
+  hasVideo,
+}: {
+  clip: Clip
+  stageIndex: number
+  sec: Section
+  selected: Selected
+  setSelected: (s: Selected) => void
+  onEdit: (edit: ClipEdit) => Clip
+  playhead: number
+  hasVideo: boolean
+}) {
+  const split = clip.animationSplits?.[stageIndex] ?? null
+  if (!split) {
+    return (
+      <button
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() =>
+          onEdit({
+            type: "setAnimationSplit",
+            stageIndex,
+            frame: Math.round((sec.start + sec.end) / 2),
+            cue: "vfxEdge",
+          })
+        }
+        className="block w-full border-t border-border/60 bg-card/40 px-2 py-1 text-left text-micro uppercase tracking-[1px] text-muted-foreground/40 hover:text-muted-foreground"
+      >
+        + animation split
+      </button>
+    )
+  }
+  const { animationFrames } = stageTiming(clip, stageIndex)
+  const isSel = selected?.type === "split" && selected.index === stageIndex
+  return (
+    <div
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => setSelected({ type: "split", index: stageIndex })}
+      className={`${COLS} border-t border-border/60 ${isSel ? "bg-border" : "bg-card/40 hover:bg-card"}`}
+    >
+      <span className="min-w-28 truncate text-muted-foreground">
+        animation <span className="text-muted-foreground/40">│ lock</span>
+      </span>
+      <CueCell
+        cue={split.cue}
+        onChange={(c) =>
+          onEdit({ type: "setAnimationSplitCue", stageIndex, cue: c })
+        }
+      />
+      <span className="text-right font-mono tabular-nums text-foreground">
+        {split.frame}
+      </span>
+      <span
+        className="flex items-center justify-end gap-1.5 font-mono tabular-nums text-muted-foreground"
+        title="animationFrames"
+      >
+        {animationFrames}f
+        {hasVideo && (
+          <SnapButton
+            onClick={() =>
+              onEdit({
+                type: "moveAnimationSplit",
+                stageIndex,
+                frame: playhead,
+              })
+            }
+          />
+        )}
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onEdit({ type: "clearAnimationSplit", stageIndex })
+        }}
+        className="text-muted-foreground/60 hover:text-destructive"
+        title="remove animation split"
+      >
+        <Trash2 className="size-3.5" />
+      </button>
     </div>
   )
 }

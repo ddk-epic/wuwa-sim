@@ -136,6 +136,35 @@ export function Ruler({
         </div>
       ))}
 
+      {(clip.animationSplits ?? []).map((split, i) =>
+        !split ? null : (
+          <div
+            key={`split-${i}`}
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              setSelected({ type: "split", index: i })
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={(e) => {
+              if (e.buttons)
+                onEdit({
+                  type: "moveAnimationSplit",
+                  stageIndex: i,
+                  frame: frameAt(e.clientX),
+                })
+            }}
+            className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize flex-col items-center"
+            style={{ left: `${pct(split.frame)}%` }}
+            title={`animation split @ ${split.frame} (${split.cue})`}
+          >
+            <div className={`size-1.5 rotate-45 ${CUE_COLOR[split.cue]}`} />
+            <div
+              className={`w-0.5 flex-1 opacity-70 ${CUE_COLOR[split.cue]}`}
+            />
+          </div>
+        ),
+      )}
+
       {clip.hits.map((h) => (
         <div
           key={h.id}
@@ -153,7 +182,7 @@ export function Ruler({
           title={`hit @ ${h.frame} (${h.cue})`}
         >
           <div
-            className={`size-3.5 rounded-full ${exceeding.has(h.id) ? "border-2 border-destructive" : "border border-background"} ${CUE_COLOR[h.cue]} ${selected?.id === h.id ? "ring-2 ring-foreground" : ""}`}
+            className={`size-3.5 rounded-full ${exceeding.has(h.id) ? "border-2 border-destructive" : "border border-background"} ${CUE_COLOR[h.cue]} ${selected?.type === "hit" && selected.id === h.id ? "ring-2 ring-foreground" : ""}`}
           />
         </div>
       ))}

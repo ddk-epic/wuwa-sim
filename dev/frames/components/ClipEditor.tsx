@@ -40,11 +40,13 @@ export function ClipEditor({
   useEffect(() => {
     if (!selected || scoping) return
     const mark =
-      selected.type === "hit"
-        ? clip.hits.find((h) => h.id === selected.id)
-        : clip.boundaries.find((b) => b.id === selected.id)
+      selected.type === "split"
+        ? (clip.animationSplits?.[selected.index] ?? undefined)
+        : selected.type === "hit"
+          ? clip.hits.find((h) => h.id === selected.id)
+          : clip.boundaries.find((b) => b.id === selected.id)
     if (mark) setPlayhead(mark.frame)
-  }, [selected, scoping, clip.hits, clip.boundaries])
+  }, [selected, scoping, clip.hits, clip.boundaries, clip.animationSplits])
 
   function attach(s: VideoSource) {
     setWarn(

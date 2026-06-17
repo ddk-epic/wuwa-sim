@@ -5,6 +5,7 @@ import {
   hitsByStage,
   resolveVariantTarget,
   sections,
+  stageTiming,
 } from "./types"
 import type { Clip, VariantTrack } from "./types"
 
@@ -47,17 +48,25 @@ export function snapshotMarkdown(char: EnrichedCharacter, clip: Clip): string {
         .map((sec, i) => ({ sec, i }))
         .filter(({ sec }) => sec.ref.id === stage.id)
       const measured = occ.length > 0
-      const actionTime = measured ? occ[0].sec.end - occ[0].sec.start : null
+      const timing = measured ? stageTiming(clip, occ[0].i, secs) : null
+      const animLabel =
+        timing && timing.animationFrames > 0
+          ? ` · animationFrames \`${timing.animationFrames}\``
+          : ""
       const cancel = measured ? variantLabel(clip, occ[0].i, "cancel") : DASH
       const swap = measured ? variantLabel(clip, occ[0].i, "swap") : DASH
       out.push(
-        `**${stage.stage}** — actionTime \`${actionTime ?? DASH}\` · cancel \`${cancel}\` · swap \`${swap}\``,
+        `**${stage.stage}** — actionTime \`${timing?.actionTime ?? DASH}\`${animLabel} · cancel \`${cancel}\` · swap \`${swap}\``,
         "",
       )
 
-      const hits = occ.flatMap(({ sec, i }) =>
-        byStage[i].map((h) => ({ af: h.frame - sec.start, cue: h.cue })),
-      )
+      const hits = occ.flatMap(({ sec, i }) => {
+        const split = stageTiming(clip, i, secs).animationFrames > 0
+        return byStage[i].map((h) => ({
+          af: split ? 0 : h.frame - sec.start,
+          cue: h.cue,
+        }))
+      })
       const capacity = (occ.length || 1) * stage.hitCount
       const rows = Math.max(capacity, hits.length)
       if (rows === 0) {
