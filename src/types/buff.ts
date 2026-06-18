@@ -278,6 +278,14 @@ export type Condition =
       /** Narrow to a specific negative status. Absent = any negative status. */
       status?: NegStatusType
     }
+  | {
+      // Counts presence among the named buffs — one per active member, not stacks.
+      kind: "buffCount"
+      buffs: string[]
+      op: "eq" | "gte"
+      n: number
+      on: "target" | "source"
+    }
 
 export interface ResourceState {
   energy: number

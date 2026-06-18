@@ -293,6 +293,12 @@ function lowerBuffDef(
   if (def.condition?.kind === "buffActive") {
     next.condition = { ...def.condition, buff: resolveBuff(def.condition.buff) }
   }
+  if (def.condition?.kind === "buffCount") {
+    next.condition = {
+      ...def.condition,
+      buffs: def.condition.buffs.map(resolveBuff),
+    }
+  }
   if (def.duration?.kind === "inherit") {
     next.duration = { ...def.duration, buff: resolveBuff(def.duration.buff) }
   }

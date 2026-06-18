@@ -115,6 +115,17 @@ export class ConditionEvaluator {
         return cond.status
           ? this.world.hasNegStatus(cond.status)
           : this.world.hasAnyNegStatus()
+      case "buffCount": {
+        const id =
+          cond.on === "source"
+            ? subject.sourceCharacterId
+            : subject.targetCharacterId
+        const count = cond.buffs.reduce(
+          (n, buff) => n + (this.world.hasActiveBuff(buff, id) ? 1 : 0),
+          0,
+        )
+        return cond.op === "gte" ? count >= cond.n : count === cond.n
+      }
     }
   }
 

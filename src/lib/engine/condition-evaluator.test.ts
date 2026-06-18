@@ -199,6 +199,47 @@ describe("ConditionEvaluator", () => {
       const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
       expect(evaluator.evaluateUncached(cond, subject)).toBe(false)
     })
+
+    it("buffCount gte is true once enough members are active on source", () => {
+      const active = new Set(["a", "c"])
+      const world = makeWorld({
+        hasActiveBuff: vi.fn(
+          (buffId: string, charId: number) =>
+            charId === 1 && active.has(buffId),
+        ),
+      })
+      const evaluator = new ConditionEvaluator(world)
+      const cond: Condition = {
+        kind: "buffCount",
+        buffs: ["a", "b", "c"],
+        op: "gte",
+        n: 2,
+        on: "source",
+      }
+      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
+      expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
+    })
+
+    it("buffCount eq matches an exact count and rejects others", () => {
+      const active = new Set(["a", "c"])
+      const world = makeWorld({
+        hasActiveBuff: vi.fn(
+          (buffId: string, charId: number) =>
+            charId === 2 && active.has(buffId),
+        ),
+      })
+      const evaluator = new ConditionEvaluator(world)
+      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
+      const eq = (n: number): Condition => ({
+        kind: "buffCount",
+        buffs: ["a", "b", "c"],
+        op: "eq",
+        n,
+        on: "target",
+      })
+      expect(evaluator.evaluateUncached(eq(2), subject)).toBe(true)
+      expect(evaluator.evaluateUncached(eq(3), subject)).toBe(false)
+    })
   })
 
   describe("caching", () => {
