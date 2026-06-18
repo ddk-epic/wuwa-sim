@@ -384,6 +384,269 @@ export const cartethyia = {
       duration: { kind: "permanent" },
       effects: [{ kind: "removeBuffs", buffs: ["sword-of-discord"] }],
     },
+    {
+      // Targets take more DMG from Cartethyia/Fleurdelys, scaling with their
+      // Aero Erosion stacks: +30% at 1-3, then +10% per stack up to +60% at 6.
+      id: "char.cartethyia.indelible-imprint",
+      name: "Wind's Indelible Imprint",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "targetHasNegStatus", status: "Aero Erosion" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "vul" },
+          value: {
+            kind: "fromStatusStacks",
+            status: "Aero Erosion",
+            base: 0.3,
+            per: 0.1,
+            max: 6,
+            threshold: 3,
+          },
+        },
+      ],
+    },
+    {
+      id: "char.cartethyia.divine-blessing",
+      name: "Wind's Divine Blessing",
+      trigger: {
+        event: "skillCast",
+        characterId: 1409,
+        skillCategory: "Outro Skill",
+      },
+      target: { kind: "nextOnField" },
+      duration: { kind: "seconds", v: 20 },
+      condition: { kind: "targetHasNegStatus" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "elementAmp", key: "Aero" },
+          value: { kind: "const", v: 0.175 },
+        },
+      ],
+    },
+    {
+      // Mandate of Divinity: amplifies Aero Erosion DMG and halves its tick
+      // interval. Gated on the Mandate flag, which lives from recall until
+      // Manifest ends, so no separate Manifest gate is needed.
+      id: "char.cartethyia.mandate-amp",
+      name: "Mandate of Divinity (Aero Erosion Amplify)",
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buff: "mandate-of-divinity",
+        on: "source",
+      },
+      appliesToHits: { label: "Aero Erosion" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allAmp" },
+          value: { kind: "const", v: 0.5 },
+        },
+        { kind: "negStatusMod", status: "Aero Erosion", intervalMult: 0.5 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s2-erosion-cap",
+      name: "S2: Blade Broken by Tempest (Erosion Cap)",
+      requiresSequence: 2,
+      trigger: {
+        event: "skillCast",
+        characterId: 1409,
+        stage: "a-knight-s-heartfelt-prayers/cast",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "raiseCap", n: 3 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s2-multiplier-base",
+      name: "S2: Blade Broken by Tempest (Basic/Heavy/Dodge/Intro Multiplier)",
+      requiresSequence: 2,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: {
+        stage: [
+          "sword-to-carve-my-forms/stage-1",
+          "sword-to-carve-my-forms/stage-2",
+          "sword-to-carve-my-forms/stage-3",
+          "sword-to-carve-my-forms/stage-4",
+          "sword-to-carve-my-forms/dodge-counter",
+          "sword-to-carve-my-forms/heavy-attack",
+          "sword-to-mark-tide-s-trace/sword-to-mark-tide-s-trace",
+          "sword-to-mark-tide-s-trace/sword-to-call-for-freedom",
+        ],
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 0.5 },
+        },
+      ],
+    },
+    {
+      // Mid-air plunge damage is emitted by the recall buffs, so it is scoped
+      // by their sourceBuff rather than a stage.
+      id: "char.cartethyia.s2-multiplier-midair",
+      name: "S2: Blade Broken by Tempest (Mid-air Multiplier)",
+      requiresSequence: 2,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: {
+        sourceBuff: ["recall-0", "recall-1", "recall-2", "recall-3"],
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 2.0 },
+        },
+      ],
+    },
+    {
+      id: "char.cartethyia.s3-blade-multiplier",
+      name: "S3: Prisoner Hanged in the Tower (Blade Multiplier)",
+      requiresSequence: 3,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "forte",
+        n: 0,
+        on: "source",
+      },
+      appliesToHits: {
+        stage: "a-knight-s-heartfelt-prayers/blade-of-howling-squall",
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 1.0 },
+        },
+      ],
+    },
+    {
+      id: "char.cartethyia.s3-erosion-basic-stage-5",
+      name: "S3: Prisoner Hanged in the Tower (Basic Stage 5 Erosion)",
+      requiresSequence: 3,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1409,
+        source: "self",
+        stage: "tempest/basic-attack-stage-5#2",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "apply", n: 2 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s3-erosion-mid-air-2",
+      name: "S3: Prisoner Hanged in the Tower (Mid-air Stage 2 Erosion)",
+      requiresSequence: 3,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1409,
+        source: "self",
+        stage: "tempest/mid-air-attack-2#3",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "apply", n: 2 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s3-erosion-enhanced-heavy",
+      name: "S3: Prisoner Hanged in the Tower (Enhanced Heavy Erosion)",
+      requiresSequence: 3,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1409,
+        source: "self",
+        stage: "tempest/enhanced-heavy-attack#3",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "apply", n: 2 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s3-erosion-may-tempest",
+      name: "S3: Prisoner Hanged in the Tower (May Tempest Erosion)",
+      requiresSequence: 3,
+      trigger: {
+        event: "hitLanded",
+        characterId: 1409,
+        source: "self",
+        stage: "tempest/may-tempest-break-the-tides#3",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "apply", n: 2 },
+      ],
+    },
+    {
+      id: "char.cartethyia.s4-sacrifice",
+      name: "S4: Sacrifice Made for Salvation",
+      requiresSequence: 4,
+      trigger: { event: "negStatusInflicted", actor: "any" },
+      target: { kind: "global" },
+      duration: { kind: "seconds", v: 20 },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "allDmgBonus" },
+          value: { kind: "const", v: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "char.cartethyia.s6-fleurdelys-vul",
+      name: "S6: Freedom Found in Storm's Wake (Fleurdelys Vul)",
+      requiresSequence: 6,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: { kind: "buffActive", buff: "manifest", on: "source" },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "vul" },
+          value: { kind: "const", v: 0.4 },
+        },
+      ],
+    },
+    {
+      id: "char.cartethyia.s6-blade-raise-to-max",
+      name: "S6: Freedom Found in Storm's Wake (Blade Raise to Max)",
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1409,
+        stage: "a-knight-s-heartfelt-prayers/blade-of-howling-squall",
+      },
+      effects: [
+        { kind: "negStatus", status: "Aero Erosion", op: "raiseToMax" },
+      ],
+    },
   ],
   skills: [
     {

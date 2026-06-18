@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-18 — `buffCount` condition: count expiring flags instead of a resource
+
+Cartethyia's Sword Shadows are a decaying multiset (each shadow self-expires at 20s), so a resource counter would drift out of sync. Modeled instead as three typed presence-flag buffs read by a new `buffCount` condition (`buffs` keys, `op: "eq" | "gte"`, `n`, `on`), which counts **presence** — one per active member, not stacks. It reuses the existing `hasActiveBuff` world method (summed over members), so it adds no new `ConditionWorld` surface or mutation-version; member keys lower to ids via the same `resolveBuff` pass as `condition.buffActive`. The plunge recall selects its per-count damage profile with four `buffCount`-gated emit buffs. A self-regulating (TTL) resource — the correct home for a non-expiring build-and-dump counter such as Camellya's Crimson Buds — was deferred until a second consumer appears (note in `tmp/self-regulating-resource.md`).
+
+Pages touched: src/data/BUFFS.md (Conditions table: `buffCount` row).
+
 ## 2026-06-14 — Frame Tool design (`/dev/frames`) for empirical stage timing
 
 A dev-only, `DEV`-gated, pure client-side route for deriving `actionTime`/`actionFrame` from gameplay. Core model: **Clips** (action strings of known length) hold **marks** (cutoffs + hits) stored as absolute clip-frames — the single source of truth, with `actionTime`/`actionFrame` as derived projections. **Stages** are shared unknowns across clips; a small **linear solver** combines clip totals, cutoffs, and cross-clip differences, reporting under-determined and conflicting stages. **Confidence** auto-derives from a per-mark **cue tag** (`impactFlash` > `vfxEdge` > `animationBreak` > `estimate`) × corroboration. Variants are derived not marked (`cancel` = last hit's actionFrame; `swap` = 0 or pinned hit). 60fps-only for now; mp4 frame-stepping deferred to phase 2. Reads the bundled character registry; emit is copy/download (no `.ts` writes). Clip set persists to localStorage per character. Deliberately not named "extract" (collides with the API-pull sense).

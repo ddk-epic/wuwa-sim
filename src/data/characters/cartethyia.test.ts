@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter, SkillCategory } from "#/types/character"
+import type { HitContext } from "#/types/buff"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/engine/buff-engine"
 import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
@@ -31,12 +32,13 @@ const emptyLoadout: SlotLoadout = {
   cost3Mains: ["elemDmg", "elemDmg"],
 }
 
-function makeEngine() {
+function makeEngine(sequence = 0) {
   testCharacters = [cartethyia]
   const engine = new BuffEngine()
+  const loadout = { ...emptyLoadout, sequence }
   engine.bootstrap({
     slots: [1409, null, null],
-    loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    loadouts: [loadout, emptyLoadout, emptyLoadout],
   })
   return engine
 }
@@ -131,5 +133,46 @@ describe("Cartethyia — Sword Shadows & recall", () => {
     const after = engine.activeBuffIds(1409)
     expect(after).not.toContain("char.cartethyia.manifest")
     expect(after).not.toContain("char.cartethyia.heart-of-virtue")
+  })
+})
+
+describe("Cartethyia — amps", () => {
+  it("Wind's Indelible Imprint adds vul only while the target has Aero Erosion", () => {
+    const engine = makeEngine()
+    expect(engine.resolveStats(1409).vul).toBeCloseTo(0)
+
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1409,
+      skillCategory: "Resonance Skill",
+      dmgType: "Aero",
+      stageId: STAGE.resonanceSkill,
+      hitIndex: 4,
+      frame: 0,
+      energy: 0,
+      concerto: 0,
+    })
+    expect(engine.getTarget().stacksOf("Aero Erosion")).toBe(2)
+    expect(engine.resolveStats(1409).vul).toBeCloseTo(0.3)
+  })
+
+  it("S2 raises the Basic Attack DMG Multiplier via appliesToHits but spares unlisted stages", () => {
+    const engine = makeEngine(2)
+    const basicCtx: HitContext = {
+      stageId:
+        "char.cartethyia.basic-attack.sword-to-carve-my-forms.stage-1::basic-attack",
+      skillType: "Basic Attack",
+      skillCategory: "Basic Attack",
+      element: "Aero",
+    }
+    expect(engine.resolveStats(1409, basicCtx).bonusMultiplier).toBeCloseTo(0.5)
+
+    const rsCtx: HitContext = {
+      stageId: STAGE.resonanceSkill,
+      skillType: "Basic Attack",
+      skillCategory: "Resonance Skill",
+      element: "Aero",
+    }
+    expect(engine.resolveStats(1409, rsCtx).bonusMultiplier).toBeCloseTo(0)
   })
 })

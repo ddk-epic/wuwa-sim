@@ -479,16 +479,19 @@ A buff's `effects` is an array; entries can mix kinds.
 
 `condition` is re-evaluated continuously. While false, the instance is present but contributes no effects. While true again, contributions resume.
 
-| `condition.kind`     | Predicate                                                                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `onField`            | The buff's _target_ is currently on field.                                                                     |
-| `actorIsOnField`     | The buff's _source_ is currently on field.                                                                     |
-| `actorIsOffField`    | The buff's _source_ is currently off field.                                                                    |
-| `buffActive`         | A specific buff (`buff`, its key) is active on `target` or `source`.                                           |
-| `resourceAtLeast`    | A resource is ≥ `n` on `target` or `source`.                                                                   |
-| `targetHasNegStatus` | The target has a negative status. Optionally narrowed to one type via `status?: NegStatusType` (absent = any). |
+| `condition.kind`     | Predicate                                                                                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onField`            | The buff's _target_ is currently on field.                                                                                                                        |
+| `actorIsOnField`     | The buff's _source_ is currently on field.                                                                                                                        |
+| `actorIsOffField`    | The buff's _source_ is currently off field.                                                                                                                       |
+| `buffActive`         | A specific buff (`buff`, its key) is active on `target` or `source`.                                                                                              |
+| `resourceAtLeast`    | A resource is ≥ `n` on `target` or `source`.                                                                                                                      |
+| `targetHasNegStatus` | The target has a negative status. Optionally narrowed to one type via `status?: NegStatusType` (absent = any).                                                    |
+| `buffCount`          | How many of the named `buffs` (keys) are active on `target`/`source`, compared (`op: "eq" \| "gte"`) to `n`. Counts presence — one per active member, not stacks. |
 
 A simStart-permanent buff with a `condition` becomes a permanent instance instead of being pre-folded — that's the intended way to model "always there but only contributes when X".
+
+`buffCount` reads a set of expiring presence-flag buffs as a quantity — the count of summons/charges currently alive — without a resource. Reach for it when each member self-expires (so a resource counter would drift). Cartethyia's plunge recall is the live example: four recall buffs gated `buffCount eq 0/1/2/3` over the three Sword Shadow flags select the per-count damage profile.
 
 ### Status & identity gating
 
