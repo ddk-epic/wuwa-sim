@@ -1,7 +1,9 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import { Provider } from "jotai"
 
+import { store } from "../state/store"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -48,7 +50,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <Provider store={store}>{children}</Provider>
         <TanStackDevtools
           config={{
             position: "bottom-right",
