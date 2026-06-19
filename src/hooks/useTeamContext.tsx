@@ -2,6 +2,7 @@ import { createContext, useContext } from "react"
 import type { ReactNode } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
+import type { Settings } from "#/lib/settings"
 import { getCharacterById } from "#/lib/loadout/catalog"
 
 export interface TeamContextValue {
@@ -10,6 +11,8 @@ export interface TeamContextValue {
   loadouts: [SlotLoadout, SlotLoadout, SlotLoadout]
   focusedId: number | null
   selectedCount: number
+  /** Present under the live `useTeam` provider; the in-memory draft omits it. */
+  settings?: Settings
   setName: (name: string) => void
   toggleCharacter: (characterId: number) => void
   focusCharacter: (id: number) => void
