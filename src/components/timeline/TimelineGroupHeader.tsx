@@ -12,8 +12,9 @@ import { IconBtn } from "#/components/ui/IconBtn"
 import { InlineRename } from "#/components/ui/InlineRename"
 import { HexPill } from "#/components/ui/HexPill"
 import { getCharacterById } from "#/lib/loadout/catalog"
+import { useAtomValue, useSetAtom } from "jotai"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
-import { useRenamingGroup } from "#/hooks/useRenamingGroup"
+import { renamingGroupIdAtom } from "#/state/renaming"
 import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
@@ -59,7 +60,8 @@ export function TimelineGroupHeader({
     gradient,
     containerIndex,
   } = item
-  const { renamingGroupId, endRename } = useRenamingGroup()
+  const renamingGroupId = useAtomValue(renamingGroupIdAtom)
+  const setRenamingGroupId = useSetAtom(renamingGroupIdAtom)
   const isDraggingThisGroup = drag.draggedId === groupId
 
   const gs = groupSummaries.get(groupId)
@@ -147,7 +149,7 @@ export function TimelineGroupHeader({
             readOnly={locked}
             autoEdit={renamingGroupId === groupId}
             onEditingChange={(next) => {
-              if (!next) endRename()
+              if (!next) setRenamingGroupId(null)
             }}
             onCommit={(l) => onGroupLabelCommit(groupId, l)}
             placeholder="unnamed"

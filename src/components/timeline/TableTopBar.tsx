@@ -1,3 +1,6 @@
+import { useSetAtom } from "jotai"
+import { renamingGroupIdAtom } from "#/state/renaming"
+
 interface DisplayProps {
   label: string
   value: string
@@ -30,7 +33,7 @@ interface TableTopBarProps {
   dps: number
   totalTimeSec: number
   stale?: boolean
-  onAddGroup: () => void
+  onAddGroup: () => string
 }
 
 export function TableTopBar({
@@ -41,6 +44,7 @@ export function TableTopBar({
   stale,
   onAddGroup,
 }: TableTopBarProps) {
+  const setRenamingGroupId = useSetAtom(renamingGroupIdAtom)
   return (
     <div className="flex h-11 shrink-0 items-center gap-4 px-4 border-b border-border bg-card">
       <div className="flex items-baseline gap-2">
@@ -62,7 +66,7 @@ export function TableTopBar({
 
       <button
         className="items-center gap-1 px-1.5 py-0.75 font-mono text-sm rounded-sm border border-muted-foreground text-muted-foreground hover:text-foreground"
-        onClick={onAddGroup}
+        onClick={() => setRenamingGroupId(onAddGroup())}
       >
         + Group
       </button>
