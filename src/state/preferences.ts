@@ -28,9 +28,22 @@ function mergeWithDefaults(stored: unknown): UiPreferences {
   }
 }
 
-// atomWithStorage's default JSON storage only parses; it would not coerce a
-// partial or legacy stored object, so reads route through mergeWithDefaults.
-const jsonStorage = createJSONStorage<UiPreferences>(() => localStorage)
+// getOnInit reads storage at module-eval time; bare `localStorage` throws in
+// non-browser runners (Vite SSR / Vitest), so fall back to a no-op store.
+const noopStorage: Storage = {
+  length: 0,
+  clear: () => {},
+  key: () => null,
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+}
+
+// default JSON storage only parses; route reads through mergeWithDefaults to
+// coerce partial/legacy stored objects.
+const jsonStorage = createJSONStorage<UiPreferences>(() =>
+  typeof localStorage !== "undefined" ? localStorage : noopStorage,
+)
 const storage = {
   ...jsonStorage,
   getItem: (key: string, initialValue: UiPreferences) =>
