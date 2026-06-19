@@ -1,4 +1,4 @@
-# Ubiquitous Language
+# Language
 
 ## Characters
 

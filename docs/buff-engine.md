@@ -61,7 +61,7 @@ Order is a data value, not inline control flow (see [ADR-0006](adr/0006-phase-ba
 
 - [engine-overview](engine-overview.md)
 - [CONTEXT.md § The buff system](../CONTEXT.md#the-buff-system)
-- [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md)
+- [LANGUAGE.md](../LANGUAGE.md)
 - [ADR-0001: buff system as unified modifier pipeline](adr/0001-buff-system-as-unified-modifier-pipeline.md)
 - [ADR-0002: structured trigger over closed event taxonomy](adr/0002-structured-trigger-over-closed-event-taxonomy.md)
 - [ADR-0004: buff instance dedupe by id and target](adr/0004-buff-instance-dedupe-by-id-and-target.md)

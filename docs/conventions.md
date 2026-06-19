@@ -4,18 +4,18 @@ How `docs/` is maintained.
 
 ## Purpose
 
-`docs/` holds concept pages that document `src/` — synthesis the existing `CONTEXT.md`, `UBIQUITOUS_LANGUAGE.md`, and ADRs don't already cover.
+`docs/` holds concept pages that document `src/` — synthesis the existing `CONTEXT.md`, `LANGUAGE.md`, and ADRs don't already cover.
 
 ## What goes here vs elsewhere
 
 - **`docs/`** — project knowledge useful to any contributor; verifiable against source
 - **`CONTEXT.md`** — narrative and language for the project as a whole
-- **`UBIQUITOUS_LANGUAGE.md`** — canonical definitions of domain terms
+- **`LANGUAGE.md`** — canonical definitions of domain terms
 - **`docs/adr/`** — architectural decisions, kept **current** rather than append-only: when a decision is revised, fold the change into the ADR's body and retrofit the superseded design into Considered Options with the reason it changed (no trailing "Amendment" sections). An ADR fully superseded by a later one is deleted and absorbed into its successor's Considered Options. Numbers are never reused — gaps remain; full history lives in git.
 
 Boundary test: _"Useful to a contributor who isn't the user?"_ Yes → docs.
 
-**Anti-rule:** don't duplicate prose from `CONTEXT.md` or `UBIQUITOUS_LANGUAGE.md`. Link to the canonical definition, then add the implementation layer (which files, how it composes, gotchas).
+**Anti-rule:** don't duplicate prose from `CONTEXT.md` or `LANGUAGE.md`. Link to the canonical definition, then add the implementation layer (which files, how it composes, gotchas).
 
 ## Page granularity
 
