@@ -8,7 +8,6 @@ describe("ResourceLedger", () => {
       energy: 0,
       concerto: 0,
       forte: 0,
-      resonance: 0,
     })
   })
 
@@ -78,15 +77,13 @@ describe("ResourceLedger — forte cap", () => {
     expect(r.getResource(1).forte).toBe(100)
   })
 
-  it("cap only affects forte; energy, concerto, resonance remain uncapped", () => {
+  it("cap only affects forte; energy and concerto remain uncapped", () => {
     const r = new ResourceLedger()
     r.registerCap(1, "forte", 4)
     r.applyDelta(1, "energy", 200)
     r.applyDelta(1, "concerto", 200)
-    r.applyDelta(1, "resonance", 200)
     expect(r.getResource(1).energy).toBe(200)
     expect(r.getResource(1).concerto).toBe(200)
-    expect(r.getResource(1).resonance).toBe(200)
   })
 
   it("clear resets resource values but caps persist", () => {

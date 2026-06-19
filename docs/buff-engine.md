@@ -9,7 +9,7 @@
 ### Composition
 
 - **`InstanceStore`** — active buff instances, the pending-nextOnField queue, trigger matching, cooldown bookkeeping
-- **`ResourceLedger`** — per-character Energy / Concerto / Forte / Resonance counters
+- **`ResourceLedger`** — per-character Energy / Concerto / Forte counters
 - **`OnFieldTracker`** — current on-field character; swap inference
 - **`EmitHitDispatcher`** — synthetic hit firing with ICD
 - **`StatTableBuilder`** — base stats + per-hit `stat`-effect accumulation

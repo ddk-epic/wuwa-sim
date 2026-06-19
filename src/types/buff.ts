@@ -82,7 +82,7 @@ export type ValueExpr =
       threshold?: number
     }
 
-export type ResourceKind = "energy" | "concerto" | "forte" | "resonance"
+export type ResourceKind = "energy" | "concerto" | "forte"
 
 export type StatEffect = {
   kind: "stat"
@@ -291,11 +291,10 @@ export interface ResourceState {
   energy: number
   concerto: number
   forte: number
-  resonance: number
 }
 
 export function emptyResourceState(): ResourceState {
-  return { energy: 0, concerto: 0, forte: 0, resonance: 0 }
+  return { energy: 0, concerto: 0, forte: 0 }
 }
 
 export type Duration =

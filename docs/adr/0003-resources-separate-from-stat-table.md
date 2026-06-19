@@ -1,6 +1,6 @@
 # Resources stored separately from Stat Table, queried through unified vocabulary
 
-Energy, Concerto, Forte, and Resonance are stored on the Buff Engine as a per-character `ResourceState`, NOT as fields on the Stat Table. They have caps, consumption semantics, and per-character ownership that don't align with the way damage-modifier stats are read and combined. However, the authoring vocabulary is unified: buff Triggers and Conditions query resource state through the same `{ kind: "resource", ... }` shape used for stat queries, so buff authors only need one mental model.
+Energy, Concerto, and Forte are stored on the Buff Engine as a per-character `ResourceState`, NOT as fields on the Stat Table. They have caps, consumption semantics, and per-character ownership that don't align with the way damage-modifier stats are read and combined. However, the authoring vocabulary is unified: buff Triggers and Conditions query resource state through the same `{ kind: "resource", ... }` shape used for stat queries, so buff authors only need one mental model.
 
 ## Consequences
 
