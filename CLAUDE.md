@@ -28,6 +28,8 @@ Apply to every edit, in source AND test files.
   it explains what the code cannot: a non-obvious _why_, an invariant, a gotcha,
   or the reason a magic value is what it is.
 - **Never narrate the next line** ("// loop over skills", "// set the flag").
+- **Keep comments concise and functional.** State the fact, drop the framing.
+- **Never restate the code in prose.** If the comment is the line read aloud, cut it.
 
 After finishing an edit, re-read every comment and test title you added and
 delete each one that breaks the above.
