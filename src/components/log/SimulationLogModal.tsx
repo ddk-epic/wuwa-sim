@@ -2,7 +2,8 @@ import { useState } from "react"
 import { Modal } from "#/components/ui/Modal"
 import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import type { LogVariant, SimulationLogEntry } from "#/types/simulation-log"
-import { useDefaultLogPreference } from "#/hooks/useUiPreferencesContext"
+import { useAtomValue } from "jotai"
+import { defaultLogVariantAtom } from "#/state/preferences"
 import { LogTable } from "./LogTable"
 import { isBuff } from "./BuffEventRow"
 import { BuffTimelineLog, BuffTimelineKpis } from "./BuffTimelineLog"
@@ -26,7 +27,9 @@ export function SimulationLogModal({
 }: SimulationLogModalProps) {
   const hitCount = log.filter((e) => e.kind === "hit").length
   const [showBuffs, setShowBuffs] = useState(true)
-  const [variant, setVariant] = useState<LogVariant>(useDefaultLogPreference())
+  const [variant, setVariant] = useState<LogVariant>(
+    useAtomValue(defaultLogVariantAtom),
+  )
   const filtered = showBuffs ? log : log.filter((e) => !isBuff(e))
 
   return (

@@ -6,11 +6,8 @@ import {
   useSettingsValue,
   useSettingsActions,
 } from "#/hooks/useSettingsContext"
-import {
-  useAutoRunPreference,
-  useDefaultLogPreference,
-  useUiPreferencesActions,
-} from "#/hooks/useUiPreferencesContext"
+import { useAtomValue, useSetAtom } from "jotai"
+import { autoRunAtom, defaultLogVariantAtom } from "#/state/preferences"
 import type { LogVariant } from "#/types/simulation-log"
 
 /** Frame values step 3 at a time, 0–30 (≤0.5s). All defaults land on this grid. */
@@ -95,9 +92,10 @@ function SegmentedControl<T extends string>({
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const settings = useSettingsValue()
   const { setSettings } = useSettingsActions()
-  const autoRun = useAutoRunPreference()
-  const defaultLogVariant = useDefaultLogPreference()
-  const { setPreferences } = useUiPreferencesActions()
+  const autoRun = useAtomValue(autoRunAtom)
+  const setAutoRun = useSetAtom(autoRunAtom)
+  const defaultLogVariant = useAtomValue(defaultLogVariantAtom)
+  const setDefaultLogVariant = useSetAtom(defaultLogVariantAtom)
 
   return (
     <Modal onClose={onClose} title="Settings">
@@ -109,7 +107,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           { value: "manual", label: "Manual" },
           { value: "auto", label: "Auto" },
         ]}
-        onChange={(v) => setPreferences({ autoRun: v === "auto" })}
+        onChange={(v) => setAutoRun(v === "auto")}
       />
       <SegmentedControl<LogVariant>
         label="Default log"
@@ -118,7 +116,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           { value: "table", label: "Table" },
           { value: "timeline", label: "Timeline" },
         ]}
-        onChange={(v) => setPreferences({ defaultLogVariant: v })}
+        onChange={(v) => setDefaultLogVariant(v)}
       />
 
       <div className="border-t border-border my-4" />
