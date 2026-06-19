@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-06-19 — Page state moves to Jotai atoms; draft isolation via Provider scoping
+
+`SimulatorPage`'s growing stack of hand-rolled context providers (four deep: team, settings, UI preferences, renaming-group) becomes Jotai atoms — one `atomWithStorage` base per persisted object with derived field atoms for subscription granularity, killing both the boilerplate and the coarse-object re-render churn. Jotai over Zustand because `TeamContext` is polymorphic (live `useTeam` vs. throwaway `useDraftTeam`), and Jotai's `<Provider>` natively models "same atoms, isolated instance" — the draft survives as a bare `<Provider>` around the create modal while `useDraftTeam`/`DraftTeamProvider` are deleted. Settings stay a derived atom of the team (per ADR-0040); UI-preference boundary unchanged (ADR-0027). The five localStorage keys stay split (merging would reintroduce whole-blob write churn). Two-pass leaf-first migration. Implementation pending. Flagged for later: `EditTeamModal`'s no-cancel edit-through asymmetry, inlining the `EditTeamModal` wrapper, renaming `reviveActiveTeam`.
+
+Pages touched: ADR-0041 (new).
+
 ## 2026-06-18 — `buffCount` condition: count expiring flags instead of a resource
 
 Cartethyia's Sword Shadows are a decaying multiset (each shadow self-expires at 20s), so a resource counter would drift out of sync. Modeled instead as three typed presence-flag buffs read by a new `buffCount` condition (`buffs` keys, `op: "eq" | "gte"`, `n`, `on`), which counts **presence** — one per active member, not stacks. It reuses the existing `hasActiveBuff` world method (summed over members), so it adds no new `ConditionWorld` surface or mutation-version; member keys lower to ids via the same `resolveBuff` pass as `condition.buffActive`. The plunge recall selects its per-count damage profile with four `buffCount`-gated emit buffs. A self-regulating (TTL) resource — the correct home for a non-expiring build-and-dump counter such as Camellya's Crimson Buds — was deferred until a second consumer appears (note in `tmp/self-regulating-resource.md`).
