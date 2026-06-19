@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"
-import { useTeamContext } from "#/hooks/useTeamContext"
+import { useAtomValue, useSetAtom } from "jotai"
+import { teamAtom, focusCharacterAtom } from "#/state/team"
 import { elementHex } from "#/components/ui/character-visual"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById } from "#/lib/loadout/catalog"
@@ -49,8 +50,8 @@ interface SkillCatalogProps {
 }
 
 export function SkillCatalog({ onStageClick }: SkillCatalogProps) {
-  const { slots, loadouts, focusedId, focusCharacter } = useTeamContext()
-  const onFocus = focusCharacter
+  const { slots, loadouts, focusedId } = useAtomValue(teamAtom)
+  const onFocus = useSetAtom(focusCharacterAtom)
   const [filterKey, setFilterKey] = useState<FilterKey | null>(null)
 
   useEffect(() => {

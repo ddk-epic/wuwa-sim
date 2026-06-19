@@ -1,5 +1,6 @@
 import { CheckIcon } from "lucide-react"
-import { useTeamContext } from "#/hooks/useTeamContext"
+import { useAtomValue } from "jotai"
+import { teamAtom } from "#/state/team"
 import { useAutosaveIndicator } from "#/hooks/useAutosaveIndicator"
 
 /**
@@ -10,7 +11,7 @@ import { useAutosaveIndicator } from "#/hooks/useAutosaveIndicator"
  * doesn't flash the indicator.
  */
 export function AutosaveIndicator() {
-  const { name, slots, loadouts, settings } = useTeamContext()
+  const { name, slots, loadouts, settings } = useAtomValue(teamAtom)
   const status = useAutosaveIndicator({ name, slots, loadouts, settings })
   if (status === "idle") return null
   return (

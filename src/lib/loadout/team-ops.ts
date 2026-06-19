@@ -9,8 +9,8 @@ import {
 /**
  * The composition slice shared by the live Active Team and the in-memory draft.
  * The pure transforms below operate on any object carrying these fields and
- * return a new object of the same shape, so `useTeam` (localStorage-backed) and
- * `useDraftTeam` (useState-backed) share one source of truth for the rules.
+ * return a new object of the same shape, so the live team and the create
+ * modal's draft store share one source of truth for the rules.
  */
 export interface TeamComposition {
   slots: Slots

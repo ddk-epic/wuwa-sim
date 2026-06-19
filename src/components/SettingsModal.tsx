@@ -2,11 +2,8 @@ import { Modal } from "#/components/ui/Modal"
 import { Stepper } from "#/components/ui/Stepper"
 import { DEFAULT_SETTINGS } from "#/lib/settings"
 import type { Settings } from "#/lib/settings"
-import {
-  useSettingsValue,
-  useSettingsActions,
-} from "#/hooks/useSettingsContext"
 import { useAtomValue, useSetAtom } from "jotai"
+import { settingsAtom } from "#/state/team"
 import { autoRunAtom, defaultLogVariantAtom } from "#/state/preferences"
 import type { LogVariant } from "#/types/simulation-log"
 
@@ -90,8 +87,8 @@ function SegmentedControl<T extends string>({
 }
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
-  const settings = useSettingsValue()
-  const { setSettings } = useSettingsActions()
+  const settings = useAtomValue(settingsAtom)
+  const setSettings = useSetAtom(settingsAtom)
   const autoRun = useAtomValue(autoRunAtom)
   const setAutoRun = useSetAtom(autoRunAtom)
   const defaultLogVariant = useAtomValue(defaultLogVariantAtom)

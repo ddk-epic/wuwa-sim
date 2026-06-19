@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react"
-import { useTeam } from "#/hooks/useTeam"
 import { useLibrary } from "#/hooks/useLibrary"
 import { useTimeline } from "#/hooks/useTimeline"
 import { useSimulationLog, computeSignature } from "#/hooks/useSimulationLog"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { autoRunAtom } from "#/state/preferences"
+import {
+  teamAtom,
+  setOriginIdAtom,
+  loadTeamAtom,
+  useTeamPersistence,
+} from "#/state/team"
 import { useAutoRun } from "#/hooks/useAutoRun"
 import { useModalToggle } from "#/hooks/useModalToggle"
-import { SettingsProvider } from "#/hooks/useSettingsContext"
-import { TeamProvider } from "#/hooks/useTeamContext"
 import { SkillCatalog } from "#/components/skills/SkillCatalog"
 import { Header } from "#/components/Header"
 import { TableTopBar } from "#/components/timeline/TableTopBar"
@@ -24,18 +27,11 @@ import { encodePayload, decodePayload } from "#/lib/import-export"
 import type { ImportExportPayload } from "#/lib/import-export"
 
 export function SimulatorPage() {
-  const team = useTeam()
-  const {
-    name,
-    slots,
-    loadouts,
-    focusedId,
-    originId,
-    settings,
-    setSettings,
-    setOriginId,
-    loadTeam,
-  } = team
+  useTeamPersistence()
+  const { name, slots, loadouts, focusedId, originId, settings } =
+    useAtomValue(teamAtom)
+  const setOriginId = useSetAtom(setOriginIdAtom)
+  const loadTeam = useSetAtom(loadTeamAtom)
   const { saveCurrent } = useLibrary()
 
   const { log, storedSignature, setLog, clearLog } = useSimulationLog()
@@ -148,12 +144,12 @@ export function SimulatorPage() {
   )
 
   function applyImport(payload: ImportExportPayload) {
-    loadTeam(
-      payload.team.slots,
-      payload.team.loadouts,
-      payload.team.focusedId,
-      payload.team.settings,
-    )
+    loadTeam({
+      slots: payload.team.slots,
+      loadouts: payload.team.loadouts,
+      focusedId: payload.team.focusedId,
+      settings: payload.team.settings,
+    })
     loadNodes(payload.timeline ?? [])
     clearLog()
   }
@@ -192,92 +188,86 @@ export function SimulatorPage() {
   }
 
   return (
-    <TeamProvider value={team}>
-      <SettingsProvider settings={settings} actions={{ setSettings }}>
-        <main className="flex flex-col min-w-345 h-screen">
-          <Header
-            onEditTeam={teamModal.open}
-            onResetTimeline={handleResetTimeline}
-            onSimulate={handleSimulate}
-            onSaveTeam={handleSaveTeam}
-            onOpenSimulationLog={simulationLogModal.open}
-            onOpenSettings={settingsModal.open}
-            timelineEmpty={entries.length === 0}
-            logEmpty={log.length === 0}
-            saveDisabled={slots.every((id) => id === null)}
-            autoRun={autoRun}
-            needsRun={needsRun}
-            exportString={exportString}
-            onImport={handleImport}
-            importError={importError}
+    <main className="flex flex-col min-w-345 h-screen">
+      <Header
+        onEditTeam={teamModal.open}
+        onResetTimeline={handleResetTimeline}
+        onSimulate={handleSimulate}
+        onSaveTeam={handleSaveTeam}
+        onOpenSimulationLog={simulationLogModal.open}
+        onOpenSettings={settingsModal.open}
+        timelineEmpty={entries.length === 0}
+        logEmpty={log.length === 0}
+        saveDisabled={slots.every((id) => id === null)}
+        autoRun={autoRun}
+        needsRun={needsRun}
+        exportString={exportString}
+        onImport={handleImport}
+        importError={importError}
+      />
+      <div className="flex flex-1 min-h-0">
+        {/* left rail */}
+        <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
+        {/* center column */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <TableTopBar
+            entriesNumber={entries.length}
+            totalDmg={summary.totalDamage}
+            dps={summary.dps}
+            totalTimeSec={summary.totalTimeFrames / 60}
+            stale={stale}
+            onAddGroup={addGroup}
           />
-          <div className="flex flex-1 min-h-0">
-            {/* left rail */}
-            <div className="flex w-10 shrink-0 flex-col items-center gap-2.5 border-r border-border bg-darkest py-3" />
-            {/* center column */}
-            <div className="flex-1 flex flex-col min-h-0">
-              <TableTopBar
-                entriesNumber={entries.length}
-                totalDmg={summary.totalDamage}
-                dps={summary.dps}
-                totalTimeSec={summary.totalTimeFrames / 60}
-                stale={stale}
-                onAddGroup={addGroup}
-              />
-              <TimelineView
-                nodes={nodes}
-                summary={summary}
-                log={log}
-                stale={stale}
-                onRemove={removeEntry}
-                onReorder={reorderEntries}
-                onReorderNodes={reorderNodes}
-                onUpdateEntry={updateEntry}
-                onGroupLabelCommit={updateGroupLabel}
-                onToggleGroupLock={toggleGroupLock}
-                onDuplicateGroup={duplicateGroup}
-                onDeleteGroup={deleteGroup}
-                onReorderGroupEntries={reorderGroupEntries}
-              />
-            </div>
-            {/* right sidebar */}
-            <div className="w-100 shrink-0 border-l border-border flex flex-col min-h-0">
-              {slots.some((id) => id !== null) ? (
-                <SkillCatalog onStageClick={addEntry} />
-              ) : (
-                <EmptyStatement
-                  statement="No characters yet"
-                  description="Add a character to your team to browse their skills."
-                />
-              )}
-            </div>
-          </div>
-          {teamModal.isOpen && <EditTeamModal onClose={teamModal.close} />}
-          {simulationLogModal.isOpen && (
-            <SimulationLogModal
-              log={log}
-              rosterIds={slots.filter((id): id is number => id !== null)}
-              totalDamage={summary.totalDamage}
-              dps={summary.dps}
-              totalTimeFrames={summary.totalTimeFrames}
-              onClose={simulationLogModal.close}
+          <TimelineView
+            nodes={nodes}
+            summary={summary}
+            log={log}
+            stale={stale}
+            onRemove={removeEntry}
+            onReorder={reorderEntries}
+            onReorderNodes={reorderNodes}
+            onUpdateEntry={updateEntry}
+            onGroupLabelCommit={updateGroupLabel}
+            onToggleGroupLock={toggleGroupLock}
+            onDuplicateGroup={duplicateGroup}
+            onDeleteGroup={deleteGroup}
+            onReorderGroupEntries={reorderGroupEntries}
+          />
+        </div>
+        {/* right sidebar */}
+        <div className="w-100 shrink-0 border-l border-border flex flex-col min-h-0">
+          {slots.some((id) => id !== null) ? (
+            <SkillCatalog onStageClick={addEntry} />
+          ) : (
+            <EmptyStatement
+              statement="No characters yet"
+              description="Add a character to your team to browse their skills."
             />
           )}
-          {settingsModal.isOpen && (
-            <SettingsModal onClose={settingsModal.close} />
-          )}
-          {pendingImport !== null && (
-            <ConfirmModal
-              message="Import will overwrite your current timeline. Continue?"
-              onConfirm={() => {
-                applyImport(pendingImport)
-                setPendingImport(null)
-              }}
-              onCancel={() => setPendingImport(null)}
-            />
-          )}
-        </main>
-      </SettingsProvider>
-    </TeamProvider>
+        </div>
+      </div>
+      {teamModal.isOpen && <EditTeamModal onClose={teamModal.close} />}
+      {simulationLogModal.isOpen && (
+        <SimulationLogModal
+          log={log}
+          rosterIds={slots.filter((id): id is number => id !== null)}
+          totalDamage={summary.totalDamage}
+          dps={summary.dps}
+          totalTimeFrames={summary.totalTimeFrames}
+          onClose={simulationLogModal.close}
+        />
+      )}
+      {settingsModal.isOpen && <SettingsModal onClose={settingsModal.close} />}
+      {pendingImport !== null && (
+        <ConfirmModal
+          message="Import will overwrite your current timeline. Continue?"
+          onConfirm={() => {
+            applyImport(pendingImport)
+            setPendingImport(null)
+          }}
+          onCancel={() => setPendingImport(null)}
+        />
+      )}
+    </main>
   )
 }

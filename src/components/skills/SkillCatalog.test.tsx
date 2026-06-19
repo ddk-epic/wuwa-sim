@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent, cleanup } from "@testing-library/react"
+import { Provider, createStore } from "jotai"
 import type { ReactElement } from "react"
 import type { EnrichedCharacter } from "#/types/character"
 import type { EnrichedEcho } from "#/types/echo"
 import type { Slots, SlotLoadout } from "#/types/loadout"
-import { TeamProvider } from "#/hooks/useTeamContext"
+import { teamAtom, defaultActiveTeam } from "#/state/team"
 
 import { SkillCatalog } from "./SkillCatalog"
 
@@ -15,7 +16,6 @@ function renderWithTeam(
     slots,
     loadouts,
     focusedId,
-    onFocus,
   }: {
     slots: Slots
     loadouts: SlotLoadout[]
@@ -23,22 +23,14 @@ function renderWithTeam(
     onFocus?: (id: number) => void
   },
 ) {
-  const value = {
-    name: "New team",
+  const store = createStore()
+  store.set(teamAtom, {
+    ...defaultActiveTeam(),
     slots,
-    loadouts: [loadouts[0], loadouts[1], loadouts[2]] as [
-      SlotLoadout,
-      SlotLoadout,
-      SlotLoadout,
-    ],
+    loadouts: [loadouts[0], loadouts[1], loadouts[2]],
     focusedId,
-    selectedCount: slots.filter((s) => s !== null).length,
-    setName: vi.fn(),
-    toggleCharacter: vi.fn(),
-    focusCharacter: onFocus ?? vi.fn(),
-    setSlotPatch: vi.fn(),
-  }
-  return render(<TeamProvider value={value}>{ui}</TeamProvider>)
+  })
+  return { store, ...render(<Provider store={store}>{ui}</Provider>) }
 }
 
 const char1: EnrichedCharacter = {
@@ -216,18 +208,16 @@ describe("SkillSidebar — tab strip", () => {
     expect(screen.getByText("Sanhua")).toBeTruthy()
   })
 
-  it("clicking an unfocused tab calls onFocus with that character id", () => {
+  it("clicking an unfocused tab focuses that character in the team", () => {
     setCatalog([char1, char2], [])
     const slots: Slots = [1, 2, null]
-    const onFocus = vi.fn()
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
+    const { store } = renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
       slots: slots,
       loadouts: noLoadouts,
       focusedId: 1,
-      onFocus: onFocus,
     })
     fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
-    expect(onFocus).toHaveBeenCalledWith(2)
+    expect(store.get(teamAtom).focusedId).toBe(2)
   })
 })
 

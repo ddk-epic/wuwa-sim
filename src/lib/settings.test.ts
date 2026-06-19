@@ -2,18 +2,18 @@ import { describe, expect, it } from "vitest"
 import {
   DEFAULT_SETTINGS,
   applySettingsPatch,
-  reviveSettings,
+  coerceStoredSettings,
 } from "./settings"
 
-describe("reviveSettings", () => {
+describe("coerceStoredSettings", () => {
   it("returns the constant defaults for null/non-object input", () => {
-    expect(reviveSettings(null)).toEqual(DEFAULT_SETTINGS)
-    expect(reviveSettings(undefined)).toEqual(DEFAULT_SETTINGS)
-    expect(reviveSettings(42)).toEqual(DEFAULT_SETTINGS)
+    expect(coerceStoredSettings(null)).toEqual(DEFAULT_SETTINGS)
+    expect(coerceStoredSettings(undefined)).toEqual(DEFAULT_SETTINGS)
+    expect(coerceStoredSettings(42)).toEqual(DEFAULT_SETTINGS)
   })
 
   it("merges a partial object over defaults", () => {
-    expect(reviveSettings({ reactionDelay: 9 })).toEqual({
+    expect(coerceStoredSettings({ reactionDelay: 9 })).toEqual({
       ...DEFAULT_SETTINGS,
       reactionDelay: 9,
     })
@@ -21,14 +21,14 @@ describe("reviveSettings", () => {
 
   it("carries startWithFullEnergy through", () => {
     expect(
-      reviveSettings({ startWithFullEnergy: true }).startWithFullEnergy,
+      coerceStoredSettings({ startWithFullEnergy: true }).startWithFullEnergy,
     ).toBe(true)
   })
 
   it("ignores a non-boolean startWithFullEnergy", () => {
-    expect(reviveSettings({ startWithFullEnergy: 1 }).startWithFullEnergy).toBe(
-      false,
-    )
+    expect(
+      coerceStoredSettings({ startWithFullEnergy: 1 }).startWithFullEnergy,
+    ).toBe(false)
   })
 })
 

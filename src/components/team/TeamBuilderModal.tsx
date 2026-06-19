@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import { useTeamContext } from "#/hooks/useTeamContext"
+import { useAtomValue, useSetAtom } from "jotai"
+import { teamAtom, nameAtom } from "#/state/team"
 import { suggestedTeamName } from "#/lib/loadout/team-ops"
 import { Modal } from "#/components/ui/Modal"
 import { InlineRename } from "#/components/ui/InlineRename"
@@ -9,10 +10,10 @@ import { TeamPanel } from "#/components/team/TeamPanel"
 /**
  * The Team Builder modal shared by the sim (edit) and Library (create) wrappers:
  * a fullscreen Modal with an inline-renamed name field stacked over the
- * character grid on the left and the per-slot panel on the right. Reads
- * `useTeamContext`, so it must render inside a Team provider. `autoEdit` opens
- * the name field ready to type (create flow); `footer` and `headerExtra` are
- * optional caller-supplied chrome.
+ * character grid on the left and the per-slot panel on the right. Reads the
+ * team atoms; the create flow scopes them to a throwaway draft `<Provider>`.
+ * `autoEdit` opens the name field ready to type (create flow); `footer` and
+ * `headerExtra` are optional caller-supplied chrome.
  */
 export function TeamBuilderModal({
   onClose,
@@ -25,7 +26,9 @@ export function TeamBuilderModal({
   headerExtra?: ReactNode
   autoEdit?: boolean
 }) {
-  const { name, setName, slots, selectedCount } = useTeamContext()
+  const { name, slots } = useAtomValue(teamAtom)
+  const setName = useSetAtom(nameAtom)
+  const selectedCount = slots.filter((s) => s !== null).length
   return (
     <Modal
       onClose={onClose}
@@ -40,7 +43,10 @@ export function TeamBuilderModal({
       panelClassName="w-full min-w-5xl max-w-350 flex flex-col"
     >
       <div className="flex gap-3 min-h-0">
-        <div className="w-1/4 shrink-0 flex flex-col gap-3 min-h-0">
+        <div className="w-1/4 shrink-0 flex flex-col min-h-0">
+          <span className="-my-0.5 text-micro uppercase tracking-[1px] text-muted-foreground/70">
+            Team name
+          </span>
           <InlineRename
             value={name}
             onCommit={setName}
@@ -48,7 +54,7 @@ export function TeamBuilderModal({
             ariaLabel="Team name"
             autoEdit={autoEdit}
             className="text-foreground w-full"
-            wrapperClassName="rounded-sm px-1.5 py-0.5 -mx-1.5 w-full"
+            wrapperClassName="rounded-sm px-1.5 pb-3 -mx-1.5 w-full"
           />
           <div className="overflow-y-auto min-h-0">
             <CharacterGrid />

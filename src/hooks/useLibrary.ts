@@ -3,11 +3,15 @@ import { decodePayload } from "#/lib/import-export"
 import type { ImportExportPayload } from "#/lib/import-export"
 import { computeTeamStats } from "#/lib/team-stats"
 import type { TeamStats } from "#/lib/team-stats"
-import { defaultActiveTeam, reviveActiveTeam, TEAM_KEY } from "./useTeam"
+import {
+  defaultActiveTeam,
+  coerceStoredActiveTeam,
+  TEAM_KEY,
+} from "#/state/team"
 import { LOG_KEY, normalizeStoredLog } from "./useSimulationLog"
 import type { ActiveTeam } from "#/types/loadout"
 import type { TimelineNode } from "#/types/timeline"
-import { reviveSettings } from "#/lib/settings"
+import { coerceStoredSettings } from "#/lib/settings"
 
 /**
  * One saved team in the Library. `payload` reuses the import/export bundle as the
@@ -61,7 +65,7 @@ function snapshotLive(): {
   stats: TeamStats
   name: string
 } {
-  const team = reviveActiveTeam(
+  const team = coerceStoredActiveTeam(
     readJSON<unknown>(LIVE.team, defaultActiveTeam()),
   )
   const nodes = readJSON<TimelineNode[]>(LIVE.timeline, [])
@@ -100,7 +104,7 @@ function writeLive(
     loadouts: payload.team.loadouts,
     focusedId: payload.team.focusedId,
     originId,
-    settings: reviveSettings(payload.team.settings),
+    settings: coerceStoredSettings(payload.team.settings),
   }
   writeJSON(LIVE.team, team)
   writeJSON(LIVE.timeline, payload.timeline ?? [])

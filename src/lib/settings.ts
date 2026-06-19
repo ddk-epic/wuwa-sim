@@ -32,7 +32,7 @@ function clampFrame(value: number): number {
 }
 
 /** Coerce unknown stored JSON into Settings, filling missing fields from defaults. */
-export function reviveSettings(stored: unknown): Settings {
+export function coerceStoredSettings(stored: unknown): Settings {
   if (stored === null || typeof stored !== "object") {
     return { ...DEFAULT_SETTINGS }
   }

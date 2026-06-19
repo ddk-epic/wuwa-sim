@@ -6,7 +6,7 @@ import {
   COST4_MAINS_DEFAULT,
 } from "#/lib/loadout/template"
 import { elementHex } from "#/components/ui/character-visual"
-import { useSlot } from "#/hooks/useTeamContext"
+import { useSlot } from "#/state/team"
 import { ComboboxSelect } from "#/components/team/TeamSlotControls"
 
 const ECHO_BUILDS: EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]

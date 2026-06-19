@@ -15,7 +15,8 @@ import {
   nameInitial,
 } from "#/components/ui/character-visual"
 import { getCharacterById } from "#/lib/loadout/catalog"
-import { useTeamContext } from "#/hooks/useTeamContext"
+import { useAtomValue } from "jotai"
+import { teamAtom } from "#/state/team"
 import { ConfirmModal } from "./ui/ConfirmModal"
 import { ImportExportModal } from "./ImportExportModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
@@ -54,7 +55,7 @@ export function Header({
   onImport,
   importError,
 }: HeaderProps) {
-  const { slots } = useTeamContext()
+  const { slots } = useAtomValue(teamAtom)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [importExportOpen, setImportExportOpen] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)

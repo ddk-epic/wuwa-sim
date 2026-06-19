@@ -5,7 +5,8 @@ import {
   nameInitial,
 } from "#/components/ui/character-visual"
 import { listCharacters } from "#/lib/loadout/catalog"
-import { useTeamContext } from "#/hooks/useTeamContext"
+import { useAtomValue, useSetAtom } from "jotai"
+import { teamAtom, toggleCharacterAtom } from "#/state/team"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 
 const RARITY_HEX: Record<string, string> = {
@@ -14,7 +15,8 @@ const RARITY_HEX: Record<string, string> = {
 }
 
 export function CharacterGrid() {
-  const { slots, focusedId, toggleCharacter } = useTeamContext()
+  const { slots, focusedId } = useAtomValue(teamAtom)
+  const toggleCharacter = useSetAtom(toggleCharacterAtom)
   const characters = listCharacters()
   const selectedCount = slots.filter((s) => s !== null).length
 
