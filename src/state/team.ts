@@ -164,22 +164,23 @@ export function useTeamPersistence(): void {
   const setTeam = useSetAtom(teamAtom)
   const hydrated = useRef(false)
 
+  // Hydrate once on mount, persist on later runs — one effect so mount never
+  // writes the pre-hydration team back over what was just stored.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(TEAM_KEY)
-      if (raw !== null) setTeam(coerceStoredActiveTeam(JSON.parse(raw)))
-    } catch {
-      // silently ignore read errors
+    if (!hydrated.current) {
+      hydrated.current = true
+      try {
+        const raw = window.localStorage.getItem(TEAM_KEY)
+        if (raw !== null) setTeam(coerceStoredActiveTeam(JSON.parse(raw)))
+      } catch {
+        // silently ignore read errors
+      }
+      return
     }
-    hydrated.current = true
-  }, [setTeam])
-
-  useEffect(() => {
-    if (!hydrated.current) return
     try {
       window.localStorage.setItem(TEAM_KEY, JSON.stringify(team))
     } catch {
       // silently ignore write errors
     }
-  }, [team])
+  }, [team, setTeam])
 }
