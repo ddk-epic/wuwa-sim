@@ -25,11 +25,13 @@ describe("CreateTeamModal — Move to sim commit", () => {
     expect(readLiveTeam().name).toBe("New team")
   })
 
-  it("commits a typed name as-is", () => {
+  it("commits a name typed into the auto-opened rename field on blur", () => {
     render(<CreateTeamModal onClose={() => {}} />)
-    fireEvent.change(screen.getByRole("textbox", { name: "Team name" }), {
-      target: { value: "Glacio Burst" },
-    })
+    // autoEdit opens the InlineRename field ready to type; the value commits
+    // via onCommit (blur) before "Move to sim" reads it.
+    const input = screen.getByRole("textbox", { name: "Team name" })
+    fireEvent.change(input, { target: { value: "Glacio Burst" } })
+    fireEvent.blur(input)
     fireEvent.click(screen.getByRole("button", { name: "Move to sim" }))
     expect(readLiveTeam().name).toBe("Glacio Burst")
   })

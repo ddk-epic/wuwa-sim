@@ -1,22 +1,31 @@
 import type { ReactNode } from "react"
 import { useTeamContext } from "#/hooks/useTeamContext"
+import { suggestedTeamName } from "#/lib/loadout/team-ops"
 import { Modal } from "#/components/ui/Modal"
-import { TeamBuilderBody } from "./TeamBuilderBody"
+import { InlineRename } from "#/components/ui/InlineRename"
+import { CharacterGrid } from "#/components/team/CharacterGrid"
+import { TeamPanel } from "#/components/team/TeamPanel"
 
 /**
- * The Team Builder modal chrome shared by the sim (edit) and Library (create)
- * wrappers: fullscreen Modal, "n/3 selected" header, the shared body, and a
- * caller-supplied `footer` (Close vs. Move to sim). Reads `useTeamContext`, so
- * it must render inside a Team provider.
+ * The Team Builder modal shared by the sim (edit) and Library (create) wrappers:
+ * a fullscreen Modal with an inline-renamed name field stacked over the
+ * character grid on the left and the per-slot panel on the right. Reads
+ * `useTeamContext`, so it must render inside a Team provider. `autoEdit` opens
+ * the name field ready to type (create flow); `footer` and `headerExtra` are
+ * optional caller-supplied chrome.
  */
 export function TeamBuilderModal({
   onClose,
   footer,
+  headerExtra,
+  autoEdit = false,
 }: {
   onClose: () => void
-  footer: ReactNode
+  footer?: ReactNode
+  headerExtra?: ReactNode
+  autoEdit?: boolean
 }) {
-  const { selectedCount } = useTeamContext()
+  const { name, setName, slots, selectedCount } = useTeamContext()
   return (
     <Modal
       onClose={onClose}
@@ -27,10 +36,31 @@ export function TeamBuilderModal({
           {selectedCount}/3 selected
         </span>
       }
+      headerExtra={headerExtra}
       panelClassName="w-full min-w-5xl max-w-350 flex flex-col"
     >
-      <TeamBuilderBody />
-      <div className="flex justify-end gap-2 pt-4 shrink-0">{footer}</div>
+      <div className="flex gap-3 min-h-0">
+        <div className="w-1/4 shrink-0 flex flex-col gap-3 min-h-0">
+          <InlineRename
+            value={name}
+            onCommit={setName}
+            placeholder={suggestedTeamName(slots)}
+            ariaLabel="Team name"
+            autoEdit={autoEdit}
+            className="text-foreground w-full"
+            wrapperClassName="rounded-sm px-1.5 py-0.5 -mx-1.5 w-full"
+          />
+          <div className="overflow-y-auto min-h-0">
+            <CharacterGrid />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <TeamPanel />
+        </div>
+      </div>
+      {footer && (
+        <div className="flex justify-end gap-2 pt-4 shrink-0">{footer}</div>
+      )}
     </Modal>
   )
 }

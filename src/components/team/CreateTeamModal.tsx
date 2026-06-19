@@ -33,7 +33,11 @@ function MoveToSimButton() {
 export function CreateTeamModal({ onClose }: { onClose: () => void }) {
   return (
     <DraftTeamProvider>
-      <TeamBuilderModal onClose={onClose} footer={<MoveToSimButton />} />
+      <TeamBuilderModal
+        onClose={onClose}
+        autoEdit
+        footer={<MoveToSimButton />}
+      />
     </DraftTeamProvider>
   )
 }

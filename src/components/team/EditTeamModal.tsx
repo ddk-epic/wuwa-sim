@@ -1,16 +1,10 @@
-import { LabelBtn } from "#/components/ui/LabelBtn"
 import { TeamBuilderModal } from "./TeamBuilderModal"
 
 /**
- * The simulator's "Edit Team" modal: the shared body under the live `useTeam`
- * provider. Edits auto-persist to `wuwa.team`, so the only footer action is
- * Close.
+ * The simulator's "Edit Team" modal: the Team Builder under the live `useTeam`
+ * provider. Edits auto-persist to `wuwa.team`, so there is no footer — closing
+ * happens via the header X, Escape, or overlay-click.
  */
 export function EditTeamModal({ onClose }: { onClose: () => void }) {
-  return (
-    <TeamBuilderModal
-      onClose={onClose}
-      footer={<LabelBtn label="Close" onClick={onClose} />}
-    />
-  )
+  return <TeamBuilderModal onClose={onClose} />
 }
