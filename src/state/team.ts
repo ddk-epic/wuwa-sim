@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import { atom, useAtomValue, useSetAtom } from "jotai"
-import { atomFamily, selectAtom } from "jotai/utils"
+import { selectAtom } from "jotai/utils"
 import type { ActiveTeam, Slots, SlotLoadout } from "#/types/loadout"
 import type { EnrichedCharacter } from "#/types/character"
 import { emptyLoadout } from "#/lib/loadout/template"
@@ -122,13 +122,14 @@ interface SlotData {
 }
 
 /**
- * One slot's character id + loadout, selected from teamAtom with a reference
- * equality that holds whenever that slot is untouched (team-ops keeps other
- * slots' loadout objects by reference). A settings change or an edit to a
- * different slot then yields the same selected value, so this slot's consumers
- * skip the re-render.
+ * One selector per slot: each slot's character id + loadout, selected from
+ * teamAtom with a reference equality that holds whenever that slot is untouched
+ * (team-ops keeps other slots' loadout objects by reference). A settings change
+ * or an edit to a different slot then yields the same selected value, so this
+ * slot's consumers skip the re-render. Keys are the fixed slot indices, so a
+ * static array suffices.
  */
-export const slotAtomFamily = atomFamily((i: number) =>
+const slotSelectors = [0, 1, 2].map((i) =>
   selectAtom(
     teamAtom,
     (team): SlotData => ({ charId: team.slots[i], loadout: team.loadouts[i] }),
@@ -143,7 +144,7 @@ export interface SlotView {
 }
 
 export function useSlot(i: number): SlotView {
-  const { charId, loadout } = useAtomValue(slotAtomFamily(i))
+  const { charId, loadout } = useAtomValue(slotSelectors[i])
   const setTeam = useSetAtom(teamAtom)
   return {
     character: charId !== null ? getCharacterById(charId) : null,
