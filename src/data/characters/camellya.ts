@@ -205,20 +205,16 @@ export const camellya = {
         resource: "forte",
         step: 10,
         direction: "consumed",
+        precondition: {
+          kind: "buffActive",
+          buff: "budding-mode",
+          on: "source",
+          negate: true,
+        },
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 10, onRetrigger: "addStack" },
-      // No Crimson Buds while Budding Mode is active. Forte keeps draining (the
-      // trigger still fires), so `gateTriggerOnCondition` suppresses minting at
-      // trigger time.
-      condition: {
-        kind: "buffActive",
-        buff: "budding-mode",
-        on: "source",
-        negate: true,
-      },
-      gateTriggerOnCondition: true,
       effects: [],
     },
     {

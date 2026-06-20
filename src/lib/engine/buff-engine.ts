@@ -226,18 +226,6 @@ export class BuffEngine {
       this.deferOutroBuff(def, sourceCharacterId, frame)
       return
     }
-    // With `gateTriggerOnCondition`, a false condition at trigger time
-    // suppresses instantiation entirely (not just contribution).
-    if (
-      def.gateTriggerOnCondition &&
-      def.condition &&
-      !this.evaluator.evaluateUncached(
-        def.condition,
-        subjectAtTrigger(sourceCharacterId),
-      )
-    ) {
-      return
-    }
     if (def.target?.kind === "global") {
       this.store.applyBuff(def, sourceCharacterId, GLOBAL_TARGET_ID, frame, out)
       return
@@ -446,6 +434,14 @@ export class BuffEngine {
 
     const rawCandidates = this.store.findCandidates(event)
     const candidates = rawCandidates.filter(({ def, sourceCharacterId }) => {
+      if (
+        def.trigger.precondition &&
+        !this.evaluator.evaluateUncached(
+          def.trigger.precondition,
+          subjectAtTrigger(sourceCharacterId),
+        )
+      )
+        return false
       if (def.cooldown) {
         const key = `${def.id}|${sourceCharacterId}`
         const last = this.cooldownLastFired.get(key)

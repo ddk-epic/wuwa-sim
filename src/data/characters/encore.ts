@@ -148,15 +148,15 @@ export const encore = {
       description:
         "During Cosmos Rave, each hit Encore lands grants 1 stack (up to 5), each increasing ATK by 5% for 10s.",
       requiresSequence: 6,
-      trigger: { event: "hitLanded", characterId: 1203, source: "self" },
+      trigger: {
+        event: "hitLanded",
+        characterId: 1203,
+        source: "self",
+        precondition: { kind: "buffActive", buff: "cosmos-rave", on: "source" },
+      },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
       stacking: { max: 5, onRetrigger: "addStack" },
-      condition: {
-        kind: "buffActive",
-        buff: "cosmos-rave",
-        on: "target",
-      },
       effects: [
         {
           kind: "stat",

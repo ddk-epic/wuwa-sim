@@ -979,3 +979,104 @@ describe("BuffEngine — global target kind (#276)", () => {
     expect(engine.activeBuffIds(2)).not.toContain("test.global-swapout")
   })
 })
+
+describe("BuffEngine — trigger precondition", () => {
+  const window: BuffDef = {
+    id: "test.window",
+    name: "Window",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 15 },
+    effects: [],
+  }
+
+  const gated: BuffDef = {
+    id: "test.gated",
+    name: "Gated",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      precondition: { kind: "buffActive", buff: "window", on: "source" },
+    },
+    target: { kind: "self" },
+    duration: { kind: "seconds", v: 10 },
+    effects: [
+      {
+        kind: "stat",
+        path: { stat: "atkPct" },
+        value: { kind: "const", v: 0.2 },
+      },
+    ],
+  }
+
+  const setup = (buffs: BuffDef[]) => {
+    testCharacters = [baseChar({ id: 1, buffs })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    return engine
+  }
+
+  it("mints nothing when the precondition is false at fire time", () => {
+    const engine = setup([window, gated])
+    const { lifecycleEvents } = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(lifecycleEvents).toHaveLength(0)
+    expect(engine.activeBuffIds(1)).not.toContain("test.gated")
+  })
+
+  it("mints when the precondition holds at fire time", () => {
+    const engine = setup([window, gated])
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 1,
+    })
+    expect(engine.activeBuffIds(1)).toContain("test.gated")
+  })
+
+  it("a precondition-gated fire does not consume the cooldown", () => {
+    const gatedWithCd: BuffDef = { ...gated, cooldown: 10 }
+    const engine = setup([window, gatedWithCd])
+
+    // Fire while gated out — must not stamp the cooldown.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+      frame: 30,
+    })
+    // Within the 10s cooldown window of the gated-out fire; still applies.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 60,
+    })
+    expect(engine.activeBuffIds(1)).toContain("test.gated")
+  })
+})

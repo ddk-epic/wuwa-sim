@@ -156,7 +156,7 @@ export type Effect =
 
 export type TriggerSource = "self" | "synthetic" | "any"
 
-export type Trigger =
+export type TriggerEvent =
   | { event: "simStart" }
   | {
       event: "skillCast"
@@ -238,6 +238,16 @@ export type Trigger =
       actor?: "self" | "any"
       characterId?: number
     }
+
+export type Trigger = TriggerEvent & {
+  /**
+   * Evaluated once when the trigger fires, before any cooldown is stamped; a
+   * false result mints, stacks, and refreshes nothing. Reads relative to the
+   * triggering event's acting character, not a live instance's reader — distinct
+   * from the buff-root `condition`, which continuously gates contribution.
+   */
+  precondition?: Condition
+}
 
 export type BuffTarget =
   | {
@@ -345,11 +355,6 @@ export interface BuffDef {
   nonStackingGroup?: string
   /** Continuously evaluated; gates whether instance contributes effects. */
   condition?: Condition
-  /**
-   * When true, `condition` is also evaluated at trigger time; a false result
-   * suppresses instantiation entirely (not just contribution).
-   */
-  gateTriggerOnCondition?: boolean
   /** When true, instance is removed when its source character swaps out. */
   expiresOnSourceSwapOut?: boolean
   /**

@@ -19,8 +19,8 @@ export const cartethyia = {
   skillTreeBonuses: ["Crit. Rate", "HP"],
   buffs: [
     {
-      // Fleurdelys-form presence flag. No timer: applied on transform-in,
-      // cleared by manifest-end. Gates every Fleurdelys-only buff.
+      // Fleurdelys-form presence flag. No timer.
+      // Cleared by manifest-end. Gates every Fleurdelys-only buff.
       id: "char.cartethyia.manifest",
       name: "Manifest",
       trigger: {
@@ -345,9 +345,12 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
+        precondition: {
+          kind: "buffActive",
+          buff: "sword-of-virtue",
+          on: "source",
+        },
       },
-      condition: { kind: "buffActive", buff: "sword-of-virtue", on: "source" },
-      gateTriggerOnCondition: true,
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [{ kind: "removeBuffs", buffs: ["sword-of-virtue"] }],
@@ -359,13 +362,12 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
+        precondition: {
+          kind: "buffActive",
+          buff: "sword-of-divinity",
+          on: "source",
+        },
       },
-      condition: {
-        kind: "buffActive",
-        buff: "sword-of-divinity",
-        on: "source",
-      },
-      gateTriggerOnCondition: true,
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [{ kind: "removeBuffs", buffs: ["sword-of-divinity"] }],
@@ -377,9 +379,12 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
+        precondition: {
+          kind: "buffActive",
+          buff: "sword-of-discord",
+          on: "source",
+        },
       },
-      condition: { kind: "buffActive", buff: "sword-of-discord", on: "source" },
-      gateTriggerOnCondition: true,
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [{ kind: "removeBuffs", buffs: ["sword-of-discord"] }],

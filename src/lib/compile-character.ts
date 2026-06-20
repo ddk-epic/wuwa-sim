@@ -5,7 +5,13 @@ import type {
   SkillType,
 } from "#/types/character"
 import type { EnrichedEcho, EnrichedEchoStage } from "#/types/echo"
-import type { BuffDef, Effect, HitFilter, Trigger } from "#/types/buff"
+import type {
+  BuffDef,
+  Condition,
+  Effect,
+  HitFilter,
+  Trigger,
+} from "#/types/buff"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById, getEchoById } from "./loadout/catalog"
@@ -191,12 +197,25 @@ function resolveBuffRefs(
   return Array.isArray(refs) ? refs.map(resolve) : resolve(refs)
 }
 
+function lowerCondition(cond: Condition, resolveBuff: BuffResolver): Condition {
+  if (cond.kind === "buffActive") {
+    return { ...cond, buff: resolveBuff(cond.buff) }
+  }
+  if (cond.kind === "buffCount") {
+    return { ...cond, buffs: cond.buffs.map(resolveBuff) }
+  }
+  return cond
+}
+
 function lowerTrigger(
   t: Trigger,
   owner: string,
   lowerStage: RefLowerer,
   resolveBuff: BuffResolver,
 ): Trigger {
+  if (t.precondition !== undefined) {
+    t = { ...t, precondition: lowerCondition(t.precondition, resolveBuff) }
+  }
   if (t.event === "skillCast" && t.stage !== undefined) {
     const axes = lowerStage(t.stage)
     if (axes.hitIndex !== undefined) {
@@ -290,14 +309,8 @@ function lowerBuffDef(
       resolveBuff,
     )
   }
-  if (def.condition?.kind === "buffActive") {
-    next.condition = { ...def.condition, buff: resolveBuff(def.condition.buff) }
-  }
-  if (def.condition?.kind === "buffCount") {
-    next.condition = {
-      ...def.condition,
-      buffs: def.condition.buffs.map(resolveBuff),
-    }
+  if (def.condition !== undefined) {
+    next.condition = lowerCondition(def.condition, resolveBuff)
   }
   if (def.duration?.kind === "inherit") {
     next.duration = { ...def.duration, buff: resolveBuff(def.duration.buff) }
