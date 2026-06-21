@@ -79,6 +79,9 @@ export const settingsAtom = atom(
  */
 export const slotsAtom = selectAtom(teamAtom, (t) => t.slots)
 
+/** The focusedId slice — a primitive, so default equality is ideal. */
+export const focusedIdAtom = selectAtom(teamAtom, (t) => t.focusedId)
+
 export const nameAtom = atom(
   (get) => get(teamAtom).name,
   (_get, set, name: string) => set(teamAtom, (t) => ({ ...t, name })),

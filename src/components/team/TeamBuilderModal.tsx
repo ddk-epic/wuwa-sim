@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { useAtomValue, useSetAtom } from "jotai"
-import { teamAtom, nameAtom } from "#/state/team"
+import { slotsAtom, nameAtom } from "#/state/team"
 import { suggestedTeamName } from "#/lib/loadout/team-ops"
 import { Modal } from "#/components/ui/Modal"
 import { InlineRename } from "#/components/ui/InlineRename"
@@ -26,7 +26,8 @@ export function TeamBuilderModal({
   headerExtra?: ReactNode
   autoEdit?: boolean
 }) {
-  const { name, slots } = useAtomValue(teamAtom)
+  const name = useAtomValue(nameAtom)
+  const slots = useAtomValue(slotsAtom)
   const setName = useSetAtom(nameAtom)
   const selectedCount = slots.filter((s) => s !== null).length
   return (

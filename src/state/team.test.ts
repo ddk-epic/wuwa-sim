@@ -4,6 +4,7 @@ import { createStore } from "jotai"
 import {
   teamAtom,
   slotsAtom,
+  focusedIdAtom,
   nameAtom,
   settingsAtom,
   toggleCharacterAtom,
@@ -56,6 +57,22 @@ describe("slotsAtom", () => {
     store.set(settingsAtom, { reactionDelay: 30 })
     store.set(focusCharacterAtom, 1203)
     expect(store.get(slotsAtom)).toBe(before)
+  })
+})
+
+describe("focusedIdAtom", () => {
+  it("reads the focusedId slice", () => {
+    const store = createStore()
+    store.set(focusCharacterAtom, 1203)
+    expect(store.get(focusedIdAtom)).toBe(1203)
+  })
+
+  it("does not change on unrelated name/settings edits", () => {
+    const store = createStore()
+    store.set(focusCharacterAtom, 1203)
+    store.set(nameAtom, "Renamed")
+    store.set(settingsAtom, { reactionDelay: 30 })
+    expect(store.get(focusedIdAtom)).toBe(1203)
   })
 })
 
