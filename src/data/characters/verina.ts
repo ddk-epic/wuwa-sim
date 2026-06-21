@@ -104,11 +104,11 @@ export const verina = {
         event: "hitLanded",
         actor: "any",
         source: "self",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "photosynthesis-mark",
-        on: "source",
+        precondition: {
+          kind: "buffActive",
+          buff: "photosynthesis-mark",
+          on: "source",
+        },
       },
       effects: [
         {
@@ -160,12 +160,12 @@ export const verina = {
           "starflower-blooms/mid-air-attack-starflower-blooms-stage-2",
           "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
         ],
-      },
-      condition: {
-        kind: "resourceAtLeast",
-        resource: "forte",
-        n: 1,
-        on: "source",
+        precondition: {
+          kind: "resourceAtLeast",
+          resource: "forte",
+          n: 1,
+          on: "source",
+        },
       },
       effects: [
         {

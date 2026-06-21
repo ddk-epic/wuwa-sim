@@ -149,11 +149,7 @@ export const sanhua = {
         characterId: 1102,
         stage: "clarity-of-mind/detonate",
         source: "self",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "ice-thorn",
-        on: "source",
+        precondition: { kind: "buffActive", buff: "ice-thorn", on: "source" },
       },
       effects: [
         {
@@ -183,11 +179,7 @@ export const sanhua = {
         characterId: 1102,
         stage: "clarity-of-mind/detonate",
         source: "self",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "ice-prism",
-        on: "source",
+        precondition: { kind: "buffActive", buff: "ice-prism", on: "source" },
       },
       effects: [
         {
@@ -217,11 +209,7 @@ export const sanhua = {
         characterId: 1102,
         stage: "clarity-of-mind/detonate",
         source: "self",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "ice-glacier",
-        on: "source",
+        precondition: { kind: "buffActive", buff: "ice-glacier", on: "source" },
       },
       effects: [
         {

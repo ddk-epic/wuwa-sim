@@ -173,7 +173,7 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
   })
 })
 
-describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", () => {
+describe("BuffEngine — precondition gating for reaction-shaped defs", () => {
   const dmg = (): DamageEntry => ({
     type: "Basic Attack",
     dmgType: "Fusion",
@@ -212,8 +212,8 @@ describe("BuffEngine — condition-at-trigger for reaction-shaped defs (#116)", 
       event: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
+      precondition: { kind: "buffActive", buff: "window", on: "source" },
     },
-    condition: { kind: "buffActive", buff: "window", on: "source" },
     effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
   }
 

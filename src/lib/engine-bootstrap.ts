@@ -157,6 +157,11 @@ export function validateBuffDef(def: BuffDef): void {
         `BuffDef "${def.id}": reaction-shaped BuffDef cannot declare consumedBy.`,
       )
     }
+    if (def.condition != null) {
+      throw new Error(
+        `BuffDef "${def.id}": reaction-shaped BuffDef cannot carry a root condition; gate it with trigger.precondition.`,
+      )
+    }
   }
   if (def.target?.kind === "global") {
     if (def.condition != null) {

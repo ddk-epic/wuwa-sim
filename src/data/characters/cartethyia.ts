@@ -143,13 +143,13 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
-      },
-      condition: {
-        kind: "buffCount",
-        buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
-        op: "eq",
-        n: 0,
-        on: "source",
+        precondition: {
+          kind: "buffCount",
+          buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
+          op: "eq",
+          n: 0,
+          on: "source",
+        },
       },
       effects: [
         {
@@ -177,13 +177,13 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
-      },
-      condition: {
-        kind: "buffCount",
-        buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
-        op: "eq",
-        n: 1,
-        on: "source",
+        precondition: {
+          kind: "buffCount",
+          buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
+          op: "eq",
+          n: 1,
+          on: "source",
+        },
       },
       effects: [
         {
@@ -211,13 +211,13 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
-      },
-      condition: {
-        kind: "buffCount",
-        buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
-        op: "eq",
-        n: 2,
-        on: "source",
+        precondition: {
+          kind: "buffCount",
+          buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
+          op: "eq",
+          n: 2,
+          on: "source",
+        },
       },
       effects: [
         {
@@ -277,13 +277,13 @@ export const cartethyia = {
         event: "skillCast",
         characterId: 1409,
         stage: "sword-to-carve-my-forms/mid-air-attack",
-      },
-      condition: {
-        kind: "buffCount",
-        buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
-        op: "eq",
-        n: 3,
-        on: "source",
+        precondition: {
+          kind: "buffCount",
+          buffs: ["sword-of-discord", "sword-of-divinity", "sword-of-virtue"],
+          op: "eq",
+          n: 3,
+          on: "source",
+        },
       },
       effects: [
         {

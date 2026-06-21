@@ -448,14 +448,6 @@ export class BuffEngine {
         if (last !== undefined && event.frame - last < def.cooldown * 60)
           return false
       }
-      // Reactions have no instance for lazy re-evaluation; evaluate condition
-      // at candidate-selection time.
-      if (def.condition && def.duration == null) {
-        return this.evaluator.evaluateUncached(
-          def.condition,
-          subjectAtTrigger(sourceCharacterId),
-        )
-      }
       return true
     })
     for (const { def, sourceCharacterId } of candidates) {

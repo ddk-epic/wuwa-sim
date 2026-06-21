@@ -436,4 +436,23 @@ describe("validateBuffDef (#220)", () => {
       }),
     ).toThrow(/cannot declare consumedBy/)
   })
+
+  it("rejects reaction with a root condition", () => {
+    expect(() =>
+      validateBuffDef({
+        id: "test.bad-condition",
+        name: "Bad Condition Reaction",
+        trigger: baseTrigger,
+        effects: [
+          {
+            kind: "resource",
+            resource: "forte",
+            op: "add",
+            value: { kind: "const", v: 1 },
+          },
+        ],
+        condition: { kind: "buffActive", buff: "x", on: "source" },
+      }),
+    ).toThrow(/cannot carry a root condition/)
+  })
 })
