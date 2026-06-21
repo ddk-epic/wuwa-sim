@@ -62,7 +62,7 @@ function ActionLane({
                   ? `0 0 0 1px #fff8, 0 0 12px ${hex}88`
                   : "none",
                 alignItems: b.laneSpan > 1 ? "flex-start" : "center",
-                zIndex: active ? 12 : b.laneSpan > 1 ? 6 : 5,
+                zIndex: active ? 12 : b.laneSpan > 1 ? 5 : 6,
               }}
             >
               <span
