@@ -20,7 +20,8 @@
     "gen:character": "tsx scripts/generate-character.ts",
     "gen:sim-flow": "tsx scripts/generate-sim-flow.ts",
     "gen:weapon": "tsx scripts/generate-weapon.ts",
-    "gen:echo": "tsx scripts/generate-echo.ts"
+    "gen:echo": "tsx scripts/generate-echo.ts",
+    "gen:sharecode": "tsx scripts/generate-sharecode.ts"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
