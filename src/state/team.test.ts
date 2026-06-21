@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { createStore } from "jotai"
 import {
   teamAtom,
+  slotsAtom,
   nameAtom,
   settingsAtom,
   toggleCharacterAtom,
@@ -38,6 +39,23 @@ describe("teamAtom — composition writes", () => {
     store.set(nameAtom, "Rover Hypercarry")
     expect(store.get(nameAtom)).toBe("Rover Hypercarry")
     expect(store.get(teamAtom).name).toBe("Rover Hypercarry")
+  })
+})
+
+describe("slotsAtom", () => {
+  it("reads the slots slice", () => {
+    const store = createStore()
+    store.set(toggleCharacterAtom, 1203)
+    expect(store.get(slotsAtom)).toBe(store.get(teamAtom).slots)
+  })
+
+  it("preserves the slots reference across name/settings/focus changes", () => {
+    const store = createStore()
+    const before = store.get(slotsAtom)
+    store.set(nameAtom, "Renamed")
+    store.set(settingsAtom, { reactionDelay: 30 })
+    store.set(focusCharacterAtom, 1203)
+    expect(store.get(slotsAtom)).toBe(before)
   })
 })
 

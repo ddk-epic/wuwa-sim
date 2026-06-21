@@ -72,6 +72,13 @@ export const settingsAtom = atom(
     })),
 )
 
+/**
+ * The slots slice. team-ops preserves the `slots` array reference across
+ * unrelated changes (settings/name/focus/loadout edits), so default `Object.is`
+ * equality lets slots-only consumers skip those re-renders.
+ */
+export const slotsAtom = selectAtom(teamAtom, (t) => t.slots)
+
 export const nameAtom = atom(
   (get) => get(teamAtom).name,
   (_get, set, name: string) => set(teamAtom, (t) => ({ ...t, name })),

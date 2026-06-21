@@ -2,7 +2,7 @@ import { UsersRoundIcon, SwordsIcon } from "lucide-react"
 import { listWeaponsByType } from "#/lib/loadout/catalog"
 import { elementHex } from "#/components/ui/character-visual"
 import { useAtomValue } from "jotai"
-import { teamAtom, useSlot } from "#/state/team"
+import { slotsAtom, useSlot } from "#/state/team"
 import { EchoBuildEditor } from "#/components/team/EchoBuildEditor"
 import { TeamSlotPortrait } from "#/components/team/TeamSlotPortrait"
 import { ComboboxSelect } from "#/components/team/TeamSlotControls"
@@ -12,7 +12,7 @@ const SEQUENCES: number[] = [0, 1, 2, 3, 4, 5, 6]
 const RANKS: number[] = [1, 2, 3, 4, 5]
 
 export function TeamPanel() {
-  const { slots } = useAtomValue(teamAtom)
+  const slots = useAtomValue(slotsAtom)
   return (
     <div className="flex gap-3">
       {slots.map((_, i) => (
