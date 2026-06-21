@@ -5,6 +5,7 @@ import {
   teamAtom,
   slotsAtom,
   focusedIdAtom,
+  loadoutsAtom,
   nameAtom,
   settingsAtom,
   toggleCharacterAtom,
@@ -73,6 +74,23 @@ describe("focusedIdAtom", () => {
     store.set(nameAtom, "Renamed")
     store.set(settingsAtom, { reactionDelay: 30 })
     expect(store.get(focusedIdAtom)).toBe(1203)
+  })
+})
+
+describe("loadoutsAtom", () => {
+  it("reads the loadouts slice", () => {
+    const store = createStore()
+    expect(store.get(loadoutsAtom)).toBe(store.get(teamAtom).loadouts)
+  })
+
+  it("preserves the reference across name/settings changes but rebuilds on a loadout edit", () => {
+    const store = createStore()
+    const before = store.get(loadoutsAtom)
+    store.set(nameAtom, "Renamed")
+    store.set(settingsAtom, { reactionDelay: 30 })
+    expect(store.get(loadoutsAtom)).toBe(before)
+    store.set(toggleCharacterAtom, 1203)
+    expect(store.get(loadoutsAtom)).not.toBe(before)
   })
 })
 

@@ -8,7 +8,7 @@ import { deriveRowDiagnostics } from "#/lib/timeline/log-diagnostics"
 import { useTimelineDrag } from "#/hooks/useTimelineDrag"
 import type { DropPosition } from "#/hooks/useTimelineDrag"
 import { useAtomValue } from "jotai"
-import { teamAtom } from "#/state/team"
+import { slotsAtom, loadoutsAtom } from "#/state/team"
 import { buildTimelineRenderItems } from "#/lib/timeline/timeline-render-items"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 import { summarizeGroups } from "#/lib/timeline/timeline-group-summary"
@@ -57,7 +57,8 @@ export function TimelineView({
   onDeleteGroup,
   onReorderGroupEntries,
 }: TimelineViewProps) {
-  const { slots, loadouts } = useAtomValue(teamAtom)
+  const slots = useAtomValue(slotsAtom)
+  const loadouts = useAtomValue(loadoutsAtom)
   const drag = useTimelineDrag({
     onReorderTopLevelEntry: onReorder,
     onReorderNodes,

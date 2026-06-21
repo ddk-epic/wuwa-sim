@@ -82,6 +82,12 @@ export const slotsAtom = selectAtom(teamAtom, (t) => t.slots)
 /** The focusedId slice — a primitive, so default equality is ideal. */
 export const focusedIdAtom = selectAtom(teamAtom, (t) => t.focusedId)
 
+/**
+ * The loadouts slice. team-ops preserves the `loadouts` array reference on
+ * unrelated changes; a loadout edit rebuilds it, so default equality is right.
+ */
+export const loadoutsAtom = selectAtom(teamAtom, (t) => t.loadouts)
+
 export const nameAtom = atom(
   (get) => get(teamAtom).name,
   (_get, set, name: string) => set(teamAtom, (t) => ({ ...t, name })),
