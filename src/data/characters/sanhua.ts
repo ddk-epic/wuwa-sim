@@ -275,15 +275,16 @@ export const sanhua = {
       id: "char.sanhua.s4-heavy-dmg",
       name: "S4: Blade Mastery (Heavy DMG)",
       description:
-        "Detonate Heavy Attack DMG +120% for 0.5s. Requires Sequence 4.",
+        "After casting Resonance Liberation, the next Heavy Attack Detonate within 5s deals +120% DMG. Requires Sequence 4.",
       requiresSequence: 4,
       trigger: {
         event: "skillCast",
         characterId: 1102,
-        stage: "clarity-of-mind/detonate",
+        skillCategory: "Resonance Liberation",
       },
       target: { kind: "self" },
-      duration: { kind: "seconds", v: 0.5 },
+      duration: { kind: "seconds", v: 5 },
+      appliesToHits: { stage: "clarity-of-mind/detonate" },
       effects: [
         {
           kind: "stat",

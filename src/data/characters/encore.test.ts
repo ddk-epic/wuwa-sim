@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
@@ -14,7 +15,6 @@ const ENCORE = 1203
 const FPS = 60
 const DURATION_TOLERANCE = 12
 
-/** Stage IDs */
 const STAGE = {
   intro: "char.encore.intro-skill.woolies-helpers.cast::intro-skill",
   flamingWoolies:
@@ -52,7 +52,7 @@ const ROTATION: readonly string[] = [
 
 const ENTRY = ROTATION.map((_, i) => `e${i}`)
 const INTRO_ENTRY = ENTRY[0]
-/** Entries that execute inside the Cosmos Rave window (Frolicking 1-4 → Rampage → Cosmos Rupture). */
+/** Rave-window entries: Frolicking 1-4, Rampage, Rupture. */
 const RAVE_ENTRIES = new Set([
   ENTRY[4],
   ENTRY[5],
@@ -73,7 +73,13 @@ const BUFF = {
 
 const CHAIN_BUFFS = [BUFF.s1, BUFF.s4, BUFF.s6]
 
+const logCache = new Map<number, SimulationLogEntry[]>()
+
+// The rotation is fixed per sequence and the log is read-only, so simulate once.
 function runRotation(sequence: number): SimulationLogEntry[] {
+  const cached = logCache.get(sequence)
+  if (cached) return cached
+
   const slots: Slots = [ENCORE, null, null]
   const loadouts: SlotLoadout[] = [
     { ...loadoutFromTemplate(encore.template), sequence },
@@ -85,7 +91,11 @@ function runRotation(sequence: number): SimulationLogEntry[] {
     characterId: ENCORE,
     stageId,
   }))
-  return runSimulation(entries, slots, loadouts, { startWithFullEnergy: true })
+  const log = runSimulation(entries, slots, loadouts, {
+    startWithFullEnergy: true,
+  })
+  logCache.set(sequence, log)
+  return log
 }
 
 const hits = (log: SimulationLogEntry[]): HitEvent[] =>
@@ -97,7 +107,7 @@ const buffEvents = (log: SimulationLogEntry[], buffId: string): BuffEvent[] =>
     .filter((b) => b.buffId === buffId)
     .sort((a, b) => a.frame - b.frame)
 
-/** Frames between a buff's first application (or last trigger, for refreshers) and its expiry. */
+/** Frames from a buff's first apply / last trigger to expiry. */
 function lifespan(log: SimulationLogEntry[], buffId: string) {
   const evs = buffEvents(log, buffId)
   const applied = evs.find((b) => b.kind === "buffApplied")
@@ -121,6 +131,11 @@ const peakStacks = (log: SimulationLogEntry[], buffId: string): number =>
 const activeOn = (hit: HitEvent, buffId: string): boolean =>
   hit.activeBuffs.some((b) => b.id === buffId)
 
+const stacksOn = (hit: HitEvent, buffId: string): number =>
+  hit.activeBuffs.find((b) => b.id === buffId)?.stacks ?? 0
+
+const fusion = (hit: HitEvent): number => hit.statsSnapshot.elementBonus.Fusion
+
 describe("Encore — forte rotation, base-kit buffs", () => {
   it.each([0, 6])(
     "Cosmos Rave window buffs cover every in-Rave hit and last ~10s (S%i)",
@@ -139,6 +154,14 @@ describe("Encore — forte rotation, base-kit buffs", () => {
         )
         for (const h of raveHits) expect(activeOn(h, id)).toBe(true)
       }
+
+      // Only Angry Cosmos toggles allDmgBonus from pre-Rave to Rave; delta isolates +0.1.
+      const introHit = hits(log).find((h) => h.sourceEntryId === INTRO_ENTRY)
+      expect(introHit).toBeDefined()
+      for (const h of raveHits)
+        expect(
+          h.statsSnapshot.allDmgBonus - introHit!.statsSnapshot.allDmgBonus,
+        ).toBeCloseTo(0.1)
     },
   )
 
@@ -154,6 +177,16 @@ describe("Encore — forte rotation, base-kit buffs", () => {
       expect(
         Math.abs((life.fromLastTrigger ?? 0) - 10 * FPS),
       ).toBeLessThanOrEqual(DURATION_TOLERANCE)
+
+      // Cheer lapses mid-outro, the only Fusion change there; present minus absent isolates +0.1.
+      const outroHits = hits(log).filter((h) => h.sourceEntryId === ENTRY[10])
+      const withCheer = outroHits.filter((h) => activeOn(h, BUFF.cheerDance))
+      const withoutCheer = outroHits.filter(
+        (h) => !activeOn(h, BUFF.cheerDance),
+      )
+      expect(withCheer.length).toBeGreaterThan(0)
+      expect(withoutCheer.length).toBeGreaterThan(0)
+      expect(fusion(withCheer[0]) - fusion(withoutCheer[0])).toBeCloseTo(0.1)
     },
   )
 })
@@ -164,7 +197,7 @@ describe("Encore — forte rotation, Resonance Chain", () => {
     for (const id of CHAIN_BUFFS) expect(buffEvents(log, id)).toHaveLength(0)
   })
 
-  it("S6: Wooly's Fairy Tale stacks to 4 on the Frolicking basics, lives 6s", () => {
+  it("S6: Wooly's Fairy Tale stacks to 4 on the Frolicking basics, adds +12% Fusion, lives 6s", () => {
     const log = runRotation(6)
     expect(peakStacks(log, BUFF.s1)).toBe(4)
     const life = lifespan(log, BUFF.s1)
@@ -172,34 +205,57 @@ describe("Encore — forte rotation, Resonance Chain", () => {
     expect(Math.abs((life.fromLastTrigger ?? 0) - 6 * FPS)).toBeLessThanOrEqual(
       DURATION_TOLERANCE,
     )
+
+    // During Frolicking only S1 moves Fusion; 0→4 stack delta isolates 4×0.03.
+    const preS1 = hits(log).find(
+      (h) => h.sourceEntryId === ENTRY[4] && stacksOn(h, BUFF.s1) === 0,
+    )
+    const atMax = hits(log).find((h) => stacksOn(h, BUFF.s1) === 4)
+    expect(preS1).toBeDefined()
+    expect(atMax).toBeDefined()
+    expect(fusion(atMax!) - fusion(preS1!)).toBeCloseTo(0.12)
   })
 
   it("S6: Cosmos Rupture grants the team Fusion buff for 30s", () => {
     const log = runRotation(6)
     const life = lifespan(log, BUFF.s4)
     expect(life.applied).toBeDefined()
-    // Confirms the Rave-mode Forte branch fired: S4 keys off Cosmos Rupture, not Cloudy Frenzy.
+    // S4 keys off Cosmos Rupture (Rave branch), not Cloudy Frenzy.
     const rupture = hits(log).filter((h) => h.sourceEntryId === ENTRY[9])
     expect(rupture.every((h) => activeOn(h, BUFF.s4))).toBe(true)
     expect(Math.abs((life.fromApply ?? 0) - 30 * FPS)).toBeLessThanOrEqual(
       DURATION_TOLERANCE,
     )
+
+    // Only S4 changes Fusion from rampage to rupture; delta isolates +0.2.
+    const lastRampage = hits(log)
+      .filter((h) => h.sourceEntryId === ENTRY[8])
+      .at(-1)
+    expect(lastRampage).toBeDefined()
+    expect(fusion(rupture[0]) - fusion(lastRampage!)).toBeCloseTo(0.2)
   })
 
-  it("S6: Lost Lamb stacks to 5 and is minted only inside Rave", () => {
+  it("S6: Lost Lamb stacks to 5 (+25% ATK) and is minted only inside Rave", () => {
     const log = runRotation(6)
     expect(peakStacks(log, BUFF.s6)).toBe(5)
 
-    // Stacks accrue only during Cosmos Rave: the first application lands inside
-    // the Rave window, not on the earlier intro/skill hits that also land self hits.
+    // atkPct is S6's alone; 0→5 stack delta isolates 5×0.05.
+    const preLamb = hits(log).find((h) => h.sourceEntryId === ENTRY[2])
+    const atMax = hits(log).find((h) => stacksOn(h, BUFF.s6) === 5)
+    expect(preLamb).toBeDefined()
+    expect(atMax).toBeDefined()
+    expect(
+      atMax!.statsSnapshot.atkPct - preLamb!.statsSnapshot.atkPct,
+    ).toBeCloseTo(0.25)
+
+    // Stacks accrue only during Rave; first application lands inside the window.
     const rave = lifespan(log, BUFF.cosmosRave)
     const firstStack = lifespan(log, BUFF.s6).applied?.frame ?? -1
     expect(rave.applied?.frame ?? -1).toBeGreaterThan(0)
     expect(firstStack).toBeGreaterThanOrEqual(rave.applied?.frame ?? -1)
     expect(firstStack).toBeLessThanOrEqual(rave.expired?.frame ?? -1)
 
-    // No stack accrues before Rave; each in-Rave grant then lingers its full
-    // 10s and keeps contributing past Rave's end (the outro lands in that tail).
+    // Each in-Rave grant lingers its full 10s, contributing past Rave's end (outro tail).
     const introHit = hits(log).find((h) => h.sourceEntryId === INTRO_ENTRY)
     expect(introHit && activeOn(introHit, BUFF.s6)).toBe(false)
     const ruptureHits = hits(log).filter((h) => h.sourceEntryId === ENTRY[9])
