@@ -9,6 +9,10 @@ export function elementHex(element: string): string {
   return ELEMENT_HEX[element as Element] ?? "#888888"
 }
 
+export function resolveCharName(id: number): string {
+  return getCharacterById(id)?.name ?? `#${id}`
+}
+
 export function portraitSrc(name: string): string {
   return `/portraits/${name.toLowerCase()}.png`
 }

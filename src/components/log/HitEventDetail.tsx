@@ -5,7 +5,8 @@ import {
   formatActiveBuffLabel,
   formatStatComponents,
 } from "#/lib/damage/hit-formula"
-import { SkillNameSuffix, resolveCharName } from "./log-cells"
+import { SkillNameSuffix } from "./log-cells"
+import { resolveCharName } from "#/components/ui/character-visual"
 
 export function HitEventDetail({ ev }: { ev: HitEvent }) {
   const snap = ev.statsSnapshot

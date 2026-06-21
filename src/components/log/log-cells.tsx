@@ -4,7 +4,6 @@ import type {
   SustainEvent,
 } from "#/types/simulation-log"
 import type { Element } from "#/data/elements"
-import { getCharacterById } from "#/lib/loadout/catalog"
 import { formatSkillType } from "#/data/skill-types"
 import { formatCritCell } from "#/lib/damage/hit-formula"
 import { formatFrames } from "#/lib/format"
@@ -70,10 +69,6 @@ export function StatPad() {
       <td className={`${numCell} text-xs`} />
     </>
   )
-}
-
-export function resolveCharName(id: number): string {
-  return getCharacterById(id)?.name ?? `#${id}`
 }
 
 export function CharChip({ id }: { id: number }) {
