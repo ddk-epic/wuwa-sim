@@ -1,7 +1,7 @@
 # Docs Index
 
 Concept pages documenting `src/`. ADRs (`adr/`) record architectural decisions.
-Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md](log.md). Testing: which tests to drop — [test-pruning-guidelines.md](test-pruning-guidelines.md).
+Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md](log.md). Testing: how to write a character rotation test — [character-e2e-test-guidelines.md](character-e2e-test-guidelines.md); which tests to drop — [test-pruning-guidelines.md](test-pruning-guidelines.md).
 
 ## Engine
 

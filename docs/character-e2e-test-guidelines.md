@@ -1,0 +1,80 @@
+# Character e2e Test Guidelines
+
+How to write a character's end-to-end rotation test (`src/data/characters/<name>.test.ts`).
+These tests drive the **full `runSimulation` pipeline** over a character's most-used
+rotation and assert on the resulting Simulation Log. They complement — not replace —
+the engine-level tests under `src/lib/engine/`.
+
+## What an e2e rotation test is
+
+One authored Timeline of the character's canonical rotation, run through
+`runSimulation(entries, slots, loadouts, config)`, with assertions read off the
+returned `SimulationLogEntry[]`. The chain under test is the real one: Timeline →
+stage resolution → frame scheduling → Buff Engine → damage formula → log.
+
+Prefer this over poking `BuffEngine` directly. The engine tests already cover
+mechanics in isolation; the e2e test covers them **in rotation flow**, where
+ordering, gating, and refresh interactions actually happen.
+
+## e2e-log-first
+
+- **Default:** assert a mechanic by observing it in the rotation log — a buff in a
+  hit's `activeBuffs`, a stack count, a lifecycle `BuffEvent`.
+- **Exception:** keep an isolated engine poke **only** for a branch or edge-case the
+  canonical rotation doesn't reach (an alternate combo path, a zero/max-stack
+  boundary, a sequence the run doesn't take). Label why it can't be covered e2e.
+
+## Harness
+
+- **Mock-free catalog.** Use the real `loadout/catalog` — `bootstrapSlot` only reads
+  the character (`compileCharacter` is `WeakMap`-cached and pure; runtime buff state
+  lives on `BuffInstance`s, never on the character or its `BuffDef`s), so the shared
+  `ALL_CHARACTERS` instance is safe to reuse.
+- **Real default template.** Build the loadout with `loadoutFromTemplate(char.template)`
+  so damage and gear buffs reflect the default build, not an empty one.
+- **Solo by default.** One character in slot 0, the rest `emptyLoadout()`. Swap
+  timing (intro-on-swap-in, outro-during-channel, swap-back cost) is out of scope
+  unless the test specifically targets it — Intro/Outro buffs still fire on
+  `skillCast`, and the timeline validator only _warns_ on an "illegal" sequence, so
+  the rotation still runs.
+
+## The rotation
+
+- One shared timeline of the most-used skill combination — the rotation a player
+  actually runs, including the Forte branch that fires in practice (and not the one
+  that doesn't).
+- `TimelineEntry` carries no frame; the sim places frames. Author **order** only;
+  `requiresPriorStage` gates resolve as waits.
+- StageId format: `char.<char>.<skill-category>.<skillKey>.<stageKey>::<skill-type>`.
+
+## Sequences
+
+For an SSR the realistic default is **S0**, but the Resonance Chain buffs still need
+coverage. Parametrize the _same_ timeline over `it.each([0, 6])`:
+
+- **S0** — base-kit buffs; **negative-assert** the chain buffs are absent.
+- **S6** — chain buffs in rotation flow. Because chain buffs are cumulative
+  `requiresSequence` gates, S6 subsumes S1–S5; a buff with an upper `maxSequence`
+  bound or one that only matters at an intermediate sequence is the isolated-poke
+  exception.
+
+## What to assert
+
+Buff application and lifecycle. Forte/resource-gauge correctness rides along through
+the buffs (e.g. a team buff that only triggers off one Forte branch confirms that
+branch fired).
+
+For each buff the rotation triggers:
+
+1. **Presence** — in `activeBuffs` on the hits where it applies; absent where it
+   shouldn't.
+2. **Stacks** — reaches its expected max.
+3. **Duration sanity** — read applied/expired frames from the `BuffEvent` lifecycle
+   entries and assert the observed lifespan ≈ `duration_seconds × 60` (60 fps) within
+   a tolerance band. Derive frames from the log; never hardcode absolutes. For a
+   refreshing buff this is measured from the last trigger, which validates refresh
+   for free.
+
+**Out of scope:** golden total-damage numbers, action-order assertions, frame-exact
+timing (owned by the `simulation.timing.*` tests), and resource accrual
+(energy/concerto/forte gauges).
