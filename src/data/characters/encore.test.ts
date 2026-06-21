@@ -36,30 +36,35 @@ const STAGE = {
   outro: "char.encore.outro-skill.thermal-field.cast::outro-skill",
 } as const
 
-const ROTATION: readonly string[] = [
-  STAGE.intro,
-  STAGE.flamingWoolies,
-  STAGE.energeticWelcome,
-  STAGE.lib,
-  STAGE.frolicking1,
-  STAGE.frolicking2,
-  STAGE.frolicking3,
-  STAGE.frolicking4,
-  STAGE.rampage,
-  STAGE.cosmosRupture,
-  STAGE.outro,
+type StageName = keyof typeof STAGE
+
+const ROTATION: readonly StageName[] = [
+  "intro",
+  "flamingWoolies",
+  "energeticWelcome",
+  "lib",
+  "frolicking1",
+  "frolicking2",
+  "frolicking3",
+  "frolicking4",
+  "rampage",
+  "cosmosRupture",
+  "outro",
 ]
 
-const ENTRY = ROTATION.map((_, i) => `e${i}`)
-const INTRO_ENTRY = ENTRY[0]
-/** Rave-window entries: Frolicking 1-4, Rampage, Rupture. */
-const RAVE_ENTRIES = new Set([
-  ENTRY[4],
-  ENTRY[5],
-  ENTRY[6],
-  ENTRY[7],
-  ENTRY[8],
-  ENTRY[9],
+// Each timeline entry's id is its stage name, so tests reference entries by
+// meaning (ENTRY.frolicking1) rather than rotation position.
+const ENTRY = Object.fromEntries(
+  ROTATION.map((name) => [name, name]),
+) as Record<StageName, string>
+
+const RAVE_ENTRIES = new Set<string>([
+  ENTRY.frolicking1,
+  ENTRY.frolicking2,
+  ENTRY.frolicking3,
+  ENTRY.frolicking4,
+  ENTRY.rampage,
+  ENTRY.cosmosRupture,
 ])
 
 const BUFF = {
@@ -86,10 +91,10 @@ function runRotation(sequence: number): SimulationLogEntry[] {
     emptyLoadout(),
     emptyLoadout(),
   ]
-  const entries: TimelineEntry[] = ROTATION.map((stageId, i) => ({
-    id: ENTRY[i],
+  const entries: TimelineEntry[] = ROTATION.map((name) => ({
+    id: ENTRY[name],
     characterId: ENCORE,
-    stageId,
+    stageId: STAGE[name],
   }))
   const log = runSimulation(entries, slots, loadouts, {
     startWithFullEnergy: true,
@@ -156,7 +161,7 @@ describe("Encore — forte rotation, base-kit buffs", () => {
       }
 
       // Only Angry Cosmos toggles allDmgBonus from pre-Rave to Rave; delta isolates +0.1.
-      const introHit = hits(log).find((h) => h.sourceEntryId === INTRO_ENTRY)
+      const introHit = hits(log).find((h) => h.sourceEntryId === ENTRY.intro)
       expect(introHit).toBeDefined()
       for (const h of raveHits)
         expect(
@@ -179,7 +184,7 @@ describe("Encore — forte rotation, base-kit buffs", () => {
       ).toBeLessThanOrEqual(DURATION_TOLERANCE)
 
       // Cheer lapses mid-outro, the only Fusion change there; present minus absent isolates +0.1.
-      const outroHits = hits(log).filter((h) => h.sourceEntryId === ENTRY[10])
+      const outroHits = hits(log).filter((h) => h.sourceEntryId === ENTRY.outro)
       const withCheer = outroHits.filter((h) => activeOn(h, BUFF.cheerDance))
       const withoutCheer = outroHits.filter(
         (h) => !activeOn(h, BUFF.cheerDance),
@@ -208,7 +213,8 @@ describe("Encore — forte rotation, Resonance Chain", () => {
 
     // During Frolicking only S1 moves Fusion; 0→4 stack delta isolates 4×0.03.
     const preS1 = hits(log).find(
-      (h) => h.sourceEntryId === ENTRY[4] && stacksOn(h, BUFF.s1) === 0,
+      (h) =>
+        h.sourceEntryId === ENTRY.frolicking1 && stacksOn(h, BUFF.s1) === 0,
     )
     const atMax = hits(log).find((h) => stacksOn(h, BUFF.s1) === 4)
     expect(preS1).toBeDefined()
@@ -221,7 +227,9 @@ describe("Encore — forte rotation, Resonance Chain", () => {
     const life = lifespan(log, BUFF.s4)
     expect(life.applied).toBeDefined()
     // S4 keys off Cosmos Rupture (Rave branch), not Cloudy Frenzy.
-    const rupture = hits(log).filter((h) => h.sourceEntryId === ENTRY[9])
+    const rupture = hits(log).filter(
+      (h) => h.sourceEntryId === ENTRY.cosmosRupture,
+    )
     expect(rupture.every((h) => activeOn(h, BUFF.s4))).toBe(true)
     expect(Math.abs((life.fromApply ?? 0) - 30 * FPS)).toBeLessThanOrEqual(
       DURATION_TOLERANCE,
@@ -229,7 +237,7 @@ describe("Encore — forte rotation, Resonance Chain", () => {
 
     // Only S4 changes Fusion from rampage to rupture; delta isolates +0.2.
     const lastRampage = hits(log)
-      .filter((h) => h.sourceEntryId === ENTRY[8])
+      .filter((h) => h.sourceEntryId === ENTRY.rampage)
       .at(-1)
     expect(lastRampage).toBeDefined()
     expect(fusion(rupture[0]) - fusion(lastRampage!)).toBeCloseTo(0.2)
@@ -240,7 +248,9 @@ describe("Encore — forte rotation, Resonance Chain", () => {
     expect(peakStacks(log, BUFF.s6)).toBe(5)
 
     // atkPct is S6's alone; 0→5 stack delta isolates 5×0.05.
-    const preLamb = hits(log).find((h) => h.sourceEntryId === ENTRY[2])
+    const preLamb = hits(log).find(
+      (h) => h.sourceEntryId === ENTRY.energeticWelcome,
+    )
     const atMax = hits(log).find((h) => stacksOn(h, BUFF.s6) === 5)
     expect(preLamb).toBeDefined()
     expect(atMax).toBeDefined()
@@ -256,12 +266,14 @@ describe("Encore — forte rotation, Resonance Chain", () => {
     expect(firstStack).toBeLessThanOrEqual(rave.expired?.frame ?? -1)
 
     // Each in-Rave grant lingers its full 10s, contributing past Rave's end (outro tail).
-    const introHit = hits(log).find((h) => h.sourceEntryId === INTRO_ENTRY)
+    const introHit = hits(log).find((h) => h.sourceEntryId === ENTRY.intro)
     expect(introHit && activeOn(introHit, BUFF.s6)).toBe(false)
-    const ruptureHits = hits(log).filter((h) => h.sourceEntryId === ENTRY[9])
+    const ruptureHits = hits(log).filter(
+      (h) => h.sourceEntryId === ENTRY.cosmosRupture,
+    )
     expect(ruptureHits.length).toBeGreaterThan(0)
     expect(ruptureHits.every((h) => activeOn(h, BUFF.s6))).toBe(true)
-    const outroHits = hits(log).filter((h) => h.sourceEntryId === ENTRY[10])
+    const outroHits = hits(log).filter((h) => h.sourceEntryId === ENTRY.outro)
     expect(outroHits.length).toBeGreaterThan(0)
     expect(outroHits.every((h) => activeOn(h, BUFF.s6))).toBe(true)
   })
