@@ -24,15 +24,20 @@ Apply to every edit, in source AND test files.
   no "see issue X" — not in comments, not in `describe(...)` / `it(...)` test
   titles. They belong only in Markdown docs (`docs/`, ADRs) and commit messages;
   code must read as if the issue tracker does not exist.
-- **Never comment self-explanatory code.** A comment earns its place only when
-  it explains what the code cannot: a non-obvious _why_, an invariant, a gotcha,
-  or the reason a magic value is what it is.
-- **Never narrate the next line** ("// loop over skills", "// set the flag").
-- **Keep comments concise and functional.** State the fact, drop the framing.
-- **Never restate the code in prose.** If the comment is the line read aloud, cut it.
+- **Make code self-explanatory; don't comment it.** Clear names over comments.
+  Comment only what code can't say: a non-obvious _why_, invariant, gotcha, or
+  magic value — never the _what_.
+- **Terse, not prose.** A comment is a clause of fact, not a sentence explaining
+  yourself. Cut em-dash asides, "so it … ", "the X must be a real Y:", and any
+  framing around the fact. If it reads like a sentence you'd say aloud, compress it.
+
+  ```
+  BAD:  // Silversnow's amp is keyed to Basic Attack — only a Basic-Attack hit exercises it.
+  GOOD: // Silversnow's amp only applies to basic attacks.
+  ```
 
 After finishing an edit, re-read every comment and test title you added and
-delete each one that breaks the above.
+delete or compress each one that breaks the above.
 
 </code-style>
 
