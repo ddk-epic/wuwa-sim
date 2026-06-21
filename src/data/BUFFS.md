@@ -94,7 +94,7 @@ See: skill-tree compilation in `src/lib/engine-bootstrap.ts` (`compileSkillTreeN
 
 **Key fields**: `trigger.event = "skillCast"` with `skillCategory: "Outro Skill"` and the source character's `characterId`; `target: { kind: "nextOnField" }`; timed `duration`.
 
-**Gotchas**: `nextOnField` arms the buff at trigger time and only lands it when the next swap-in actually happens. The buff sits dormant until then.
+**Gotchas**: `nextOnField` arms the buff at trigger time and only lands it when the next swap-in actually happens. The buff sits dormant until then. To gate _whether it arms_ on a fire-time predicate (e.g. a window that the outro itself consumes), use `trigger.precondition` — a root `condition` here gates only contribution on the landed instance and would wink it off the moment the predicate lapses.
 
 ```ts
 {

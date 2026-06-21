@@ -214,15 +214,6 @@ export class BuffEngine {
     out: BuffEvent[],
   ): void {
     if (def.target?.kind === "nextOnField") {
-      if (
-        def.condition &&
-        !this.evaluator.evaluateUncached(
-          def.condition,
-          subjectAtTrigger(sourceCharacterId),
-        )
-      ) {
-        return
-      }
       this.deferOutroBuff(def, sourceCharacterId, frame)
       return
     }

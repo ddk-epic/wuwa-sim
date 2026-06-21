@@ -35,14 +35,10 @@ export const impermanenceHeron = {
         event: "skillCast",
         actor: "self",
         skillCategory: "Outro Skill",
+        precondition: { kind: "buffActive", buff: "window", on: "source" },
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
-      condition: {
-        kind: "buffActive",
-        buff: "window",
-        on: "source",
-      },
       effects: [
         {
           kind: "stat",

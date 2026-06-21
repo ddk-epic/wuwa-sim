@@ -630,7 +630,7 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
   })
 })
 
-describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)", () => {
+describe("BuffEngine — precondition gating for nextOnField stat buffs", () => {
   const windowBuff: BuffDef = {
     id: "test.window",
     name: "Window",
@@ -657,10 +657,10 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
       event: "skillCast",
       characterId: 1,
       skillCategory: "Outro Skill",
+      precondition: { kind: "buffActive", buff: "window", on: "source" },
     },
     target: { kind: "nextOnField" },
     duration: { kind: "seconds", v: 15 },
-    condition: { kind: "buffActive", buff: "window", on: "source" },
     effects: [
       {
         kind: "stat",
@@ -670,7 +670,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     ],
   }
 
-  it("does not enqueue nextOnField buff when condition is false at trigger time", () => {
+  it("does not enqueue nextOnField buff when precondition is false at trigger time", () => {
     testCharacters = [
       baseChar({ id: 1, buffs: [windowBuff, nextOnFieldWithCondition] }),
       baseChar({ id: 2, buffs: [] }),
@@ -694,7 +694,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
     expect(engine.activeBuffIds(2)).not.toContain("test.conditional-nof")
   })
 
-  it("enqueues nextOnField buff when condition is true at trigger time", () => {
+  it("enqueues nextOnField buff when precondition is true at trigger time", () => {
     testCharacters = [
       baseChar({ id: 1, buffs: [windowBuff, nextOnFieldWithCondition] }),
       baseChar({ id: 2, buffs: [] }),
@@ -726,7 +726,7 @@ describe("BuffEngine — condition-at-trigger for nextOnField stat buffs (#116)"
 })
 
 describe("BuffEngine — target collapses to source at trigger time", () => {
-  it("nextOnField def with cond.on=target evaluates against source, not nextOnField char", () => {
+  it("nextOnField def with precondition.on=target evaluates against source, not nextOnField char", () => {
     const windowBuff: BuffDef = {
       id: "test.window",
       name: "Window",
@@ -739,7 +739,7 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
       duration: { kind: "seconds", v: 15 },
       effects: [],
     }
-    // Condition uses on: "target" — at trigger time this collapses to source (char 1)
+    // Precondition uses on: "target" — at trigger time this collapses to source (char 1)
     const nextOnFieldDef: BuffDef = {
       id: "test.nof-target-cond",
       name: "NOF target cond",
@@ -747,10 +747,10 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
         event: "skillCast",
         characterId: 1,
         skillCategory: "Outro Skill",
+        precondition: { kind: "buffActive", buff: "window", on: "target" },
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
-      condition: { kind: "buffActive", buff: "window", on: "target" },
       effects: [
         {
           kind: "stat",
@@ -788,7 +788,7 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
     expect(engine.activeBuffIds(2)).toContain("test.nof-target-cond")
   })
 
-  it("nextOnField def with cond.on=target does not pass when source lacks the buff", () => {
+  it("nextOnField def with precondition.on=target does not pass when source lacks the buff", () => {
     const nextOnFieldDef: BuffDef = {
       id: "test.nof-target-absent",
       name: "NOF target absent",
@@ -796,10 +796,10 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
         event: "skillCast",
         characterId: 1,
         skillCategory: "Outro Skill",
+        precondition: { kind: "buffActive", buff: "absent", on: "target" },
       },
       target: { kind: "nextOnField" },
       duration: { kind: "seconds", v: 15 },
-      condition: { kind: "buffActive", buff: "absent", on: "target" },
       effects: [
         {
           kind: "stat",
