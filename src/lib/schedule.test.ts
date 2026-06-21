@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest"
 import { Schedule } from "./schedule"
 import type { ScheduledWork } from "./schedule"

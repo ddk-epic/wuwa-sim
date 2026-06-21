@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { loadoutFromTemplate, inferEchoSetForEcho } from "./template"
 import { getCharacterById } from "./catalog"

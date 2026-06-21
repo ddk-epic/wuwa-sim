@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { BuffDef, HitContext, HitFilter } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { BuffDef } from "#/types/buff"
 import { TriggerIndex } from "./trigger-index"

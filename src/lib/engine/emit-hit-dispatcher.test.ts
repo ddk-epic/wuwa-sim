@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import type { BuffDef, EmitHitEffect } from "#/types/buff"
 import { emptyResourceState } from "#/types/buff"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { createStore } from "jotai"

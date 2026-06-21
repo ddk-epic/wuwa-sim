@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { emptyStatTable } from "#/types/stat-table"
 import type { StatTable } from "#/types/stat-table"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { shorekeeper } from "#/data/characters/shorekeeper"
 import { stellarSymphony } from "#/data/weapons/stellar-symphony"

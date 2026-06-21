@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { applyDragPreview } from "./timeline-drag-preview"
 import type { RenderItem } from "./timeline-render-items"

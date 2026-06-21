@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { ActiveBuff } from "#/types/simulation-log"
 import { emptyStatTable } from "#/types/stat-table"

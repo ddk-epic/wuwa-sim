@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { AERO_EROSION } from "#/data/neg-statuses"
 import { DEFAULT_TARGET_PARAMS } from "#/types/target"

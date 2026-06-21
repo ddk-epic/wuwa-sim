@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter, DamageEntry } from "#/types/character"
 import type { WeaponData } from "#/types/weapon"

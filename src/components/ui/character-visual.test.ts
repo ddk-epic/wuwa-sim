@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { listCharacters } from "#/lib/loadout/catalog"
 import { GLOBAL_TARGET_ID } from "#/types/buff"

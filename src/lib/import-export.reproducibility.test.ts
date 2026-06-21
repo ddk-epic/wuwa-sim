@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import { flattenNodes } from "#/types/timeline"
 import { DEFAULT_SETTINGS } from "#/lib/settings"

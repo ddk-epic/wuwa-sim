@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import type { BuffDef, Trigger } from "#/types/buff"
 import type { BuffEvent } from "#/types/simulation-log"

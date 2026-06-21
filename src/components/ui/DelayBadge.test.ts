@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { DelayBreakdown } from "#/types/simulation-log"
 import { formatFrames } from "#/lib/format"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import type { SlotLoadout } from "#/types/loadout"
 import type { ImportExportPayload } from "#/lib/import-export"

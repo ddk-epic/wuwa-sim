@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest"
 import type { DamageEntry, SkillType } from "#/types/character"
 import type { TimelineEntry } from "#/types/timeline"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EchoSet } from "#/types/echo"
 import { resolveEchoSets } from "./resolve-echo-sets"

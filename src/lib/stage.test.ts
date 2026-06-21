@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { DamageEntry, EnrichedSkillAttribute } from "#/types/character"
 import { nextVariant, resolveStageExecution } from "./stage"

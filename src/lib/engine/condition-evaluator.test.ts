@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi } from "vitest"
 import type { BuffInstance, Condition } from "#/types/buff"
 import { ConditionEvaluator } from "./condition-evaluator"
