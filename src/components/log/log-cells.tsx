@@ -174,7 +174,7 @@ export function SkillNameSuffix({ ev }: { ev: ActionEvent | HitEvent }) {
       </>
     )
   }
-  if (ev.synthetic) {
+  if (ev.coord) {
     return <span> (coord)</span>
   }
   return null
