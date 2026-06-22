@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react"
-import { Crop, Lock, LockOpen, Plus, Trash2 } from "lucide-react"
+import {
+  Crop,
+  Crosshair,
+  Lock,
+  LockOpen,
+  MoveHorizontal,
+  SeparatorHorizontal,
+  Trash2,
+} from "lucide-react"
 import { TRACK_COLS, uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
@@ -186,43 +194,43 @@ export function ClipEditor({
       {!scoping && (
         <>
           <div className={`${TRACK_COLS} items-start`}>
-            <div className="flex w-fit flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <AddStagePopover
-                  groups={groups}
-                  onAdd={(ref: StageRef) =>
-                    onEdit({ type: "addStage", ref, boundaryId: uid() })
-                  }
-                />
+            <div className="flex items-start justify-between pr-3">
+              <AddStagePopover
+                groups={groups}
+                onAdd={(ref: StageRef) =>
+                  onEdit({ type: "addStage", ref, boundaryId: uid() })
+                }
+              />
+              <div className="flex flex-col divide-y divide-border overflow-hidden rounded-md border border-border">
                 <button
                   onClick={addHitHere}
                   disabled={hitReason != null}
-                  className="flex items-center gap-0.5 rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border"
+                  className="p-1.5 text-muted-foreground hover:bg-border hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                   title={hitReason ?? "drop a hit at the playhead"}
                 >
-                  <Plus className="size-4" /> Hit
+                  <Crosshair className="size-4" />
+                </button>
+                <button
+                  onClick={addSplitHere}
+                  className="p-1.5 text-muted-foreground hover:bg-border hover:text-foreground"
+                  title="drop an animation split at the playhead"
+                >
+                  <SeparatorHorizontal className="size-4 rotate-90" />
+                </button>
+                <button
+                  onClick={() =>
+                    onEdit({
+                      type: "addStage",
+                      ref: placeholderRef(),
+                      boundaryId: uid(),
+                    })
+                  }
+                  className="p-1.5 text-muted-foreground hover:bg-border hover:text-foreground"
+                  title="append a spacer to carve out a mid-rotation gap (jump/dodge)"
+                >
+                  <MoveHorizontal className="size-4" />
                 </button>
               </div>
-              <button
-                onClick={addSplitHere}
-                className="flex items-center gap-0.5 self-end rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground"
-                title="drop an animation split at the playhead"
-              >
-                <Plus className="size-4" /> Anim split
-              </button>
-              <button
-                onClick={() =>
-                  onEdit({
-                    type: "addStage",
-                    ref: placeholderRef(),
-                    boundaryId: uid(),
-                  })
-                }
-                className="flex items-center gap-0.5 self-end rounded border border-dashed border-gray-700 pl-2 pr-2.5 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-                title="append a spacer to carve out a mid-rotation gap (jump/dodge)"
-              >
-                <Plus className="size-4" /> Spacer
-              </button>
             </div>
             <div className="space-y-1">
               <Ruler

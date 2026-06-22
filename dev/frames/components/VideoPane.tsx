@@ -189,7 +189,7 @@ export function VideoPane({
       </div>
 
       <div className={`${TRACK_COLS} items-center`}>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.75">
           <StepButton onClick={() => step(-10)} title="−10 frames">
             <ChevronsLeft className="size-4" />
           </StepButton>

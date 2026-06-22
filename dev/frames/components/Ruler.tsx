@@ -44,7 +44,7 @@ export function Ruler({
       onPointerMove={(e) => {
         if (e.buttons) onSeek?.(frameAt(e.clientX))
       }}
-      className="relative h-20 cursor-ew-resize select-none rounded border border-border bg-border"
+      className="relative h-22 cursor-ew-resize select-none rounded border border-border bg-border"
     >
       {secs.map((sec, i) => {
         const ph = isPlaceholder(sec.ref)
