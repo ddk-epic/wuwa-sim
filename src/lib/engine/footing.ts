@@ -35,7 +35,7 @@ export class FootingModule {
   /**
    * An Intro Skill ignores the footing it enters on — it can take the field on any
    * footing (see `references/footing.md`) — and instead establishes its own exit
-   * footing. A footing-transparent intro (`undefined`/`"either"`) keeps the
+   * footing. An untagged intro grounds (the default); only `"either"` keeps the
    * current footing.
    */
   enterIntro(footing: Footing | undefined): void {
