@@ -71,9 +71,9 @@ export function StageOverview({
   )
 }
 
-// One catalog stage's progress row. Aggregates hits across every occurrence of this
-// stage in the clip (an action string may repeat a stage), so capacity scales with
-// the occurrence count; actionFrame stays relative to each occurrence's start.
+// One catalog stage's progress row, measured against the first occurrence in the
+// clip. A repeated stage is a trailing sentinel (a recording artifact, deleted
+// before export), so later occurrences don't inflate the count.
 function StageRow({
   stage,
   clip,
@@ -91,6 +91,7 @@ function StageRow({
   const occ = secs
     .map((sec, i) => ({ sec, i }))
     .filter(({ sec }) => sec.ref.id === stage.id)
+    .slice(0, 1)
   const hits = occ.flatMap(({ sec, i }) => {
     const split = cl ? stageTiming(cl, i, secs).animationFrames > 0 : false
     return byStage[i].map((h) => ({
