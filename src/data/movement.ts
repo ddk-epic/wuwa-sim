@@ -14,6 +14,7 @@ export const DODGE_SKILL: EnrichedSkill = {
       value: "",
       damage: [],
       actionTime: DODGE_ACTION_TIME,
+      footing: "either",
     },
   ],
   damage: [],

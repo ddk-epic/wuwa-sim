@@ -497,9 +497,10 @@ function computeFall(
   fallFrames: number,
 ): number {
   if (currentFooting !== "air") return 0
-  // Fall when the next stage begins on the ground — a sustained "ground" stage or a
-  // { launch } (which launches *from* the ground, so an airborne entry falls first,
-  // then re-launches at the commit frame). { land } / "air" / transparent: no fall.
+  // Fall when the next stage begins on the ground — an untagged stage, a sustained
+  // "ground" stage, or a { launch } (which launches *from* the ground, so an airborne
+  // entry falls first, then re-launches at the commit frame). { land } / "air" /
+  // "either": no fall.
   if (stageEntryFooting(stageFooting) !== "ground") return 0
   return fallFrames
 }

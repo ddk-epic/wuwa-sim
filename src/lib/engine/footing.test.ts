@@ -37,11 +37,11 @@ describe("FootingModule.applyStageFooting", () => {
     expect(f.team()).toBe("ground")
   })
 
-  it("undefined is footing-transparent", () => {
+  it("omitted footing grounds the field", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
     f.applyStageFooting(undefined, 60)
-    expect(f.team()).toBe("air")
+    expect(f.team()).toBe("ground")
   })
 })
 
@@ -67,11 +67,16 @@ describe("FootingModule.enterIntro", () => {
     expect(f.team()).toBe("ground")
   })
 
-  it("undefined and either intros keep the current footing", () => {
+  it("an untagged intro grounds the field", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
     f.enterIntro(undefined)
-    expect(f.team()).toBe("air")
+    expect(f.team()).toBe("ground")
+  })
+
+  it("an either intro keeps the current footing", () => {
+    const f = new FootingModule()
+    f.applyStageFooting("air", 60)
     f.enterIntro("either")
     expect(f.team()).toBe("air")
   })

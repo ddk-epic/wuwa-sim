@@ -260,6 +260,7 @@ const charAerial: EnrichedCharacter = {
           category: "Basic Attack",
           value: "100%",
           actionTime: 45,
+          footing: "either",
           damage: [],
         },
       ],

@@ -378,8 +378,11 @@ describe("stageEntryFooting", () => {
     expect(stageEntryFooting({ land: 30 })).toBe("air")
   })
 
-  it("undefined and either are footing-transparent", () => {
-    expect(stageEntryFooting(undefined)).toBeUndefined()
+  it("omitted footing enters on the ground", () => {
+    expect(stageEntryFooting(undefined)).toBe("ground")
+  })
+
+  it("either is footing-transparent", () => {
     expect(stageEntryFooting("either")).toBeUndefined()
   })
 })
@@ -395,8 +398,11 @@ describe("stageExitFooting", () => {
     expect(stageExitFooting({ land: 30 })).toBe("ground")
   })
 
-  it("undefined and either preserve the entry footing", () => {
-    expect(stageExitFooting(undefined)).toBeUndefined()
+  it("omitted footing settles to the ground", () => {
+    expect(stageExitFooting(undefined)).toBe("ground")
+  })
+
+  it("either preserves the entry footing", () => {
     expect(stageExitFooting("either")).toBeUndefined()
   })
 })

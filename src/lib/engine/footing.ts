@@ -20,7 +20,6 @@ export class FootingModule {
    * leaves the field, so it is not a stream event).
    */
   applyStageFooting(footing: Footing | undefined, stageDuration: number): void {
-    if (footing === undefined || footing === "either") return
     if (typeof footing === "object") {
       if ("launch" in footing && footing.launch <= stageDuration) {
         this.tracker.setTeam("air")
@@ -29,7 +28,8 @@ export class FootingModule {
       }
       return
     }
-    this.tracker.setTeam(footing)
+    const exit = stageExitFooting(footing)
+    if (exit !== undefined) this.tracker.setTeam(exit)
   }
 
   /**
