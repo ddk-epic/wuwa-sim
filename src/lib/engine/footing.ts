@@ -1,4 +1,5 @@
 import type { Footing } from "#/types/character"
+import { stageExitFooting } from "#/lib/stage"
 import { FootingTracker } from "./footing-tracker"
 
 export class FootingModule {
@@ -19,31 +20,27 @@ export class FootingModule {
    * leaves the field, so it is not a stream event).
    */
   applyStageFooting(footing: Footing | undefined, stageDuration: number): void {
-    if (!footing || typeof footing !== "object") return
-    if ("launch" in footing && footing.launch <= stageDuration) {
-      this.tracker.setTeam("air")
-    } else if ("land" in footing && footing.land <= stageDuration) {
-      this.tracker.setTeam("ground")
+    if (footing === undefined || footing === "either") return
+    if (typeof footing === "object") {
+      if ("launch" in footing && footing.launch <= stageDuration) {
+        this.tracker.setTeam("air")
+      } else if ("land" in footing && footing.land <= stageDuration) {
+        this.tracker.setTeam("ground")
+      }
+      return
     }
+    this.tracker.setTeam(footing)
   }
 
   /**
    * An Intro Skill ignores the footing it enters on — it can take the field on any
-   * footing (see `references/footing.md`) — and instead establishes its own. Set
-   * team footing to the intro's settled value (`air` for `air`/`{ launch }`,
-   * `ground` for `ground`/`{ land }`); a footing-transparent intro keeps the
+   * footing (see `references/footing.md`) — and instead establishes its own exit
+   * footing. A footing-transparent intro (`undefined`/`"either"`) keeps the
    * current footing.
    */
   enterIntro(footing: Footing | undefined): void {
-    if (footing === undefined) return
-    if (
-      footing === "air" ||
-      (typeof footing === "object" && "launch" in footing)
-    ) {
-      this.tracker.setTeam("air")
-    } else {
-      this.tracker.setTeam("ground")
-    }
+    const exit = stageExitFooting(footing)
+    if (exit !== undefined) this.tracker.setTeam(exit)
   }
 
   /**

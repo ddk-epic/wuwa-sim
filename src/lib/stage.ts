@@ -15,16 +15,31 @@ export const STAGE_CAST_NAME = "Skill DMG"
  * The footing a stage begins on (its "entry footing"). Sustained values enter
  * as-is; a `{ launch }` starts on the **ground** (it launches _from_ the ground,
  * so an airborne character must fall first), a `{ land }` starts in the **air**.
- * Omission is footing-transparent — no entry requirement. See
+ * Omission and `"either"` are footing-transparent — no entry requirement. See
  * `references/footing.md` ("Falling").
  */
 export function stageEntryFooting(
   footing: Footing | undefined,
 ): "ground" | "air" | undefined {
-  if (footing === undefined) return undefined
+  if (footing === undefined || footing === "either") return undefined
   if (footing === "air") return "air"
   if (typeof footing === "object" && "land" in footing) return "air"
   return "ground" // sustained "ground" or { launch }
+}
+
+/**
+ * The footing a stage ends on (its "exit footing"). A `{ launch }` lifts off,
+ * a `{ land }` settles down; sustained values exit as-is. Omission and
+ * `"either"` are footing-transparent — they preserve the entry footing.
+ */
+export function stageExitFooting(
+  footing: Footing | undefined,
+): "ground" | "air" | undefined {
+  if (footing === undefined || footing === "either") return undefined
+  if (footing === "air") return "air"
+  if (footing === "ground") return "ground"
+  if ("launch" in footing) return "air"
+  return "ground" // { land }
 }
 
 export function toKebab(s: string | undefined): string {

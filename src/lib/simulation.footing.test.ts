@@ -386,7 +386,12 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     expect(charBAction?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
-  it("consecutive aerial swap-variants layer per-character snapshots independently", () => {
+  it("consecutive aerial swaps resolve each re-entry against its own window", () => {
+    // charA and charB each aerial-swap, then each re-enters into a 50-frame ground
+    // stage. charA re-enters within its window (carried air survives -> fall); the
+    // sequential ground stages push charB's re-entry past its own window, so its
+    // carried air has reset to ground (no fall). charA's grounded ground stage
+    // settles team footing to ground, so charB no longer inherits a stale air field.
     testCharacters = [charSnapA, charSnapB]
     const entries: TimelineEntry[] = [
       {
@@ -400,7 +405,7 @@ describe("runSimulation — trailing-window footing snapshot", () => {
         id: "e2",
         characterId: 53,
         stageId:
-          "char.snap-a.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
+          "char.snap-b.resonance-skill.aerial-swap.aerial-swap-stage::resonance-skill",
         variantKind: "swap",
       },
       tlEntry(
@@ -424,7 +429,7 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     const charAReentry = actions.find((a) => a.sourceEntryId === "e3")
     const charBReentry = actions.find((a) => a.sourceEntryId === "e4")
     expect(charAReentry?.delayBreakdown?.pad.fall).toBe(21)
-    expect(charBReentry?.delayBreakdown?.pad.fall).toBe(21)
+    expect(charBReentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 })
 

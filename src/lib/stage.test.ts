@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { DamageEntry, EnrichedSkillAttribute } from "#/types/character"
-import { nextVariant, resolveStageExecution } from "./stage"
+import {
+  nextVariant,
+  resolveStageExecution,
+  stageEntryFooting,
+  stageExitFooting,
+} from "./stage"
 import type { ActionTimeStage } from "./stage"
 
 function makeStage(
@@ -359,5 +364,39 @@ describe("nextVariant — full cycle", () => {
 
   it("stage with no variants stays at FULL (only undefined in defined list)", () => {
     expect(nextVariant(undefined, stageNoVariants)).toBeUndefined()
+  })
+})
+
+describe("stageEntryFooting", () => {
+  it("sustained values enter as-is", () => {
+    expect(stageEntryFooting("ground")).toBe("ground")
+    expect(stageEntryFooting("air")).toBe("air")
+  })
+
+  it("{ launch } enters on the ground, { land } in the air", () => {
+    expect(stageEntryFooting({ launch: 30 })).toBe("ground")
+    expect(stageEntryFooting({ land: 30 })).toBe("air")
+  })
+
+  it("undefined and either are footing-transparent", () => {
+    expect(stageEntryFooting(undefined)).toBeUndefined()
+    expect(stageEntryFooting("either")).toBeUndefined()
+  })
+})
+
+describe("stageExitFooting", () => {
+  it("sustained values exit as-is", () => {
+    expect(stageExitFooting("ground")).toBe("ground")
+    expect(stageExitFooting("air")).toBe("air")
+  })
+
+  it("{ launch } lifts off, { land } settles down", () => {
+    expect(stageExitFooting({ launch: 30 })).toBe("air")
+    expect(stageExitFooting({ land: 30 })).toBe("ground")
+  })
+
+  it("undefined and either preserve the entry footing", () => {
+    expect(stageExitFooting(undefined)).toBeUndefined()
+    expect(stageExitFooting("either")).toBeUndefined()
   })
 })

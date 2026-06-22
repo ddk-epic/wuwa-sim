@@ -155,7 +155,12 @@ export interface StageVariant {
 
 export type MovementKind = "Dodge" | "Jump"
 
-export type Footing = "ground" | "air" | { launch: number } | { land: number }
+export type Footing =
+  | "ground"
+  | "air"
+  | "either"
+  | { launch: number }
+  | { land: number }
 
 type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   /** Override for `deriveKey(name)` collisions. */
