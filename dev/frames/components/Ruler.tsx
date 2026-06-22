@@ -2,7 +2,7 @@ import { useRef } from "react"
 import { X } from "lucide-react"
 import { CUE_COLOR } from "../shared"
 import type { Selected } from "../shared"
-import { exceedingHitIds, sections } from "../types"
+import { exceedingHitIds, isPlaceholder, sections } from "../types"
 import type { Clip, ClipEdit } from "../types"
 
 export function Ruler({
@@ -46,38 +46,53 @@ export function Ruler({
       }}
       className="relative h-20 cursor-ew-resize select-none rounded border border-border bg-border"
     >
-      {secs.map((sec, i) => (
-        <div
-          key={i}
-          className={`absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden border-r border-border ${i % 2 ? "bg-border/40" : "bg-border/20"}`}
-          style={{
-            left: `${pct(sec.start)}%`,
-            width: `${pct(sec.end) - pct(sec.start)}%`,
-          }}
-        >
-          {!locked && (
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onEdit({ type: "removeStage", index: i })}
-              className="absolute right-1 top-1 text-muted-foreground/60 hover:text-destructive"
-              title="remove stage"
-            >
-              <X className="size-3" />
-            </button>
-          )}
-          <span className="max-w-full truncate px-1 text-label font-medium text-foreground">
-            {sec.ref.skill}
-          </span>
-          {sec.ref.stage !== sec.ref.skill && (
-            <span className="max-w-full truncate px-1 text-detail text-muted-foreground">
-              {sec.ref.stage}
+      {secs.map((sec, i) => {
+        const ph = isPlaceholder(sec.ref)
+        return (
+          <div
+            key={i}
+            className={`absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden border-r border-border ${ph ? "" : i % 2 ? "bg-border/40" : "bg-border/20"}`}
+            style={{
+              left: `${pct(sec.start)}%`,
+              width: `${pct(sec.end) - pct(sec.start)}%`,
+              ...(ph && {
+                background:
+                  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted-foreground) 15%, transparent) 0 8px, transparent 8px 16px)",
+              }),
+            }}
+          >
+            {!locked && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onEdit({ type: "removeStage", index: i })}
+                className="absolute right-1 top-1 text-muted-foreground/60 hover:text-destructive"
+                title={ph ? "remove spacer" : "remove stage"}
+              >
+                <X className="size-3" />
+              </button>
+            )}
+            {ph ? (
+              <span className="px-1 text-micro uppercase tracking-[1px] text-muted-foreground/70">
+                spacer
+              </span>
+            ) : (
+              <>
+                <span className="max-w-full truncate px-1 text-label font-medium text-foreground">
+                  {sec.ref.skill}
+                </span>
+                {sec.ref.stage !== sec.ref.skill && (
+                  <span className="max-w-full truncate px-1 text-detail text-muted-foreground">
+                    {sec.ref.stage}
+                  </span>
+                )}
+              </>
+            )}
+            <span className="font-mono text-detail tabular-nums text-muted-foreground/70">
+              {sec.end - sec.start}f
             </span>
-          )}
-          <span className="font-mono text-detail tabular-nums text-muted-foreground/70">
-            {sec.end - sec.start}f
-          </span>
-        </div>
-      ))}
+          </div>
+        )
+      })}
 
       {clip.restStart != null && clip.restStart < clip.end && (
         <>

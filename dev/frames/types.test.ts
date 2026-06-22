@@ -3,10 +3,13 @@ import {
   animationSplitOf,
   appendStage,
   applyClipEdit,
+  clipDisplayName,
   exceedingHitIds,
   hitsByStage,
   hitsInStage,
+  isPlaceholder,
   ownerIndexOf,
+  placeholderRef,
   removeStageAt,
   resolveVariantTarget,
   sections,
@@ -73,6 +76,34 @@ describe("sections", () => {
       ["A", 0, 30],
       ["B", 30, 70],
     ])
+  })
+})
+
+describe("placeholder spacer", () => {
+  it("carves a section between real stages without a catalog identity", () => {
+    let c = clip({ stageRefs: [], boundaries: [] })
+    c = appendStage(c, stage("A"), "b-a")
+    c = appendStage(c, placeholderRef(), "b-ph")
+    c = appendStage(c, stage("B"), "b-b")
+    const secs = sections(c)
+    expect(secs.map((s) => isPlaceholder(s.ref))).toEqual([false, true, false])
+  })
+
+  it("is skipped in the clip display name", () => {
+    const c = clip({
+      stageRefs: [stage("A"), placeholderRef(), stage("B")],
+      boundaries: [
+        { id: "b0", frame: 30, cue: "animationBreak" },
+        { id: "b1", frame: 70, cue: "animationBreak" },
+      ],
+    })
+    expect(clipDisplayName(c)).toBe("A›B")
+  })
+
+  it("names a placeholder-only clip Untitled", () => {
+    expect(clipDisplayName(clip({ stageRefs: [placeholderRef()] }))).toBe(
+      "Untitled",
+    )
   })
 })
 

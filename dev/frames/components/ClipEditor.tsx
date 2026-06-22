@@ -6,6 +6,8 @@ import type { StageGroup } from "../stages"
 import {
   clipDisplayName,
   hitsInStage,
+  isPlaceholder,
+  placeholderRef,
   stageCapacity,
   stageIndexOf,
 } from "../types"
@@ -98,6 +100,8 @@ export function ClipEditor({
   function addSplitHere() {
     const stageIndex = stageIndexOf(clip, playhead)
     if (stageIndex === -1) return
+    // A spacer has no animation to split.
+    if (isPlaceholder(clip.stageRefs[stageIndex])) return
     onEdit({
       type: "setAnimationSplit",
       stageIndex,
@@ -205,6 +209,19 @@ export function ClipEditor({
                 title="drop an animation split at the playhead"
               >
                 <Plus className="size-4" /> Anim split
+              </button>
+              <button
+                onClick={() =>
+                  onEdit({
+                    type: "addStage",
+                    ref: placeholderRef(),
+                    boundaryId: uid(),
+                  })
+                }
+                className="flex items-center gap-0.5 self-end rounded border border-dashed border-gray-700 pl-2 pr-2.5 py-1 text-sm text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+                title="append a spacer to carve out a mid-rotation gap (jump/dodge)"
+              >
+                <Plus className="size-4" /> Spacer
               </button>
             </div>
             <div className="space-y-1">

@@ -32,6 +32,18 @@ export interface StageRef {
   hitCount: number
 }
 
+// A spacer occupies frames between two real stages (a mid-rotation jump/dodge)
+// so their measured `actionTime` isn't inflated by the gap. It carries no
+// catalog identity: invisible to the sidebar and export, owns no hits.
+export const PLACEHOLDER_ID = "__placeholder__"
+
+export const isPlaceholder = (ref: StageRef): boolean =>
+  ref.id === PLACEHOLDER_ID
+
+export function placeholderRef(): StageRef {
+  return { id: PLACEHOLDER_ID, skill: "", stage: "spacer", hitCount: 0 }
+}
+
 /** A divider between two consecutive stages — the stage-boundary mark (old "cutoff"). */
 export interface Boundary {
   id: string
@@ -187,8 +199,9 @@ export function stageTiming(
 
 export function clipDisplayName(clip: Clip): string {
   if (clip.name.trim()) return clip.name
-  if (clip.stageRefs.length === 0) return "Untitled"
-  return clip.stageRefs.map((s) => s.stage).join("›")
+  const named = clip.stageRefs.filter((s) => !isPlaceholder(s))
+  if (named.length === 0) return "Untitled"
+  return named.map((s) => s.stage).join("›")
 }
 
 /**
