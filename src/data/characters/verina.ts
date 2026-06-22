@@ -67,21 +67,6 @@ export const verina = {
       ],
     },
     {
-      id: "char.verina.s1-moment-of-emergence",
-      name: "S1: Moment of Emergence",
-      description:
-        "Outro Skill Blossom grants the next character continuous healing (20% ATK every 5s for 30s). Heal portion is deferred — no HoT primitive in the engine yet.",
-      requiresSequence: 1,
-      trigger: {
-        event: "skillCast",
-        characterId: 1503,
-        skillCategory: "Outro Skill",
-      },
-      target: { kind: "nextOnField" },
-      duration: { kind: "frames", v: 1 },
-      effects: [],
-    },
-    {
       id: "char.verina.photosynthesis-mark",
       name: "Photosynthesis Mark",
       description:
@@ -200,10 +185,25 @@ export const verina = {
       ],
     },
     {
+      id: "char.verina.s1-moment-of-emergence",
+      name: "S1: Moment of Emergence",
+      description:
+        "Outro Skill Blossom grants the next character continuous healing (20% ATK every 5s for 30s). Heal portion is deferred — no HoT primitive in the engine yet.",
+      requiresSequence: 1,
+      trigger: {
+        event: "skillCast",
+        characterId: 1503,
+        skillCategory: "Outro Skill",
+      },
+      target: { kind: "nextOnField" },
+      duration: { kind: "frames", v: 1 },
+      effects: [],
+    },
+    {
       id: "char.verina.s2-concerto-grant",
       name: "S2: Sprouting Reflections",
       description:
-        "Botany Experiment landing restores 10 Concerto Energy once per cast (hit 1).",
+        "Botany Experiment landing grants 1 Forte and restores 10 Concerto Energy once per cast (hit 1).",
       requiresSequence: 2,
       trigger: {
         event: "hitLanded",
@@ -211,6 +211,12 @@ export const verina = {
         stage: "botany-experiment/cast#1",
       },
       effects: [
+        {
+          kind: "resource",
+          resource: "forte",
+          op: "add",
+          value: { kind: "const", v: 1 },
+        },
         {
           kind: "resource",
           resource: "concerto",

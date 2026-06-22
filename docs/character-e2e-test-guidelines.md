@@ -60,9 +60,16 @@ coverage. Parametrize the _same_ timeline over `it.each([0, 6])`:
 
 ## What to assert
 
-Buff application and lifecycle. Forte/resource-gauge correctness rides along through
-the buffs (e.g. a team buff that only triggers off one Forte branch confirms that
-branch fired).
+Buff application and lifecycle are the core.
+
+**Resource gauges (energy/concerto/forte) are case-by-case.** By default, leave
+gauge arithmetic to the engine resource tests and let correctness ride along through
+the buffs — a team buff that only triggers off one Forte branch confirms that branch
+fired. When the resource _is_ the mechanic under test (a gated consume, a
+gauge-driven ability whose correctness is the point), assert it directly, preferring
+the gated observable over the raw gauge where one exists (count the consume's heal
+emits, don't read the gauge). Verina's Starflower consume is the canonical case: the
+3rd mid-air on 2 banked Forte must whiff, observed as exactly 2 consume heal-emits.
 
 For each buff the rotation triggers:
 
@@ -85,8 +92,8 @@ For each buff the rotation triggers:
    for free.
 
 **Out of scope:** golden total-damage numbers, action-order assertions, frame-exact
-timing (owned by the `simulation.timing.*` tests), and resource accrual
-(energy/concerto/forte gauges).
+timing (owned by the `simulation.timing.*` tests), and resource accrual that isn't
+the mechanic under test (gauge arithmetic is owned by the engine resource tests).
 
 ## Gotchas
 

@@ -112,8 +112,8 @@ Implement each playable character end-to-end.
   - [x] Liberation's Photosynthesis Mark drives coordinated attacks (#216)
   - [x] forte spent on Starflower Blooms heal the team and restore concerto (#214–215)
   - [x] team buffs (Outro allAmp, Gift of Nature ATK) (#150)
-  - [x] Resonance Chain sequences (S1-S4, S6) (#150, 214)
-  - [ ] e2e tested
+  - [x] Resonance Chain sequences (S2-S4, S6) (#150, 214)
+  - [x] e2e tested
 - **Shorekeeper**
   - [x] signature gear: Stellar Symphony / Fallacy of No Return / Rejuvenating Glow (#275)
   - [x] Liberation creates an Outer/Inner/Supernal Stellarealm field granting the team Crit Rate then Crit DMG (scaling with her Energy Regen) (#259–260)
