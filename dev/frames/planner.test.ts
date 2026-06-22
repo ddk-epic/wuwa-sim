@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { sanhua } from "#/data/characters/sanhua"
+import type { EnrichedCharacter, Footing } from "#/types/character"
 import { coverageOf, planClips } from "./planner"
 import type { SuggestedClip } from "./planner"
 import type { Clip } from "./types"
@@ -72,6 +73,52 @@ describe("planClips — Sanhua", () => {
 
   it("uses the first basic stage as the loop sentinel", () => {
     expect(plan[0].sentinel).toBe("Stage 1")
+  })
+})
+
+describe("planClips — footing under the grounded default", () => {
+  const charWithStage = (
+    name: string,
+    footing: Footing | undefined,
+  ): EnrichedCharacter =>
+    ({
+      skills: [
+        {
+          id: 1,
+          name: "Skill",
+          type: "Resonance Skill",
+          stages: [
+            {
+              name,
+              category: "Resonance Skill",
+              value: "100%",
+              actionTime: 30,
+              ...(footing !== undefined ? { footing } : {}),
+              damage: [{ type: "Resonance Skill", actionFrame: 0 }],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    }) as unknown as EnrichedCharacter
+
+  it("untagged aerial-named stage is grounded but flagged as a data gap", () => {
+    const plan = planClips(charWithStage("Plunging Attack", undefined))
+    const stage = plan[0].stages[0]
+    expect(stage.footingGap).toBe(true)
+    expect(plan[0].preconditions).not.toContain("airborne")
+  })
+
+  it("untagged plain-named stage is grounded with no data gap", () => {
+    const plan = planClips(charWithStage("Heavy Attack", undefined))
+    expect(plan[0].stages[0].footingGap).toBe(false)
+    expect(plan[0].preconditions).not.toContain("airborne")
+  })
+
+  it("explicit air footing stays airborne with no gap", () => {
+    const plan = planClips(charWithStage("Plunging Attack", "air"))
+    expect(plan[0].stages[0].footingGap).toBe(false)
+    expect(plan[0].preconditions).toContain("airborne")
   })
 })
 
