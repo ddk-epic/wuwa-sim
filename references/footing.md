@@ -31,9 +31,15 @@ A stage may declare its footing relationship:
   - **launch**: `ground → air` (e.g. Jump, a character's launch move).
   - **land**: `air → ground`.
 
-A stage with no footing declaration is **footing-transparent**: it neither
-requires nor changes footing (Dodge is the canonical case — one button that
-preserves whatever state you were in).
+A stage with no footing declaration is **grounded** by default: it requires the
+ground on entry and ends grounded. Most stages are grounded, so omission carries
+the common case for free, and any stage that genuinely needs the ground is checked
+even when its author never thought about footing.
+
+A stage that genuinely **preserves** footing is tagged **`either`** —
+footing-transparent: it neither requires nor changes footing. Dodge is the
+canonical case: one button that keeps whatever state you were in, so an air-dodge
+stays airborne instead of falling.
 
 ## The commit frame (point of no return)
 
@@ -101,13 +107,14 @@ never a standalone event — it is detected **only at a stage boundary**, by
 comparing the character's current footing against the next stage's **entry
 footing** (the footing it begins on):
 
-| stage              | entry footing                              |
-| ------------------ | ------------------------------------------ |
-| sustained `ground` | ground                                     |
-| sustained `air`    | air                                        |
-| `{ launch }`       | **ground** — it launches _from_ the ground |
-| `{ land }`         | **air** — it lands _from_ the air          |
-| transparent        | inherits current (no requirement)          |
+| stage                  | entry footing                              |
+| ---------------------- | ------------------------------------------ |
+| untagged (default)     | **ground**                                 |
+| sustained `ground`     | ground                                     |
+| sustained `air`        | air                                        |
+| `{ launch }`           | **ground** — it launches _from_ the ground |
+| `{ land }`             | **air** — it lands _from_ the air          |
+| `either` (transparent) | inherits current (no requirement)          |
 
 When a character takes the field **airborne** and the next stage's entry footing
 is **ground**, the engine inserts **fall padding**: a startup delay of
@@ -118,9 +125,11 @@ Crucially this **includes a `{ launch }` stage entered from the air**: the
 character first falls (`air → ground`), then the launch fires at its commit frame
 (`ground → air`). The footing is evaluated _as the stage resolves_, by which point
 the fall has grounded the character — so launching from the air is legal, it just
-pays a fall first. Fall padding does **not** apply to a `{ land }` stage (entry is
-air — landing is its own animation), a footing-transparent stage (it preserves the
-airborne state), or an `air` stage (no mismatch).
+pays a fall first. An untagged stage entered from the air falls the same way (its
+default entry is ground), _landing_ as it does. Fall padding does **not** apply to
+a `{ land }` stage (entry is air — landing is its own animation), an `either`
+(footing-transparent) stage (it preserves the airborne state), or an `air` stage
+(no mismatch).
 
 Going airborne is never padded: nothing lifts you off the ground without an
 explicit launch.
@@ -143,13 +152,14 @@ field footing. Only two outcomes are non-trivial:
 
 Spelled out across the stage kinds:
 
-- `air → sustained ground` and **`air → { launch }`** — soft; pay a fall (for
-  `{ launch }`, the fall lands you, then the launch re-launches you).
+- `air → untagged`, `air → sustained ground`, and **`air → { launch }`** — soft;
+  pay a fall (for `{ launch }`, the fall lands you, then the launch re-launches
+  you).
 - `ground → sustained air` and `ground → { land }` — hard errors; you can't
   sustain air or land from it without a launch first.
 - `ground → { launch }` and `air → { land }` — the valid footing changes
   themselves; no error, no fall.
-- transparent stage — always valid, never falls.
+- `either` (transparent) stage — always valid, never falls.
 
 The asymmetry is physical: gravity recovers you from the air for free (so any
 ground-entry stage, including a launch, is reachable from the air via a fall), but
@@ -168,9 +178,9 @@ the field was:
 - **No fall** — a grounded Intro entered while the field was airborne does **not**
   pay fall frames. It enters clean.
 - **It sets the footing** — the Intro establishes the field footing per its own
-  declaration (an aerial Intro → `air`, a grounded Intro → `ground`, a
-  footing-transparent Intro keeps the current footing), and footing proceeds
-  normally from there.
+  declaration (an aerial Intro → `air`, a grounded _or untagged_ Intro → `ground`,
+  an `either` Intro keeps the current footing), and footing proceeds normally from
+  there.
 
 So an Intro is a clean footing **reset point**: nothing about the prior field state
 constrains it, and its own declaration becomes the new field footing.
