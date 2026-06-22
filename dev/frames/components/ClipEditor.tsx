@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Crop, Plus, Trash2 } from "lucide-react"
+import { Crop, Lock, LockOpen, Plus, Trash2 } from "lucide-react"
 import { TRACK_COLS, uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
@@ -216,10 +216,30 @@ export function ClipEditor({
                 playhead={playhead}
                 onSeek={(f) => setPlayhead(clamp(f, 0, clip.end))}
               />
-              <p className="text-detail text-muted-foreground/60">
-                Click the ruler to move the playhead; drag hits/dividers to
-                reposition.
-              </p>
+              <div className="flex items-center justify-between gap-3 text-detail">
+                <p className="text-muted-foreground/60">
+                  Click the ruler to move the playhead; drag hits/dividers to
+                  reposition.
+                </p>
+                {clip.stageRefs.length > 0 && (
+                  <button
+                    onClick={() => onEdit({ type: "toggleStagesLock" })}
+                    className={`flex shrink-0 items-center gap-1 ${clip.stagesLocked ? "text-blue-400 hover:text-blue-300" : "text-muted-foreground/60 hover:text-foreground"}`}
+                    title={
+                      clip.stagesLocked
+                        ? "unlock stages"
+                        : "lock the stage dividers against accidental edits"
+                    }
+                  >
+                    {clip.stagesLocked ? "stages locked!" : "lock stages"}
+                    {clip.stagesLocked ? (
+                      <Lock className="size-3.5" />
+                    ) : (
+                      <LockOpen className="size-3.5" />
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

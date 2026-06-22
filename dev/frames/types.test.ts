@@ -266,6 +266,35 @@ describe("applyClipEdit", () => {
     expect(locked.boundaries.map((b) => b.frame)).toEqual([30, 100])
   })
 
+  it("toggleStagesLock flips the flag", () => {
+    expect(
+      applyClipEdit(threeStage, { type: "toggleStagesLock" }).stagesLocked,
+    ).toBe(true)
+  })
+
+  it("a locked clip freezes the stage skeleton but keeps marks editable", () => {
+    const locked = { ...capped, stagesLocked: true }
+    expect(
+      applyClipEdit(locked, { type: "moveBoundary", index: 0, frame: 40 }),
+    ).toBe(locked)
+    expect(applyClipEdit(locked, { type: "removeStage", index: 0 })).toBe(
+      locked,
+    )
+    expect(
+      applyClipEdit(locked, {
+        type: "addStage",
+        ref: stage("D"),
+        boundaryId: "x",
+      }),
+    ).toBe(locked)
+    // A hit still lands while locked (stage A has capacity 1).
+    const withHit = applyClipEdit(locked, {
+      type: "addHit",
+      hit: { id: "h", frame: 15, cue: "impactFlash" },
+    })
+    expect(withHit.hits).toHaveLength(1)
+  })
+
   it("clamps a moved boundary between its neighbours", () => {
     const hi = applyClipEdit(threeStage, {
       type: "moveBoundary",

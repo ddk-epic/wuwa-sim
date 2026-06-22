@@ -21,6 +21,7 @@ export function Ruler({
   onSeek?: (frame: number) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const locked = clip.stagesLocked ?? false
   const span = Math.max(1, clip.end - clip.start)
   const pct = (f: number) => ((f - clip.start) / span) * 100
   const secs = sections(clip)
@@ -54,14 +55,16 @@ export function Ruler({
             width: `${pct(sec.end) - pct(sec.start)}%`,
           }}
         >
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onEdit({ type: "removeStage", index: i })}
-            className="absolute right-1 top-1 text-muted-foreground/60 hover:text-destructive"
-            title="remove stage"
-          >
-            <X className="size-3" />
-          </button>
+          {!locked && (
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => onEdit({ type: "removeStage", index: i })}
+              className="absolute right-1 top-1 text-muted-foreground/60 hover:text-destructive"
+              title="remove stage"
+            >
+              <X className="size-3" />
+            </button>
+          )}
           <span className="max-w-full truncate px-1 text-label font-medium text-foreground">
             {sec.ref.skill}
           </span>
@@ -90,25 +93,28 @@ export function Ruler({
             <span className="absolute left-1 top-1 font-mono text-micro uppercase tracking-[1px] text-muted-foreground/70">
               end
             </span>
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onEdit({ type: "removeRestZone" })}
-              className="absolute right-1 top-1 z-20 text-muted-foreground/60 hover:text-destructive"
-              title="remove rest zone (last stage expands to the end)"
-            >
-              <X className="size-3" />
-            </button>
+            {!locked && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onEdit({ type: "removeRestZone" })}
+                className="absolute right-1 top-1 z-20 text-muted-foreground/60 hover:text-destructive"
+                title="remove rest zone (last stage expands to the end)"
+              >
+                <X className="size-3" />
+              </button>
+            )}
           </div>
           <div
             onPointerDown={(e) => {
+              if (locked) return
               e.stopPropagation()
               e.currentTarget.setPointerCapture(e.pointerId)
             }}
             onPointerMove={(e) => {
-              if (e.buttons)
+              if (!locked && e.buttons)
                 onEdit({ type: "moveRestStart", frame: frameAt(e.clientX) })
             }}
-            className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
+            className={`absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 items-stretch justify-center ${locked ? "" : "cursor-ew-resize"}`}
             style={{ left: `${pct(clip.restStart)}%` }}
             title={`rest starts @ ${clip.restStart}`}
           >
@@ -123,17 +129,17 @@ export function Ruler({
           onPointerDown={(e) => {
             e.stopPropagation()
             setSelected({ type: "boundary", id: b.id })
-            e.currentTarget.setPointerCapture(e.pointerId)
+            if (!locked) e.currentTarget.setPointerCapture(e.pointerId)
           }}
           onPointerMove={(e) => {
-            if (e.buttons)
+            if (!locked && e.buttons)
               onEdit({
                 type: "moveBoundary",
                 index: i,
                 frame: frameAt(e.clientX),
               })
           }}
-          className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
+          className={`absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 items-stretch justify-center ${locked ? "cursor-pointer" : "cursor-ew-resize"}`}
           style={{ left: `${pct(b.frame)}%` }}
           title={`boundary @ ${b.frame} (${b.cue})`}
         >

@@ -119,6 +119,8 @@ export interface Clip {
    * overlay so a re-attach of the same recording doesn't need re-scoping.
    */
   offset?: number
+  /** Freezes the stage skeleton: no divider move/remove, no stage add/remove. Marks stay editable. */
+  stagesLocked?: boolean
 }
 
 export interface Section {
@@ -379,6 +381,7 @@ function placeSplit(clip: Clip, i: number, frame: number, cue: CueTag): Clip {
 export type ClipEdit =
   | { type: "setName"; name: string }
   | { type: "setSource"; source: string }
+  | { type: "toggleStagesLock" }
   | { type: "scopeRecording"; frames: number }
   | { type: "enterScope" }
   | { type: "lockScope" }
@@ -412,13 +415,25 @@ export type ClipEdit =
   | { type: "setAnimationSplitCue"; stageIndex: number; cue: CueTag }
   | { type: "clearAnimationSplit"; stageIndex: number }
 
+// Edits that reshape the stage skeleton — frozen while `stagesLocked`.
+const STRUCTURE_EDITS = new Set<ClipEdit["type"]>([
+  "addStage",
+  "removeStage",
+  "moveBoundary",
+  "moveRestStart",
+  "removeRestZone",
+])
+
 /** Apply one edit. Returns the clip unchanged when the edit is illegal (over capacity, no room for the divider). */
 export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
+  if (clip.stagesLocked && STRUCTURE_EDITS.has(edit.type)) return clip
   switch (edit.type) {
     case "setName":
       return { ...clip, name: edit.name }
     case "setSource":
       return { ...clip, source: edit.source }
+    case "toggleStagesLock":
+      return { ...clip, stagesLocked: !clip.stagesLocked }
     case "scopeRecording":
       // Window is the whole recording (absolute frames), not the sequence.
       return { ...clip, start: 0, end: edit.frames - 1, offset: undefined }

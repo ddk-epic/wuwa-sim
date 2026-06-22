@@ -232,7 +232,7 @@ export function MarksTable({
                 </span>
                 <span className="flex items-center justify-end gap-1.5 text-muted-foreground/60">
                   —
-                  {hasVideo && (
+                  {hasVideo && !clip.stagesLocked && (
                     <SnapButton
                       onClick={() =>
                         onEdit({
