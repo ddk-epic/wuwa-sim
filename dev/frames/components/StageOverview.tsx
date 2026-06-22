@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
-import { hitsByStage, sections, stageTiming } from "../types"
+import { animationSplitOf, hitsByStage, sections, stageTiming } from "../types"
 import type { Clip, StageRef } from "../types"
 
 // Read-only progress mirror over the character's whole stage catalog (grouped by
@@ -73,7 +73,8 @@ export function StageOverview({
 
 // One catalog stage's progress row, measured against the first occurrence in the
 // clip. A repeated stage is a trailing sentinel (a recording artifact, deleted
-// before export), so later occurrences don't inflate the count.
+// before export), so later occurrences don't inflate the count. A no-hit stage
+// (some liberations) has nothing to count, so its animation split is the check.
 function StageRow({
   stage,
   clip,
@@ -103,9 +104,11 @@ function StageRow({
 
   const count = hits.length
   const capacity = (occ.length || 1) * stage.hitCount
+  const hasSplit =
+    cl != null && occ.length > 0 && animationSplitOf(cl, occ[0].i) != null
   const canOpen = count > 0
   const isOpen = open && canOpen
-  const finished = capacity > 0 && count === capacity
+  const finished = capacity > 0 ? count === capacity : hasSplit
 
   let tone = "text-muted-foreground/60"
   if (capacity > 0 && count > capacity) tone = "text-destructive"
@@ -133,7 +136,13 @@ function StageRow({
         </span>
         <span className="flex shrink-0 items-center gap-1 font-mono">
           {finished && <Check className="size-3 text-ui-heal" />}
-          <span>{capacity === 0 ? "—" : `${count}/${capacity}`}</span>
+          <span>
+            {capacity === 0
+              ? hasSplit
+                ? "split"
+                : "—"
+              : `${count}/${capacity}`}
+          </span>
         </span>
       </button>
 
