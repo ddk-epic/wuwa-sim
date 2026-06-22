@@ -14,6 +14,9 @@ import type { VideoSource } from "../video"
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v))
 
+const ATTACH_TIMEOUT_MS = 10_000
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+
 /**
  * The frame viewer + transport. Canvas on top (full width), then a stepper/scrub
  * track that aligns with the ruler below via `TRACK_COLS`. In `scoping`, the scrub
@@ -56,26 +59,73 @@ export function VideoPane({
   const [busy, setBusy] = useState(false)
   const [half, setHalf] = useState(false)
   const mounted = useRef(true)
-  useEffect(() => () => void (mounted.current = false), [])
+  // Set on setup, not just init, else a Fast Refresh cleanup leaves it stuck false.
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
+  // Latest-wins scrub: one decode in flight, stale frames dropped to avoid backlog lag.
+  const pendingFrame = useRef<number | null>(null)
+  const drawing = useRef(false)
+  const sourceRef = useRef(source)
+  sourceRef.current = source
 
   useEffect(() => {
-    const ctx = canvasRef.current?.getContext("2d")
-    if (source && ctx) void source.drawFrame(videoFrame, ctx)
+    if (!source) return
+    pendingFrame.current = videoFrame
+    if (drawing.current) return
+    drawing.current = true
+    void (async () => {
+      const ctx = canvasRef.current?.getContext("2d")
+      while (ctx && pendingFrame.current !== null) {
+        const frame = pendingFrame.current
+        pendingFrame.current = null
+        const s = sourceRef.current
+        if (!s) break
+        await s.drawFrame(frame, ctx)
+      }
+      drawing.current = false
+    })()
   }, [source, videoFrame])
 
   async function attach(file: File) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(
+        `That file is ${(file.size / 1024 / 1024).toFixed(0)}MB — over the ${MAX_UPLOAD_BYTES / 1024 / 1024}MB limit. Trim or re-encode it first.`,
+      )
+      return
+    }
     setBusy(true)
     setError(null)
+    let timedOut = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const open = openVideoSource(file)
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        timedOut = true
+        reject(
+          new Error(
+            "Reading this recording timed out. Try a shorter clip or re-encode it as H.264 mp4.",
+          ),
+        )
+      }, ATTACH_TIMEOUT_MS)
+    })
     try {
-      const source = await openVideoSource(file)
+      const source = await Promise.race([open, deadline])
       // A clip switch can unmount us mid-decode; the resolved source would never
       // reach state, so the owner's dispose-on-replace effect can't reclaim it.
       if (mounted.current) onAttach(source)
       else source.dispose()
     } catch (e) {
+      // A decode resolving after the deadline still leaves a source to free.
+      if (timedOut) void open.then((s) => s.dispose()).catch(() => {})
       if (mounted.current)
         setError(e instanceof Error ? e.message : "Could not read this file.")
     } finally {
+      clearTimeout(timer)
       if (mounted.current) setBusy(false)
     }
   }
@@ -97,6 +147,8 @@ export function VideoPane({
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0]
+            // Clear so re-picking the same file re-fires change.
+            e.target.value = ""
             if (f) void attach(f)
           }}
         />

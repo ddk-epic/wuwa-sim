@@ -232,6 +232,40 @@ describe("applyClipEdit", () => {
     expect(relocked.hits[0].frame).toBe(15)
   })
 
+  it("scopes the whole recording regardless of the sequence the ruler holds", () => {
+    const seeded = clip({ ...capped, end: 600 })
+    const scoped = applyClipEdit(seeded, {
+      type: "scopeRecording",
+      frames: 200,
+    })
+    expect([scoped.start, scoped.end, scoped.offset]).toEqual([
+      0,
+      199,
+      undefined,
+    ])
+  })
+
+  it("out-cut sets the scope end without flooring to the sequence", () => {
+    const scoped = clip({ ...capped })
+    const cut = applyClipEdit(scoped, { type: "setScopeEnd", frame: 40 })
+    expect(cut.end).toBe(40)
+  })
+
+  it("lock keeps the entered dividers, only pulling off-ruler ones back in", () => {
+    const scoped = clip({
+      start: 1000,
+      end: 1100,
+      stageRefs: [stage("A"), stage("B"), stage("C")],
+      boundaries: [
+        { id: "b0", frame: 30, cue: "animationBreak" },
+        { id: "b1", frame: 150, cue: "animationBreak" },
+      ],
+    })
+    const locked = applyClipEdit(scoped, { type: "lockScope" })
+    expect([locked.start, locked.end, locked.offset]).toEqual([0, 100, 1000])
+    expect(locked.boundaries.map((b) => b.frame)).toEqual([30, 100])
+  })
+
   it("clamps a moved boundary between its neighbours", () => {
     const hi = applyClipEdit(threeStage, {
       type: "moveBoundary",

@@ -3,7 +3,12 @@ import { Crop, Plus, Trash2 } from "lucide-react"
 import { TRACK_COLS, uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
-import { clipDisplayName, stageIndexOf } from "../types"
+import {
+  clipDisplayName,
+  hitsInStage,
+  stageCapacity,
+  stageIndexOf,
+} from "../types"
 import type { Clip, ClipEdit, StageRef } from "../types"
 import type { VideoSource } from "../video"
 import { AddStagePopover } from "./AddStagePopover"
@@ -56,13 +61,17 @@ export function ClipEditor({
     )
     onEdit({ type: "setSource", source: s.fileName })
     setVideo(s)
-    // A never-scoped clip drops into scoping with the window spanning the whole
-    // recording (so the cut handles sit at the track edges, dragged inward); an
-    // already-locked one (offset present) realigns silently to the same file.
-    const fresh = clip.offset == null
-    if (fresh) onEdit({ type: "setEnd", frame: s.frameCount - 1 })
-    setScoping(fresh)
-    setPlayhead(0)
+    // Fresh clip scopes the whole recording; a scoped one restores its window so
+    // one Lock re-confirms it, keeping the entered marks.
+    if (clip.offset == null) {
+      onEdit({ type: "scopeRecording", frames: s.frameCount })
+      setScoping(true)
+      setPlayhead(0)
+    } else {
+      const next = onEdit({ type: "enterScope" })
+      setScoping(true)
+      setPlayhead(next.start)
+    }
   }
 
   function reScope() {
@@ -102,6 +111,17 @@ export function ClipEditor({
   // the canvas frame is the playhead itself; afterwards it's offset into the file.
   const videoFrame = playhead + (clip.offset ?? 0)
   const scrubHi = scoping ? (video ? video.frameCount - 1 : clip.end) : clip.end
+
+  // A hit is placeable only where the playhead lands in a stage with spare
+  // capacity; an over-capacity or zero-hit stage rejects it. Surface the reason
+  // so the button reads as disabled rather than dead.
+  const hitOwner = stageIndexOf(clip, playhead)
+  const hitReason =
+    hitOwner === -1
+      ? "no stage at the playhead"
+      : hitsInStage(clip, hitOwner) >= stageCapacity(clip, hitOwner)
+        ? "can not place more hits"
+        : null
 
   return (
     <div className="space-y-4" onPointerDown={() => setSelected(null)}>
@@ -153,7 +173,7 @@ export function ClipEditor({
         onSetIn={(f) =>
           onEdit({ type: "setStart", frame: clamp(f, 0, clip.end - 1) })
         }
-        onSetOut={(f) => onEdit({ type: "setEnd", frame: f })}
+        onSetOut={(f) => onEdit({ type: "setScopeEnd", frame: f })}
         onLock={lock}
         onAttach={attach}
         storedSource={clip.source}
@@ -172,8 +192,9 @@ export function ClipEditor({
                 />
                 <button
                   onClick={addHitHere}
-                  className="flex items-center gap-0.5 rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground"
-                  title="drop a hit at the playhead"
+                  disabled={hitReason != null}
+                  className="flex items-center gap-0.5 rounded border border-border pl-2 pr-2.5 py-1 text-sm text-foreground hover:border-muted-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border"
+                  title={hitReason ?? "drop a hit at the playhead"}
                 >
                   <Plus className="size-4" /> Hit
                 </button>

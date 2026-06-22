@@ -62,9 +62,14 @@ export function Ruler({
           >
             <X className="size-3" />
           </button>
-          <span className="truncate px-1 text-detail font-medium text-foreground">
-            {sec.ref.stage}
+          <span className="max-w-full truncate px-1 text-label font-medium text-foreground">
+            {sec.ref.skill}
           </span>
+          {sec.ref.stage !== sec.ref.skill && (
+            <span className="max-w-full truncate px-1 text-detail text-muted-foreground">
+              {sec.ref.stage}
+            </span>
+          )}
           <span className="font-mono text-detail tabular-nums text-muted-foreground/70">
             {sec.end - sec.start}f
           </span>

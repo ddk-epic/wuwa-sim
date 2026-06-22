@@ -142,6 +142,20 @@ export function sections(clip: Clip): Section[] {
   }))
 }
 
+// Keep mark positions through scoping; only pull off-ruler ones back in.
+function clampContentToLength(clip: Clip, length: number): Clip {
+  return {
+    ...clip,
+    boundaries: clip.boundaries.map((b) => ({
+      ...b,
+      frame: clamp(b.frame, 0, length),
+    })),
+    hits: clip.hits.map((h) => ({ ...h, frame: clamp(h.frame, 0, length) })),
+    restStart:
+      clip.restStart != null ? clamp(clip.restStart, 0, length) : undefined,
+  }
+}
+
 export function animationSplitOf(clip: Clip, i: number): AnimationSplit | null {
   return clip.animationSplits?.[i] ?? null
 }
@@ -365,10 +379,12 @@ function placeSplit(clip: Clip, i: number, frame: number, cue: CueTag): Clip {
 export type ClipEdit =
   | { type: "setName"; name: string }
   | { type: "setSource"; source: string }
+  | { type: "scopeRecording"; frames: number }
   | { type: "enterScope" }
   | { type: "lockScope" }
   | { type: "setStart"; frame: number }
   | { type: "setEnd"; frame: number }
+  | { type: "setScopeEnd"; frame: number }
   | { type: "addStage"; ref: StageRef; boundaryId: string }
   | { type: "removeStage"; index: number }
   | { type: "addHit"; hit: Omit<HitMark, "owner"> }
@@ -403,6 +419,9 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
       return { ...clip, name: edit.name }
     case "setSource":
       return { ...clip, source: edit.source }
+    case "scopeRecording":
+      // Window is the whole recording (absolute frames), not the sequence.
+      return { ...clip, start: 0, end: edit.frames - 1, offset: undefined }
     case "enterScope":
       // Re-scope: lift start/end into absolute video-frame space so the cut
       // handles sit where the recording does. Marks stay in 0-based clip space —
@@ -415,17 +434,19 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
             offset: undefined,
           }
         : clip
-    case "lockScope":
-      // Normalize: clip-frame 0 becomes the in-cut (kept as offset so the overlay
-      // aligns), length becomes out − in. Marks are untouched.
-      return {
-        ...clip,
-        start: 0,
-        end: clip.end - clip.start,
-        offset: clip.start,
-      }
+    case "lockScope": {
+      // Normalize: clip-frame 0 is the in-cut (kept as offset), length is out − in.
+      const length = clip.end - clip.start
+      return clampContentToLength(
+        { ...clip, start: 0, end: length, offset: clip.start },
+        length,
+      )
+    }
     case "setStart":
       return { ...clip, start: edit.frame }
+    case "setScopeEnd":
+      // Out-cut in absolute space; no content floor, unlike `setEnd`.
+      return { ...clip, end: Math.max(edit.frame, clip.start + 1) }
     case "setEnd": {
       // End can't cross inward of the content: the last divider, the rest-zone
       // start, or any hit — else the rest zone inverts or a hit orphans off-ruler.
