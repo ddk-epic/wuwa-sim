@@ -1,6 +1,7 @@
 // Converts a rotation expressed in code into the app's import/export share code,
 // or decodes a share code back to readable JSON. Dev-only; never shipped.
 //   pnpm -s gen:sharecode            encode tmp/sharecode.ts → print code
+//   pnpm -s gen:sharecode --reset    overwrite tmp/sharecode.ts with the scaffold
 //   pnpm -s gen:sharecode decode <code>   print decoded payload as JSON
 // Use `-s` so pnpm's banner stays off stdout and the code captures cleanly.
 // The scratch file is input-only and gitignored; first run seeds a template.
@@ -103,12 +104,16 @@ function assemble(spec: RotationSpec): ImportExportPayload {
   }
 }
 
+function seedScaffold(): void {
+  writeFileSync(SCRATCH, SCAFFOLD)
+  console.error(
+    `seeded ${SCRATCH} — edit it, then re-run \`pnpm -s gen:sharecode\``,
+  )
+}
+
 async function encode(): Promise<void> {
   if (!existsSync(SCRATCH)) {
-    writeFileSync(SCRATCH, SCAFFOLD)
-    console.error(
-      `seeded ${SCRATCH} — edit it, then re-run \`pnpm -s gen:sharecode\``,
-    )
+    seedScaffold()
     return
   }
   const mod = (await import(pathToFileURL(SCRATCH).href)) as {
@@ -139,6 +144,8 @@ function decode(code: string | undefined): void {
 const [mode, arg] = process.argv.slice(2)
 if (mode === "decode") {
   decode(arg)
+} else if (mode === "--reset") {
+  seedScaffold()
 } else {
   await encode()
 }
