@@ -103,9 +103,11 @@ line, and the corroboration input the confidence layer reads.
 Two stage kinds are exceptions to "done," applied where the registry is in hand
 (the sidebar checklist and `buildExport`), not in the pure reconciler:
 
-- **No-damage stages** (`hitCount` 0) have nothing to count — the hit axis passes
-  on its own, so the checklist shows a neutral check, and they're done once their
-  `actionTime` is measured.
+- **No-damage stages** (`hitCount` 0, non-cutscene) — a zero-damage Outro and the
+  like — have nothing to measure or mark, so they **pass from the start**: the
+  checklist drops the corroboration chip, lights the label white, and reads `pass`
+  in the counter slot (mirroring a cutscene's `split`). (The other no-damage stages
+  are hidden at generation and never appear.)
 - **Cutscene stages** (registry `animationFrames`) read as frozen-animation garbage
   until an [animation split](#animation-splits) carves out the action lock. The
   checklist holds them at `unmeasured` (grey) and shows `split` as the work to do;

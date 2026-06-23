@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
@@ -160,6 +160,10 @@ function StageRow({
   const splitBlocked = stage.expectsSplit === true && !splitDone
   const shown: StageStatus = splitBlocked ? { status: "unmeasured" } : status
 
+  // A no-damage, non-cutscene stage has nothing to measure or mark — it passes
+  // from the start. No actionTime axis, so it carries no corroboration chip.
+  const passes = capacity === 0 && stage.expectsSplit !== true
+
   const observations = "observations" in shown ? shown.observations : []
   const isConflict = shown.status === "conflict"
 
@@ -188,12 +192,16 @@ function StageRow({
           ) : (
             <span className="size-3 shrink-0" />
           )}
+          {passes ? (
+            <span className="size-2 shrink-0" />
+          ) : (
+            <span
+              className={`size-2 shrink-0 rounded-full ${CHIP[shown.status]}`}
+              title={splitBlocked ? "needs animation split" : shown.status}
+            />
+          )}
           <span
-            className={`size-2 shrink-0 rounded-full ${CHIP[shown.status]}`}
-            title={splitBlocked ? "needs animation split" : shown.status}
-          />
-          <span
-            className={`truncate ${present ? "" : "text-muted-foreground"}`}
+            className={`truncate ${passes ? "font-medium" : present ? "" : "text-muted-foreground"}`}
           >
             {stage.stage}
           </span>
@@ -256,9 +264,9 @@ function StageRow({
   )
 }
 
-// The hit axis, per stage kind: a cutscene shows the split as its work; a
-// no-damage stage has nothing to count and passes with a neutral check;
-// everything else shows `hits / capacity`.
+// The hit axis, per stage kind: a cutscene shows `split` as its work; a no-damage
+// stage has nothing to count and reads `pass` from the start; everything else
+// shows `hits / capacity`.
 function Counter({
   expectsSplit,
   splitDone,
@@ -280,7 +288,6 @@ function Counter({
         split
       </span>
     )
-  if (capacity === 0)
-    return <Check className="size-3 text-muted-foreground/60" />
+  if (capacity === 0) return <span className="text-foreground">pass</span>
   return <span className={tone}>{`${count}/${capacity}`}</span>
 }
