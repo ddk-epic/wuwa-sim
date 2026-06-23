@@ -85,6 +85,23 @@ function collectTargets(
 const sameTarget = (a: VariantTarget, b: VariantTarget): boolean =>
   a.kind === b.kind && (a.kind !== "hit" || a.n === (b as { n: number }).n)
 
+/**
+ * Re-key a stage so `animationFrames` follows `actionTime` — a fresh assignment
+ * appends it last. Idempotent when it's already in place.
+ */
+function orderAnimationFrames(
+  stage: EnrichedSkillAttribute,
+): EnrichedSkillAttribute {
+  if (stage.animationFrames === undefined) return stage
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(stage)) {
+    if (k === "animationFrames") continue
+    out[k] = v
+    if (k === "actionTime") out.animationFrames = stage.animationFrames
+  }
+  return out as EnrichedSkillAttribute
+}
+
 /** A cancel pinned to start becomes `instantCancel`; otherwise the track's own key. */
 function variantKeyFor(
   track: VariantTrack,
@@ -222,6 +239,9 @@ export function buildExport(
     }
   }
 
+  for (const skill of patched.skills)
+    skill.stages = skill.stages.map(orderAnimationFrames)
+
   return {
     patched,
     ts: characterToTs(patched),
@@ -268,14 +288,16 @@ const isNonEmptyObject = (v: unknown): boolean =>
 const BUFFS_BREAK_KEYS = 3
 
 /**
- * Layout breaks independent of width, to match the authored files: the `variants`
- * map always breaks, and a `buffs` object with 3+ keys breaks. Propagates, so a
+ * Layout breaks independent of width, to match the authored files: every skill
+ * object breaks (even a tiny one like a bare `Tune Break`), the `variants` map
+ * always breaks, and a `buffs` object with 3+ keys breaks. Propagates, so a
  * container can't inline a descendant that must break.
  */
 function mustBreak(value: unknown, inBuffs: boolean): boolean {
   if (Array.isArray(value)) return value.some((v) => mustBreak(v, inBuffs))
   if (typeof value === "object" && value !== null) {
     const entries = objectEntries(value)
+    if ("stages" in value) return true
     if (inBuffs && entries.length >= BUFFS_BREAK_KEYS) return true
     return entries.some(
       ([k, v]) =>

@@ -180,6 +180,14 @@ describe("buildExport", () => {
     )
     expect(stageOf(withSplit.patched, "A").actionTime).toBe(28)
     expect(stageOf(withSplit.patched, "A").animationFrames).toBe(12)
+    // animationFrames is keyed right after actionTime, not appended last.
+    expect(Object.keys(stageOf(withSplit.patched, "A"))).toEqual([
+      "name",
+      "actionTime",
+      "animationFrames",
+      "variants",
+      "damage",
+    ])
   })
 
   it("skips a conflicting stage's actionTime and warns instead", () => {
