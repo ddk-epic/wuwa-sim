@@ -98,7 +98,14 @@ export function buildExport(
     const split = clip.animationSplits?.[i] ?? null
     const { animationFrames } = stageTiming(clip, i, secs)
     const status = statusOf(recon, ref.id)
-    if (status.status === "conflict") {
+    // A cutscene stage's section width is all frozen animation until split apart;
+    // its actionTime is meaningless without the split, so withhold it.
+    const expectsSplit = (stage.animationFrames ?? 0) > 0
+    if (expectsSplit && !split) {
+      warnings.push(
+        `${ref.stage} expects an animation split — place one before pasting; actionTime skipped.`,
+      )
+    } else if (status.status === "conflict") {
       const values = [...new Set(status.observations.map((o) => o.value))].sort(
         (a, b) => a - b,
       )

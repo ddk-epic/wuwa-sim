@@ -159,6 +159,27 @@ describe("buildExport", () => {
     expect(ts).toMatch(/export const testChar = \{\n/)
   })
 
+  it("withholds a cutscene stage's actionTime until a split is placed", () => {
+    // A is a cutscene stage in the registry — it carries animationFrames.
+    const cutscene = () => {
+      const c = character()
+      stageOf(c, "A").animationFrames = 90
+      return c
+    }
+    const noSplit = run(cutscene(), baseClip())
+    expect(stageOf(noSplit.patched, "A").actionTime).toBe(0)
+    expect(noSplit.warnings.some((w) => w.includes("animation split"))).toBe(
+      true,
+    )
+    // With a split placed, actionTime (net of the split) commits as usual.
+    const withSplit = run(
+      cutscene(),
+      baseClip({ animationSplits: [{ frame: 12, cue: "vfxEdge" }, null] }),
+    )
+    expect(stageOf(withSplit.patched, "A").actionTime).toBe(28)
+    expect(stageOf(withSplit.patched, "A").animationFrames).toBe(12)
+  })
+
   it("skips a conflicting stage's actionTime and warns instead", () => {
     const clip = baseClip()
     // A second clip disagrees on A's length (40 vs 30) at the same trust.

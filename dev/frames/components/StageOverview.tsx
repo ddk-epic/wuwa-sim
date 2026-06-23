@@ -1,9 +1,15 @@
 import { useState } from "react"
-import { ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
+import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
-import { clipDisplayName, hitsByStage, sections, stageTiming } from "../types"
+import {
+  animationSplitOf,
+  clipDisplayName,
+  hitsByStage,
+  sections,
+  stageTiming,
+} from "../types"
 import type { Clip, CueTag, StageRef } from "../types"
 import { statusOf } from "../reconcile"
 import type { Reconciliation, StageStatus } from "../reconcile"
@@ -118,6 +124,14 @@ function bestHits(
   return best
 }
 
+// Whether any clip has placed an animation split on this stage's first occurrence.
+function hasSplit(clips: Clip[], stageId: string): boolean {
+  return clips.some((clip) => {
+    const i = sections(clip).findIndex((s) => s.ref.id === stageId)
+    return i !== -1 && animationSplitOf(clip, i) != null
+  })
+}
+
 // One catalog stage's row: a corroboration chip + a monochrome hit counter. The
 // drill-down shows the conflicting clips (for `conflict`) or the marked hits.
 function StageRow({
@@ -136,10 +150,18 @@ function StageRow({
   onJumpToClip?: (clipId: string) => void
 }) {
   const best = bestHits(clips, stage.id)
+  const present = best !== null
   const count = best?.hits.length ?? 0
   const capacity = stage.hitCount
-  const observations = "observations" in status ? status.observations : []
-  const isConflict = status.status === "conflict"
+
+  // A cutscene stage's reading is frozen-animation garbage until split apart, so
+  // hold it at unmeasured (grey) and show the split as the work to do.
+  const splitDone = hasSplit(clips, stage.id)
+  const splitBlocked = stage.expectsSplit === true && !splitDone
+  const shown: StageStatus = splitBlocked ? { status: "unmeasured" } : status
+
+  const observations = "observations" in shown ? shown.observations : []
+  const isConflict = shown.status === "conflict"
 
   const canOpen = isConflict ? observations.length > 0 : count > 0
   const isOpen = open && canOpen
@@ -167,20 +189,28 @@ function StageRow({
             <span className="size-3 shrink-0" />
           )}
           <span
-            className={`size-2 shrink-0 rounded-full ${CHIP[status.status]}`}
-            title={status.status}
+            className={`size-2 shrink-0 rounded-full ${CHIP[shown.status]}`}
+            title={splitBlocked ? "needs animation split" : shown.status}
           />
-          <span className="truncate">{stage.stage}</span>
+          <span
+            className={`truncate ${present ? "" : "text-muted-foreground"}`}
+          >
+            {stage.stage}
+          </span>
         </span>
         <span className="flex shrink-0 items-center gap-1.5 font-mono tabular-nums">
-          {isConflict && (
+          {isConflict && shown.status === "conflict" && (
             <span className="text-micro text-muted-foreground/60">
-              ±{status.spread}
+              ±{shown.spread}
             </span>
           )}
-          <span className={counterTone}>
-            {capacity === 0 ? "—" : `${count}/${capacity}`}
-          </span>
+          <Counter
+            expectsSplit={stage.expectsSplit === true}
+            splitDone={splitDone}
+            capacity={capacity}
+            count={count}
+            tone={counterTone}
+          />
         </span>
       </button>
 
@@ -224,4 +254,33 @@ function StageRow({
       )}
     </div>
   )
+}
+
+// The hit axis, per stage kind: a cutscene shows the split as its work; a
+// no-damage stage has nothing to count and passes with a neutral check;
+// everything else shows `hits / capacity`.
+function Counter({
+  expectsSplit,
+  splitDone,
+  capacity,
+  count,
+  tone,
+}: {
+  expectsSplit: boolean
+  splitDone: boolean
+  capacity: number
+  count: number
+  tone: string
+}) {
+  if (expectsSplit)
+    return (
+      <span
+        className={splitDone ? "text-foreground" : "text-muted-foreground/50"}
+      >
+        split
+      </span>
+    )
+  if (capacity === 0)
+    return <Check className="size-3 text-muted-foreground/60" />
+  return <span className={tone}>{`${count}/${capacity}`}</span>
 }

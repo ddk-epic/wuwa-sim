@@ -30,6 +30,8 @@ export interface StageRef {
   skill: string
   stage: string
   hitCount: number
+  /** Registry stage carries `animationFrames` — a cutscene whose timing needs a split. */
+  expectsSplit?: boolean
 }
 
 // A spacer occupies frames between two real stages (a mid-rotation jump/dodge)

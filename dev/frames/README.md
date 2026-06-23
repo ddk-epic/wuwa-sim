@@ -100,6 +100,17 @@ line, and the corroboration input the confidence layer reads.
 > corroboration rung. `actionFrame` and hit offsets stay per-clip projections off the
 > selected clip — only `actionTime` is reconciled across clips.
 
+Two stage kinds are exceptions to "done," applied where the registry is in hand
+(the sidebar checklist and `buildExport`), not in the pure reconciler:
+
+- **No-damage stages** (`hitCount` 0) have nothing to count — the hit axis passes
+  on its own, so the checklist shows a neutral check, and they're done once their
+  `actionTime` is measured.
+- **Cutscene stages** (registry `animationFrames`) read as frozen-animation garbage
+  until an [animation split](#animation-splits) carves out the action lock. The
+  checklist holds them at `unmeasured` (grey) and shows `split` as the work to do;
+  export withholds `actionTime` and warns until the split is placed.
+
 ## Confidence
 
 Confidence splits cleanly into two inputs, and is **auto-derived** — no manual override:
@@ -160,7 +171,7 @@ stage is all `actionTime`, as before.
 
 Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so the export is **clone the whole character object → sparse-patch the measurements → serialize**. `actionTime` comes from the reconciler (cross-clip); hits and variants stay scoped to the selected clip:
 
-- `stage.actionTime` ← the **reconciled** value (the reconciler's cross-clip reading, a rest-zone-aware section width), minus any leading animation when the stage carries an [animation split](#animation-splits). A `conflict` stage is **skipped and warned** — its `actionTime` isn't committed; the registry value stands until re-counted.
+- `stage.actionTime` ← the **reconciled** value (the reconciler's cross-clip reading, a rest-zone-aware section width), minus any leading animation when the stage carries an [animation split](#animation-splits). A `conflict` stage is **skipped and warned** — its `actionTime` isn't committed; the registry value stands until re-counted. A cutscene stage (registry `animationFrames`) with no split placed is **likewise skipped and warned** — its width is still frozen animation.
 - `stage.animationFrames` ← the frozen leading slice, written only for a stage that has an animation split.
 - `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries. A split stage's hits resolve to `0` (they land inside the frozen animation).
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).

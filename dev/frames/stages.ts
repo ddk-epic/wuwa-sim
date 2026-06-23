@@ -43,6 +43,7 @@ export function stageRefOf(
     skill: skillName,
     stage: stage.newName?.trim() || stage.name,
     hitCount: stage.damage?.length ?? 0,
+    expectsSplit: (stage.animationFrames ?? 0) > 0,
   }
 }
 
