@@ -9,6 +9,7 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 - [sim-flow](sim-flow.html) — interactive subway map of the simulation flow: how an authored Timeline Entry is processed, station by station, with state stores and click-for read/write arrows. Open in a browser; regenerate with `pnpm gen:sim-flow`. Content is hand-authored in `scripts/generate-sim-flow.ts` — update it when an ADR reshapes the pipeline
 - [buff-engine](buff-engine.md) — coordinator, Phase Pipeline, Instance Store lifecycle
 - [buff-reference](buff-reference.md) — StatPath reference table (stat paths, keys, semantics)
+- [resources](resources.md) — the per-character gauges (energy, concerto, forte, pool): accrual, caps, spend, and the resource triggers/conditions
 - [row-messages](row-messages.md) — the timeline message catalog and the wording rules every diagnostic/validator message follows
 
 ## Game model

@@ -1,6 +1,6 @@
 # Buff Engine
 
-`BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`), selects matching buff candidates, and routes them through a fixed six-phase pipeline. It composes its internal modules rather than owning their state directly.
+`BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`), selects matching buff candidates, and routes them through a fixed phase pipeline. It composes its internal modules rather than owning their state directly.
 
 **Source files:** `src/lib/engine/buff-engine.ts`, `src/lib/engine/instance-store.ts`, `src/lib/engine/emit-hit-dispatcher.ts`, `src/lib/engine/on-field-tracker.ts`, `src/lib/engine/resource-ledger.ts`, `src/lib/engine/stat-table-builder.ts`, `src/lib/engine-bootstrap.ts`
 
@@ -9,7 +9,8 @@
 ### Composition
 
 - **`InstanceStore`** — active buff instances, the pending-nextOnField queue, trigger matching, cooldown bookkeeping
-- **`ResourceLedger`** — per-character Energy / Concerto / Forte counters
+- **`ResourceLedger`** — per-character Energy / Concerto / Forte / Pool counters (see [resources](resources.md))
+- **`PoolStore`** — per-character Emit Pool: the FIFO of Deferred Emits the `pool` resource projects
 - **`OnFieldTracker`** — current on-field character; swap inference
 - **`EmitHitDispatcher`** — synthetic hit firing with ICD
 - **`StatTableBuilder`** — base stats + per-hit `stat`-effect accumulation
@@ -33,10 +34,12 @@ Order is a data value, not inline control flow (see [ADR-0006](adr/0006-phase-ba
 
 1. **`resource`** — apply `kind: "resource"` effects. Resource caps emit recursive `resourceCrossed` events.
 2. **`stat`** — `target: "nextOnField"` candidates push onto `pendingNextOnField`. Other candidates resolve target ids and call `InstanceStore.applyBuff`, which creates or refreshes an instance per its stacking policy (`ignore` / `refresh` / `addStack` / `replace`).
-3. **`emitHit`** — for each `kind: "emitHit"` effect, the dispatcher takes the emit decision (ICD + chain-depth cap) at the trigger frame. A top-level or offset emit surfaces a `DeferredEmit` at `frame + actionFrame` for the simulation to resolve in frame order (ADR-0028); only an in-frame chain emit (depth ≥ 1, offset 0) resolves inline, firing its own `hitLanded` (incremented depth) to chain further triggers.
-4. **`coordHit`** — like `emitHit` through the same ICD gate, but a coord emit carries no landing offset (it lands at the trigger frame) and never chains: synthetic coord hits are not re-entered into the trigger matcher.
-5. **`consume`** — `InstanceStore.runConsumePhase` decrements stacks on instances whose `consumedBy` filter matches the event; instances at zero stacks are removed (`buffConsumed`).
-6. **`removeBuffs`** — `kind: "removeBuffs"` effects remove active instances by buff id (`InstanceStore.removeBuffsById`).
+3. **`negStatus`** — apply `kind: "negStatus"` / `negStatusMod` effects to the `Target` (apply / reduce / raise-to-max / raise-cap), scheduling the first tick and firing `negStatusInflicted`.
+4. **`emitHit`** — for each `kind: "emitHit"` effect, the dispatcher takes the emit decision (ICD + chain-depth cap) at the trigger frame. A top-level or offset emit surfaces a `DeferredEmit` at `frame + actionFrame` for the simulation to resolve in frame order (ADR-0028); only an in-frame chain emit (depth ≥ 1, offset 0) resolves inline, firing its own `hitLanded` (incremented depth) to chain further triggers.
+5. **`coordHit`** — like `emitHit` through the same ICD gate, but a coord emit carries no landing offset (it lands at the trigger frame) and never chains: synthetic coord hits are not re-entered into the trigger matcher.
+6. **`convert`** — `kind: "convert"` effects mature N (or `"all"`) held Emit Pool members now, oldest-first, surfacing each as a `DeferredEmit` and keeping the `pool` resource in sync (see [resources](resources.md), [ADR-0043](adr/0043-emit-pool-of-cancellable-deferred-emits.md)).
+7. **`consume`** — `InstanceStore.runConsumePhase` decrements stacks on instances whose `consumedBy` filter matches the event; instances at zero stacks are removed (`buffConsumed`).
+8. **`removeBuffs`** — `kind: "removeBuffs"` effects remove active instances by buff id (`InstanceStore.removeBuffsById`).
 
 ### Instance lifecycle
 
