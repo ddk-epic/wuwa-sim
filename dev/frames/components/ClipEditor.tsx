@@ -145,6 +145,9 @@ export function ClipEditor({
             value={clip.name}
             placeholder={clipDisplayName(clip)}
             onChange={(e) => onEdit({ type: "setName", name: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur()
+            }}
           />
         </label>
         {!scoping && (
