@@ -7,17 +7,18 @@ export const sanhua = {
   weaponType: "Sword",
   rarity: "SR",
   maxEnergy: 100,
-  template: {
-    weapon: "Emerald of Genesis",
-    echo: "Impermanence Heron",
-    echoSet: "Moonlit Clouds",
-  },
+  forteCap: 100,
   stats: {
     base: { hp: 805, atk: 22, def: 77 },
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
   recommendedSkillDmgPriority: "Resonance Liberation",
+  template: {
+    weapon: "Emerald of Genesis",
+    echo: "Impermanence Heron",
+    echoSet: "Moonlit Clouds",
+  },
   buffs: [
     {
       id: "char.sanhua.silversnow",

@@ -228,7 +228,7 @@ export interface EnrichedCharacter extends Omit<Character, "skills" | "buffs"> {
   maxEnergy: number
   skills: EnrichedSkill[]
   buffs: BuffDef[]
-  forteCap?: number
+  forteCap: number
   emitPool?: EmitPoolConfig
   template: CharacterTemplate
 }

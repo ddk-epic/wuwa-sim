@@ -8,16 +8,16 @@ export const verina = {
   rarity: "SSR",
   maxEnergy: 175,
   forteCap: 4,
-  template: {
-    weapon: "Variation",
-    echo: "Bell-Borne Geochelone",
-    echoSet: "Rejuvenating Glow",
-  },
   stats: {
     base: { hp: 1139, atk: 27, def: 90 },
     max: { hp: 14237.5, atk: 337.5, def: 1099.998 },
   },
   skillTreeBonuses: ["Healing Bonus", "ATK"],
+  template: {
+    weapon: "Variation",
+    echo: "Bell-Borne Geochelone",
+    echoSet: "Rejuvenating Glow",
+  },
   buffs: [
     {
       id: "char.verina.blossom-amp",

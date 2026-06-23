@@ -142,6 +142,36 @@ describe("formatCharacter", () => {
     expect(out).toContain("max: { hp: 1000, atk: 100, def: 200 }")
   })
 
+  it("emits a default forteCap", () => {
+    const out = formatCharacter(minimalChar, "testHero")
+    expect(out).toContain("forteCap: 100,")
+  })
+
+  it("scaffolds recommendedSkillDmgPriority, defaulting when absent", () => {
+    const out = formatCharacter(minimalChar, "testHero")
+    expect(out).toContain(
+      'recommendedSkillDmgPriority: "Resonance Liberation",',
+    )
+  })
+
+  it("emits recommendedSkillDmgPriority from the character when present", () => {
+    const out = formatCharacter(
+      { ...minimalChar, recommendedSkillDmgPriority: "Heavy Attack" },
+      "testHero",
+    )
+    expect(out).toContain('recommendedSkillDmgPriority: "Heavy Attack",')
+  })
+
+  it("orders forteCap and stats under rarity, with template just above buffs", () => {
+    const out = formatCharacter(charWithBonuses, "testHero")
+    const order = ["maxEnergy:", "forteCap:", "stats:", "template:", "buffs:"]
+    const positions = order.map((k) => out.indexOf(k))
+    expect(positions).toEqual([...positions].sort((a, b) => a - b))
+    expect(out.indexOf("skillTreeBonuses:")).toBeLessThan(
+      out.indexOf("template:"),
+    )
+  })
+
   it("derives newName from stage name via deriveNewName", () => {
     const out = formatCharacter(charWithSkills, "testHero")
     expect(out).toContain('newName: "Stage 1",')
@@ -190,7 +220,7 @@ describe("formatCharacter", () => {
 
   it("prepends a cast activation stage for Resonance Liberation skills", () => {
     const out = formatCharacter(charWithSkills, "testHero")
-    const libIdx = out.indexOf('"Resonance Liberation"')
+    const libIdx = out.indexOf('type: "Resonance Liberation"')
     const libSection = out.slice(libIdx)
     const castStageIdx = libSection.indexOf('name: "Skill DMG",')
     const firstRawStageIdx = libSection.indexOf(
@@ -228,7 +258,7 @@ describe("formatCharacter", () => {
       ],
     }
     const out = formatCharacter(charWithCastStage, "testHero")
-    const libIdx = out.indexOf('"Resonance Liberation"')
+    const libIdx = out.indexOf('type: "Resonance Liberation"')
     const libSection = out.slice(libIdx)
     // "Cosmos Rave" as a synthetic cast stage should not appear
     expect(libSection).not.toContain('name: "Cosmos Rave",')

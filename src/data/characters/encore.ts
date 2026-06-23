@@ -7,17 +7,18 @@ export const encore = {
   weaponType: "Rectifier",
   rarity: "SSR",
   maxEnergy: 125,
-  template: {
-    weapon: "Stringmaster",
-    echo: "Inferno Rider",
-    echoSet: "Molten Rift",
-  },
+  forteCap: 100,
   stats: {
     base: { hp: 841, atk: 34, def: 102 },
     max: { hp: 10512.5, atk: 425, def: 1246.6644 },
   },
   skillTreeBonuses: ["Fusion DMG Bonus", "ATK"],
   recommendedSkillDmgPriority: "Resonance Liberation",
+  template: {
+    weapon: "Stringmaster",
+    echo: "Inferno Rider",
+    echoSet: "Molten Rift",
+  },
   buffs: [
     {
       id: "char.encore.angry-cosmos",

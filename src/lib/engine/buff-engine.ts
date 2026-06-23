@@ -268,9 +268,7 @@ export class BuffEngine {
       if (charId === null) continue
       const character = getCharacterById(charId)
       if (!character) continue
-      if (character.forteCap !== undefined) {
-        this.resources.registerCap(charId, "forte", character.forteCap)
-      }
+      this.resources.registerCap(charId, "forte", character.forteCap)
       if (character.emitPool?.cap !== undefined) {
         this.resources.registerCap(charId, "pool", character.emitPool.cap)
       }

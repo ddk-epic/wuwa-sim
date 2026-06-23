@@ -7,17 +7,17 @@ export const camellya = {
   weaponType: "Sword",
   rarity: "SSR",
   maxEnergy: 125,
-  template: {
-    weapon: "Red Spring",
-    echo: "Nightmare: Crownless",
-    echoSet: "Havoc Eclipse",
-  },
+  forteCap: 100,
   stats: {
     base: { hp: 826, atk: 36, def: 95 },
     max: { hp: 10325, atk: 450, def: 1161.109 },
   },
   skillTreeBonuses: ["Crit. DMG", "ATK"],
-  forteCap: 100,
+  template: {
+    weapon: "Red Spring",
+    echo: "Nightmare: Crownless",
+    echoSet: "Havoc Eclipse",
+  },
   buffs: [
     {
       id: "char.camellya.seedbed",
@@ -868,6 +868,7 @@ export const camellya = {
           newName: "Heavy Attack",
           value: "88.14%*3",
           actionTime: 0,
+          footing: { launch: 60 },
           variants: {},
           // Seedbed: Heavy Pruning counts as Basic Attack DMG. The hit `type`
           // is retagged to "Basic Attack" while the stage `category` stays
@@ -917,6 +918,7 @@ export const camellya = {
           newName: "Mid-air Attack",
           value: "65.61%*2",
           actionTime: 0,
+          footing: { land: 30 },
           variants: {},
           damage: [
             {
@@ -995,6 +997,7 @@ export const camellya = {
           newName: "Vining Waltz 1",
           value: "96.33%",
           actionTime: 0,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1017,6 +1020,7 @@ export const camellya = {
           newName: "Vining Waltz 2",
           value: "45.63%*2",
           actionTime: 0,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1051,6 +1055,7 @@ export const camellya = {
           newName: "Vining Waltz 3",
           value: "21.95%*6",
           actionTime: 0,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1133,6 +1138,7 @@ export const camellya = {
           newName: "Vining Waltz 4",
           value: "67.59%*3",
           actionTime: 0,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1179,6 +1185,7 @@ export const camellya = {
           newName: "Blazing Waltz",
           value: "21.95%*19",
           actionTime: 0,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1417,6 +1424,7 @@ export const camellya = {
           newName: "Vining Ronde",
           value: "52.95%*3",
           actionTime: 0,
+          footing: { land: 60 },
           variants: {},
           damage: [
             {
@@ -1506,6 +1514,7 @@ export const camellya = {
           value: "113.62%*2",
           concerto: 7,
           actionTime: 0,
+          footing: { launch: 60 },
           variants: {},
           damage: [
             {
@@ -1541,6 +1550,7 @@ export const camellya = {
           value: "52.61%*5",
           concerto: 7,
           actionTime: 0,
+          footing: { land: 60 },
           variants: {},
           damage: [
             {
@@ -1623,6 +1633,7 @@ export const camellya = {
           value: "1202.81%",
           actionTime: 0,
           animationFrames: 60,
+          footing: { land: 0 },
           variants: {},
           damage: [
             {

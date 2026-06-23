@@ -38,12 +38,8 @@ export const sanhua = {
   element: "Glacio", // The character's element; every stage inherits it.
   weaponType: "Sword",
   rarity: "SR",
-  template: {
-    // Recommended build, used to seed a fresh loadout.
-    weapon: "Emerald of Genesis",
-    echo: "Impermanence Heron",
-    echoSet: "Moonlit Clouds",
-  },
+  maxEnergy: 100, // Full-bar energy, equal to the Resonance Liberation cost.
+  forteCap: 100, // Max forte gauge; default 100 when the gauge isn't modeled.
   stats: {
     // base = level-1 sheet, max = level-90 sheet.
     base: { hp: 805, atk: 22, def: 77 },
@@ -51,6 +47,12 @@ export const sanhua = {
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"], // Compiled into permanent stat buffs at bootstrap.
   recommendedSkillDmgPriority: "Resonance Liberation", // UI hint only.
+  template: {
+    // Recommended build, used to seed a fresh loadout.
+    weapon: "Emerald of Genesis",
+    echo: "Impermanence Heron",
+    echoSet: "Moonlit Clouds",
+  },
 
   buffs: [
     /* … BuffDef[] — see BUFFS.md … */
@@ -475,20 +477,20 @@ Concept-grouped lookup, organized by tier: **Character shell → Skill → Stage
 
 ### Character shell fields
 
-| Field                         | Drives                                                                                                                 |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `id`                          | API character id. Referenced by buff `trigger.characterId` and loadout slots.                                          |
-| `name`                        | Display name; kebabed into the `<charName>` stageId segment.                                                           |
-| `element`                     | Character element. Every stage/hit inherits it for elemental DMG.                                                      |
-| `weaponType`, `rarity`        | Metadata; weapon-slot filtering and display.                                                                           |
-| `template`                    | `{ weapon, echo, echoSet }` recommended build used to seed a fresh loadout. Scaffolded as empty strings — you fill it. |
-| `stats.base` / `stats.max`    | Level-1 and level-90 stat sheets; the loadout interpolates between them by level.                                      |
-| `skillTreeBonuses`            | Array of `SkillTreeStat` strings; compiled into permanent stat buffs at bootstrap (`compileSkillTreeNode`).            |
-| `recommendedSkillDmgPriority` | UI hint only (which skill type to prioritize).                                                                         |
-| `primaryScalingStat`          | Optional `"atk" \| "hp" \| "def"` — the character's main scaling stat, for UI/build hints.                             |
-| `forteCap`                    | Max value of the character's forte resource (e.g. Camellya `100`). Omit if not used.                                   |
-| `buffs`                       | `BuffDef[]` — scaffolded as `[]`, written by hand. See [BUFFS.md](BUFFS.md).                                           |
-| `skills`                      | `EnrichedSkill[]` — see below.                                                                                         |
+| Field                         | Drives                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `id`                          | API character id. Referenced by buff `trigger.characterId` and loadout slots.                                            |
+| `name`                        | Display name; kebabed into the `<charName>` stageId segment.                                                             |
+| `element`                     | Character element. Every stage/hit inherits it for elemental DMG.                                                        |
+| `weaponType`, `rarity`        | Metadata; weapon-slot filtering and display.                                                                             |
+| `template`                    | `{ weapon, echo, echoSet }` recommended build used to seed a fresh loadout. Scaffolded as empty strings — you fill it.   |
+| `stats.base` / `stats.max`    | Level-1 and level-90 stat sheets; the loadout interpolates between them by level.                                        |
+| `skillTreeBonuses`            | Array of `SkillTreeStat` strings; compiled into permanent stat buffs at bootstrap (`compileSkillTreeNode`).              |
+| `recommendedSkillDmgPriority` | UI hint only (which skill type to prioritize).                                                                           |
+| `primaryScalingStat`          | Optional `"atk" \| "hp" \| "def"` — the character's main scaling stat, for UI/build hints.                               |
+| `forteCap`                    | Required. Max value of the character's forte resource (e.g. Camellya `100`). Default `100` when the gauge isn't modeled. |
+| `buffs`                       | `BuffDef[]` — scaffolded as `[]`, written by hand. See [BUFFS.md](BUFFS.md).                                             |
+| `skills`                      | `EnrichedSkill[]` — see below.                                                                                           |
 
 ### Skill fields
 

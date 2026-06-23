@@ -7,16 +7,17 @@ export const cartethyia = {
   weaponType: "Sword",
   rarity: "SSR",
   maxEnergy: 125,
-  template: {
-    weapon: "Defier's Thorn",
-    echo: "Reminiscence: Fleurdelys",
-    echoSet: "Windward Pilgrimage",
-  },
+  forteCap: 120,
   stats: {
     base: { hp: 1184, atk: 25, def: 50 },
     max: { hp: 14800, atk: 312.5, def: 611.11 },
   },
   skillTreeBonuses: ["Crit. Rate", "HP"],
+  template: {
+    weapon: "Defier's Thorn",
+    echo: "Reminiscence: Fleurdelys",
+    echoSet: "Windward Pilgrimage",
+  },
   buffs: [
     {
       // Fleurdelys-form presence flag. No timer.
@@ -948,6 +949,7 @@ export const cartethyia = {
           category: "Basic Attack",
           value: "",
           actionTime: 0,
+          footing: { land: 30 },
           variants: {},
           damage: [],
         },
@@ -966,6 +968,7 @@ export const cartethyia = {
           value: "6.89%*3+8.86%",
           actionTime: 0,
           animationFrames: 60,
+          footing: { launch: 60 },
           variants: {},
           damage: [
             {
@@ -1532,6 +1535,7 @@ export const cartethyia = {
           category: "Basic Attack",
           value: "4.54%*2",
           actionTime: 0,
+          footing: { launch: 30 },
           variants: {},
           damage: [
             {
@@ -1747,6 +1751,7 @@ export const cartethyia = {
           value: "1.86%*4+17.36%",
           concerto: 10,
           actionTime: 0,
+          footing: { launch: 30 },
           variants: {},
           damage: [
             {

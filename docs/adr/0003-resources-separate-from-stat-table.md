@@ -10,7 +10,7 @@ Energy, Concerto, and Forte are stored on the Buff Engine as a per-character `Re
 - **Forte** is the third implicit channel, with three differences from energy/concerto:
   - It is **optional** on `DamageEntry` (`forte?: number`). Missing/0/undefined is a no-op — only entries that actually grant forte declare it.
   - It is scaled at gain time by the actor's `forteRechargePct`: `actorGain = entry.forte × (1 + actorForteRechargePct)`, parallel to energy's ER scaling — but applied to **gains only**; a negative `forte` (a consumption cost, ADR-0032) is applied raw. The stat is buff-writable but is not surfaced in UI, skill-tree bonuses, or echo substats.
-  - It is **not shared** to teammates (unlike energy's 50% split). It is per-character, capped by `EnrichedCharacter.forteCap`, enforced by the existing resource-ledger clamp.
+  - It is **not shared** to teammates (unlike energy's 50% split). It is per-character, capped by `EnrichedCharacter.forteCap`, enforced by the existing resource-ledger clamp. Every character declares a `forteCap` (it is mandatory); characters whose forte gauge isn't modeled default to `100`.
 - The scaled forte value is not floored — the ledger accepts fractional forte. Authors who want integer grants should keep the entry's `forte` integer and accept that scaling may produce fractions. Authoring a per-cast grant on a multi-hit stage: set `forte` on exactly one entry (typically the first) rather than splitting across entries.
 
 ## Known limitations to revisit
