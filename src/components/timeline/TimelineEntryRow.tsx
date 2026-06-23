@@ -3,7 +3,12 @@ import type { TimelineSummary } from "#/lib/timeline/timeline-summary"
 import { nextVariant } from "#/lib/stage"
 import { formatSkillType } from "#/data/skill-types"
 import { formatVariantKind } from "#/lib/format-variant-kind"
-import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
+import {
+  TimeCell,
+  WaitCell,
+  DurationCell,
+  ResourceCell,
+} from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
 import { DelayBadge } from "#/components/ui/DelayBadge"
 import { getCharacterById } from "#/lib/loadout/catalog"
@@ -182,13 +187,13 @@ export function TimelineEntryRow({
         </div>
       </td>
       <DurationCell frames={row.durationFrames} />
-      <PoolCell
+      <ResourceCell
         value={conVal}
         resource="concerto"
         threshold={100}
         stale={stale}
       />
-      <PoolCell
+      <ResourceCell
         value={resVal}
         resource="energy"
         threshold={maxEnergy}

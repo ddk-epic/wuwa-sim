@@ -9,7 +9,7 @@ import {
   WaitCell,
   StatPad,
 } from "./log-cells"
-import { PoolValue } from "../ui/PoolValue"
+import { ResourceValue } from "../ui/ResourceValue"
 import { getCharacterById } from "#/lib/loadout/catalog"
 
 export function ActionEventRow({
@@ -38,14 +38,14 @@ export function ActionEventRow({
         <SkillNameSuffix ev={ev} />
       </td>
       <td className={numCell}>
-        <PoolValue
+        <ResourceValue
           value={ev.cumulativeConcerto}
           resource="concerto"
           threshold={100}
         />
       </td>
       <td className={numCell}>
-        <PoolValue
+        <ResourceValue
           value={ev.cumulativeEnergy}
           resource="energy"
           threshold={maxEnergy}

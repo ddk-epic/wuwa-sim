@@ -11,7 +11,7 @@ import {
   FrameCell,
   WaitCell,
 } from "./log-cells"
-import { PoolValue } from "../ui/PoolValue"
+import { ResourceValue } from "../ui/ResourceValue"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import { HitEventDetail } from "./HitEventDetail"
 import {
@@ -56,14 +56,14 @@ export function HitEventRow({
           <SkillNameSuffix ev={ev} />
         </td>
         <td className={numCell}>
-          <PoolValue
+          <ResourceValue
             value={ev.cumulativeConcerto}
             resource="concerto"
             threshold={100}
           />
         </td>
         <td className={numCell}>
-          <PoolValue
+          <ResourceValue
             value={ev.cumulativeEnergy}
             resource="energy"
             threshold={maxEnergy}

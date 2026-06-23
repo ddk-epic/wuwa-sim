@@ -1,25 +1,25 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { render } from "@testing-library/react"
-import { PoolValue } from "./PoolValue"
+import { ResourceValue } from "./ResourceValue"
 
 function renderValue(node: React.ReactElement): HTMLSpanElement {
   const { container } = render(node)
   return container.querySelector("span")!
 }
 
-describe("PoolValue", () => {
+describe("ResourceValue", () => {
   it("renders an em-dash for null", () => {
     expect(
       renderValue(
-        <PoolValue value={null} resource="concerto" threshold={100} />,
+        <ResourceValue value={null} resource="concerto" threshold={100} />,
       ).textContent,
     ).toBe("—")
   })
 
   it("renders a muted zero", () => {
     const span = renderValue(
-      <PoolValue value={0} resource="energy" threshold={125} />,
+      <ResourceValue value={0} resource="energy" threshold={125} />,
     )
     expect(span.textContent).toBe("0")
     expect(span.className).toContain("text-ui-zero")
@@ -28,7 +28,7 @@ describe("PoolValue", () => {
 
   it("renders a plain value below threshold with no pill fill", () => {
     const span = renderValue(
-      <PoolValue value={50} resource="concerto" threshold={100} />,
+      <ResourceValue value={50} resource="concerto" threshold={100} />,
     )
     expect(span.textContent).toBe("50.0")
     expect(span.style.backgroundColor).toBe("")
@@ -37,7 +37,7 @@ describe("PoolValue", () => {
 
   it("fills a concerto pill at or over 100, without bold weight", () => {
     const span = renderValue(
-      <PoolValue value={100} resource="concerto" threshold={100} />,
+      <ResourceValue value={100} resource="concerto" threshold={100} />,
     )
     expect(span.style.backgroundColor).toBe("var(--ui-concerto)")
     expect(span.style.color).toBe("var(--darkest)")
@@ -46,7 +46,7 @@ describe("PoolValue", () => {
 
   it("fills an energy pill at the per-character maxEnergy", () => {
     const span = renderValue(
-      <PoolValue value={125} resource="energy" threshold={125} />,
+      <ResourceValue value={125} resource="energy" threshold={125} />,
     )
     expect(span.style.backgroundColor).toBe("var(--ui-resonance)")
     expect(span.style.color).toBe("var(--foreground)")
@@ -54,7 +54,7 @@ describe("PoolValue", () => {
 
   it("does not fill an energy pill below the per-character maxEnergy", () => {
     const span = renderValue(
-      <PoolValue value={100} resource="energy" threshold={125} />,
+      <ResourceValue value={100} resource="energy" threshold={125} />,
     )
     expect(span.style.backgroundColor).toBe("")
   })

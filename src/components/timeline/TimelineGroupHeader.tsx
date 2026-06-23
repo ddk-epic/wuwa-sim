@@ -15,7 +15,12 @@ import { getCharacterById } from "#/lib/loadout/catalog"
 import { useAtomValue, useSetAtom } from "jotai"
 import type { TimelineDrag } from "#/hooks/useTimelineDrag"
 import { renamingGroupIdAtom } from "#/state/renaming"
-import { TimeCell, WaitCell, DurationCell, PoolCell } from "./timeline-cells"
+import {
+  TimeCell,
+  WaitCell,
+  DurationCell,
+  ResourceCell,
+} from "./timeline-cells"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
 
 type GroupHeaderRenderItem = Extract<RenderItem, { type: "groupHeader" }>
@@ -165,8 +170,8 @@ export function TimelineGroupHeader({
         </div>
       </td>
       <DurationCell frames={totalDurFrames} />
-      <PoolCell value={lastConVal} resource="concerto" threshold={100} />
-      <PoolCell
+      <ResourceCell value={lastConVal} resource="concerto" threshold={100} />
+      <ResourceCell
         value={lastResVal}
         resource="energy"
         threshold={lastMaxEnergy}

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { render } from "@testing-library/react"
-import { TimeCell, WaitCell, PoolCell } from "./timeline-cells"
+import { TimeCell, WaitCell, ResourceCell } from "./timeline-cells"
 
 function renderCell(node: React.ReactElement): HTMLTableCellElement {
   const { container } = render(
@@ -27,14 +27,15 @@ describe("timeline-cells", () => {
     expect(td.querySelector("span[title='wait 0.70s']")).not.toBeNull()
   })
 
-  it("PoolCell adds opacity-40 only when stale", () => {
+  it("ResourceCell adds opacity-40 only when stale", () => {
     expect(
-      renderCell(<PoolCell value={50} resource="concerto" threshold={100} />)
-        .className,
+      renderCell(
+        <ResourceCell value={50} resource="concerto" threshold={100} />,
+      ).className,
     ).not.toContain("opacity-40")
     expect(
       renderCell(
-        <PoolCell value={50} resource="concerto" threshold={100} stale />,
+        <ResourceCell value={50} resource="concerto" threshold={100} stale />,
       ).className,
     ).toContain("opacity-40")
   })
