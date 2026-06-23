@@ -98,8 +98,24 @@ export interface DamageEntry {
   independent?: boolean
   /** Per-hit forte resource gain for the actor. Scaled by forteRechargePct. */
   forte?: number
+  /** Deferred Emits this hit pushes onto the actor's Emit Pool. Not FR-scaled. */
+  spawn?: number
   /** "Counts-as" labels — a hit may bear several (e.g. a plunge considered Aero Erosion DMG). */
   labels?: HitLabel[]
+}
+
+/**
+ * A character's Emit Pool: a capacity-bounded FIFO of Deferred Emits. A hit's
+ * `spawn` pushes members; each matures `maturation` frames later into a
+ * Synthetic Hit carrying `emit` (the same authoring shape as `emitHit`).
+ */
+export interface EmitPoolConfig {
+  /** Omit = uncapped. */
+  cap?: number
+  /** Frames from spawn to auto-conversion. */
+  maturation: number
+  /** Payload every member emits on conversion; its `actionFrame` is travel time. */
+  emit: DamageEntry
 }
 
 export interface Skill {
@@ -213,5 +229,6 @@ export interface EnrichedCharacter extends Omit<Character, "skills" | "buffs"> {
   skills: EnrichedSkill[]
   buffs: BuffDef[]
   forteCap?: number
+  emitPool?: EmitPoolConfig
   template: CharacterTemplate
 }

@@ -49,6 +49,8 @@ export interface ActionEvent extends SimulationLogBase {
   kind: "action"
   /** Trigger axis (player input) for this action; orthogonal to `skillType`. */
   skillCategory: SkillCategory
+  /** Actor's Emit Pool size at this action; omitted when zero. */
+  pool?: number
   variantKind?: VariantKind
   delayBreakdown?: DelayBreakdown
   diagnostics?: Diagnostic[]

@@ -9,7 +9,7 @@ import type {
   ResourceState,
 } from "#/types/buff"
 import { GLOBAL_TARGET_ID } from "#/types/buff"
-import type { SkillCategory, SkillType } from "#/types/character"
+import type { DamageEntry, SkillCategory, SkillType } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActiveBuff,
@@ -46,6 +46,7 @@ import { computeDamage } from "../damage/compute-damage"
 import { buildHitEvent } from "./log-event-builders"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
+import { PoolStore } from "./pool-store"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects, matchesHit } from "./stat-table-builder"
 import { TriggerIndex } from "./trigger-index"
@@ -63,9 +64,17 @@ export interface ResolvedHit {
   tickEvents: HitEvent[]
 }
 
+/** A scheduled Emit Pool maturation the simulation parks on its Schedule. */
+export interface PoolMaturation {
+  characterId: number
+  memberId: number
+  maturationFrame: number
+}
+
 export interface HitDispatch {
   lifecycleEvents: BuffEvent[]
   deferredEmits: DeferredEmit[]
+  poolMaturations: PoolMaturation[]
   postState: ResourceState
 }
 
@@ -97,6 +106,14 @@ const EMIT_HIT_CHAIN_DEPTH_CAP = 8
  */
 export const OUTRO_CONCERTO_COST = 100
 
+/** Attribution carrier for the Synthetic Hit a converted Deferred Emit produces. */
+const POOL_EMIT_DEF: BuffDef = {
+  id: "emitPool",
+  name: "Emit Pool",
+  trigger: { event: "simStart" },
+  effects: [],
+}
+
 /** Synthetic emit-hit events have no SkillCategory source; map from effect skillType. */
 function skillTypeToCategory(skillType: SkillType | undefined): SkillCategory {
   return skillType ?? "Basic Attack"
@@ -117,6 +134,7 @@ export class BuffEngine {
   private target = new Target()
   private triggerIndex = new TriggerIndex([])
   private resources = new ResourceLedger()
+  private pool = new PoolStore()
   private onField = new OnFieldTracker()
   readonly footing = new FootingModule()
   private cooldownLastFired = new Map<string, number>()
@@ -130,6 +148,8 @@ export class BuffEngine {
   })
   /** Deferred emits produced during the in-flight `onEvent` / resolve call. */
   private deferredEmits: DeferredEmit[] = []
+  /** Pool maturations spawned during the in-flight `onEvent` / resolve call. */
+  private pendingMaturations: PoolMaturation[] = []
   /** Diagnostics produced during the in-flight `onEvent` call. */
   private diagnostics: Diagnostic[] = []
   private emitHitHost: EmitHitHost = {
@@ -232,6 +252,7 @@ export class BuffEngine {
     this.target.reset()
     this.resources.clear()
     this.resources.clearCaps()
+    this.pool.clear()
     this.onField.clear()
     this.footing.clear()
     this.cooldownLastFired.clear()
@@ -248,6 +269,9 @@ export class BuffEngine {
       const character = getCharacterById(charId)
       if (character?.forteCap !== undefined) {
         this.resources.registerCap(charId, "forte", character.forteCap)
+      }
+      if (character?.emitPool?.cap !== undefined) {
+        this.resources.registerCap(charId, "pool", character.emitPool.cap)
       }
       const slot = bootstrapSlot(charId, input.loadouts[i] ?? null)
       if (!slot) continue
@@ -291,11 +315,13 @@ export class BuffEngine {
   onEvent(event: EngineEvent): {
     lifecycleEvents: BuffEvent[]
     deferredEmits: DeferredEmit[]
+    poolMaturations: PoolMaturation[]
     diagnostics: Diagnostic[]
   } {
     const lifecycleEvents: BuffEvent[] = []
     const syntheticEvents: (HitEvent | SustainEvent)[] = []
     this.deferredEmits = []
+    this.pendingMaturations = []
     this.diagnostics = []
 
     // Implicit swap inference: an authored skillCast by a different character
@@ -327,6 +353,7 @@ export class BuffEngine {
     return {
       lifecycleEvents,
       deferredEmits: this.deferredEmits,
+      poolMaturations: this.pendingMaturations,
       diagnostics: this.diagnostics,
     }
   }
@@ -348,6 +375,16 @@ export class BuffEngine {
           a.characterId,
           a.resource,
           a.delta,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
+      }
+      if (event.spawn) {
+        this.spawnIntoPool(
+          event.characterId,
+          event.spawn,
           event.frame,
           out,
           hitsOut,
@@ -694,10 +731,12 @@ export class BuffEngine {
     lifecycleEvents: BuffEvent[]
     syntheticEvents: (HitEvent | SustainEvent)[]
     deferredEmits: DeferredEmit[]
+    poolMaturations: PoolMaturation[]
   } {
     const lifecycleEvents: BuffEvent[] = []
     const syntheticEvents: (HitEvent | SustainEvent)[] = []
     this.deferredEmits = []
+    this.pendingMaturations = []
     const event = this.resolveSyntheticEmit(
       d.input,
       d.landingFrame,
@@ -723,6 +762,7 @@ export class BuffEngine {
       lifecycleEvents,
       syntheticEvents,
       deferredEmits: this.deferredEmits,
+      poolMaturations: this.pendingMaturations,
     }
   }
 
@@ -867,6 +907,101 @@ export class BuffEngine {
       this.emitHitHost,
       hitCtx,
     )
+  }
+
+  /**
+   * Push `n` Deferred Emits onto the actor's pool, record each maturation for the
+   * simulation to park on its Schedule, and sync the `"pool"` resource to the new
+   * member count. Sole spawn op — `DamageEntry.spawn` routes here, not accrual.
+   */
+  private spawnIntoPool(
+    characterId: number,
+    n: number,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    const config = getCharacterById(characterId)?.emitPool
+    if (!config) return
+    for (let i = 0; i < n; i++) {
+      const member = this.pool.spawn(
+        characterId,
+        frame,
+        frame + config.maturation,
+      )
+      this.pendingMaturations.push({
+        characterId,
+        memberId: member.id,
+        maturationFrame: member.maturationFrame,
+      })
+    }
+    this.setResource(
+      characterId,
+      "pool",
+      this.pool.count(characterId),
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
+  }
+
+  /**
+   * Convert the pool member at its maturation frame: drop it from the FIFO, sync
+   * the count, and defer the pool's `emit` payload as a Synthetic Hit landing at
+   * `convertFrame + emit.actionFrame`. A no-op if the member already converted —
+   * this is how the maturation timer is cancelled when displaced early.
+   */
+  matureMember(
+    characterId: number,
+    memberId: number,
+    convertFrame: number,
+  ): {
+    lifecycleEvents: BuffEvent[]
+    syntheticEvents: (HitEvent | SustainEvent)[]
+    deferredEmits: DeferredEmit[]
+  } {
+    const lifecycleEvents: BuffEvent[] = []
+    const syntheticEvents: (HitEvent | SustainEvent)[] = []
+    this.deferredEmits = []
+    if (!this.pool.remove(characterId, memberId)) {
+      return { lifecycleEvents, syntheticEvents, deferredEmits: [] }
+    }
+    const config = getCharacterById(characterId)?.emitPool
+    if (!config) return { lifecycleEvents, syntheticEvents, deferredEmits: [] }
+    this.setResource(
+      characterId,
+      "pool",
+      this.pool.count(characterId),
+      convertFrame,
+      lifecycleEvents,
+      syntheticEvents,
+      0,
+    )
+    this.deferredEmits.push(
+      this.poolEmit(characterId, config.emit, convertFrame),
+    )
+    return {
+      lifecycleEvents,
+      syntheticEvents,
+      deferredEmits: this.deferredEmits,
+    }
+  }
+
+  private poolEmit(
+    characterId: number,
+    emit: DamageEntry,
+    convertFrame: number,
+  ): DeferredEmit {
+    const input: EmitHitInput = {
+      buffInstanceKey: buffInstanceKey(POOL_EMIT_DEF.id, characterId),
+      def: POOL_EMIT_DEF,
+      effect: { kind: "emitHit", damage: emit, icdFrames: 0 },
+      effectIndex: 0,
+      sourceCharacterId: characterId,
+    }
+    return { input, landingFrame: convertFrame + emit.actionFrame, depth: 0 }
   }
 
   private applyResourceDelta(
@@ -1289,15 +1424,17 @@ export class BuffEngine {
    * events, synthetic hits, and the post-hit Resource State for the actor.
    */
   recordHit(event: HitLandedEvent): HitDispatch {
-    const { lifecycleEvents, deferredEmits } = this.onEvent(event)
+    const { lifecycleEvents, deferredEmits, poolMaturations } =
+      this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, deferredEmits, postState }
+    return { lifecycleEvents, deferredEmits, poolMaturations, postState }
   }
 
   recordHeal(event: HealLandedEvent): HitDispatch {
-    const { lifecycleEvents, deferredEmits } = this.onEvent(event)
+    const { lifecycleEvents, deferredEmits, poolMaturations } =
+      this.onEvent(event)
     const postState = this.getResource(event.characterId)
-    return { lifecycleEvents, deferredEmits, postState }
+    return { lifecycleEvents, deferredEmits, poolMaturations, postState }
   }
 }
 

@@ -7,8 +7,11 @@
  *   padded past on a non-cancel-capable one.
  * - **reset** — cancelled if the owner re-enters strictly before its frame.
  * - **ignore** — never invalidated by any arrival.
+ * - **maturation** — an Emit Pool lifecycle timer; never invalidated by an
+ *   arrival. Cancelled out-of-band when its pool member converts early: the
+ *   timer still fires but resolves to a no-op once the member is gone.
  */
-export type ArrivalClass = "residue" | "reset" | "ignore"
+export type ArrivalClass = "residue" | "reset" | "ignore" | "maturation"
 
 /** One unit of pending work, drained in nondecreasing `frame` order. */
 export interface ScheduledWork<T> {

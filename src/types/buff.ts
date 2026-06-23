@@ -82,7 +82,7 @@ export type ValueExpr =
       threshold?: number
     }
 
-export type ResourceKind = "energy" | "concerto" | "forte"
+export type ResourceKind = "energy" | "concerto" | "forte" | "pool"
 
 export type StatEffect = {
   kind: "stat"
@@ -301,10 +301,12 @@ export interface ResourceState {
   energy: number
   concerto: number
   forte: number
+  /** Emit Pool size — a projection of the pool store's member-list length. */
+  pool: number
 }
 
 export function emptyResourceState(): ResourceState {
-  return { energy: 0, concerto: 0, forte: 0 }
+  return { energy: 0, concerto: 0, forte: 0, pool: 0 }
 }
 
 export type Duration =

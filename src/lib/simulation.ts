@@ -13,7 +13,7 @@ import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./damage/compute-damage"
 import { computeHealing } from "./damage/compute-healing"
 import { BuffEngine } from "./engine/buff-engine"
-import type { ResolvedHit } from "./engine/buff-engine"
+import type { PoolMaturation, ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { buildHitEvent, buildSustainEvent } from "./engine/log-event-builders"
 import { findStageByEntry } from "./compile-character"
@@ -42,6 +42,9 @@ interface SimCursor {
  *  - **footing** — a launch/land commit (`residue`) or a window-end ground
  *    reset (`reset`, cancelled if the owner re-enters before its frame); on
  *    resolve it sets the owner's carried footing via `commitFor`.
+ *  - **maturation** — an Emit Pool member's auto-conversion timer; `maturation`
+ *    class, never invalidated by an arrival. On resolve it converts the member
+ *    into a deferred Synthetic Hit (a no-op if already converted early).
  */
 type Work =
   | {
@@ -52,6 +55,14 @@ type Work =
     }
   | { kind: "trailing"; bundle: TrailingHit }
   | { kind: "footing"; characterId: number; exitFooting: "ground" | "air" }
+  | {
+      kind: "maturation"
+      characterId: number
+      memberId: number
+      frame: number
+      /** The authored entry whose hit spawned this member, for log attribution. */
+      sourceEntryId: string
+    }
 
 /** Everything an entry/drain step needs. */
 interface SimContext {
@@ -254,7 +265,32 @@ function resolveWork(work: Work, ctx: SimContext): void {
     case "synthetic":
       resolvePendingSynthetic(work, ctx)
       break
+    case "maturation":
+      resolveMaturation(work, ctx)
+      break
   }
+}
+
+/**
+ * Convert an Emit Pool member at its maturation frame and park the resulting
+ * Synthetic Hit onto the stream. Already-converted members resolve to a no-op
+ * (empty deferredEmits). The clock is ticked frame-honest first, matching the
+ * synthetic path.
+ */
+function resolveMaturation(
+  work: Extract<Work, { kind: "maturation" }>,
+  ctx: SimContext,
+): void {
+  const { engine, log } = ctx
+  pushAdvance(log, engine.tickToFrame(work.frame))
+  const r = engine.matureMember(work.characterId, work.memberId, work.frame)
+  pushBuffEvents(log, r.lifecycleEvents)
+  for (const synth of r.syntheticEvents) {
+    synth.sourceEntryId = work.sourceEntryId
+    log.push(synth)
+  }
+  for (const emit of r.deferredEmits)
+    enqueueSynthetic(ctx, emit, work.sourceEntryId)
 }
 
 /**
@@ -308,6 +344,25 @@ function enqueueSynthetic(
     frame: emit.landingFrame,
     arrival: "ignore",
     payload: { kind: "synthetic", emit, sourceEntryId },
+  })
+}
+
+/** Park an Emit Pool maturation onto the stream at its conversion frame (maturation class). */
+function enqueueMaturation(
+  ctx: SimContext,
+  m: PoolMaturation,
+  sourceEntryId: string,
+): void {
+  ctx.schedule.enqueue({
+    frame: m.maturationFrame,
+    arrival: "maturation",
+    payload: {
+      kind: "maturation",
+      characterId: m.characterId,
+      memberId: m.memberId,
+      frame: m.maturationFrame,
+      sourceEntryId,
+    },
   })
 }
 
@@ -433,6 +488,7 @@ function buildActionEvent(
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
+  if (actorState.pool > 0) event.pool = actorState.pool
   if (diagnostics.length > 0) event.diagnostics = diagnostics
   if (
     pad.reaction > 0 ||
@@ -626,6 +682,7 @@ function processDamageHit(
     energy: hit.energy,
     concerto: hit.concerto,
     forte: hit.forte,
+    spawn: hit.spawn,
   })
   const hitEvent = buildHitEvent(
     {
@@ -665,10 +722,16 @@ function pushBuffEvents(log: SimulationLogEntry[], events: BuffEvent[]): void {
  */
 function drainDispatch(
   ctx: SimContext,
-  dispatch: { lifecycleEvents: BuffEvent[]; deferredEmits: DeferredEmit[] },
+  dispatch: {
+    lifecycleEvents: BuffEvent[]
+    deferredEmits: DeferredEmit[]
+    poolMaturations?: PoolMaturation[]
+  },
   sourceEntryId: string,
 ): void {
   pushBuffEvents(ctx.log, dispatch.lifecycleEvents)
   for (const emit of dispatch.deferredEmits)
     enqueueSynthetic(ctx, emit, sourceEntryId)
+  for (const m of dispatch.poolMaturations ?? [])
+    enqueueMaturation(ctx, m, sourceEntryId)
 }

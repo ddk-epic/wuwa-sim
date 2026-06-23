@@ -9,6 +9,7 @@ describe("ResourceLedger", () => {
       energy: 0,
       concerto: 0,
       forte: 0,
+      pool: 0,
     })
   })
 

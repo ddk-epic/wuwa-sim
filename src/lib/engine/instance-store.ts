@@ -46,6 +46,8 @@ export type EngineEvent =
       concerto?: number
       /** Per-hit forte gained by the actor. Scaled by forteRechargePct. Actor-only. */
       forte?: number
+      /** Deferred Emits this hit pushes onto the actor's Emit Pool. Authored-only; not FR-scaled. */
+      spawn?: number
       /** Buff def id that produced this synthetic hit via emitHit; undefined for authored hits. */
       sourceBuffId?: string
       /** Target's negative statuses stamped at dispatch, for trigger-time gating. */
