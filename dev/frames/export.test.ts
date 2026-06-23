@@ -6,7 +6,7 @@ import type { Clip, HitMark, StageRef } from "./types"
 
 // Most cases export from a single clip; its reconciliation is that clip alone.
 const run = (char: EnrichedCharacter, clip: Clip) =>
-  buildExport(char, clip, reconcile([clip]))
+  buildExport(char, [clip], reconcile([clip]))
 
 const ref = (name: string, hitCount: number): StageRef => ({
   id: `skill::${name}`,
@@ -113,15 +113,17 @@ describe("buildExport", () => {
     expect(warnings.some((w) => w.includes("unresolved"))).toBe(true)
   })
 
-  it("warns once and skips a stage the clip repeats", () => {
+  it("patches a repeated stage from its first occurrence", () => {
+    // A appears twice (a trailing sentinel); the first occupies [0,40].
     const clip = baseClip({
       stageRefs: [ref("A", 2), ref("A", 2)],
-      hits: [hit("a0", 10, 0), hit("a1", 50, 1)],
+      hits: [hit("a0", 10, 0), hit("a1", 25, 0)],
     })
-    const { patched, warnings, changes } = run(character(), clip)
-    expect(stageOf(patched, "A").actionTime).toBe(0)
-    expect(changes).toHaveLength(0)
-    expect(warnings.filter((w) => w.includes("more than once"))).toHaveLength(1)
+    const { patched } = run(character(), clip)
+    expect(stageOf(patched, "A").actionTime).toBe(40)
+    expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
+      10, 25,
+    ])
   })
 
   it("writes animationFrames from a split, rebases actionTime, and zeroes split-stage hit frames", () => {
@@ -190,7 +192,7 @@ describe("buildExport", () => {
     })
     const { patched, warnings, changes } = buildExport(
       character(),
-      clip,
+      [clip, other],
       reconcile([clip, other]),
     )
     expect(stageOf(patched, "A").actionTime).toBe(0)
@@ -200,5 +202,112 @@ describe("buildExport", () => {
     expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
       10, 25,
     ])
+  })
+
+  it("covers a stage measured only in another clip", () => {
+    // Clip 1 measures only A; clip 2 measures only B. Both get patched.
+    const c1 = baseClip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0), hit("a1", 25, 0)],
+      end: 50,
+    })
+    const c2 = baseClip({
+      id: "c2",
+      stageRefs: [ref("B", 1)],
+      boundaries: [],
+      hits: [hit("b0", 30, 0)],
+      end: 70,
+    })
+    const { patched } = buildExport(character(), [c1, c2], reconcile([c1, c2]))
+    expect(stageOf(patched, "A").actionTime).toBe(50)
+    expect(stageOf(patched, "B").actionTime).toBe(70)
+    expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
+      10, 25,
+    ])
+    expect(stageOf(patched, "B").damage?.map((d) => d.actionFrame)).toEqual([
+      30,
+    ])
+  })
+
+  it("pulls a stage's hits from its best clip (most hits)", () => {
+    // A is measured in two clips; only the second marks both of A's hits.
+    const sparse = baseClip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0)],
+      end: 40,
+    })
+    const full = baseClip({
+      id: "c2",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
+      end: 40,
+    })
+    const { patched } = buildExport(
+      character(),
+      [sparse, full],
+      reconcile([sparse, full]),
+    )
+    expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
+      12, 30,
+    ])
+  })
+
+  it("resolves a variant pinned in one clip against the best clip's hits", () => {
+    // A's cancel is pinned to `last` in the sparse clip, but resolves against the
+    // fuller clip — `last` tracking the true final hit.
+    const pinned = baseClip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "last" } } },
+    })
+    const full = baseClip({
+      id: "c2",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
+      end: 40,
+    })
+    const { patched } = buildExport(
+      character(),
+      [pinned, full],
+      reconcile([pinned, full]),
+    )
+    expect(stageOf(patched, "A").variants).toEqual({
+      cancel: { actionTime: 30 },
+    })
+  })
+
+  it("skips and warns when clips disagree on a variant pin", () => {
+    const a = baseClip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0), hit("a1", 25, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "hit", n: 1 } } },
+    })
+    const b = baseClip({
+      id: "c2",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "hit", n: 2 } } },
+    })
+    const { patched, warnings } = buildExport(
+      character(),
+      [a, b],
+      reconcile([a, b]),
+    )
+    expect(stageOf(patched, "A").variants).toEqual({})
+    expect(warnings.some((w) => w.includes("disagree on the pin"))).toBe(true)
   })
 })

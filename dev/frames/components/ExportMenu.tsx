@@ -11,19 +11,23 @@ import type { Reconciliation } from "../reconcile"
 
 type Tab = "ts" | "md"
 
-// Character-scoped export from the selected clip; the preview lives in a modal,
-// not on the page. Disabled until a clip is selected.
+// Character-scoped export across the whole clip set; the preview lives in a modal,
+// not on the page. The TS patch reconciles every clip; the MD snapshot still reads
+// the selected clip. Disabled until at least one clip exists.
 export function ExportMenu({
   char,
+  clips,
   clip,
   recon,
 }: {
   char: EnrichedCharacter
+  clips: Clip[]
   clip: Clip | null
   recon: Reconciliation
 }) {
   const [tab, setTab] = useState<Tab | null>(null)
-  const disabled = !clip
+  const mdClip = clip ?? clips[0] ?? null
+  const disabled = clips.length === 0
 
   return (
     <div className="flex items-center gap-2">
@@ -36,17 +40,18 @@ export function ExportMenu({
             key={t}
             disabled={disabled}
             onClick={() => setTab(t)}
-            title={disabled ? "select a clip" : `${t.toUpperCase()} export`}
+            title={disabled ? "no clips yet" : `${t.toUpperCase()} export`}
             className="px-2.5 py-1 text-detail font-medium uppercase text-muted-foreground hover:bg-card hover:text-foreground disabled:opacity-40"
           >
             {t}
           </button>
         ))}
       </div>
-      {tab && clip && (
+      {tab && mdClip && (
         <ExportModal
           char={char}
-          clip={clip}
+          clips={clips}
+          clip={mdClip}
           recon={recon}
           tab={tab}
           setTab={setTab}
@@ -59,6 +64,7 @@ export function ExportMenu({
 
 function ExportModal({
   char,
+  clips,
   clip,
   recon,
   tab,
@@ -66,6 +72,7 @@ function ExportModal({
   onClose,
 }: {
   char: EnrichedCharacter
+  clips: Clip[]
   clip: Clip
   recon: Reconciliation
   tab: Tab
@@ -73,8 +80,8 @@ function ExportModal({
   onClose: () => void
 }) {
   const { ts, warnings } = useMemo(
-    () => buildExport(char, clip, recon),
-    [char, clip, recon],
+    () => buildExport(char, clips, recon),
+    [char, clips, recon],
   )
   const before = useMemo(() => characterToTs(char), [char])
   const md = useMemo(() => snapshotMarkdown(char, clip), [char, clip])

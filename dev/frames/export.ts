@@ -5,11 +5,12 @@ import type {
 } from "#/types/character"
 import {
   hitsByStage,
+  isPlaceholder,
   resolveVariantTarget,
   sections,
   stageTiming,
 } from "./types"
-import type { Clip, StageRef, VariantTrack } from "./types"
+import type { Clip, StageRef, VariantTarget, VariantTrack } from "./types"
 import { statusOf } from "./reconcile"
 import type { Reconciliation } from "./reconcile"
 
@@ -37,16 +38,52 @@ function locateStage(
   )
 }
 
-function duplicateOccurrences(clip: Clip): Set<number> {
-  const counts = new Map<string, number>()
-  for (const ref of clip.stageRefs)
-    counts.set(ref.id, (counts.get(ref.id) ?? 0) + 1)
-  const dupes = new Set<number>()
-  clip.stageRefs.forEach((ref, i) => {
-    if ((counts.get(ref.id) ?? 0) > 1) dupes.add(i)
-  })
-  return dupes
+/** Every non-placeholder stage measured in ≥1 clip, deduped by id, first appearance first. */
+function collectStageRefs(clips: Clip[]): StageRef[] {
+  const seen = new Map<string, StageRef>()
+  for (const clip of clips)
+    for (const ref of clip.stageRefs)
+      if (!isPlaceholder(ref) && !seen.has(ref.id)) seen.set(ref.id, ref)
+  return [...seen.values()]
 }
+
+/**
+ * The clip that measures a stage most completely — most hits on its first
+ * occurrence — with that occurrence's index. Drives hits, split, and variant
+ * resolution; null when no clip contains the stage.
+ */
+function bestClipFor(
+  clips: Clip[],
+  stageId: string,
+): { clip: Clip; index: number } | null {
+  let best: { clip: Clip; index: number; hits: number } | null = null
+  for (const clip of clips) {
+    const index = clip.stageRefs.findIndex((r) => r.id === stageId)
+    if (index === -1) continue
+    const hits = hitsByStage(clip)[index]?.length ?? 0
+    if (!best || hits > best.hits) best = { clip, index, hits }
+  }
+  return best && { clip: best.clip, index: best.index }
+}
+
+/** The track's authored target in every clip that pins it (stage's first occurrence). */
+function collectTargets(
+  clips: Clip[],
+  stageId: string,
+  track: VariantTrack,
+): VariantTarget[] {
+  const out: VariantTarget[] = []
+  for (const clip of clips) {
+    const i = clip.stageRefs.findIndex((r) => r.id === stageId)
+    if (i === -1) continue
+    const t = clip.variants?.[i]?.[track]
+    if (t) out.push(t)
+  }
+  return out
+}
+
+const sameTarget = (a: VariantTarget, b: VariantTarget): boolean =>
+  a.kind === b.kind && (a.kind !== "hit" || a.n === (b as { n: number }).n)
 
 /** A cancel pinned to start becomes `instantCancel`; otherwise the track's own key. */
 function variantKeyFor(
@@ -58,48 +95,36 @@ function variantKeyFor(
 }
 
 /**
- * Clone the character and sparse-patch only what the clip measured, leaving the
- * rest byte-equal so the diff stays tight. `actionTime` comes from the reconciler
- * (cross-clip); hits and variants stay scoped to the selected clip. A repeated
- * stage can't patch one slot twice, and a `conflict` stage can't pick a value —
- * both are skipped with a warning.
+ * Clone the character and sparse-patch only what was measured, leaving the rest
+ * byte-equal so the diff stays tight. Character-scoped across the whole clip set:
+ * `actionTime` comes from the reconciler, and each stage's hits, split, and
+ * variant resolution come from its best clip (the one with the most hits). A
+ * `conflict` actionTime, a missing cutscene split, or a cross-clip variant
+ * disagreement is skipped with a warning rather than guessed.
  */
 export function buildExport(
   char: EnrichedCharacter,
-  clip: Clip,
+  clips: Clip[],
   recon: Reconciliation,
 ): ExportResult {
   const patched = structuredClone(char)
   const changes: Change[] = []
   const warnings: string[] = []
-  const secs = sections(clip)
-  const byStage = hitsByStage(clip)
-  const dupes = duplicateOccurrences(clip)
-  const warnedDupes = new Set<string>()
 
-  clip.stageRefs.forEach((ref, i) => {
-    if (dupes.has(i)) {
-      if (!warnedDupes.has(ref.id)) {
-        warnedDupes.add(ref.id)
-        warnings.push(
-          `${ref.stage} appears more than once in this clip — skipped (split it into single-occurrence clips).`,
-        )
-      }
-      return
-    }
-
+  for (const ref of collectStageRefs(clips)) {
     const stage = locateStage(patched, ref)
     if (!stage) {
       warnings.push(`${ref.stage} not found in the registry — skipped.`)
-      return
+      continue
     }
 
-    const sec = secs[i]
-    const split = clip.animationSplits?.[i] ?? null
-    const { animationFrames } = stageTiming(clip, i, secs)
+    const best = bestClipFor(clips, ref.id)
+    const split = best
+      ? (best.clip.animationSplits?.[best.index] ?? null)
+      : null
     const status = statusOf(recon, ref.id)
-    // A cutscene stage's section width is all frozen animation until split apart;
-    // its actionTime is meaningless without the split, so withhold it.
+    // A cutscene's section width is all frozen animation until split apart; its
+    // actionTime is meaningless without the split.
     const expectsSplit = (stage.animationFrames ?? 0) > 0
     if (expectsSplit && !split) {
       warnings.push(
@@ -122,16 +147,24 @@ export function buildExport(
         stage.actionTime = status.actionTime
       }
     }
-    if (split && stage.animationFrames !== animationFrames) {
-      changes.push({
-        path: `${ref.stage}.animationFrames`,
-        before: stage.animationFrames,
-        after: animationFrames,
-      })
-      stage.animationFrames = animationFrames
+
+    if (!best) continue
+    const secs = sections(best.clip)
+    const sec = secs[best.index]
+
+    if (split) {
+      const { animationFrames } = stageTiming(best.clip, best.index, secs)
+      if (stage.animationFrames !== animationFrames) {
+        changes.push({
+          path: `${ref.stage}.animationFrames`,
+          before: stage.animationFrames,
+          after: animationFrames,
+        })
+        stage.animationFrames = animationFrames
+      }
     }
 
-    const hits = byStage[i] ?? []
+    const hits = hitsByStage(best.clip)[best.index] ?? []
     const damage = stage.damage ?? []
     const n = Math.min(hits.length, damage.length)
     for (let k = 0; k < n; k++) {
@@ -147,11 +180,17 @@ export function buildExport(
       }
     }
 
-    const pins = clip.variants?.[i]
     for (const track of ["cancel", "swap"] as const) {
-      const target = pins?.[track]
-      if (!target) continue
-      const resolved = resolveVariantTarget(clip, i, target)
+      const targets = collectTargets(clips, ref.id, track)
+      if (targets.length === 0) continue
+      if (!targets.every((t) => sameTarget(t, targets[0]))) {
+        warnings.push(
+          `${ref.stage} ${track}: clips disagree on the pin — reconcile before pasting.`,
+        )
+        continue
+      }
+      const target = targets[0]
+      const resolved = resolveVariantTarget(best.clip, best.index, target)
       if (!resolved.ok) {
         warnings.push(`${ref.stage} ${track} unresolved — ${resolved.reason}.`)
         continue
@@ -181,7 +220,7 @@ export function buildExport(
       }
       stage.variants[key] = value
     }
-  })
+  }
 
   return {
     patched,
