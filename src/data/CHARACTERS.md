@@ -46,7 +46,7 @@ export const sanhua = {
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"], // Compiled into permanent stat buffs at bootstrap.
-  recommendedSkillDmgPriority: "Resonance Liberation", // UI hint only.
+  skillBonusPriority: "Resonance Liberation", // UI hint only.
   template: {
     // Recommended build, used to seed a fresh loadout.
     weapon: "Emerald of Genesis",
@@ -477,20 +477,20 @@ Concept-grouped lookup, organized by tier: **Character shell → Skill → Stage
 
 ### Character shell fields
 
-| Field                         | Drives                                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `id`                          | API character id. Referenced by buff `trigger.characterId` and loadout slots.                                            |
-| `name`                        | Display name; kebabed into the `<charName>` stageId segment.                                                             |
-| `element`                     | Character element. Every stage/hit inherits it for elemental DMG.                                                        |
-| `weaponType`, `rarity`        | Metadata; weapon-slot filtering and display.                                                                             |
-| `template`                    | `{ weapon, echo, echoSet }` recommended build used to seed a fresh loadout. Scaffolded as empty strings — you fill it.   |
-| `stats.base` / `stats.max`    | Level-1 and level-90 stat sheets; the loadout interpolates between them by level.                                        |
-| `skillTreeBonuses`            | Array of `SkillTreeStat` strings; compiled into permanent stat buffs at bootstrap (`compileSkillTreeNode`).              |
-| `recommendedSkillDmgPriority` | UI hint only (which skill type to prioritize).                                                                           |
-| `primaryScalingStat`          | Optional `"atk" \| "hp" \| "def"` — the character's main scaling stat, for UI/build hints.                               |
-| `forteCap`                    | Required. Max value of the character's forte resource (e.g. Camellya `100`). Default `100` when the gauge isn't modeled. |
-| `buffs`                       | `BuffDef[]` — scaffolded as `[]`, written by hand. See [BUFFS.md](BUFFS.md).                                             |
-| `skills`                      | `EnrichedSkill[]` — see below.                                                                                           |
+| Field                      | Drives                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | API character id. Referenced by buff `trigger.characterId` and loadout slots.                                                   |
+| `name`                     | Display name; kebabed into the `<charName>` stageId segment.                                                                    |
+| `element`                  | Character element. Every stage/hit inherits it for elemental DMG.                                                               |
+| `weaponType`, `rarity`     | Metadata; weapon-slot filtering and display.                                                                                    |
+| `template`                 | `{ weapon, echo, echoSet }` recommended build used to seed a fresh loadout. Scaffolded as empty strings — you fill it.          |
+| `stats.base` / `stats.max` | Level-1 and level-90 stat sheets; the loadout interpolates between them by level.                                               |
+| `skillTreeBonuses`         | Array of `SkillTreeStat` strings; compiled into permanent stat buffs at bootstrap (`compileSkillTreeNode`).                     |
+| `skillBonusPriority`       | UI hint only. One of the four DMG-bonus substat skill types: Basic Attack, Heavy Attack, Resonance Skill, Resonance Liberation. |
+| `primaryScalingStat`       | Optional `"atk" \| "hp" \| "def"` — the character's main scaling stat, for UI/build hints.                                      |
+| `forteCap`                 | Required. Max value of the character's forte resource (e.g. Camellya `100`). Default `100` when the gauge isn't modeled.        |
+| `buffs`                    | `BuffDef[]` — scaffolded as `[]`, written by hand. See [BUFFS.md](BUFFS.md).                                                    |
+| `skills`                   | `EnrichedSkill[]` — see below.                                                                                                  |
 
 ### Skill fields
 

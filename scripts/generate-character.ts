@@ -200,7 +200,7 @@ export function formatCharacter(char: Character, varName: string): string {
     `  skillTreeBonuses: [`,
     ...char.skillTreeBonuses.map((b) => `    ${s(b)},`),
     `  ],`,
-    `  recommendedSkillDmgPriority: ${s(char.recommendedSkillDmgPriority ?? "Resonance Liberation")},`,
+    `  skillBonusPriority: ${s(char.skillBonusPriority ?? "Resonance Liberation")},`,
     `  template: {`,
     `    weapon: '',`,
     `    echo: '',`,

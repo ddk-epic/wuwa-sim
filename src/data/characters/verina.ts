@@ -13,6 +13,7 @@ export const verina = {
     max: { hp: 14237.5, atk: 337.5, def: 1099.998 },
   },
   skillTreeBonuses: ["Healing Bonus", "ATK"],
+  skillBonusPriority: "Resonance Liberation",
   template: {
     weapon: "Variation",
     echo: "Bell-Borne Geochelone",

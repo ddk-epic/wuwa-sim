@@ -264,7 +264,7 @@ function accumulateEchoSubstatBlock(
   stats.energyRechargePct +=
     DEFAULT_SUBSTAT_ROLLS.energyRechargePct * ECHO_SUBSTAT.energyRechargePct
   const skillType: SkillType =
-    character.recommendedSkillDmgPriority ?? "Resonance Liberation"
+    character.skillBonusPriority ?? "Resonance Liberation"
   stats.skillTypeBonus[skillType] +=
     DEFAULT_SUBSTAT_ROLLS.skillDmgBonus * ECHO_SUBSTAT.skillDmgBonus
 }

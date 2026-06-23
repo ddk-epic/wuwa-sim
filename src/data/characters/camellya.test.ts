@@ -10,7 +10,9 @@ let testCharacters: EnrichedCharacter[] = []
 
 /** Fresh per-test copy of Camellya (the engine mutates characters in place). */
 function makeCamellyaChar(): EnrichedCharacter {
-  return { ...camellya }
+  // Route the echo substat DMG bonus away from Basic Attack, the skill type
+  // these tests measure buff bonuses on.
+  return { ...camellya, skillBonusPriority: "Resonance Liberation" }
 }
 
 vi.mock("../../lib/loadout/catalog", () => ({

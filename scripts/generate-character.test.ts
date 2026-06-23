@@ -147,19 +147,17 @@ describe("formatCharacter", () => {
     expect(out).toContain("forteCap: 100,")
   })
 
-  it("scaffolds recommendedSkillDmgPriority, defaulting when absent", () => {
+  it("scaffolds skillBonusPriority, defaulting when absent", () => {
     const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain(
-      'recommendedSkillDmgPriority: "Resonance Liberation",',
-    )
+    expect(out).toContain('skillBonusPriority: "Resonance Liberation",')
   })
 
-  it("emits recommendedSkillDmgPriority from the character when present", () => {
+  it("emits skillBonusPriority from the character when present", () => {
     const out = formatCharacter(
-      { ...minimalChar, recommendedSkillDmgPriority: "Heavy Attack" },
+      { ...minimalChar, skillBonusPriority: "Heavy Attack" },
       "testHero",
     )
-    expect(out).toContain('recommendedSkillDmgPriority: "Heavy Attack",')
+    expect(out).toContain('skillBonusPriority: "Heavy Attack",')
   })
 
   it("orders forteCap and stats under rarity, with template just above buffs", () => {

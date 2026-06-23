@@ -13,7 +13,7 @@ export const shorekeeper = {
     max: { hp: 16712.5, atk: 287.5, def: 1099.998 },
   },
   skillTreeBonuses: ["Healing Bonus", "HP"],
-  recommendedSkillDmgPriority: "Resonance Liberation",
+  skillBonusPriority: "Resonance Liberation",
   template: {
     weapon: "Stellar Symphony",
     echo: "Fallacy of No Return",

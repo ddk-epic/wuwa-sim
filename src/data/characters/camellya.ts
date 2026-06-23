@@ -13,6 +13,7 @@ export const camellya = {
     max: { hp: 10325, atk: 450, def: 1161.109 },
   },
   skillTreeBonuses: ["Crit. DMG", "ATK"],
+  skillBonusPriority: "Basic Attack",
   template: {
     weapon: "Red Spring",
     echo: "Nightmare: Crownless",

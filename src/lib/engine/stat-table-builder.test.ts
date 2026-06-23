@@ -473,8 +473,8 @@ describe("compileBaseStats", () => {
     expect(statsWithWeapon.critRate - statsNoWeapon.critRate).toBeCloseTo(0.1)
   })
 
-  it("recommendedSkillDmgPriority override routes skill dmg bonus to that skill type", () => {
-    const char = baseChar({ recommendedSkillDmgPriority: "Resonance Skill" })
+  it("skillBonusPriority override routes skill dmg bonus to that skill type", () => {
+    const char = baseChar({ skillBonusPriority: "Resonance Skill" })
     const stats = compileBaseStats(char, null, null)
     expect(stats.skillTypeBonus["Resonance Skill"]).toBeGreaterThan(0)
     expect(stats.skillTypeBonus["Resonance Liberation"]).toBe(0)

@@ -13,6 +13,7 @@ export const cartethyia = {
     max: { hp: 14800, atk: 312.5, def: 611.11 },
   },
   skillTreeBonuses: ["Crit. Rate", "HP"],
+  skillBonusPriority: "Basic Attack",
   template: {
     weapon: "Defier's Thorn",
     echo: "Reminiscence: Fleurdelys",

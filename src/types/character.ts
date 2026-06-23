@@ -50,6 +50,12 @@ export type SkillType =
   | "Echo Skill"
   | "Movement"
 
+/** The skill types that have a DMG Bonus echo substat. */
+export type SubstatSkillType = Extract<
+  SkillType,
+  "Basic Attack" | "Heavy Attack" | "Resonance Skill" | "Resonance Liberation"
+>
+
 export interface StatGroup {
   hp: number
   atk: number
@@ -159,7 +165,7 @@ export interface Character {
   skills: Skill[]
   skillTreeBonuses: SkillTreeStat[]
   buffs: CharacterBuffNames
-  recommendedSkillDmgPriority?: SkillType
+  skillBonusPriority?: SubstatSkillType
   primaryScalingStat?: "atk" | "hp" | "def"
 }
 

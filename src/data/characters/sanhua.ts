@@ -13,7 +13,7 @@ export const sanhua = {
     max: { hp: 10062.5, atk: 275, def: 941.1094 },
   },
   skillTreeBonuses: ["Glacio DMG Bonus", "ATK"],
-  recommendedSkillDmgPriority: "Resonance Liberation",
+  skillBonusPriority: "Resonance Liberation",
   template: {
     weapon: "Emerald of Genesis",
     echo: "Impermanence Heron",
