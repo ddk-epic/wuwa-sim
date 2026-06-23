@@ -1,6 +1,6 @@
 # `/dev/frames` — Frame Tool
 
-A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit `actionFrame` — **empirically from gameplay**, the numbers `gen:character` can't know and that today are hand-counted by eye. You define **clips** (recorded action strings) of known length, mark stage cutoffs and hits inside them, tag each mark with the visual cue you used, and the tool **solves** for each stage's timing across all clips, scoring every result by confidence. Output is copy/download — you paste it into the character file by hand.
+A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit `actionFrame` — **empirically from gameplay**, the numbers `gen:character` can't know and that today are hand-counted by eye. You define **clips** (recorded action strings) of known length, mark stage cutoffs and hits inside them, tag each mark with the visual cue you used, and the tool **reconciles** each stage's timing across all clips, scoring every result by confidence. Output is copy/download — you paste it into the character file by hand.
 
 **Source files:** `src/routes/dev.frames.tsx` (and supporting `dev/frames/` at the repo root) — a `DEV`-gated, pure client-side route. No node/server side.
 
@@ -62,22 +62,43 @@ The panel computes **coverage live** against the clips that already exist, so it
 doubles as a checklist; each row **seeds** a real `Clip` pre-loaded with its stage
 sequence (the sentinel is a recording instruction, never a stored stage).
 
-## The solver
+## The reconciler
 
-Each mark and clip is a linear equation over the stages' `actionTime`s:
+Every clip already carries all its interior dividers, so **every stage in every
+clip has a concrete section width** — a direct `actionTime` reading. The reconciler
+doesn't solve a system; it **groups those readings by stage identity and
+cross-checks them**. It is a discrepancy _checker_, never a value _deriver_: it
+invents nothing and averages nothing, it only reports how well a stage's clips
+agree.
 
-- a directly-marked cutoff or clip boundary → `A = 50`
-- a marked sub-span → `A + B = M`
-- a whole clip → `Σ (its stages) = clipLength`
-- cross-clip differences fall out for free (`len(1234) − len(234)` is just two equations)
+`reconcile(clips): Reconciliation` returns a `Map` keyed by stage id, each entry a
+rung on a four-step **corroboration** ladder:
 
-The tool solves the small linear system (a skill is ~4–10 stages, a handful of clips — trivial to re-run on every edit) and reports per stage:
+- **`unmeasured`** — no clip measures it yet.
+- **`single`** — one reading; usable but uncorroborated (the minimum bar).
+- **`confirmed`** — two or more readings agree, within a ±1-frame tolerance.
+- **`conflict`** — two or more _same-trust_ readings disagree beyond tolerance: a
+  miscount signal, surfaced rather than reconciled.
 
-- **under-determined** — not yet pinned; record another clip that adds an equation.
-- **solved** — determined, with a confidence score.
-- **conflicting** — over-determined and inconsistent (two measurements disagree). Surfaced rather than silently averaged: for empirical frame-counting this is how a miscount is caught, so redundant clips are cross-checks, not waste.
+Trust comes from the cue (see below). A disagreement between readings of
+_different_ cue weight is not a conflict — the higher-trust reading wins
+(`impactFlash` over `estimate`). Only a **same-trust** spread is a true `conflict`,
+left for the author to re-count: there is no auto-pick and no stored resolution, so
+re-counting or deleting the bad mark is the only fix. Each entry carries its
+`observations` (`{ clipId, value, cue }`) — the conflict drill-down, the provenance
+line, and the corroboration input the confidence layer reads.
 
-> **MVP status.** The solver and confidence scoring are deferred — they are a second layer. Until they land, `actionTime`/`actionFrame` are projected from a **single selected clip** at face value (section widths and hit offsets, no cross-clip reconciliation). The variant and export steps below are built against that single-clip projection; the solver later replaces "section width" with a reconciled value without changing the export shape.
+> **Deferred: the linear system.** Cross-clip _differencing_ — using a precise clip
+> total plus a precise neighbour to override a fuzzy interior divider
+> (`len(1234) − len(234)`) — needs a real linear solve. It's deferred; the reconciler
+> ships as group-by-identity. The linear upgrade would change only how an
+> observation's `value` is derived, not the `Reconciliation` shape — and even then it
+> stays a checker: it surfaces discrepancies, never silently corrects them.
+
+> **Confidence is still deferred.** Confidence tiers (high/medium/low) are a second
+> layer over the reconciler's `observations`; until they land a stage shows only its
+> corroboration rung. `actionFrame` and hit offsets stay per-clip projections off the
+> selected clip — only `actionTime` is reconciled across clips.
 
 ## Confidence
 
@@ -137,9 +158,9 @@ stage is all `actionTime`, as before.
 
 ## Output
 
-Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so the export is **clone the whole character object → sparse-patch the selected clip's measurements → serialize**:
+Read-only against the **bundled character registry** (the compiled character modules the app already imports) — pick a character, the stage list seeds from its scaffolded `stages[]`. The tool holds the **runtime object**, not the `.ts` source text, so the export is **clone the whole character object → sparse-patch the measurements → serialize**. `actionTime` comes from the reconciler (cross-clip); hits and variants stay scoped to the selected clip:
 
-- `stage.actionTime` ← the stage's section width (rest-zone-aware at the tail), minus any leading animation when the stage carries an [animation split](#animation-splits).
+- `stage.actionTime` ← the **reconciled** value (the reconciler's cross-clip reading, a rest-zone-aware section width), minus any leading animation when the stage carries an [animation split](#animation-splits). A `conflict` stage is **skipped and warned** — its `actionTime` isn't committed; the registry value stands until re-counted.
 - `stage.animationFrames` ← the frozen leading slice, written only for a stage that has an animation split.
 - `stage.damage[i].actionFrame` ← the _i_-th hit by frame, capped at `hitCount`; fewer hits patch only the leading entries. A split stage's hits resolve to `0` (they land inside the frozen animation).
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`).

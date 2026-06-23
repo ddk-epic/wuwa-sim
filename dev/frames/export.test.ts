@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import { buildExport } from "./export"
+import { reconcile } from "./reconcile"
 import type { Clip, HitMark, StageRef } from "./types"
+
+// Most cases export from a single clip; its reconciliation is that clip alone.
+const run = (char: EnrichedCharacter, clip: Clip) =>
+  buildExport(char, clip, reconcile([clip]))
 
 const ref = (name: string, hitCount: number): StageRef => ({
   id: `skill::${name}`,
@@ -60,7 +65,7 @@ const stageOf = (char: EnrichedCharacter, name: string) =>
 
 describe("buildExport", () => {
   it("patches actionTime from section width and actionFrame positionally", () => {
-    const { patched } = buildExport(character(), baseClip())
+    const { patched } = run(character(), baseClip())
     const a = stageOf(patched, "A")
     const b = stageOf(patched, "B")
     expect(a.actionTime).toBe(40)
@@ -71,7 +76,7 @@ describe("buildExport", () => {
 
   it("leaves the original registry object untouched", () => {
     const char = character()
-    buildExport(char, baseClip())
+    run(char, baseClip())
     expect(stageOf(char, "A").actionTime).toBe(0)
   })
 
@@ -82,7 +87,7 @@ describe("buildExport", () => {
         1: { swap: { kind: "start" } },
       },
     })
-    const { patched } = buildExport(character(), clip)
+    const { patched } = run(character(), clip)
     expect(stageOf(patched, "A").variants).toEqual({
       cancel: { actionTime: 25 },
     })
@@ -93,7 +98,7 @@ describe("buildExport", () => {
     const char = character()
     stageOf(char, "A").variants = { cancel: { actionTime: 99 } }
     const clip = baseClip({ variants: { 0: { cancel: { kind: "start" } } } })
-    const { patched, changes } = buildExport(char, clip)
+    const { patched, changes } = run(char, clip)
     expect(stageOf(patched, "A").variants).toEqual({
       instantCancel: { actionTime: 0 },
     })
@@ -103,7 +108,7 @@ describe("buildExport", () => {
 
   it("warns and skips an unresolved variant rather than writing it", () => {
     const clip = baseClip({ variants: { 0: { swap: { kind: "hit", n: 5 } } } })
-    const { patched, warnings } = buildExport(character(), clip)
+    const { patched, warnings } = run(character(), clip)
     expect(stageOf(patched, "A").variants).toEqual({})
     expect(warnings.some((w) => w.includes("unresolved"))).toBe(true)
   })
@@ -113,7 +118,7 @@ describe("buildExport", () => {
       stageRefs: [ref("A", 2), ref("A", 2)],
       hits: [hit("a0", 10, 0), hit("a1", 50, 1)],
     })
-    const { patched, warnings, changes } = buildExport(character(), clip)
+    const { patched, warnings, changes } = run(character(), clip)
     expect(stageOf(patched, "A").actionTime).toBe(0)
     expect(changes).toHaveLength(0)
     expect(warnings.filter((w) => w.includes("more than once"))).toHaveLength(1)
@@ -123,7 +128,7 @@ describe("buildExport", () => {
     const clip = baseClip({
       animationSplits: [{ frame: 12, cue: "vfxEdge" }, null],
     })
-    const { patched, changes } = buildExport(character(), clip)
+    const { patched, changes } = run(character(), clip)
     const a = stageOf(patched, "A")
     expect(a.animationFrames).toBe(12)
     expect(a.actionTime).toBe(28)
@@ -137,7 +142,7 @@ describe("buildExport", () => {
   })
 
   it("produces a TS literal with unquoted keys and the wrapper", () => {
-    const { ts } = buildExport(character(), baseClip())
+    const { ts } = run(character(), baseClip())
     expect(ts).toContain(
       'import type { EnrichedCharacter } from "#/types/character"',
     )
@@ -148,9 +153,31 @@ describe("buildExport", () => {
   })
 
   it("keeps small objects inline, breaking only what overflows the width", () => {
-    const { ts } = buildExport(character(), baseClip())
+    const { ts } = run(character(), baseClip())
     // A short damage entry fits on one line; the whole character does not.
     expect(ts).toContain("{ actionFrame: 10, value: 1 }")
     expect(ts).toMatch(/export const testChar = \{\n/)
+  })
+
+  it("skips a conflicting stage's actionTime and warns instead", () => {
+    const clip = baseClip()
+    // A second clip disagrees on A's length (40 vs 30) at the same trust.
+    const other = baseClip({
+      id: "c2",
+      boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
+      hits: [],
+    })
+    const { patched, warnings, changes } = buildExport(
+      character(),
+      clip,
+      reconcile([clip, other]),
+    )
+    expect(stageOf(patched, "A").actionTime).toBe(0)
+    expect(changes.map((c) => c.path)).not.toContain("A.actionTime")
+    expect(warnings.some((w) => w.includes("disagree"))).toBe(true)
+    // Hits still commit — they're a separate axis from the timing conflict.
+    expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
+      10, 25,
+    ])
   })
 })

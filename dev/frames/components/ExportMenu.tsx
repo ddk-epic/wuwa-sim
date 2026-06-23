@@ -7,6 +7,7 @@ import type { Cell } from "../diff"
 import { buildExport, characterToTs } from "../export"
 import { snapshotMarkdown } from "../snapshot"
 import type { Clip } from "../types"
+import type { Reconciliation } from "../reconcile"
 
 type Tab = "ts" | "md"
 
@@ -15,9 +16,11 @@ type Tab = "ts" | "md"
 export function ExportMenu({
   char,
   clip,
+  recon,
 }: {
   char: EnrichedCharacter
   clip: Clip | null
+  recon: Reconciliation
 }) {
   const [tab, setTab] = useState<Tab | null>(null)
   const disabled = !clip
@@ -44,6 +47,7 @@ export function ExportMenu({
         <ExportModal
           char={char}
           clip={clip}
+          recon={recon}
           tab={tab}
           setTab={setTab}
           onClose={() => setTab(null)}
@@ -56,17 +60,22 @@ export function ExportMenu({
 function ExportModal({
   char,
   clip,
+  recon,
   tab,
   setTab,
   onClose,
 }: {
   char: EnrichedCharacter
   clip: Clip
+  recon: Reconciliation
   tab: Tab
   setTab: (t: Tab) => void
   onClose: () => void
 }) {
-  const { ts, warnings } = useMemo(() => buildExport(char, clip), [char, clip])
+  const { ts, warnings } = useMemo(
+    () => buildExport(char, clip, recon),
+    [char, clip, recon],
+  )
   const before = useMemo(() => characterToTs(char), [char])
   const md = useMemo(() => snapshotMarkdown(char, clip), [char, clip])
   const text = tab === "ts" ? ts : md

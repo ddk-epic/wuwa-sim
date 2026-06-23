@@ -1,21 +1,36 @@
 import { useState } from "react"
-import { Check, ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
-import { animationSplitOf, hitsByStage, sections, stageTiming } from "../types"
-import type { Clip, StageRef } from "../types"
+import { clipDisplayName, hitsByStage, sections, stageTiming } from "../types"
+import type { Clip, CueTag, StageRef } from "../types"
+import { statusOf } from "../reconcile"
+import type { Reconciliation, StageStatus } from "../reconcile"
 
-// Read-only progress mirror over the character's whole stage catalog (grouped by
-// skill). Each stage's progress is measured against the selected clip; a stage not
-// in the clip reads as untouched. Open-state is keyed by catalog stage id and
-// deliberately survives clip switches — collapse-all is the only thing that clears it.
+// Color of the corroboration chip — the row's only semantic color. The hit
+// counter stays monochrome so the two axes don't clash.
+const CHIP: Record<StageStatus["status"], string> = {
+  unmeasured: "bg-muted-foreground/40",
+  single: "bg-amber-400",
+  confirmed: "bg-ui-heal",
+  conflict: "bg-destructive",
+}
+
+// Read-only campaign checklist over the character's whole stage catalog (grouped
+// by skill). The corroboration chip is cross-clip (the reconciler); the hit
+// counter is the best occurrence across clips. Open-state is keyed by stage id
+// and survives clip switches — collapse-all is the only thing that clears it.
 export function StageOverview({
   groups,
-  clip,
+  clips,
+  recon,
+  onJumpToClip,
 }: {
   groups: StageGroup[]
-  clip: Clip | null
+  clips: Clip[]
+  recon: Reconciliation
+  onJumpToClip?: (clipId: string) => void
 }) {
   const [open, setOpen] = useState<Set<string>>(new Set())
 
@@ -58,9 +73,11 @@ export function StageOverview({
                 <StageRow
                   key={s.id}
                   stage={s}
-                  clip={clip}
+                  status={statusOf(recon, s.id)}
+                  clips={clips}
                   open={open.has(s.id)}
                   onToggle={() => toggle(s.id)}
+                  onJumpToClip={onJumpToClip}
                 />
               ))}
             </div>
@@ -71,84 +88,125 @@ export function StageOverview({
   )
 }
 
-// One catalog stage's progress row, measured against the first occurrence in the
-// clip. A repeated stage is a trailing sentinel (a recording artifact, deleted
-// before export), so later occurrences don't inflate the count. A no-hit stage
-// (some liberations) has nothing to count, so its animation split is the check.
-function StageRow({
-  stage,
-  clip,
-  open,
-  onToggle,
-}: {
-  stage: StageRef
-  clip: Clip | null
-  open: boolean
-  onToggle: () => void
-}) {
-  const cl = clip
-  const secs = cl ? sections(cl) : []
-  const byStage = cl ? hitsByStage(cl) : []
-  const occ = secs
-    .map((sec, i) => ({ sec, i }))
-    .filter(({ sec }) => sec.ref.id === stage.id)
-    .slice(0, 1)
-  const hits = occ.flatMap(({ sec, i }) => {
-    const split = cl ? stageTiming(cl, i, secs).animationFrames > 0 : false
-    return byStage[i].map((h) => ({
+interface HitView {
+  id: string
+  cue: CueTag
+  af: number
+}
+
+// The clip with the most hits marked for this stage's first occurrence — the
+// honest "best you've captured anywhere" reading, independent of which clip is
+// selected. A split stage's hits resolve to 0 (they land in the frozen animation).
+function bestHits(
+  clips: Clip[],
+  stageId: string,
+): { clipId: string; hits: HitView[] } | null {
+  let best: { clipId: string; hits: HitView[] } | null = null
+  for (const clip of clips) {
+    const secs = sections(clip)
+    const i = secs.findIndex((s) => s.ref.id === stageId)
+    if (i === -1) continue
+    const split = stageTiming(clip, i, secs).animationFrames > 0
+    const hits = hitsByStage(clip)[i].map((h) => ({
       id: h.id,
       cue: h.cue,
-      af: split ? 0 : h.frame - sec.start,
+      af: split ? 0 : h.frame - secs[i].start,
     }))
-  })
+    if (!best || hits.length > best.hits.length)
+      best = { clipId: clip.id, hits }
+  }
+  return best
+}
 
-  const count = hits.length
-  const capacity = (occ.length || 1) * stage.hitCount
-  const hasSplit =
-    cl != null && occ.length > 0 && animationSplitOf(cl, occ[0].i) != null
-  const canOpen = count > 0
+// One catalog stage's row: a corroboration chip + a monochrome hit counter. The
+// drill-down shows the conflicting clips (for `conflict`) or the marked hits.
+function StageRow({
+  stage,
+  status,
+  clips,
+  open,
+  onToggle,
+  onJumpToClip,
+}: {
+  stage: StageRef
+  status: StageStatus
+  clips: Clip[]
+  open: boolean
+  onToggle: () => void
+  onJumpToClip?: (clipId: string) => void
+}) {
+  const best = bestHits(clips, stage.id)
+  const count = best?.hits.length ?? 0
+  const capacity = stage.hitCount
+  const observations = "observations" in status ? status.observations : []
+  const isConflict = status.status === "conflict"
+
+  const canOpen = isConflict ? observations.length > 0 : count > 0
   const isOpen = open && canOpen
-  const finished = capacity > 0 ? count === capacity : hasSplit
 
-  let tone = "text-muted-foreground/60"
-  if (capacity > 0 && count > capacity) tone = "text-destructive"
-  else if (finished) tone = "text-ui-heal"
-  else if (count > 0) tone = "text-foreground"
+  const counterTone =
+    capacity > 0 && count === capacity
+      ? "text-foreground"
+      : "text-muted-foreground/70"
 
   return (
     <div>
       <button
         disabled={!canOpen}
         onClick={() => canOpen && onToggle()}
-        className={`flex w-full items-center justify-between rounded border border-border px-2 py-1 text-left text-detail ${canOpen ? "hover:border-muted-foreground/40 hover:bg-card" : "cursor-default"} ${tone}`}
+        className={`flex w-full items-center justify-between rounded border border-border px-2 py-1 text-left text-detail text-foreground ${canOpen ? "hover:border-muted-foreground/40 hover:bg-card" : "cursor-default"}`}
       >
-        <span className="flex min-w-0 items-center gap-1">
+        <span className="flex min-w-0 items-center gap-1.5">
           {canOpen ? (
             isOpen ? (
-              <ChevronDown className="size-3 shrink-0" />
+              <ChevronDown className="size-3 shrink-0 text-muted-foreground/60" />
             ) : (
-              <ChevronRight className="size-3 shrink-0" />
+              <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" />
             )
           ) : (
             <span className="size-3 shrink-0" />
           )}
+          <span
+            className={`size-2 shrink-0 rounded-full ${CHIP[status.status]}`}
+            title={status.status}
+          />
           <span className="truncate">{stage.stage}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 font-mono">
-          {finished && <Check className="size-3 text-ui-heal" />}
-          <span>
-            {capacity === 0
-              ? hasSplit
-                ? "split"
-                : "—"
-              : `${count}/${capacity}`}
+        <span className="flex shrink-0 items-center gap-1.5 font-mono tabular-nums">
+          {isConflict && (
+            <span className="text-micro text-muted-foreground/60">
+              ±{status.spread}
+            </span>
+          )}
+          <span className={counterTone}>
+            {capacity === 0 ? "—" : `${count}/${capacity}`}
           </span>
         </span>
       </button>
 
-      {isOpen && (
+      {isOpen && isConflict && (
         <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
-          {hits.map((h, idx) => (
+          {observations.map((o) => (
+            <button
+              key={o.clipId}
+              onClick={() => onJumpToClip?.(o.clipId)}
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-left text-detail hover:text-foreground"
+            >
+              <span className="truncate text-muted-foreground/70">
+                {clipDisplayName(clips.find((c) => c.id === o.clipId)!)}
+              </span>
+              <span className={`size-2 rounded-full ${CUE_COLOR[o.cue]}`} />
+              <span className="pr-2 text-right font-mono tabular-nums text-foreground">
+                {o.value}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isOpen && !isConflict && best && (
+        <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+          {best.hits.map((h, idx) => (
             <div
               key={h.id}
               className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-detail"

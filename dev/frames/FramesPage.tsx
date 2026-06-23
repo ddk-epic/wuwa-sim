@@ -9,6 +9,7 @@ import {
 } from "./storage"
 import { applyClipEdit, clipDisplayName } from "./types"
 import type { Clip, ClipEdit } from "./types"
+import { reconcile } from "./reconcile"
 import { planClips } from "./planner"
 import type { SuggestedClip } from "./planner"
 import { uid } from "./shared"
@@ -40,6 +41,7 @@ export function FramesPage() {
   const char = findCharacter(characterName)
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
   const suggestions = useMemo(() => (char ? planClips(char) : []), [char])
+  const recon = useMemo(() => reconcile(clips), [clips])
   const clip = clips.find((c) => c.id === selectedId) ?? null
 
   // Restore the saved character + clips after mount, not at init, so SSR and the
@@ -124,7 +126,12 @@ export function FramesPage() {
 
       <div className="grid min-h-0 flex-1 grid-cols-[16rem_1fr]">
         <aside className="min-h-0 overflow-hidden border-r border-border">
-          <StageOverview groups={groups} clip={clip} />
+          <StageOverview
+            groups={groups}
+            clips={clips}
+            recon={recon}
+            onJumpToClip={setSelectedId}
+          />
         </aside>
 
         <main className="overflow-y-auto p-5">
@@ -132,7 +139,7 @@ export function FramesPage() {
             <h2 className="text-title font-bold tracking-tight">
               {characterName}
             </h2>
-            {char && <ExportMenu char={char} clip={clip} />}
+            {char && <ExportMenu char={char} clip={clip} recon={recon} />}
           </div>
 
           <div className="rounded-lg border border-border bg-card p-3">

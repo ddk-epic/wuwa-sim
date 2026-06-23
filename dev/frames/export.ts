@@ -10,6 +10,8 @@ import {
   stageTiming,
 } from "./types"
 import type { Clip, StageRef, VariantTrack } from "./types"
+import { statusOf } from "./reconcile"
+import type { Reconciliation } from "./reconcile"
 
 export interface Change {
   path: string
@@ -57,10 +59,16 @@ function variantKeyFor(
 
 /**
  * Clone the character and sparse-patch only what the clip measured, leaving the
- * rest byte-equal so the diff stays tight. A repeated stage can't patch one slot
- * twice, so it's skipped with a warning.
+ * rest byte-equal so the diff stays tight. `actionTime` comes from the reconciler
+ * (cross-clip); hits and variants stay scoped to the selected clip. A repeated
+ * stage can't patch one slot twice, and a `conflict` stage can't pick a value —
+ * both are skipped with a warning.
  */
-export function buildExport(char: EnrichedCharacter, clip: Clip): ExportResult {
+export function buildExport(
+  char: EnrichedCharacter,
+  clip: Clip,
+  recon: Reconciliation,
+): ExportResult {
   const patched = structuredClone(char)
   const changes: Change[] = []
   const warnings: string[] = []
@@ -88,14 +96,24 @@ export function buildExport(char: EnrichedCharacter, clip: Clip): ExportResult {
 
     const sec = secs[i]
     const split = clip.animationSplits?.[i] ?? null
-    const { animationFrames, actionTime } = stageTiming(clip, i, secs)
-    if (stage.actionTime !== actionTime) {
-      changes.push({
-        path: `${ref.stage}.actionTime`,
-        before: stage.actionTime,
-        after: actionTime,
-      })
-      stage.actionTime = actionTime
+    const { animationFrames } = stageTiming(clip, i, secs)
+    const status = statusOf(recon, ref.id)
+    if (status.status === "conflict") {
+      const values = [...new Set(status.observations.map((o) => o.value))].sort(
+        (a, b) => a - b,
+      )
+      warnings.push(
+        `${ref.stage}: clips disagree (${values.join(" vs ")}) — re-count before pasting.`,
+      )
+    } else if (status.status === "single" || status.status === "confirmed") {
+      if (stage.actionTime !== status.actionTime) {
+        changes.push({
+          path: `${ref.stage}.actionTime`,
+          before: stage.actionTime,
+          after: status.actionTime,
+        })
+        stage.actionTime = status.actionTime
+      }
     }
     if (split && stage.animationFrames !== animationFrames) {
       changes.push({
