@@ -108,7 +108,7 @@ export function MarksTable({
             <div className="min-w-108 overflow-hidden rounded border border-border text-detail">
               <div className={`${COLS} bg-card`}>
                 <span className="min-w-28 truncate font-medium text-foreground">
-                  Stage {i + 1}
+                  {sec.ref.stage}
                   <span className="px-1.5 font-normal text-muted-foreground/70">
                     {sec.end - sec.start}f
                   </span>
@@ -168,10 +168,10 @@ export function MarksTable({
                         hit [{idx + 1}]
                         {displaced && (
                           <span
-                            className="rounded bg-amber-500/15 px-1 text-micro text-amber-500"
-                            title={`delayed — frame lands in stage ${posIdx + 1}`}
+                            className="max-w-24 truncate rounded bg-amber-500/15 px-1 text-micro text-amber-500"
+                            title={`delayed — frame lands in ${secs[posIdx].ref.stage}`}
                           >
-                            ⤶ S{posIdx + 1}
+                            ⤶ {secs[posIdx].ref.stage}
                           </span>
                         )}
                       </span>
