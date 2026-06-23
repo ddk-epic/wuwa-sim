@@ -12,6 +12,22 @@ export const shorekeeper = {
     base: { hp: 1337, atk: 23, def: 90 },
     max: { hp: 16712.5, atk: 287.5, def: 1099.998 },
   },
+  // Flare Star Butterfly
+  emitPool: {
+    cap: 5,
+    maturation: 360,
+    emit: {
+      type: "Basic Attack",
+      dmgType: "Damage",
+      scalingStat: "ATK",
+      actionFrame: 40,
+      value: 0.3729,
+      energy: 0.59,
+      concerto: 1,
+      toughness: 0.1876,
+      weakness: 0,
+    },
+  },
   skillTreeBonuses: ["Healing Bonus", "HP"],
   skillBonusPriority: "Resonance Liberation",
   template: {
@@ -328,6 +344,7 @@ export const shorekeeper = {
               toughness: 0.1599,
               weakness: 0.2664,
               forte: 1,
+              spawn: 1,
             },
           ],
         },
@@ -353,6 +370,7 @@ export const shorekeeper = {
               toughness: 0.12,
               weakness: 0.2,
               forte: 1,
+              spawn: 1,
             },
             {
               type: "Basic Attack",
@@ -364,6 +382,7 @@ export const shorekeeper = {
               concerto: 1.2,
               toughness: 0.12,
               weakness: 0.2,
+              spawn: 1,
             },
           ],
         },
@@ -390,6 +409,7 @@ export const shorekeeper = {
               weakness: 0.1955,
               forte: 1,
               independent: true,
+              spawn: 1,
             },
             {
               type: "Basic Attack",
@@ -440,6 +460,7 @@ export const shorekeeper = {
               toughness: 0.3658,
               weakness: 0.6096,
               forte: 1,
+              spawn: 1,
             },
           ],
         },
@@ -854,28 +875,6 @@ export const shorekeeper = {
       name: "Astral Chord",
       type: "Forte Circuit",
       stages: [
-        {
-          name: "Flare Star Butterfly DMG",
-          category: "Basic Attack",
-          newName: "Flare Star Butterfly",
-          value: "37.29%",
-          hidden: true,
-          actionTime: 0,
-          variants: {},
-          damage: [
-            {
-              type: "Basic Attack",
-              dmgType: "Damage",
-              scalingStat: "ATK",
-              actionFrame: 0,
-              value: 0.3729,
-              energy: 0.59,
-              concerto: 1,
-              toughness: 0.1876,
-              weakness: 0,
-            },
-          ],
-        },
         {
           name: "Illation DMG",
           category: "Heavy Attack",

@@ -94,7 +94,6 @@ exports[`all shipped data compiles > stage-id snapshot (drift tripwire) 1`] = `
   "char.sanhua.outro-skill.silversnow.cast::outro-skill",
   "char.sanhua.resonance-liberation.glacial-gaze.cast::resonance-liberation",
   "char.sanhua.resonance-skill.eternal-frost.cast::resonance-skill",
-  "char.shorekeeper.basic-attack.astral-chord.flare-star-butterfly::basic-attack",
   "char.shorekeeper.basic-attack.astral-chord.transmutation::basic-attack",
   "char.shorekeeper.basic-attack.end-loop.healing::basic-attack",
   "char.shorekeeper.basic-attack.origin-calculus.dodge-counter::basic-attack",
