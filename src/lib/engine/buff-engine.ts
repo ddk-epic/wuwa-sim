@@ -47,6 +47,7 @@ import { buildHitEvent } from "./log-event-builders"
 import { FootingModule } from "./footing"
 import { OnFieldTracker } from "./on-field-tracker"
 import { PoolStore } from "./pool-store"
+import type { PoolMember } from "./pool-store"
 import { ResourceLedger } from "./resource-ledger"
 import { accumulateStatEffects, matchesHit } from "./stat-table-builder"
 import { TriggerIndex } from "./trigger-index"
@@ -909,9 +910,10 @@ export class BuffEngine {
   }
 
   /**
-   * Push `n` Deferred Emits onto the actor's pool, record each maturation for the
-   * simulation to park on its Schedule, and sync the `"pool"` resource to the new
-   * member count. Sole spawn op — `DamageEntry.spawn` routes here, not accrual.
+   * Push `n` Deferred Emits onto the actor's pool, displacing the oldest over
+   * `cap` (each converts immediately at `frame`), record each surviving member's
+   * maturation for the simulation to park, and sync the `"pool"` resource to the
+   * new count. Sole spawn op — `DamageEntry.spawn` routes here, not accrual.
    */
   private spawnIntoPool(
     characterId: number,
@@ -923,17 +925,29 @@ export class BuffEngine {
   ): void {
     const config = getCharacterById(characterId)?.emitPool
     if (!config) return
+    const spawned: PoolMember[] = []
     for (let i = 0; i < n; i++) {
-      const member = this.pool.spawn(
-        characterId,
-        frame,
-        frame + config.maturation,
+      spawned.push(
+        this.pool.spawn(characterId, frame, frame + config.maturation),
       )
+    }
+    // FIFO displacement: the oldest over cap convert now, at `frame`. Their parked
+    // maturation timers find them gone and no-op, so each converts exactly once.
+    const displaced =
+      config.cap !== undefined
+        ? this.pool.displaceOldest(characterId, config.cap)
+        : []
+    const displacedIds = new Set(displaced.map((m) => m.id))
+    for (const member of spawned) {
+      if (displacedIds.has(member.id)) continue
       this.pendingMaturations.push({
         characterId,
         memberId: member.id,
         maturationFrame: member.maturationFrame,
       })
+    }
+    for (let i = 0; i < displaced.length; i++) {
+      this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
     }
     this.setResource(
       characterId,

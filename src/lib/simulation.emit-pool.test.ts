@@ -20,10 +20,11 @@ import { dmgHit, makeChar, stageOf, tlEntry } from "./simulation.test-fixtures"
 const MATURATION = 100
 const TRAVEL = 40
 
-/** A pool character whose Basic Attack spawns `spawn` cores. */
-const poolChar = (spawn: number): EnrichedCharacter => {
+/** A pool character whose Basic Attack spawns `spawn` cores, optionally capped. */
+const poolChar = (spawn: number, cap?: number): EnrichedCharacter => {
   const char = makeChar(1, "Pool A")
   char.emitPool = {
+    ...(cap !== undefined ? { cap } : {}),
     maturation: MATURATION,
     emit: { ...dmgHit(2.0), actionFrame: TRAVEL },
   }
@@ -116,5 +117,48 @@ describe("Emit Pool tracer — spawn to maturation", () => {
     const synths = log.filter(isPoolSynth)
     expect(synths).toHaveLength(1)
     expect(synths[0].frame).toBe(MATURATION + TRAVEL)
+  })
+})
+
+describe("Emit Pool — cap + FIFO displacement", () => {
+  it("a spawn over cap displaces the oldest, converting it early", () => {
+    testCharacters = [poolChar(1, 1)]
+    const slots: Slots = [1, null, null]
+    const log = runSimulation(
+      [
+        tlEntry(1, stageOf("pool-a"), "e1"),
+        tlEntry(1, stageOf("pool-a"), "e2"),
+      ],
+      slots,
+      loadouts,
+    )
+    const actions = log.filter((e): e is ActionEvent => e.kind === "action")
+    // e2 acts at frame 60 with the cap (1) member still in flight.
+    expect(actions[1].pool).toBe(1)
+
+    const synths = log.filter(isPoolSynth)
+    // e1's core (frame 0) is displaced by e2's spawn at frame 60: it converts now
+    // and lands at 60 + 40 = 100, NOT at its natural 0 + 100 + 40 = 140.
+    // e2's core survives, maturing at 60 + 100 → lands at 200.
+    expect(synths.map((s) => s.frame)).toEqual([100, 200])
+    expect(synths.some((s) => s.frame === 140)).toBe(false)
+  })
+
+  it("a multi-spawn over cap displaces multiple oldest at once", () => {
+    testCharacters = [poolChar(5, 2)]
+    const slots: Slots = [1, null, null]
+    const log = runSimulation(
+      [tlEntry(1, stageOf("pool-a"), "e1")],
+      slots,
+      loadouts,
+    )
+    const synths = log.filter(isPoolSynth)
+    // Frame 0 spawns 5 into a cap-2 pool: 3 oldest displace and land at 0 + 40;
+    // the 2 survivors mature at 100 and land at 140.
+    expect(synths).toHaveLength(5)
+    expect(synths.filter((s) => s.frame === TRAVEL)).toHaveLength(3)
+    expect(synths.filter((s) => s.frame === MATURATION + TRAVEL)).toHaveLength(
+      2,
+    )
   })
 })

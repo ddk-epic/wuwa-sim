@@ -41,6 +41,26 @@ describe("PoolStore", () => {
     expect(pool.remove(1, 999)).toBe(false)
   })
 
+  it("displaceOldest pops the oldest members down to cap, oldest-first", () => {
+    const pool = new PoolStore()
+    const a = pool.spawn(1, 0, 100)
+    const b = pool.spawn(1, 10, 110)
+    const c = pool.spawn(1, 20, 120)
+    const displaced = pool.displaceOldest(1, 1)
+    expect(displaced.map((m) => m.id)).toEqual([a.id, b.id])
+    expect(pool.count(1)).toBe(1)
+    expect(pool.remove(1, c.id)).toBe(true)
+  })
+
+  it("displaceOldest is a no-op at or under cap", () => {
+    const pool = new PoolStore()
+    pool.spawn(1, 0, 100)
+    expect(pool.displaceOldest(1, 2)).toEqual([])
+    expect(pool.displaceOldest(1, 1)).toEqual([])
+    expect(pool.displaceOldest(2, 0)).toEqual([])
+    expect(pool.count(1)).toBe(1)
+  })
+
   it("clear empties every pool and resets handles", () => {
     const pool = new PoolStore()
     pool.spawn(1, 0, 100)
