@@ -132,6 +132,16 @@ export type RemoveBuffsEffect = {
   buffs: string[]
 }
 
+/**
+ * Mature held Deferred Emits in the source's Emit Pool now, oldest-first —
+ * cancelling each member's pending maturation. `count: "all"` matures the whole
+ * pool; convert on an empty pool is a no-op.
+ */
+export type ConvertEffect = {
+  kind: "convert"
+  count: number | "all"
+}
+
 export type NegStatusEffect = {
   kind: "negStatus"
   status: NegStatusType
@@ -151,6 +161,7 @@ export type Effect =
   | EmitHitEffect
   | CoordHitEffect
   | RemoveBuffsEffect
+  | ConvertEffect
   | NegStatusEffect
   | NegStatusModEffect
 

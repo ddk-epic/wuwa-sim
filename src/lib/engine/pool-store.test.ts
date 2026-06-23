@@ -52,6 +52,20 @@ describe("PoolStore", () => {
     expect(pool.remove(1, c.id)).toBe(true)
   })
 
+  it("takeOldest splices the oldest n, oldest-first, clamped to size", () => {
+    const pool = new PoolStore()
+    const a = pool.spawn(1, 0, 100)
+    const b = pool.spawn(1, 10, 110)
+    pool.spawn(1, 20, 120)
+    expect(pool.takeOldest(1, 2).map((m) => m.id)).toEqual([a.id, b.id])
+    expect(pool.count(1)).toBe(1)
+    // n beyond size empties the rest; n <= 0 and unseen ids are no-ops.
+    expect(pool.takeOldest(1, 9)).toHaveLength(1)
+    expect(pool.count(1)).toBe(0)
+    expect(pool.takeOldest(1, 0)).toEqual([])
+    expect(pool.takeOldest(2, 3)).toEqual([])
+  })
+
   it("displaceOldest is a no-op at or under cap", () => {
     const pool = new PoolStore()
     pool.spawn(1, 0, 100)

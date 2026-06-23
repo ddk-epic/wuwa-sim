@@ -120,6 +120,100 @@ describe("Emit Pool tracer — spawn to maturation", () => {
   })
 })
 
+// Long enough that prior cores are still pending when the convert fires.
+const CONVERT_MATURATION = 300
+const RESONANCE_STAGE =
+  "char.pool-a.resonance-skill.resonance-skill.stage-1::resonance-skill"
+
+/** A pool character whose Resonance Skill cast converts `count` held cores. */
+const convertChar = (count: number | "all"): EnrichedCharacter => {
+  const char = makeChar(1, "Pool A")
+  char.emitPool = {
+    maturation: CONVERT_MATURATION,
+    emit: { ...dmgHit(2.0), actionFrame: TRAVEL },
+  }
+  char.skills[0].stages[0].damage = [{ ...dmgHit(1.0), spawn: 1 }]
+  char.skills.push({
+    id: 11,
+    name: "Resonance Skill",
+    type: "Resonance Skill",
+    stages: [
+      {
+        name: "Stage 1",
+        category: "Resonance Skill",
+        value: "100%",
+        actionTime: 60,
+        damage: [dmgHit(0.5, 0, 0, "Resonance Skill")],
+      },
+    ],
+    damage: [],
+  })
+  char.buffs = [
+    {
+      id: "gold.convert",
+      name: "Convert",
+      trigger: {
+        event: "skillCast",
+        actor: "self",
+        characterId: 1,
+        skillCategory: "Resonance Skill",
+      },
+      effects: [{ kind: "convert", count }],
+    },
+  ]
+  return char
+}
+
+describe("Emit Pool — explicit convert", () => {
+  it("convert all matures every held core early, oldest and newest alike", () => {
+    testCharacters = [convertChar("all")]
+    const slots: Slots = [1, null, null]
+    const log = runSimulation(
+      [
+        tlEntry(1, stageOf("pool-a"), "e1"),
+        tlEntry(1, stageOf("pool-a"), "e2"),
+        tlEntry(1, RESONANCE_STAGE, "e3"),
+      ],
+      slots,
+      loadouts,
+    )
+    const synths = log.filter(isPoolSynth)
+    // Cores from e1 (frame 0) and e2 (frame 60) both convert on e3's cast at
+    // frame 120 → land at 120 + 40 = 160, not at their natural 340 / 400.
+    expect(synths.map((s) => s.frame)).toEqual([160, 160])
+    expect(synths.some((s) => s.frame === 340 || s.frame === 400)).toBe(false)
+  })
+
+  it("convert N matures only the oldest N; the rest mature naturally", () => {
+    testCharacters = [convertChar(1)]
+    const slots: Slots = [1, null, null]
+    const log = runSimulation(
+      [
+        tlEntry(1, stageOf("pool-a"), "e1"),
+        tlEntry(1, stageOf("pool-a"), "e2"),
+        tlEntry(1, RESONANCE_STAGE, "e3"),
+      ],
+      slots,
+      loadouts,
+    )
+    const synths = log.filter(isPoolSynth)
+    // Oldest (e1's core) converts on e3's cast → 160. e2's core is untouched and
+    // matures naturally at 60 + 300 → lands at 400.
+    expect(synths.map((s) => s.frame)).toEqual([160, 400])
+  })
+
+  it("convert on an empty pool is a harmless no-op", () => {
+    testCharacters = [convertChar("all")]
+    const slots: Slots = [1, null, null]
+    const log = runSimulation(
+      [tlEntry(1, RESONANCE_STAGE, "e1")],
+      slots,
+      loadouts,
+    )
+    expect(log.filter(isPoolSynth)).toHaveLength(0)
+  })
+})
+
 describe("Emit Pool — cap + FIFO displacement", () => {
   it("a spawn over cap displaces the oldest, converting it early", () => {
     testCharacters = [poolChar(1, 1)]

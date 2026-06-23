@@ -39,6 +39,13 @@ export class PoolStore {
     return member
   }
 
+  /** Splice and return the oldest `n` members (fewer if the pool is smaller). */
+  takeOldest(characterId: number, n: number): PoolMember[] {
+    const list = this.byCharacter.get(characterId)
+    if (!list || n <= 0) return []
+    return list.splice(0, Math.min(n, list.length))
+  }
+
   /**
    * Enforce `cap` by popping the oldest members until the FIFO holds at `cap`,
    * returning the displaced members (oldest-first) for immediate conversion.
@@ -47,7 +54,7 @@ export class PoolStore {
   displaceOldest(characterId: number, cap: number): PoolMember[] {
     const list = this.byCharacter.get(characterId)
     if (!list || list.length <= cap) return []
-    return list.splice(0, list.length - cap)
+    return this.takeOldest(characterId, list.length - cap)
   }
 
   /** Remove the member by handle. Returns false when already gone (converted). */

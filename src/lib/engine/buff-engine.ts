@@ -171,6 +171,7 @@ export class BuffEngine {
     { name: "negStatus", run: (ctx) => this.runNegStatusPhase(ctx) },
     { name: "emitHit", run: (ctx) => this.runEmitHitPhase(ctx) },
     { name: "coordHit", run: (ctx) => this.runCoordHitPhase(ctx) },
+    { name: "convert", run: (ctx) => this.runConvertPhase(ctx) },
     {
       name: "consume",
       run: (ctx) => this.store.runConsumePhase(ctx.event, ctx.out),
@@ -1015,6 +1016,54 @@ export class BuffEngine {
       sourceCharacterId: characterId,
     }
     return { input, landingFrame: convertFrame + emit.actionFrame, depth: 0 }
+  }
+
+  private runConvertPhase(ctx: PhaseContext): void {
+    for (const { def, sourceCharacterId } of ctx.candidates) {
+      for (const effect of def.effects) {
+        if (effect.kind !== "convert") continue
+        this.convertPool(
+          sourceCharacterId,
+          effect.count,
+          ctx.event.frame,
+          ctx.out,
+          ctx.hitsOut,
+          ctx.depth,
+        )
+      }
+    }
+  }
+
+  /**
+   * Mature `count` held Deferred Emits now, oldest-first (`"all"` empties the
+   * pool), converting each at `frame`. Their parked maturation timers find them
+   * gone and no-op. A no-op when nothing is held.
+   */
+  private convertPool(
+    characterId: number,
+    count: number | "all",
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    const config = getCharacterById(characterId)?.emitPool
+    if (!config) return
+    const n = count === "all" ? this.pool.count(characterId) : count
+    const converted = this.pool.takeOldest(characterId, n)
+    if (converted.length === 0) return
+    for (let i = 0; i < converted.length; i++) {
+      this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
+    }
+    this.setResource(
+      characterId,
+      "pool",
+      this.pool.count(characterId),
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
   }
 
   private applyResourceDelta(
