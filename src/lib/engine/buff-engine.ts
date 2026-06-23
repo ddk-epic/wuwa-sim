@@ -267,10 +267,11 @@ export class BuffEngine {
       slots.push(charId ?? -1)
       if (charId === null) continue
       const character = getCharacterById(charId)
-      if (character?.forteCap !== undefined) {
+      if (!character) continue
+      if (character.forteCap !== undefined) {
         this.resources.registerCap(charId, "forte", character.forteCap)
       }
-      if (character?.emitPool?.cap !== undefined) {
+      if (character.emitPool?.cap !== undefined) {
         this.resources.registerCap(charId, "pool", character.emitPool.cap)
       }
       const slot = bootstrapSlot(charId, input.loadouts[i] ?? null)
