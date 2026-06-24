@@ -113,7 +113,6 @@ exports[`all shipped data compiles > stage-id snapshot (drift tripwire) 1`] = `
   "char.shorekeeper.outro-skill.binary-butterfly.cast::outro-skill",
   "char.shorekeeper.resonance-liberation.end-loop.cast::resonance-liberation",
   "char.shorekeeper.resonance-skill.chaos-theory.cast::resonance-skill",
-  "char.shorekeeper.resonance-skill.chaos-theory.healing::resonance-skill",
   "char.verina.basic-attack.arboreal-flourish.arboreal-flourish-healing::basic-attack",
   "char.verina.basic-attack.arboreal-flourish.coordinated-attack-healing::basic-attack",
   "char.verina.basic-attack.cultivation.dodge-counter::basic-attack",

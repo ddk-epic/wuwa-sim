@@ -2,7 +2,11 @@
 import { describe, expect, it } from "vitest"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
-import type { HitEvent, SimulationLogEntry } from "#/types/simulation-log"
+import type {
+  HitEvent,
+  SimulationLogEntry,
+  SustainEvent,
+} from "#/types/simulation-log"
 import { runSimulation } from "#/lib/simulation"
 import { emptyLoadout, loadoutFromTemplate } from "#/lib/loadout/template"
 import { shorekeeper } from "./shorekeeper"
@@ -84,5 +88,96 @@ describe("Shorekeeper — Flare Star Butterflies via Emit Pool", () => {
     // and the 5 combo-2 survivors mature late.
     const early = flies.filter((b) => b.frame < MATURATION)
     expect(early).toHaveLength(5)
+  })
+})
+
+const HIT_STAGE = {
+  chaosTheory:
+    "char.shorekeeper.resonance-skill.chaos-theory.cast::resonance-skill",
+  discernment:
+    "char.shorekeeper.intro-skill.proof-of-existence.discernment::resonance-liberation",
+} as const
+
+function runHitScopedRotation(sequence: number): SimulationLogEntry[] {
+  const slots: Slots = [SHOREKEEPER, null, null]
+  const loadouts: SlotLoadout[] = [
+    { ...loadoutFromTemplate(shorekeeper.template), sequence },
+    emptyLoadout(),
+    emptyLoadout(),
+  ]
+  const entries: TimelineEntry[] = [
+    { id: "chaos", characterId: SHOREKEEPER, stageId: HIT_STAGE.chaosTheory },
+    { id: "discern", characterId: SHOREKEEPER, stageId: HIT_STAGE.discernment },
+  ]
+  return runSimulation(entries, slots, loadouts, { startWithFullEnergy: true })
+}
+
+const allHits = (log: SimulationLogEntry[]): HitEvent[] =>
+  log.filter((e): e is HitEvent => e.kind === "hit")
+
+const chaosTheoryHeal = (log: SimulationLogEntry[]): SustainEvent | undefined =>
+  log.find(
+    (e): e is SustainEvent =>
+      e.kind === "sustain" && e.sub === "heal" && e.sourceEntryId === "chaos",
+  )
+
+describe("Shorekeeper — hit-scoped buffs via appliesToHits", () => {
+  it("Chaos Theory heal is hit #1 of the cast stage", () => {
+    const chaosTheory = shorekeeper.skills.find(
+      (s) => s.name === "Chaos Theory",
+    )
+    const cast = chaosTheory?.stages.find((s) => s.name === "Skill DMG")
+    expect(cast?.damage[0].dmgType).toBe("Heal")
+    // The standalone hidden healing stage is gone.
+    expect(chaosTheory?.stages.some((s) => s.name === "Healing")).toBe(false)
+  })
+
+  it("S4 folds Healing Bonus +70% into the Chaos Theory heal and nowhere else", () => {
+    const log = runHitScopedRotation(6)
+    const heal = chaosTheoryHeal(log)
+    const base = chaosTheoryHeal(runHitScopedRotation(0))
+    expect(heal).toBeDefined()
+    expect(base).toBeDefined()
+    expect(heal!.statsSnapshot.healingBonus).toBeCloseTo(
+      base!.statsSnapshot.healingBonus + 0.7,
+    )
+
+    // The bonus reaches no other stage's hits.
+    for (const h of allHits(log).filter((h) => h.sourceEntryId === "discern"))
+      expect(h.statsSnapshot.healingBonus).toBeCloseTo(
+        base!.statsSnapshot.healingBonus,
+      )
+  })
+
+  it("S4 stays dormant below Sequence 4", () => {
+    const seq3 = chaosTheoryHeal(runHitScopedRotation(3))
+    const seq0 = chaosTheoryHeal(runHitScopedRotation(0))
+    expect(seq3!.statsSnapshot.healingBonus).toBeCloseTo(
+      seq0!.statsSnapshot.healingBonus,
+    )
+  })
+
+  it("discernment hits gain Crit Rate, Bonus Multiplier, and Crit DMG; Chaos Theory DMG hits do not", () => {
+    const hits = allHits(runHitScopedRotation(6))
+    const discernment = hits.filter((h) => h.sourceEntryId === "discern")
+    const chaosDmg = hits.filter(
+      (h) => h.sourceEntryId === "chaos" && h.dmgType === "Damage",
+    )
+    expect(discernment.length).toBeGreaterThan(0)
+    expect(chaosDmg.length).toBeGreaterThan(0)
+
+    const base = chaosDmg[0].statsSnapshot
+    for (const h of discernment) {
+      expect(h.statsSnapshot.critRate).toBeCloseTo(base.critRate + 1)
+      expect(h.statsSnapshot.bonusMultiplier).toBeCloseTo(
+        base.bonusMultiplier + 0.42,
+      )
+      expect(h.statsSnapshot.critDmg).toBeCloseTo(base.critDmg + 5)
+    }
+    // The discernment bonuses never leak onto the Chaos Theory DMG hits.
+    for (const h of chaosDmg) {
+      expect(h.statsSnapshot.bonusMultiplier).toBeCloseTo(base.bonusMultiplier)
+      expect(h.statsSnapshot.critDmg).toBeCloseTo(base.critDmg)
+    }
   })
 })

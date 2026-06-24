@@ -97,8 +97,9 @@ line, and the corroboration input the confidence layer reads.
 
 > **Confidence is still deferred.** Confidence tiers (high/medium/low) are a second
 > layer over the reconciler's `observations`; until they land a stage shows only its
-> corroboration rung. `actionFrame` and hit offsets stay per-clip projections off the
-> selected clip — only `actionTime` is reconciled across clips.
+> corroboration rung. `actionTime` is reconciled across clips; `actionFrame`, hit
+> offsets, the animation split, and resolved variants come from the stage's **best
+> clip** (see [Stage projection](#stage-projection)).
 
 Two stage kinds are exceptions to "done," applied where the registry is in hand
 (the sidebar checklist and `buildExport`), not in the pure reconciler:
@@ -112,6 +113,55 @@ Two stage kinds are exceptions to "done," applied where the registry is in hand
   until an [animation split](#animation-splits) carves out the action lock. The
   checklist holds them at `unmeasured` (grey) and shows `split` as the work to do;
   export withholds `actionTime` and warns until the split is placed.
+
+## Stage projection
+
+`reconcile` answers one cross-clip question — does a stage's `actionTime` agree across
+clips. Every **other** cross-clip question about a stage — which clip measured it most
+completely, what that clip's hits project to as `actionFrame`s, whether it carries an
+animation split, and what its variants resolve to — is answered by `projectStages`,
+a sibling that **composes** the reconciler (it takes the `Reconciliation` as input and
+never re-derives `actionTime`).
+
+`projectStages(clips, recon): Map<stageId, StageProjection>` keys by stage id, like
+`reconcile`; `projectionOf(map, id)` defaults an absent stage to `unmeasured`/empty (the
+`statusOf` pattern). Each entry is the stage's **best-clip** reading:
+
+```
+StageProjection = {
+  status            // the reconciler's actionTime rung
+  best?: { clipId, index }   // best clip + its first-occurrence index; null = unmeasured
+  hits[]            // best clip's owned hits, frame-ordered, split→0 applied, uncapped
+  animationFrames?  // best clip's frozen leading slice; null when unsplit
+  variants          // { cancel?, swap? } — see below
+}
+```
+
+- **Best clip** — the clip whose **first occurrence** of the stage carries the most hits
+  (the same first-occurrence rule the reconciler and sidebar use). The honest "best
+  you've captured anywhere," independent of which clip is selected.
+- **Hits** are projected once, here: `actionFrame = hitFrame − stageStart`, except a
+  split stage's hits land in the frozen animation and project to `0`. Left **uncapped** —
+  each reader applies its own capacity rule (export caps at `damage.length`, the snapshot
+  pads to capacity, the sidebar shows `count/capacity`).
+- **Variants** carry both cross-clip operations a stage's pin needs: _agreement_ across
+  every clip that pins the track, and _resolution_ against the best clip. A track is
+  absent when nothing is pinned; otherwise it is either
+  `{ agreed: true, target, resolution }` or `{ agreed: false, targets }` (clips disagree
+  — export warns and skips). Callers keep only output shaping: export owns the
+  `cancel`/`instantCancel` key split and change recording; the snapshot owns its label
+  text. Resolution lives here, so the snapshot's variant column and the TS export agree
+  by construction.
+
+Three readers share this one source, so the `actionFrame` rule, the best-clip rule, and
+variant resolution each have exactly one home:
+
+- **`buildExport`** patches `actionTime` (from `status`), `animationFrames`, each
+  `damage[i].actionFrame` (from `hits`), and `variants` (from the agreed, resolved track).
+- **The stage overview sidebar** renders the corroboration chip (from `status`), the
+  `hits / capacity` counter, and the hit / conflict drill-downs.
+- **The markdown snapshot** is a **best-clip** read-out (not the selected clip — that was
+  pre-reconciler residue), so it mirrors exactly what the TS export would write.
 
 ## Confidence
 
@@ -179,10 +229,10 @@ Read-only against the **bundled character registry** (the compiled character mod
 - `stage.variants` ← resolved variants only (init `variants ??= {}` first — the field is optional and can be absent at runtime even though the generator scaffolds `{}`). The **target** (the ordinal pin) is the authored fact, **aggregated across clips**: every clip agrees → use it; they **disagree → skipped and warned** (a cross-clip variant conflict). The agreed target then resolves against the best clip's hits, so `last` tracks the true final hit.
 - A stage **repeated** in a clip (a trailing sentinel) patches from its **first occurrence**; later occurrences are ignored — the same first-occurrence rule the reconciler and sidebar use.
 
-The **export menu** sits beside the character name (truly character-scoped — the TS patch reconciles every clip, disabled only when no clip exists; the MD snapshot still reads the selected clip) and is **copy-only**, two kinds, each opening a tabbed modal:
+The **export menu** sits beside the character name (truly character-scoped — both the TS patch and the MD snapshot read the whole clip set via [stage projection](#stage-projection), disabled only when no clip exists) and is **copy-only**, two kinds, each opening a tabbed modal:
 
-- **TS** — a GitHub-style diff: `characterToTs(registry)` vs `characterToTs(patched)`. Both sides go through the **same serializer** (object literal with unquoted keys, wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate), so the diff is noise-free — only patched values and added variant lines show. A self-rolled LCS line diff renders changed hunks with context in a split view; conflict / missing-split / unresolved-variant **warnings** banner above it. You paste the result into the character file by hand; the tool never reads or writes a `.ts` on disk.
-- **MD** — a shareable read-out, not paste source: the read-only sidebar's view as a table — the whole stage catalog, measured against the selected clip, with each stage's `actionTime` and resolved `cancel`/`swap` and a row per hit slot up to capacity. Unmeasured hits (and stages absent from the clip) render as an em-dash, so it doubles as a checklist of what's left to count. Shown as raw markdown (no renderer dependency).
+- **TS** — a GitHub-style diff: `characterToTs(registry)` vs `characterToTs(patched)`. Both sides go through the **same serializer** (`character-ts.ts`, its own module — not the measurement-patch in `export.ts`), so the diff is noise-free — only patched values and added variant lines show. The serializer is **two phases**: a character-aware **break policy** (`forcedBreaks` — the only place schema knowledge lives: a skill `stages` object always breaks, `variants` always breaks, a `buffs` object with ≥3 keys breaks) feeding a **generic** prettier-emulating literal printer (`toTsLiteral` — inline-or-break by an 80-col print width, unquoted identifier keys, 2-space indent, trailing commas; no schema knowledge). Tuned to prettier's defaults so a paste needs no reflow, then wrapped in the deterministic `import … / export const <name> = … satisfies <Type>` boilerplate. A self-rolled LCS line diff renders changed hunks with context in a split view; conflict / missing-split / unresolved-variant **warnings** banner above it. You paste the result into the character file by hand; the tool never reads or writes a `.ts` on disk.
+- **MD** — a shareable read-out, not paste source: the read-only sidebar's view as a table — the whole stage catalog read off each stage's best clip (via [stage projection](#stage-projection)), with each stage's `actionTime` and resolved `cancel`/`swap` and a row per hit slot up to capacity. Unmeasured hits (and stages absent from every clip) render as an em-dash, so it doubles as a checklist of what's left to count. Shown as raw markdown (no renderer dependency).
 
 (JSON and a download button were considered and dropped — the diff is the transcription aid, and the markdown is the shareable artifact.)
 
@@ -204,6 +254,7 @@ The editor is a **manual timing tool first** — set a length, add stages, place
 - **Stage lock freezes the skeleton.** Setting the dividers is the first step, so a per-clip `stagesLocked` flag (persisted) guards them once placed: `applyClipEdit` no-ops the structural edits (`addStage`/`removeStage`/`moveBoundary`/`moveRestStart`/`removeRestZone`) while locked, the ruler hides its X buttons and stops divider drags, and the marks-table boundary snap is hidden. Marks (hits, splits, cues, length) stay editable. The toggle is the lock glyph at the end of the ruler's instruction line.
 - **Spacers carve out non-cataloged frames.** A mid-rotation jump/dodge eats frames that would otherwise inflate a neighbouring stage's measured `actionTime` (which is just section width). `+ Spacer` appends a placeholder `stageRef` (reserved `PLACEHOLDER_ID`, `hitCount: 0`) that reuses all the section/divider/lock machinery but owns no hits, takes no anim-split, is skipped in the clip name, and is invisible to the sidebar and export (its id isn't a catalog id). It renders as the rest-zone diagonal striping with a `spacer` label and the frame-count readout.
 - **Layout.** Canvas full width (100%/50% toggle) on top, then two vertically-aligned tracks via the shared `TRACK_COLS` grid: stepper + scrub above, context buttons + ruler below, so the playhead lines up. Marks table beneath.
+- **One coordinate seam: `FrameTrack`.** The ruler and the scrub are both a **frame track** — a 1-D `[lo, hi]` frame space laid over a DOM box — so the pixel↔frame mapping lives in exactly one place (`components/FrameTrack.tsx`), not re-derived per component. `FrameTrack` owns the `ref`, the `pct` (frame→%) and `frameAt` (pixel→frame, rounded + clamped) mapping, and the scrub gesture, exposing the mapping to descendants by context; the anticipated `× 60 / sourceFps` conversion would land in `frameAt` alone. Everything on a track is declared in **frame space**, never pixels: a `TrackMarker` is a point at a `frame` (draggable when given an `onDrag(frame)`, selectable-while-locked via `onSelect` without `onDrag`, so no lock flag leaks in) and a `TrackRegion` is an interval `[start, end]`. Boundaries, splits, hits, the rest-start divider, cut handles, and the playhead are all `TrackMarker`s; sections and the rest zone are `TrackRegion`s. The ruler/scrub become pure model→markup maps. (`TRACK_COLS` above is the unrelated CSS-grid sense of "track" — vertical alignment, not the frame axis.)
 
 ## Gotchas
 
