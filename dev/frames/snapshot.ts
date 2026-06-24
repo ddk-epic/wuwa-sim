@@ -1,74 +1,64 @@
 import type { EnrichedCharacter } from "#/types/character"
 import { stageGroups } from "./stages"
-import {
-  clipDisplayName,
-  hitsByStage,
-  resolveVariantTarget,
-  sections,
-  stageTiming,
-} from "./types"
-import type { Clip, VariantTrack } from "./types"
+import { projectionOf } from "./projection"
+import type { StageProjection, TrackProjection } from "./projection"
 
 const DASH = "—"
 
-// Resolved variant label: a number, "instant" (cancel pinned to start), "—"
-// (not opted in), or "unresolved" (dangling pin).
+function actionTimeLabel(status: StageProjection["status"]): string {
+  if (status.status === "single" || status.status === "confirmed")
+    return String(status.actionTime)
+  if (status.status === "conflict") return String(status.estimate)
+  return DASH
+}
+
+// Resolved variant label: a number, "instant" (cancel pinned to start), "—" (not
+// opted in), "unresolved" (dangling pin), or "conflict" (clips disagree).
 function variantLabel(
-  clip: Clip,
-  occurrence: number,
-  track: VariantTrack,
+  track: TrackProjection | undefined,
+  cancel: boolean,
 ): string {
-  const target = clip.variants?.[occurrence]?.[track]
-  if (!target) return DASH
-  const resolved = resolveVariantTarget(clip, occurrence, target)
-  if (!resolved.ok) return "unresolved"
-  if (track === "cancel" && target.kind === "start") return "instant"
-  return String(resolved.actionTime)
+  if (!track) return DASH
+  if (!track.agreed) return "conflict"
+  if (!track.resolution.ok) return "unresolved"
+  if (cancel && track.target.kind === "start") return "instant"
+  return String(track.resolution.actionTime)
 }
 
 /**
- * The read-only sidebar's view as a shareable markdown table: the whole catalog
- * measured against the selected clip, every hit slot up to capacity (unmeasured
- * ones as em-dash) so it doubles as a checklist. Single-clip, like the sidebar.
+ * The read-only sidebar's view as a shareable markdown table, read off each
+ * stage's best clip (via stage projection) so it mirrors exactly what the TS
+ * export writes. Every hit slot up to capacity, unmeasured ones as em-dash, so it
+ * doubles as a checklist; a stage absent from every clip is all em-dash.
  */
-export function snapshotMarkdown(char: EnrichedCharacter, clip: Clip): string {
-  const secs = sections(clip)
-  const byStage = hitsByStage(clip)
+export function snapshotMarkdown(
+  char: EnrichedCharacter,
+  projections: Map<string, StageProjection>,
+): string {
   const out: string[] = [
     `# ${char.name} — frame snapshot`,
     "",
-    `_Source clip: ${clipDisplayName(clip)}. Unmeasured values shown as ${DASH}._`,
+    `_Best clip per stage. Unmeasured values shown as ${DASH}._`,
     "",
   ]
 
   for (const group of stageGroups(char)) {
     out.push(`### ${group.skill}`, "")
     for (const stage of group.stages) {
-      const occ = secs
-        .map((sec, i) => ({ sec, i }))
-        .filter(({ sec }) => sec.ref.id === stage.id)
-      const measured = occ.length > 0
-      const timing = measured ? stageTiming(clip, occ[0].i, secs) : null
+      const p = projectionOf(projections, stage.id)
       const animLabel =
-        timing && timing.animationFrames > 0
-          ? ` · animationFrames \`${timing.animationFrames}\``
+        p.animationFrames !== null && p.animationFrames > 0
+          ? ` · animationFrames \`${p.animationFrames}\``
           : ""
-      const cancel = measured ? variantLabel(clip, occ[0].i, "cancel") : DASH
-      const swap = measured ? variantLabel(clip, occ[0].i, "swap") : DASH
+      const cancel = variantLabel(p.variants.cancel, true)
+      const swap = variantLabel(p.variants.swap, false)
       out.push(
-        `**${stage.stage}** — actionTime \`${timing?.actionTime ?? DASH}\`${animLabel} · cancel \`${cancel}\` · swap \`${swap}\``,
+        `**${stage.stage}** — actionTime \`${actionTimeLabel(p.status)}\`${animLabel} · cancel \`${cancel}\` · swap \`${swap}\``,
         "",
       )
 
-      const hits = occ.flatMap(({ sec, i }) => {
-        const split = stageTiming(clip, i, secs).animationFrames > 0
-        return byStage[i].map((h) => ({
-          af: split ? 0 : h.frame - sec.start,
-          cue: h.cue,
-        }))
-      })
-      const capacity = (occ.length || 1) * stage.hitCount
-      const rows = Math.max(capacity, hits.length)
+      const capacity = stage.hitCount
+      const rows = Math.max(capacity, p.hits.length)
       if (rows === 0) {
         out.push("_no hits_", "")
         continue
@@ -76,10 +66,12 @@ export function snapshotMarkdown(char: EnrichedCharacter, clip: Clip): string {
 
       out.push("| Hit | actionFrame | cue |", "| --- | --- | --- |")
       for (let k = 0; k < rows; k++) {
-        const h = k < hits.length ? hits[k] : undefined
+        const h = k < p.hits.length ? p.hits[k] : undefined
         // A hit past capacity is a miscount signal; flag it rather than hide it.
         const label = k >= capacity ? `${k + 1} ⚠` : `${k + 1}`
-        out.push(`| ${label} | ${h ? h.af : DASH} | ${h ? h.cue : DASH} |`)
+        out.push(
+          `| ${label} | ${h ? h.actionFrame : DASH} | ${h ? h.cue : DASH} |`,
+        )
       }
       out.push("")
     }

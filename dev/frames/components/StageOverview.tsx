@@ -1,17 +1,12 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight, ChevronsDownUp } from "lucide-react"
 import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { CUE_COLOR } from "../shared"
 import type { StageGroup } from "../stages"
-import {
-  animationSplitOf,
-  clipDisplayName,
-  hitsByStage,
-  sections,
-  stageTiming,
-} from "../types"
-import type { Clip, CueTag, StageRef } from "../types"
-import { statusOf } from "../reconcile"
+import { clipDisplayName } from "../types"
+import type { Clip, StageRef } from "../types"
+import { projectStages, projectionOf } from "../projection"
+import type { StageProjection } from "../projection"
 import type { Reconciliation, StageStatus } from "../reconcile"
 
 // Color of the corroboration chip — the row's only semantic color. The hit
@@ -39,6 +34,7 @@ export function StageOverview({
   onJumpToClip?: (clipId: string) => void
 }) {
   const [open, setOpen] = useState<Set<string>>(new Set())
+  const projections = useMemo(() => projectStages(clips, recon), [clips, recon])
 
   function toggle(id: string) {
     setOpen((prev) => {
@@ -79,7 +75,7 @@ export function StageOverview({
                 <StageRow
                   key={s.id}
                   stage={s}
-                  status={statusOf(recon, s.id)}
+                  projection={projectionOf(projections, s.id)}
                   clips={clips}
                   open={open.has(s.id)}
                   onToggle={() => toggle(s.id)}
@@ -94,69 +90,31 @@ export function StageOverview({
   )
 }
 
-interface HitView {
-  id: string
-  cue: CueTag
-  af: number
-}
-
-// The clip with the most hits marked for this stage's first occurrence — the
-// honest "best you've captured anywhere" reading, independent of which clip is
-// selected. A split stage's hits resolve to 0 (they land in the frozen animation).
-function bestHits(
-  clips: Clip[],
-  stageId: string,
-): { clipId: string; hits: HitView[] } | null {
-  let best: { clipId: string; hits: HitView[] } | null = null
-  for (const clip of clips) {
-    const secs = sections(clip)
-    const i = secs.findIndex((s) => s.ref.id === stageId)
-    if (i === -1) continue
-    const split = stageTiming(clip, i, secs).animationFrames > 0
-    const hits = hitsByStage(clip)[i].map((h) => ({
-      id: h.id,
-      cue: h.cue,
-      af: split ? 0 : h.frame - secs[i].start,
-    }))
-    if (!best || hits.length > best.hits.length)
-      best = { clipId: clip.id, hits }
-  }
-  return best
-}
-
-// Whether any clip has placed an animation split on this stage's first occurrence.
-function hasSplit(clips: Clip[], stageId: string): boolean {
-  return clips.some((clip) => {
-    const i = sections(clip).findIndex((s) => s.ref.id === stageId)
-    return i !== -1 && animationSplitOf(clip, i) != null
-  })
-}
-
 // One catalog stage's row: a corroboration chip + a monochrome hit counter. The
 // drill-down shows the conflicting clips (for `conflict`) or the marked hits.
 function StageRow({
   stage,
-  status,
+  projection,
   clips,
   open,
   onToggle,
   onJumpToClip,
 }: {
   stage: StageRef
-  status: StageStatus
+  projection: StageProjection
   clips: Clip[]
   open: boolean
   onToggle: () => void
   onJumpToClip?: (clipId: string) => void
 }) {
-  const best = bestHits(clips, stage.id)
-  const present = best !== null
-  const count = best?.hits.length ?? 0
+  const { status, hits } = projection
+  const present = projection.best !== null
+  const count = hits.length
   const capacity = stage.hitCount
 
   // A cutscene stage's reading is frozen-animation garbage until split apart, so
   // hold it at unmeasured (grey) and show the split as the work to do.
-  const splitDone = hasSplit(clips, stage.id)
+  const splitDone = projection.animationFrames !== null
   const splitBlocked = stage.expectsSplit === true && !splitDone
   const shown: StageStatus = splitBlocked ? { status: "unmeasured" } : status
 
@@ -207,7 +165,7 @@ function StageRow({
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-1.5 font-mono tabular-nums">
-          {isConflict && shown.status === "conflict" && (
+          {isConflict && (
             <span className="text-micro text-muted-foreground/60">
               ±{shown.spread}
             </span>
@@ -242,9 +200,9 @@ function StageRow({
         </div>
       )}
 
-      {isOpen && !isConflict && best && (
+      {isOpen && !isConflict && present && (
         <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
-          {best.hits.map((h, idx) => (
+          {hits.map((h, idx) => (
             <div
               key={h.id}
               className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-detail"
@@ -254,7 +212,7 @@ function StageRow({
               </span>
               <span className={`size-2 rounded-full ${CUE_COLOR[h.cue]}`} />
               <span className="pr-2 text-right font-mono tabular-nums text-foreground">
-                {h.af}
+                {h.actionFrame}
               </span>
             </div>
           ))}

@@ -139,9 +139,7 @@ export function FramesPage() {
             <h2 className="text-title font-bold tracking-tight">
               {characterName}
             </h2>
-            {char && (
-              <ExportMenu char={char} clips={clips} clip={clip} recon={recon} />
-            )}
+            {char && <ExportMenu char={char} clips={clips} recon={recon} />}
           </div>
 
           <div className="rounded-lg border border-border bg-card p-3">

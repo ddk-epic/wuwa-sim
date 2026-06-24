@@ -6,27 +6,25 @@ import { diffHunks } from "../diff"
 import type { Cell } from "../diff"
 import { buildExport, characterToTs } from "../export"
 import { snapshotMarkdown } from "../snapshot"
+import { projectStages } from "../projection"
 import type { Clip } from "../types"
 import type { Reconciliation } from "../reconcile"
 
 type Tab = "ts" | "md"
 
 // Character-scoped export across the whole clip set; the preview lives in a modal,
-// not on the page. The TS patch reconciles every clip; the MD snapshot still reads
-// the selected clip. Disabled until at least one clip exists.
+// not on the page. Both the TS patch and the MD snapshot read the whole clip set
+// through one stage projection. Disabled until at least one clip exists.
 export function ExportMenu({
   char,
   clips,
-  clip,
   recon,
 }: {
   char: EnrichedCharacter
   clips: Clip[]
-  clip: Clip | null
   recon: Reconciliation
 }) {
   const [tab, setTab] = useState<Tab | null>(null)
-  const mdClip = clip ?? clips[0] ?? null
   const disabled = clips.length === 0
 
   return (
@@ -47,11 +45,10 @@ export function ExportMenu({
           </button>
         ))}
       </div>
-      {tab && mdClip && (
+      {tab && !disabled && (
         <ExportModal
           char={char}
           clips={clips}
-          clip={mdClip}
           recon={recon}
           tab={tab}
           setTab={setTab}
@@ -65,7 +62,6 @@ export function ExportMenu({
 function ExportModal({
   char,
   clips,
-  clip,
   recon,
   tab,
   setTab,
@@ -73,18 +69,21 @@ function ExportModal({
 }: {
   char: EnrichedCharacter
   clips: Clip[]
-  clip: Clip
   recon: Reconciliation
   tab: Tab
   setTab: (t: Tab) => void
   onClose: () => void
 }) {
+  const projections = useMemo(() => projectStages(clips, recon), [clips, recon])
   const { ts, warnings } = useMemo(
-    () => buildExport(char, clips, recon),
-    [char, clips, recon],
+    () => buildExport(char, clips, projections),
+    [char, clips, projections],
   )
   const before = useMemo(() => characterToTs(char), [char])
-  const md = useMemo(() => snapshotMarkdown(char, clip), [char, clip])
+  const md = useMemo(
+    () => snapshotMarkdown(char, projections),
+    [char, projections],
+  )
   const text = tab === "ts" ? ts : md
 
   return (

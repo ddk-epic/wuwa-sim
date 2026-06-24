@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
 import { buildExport } from "./export"
+import { projectStages } from "./projection"
 import { reconcile } from "./reconcile"
 import type { Clip, HitMark, StageRef } from "./types"
 
+const exportOf = (char: EnrichedCharacter, clips: Clip[]) =>
+  buildExport(char, clips, projectStages(clips, reconcile(clips)))
+
 // Most cases export from a single clip; its reconciliation is that clip alone.
-const run = (char: EnrichedCharacter, clip: Clip) =>
-  buildExport(char, [clip], reconcile([clip]))
+const run = (char: EnrichedCharacter, clip: Clip) => exportOf(char, [clip])
 
 const ref = (name: string, hitCount: number): StageRef => ({
   id: `skill::${name}`,
@@ -198,11 +201,7 @@ describe("buildExport", () => {
       boundaries: [{ id: "b0", frame: 30, cue: "animationBreak" }],
       hits: [],
     })
-    const { patched, warnings, changes } = buildExport(
-      character(),
-      [clip, other],
-      reconcile([clip, other]),
-    )
+    const { patched, warnings, changes } = exportOf(character(), [clip, other])
     expect(stageOf(patched, "A").actionTime).toBe(0)
     expect(changes.map((c) => c.path)).not.toContain("A.actionTime")
     expect(warnings.some((w) => w.includes("disagree"))).toBe(true)
@@ -228,7 +227,7 @@ describe("buildExport", () => {
       hits: [hit("b0", 30, 0)],
       end: 70,
     })
-    const { patched } = buildExport(character(), [c1, c2], reconcile([c1, c2]))
+    const { patched } = exportOf(character(), [c1, c2])
     expect(stageOf(patched, "A").actionTime).toBe(50)
     expect(stageOf(patched, "B").actionTime).toBe(70)
     expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
@@ -255,11 +254,7 @@ describe("buildExport", () => {
       hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
       end: 40,
     })
-    const { patched } = buildExport(
-      character(),
-      [sparse, full],
-      reconcile([sparse, full]),
-    )
+    const { patched } = exportOf(character(), [sparse, full])
     expect(stageOf(patched, "A").damage?.map((d) => d.actionFrame)).toEqual([
       12, 30,
     ])
@@ -283,11 +278,7 @@ describe("buildExport", () => {
       hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
       end: 40,
     })
-    const { patched } = buildExport(
-      character(),
-      [pinned, full],
-      reconcile([pinned, full]),
-    )
+    const { patched } = exportOf(character(), [pinned, full])
     expect(stageOf(patched, "A").variants).toEqual({
       cancel: { actionTime: 30 },
     })
@@ -310,11 +301,7 @@ describe("buildExport", () => {
       end: 40,
       variants: { 0: { cancel: { kind: "hit", n: 2 } } },
     })
-    const { patched, warnings } = buildExport(
-      character(),
-      [a, b],
-      reconcile([a, b]),
-    )
+    const { patched, warnings } = exportOf(character(), [a, b])
     expect(stageOf(patched, "A").variants).toEqual({})
     expect(warnings.some((w) => w.includes("disagree on the pin"))).toBe(true)
   })

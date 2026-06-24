@@ -8,6 +8,7 @@ import {
 } from "./types"
 import type {
   Clip,
+  CueTag,
   StageRef,
   VariantResolution,
   VariantTarget,
@@ -18,6 +19,8 @@ import type { Reconciliation, StageStatus } from "./reconcile"
 
 /** A best-clip hit projected to its `actionFrame` — uncapped; readers apply capacity. */
 export interface HitProjection {
+  id: string
+  cue: CueTag
   actionFrame: number
 }
 
@@ -131,6 +134,8 @@ function projectStage(
     ? stageTiming(best.clip, best.index, secs).animationFrames
     : null
   const hits = (hitsByStage(best.clip)[best.index] ?? []).map((h) => ({
+    id: h.id,
+    cue: h.cue,
     actionFrame: split ? 0 : h.frame - sec.start,
   }))
   return {

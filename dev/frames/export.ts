@@ -5,8 +5,8 @@ import type {
 } from "#/types/character"
 import { isPlaceholder } from "./types"
 import type { Clip, StageRef, VariantTrack } from "./types"
-import type { Reconciliation } from "./reconcile"
-import { projectStages, projectionOf } from "./projection"
+import { projectionOf } from "./projection"
+import type { StageProjection } from "./projection"
 
 export interface Change {
   path: string
@@ -78,12 +78,11 @@ function variantKeyFor(
 export function buildExport(
   char: EnrichedCharacter,
   clips: Clip[],
-  recon: Reconciliation,
+  projections: Map<string, StageProjection>,
 ): ExportResult {
   const patched = structuredClone(char)
   const changes: Change[] = []
   const warnings: string[] = []
-  const projections = projectStages(clips, recon)
 
   for (const ref of collectStageRefs(clips)) {
     const stage = locateStage(patched, ref)
