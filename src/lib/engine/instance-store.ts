@@ -354,9 +354,17 @@ export class InstanceStore {
       frame,
       targetCharacterId,
       (buffId, targetId) => {
-        return this.active.find(
-          (i) => i.def.id === buffId && i.targetCharacterId === targetId,
-        )?.endTime
+        // A self/target buff may inherit a global parent (e.g. Self Gravitation
+        // off the global Outer Stellarealm); fall back to the global instance.
+        const parent =
+          this.active.find(
+            (i) => i.def.id === buffId && i.targetCharacterId === targetId,
+          ) ??
+          this.active.find(
+            (i) =>
+              i.def.id === buffId && i.targetCharacterId === GLOBAL_TARGET_ID,
+          )
+        return parent?.endTime
       },
     )
 
