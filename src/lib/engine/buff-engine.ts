@@ -285,7 +285,7 @@ export class BuffEngine {
       this.foldedBuffsMap.set(slot.charId, slot.foldedBuffs)
       this.resources.ensureState(slot.charId)
       // Seed before sim-start so grants stack on top; energy is uncapped.
-      if (input.startWithFullEnergy && character) {
+      if (input.startWithFullEnergy) {
         this.resources.applyDelta(charId, "energy", character.maxEnergy)
       }
     }
@@ -947,7 +947,7 @@ export class BuffEngine {
         maturationFrame: member.maturationFrame,
       })
     }
-    for (let i = 0; i < displaced.length; i++) {
+    for (const _ of displaced) {
       this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
     }
     this.setResource(
@@ -1052,7 +1052,7 @@ export class BuffEngine {
     const n = count === "all" ? this.pool.count(characterId) : count
     const converted = this.pool.takeOldest(characterId, n)
     if (converted.length === 0) return
-    for (let i = 0; i < converted.length; i++) {
+    for (const _ of converted) {
       this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
     }
     this.setResource(
