@@ -242,21 +242,38 @@ const chaosHeal = (log: SimulationLogEntry[]): SustainEvent =>
 
 describe("Shorekeeper — full rotation, base-kit team buffs", () => {
   it.each([0, 6])(
-    "Stellarealm chain folds team Crit Rate/DMG scaled by Energy Regen, reaching teammates (S%i)",
+    "Stellarealm evolves Inner→Supernal across intros, folding team Crit scaled by Energy Regen (S%i)",
     (sequence) => {
       const log = runRotation(sequence)
       const er = baseline(log).statsSnapshot.energyRechargePct
+
+      // Inner Crit Rate on the butterflies (Inner up, Supernal not yet minted).
       expect(
         butterfly(log).statsSnapshot.critRate -
           baseline(log).statsSnapshot.critRate,
       ).toBeCloseTo(Math.min(((1 + er) / 0.002) * 0.0001, 0.125))
+
+      // Supernal Crit DMG on the Chaos Theory hits (both realms up, no
+      // Discernment crit pollution).
+      const chaosDmg = hits(log).find(
+        (h) => h.sourceEntryId === "chaos" && h.dmgType === "Damage",
+      )!
+      expect(activeOn(chaosDmg, BUFF.supernal)).toBe(true)
       expect(
-        butterfly(log).statsSnapshot.critDmg -
-          baseline(log).statsSnapshot.critDmg,
+        chaosDmg.statsSnapshot.critDmg - baseline(log).statsSnapshot.critDmg,
       ).toBeCloseTo(Math.min(((1 + er) / 0.001) * 0.0001, 0.25))
-      // Global: Inner reaches the first intro, Supernal the second.
+
+      // Evolution: the first Intro mints Inner only; the second adds Supernal.
       expect(activeOn(entryHit(log, "sanIntro"), BUFF.inner)).toBe(true)
+      expect(activeOn(entryHit(log, "sanIntro"), BUFF.supernal)).toBe(false)
       expect(activeOn(entryHit(log, "encIntro"), BUFF.supernal)).toBe(true)
+      const innerAt = buffEvents(log, BUFF.inner).find(
+        (e) => e.kind === "buffApplied",
+      )!.frame
+      const supernalAt = buffEvents(log, BUFF.supernal).find(
+        (e) => e.kind === "buffApplied",
+      )!.frame
+      expect(supernalAt).toBeGreaterThan(innerAt)
     },
   )
 

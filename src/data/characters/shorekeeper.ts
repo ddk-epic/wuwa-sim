@@ -237,11 +237,11 @@ export const shorekeeper = {
         event: "skillCast",
         actor: "any",
         skillCategory: "Intro Skill",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "outer-stellarealm",
-        on: "source",
+        precondition: {
+          kind: "buffActive",
+          buff: "outer-stellarealm",
+          on: "source",
+        },
       },
       target: { kind: "global" },
       duration: { kind: "inherit", buff: "outer-stellarealm" },
@@ -270,11 +270,11 @@ export const shorekeeper = {
         event: "skillCast",
         actor: "any",
         skillCategory: "Intro Skill",
-      },
-      condition: {
-        kind: "buffActive",
-        buff: "inner-stellarealm",
-        on: "source",
+        precondition: {
+          kind: "buffActive",
+          buff: "inner-stellarealm",
+          on: "source",
+        },
       },
       target: { kind: "global" },
       duration: { kind: "inherit", buff: "inner-stellarealm" },
