@@ -97,6 +97,8 @@ export interface BootstrapInput {
   loadouts: SlotLoadout[]
   /** Seed each occupied slot's energy to its own `maxEnergy` before sim start. */
   startWithFullEnergy?: boolean
+  /** Seed each occupied slot's concerto to `OUTRO_CONCERTO_COST` before sim start. */
+  startWithFullConcerto?: boolean
 }
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
@@ -287,6 +289,9 @@ export class BuffEngine {
       // Seed before sim-start so grants stack on top; energy is uncapped.
       if (input.startWithFullEnergy) {
         this.resources.applyDelta(charId, "energy", character.maxEnergy)
+      }
+      if (input.startWithFullConcerto) {
+        this.resources.applyDelta(charId, "concerto", OUTRO_CONCERTO_COST)
       }
     }
     this.store.setSlots(slots)

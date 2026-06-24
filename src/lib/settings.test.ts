@@ -31,6 +31,19 @@ describe("coerceStoredSettings", () => {
       coerceStoredSettings({ startWithFullEnergy: 1 }).startWithFullEnergy,
     ).toBe(false)
   })
+
+  it("carries startWithFullConcerto through", () => {
+    expect(
+      coerceStoredSettings({ startWithFullConcerto: true })
+        .startWithFullConcerto,
+    ).toBe(true)
+  })
+
+  it("ignores a non-boolean startWithFullConcerto", () => {
+    expect(
+      coerceStoredSettings({ startWithFullConcerto: 1 }).startWithFullConcerto,
+    ).toBe(false)
+  })
 })
 
 describe("applySettingsPatch", () => {
@@ -57,6 +70,13 @@ describe("applySettingsPatch", () => {
       startWithFullEnergy: true,
     })
     expect(next.startWithFullEnergy).toBe(true)
+  })
+
+  it("toggles startWithFullConcerto without clamping", () => {
+    const next = applySettingsPatch(DEFAULT_SETTINGS, {
+      startWithFullConcerto: true,
+    })
+    expect(next.startWithFullConcerto).toBe(true)
   })
 
   it("restores every field when patched with the full defaults", () => {

@@ -186,6 +186,7 @@ describe("settings encoding", () => {
     variantFloor: 0,
     fallFrames: 30,
     startWithFullEnergy: true,
+    startWithFullConcerto: true,
   }
 
   it("round-trips non-default settings exactly", () => {
@@ -204,12 +205,12 @@ describe("settings encoding", () => {
   })
 
   it("decodes a settings-less v3 code to the constant defaults (back-compat)", () => {
-    // A genuine v3 code is a v4 code minus the 5 trailing settings bytes, with
-    // the version byte rolled back to 3.
+    // A genuine v3 code is a current code minus the 6 trailing settings bytes,
+    // with the version byte rolled back to 3.
     const payload = basePayload()
     payload.team.settings = NON_DEFAULT
-    const v4 = base91Decode(encodePayload(payload))
-    const v3 = new Uint8Array([3, ...v4.slice(1, v4.length - 5)])
+    const current = base91Decode(encodePayload(payload))
+    const v3 = new Uint8Array([3, ...current.slice(1, current.length - 6)])
     const decoded = decodePayload(base91Encode(v3))
     expect(decoded.team.settings).toEqual(DEFAULT_SETTINGS)
     // The rest of the team still decodes correctly.

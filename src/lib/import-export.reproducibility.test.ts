@@ -125,6 +125,7 @@ describe("share-code reproducibility", () => {
       variantFloor: 0,
       fallFrames: 30,
       startWithFullEnergy: true,
+      startWithFullConcerto: true,
     }
     const decoded = decodePayload(encodePayload(payloadWith(sourceSettings)))
 

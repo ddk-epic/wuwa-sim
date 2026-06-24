@@ -273,6 +273,25 @@ describe("runSimulation — multi-hit stage", () => {
     // charA.maxEnergy === 100: the seeded run's first hit reads 100 higher.
     expect(seededHit.cumulativeEnergy).toBe(baseHit.cumulativeEnergy + 100)
   })
+
+  it("startWithFullConcerto seeds the occupied slot's concerto before hits accrue", () => {
+    testCharacters = [charA]
+    const slots: Slots = [1, null, null]
+    const entry = tlEntry(
+      1,
+      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
+    )
+    const baseline = runSimulation([entry], slots, emptyLoadouts)
+    const seeded = runSimulation([entry], slots, emptyLoadouts, {
+      startWithFullConcerto: true,
+    })
+    const baseHit = baseline[1]
+    const seededHit = seeded[1]
+    if (baseHit.kind !== "hit" || seededHit.kind !== "hit")
+      throw new Error("expected hit rows")
+    // OUTRO_CONCERTO_COST === 100: the seeded run's first hit reads 100 higher.
+    expect(seededHit.cumulativeConcerto).toBe(baseHit.cumulativeConcerto + 100)
+  })
 })
 
 describe("runSimulation — multi-character accumulation", () => {

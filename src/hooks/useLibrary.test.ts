@@ -307,6 +307,7 @@ describe("useLibrary", () => {
       variantFloor: 21,
       fallFrames: 3,
       startWithFullEnergy: true,
+      startWithFullConcerto: false,
     })
 
     // Live settings drift; loading restores the saved ones.
@@ -318,6 +319,7 @@ describe("useLibrary", () => {
       variantFloor: 21,
       fallFrames: 3,
       startWithFullEnergy: true,
+      startWithFullConcerto: false,
     })
   })
 

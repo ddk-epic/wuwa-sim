@@ -88,6 +88,7 @@ export interface SimConfig {
   variantFloor?: number
   fallFrames?: number
   startWithFullEnergy?: boolean
+  startWithFullConcerto?: boolean
 }
 
 const SIM_DEFAULTS = {
@@ -96,6 +97,7 @@ const SIM_DEFAULTS = {
   variantFloor: 0,
   fallFrames: 21,
   startWithFullEnergy: false,
+  startWithFullConcerto: false,
 } as const
 
 export function runSimulation(
@@ -110,11 +112,17 @@ export function runSimulation(
     variantFloor,
     fallFrames,
     startWithFullEnergy,
+    startWithFullConcerto,
   } = { ...SIM_DEFAULTS, ...config }
 
   const log: SimulationLogEntry[] = []
   const engine = new BuffEngine()
-  engine.bootstrap({ slots, loadouts, startWithFullEnergy })
+  engine.bootstrap({
+    slots,
+    loadouts,
+    startWithFullEnergy,
+    startWithFullConcerto,
+  })
 
   const ctx: SimContext = {
     engine,

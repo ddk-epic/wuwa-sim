@@ -112,9 +112,9 @@ const stageId = (charByte: number, ord: number) => {
 }
 
 // ---- Encode ----
-// v4 appends the per-team Settings block (5 bytes) after the timeline. Older
-// codes lack it and decode to DEFAULT_SETTINGS — an append, not a break.
-const VERSION = 4
+// v4 appends the per-team Settings block after the timeline; v5 adds the
+// startWithFullConcerto bit. Older codes lack these and decode to defaults.
+const VERSION = 5
 
 export function encodePayload(payload: ImportExportPayload): string {
   const w = new Writer()
@@ -175,6 +175,7 @@ export function encodePayload(payload: ImportExportPayload): string {
   w.push(s.variantFloor)
   w.push(s.fallFrames)
   w.push(s.startWithFullEnergy ? 1 : 0)
+  w.push(s.startWithFullConcerto ? 1 : 0)
 
   return base91Encode(w.bytes())
 }
@@ -203,7 +204,7 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const r = new Reader(data)
 
   const version = r.next()
-  if (version !== 3 && version !== 4)
+  if (version !== 3 && version !== 4 && version !== 5)
     throw new Error(`Unsupported format version ${version}`)
 
   const name = r.str()
@@ -280,6 +281,7 @@ export function decodePayload(encoded: string): ImportExportPayload {
           variantFloor: r.next(),
           fallFrames: r.next(),
           startWithFullEnergy: r.next() === 1,
+          startWithFullConcerto: version >= 5 ? r.next() === 1 : false,
         }
       : { ...DEFAULT_SETTINGS }
 

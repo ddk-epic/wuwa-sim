@@ -135,6 +135,19 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           }
         />
       </label>
+      <label className="flex items-center gap-1 mb-4 cursor-pointer select-none">
+        <span className="flex-1 text-sm text-gray-400">
+          Start with full concerto
+        </span>
+        <input
+          type="checkbox"
+          className="accent-yellow-400 w-5 h-5"
+          checked={settings.startWithFullConcerto}
+          onChange={(e) =>
+            setSettings({ startWithFullConcerto: e.target.checked })
+          }
+        />
+      </label>
       {FRAME_FIELDS.map(({ key, label }) => (
         <div key={key} className="flex items-center gap-1 mb-4">
           <label className="flex-1 text-sm text-gray-400">{label}</label>

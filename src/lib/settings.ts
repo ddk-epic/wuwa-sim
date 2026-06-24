@@ -10,6 +10,7 @@ export interface Settings {
   variantFloor: number
   fallFrames: number
   startWithFullEnergy: boolean
+  startWithFullConcerto: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS: Settings = {
   variantFloor: 15,
   fallFrames: 15,
   startWithFullEnergy: false,
+  startWithFullConcerto: false,
 }
 
 const FRAME_KEYS = [
@@ -59,6 +61,10 @@ export function coerceStoredSettings(stored: unknown): Settings {
       typeof partial.startWithFullEnergy === "boolean"
         ? partial.startWithFullEnergy
         : DEFAULT_SETTINGS.startWithFullEnergy,
+    startWithFullConcerto:
+      typeof partial.startWithFullConcerto === "boolean"
+        ? partial.startWithFullConcerto
+        : DEFAULT_SETTINGS.startWithFullConcerto,
   }
 }
 
@@ -74,6 +80,9 @@ export function applySettingsPatch(
   }
   if (patch.startWithFullEnergy !== undefined) {
     next.startWithFullEnergy = patch.startWithFullEnergy
+  }
+  if (patch.startWithFullConcerto !== undefined) {
+    next.startWithFullConcerto = patch.startWithFullConcerto
   }
   return next
 }
