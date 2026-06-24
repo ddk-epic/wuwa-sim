@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { atom, useAtomValue, useSetAtom } from "jotai"
+import type { PrimitiveAtom } from "jotai"
 import { selectAtom } from "jotai/utils"
 import type { ActiveTeam, Slots, SlotLoadout } from "#/types/loadout"
 import type { EnrichedCharacter } from "#/types/character"
@@ -54,13 +55,22 @@ export function coerceStoredActiveTeam(stored: unknown): ActiveTeam {
 }
 
 /**
- * The single source of truth for the active team. A plain in-memory atom, not
- * atomWithStorage: that would bind every Jotai store (including the create
- * modal's draft `<Provider>`) to the same `wuwa.team` localStorage backing,
- * so a draft keystroke would overwrite the live session. Persistence is a
- * separate bridge mounted only at the live root — see useTeamPersistence.
+ * Single source of truth for the active team. Plain in-memory atom, not
+ * atomWithStorage: that backing would bind the create modal's draft
+ * `<Provider>` to `wuwa.team` too, so a draft keystroke clobbers the live
+ * session. Persistence is a separate bridge at the live root — useTeamPersistence.
+ *
+ * Editing character data invalidates the catalog and so this module; the
+ * `hot.data` cache keeps reloads reusing the same atom rather than rebuilding
+ * it at default and dropping the live team. Derived atoms below recompute from it.
  */
-export const teamAtom = atom<ActiveTeam>(defaultActiveTeam())
+const createTeamAtom = (): PrimitiveAtom<ActiveTeam> =>
+  atom<ActiveTeam>(defaultActiveTeam())
+
+const hotData = import.meta.hot?.data
+export const teamAtom: PrimitiveAtom<ActiveTeam> = hotData
+  ? (hotData.teamAtom ??= createTeamAtom())
+  : createTeamAtom()
 
 /** Settings stay per-team, riding Save/Load and export with the rest of the team. */
 export const settingsAtom = atom(
