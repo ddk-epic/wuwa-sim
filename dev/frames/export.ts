@@ -3,16 +3,10 @@ import type {
   EnrichedSkillAttribute,
   StageVariant,
 } from "#/types/character"
-import {
-  hitsByStage,
-  isPlaceholder,
-  resolveVariantTarget,
-  sections,
-  stageTiming,
-} from "./types"
+import { isPlaceholder, resolveVariantTarget } from "./types"
 import type { Clip, StageRef, VariantTarget, VariantTrack } from "./types"
-import { statusOf } from "./reconcile"
 import type { Reconciliation } from "./reconcile"
+import { projectStages, projectionOf } from "./projection"
 
 export interface Change {
   path: string
@@ -45,25 +39,6 @@ function collectStageRefs(clips: Clip[]): StageRef[] {
     for (const ref of clip.stageRefs)
       if (!isPlaceholder(ref) && !seen.has(ref.id)) seen.set(ref.id, ref)
   return [...seen.values()]
-}
-
-/**
- * The clip that measures a stage most completely — most hits on its first
- * occurrence — with that occurrence's index. Drives hits, split, and variant
- * resolution; null when no clip contains the stage.
- */
-function bestClipFor(
-  clips: Clip[],
-  stageId: string,
-): { clip: Clip; index: number } | null {
-  let best: { clip: Clip; index: number; hits: number } | null = null
-  for (const clip of clips) {
-    const index = clip.stageRefs.findIndex((r) => r.id === stageId)
-    if (index === -1) continue
-    const hits = hitsByStage(clip)[index]?.length ?? 0
-    if (!best || hits > best.hits) best = { clip, index, hits }
-  }
-  return best && { clip: best.clip, index: best.index }
 }
 
 /** The track's authored target in every clip that pins it (stage's first occurrence). */
@@ -127,6 +102,7 @@ export function buildExport(
   const patched = structuredClone(char)
   const changes: Change[] = []
   const warnings: string[] = []
+  const projections = projectStages(clips, recon)
 
   for (const ref of collectStageRefs(clips)) {
     const stage = locateStage(patched, ref)
@@ -135,15 +111,13 @@ export function buildExport(
       continue
     }
 
-    const best = bestClipFor(clips, ref.id)
-    const split = best
-      ? (best.clip.animationSplits?.[best.index] ?? null)
-      : null
-    const status = statusOf(recon, ref.id)
+    const projection = projectionOf(projections, ref.id)
+    const { status } = projection
+    const hasSplit = projection.animationFrames !== null
     // A cutscene's section width is all frozen animation until split apart; its
     // actionTime is meaningless without the split.
     const expectsSplit = (stage.animationFrames ?? 0) > 0
-    if (expectsSplit && !split) {
+    if (expectsSplit && !hasSplit) {
       warnings.push(
         `${ref.stage} expects an animation split — place one before pasting; actionTime skipped.`,
       )
@@ -165,28 +139,25 @@ export function buildExport(
       }
     }
 
+    const { best } = projection
     if (!best) continue
-    const secs = sections(best.clip)
-    const sec = secs[best.index]
+    const bestClip = clips.find((c) => c.id === best.clipId)!
 
-    if (split) {
-      const { animationFrames } = stageTiming(best.clip, best.index, secs)
-      if (stage.animationFrames !== animationFrames) {
+    if (projection.animationFrames !== null) {
+      if (stage.animationFrames !== projection.animationFrames) {
         changes.push({
           path: `${ref.stage}.animationFrames`,
           before: stage.animationFrames,
-          after: animationFrames,
+          after: projection.animationFrames,
         })
-        stage.animationFrames = animationFrames
+        stage.animationFrames = projection.animationFrames
       }
     }
 
-    const hits = hitsByStage(best.clip)[best.index] ?? []
     const damage = stage.damage ?? []
-    const n = Math.min(hits.length, damage.length)
+    const n = Math.min(projection.hits.length, damage.length)
     for (let k = 0; k < n; k++) {
-      // Split-stage hits land in the frozen animation → actionFrame 0.
-      const actionFrame = split ? 0 : hits[k].frame - sec.start
+      const { actionFrame } = projection.hits[k]
       if (damage[k].actionFrame !== actionFrame) {
         changes.push({
           path: `${ref.stage}.damage[${k}].actionFrame`,
@@ -207,7 +178,7 @@ export function buildExport(
         continue
       }
       const target = targets[0]
-      const resolved = resolveVariantTarget(best.clip, best.index, target)
+      const resolved = resolveVariantTarget(bestClip, best.index, target)
       if (!resolved.ok) {
         warnings.push(`${ref.stage} ${track} unresolved — ${resolved.reason}.`)
         continue
