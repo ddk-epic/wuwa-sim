@@ -221,7 +221,6 @@ export const shorekeeper = {
       name: "Inner Stellarealm",
       description:
         "Team Intro while Outer Stellarealm is active grants team Crit. Rate scaling with Shorekeeper's Energy Regen (max 12.5%), inheriting Outer Stellarealm's duration.",
-      maxSequence: 0,
       trigger: {
         event: "skillCast",
         actor: "any",
@@ -255,7 +254,6 @@ export const shorekeeper = {
       name: "Supernal Stellarealm",
       description:
         "Team Intro while Inner Stellarealm is active grants team Crit. DMG scaling with Shorekeeper's Energy Regen (max 25%), inheriting Inner Stellarealm's duration.",
-      maxSequence: 0,
       trigger: {
         event: "skillCast",
         actor: "any",
