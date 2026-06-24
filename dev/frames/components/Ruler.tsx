@@ -1,9 +1,9 @@
-import { useRef } from "react"
 import { X } from "lucide-react"
 import { CUE_COLOR } from "../shared"
 import type { Selected } from "../shared"
 import { exceedingHitIds, isPlaceholder, sections } from "../types"
 import type { Clip, ClipEdit } from "../types"
+import { FrameTrack, TrackMarker, TrackRegion } from "./FrameTrack"
 
 export function Ruler({
   clip,
@@ -20,46 +20,33 @@ export function Ruler({
   playhead?: number
   onSeek?: (frame: number) => void
 }) {
-  const ref = useRef<HTMLDivElement>(null)
   const locked = clip.stagesLocked ?? false
-  const span = Math.max(1, clip.end - clip.start)
-  const pct = (f: number) => ((f - clip.start) / span) * 100
   const secs = sections(clip)
   const exceeding = exceedingHitIds(clip)
 
-  function frameAt(clientX: number) {
-    const rect = ref.current!.getBoundingClientRect()
-    const ratio = (clientX - rect.left) / rect.width
-    return Math.round(clip.start + ratio * span)
-  }
-
   return (
-    <div
-      ref={ref}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onSeek?.(frameAt(e.clientX))
-        e.currentTarget.setPointerCapture(e.pointerId)
-      }}
-      onPointerMove={(e) => {
-        if (e.buttons) onSeek?.(frameAt(e.clientX))
-      }}
+    <FrameTrack
+      lo={clip.start}
+      hi={clip.end}
+      onScrub={onSeek}
       className="relative h-22 cursor-ew-resize select-none rounded border border-border bg-border"
     >
       {secs.map((sec, i) => {
         const ph = isPlaceholder(sec.ref)
         return (
-          <div
+          <TrackRegion
             key={i}
+            start={sec.start}
+            end={sec.end}
             className={`absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden border-r border-border ${ph ? "" : i % 2 ? "bg-border/40" : "bg-border/20"}`}
-            style={{
-              left: `${pct(sec.start)}%`,
-              width: `${pct(sec.end) - pct(sec.start)}%`,
-              ...(ph && {
-                background:
-                  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted-foreground) 15%, transparent) 0 8px, transparent 8px 16px)",
-              }),
-            }}
+            style={
+              ph
+                ? {
+                    background:
+                      "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted-foreground) 15%, transparent) 0 8px, transparent 8px 16px)",
+                  }
+                : undefined
+            }
           >
             {!locked && (
               <button
@@ -90,17 +77,17 @@ export function Ruler({
             <span className="font-mono text-detail tabular-nums text-muted-foreground/70">
               {sec.end - sec.start}f
             </span>
-          </div>
+          </TrackRegion>
         )
       })}
 
       {clip.restStart != null && clip.restStart < clip.end && (
         <>
-          <div
+          <TrackRegion
+            start={clip.restStart}
+            end={clip.end}
             className="absolute top-0 h-full"
             style={{
-              left: `${pct(clip.restStart)}%`,
-              width: `${pct(clip.end) - pct(clip.restStart)}%`,
               background:
                 "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted-foreground) 15%, transparent) 0 8px, transparent 8px 16px)",
             }}
@@ -118,105 +105,78 @@ export function Ruler({
                 <X className="size-3" />
               </button>
             )}
-          </div>
-          <div
-            onPointerDown={(e) => {
-              if (locked) return
-              e.stopPropagation()
-              e.currentTarget.setPointerCapture(e.pointerId)
-            }}
-            onPointerMove={(e) => {
-              if (!locked && e.buttons)
-                onEdit({ type: "moveRestStart", frame: frameAt(e.clientX) })
-            }}
+          </TrackRegion>
+          <TrackMarker
+            frame={clip.restStart}
+            onDrag={
+              locked
+                ? undefined
+                : (frame) => onEdit({ type: "moveRestStart", frame })
+            }
             className={`absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 items-stretch justify-center ${locked ? "" : "cursor-ew-resize"}`}
-            style={{ left: `${pct(clip.restStart)}%` }}
             title={`rest starts @ ${clip.restStart}`}
           >
             <div className="w-0.5 bg-muted-foreground/50" />
-          </div>
+          </TrackMarker>
         </>
       )}
 
       {clip.boundaries.map((b, i) => (
-        <div
+        <TrackMarker
           key={b.id}
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            setSelected({ type: "boundary", id: b.id })
-            if (!locked) e.currentTarget.setPointerCapture(e.pointerId)
-          }}
-          onPointerMove={(e) => {
-            if (!locked && e.buttons)
-              onEdit({
-                type: "moveBoundary",
-                index: i,
-                frame: frameAt(e.clientX),
-              })
-          }}
+          frame={b.frame}
+          onSelect={() => setSelected({ type: "boundary", id: b.id })}
+          onDrag={
+            locked
+              ? undefined
+              : (frame) => onEdit({ type: "moveBoundary", index: i, frame })
+          }
           className={`absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 items-stretch justify-center ${locked ? "cursor-pointer" : "cursor-ew-resize"}`}
-          style={{ left: `${pct(b.frame)}%` }}
           title={`boundary @ ${b.frame} (${b.cue})`}
         >
           <div className={`w-0.5 ${CUE_COLOR[b.cue]}`} />
-        </div>
+        </TrackMarker>
       ))}
 
       {(clip.animationSplits ?? []).map((split, i) =>
         !split ? null : (
-          <div
+          <TrackMarker
             key={`split-${i}`}
-            onPointerDown={(e) => {
-              e.stopPropagation()
-              setSelected({ type: "split", index: i })
-              e.currentTarget.setPointerCapture(e.pointerId)
-            }}
-            onPointerMove={(e) => {
-              if (e.buttons)
-                onEdit({
-                  type: "moveAnimationSplit",
-                  stageIndex: i,
-                  frame: frameAt(e.clientX),
-                })
-            }}
+            frame={split.frame}
+            onSelect={() => setSelected({ type: "split", index: i })}
+            onDrag={(frame) =>
+              onEdit({ type: "moveAnimationSplit", stageIndex: i, frame })
+            }
             className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize flex-col items-center"
-            style={{ left: `${pct(split.frame)}%` }}
             title={`animation split @ ${split.frame} (${split.cue})`}
           >
             <div className={`size-1.5 rotate-45 ${CUE_COLOR[split.cue]}`} />
             <div
               className={`w-0.5 flex-1 opacity-70 ${CUE_COLOR[split.cue]}`}
             />
-          </div>
+          </TrackMarker>
         ),
       )}
 
       {clip.hits.map((h) => (
-        <div
+        <TrackMarker
           key={h.id}
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            setSelected({ type: "hit", id: h.id })
-            e.currentTarget.setPointerCapture(e.pointerId)
-          }}
-          onPointerMove={(e) => {
-            if (e.buttons)
-              onEdit({ type: "moveHit", id: h.id, frame: frameAt(e.clientX) })
-          }}
+          frame={h.frame}
+          onSelect={() => setSelected({ type: "hit", id: h.id })}
+          onDrag={(frame) => onEdit({ type: "moveHit", id: h.id, frame })}
           className="absolute bottom-2 z-20 -translate-x-1/2 cursor-grab"
-          style={{ left: `${pct(h.frame)}%` }}
           title={`hit @ ${h.frame} (${h.cue})`}
         >
           <div
             className={`size-3.5 rounded-full ${exceeding.has(h.id) ? "border-2 border-destructive" : "border border-background"} ${CUE_COLOR[h.cue]} ${selected?.type === "hit" && selected.id === h.id ? "ring-2 ring-foreground" : ""}`}
           />
-        </div>
+        </TrackMarker>
       ))}
 
       {playhead != null && playhead >= clip.start && playhead <= clip.end && (
-        <div
+        <TrackMarker
+          frame={playhead}
           className="pointer-events-none absolute top-0 z-30 h-full w-px -translate-x-1/2 bg-foreground"
-          style={{ left: `${pct(playhead)}%` }}
         />
       )}
 
@@ -226,6 +186,6 @@ export function Ruler({
       <span className="pointer-events-none absolute bottom-0.5 right-1 font-mono text-detail text-muted-foreground/60">
         {clip.end}
       </span>
-    </div>
+    </FrameTrack>
   )
 }

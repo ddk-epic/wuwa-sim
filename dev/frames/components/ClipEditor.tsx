@@ -242,7 +242,7 @@ export function ClipEditor({
                 setSelected={setSelected}
                 onEdit={onEdit}
                 playhead={playhead}
-                onSeek={(f) => setPlayhead(clamp(f, 0, clip.end))}
+                onSeek={setPlayhead}
               />
               <div className="flex items-center justify-between gap-3 text-detail">
                 <p className="text-muted-foreground/60">
