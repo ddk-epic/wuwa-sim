@@ -8,7 +8,7 @@ import {
   SeparatorHorizontal,
   Trash2,
 } from "lucide-react"
-import { TRACK_COLS, uid } from "../shared"
+import { TRACK_COLS, clamp, uid } from "../shared"
 import type { Selected } from "../shared"
 import type { StageGroup } from "../stages"
 import {
@@ -25,9 +25,6 @@ import { AddStagePopover } from "./AddStagePopover"
 import { MarksTable } from "./MarksTable"
 import { Ruler } from "./Ruler"
 import { VideoPane } from "./VideoPane"
-
-const clamp = (v: number, lo: number, hi: number) =>
-  Math.min(hi, Math.max(lo, v))
 
 export function ClipEditor({
   clip,

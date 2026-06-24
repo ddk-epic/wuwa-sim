@@ -2,6 +2,9 @@ import type { CueTag } from "./types"
 
 export const uid = () => Math.random().toString(36).slice(2, 9)
 
+export const clamp = (v: number, lo: number, hi: number) =>
+  Math.min(hi, Math.max(lo, v))
+
 export const CUE_COLOR: Record<CueTag, string> = {
   impactFlash: "bg-emerald-500",
   vfxEdge: "bg-sky-500",

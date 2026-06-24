@@ -7,12 +7,10 @@ import {
   Lock,
   Upload,
 } from "lucide-react"
-import { TRACK_COLS } from "../shared"
+import { TRACK_COLS, clamp } from "../shared"
 import { ENGINE_FPS, openVideoSource } from "../video"
 import type { VideoSource } from "../video"
-
-const clamp = (v: number, lo: number, hi: number) =>
-  Math.min(hi, Math.max(lo, v))
+import { FrameTrack, TrackMarker, TrackRegion } from "./FrameTrack"
 
 const ATTACH_TIMEOUT_MS = 10_000
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -256,82 +254,49 @@ function Scrub({
   onSetIn: (f: number) => void
   onSetOut: (f: number) => void
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const span = Math.max(1, hi - lo)
-  const pct = (f: number) => ((f - lo) / span) * 100
-  const frameAt = (clientX: number) => {
-    const rect = ref.current!.getBoundingClientRect()
-    return Math.round(lo + ((clientX - rect.left) / rect.width) * span)
+  // Dragging a cut handle also drives the live preview to that frame.
+  const cut = (set: (f: number) => void) => (f: number) => {
+    set(f)
+    setPlayhead(f)
   }
+  const cutHandle =
+    "absolute top-0 z-10 flex h-full w-2.5 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
 
   return (
-    <div
-      ref={ref}
-      onPointerDown={(e) => {
-        setPlayhead(clamp(frameAt(e.clientX), lo, hi))
-        e.currentTarget.setPointerCapture(e.pointerId)
-      }}
-      onPointerMove={(e) => {
-        if (e.buttons) setPlayhead(clamp(frameAt(e.clientX), lo, hi))
-      }}
+    <FrameTrack
+      lo={lo}
+      hi={hi}
+      onScrub={setPlayhead}
       className="relative h-6 cursor-ew-resize rounded border border-border bg-border/30"
     >
       {scoping && (
         <>
-          <div
+          <TrackRegion
+            start={inCut}
+            end={outCut}
             className="absolute top-0 h-full bg-primary/15"
-            style={{
-              left: `${pct(inCut)}%`,
-              width: `${pct(outCut) - pct(inCut)}%`,
-            }}
           />
-          <CutHandle
-            pos={pct(inCut)}
-            onDrag={(x) => {
-              const f = frameAt(x)
-              onSetIn(f)
-              setPlayhead(clamp(f, lo, hi))
-            }}
-          />
-          <CutHandle
-            pos={pct(outCut)}
-            onDrag={(x) => {
-              const f = frameAt(x)
-              onSetOut(f)
-              setPlayhead(clamp(f, lo, hi))
-            }}
-          />
+          <TrackMarker
+            frame={inCut}
+            onDrag={cut(onSetIn)}
+            className={cutHandle}
+          >
+            <div className="w-0.5 bg-primary" />
+          </TrackMarker>
+          <TrackMarker
+            frame={outCut}
+            onDrag={cut(onSetOut)}
+            className={cutHandle}
+          >
+            <div className="w-0.5 bg-primary" />
+          </TrackMarker>
         </>
       )}
-      <div
+      <TrackMarker
+        frame={clamp(playhead, lo, hi)}
         className="pointer-events-none absolute top-0 h-full w-px -translate-x-1/2 bg-foreground"
-        style={{ left: `${pct(clamp(playhead, lo, hi))}%` }}
       />
-    </div>
-  )
-}
-
-function CutHandle({
-  pos,
-  onDrag,
-}: {
-  pos: number
-  onDrag: (clientX: number) => void
-}) {
-  return (
-    <div
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        e.currentTarget.setPointerCapture(e.pointerId)
-      }}
-      onPointerMove={(e) => {
-        if (e.buttons) onDrag(e.clientX)
-      }}
-      className="absolute top-0 z-10 flex h-full w-2.5 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
-      style={{ left: `${pos}%` }}
-    >
-      <div className="w-0.5 bg-primary" />
-    </div>
+    </FrameTrack>
   )
 }
 

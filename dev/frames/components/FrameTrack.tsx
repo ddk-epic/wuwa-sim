@@ -1,8 +1,6 @@
 import { createContext, useContext, useRef } from "react"
 import type { CSSProperties, ReactNode } from "react"
-
-const clamp = (v: number, lo: number, hi: number) =>
-  Math.min(hi, Math.max(lo, v))
+import { clamp } from "../shared"
 
 /** Frame → percent across the `[lo, hi]` span. */
 export const frameToPct = (frame: number, lo: number, hi: number) =>
