@@ -266,7 +266,7 @@ describe("Sanhua — Resonance Chain", () => {
     const s6 = runRotation(6)
 
     const tapHeavyBonus = (log: SimulationLogEntry[]) =>
-      detonateTaps(log)[0].statsSnapshot.skillTypeBonus["Heavy Attack"] ?? 0
+      detonateTaps(log)[0].statsSnapshot.skillTypeBonus["Heavy Attack"]
 
     // Only S4 differs between runs; the tap delta isolates +1.2.
     expect(tapHeavyBonus(s6)).toBeCloseTo(tapHeavyBonus(s0) + 1.2)
@@ -275,7 +275,7 @@ describe("Sanhua — Resonance Chain", () => {
 
     // Bursts are Resonance Skill DMG; the detonate-scoped buff skips them.
     for (const b of burstHits(s6))
-      expect(b.statsSnapshot.skillTypeBonus["Heavy Attack"] ?? 0).toBeCloseTo(
+      expect(b.statsSnapshot.skillTypeBonus["Heavy Attack"]).toBeCloseTo(
         tapHeavyBonus(s0),
       )
 
