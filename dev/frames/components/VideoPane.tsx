@@ -100,12 +100,10 @@ export function VideoPane({
     }
     setBusy(true)
     setError(null)
-    let timedOut = false
     let timer: ReturnType<typeof setTimeout> | undefined
     const open = openVideoSource(file)
     const deadline = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
-        timedOut = true
         reject(
           new Error(
             "Reading this recording timed out. Try a shorter clip or re-encode it as H.264 mp4.",
@@ -114,14 +112,14 @@ export function VideoPane({
       }, ATTACH_TIMEOUT_MS)
     })
     try {
-      const source = await Promise.race([open, deadline])
+      const opened = await Promise.race([open, deadline])
       // A clip switch can unmount us mid-decode; the resolved source would never
       // reach state, so the owner's dispose-on-replace effect can't reclaim it.
-      if (mounted.current) onAttach(source)
-      else source.dispose()
+      if (mounted.current) onAttach(opened)
+      else opened.dispose()
     } catch (e) {
-      // A decode resolving after the deadline still leaves a source to free.
-      if (timedOut) void open.then((s) => s.dispose()).catch(() => {})
+      // Whatever rejected, a source that resolves afterward still needs freeing.
+      void open.then((s) => s.dispose()).catch(() => {})
       if (mounted.current)
         setError(e instanceof Error ? e.message : "Could not read this file.")
     } finally {
