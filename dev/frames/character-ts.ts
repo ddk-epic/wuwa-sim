@@ -28,69 +28,75 @@ function inlineLiteral(value: unknown): string {
   return "null"
 }
 
-const isNonEmptyObject = (v: unknown): boolean =>
-  typeof v === "object" &&
-  v !== null &&
-  !Array.isArray(v) &&
-  objectEntries(v).length > 0
-
-// Smallest buffs-section object that must break one key per line.
+// Smallest buffs-section object that breaks one key per line.
 const BUFFS_BREAK_KEYS = 3
 
 /**
- * Layout breaks independent of width, to match the authored files: every skill
- * object breaks (even a tiny one like a bare `Tune Break`), the `variants` map
- * always breaks, and a `buffs` object with 3+ keys breaks. Propagates, so a
- * container can't inline a descendant that must break.
+ * Phase 1 — the only place character-schema knowledge lives. A container is
+ * forced to break regardless of width when, to match the authored files, it is
+ * a skill object (has `stages`), a non-empty `variants` map, or a `buffs`-section
+ * object with 3+ keys — or it contains a descendant that is. Computed once per
+ * serialization; `inBuffs` rides down so the 3-key rule only fires under `buffs`.
  */
-function mustBreak(value: unknown, inBuffs: boolean): boolean {
-  if (Array.isArray(value)) return value.some((v) => mustBreak(v, inBuffs))
-  if (typeof value === "object" && value !== null) {
-    const entries = objectEntries(value)
-    if ("stages" in value) return true
-    if (inBuffs && entries.length >= BUFFS_BREAK_KEYS) return true
-    return entries.some(
-      ([k, v]) =>
-        (k === "variants" && isNonEmptyObject(v)) ||
-        mustBreak(v, inBuffs || k === "buffs"),
-    )
+export function forcedBreaks(root: unknown): WeakSet<object> {
+  const forced = new WeakSet<object>()
+
+  function walk(
+    value: unknown,
+    isVariants: boolean,
+    inBuffs: boolean,
+  ): boolean {
+    if (Array.isArray(value)) {
+      let any = false
+      for (const v of value) if (walk(v, false, inBuffs)) any = true
+      if (any) forced.add(value)
+      return any
+    }
+    if (typeof value === "object" && value !== null) {
+      const entries = objectEntries(value)
+      let broken =
+        "stages" in value ||
+        (isVariants && entries.length > 0) ||
+        (inBuffs && entries.length >= BUFFS_BREAK_KEYS)
+      for (const [k, v] of entries)
+        if (walk(v, k === "variants", inBuffs || k === "buffs")) broken = true
+      if (broken) forced.add(value)
+      return broken
+    }
+    return false
   }
-  return false
+
+  walk(root, false, false)
+  return forced
 }
 
 /**
- * Render a TS literal, preferring one line: a value stays inline unless it would
- * overflow `col` past the print width or it `mustBreak`s, then the container
- * breaks and each child is re-tried. Tuned to prettier's defaults so a paste
- * needs no reflow.
+ * Phase 2 — generic: a value stays on one line unless `forced` marks it or it
+ * overflows `col` past the print width, then the container breaks and each child
+ * is re-tried. No character-schema branches. Tuned to prettier's defaults so a
+ * paste needs no reflow.
  */
-function toTsLiteral(
+export function toTsLiteral(
   value: unknown,
   pad: string,
   col: number,
-  inBuffs = false,
-  forceBreak = false,
+  forced: WeakSet<object>,
 ): string {
   const flat = inlineLiteral(value)
-  if (
-    !forceBreak &&
-    !mustBreak(value, inBuffs) &&
-    col + flat.length <= PRINT_WIDTH
-  )
-    return flat
+  const mustBreak =
+    typeof value === "object" && value !== null && forced.has(value)
+  if (!mustBreak && col + flat.length <= PRINT_WIDTH) return flat
   const inner = pad + "  "
   if (Array.isArray(value)) {
     const items = value.map(
-      (v) => inner + toTsLiteral(v, inner, inner.length, inBuffs),
+      (v) => inner + toTsLiteral(v, inner, inner.length, forced),
     )
     return `[\n${items.join(",\n")},\n${pad}]`
   }
   if (typeof value === "object" && value !== null) {
     const lines = objectEntries(value).map(([k, v]) => {
       const key = tsKey(k)
-      const childInBuffs = inBuffs || k === "buffs"
-      const breakChild = k === "variants" && isNonEmptyObject(v)
-      return `${inner}${key}: ${toTsLiteral(v, inner, inner.length + key.length + 2, childInBuffs, breakChild)}`
+      return `${inner}${key}: ${toTsLiteral(v, inner, inner.length + key.length + 2, forced)}`
     })
     return `{\n${lines.join(",\n")},\n${pad}}`
   }
@@ -120,5 +126,6 @@ export function characterToTs(char: EnrichedCharacter): string {
     skills: char.skills.filter((s) => s.type !== "Movement"),
   }
   const binding = `export const ${constName(char.name)} = `
-  return `import type { EnrichedCharacter } from "#/types/character"\n\n${binding}${toTsLiteral(authored, "", binding.length)} satisfies EnrichedCharacter\n`
+  const forced = forcedBreaks(authored)
+  return `import type { EnrichedCharacter } from "#/types/character"\n\n${binding}${toTsLiteral(authored, "", binding.length, forced)} satisfies EnrichedCharacter\n`
 }
