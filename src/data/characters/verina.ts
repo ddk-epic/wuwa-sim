@@ -277,9 +277,10 @@ export const verina = {
       description:
         "Heavy Attack Starflower Blooms and Mid-air Attack Starflower Blooms deal 20% more DMG.",
       requiresSequence: 6,
-      trigger: {
-        event: "skillCast",
-        characterId: 1503,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      appliesToHits: {
         stage: [
           "starflower-blooms/heavy-attack-starflower-blooms",
           "starflower-blooms/mid-air-attack-starflower-blooms-stage-1",
@@ -287,8 +288,6 @@ export const verina = {
           "starflower-blooms/mid-air-attack-starflower-blooms-stage-3",
         ],
       },
-      target: { kind: "self" },
-      duration: { kind: "seconds", v: 0.5 },
       effects: [
         {
           kind: "stat",

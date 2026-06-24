@@ -254,6 +254,24 @@ describe("Verina — Resonance Chain", () => {
     expect(activeOn(partnerHit, BUFF.s4)).toBe(true)
   })
 
+  it("S6 DMG +20% lands on Starflower Blooms hits and leaks onto no other hit", () => {
+    const s6 = runS6()
+    const s0 = runS0()
+
+    for (const stage of ["mid1", "mid2", "mid3"] as const) {
+      const delta =
+        stageTap(s6, stage).statsSnapshot.allDmgBonus -
+        stageTap(s0, stage).statsSnapshot.allDmgBonus
+      expect(delta).toBeCloseTo(0.2)
+    }
+
+    // Botany is not a Starflower Blooms hit: no bonus.
+    const botanyDelta =
+      stageTap(s6, "botany").statsSnapshot.allDmgBonus -
+      stageTap(s0, "botany").statsSnapshot.allDmgBonus
+    expect(botanyDelta).toBeCloseTo(0)
+  })
+
   it("S6: Joyous Harvest emits an extra coordinated attack on mid-air Starflower", () => {
     const log = runS6()
     const s6Coords = hits(log).filter((h) => h.sourceBuffId === BUFF.s6Coord)
