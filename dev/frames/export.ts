@@ -3,8 +3,8 @@ import type {
   EnrichedSkillAttribute,
   StageVariant,
 } from "#/types/character"
-import { isPlaceholder, resolveVariantTarget } from "./types"
-import type { Clip, StageRef, VariantTarget, VariantTrack } from "./types"
+import { isPlaceholder } from "./types"
+import type { Clip, StageRef, VariantTrack } from "./types"
 import type { Reconciliation } from "./reconcile"
 import { projectStages, projectionOf } from "./projection"
 
@@ -40,25 +40,6 @@ function collectStageRefs(clips: Clip[]): StageRef[] {
       if (!isPlaceholder(ref) && !seen.has(ref.id)) seen.set(ref.id, ref)
   return [...seen.values()]
 }
-
-/** The track's authored target in every clip that pins it (stage's first occurrence). */
-function collectTargets(
-  clips: Clip[],
-  stageId: string,
-  track: VariantTrack,
-): VariantTarget[] {
-  const out: VariantTarget[] = []
-  for (const clip of clips) {
-    const i = clip.stageRefs.findIndex((r) => r.id === stageId)
-    if (i === -1) continue
-    const t = clip.variants?.[i]?.[track]
-    if (t) out.push(t)
-  }
-  return out
-}
-
-const sameTarget = (a: VariantTarget, b: VariantTarget): boolean =>
-  a.kind === b.kind && (a.kind !== "hit" || a.n === (b as { n: number }).n)
 
 /**
  * Re-key a stage so `animationFrames` follows `actionTime` — a fresh assignment
@@ -139,9 +120,7 @@ export function buildExport(
       }
     }
 
-    const { best } = projection
-    if (!best) continue
-    const bestClip = clips.find((c) => c.id === best.clipId)!
+    if (!projection.best) continue
 
     if (projection.animationFrames !== null) {
       if (stage.animationFrames !== projection.animationFrames) {
@@ -169,22 +148,23 @@ export function buildExport(
     }
 
     for (const track of ["cancel", "swap"] as const) {
-      const targets = collectTargets(clips, ref.id, track)
-      if (targets.length === 0) continue
-      if (!targets.every((t) => sameTarget(t, targets[0]))) {
+      const tp = projection.variants[track]
+      if (!tp) continue
+      if (!tp.agreed) {
         warnings.push(
           `${ref.stage} ${track}: clips disagree on the pin — reconcile before pasting.`,
         )
         continue
       }
-      const target = targets[0]
-      const resolved = resolveVariantTarget(bestClip, best.index, target)
-      if (!resolved.ok) {
-        warnings.push(`${ref.stage} ${track} unresolved — ${resolved.reason}.`)
+      const { target, resolution } = tp
+      if (!resolution.ok) {
+        warnings.push(
+          `${ref.stage} ${track} unresolved — ${resolution.reason}.`,
+        )
         continue
       }
       const key = variantKeyFor(track, target)
-      const value: StageVariant = { actionTime: resolved.actionTime }
+      const value: StageVariant = { actionTime: resolution.actionTime }
       stage.variants ??= {}
       // The cancel track owns both keys; drop the sibling it didn't resolve to.
       if (track === "cancel") {

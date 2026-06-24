@@ -78,5 +78,75 @@ describe("projectStages", () => {
     expect(p.best).toBeNull()
     expect(p.hits).toEqual([])
     expect(p.animationFrames).toBeNull()
+    expect(p.variants).toEqual({})
+  })
+})
+
+describe("projectStages variants", () => {
+  it("leaves a track absent when no clip pins it", () => {
+    const p = projectionOf(project([clip()]), "skill::A")
+    expect(p.variants.cancel).toBeUndefined()
+    expect(p.variants.swap).toBeUndefined()
+  })
+
+  it("agrees and resolves a pin against the best clip's hits", () => {
+    const pinned = clip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "last" } } },
+    })
+    const full = clip({
+      id: "c2",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
+      end: 40,
+    })
+    const p = projectionOf(project([pinned, full]), "skill::A")
+    const track = p.variants.cancel
+    expect(track?.agreed).toBe(true)
+    if (track?.agreed) {
+      expect(track.target).toEqual({ kind: "last" })
+      expect(track.resolution).toEqual({ ok: true, actionTime: 30 })
+    }
+  })
+
+  it("reports disagreement when clips pin different targets", () => {
+    const a = clip({
+      id: "c1",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("a0", 10, 0), hit("a1", 25, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "hit", n: 1 } } },
+    })
+    const b = clip({
+      id: "c2",
+      stageRefs: [ref("A", 2)],
+      boundaries: [],
+      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
+      end: 40,
+      variants: { 0: { cancel: { kind: "hit", n: 2 } } },
+    })
+    const track = projectionOf(project([a, b]), "skill::A").variants.cancel
+    expect(track?.agreed).toBe(false)
+    if (track && !track.agreed)
+      expect(track.targets).toEqual([
+        { kind: "hit", n: 1 },
+        { kind: "hit", n: 2 },
+      ])
+  })
+
+  it("marks a dangling pin as unresolved", () => {
+    const pinned = clip({
+      stageRefs: [ref("A", 2), ref("B", 1)],
+      variants: { 0: { swap: { kind: "hit", n: 5 } } },
+    })
+    const track = projectionOf(project([pinned]), "skill::A").variants.swap
+    expect(track?.agreed).toBe(true)
+    if (track?.agreed) expect(track.resolution.ok).toBe(false)
   })
 })

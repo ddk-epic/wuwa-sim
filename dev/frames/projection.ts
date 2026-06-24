@@ -2,10 +2,17 @@ import {
   animationSplitOf,
   hitsByStage,
   isPlaceholder,
+  resolveVariantTarget,
   sections,
   stageTiming,
 } from "./types"
-import type { Clip, StageRef } from "./types"
+import type {
+  Clip,
+  StageRef,
+  VariantResolution,
+  VariantTarget,
+  VariantTrack,
+} from "./types"
 import { statusOf } from "./reconcile"
 import type { Reconciliation, StageStatus } from "./reconcile"
 
@@ -14,12 +21,27 @@ export interface HitProjection {
   actionFrame: number
 }
 
+/**
+ * A pinned variant track across the clip set: the authored target if every clip
+ * that pins it agrees (with its best-clip resolution), else the disagreeing set.
+ */
+export type TrackProjection =
+  | { agreed: true; target: VariantTarget; resolution: VariantResolution }
+  | { agreed: false; targets: VariantTarget[] }
+
+/** The two variant tracks; a track is absent when no clip pins it. */
+export interface VariantsProjection {
+  cancel?: TrackProjection
+  swap?: TrackProjection
+}
+
 /** Every cross-clip answer a stage needs beyond `actionTime`, read off its best clip. */
 export interface StageProjection {
   status: StageStatus
   best: { clipId: string; index: number } | null
   hits: HitProjection[]
   animationFrames: number | null
+  variants: VariantsProjection
 }
 
 /** Every non-placeholder stage measured in ≥1 clip, deduped by id, first appearance first. */
@@ -49,6 +71,43 @@ function bestClipFor(
   return best && { clip: best.clip, index: best.index }
 }
 
+/** The track's authored target in every clip that pins it (stage's first occurrence). */
+function collectTargets(
+  clips: Clip[],
+  stageId: string,
+  track: VariantTrack,
+): VariantTarget[] {
+  const out: VariantTarget[] = []
+  for (const clip of clips) {
+    const i = clip.stageRefs.findIndex((r) => r.id === stageId)
+    if (i === -1) continue
+    const t = clip.variants?.[i]?.[track]
+    if (t) out.push(t)
+  }
+  return out
+}
+
+const sameTarget = (a: VariantTarget, b: VariantTarget): boolean =>
+  a.kind === b.kind && (a.kind !== "hit" || a.n === (b as { n: number }).n)
+
+function projectTrack(
+  clips: Clip[],
+  stageId: string,
+  track: VariantTrack,
+  best: { clip: Clip; index: number },
+): TrackProjection | undefined {
+  const targets = collectTargets(clips, stageId, track)
+  if (targets.length === 0) return undefined
+  if (!targets.every((t) => sameTarget(t, targets[0])))
+    return { agreed: false, targets }
+  const target = targets[0]
+  return {
+    agreed: true,
+    target,
+    resolution: resolveVariantTarget(best.clip, best.index, target),
+  }
+}
+
 function projectStage(
   clips: Clip[],
   stageId: string,
@@ -56,7 +115,14 @@ function projectStage(
 ): StageProjection {
   const status = statusOf(recon, stageId)
   const best = bestClipFor(clips, stageId)
-  if (!best) return { status, best: null, hits: [], animationFrames: null }
+  if (!best)
+    return {
+      status,
+      best: null,
+      hits: [],
+      animationFrames: null,
+      variants: {},
+    }
 
   const secs = sections(best.clip)
   const sec = secs[best.index]
@@ -72,6 +138,10 @@ function projectStage(
     best: { clipId: best.clip.id, index: best.index },
     hits,
     animationFrames,
+    variants: {
+      cancel: projectTrack(clips, stageId, "cancel", best),
+      swap: projectTrack(clips, stageId, "swap", best),
+    },
   }
 }
 
@@ -101,6 +171,7 @@ export function projectionOf(
       best: null,
       hits: [],
       animationFrames: null,
+      variants: {},
     }
   )
 }
