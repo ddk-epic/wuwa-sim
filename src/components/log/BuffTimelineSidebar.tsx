@@ -1,6 +1,9 @@
-import { getCharacterById } from "#/lib/loadout/catalog"
 import { formatSkillType } from "#/data/skill-types"
-import { characterVisual } from "#/components/ui/character-visual"
+import {
+  characterVisual,
+  resolveCharName,
+} from "#/components/ui/character-visual"
+import { formatActiveBuffLabel } from "#/lib/damage/hit-formula"
 import { EmptyStatement } from "#/components/ui/EmptyStatement"
 import { TL_RULER_H } from "./BuffTimelineLog"
 import type { Char } from "./BuffTimelineLog"
@@ -221,27 +224,14 @@ export function BuffTimelineSidebar({
                 </span>
               ) : (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {passives.map((p) => {
-                    const srcName =
-                      p.sourceCharacterId != null
-                        ? getCharacterById(p.sourceCharacterId)?.name
-                        : undefined
-                    return (
-                      <span
-                        key={p.id}
-                        className="rounded-full bg-foreground/5 px-2 py-0.5 text-detail text-muted-foreground"
-                        title={srcName}
-                      >
-                        {p.name}
-                        {p.stacks > 1 && (
-                          <span className="text-muted-foreground/70">
-                            {" "}
-                            ×{p.stacks}
-                          </span>
-                        )}
-                      </span>
-                    )
-                  })}
+                  {passives.map((p) => (
+                    <span
+                      key={p.id}
+                      className="rounded-full bg-foreground/5 px-2 py-0.5 text-detail text-muted-foreground"
+                    >
+                      {formatActiveBuffLabel(p, resolveCharName)}
+                    </span>
+                  ))}
                 </div>
               )}
             </>
