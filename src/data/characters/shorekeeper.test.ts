@@ -144,28 +144,38 @@ const ROTATION: readonly Entry[] = [
   ["discern", SHOREKEEPER, STAGE.discern],
 ]
 
+const rotationEntries: TimelineEntry[] = ROTATION.map(
+  ([id, characterId, stageId, variantKind]) => ({
+    id,
+    characterId,
+    stageId,
+    ...(variantKind ? { variantKind } : {}),
+  }),
+)
+
+function runRotationWith(
+  shorekeeperLoadout: SlotLoadout,
+): SimulationLogEntry[] {
+  const slots: Slots = [SHOREKEEPER, ENCORE, SANHUA]
+  const loadouts: SlotLoadout[] = [
+    shorekeeperLoadout,
+    { ...loadoutFromTemplate(encore.template), sequence: 0 },
+    { ...loadoutFromTemplate(sanhua.template), sequence: 0 },
+  ]
+  return runSimulation(rotationEntries, slots, loadouts, {
+    startWithFullEnergy: true,
+    startWithFullConcerto: true,
+  })
+}
+
 const logCache = new Map<number, SimulationLogEntry[]>()
 
 function runRotation(sequence: number): SimulationLogEntry[] {
   const cached = logCache.get(sequence)
   if (cached) return cached
-  const slots: Slots = [SHOREKEEPER, ENCORE, SANHUA]
-  const loadouts: SlotLoadout[] = [
-    { ...loadoutFromTemplate(shorekeeper.template), sequence },
-    { ...loadoutFromTemplate(encore.template), sequence: 0 },
-    { ...loadoutFromTemplate(sanhua.template), sequence: 0 },
-  ]
-  const entries: TimelineEntry[] = ROTATION.map(
-    ([id, characterId, stageId, variantKind]) => ({
-      id,
-      characterId,
-      stageId,
-      ...(variantKind ? { variantKind } : {}),
-    }),
-  )
-  const log = runSimulation(entries, slots, loadouts, {
-    startWithFullEnergy: true,
-    startWithFullConcerto: true,
+  const log = runRotationWith({
+    ...loadoutFromTemplate(shorekeeper.template),
+    sequence,
   })
   logCache.set(sequence, log)
   return log
@@ -224,13 +234,22 @@ describe("Shorekeeper — full rotation, base-kit team buffs", () => {
     "Stellarealm evolves Inner→Supernal across intros, folding team Crit scaled by Energy Regen (S%i)",
     (sequence) => {
       const log = runRotation(sequence)
-      const er = baseline(log).statsSnapshot.energyRechargePct
+      const baseEr = baseline(log).statsSnapshot.energyRechargePct
 
       // Inner Crit Rate on the butterflies (Inner up, Supernal not yet minted).
-      expect(
+      // Conversion reads the consuming hit's own ER, which includes Self
+      // Gravitation's +10% while a realm is up.
+      const innerEr = butterfly(log).statsSnapshot.energyRechargePct
+      const innerDelta =
         butterfly(log).statsSnapshot.critRate -
-          baseline(log).statsSnapshot.critRate,
-      ).toBeCloseTo(Math.min(((1 + er) / 0.002) * 0.0001, 0.125))
+        baseline(log).statsSnapshot.critRate
+      expect(innerDelta).toBeCloseTo(
+        Math.min(((1 + innerEr) / 0.002) * 0.0001, 0.125),
+      )
+      // Self Gravitation lifts the conversion above the base-ER-only value.
+      expect(innerDelta).toBeGreaterThan(
+        Math.min(((1 + baseEr) / 0.002) * 0.0001, 0.125),
+      )
 
       // Supernal Crit DMG on the Chaos Theory hits (both realms up, no
       // Discernment crit pollution).
@@ -238,9 +257,15 @@ describe("Shorekeeper — full rotation, base-kit team buffs", () => {
         (h) => h.sourceEntryId === "chaos" && h.dmgType === "Damage",
       )!
       expect(activeOn(chaosDmg, BUFF.supernal)).toBe(true)
-      expect(
-        chaosDmg.statsSnapshot.critDmg - baseline(log).statsSnapshot.critDmg,
-      ).toBeCloseTo(Math.min(((1 + er) / 0.001) * 0.0001, 0.25))
+      const supernalEr = chaosDmg.statsSnapshot.energyRechargePct
+      const supernalDelta =
+        chaosDmg.statsSnapshot.critDmg - baseline(log).statsSnapshot.critDmg
+      expect(supernalDelta).toBeCloseTo(
+        Math.min(((1 + supernalEr) / 0.001) * 0.0001, 0.25),
+      )
+      expect(supernalDelta).toBeGreaterThan(
+        Math.min(((1 + baseEr) / 0.001) * 0.0001, 0.25),
+      )
 
       // Evolution: the first Intro mints Inner only; the second adds Supernal.
       expect(activeOn(entryHit(log, "sanIntro"), BUFF.inner)).toBe(true)
@@ -255,6 +280,26 @@ describe("Shorekeeper — full rotation, base-kit team buffs", () => {
       expect(supernalAt).toBeGreaterThan(innerAt)
     },
   )
+
+  it("Stellarealm Crit conversion clamps to the 12.5% / 25% caps at high Energy Regen", () => {
+    // Both Cost-3 mains as Energy Regen (+0.32 each) push base ER past the cap
+    // thresholds: Inner saturates at 250% ER, Supernal at 250% ER.
+    const log = runRotationWith({
+      ...loadoutFromTemplate(shorekeeper.template),
+      sequence: 0,
+      cost3Mains: ["er", "er"],
+    })
+    expect(
+      butterfly(log).statsSnapshot.critRate -
+        baseline(log).statsSnapshot.critRate,
+    ).toBeCloseTo(0.125)
+    const chaosDmg = hits(log).find(
+      (h) => h.sourceEntryId === "chaos" && h.dmgType === "Damage",
+    )!
+    expect(
+      chaosDmg.statsSnapshot.critDmg - baseline(log).statsSnapshot.critDmg,
+    ).toBeCloseTo(0.25)
+  })
 
   it.each([0, 6])(
     "Self Gravitation folds +10% Energy Regen into Shorekeeper's hits (S%i)",

@@ -49,7 +49,11 @@ import { OnFieldTracker } from "./on-field-tracker"
 import { PoolStore } from "./pool-store"
 import type { PoolMember } from "./pool-store"
 import { ResourceLedger } from "./resource-ledger"
-import { accumulateStatEffects, matchesHit } from "./stat-table-builder"
+import {
+  accumulateScaledStatEffects,
+  accumulateStatEffects,
+  matchesHit,
+} from "./stat-table-builder"
 import { TriggerIndex } from "./trigger-index"
 
 export type { EngineEvent } from "./instance-store"
@@ -144,8 +148,6 @@ export class BuffEngine {
   private foldedBuffsMap = new Map<number, BuffDef[]>()
   private pendingOutroBuffs: PendingOutroBuff[] = []
   private evaluator = new ConditionEvaluator(this.buildConditionWorld())
-  /** Guards against circular resolveStats calls from scaledByStat value expressions. */
-  private resolvingStats = new Set<number>()
   private emitHitDispatcher = new EmitHitDispatcher({
     chainDepthCap: EMIT_HIT_CHAIN_DEPTH_CAP,
   })
@@ -1396,38 +1398,50 @@ export class BuffEngine {
     })
   }
 
+  /** Base stats + every non-`scaledByStat` buff. No cross-character reader in scope. */
+  private resolveIntrinsicStats(
+    characterId: number,
+    hit?: HitContext,
+  ): StatTable {
+    const base = this.store.cloneBaseStats(characterId)
+    const getBuffStacks = (cid: number, buffId: string): number => {
+      return this.store.buffStacksOnTarget(buffId, cid)
+    }
+    const getStatusStacks = (status: NegStatusType): number => {
+      return this.target.stacksOf(status)
+    }
+    for (const inst of this.activeContributions(characterId, hit)) {
+      accumulateStatEffects(
+        base,
+        { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
+        getBuffStacks,
+        getStatusStacks,
+      )
+    }
+    return base
+  }
+
   resolveStats(characterId: number, hit?: HitContext): StatTable {
-    if (this.resolvingStats.has(characterId)) {
-      return this.store.cloneBaseStats(characterId)
+    const stats = this.resolveIntrinsicStats(characterId, hit)
+    // `scaledByStat` source reads are hit-agnostic; memoize so multiple effects
+    // referencing one character resolve its intrinsic table once.
+    const intrinsicByChar = new Map<number, StatTable>()
+    const getCharStat = (cid: number, stat: ScalarStatKey): number => {
+      let intrinsic = intrinsicByChar.get(cid)
+      if (!intrinsic) {
+        intrinsic = this.resolveIntrinsicStats(cid)
+        intrinsicByChar.set(cid, intrinsic)
+      }
+      return intrinsic[stat]
     }
-    this.resolvingStats.add(characterId)
-    try {
-      const base = this.store.cloneBaseStats(characterId)
-      const getCharStat = (cid: number, stat: ScalarStatKey): number => {
-        return this.resolveStats(cid)[stat]
-      }
-      const getBuffStacks = (cid: number, buffId: string): number => {
-        return this.store.buffStacksOnTarget(buffId, cid)
-      }
-      const getStatusStacks = (status: NegStatusType): number => {
-        return this.target.stacksOf(status)
-      }
-      // One pass over the gated instances; `accumulateStatEffects` only does
-      // `+=`, so folding hit-agnostic and hit-scoped buffs together yields the
-      // same total as the two old passes.
-      for (const inst of this.activeContributions(characterId, hit)) {
-        accumulateStatEffects(
-          base,
-          { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
-          getCharStat,
-          getBuffStacks,
-          getStatusStacks,
-        )
-      }
-      return base
-    } finally {
-      this.resolvingStats.delete(characterId)
+    for (const inst of this.activeContributions(characterId, hit)) {
+      accumulateScaledStatEffects(
+        stats,
+        { def: inst.def, stacks: inst.stacks, snapshots: inst.snapshots },
+        getCharStat,
+      )
     }
+    return stats
   }
 
   /** Test/inspection helper. */

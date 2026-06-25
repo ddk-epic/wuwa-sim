@@ -8,7 +8,7 @@ This reverses the prior `CONTEXT.md` invariant _"the engine owns no globals."_ T
 
 A per-target instance can carry target-dependent state — a value scaling off the _receiving_ character's stat, or a condition checking the _receiver's_ on-field status. A single shared instance cannot: it has no frozen target, so its contribution must be identical for every reader. We make that an enforced invariant rather than a hope:
 
-- **Effect values must be target-independent** — `const`, or `scaledByStat` pinned to an explicit `characterId` (e.g. Shorekeeper's Stellarealm buffs scale off her `1505` Energy Regen, the same number for every reader).
+- **Effect values must be target-independent** — `const`, or `scaledByStat` pinned to an explicit `characterId` (e.g. Shorekeeper's Stellarealm buffs scale off her `1505` Energy Regen, the same number for every reader). `scaledByStat` reads the source's **intrinsic** stats (base + non-`scaledByStat` buffs), resolved in a separate pass from the `scaledByStat` effects themselves — so the value is well-defined and identical for every reader, and a `scaledByStat` chain cannot recurse into stat resolution. See [stat-table § Intrinsic vs derived resolution](../stat-table.md#intrinsic-vs-derived-resolution).
 - **Conditions may reference only the source** (`on:"source"`) — resolved against the buff's owner, once.
 - **Reader-referencing conditions** (`on:"target"`, reader `onField`) are **validate-rejected**. None exist on team buffs today; the guard is an explicit "not yet supported" rather than speculative per-reader condition eval.
 

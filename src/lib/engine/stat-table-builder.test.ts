@@ -6,6 +6,7 @@ import type { SlotLoadout } from "#/types/loadout"
 import type { WeaponData } from "#/types/weapon"
 import { emptyStatTable } from "#/types/stat-table"
 import {
+  accumulateScaledStatEffects,
   accumulateStatEffects,
   compileBaseStats,
   freezeSnapshots,
@@ -124,7 +125,7 @@ describe("accumulateStatEffects", () => {
     expect(stats.vul).toBeCloseTo(0.6)
   })
 
-  it("scaledByStat reads from getCharStat and applies formula", () => {
+  it("skips scaledByStat effects (layered by the derived pass instead)", () => {
     const stats = emptyStatTable()
     const def = baseBuff({
       effects: [
@@ -143,59 +144,65 @@ describe("accumulateStatEffects", () => {
         },
       ],
     })
-    // energyRechargePct = 1.5 → total ER = 1 + 1.5 = 2.5 → min(2.5/0.002*0.0001, 0.125) = 0.125
-    const getCharStat = (_cid: number, _stat: string) => 1.5
-    accumulateStatEffects(stats, { def, stacks: 1 }, getCharStat)
-    expect(stats.critRate).toBeCloseTo(0.125)
-  })
-
-  it("scaledByStat caps at max", () => {
-    const stats = emptyStatTable()
-    const def = baseBuff({
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "critRate" },
-          value: {
-            kind: "scaledByStat",
-            stat: "energyRechargePct",
-            characterId: 99,
-            base: 1,
-            per: 0.002,
-            scale: 0.0001,
-            max: 0.125,
-          },
-        },
-      ],
-    })
-    // ER = 10.0 (very high) → without cap would exceed 0.125
-    const getCharStat = (_cid: number, _stat: string) => 10.0
-    accumulateStatEffects(stats, { def, stacks: 1 }, getCharStat)
-    expect(stats.critRate).toBeCloseTo(0.125)
-  })
-
-  it("scaledByStat returns 0 when getCharStat is not provided", () => {
-    const stats = emptyStatTable()
-    const def = baseBuff({
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "critRate" },
-          value: {
-            kind: "scaledByStat",
-            stat: "energyRechargePct",
-            characterId: 99,
-            base: 1,
-            per: 0.002,
-            scale: 0.0001,
-            max: 0.125,
-          },
-        },
-      ],
-    })
-    // raw = 0, base = 1 → min((1+0)/0.002*0.0001, 0.125) = min(0.05, 0.125) = 0.05
     accumulateStatEffects(stats, { def, stacks: 1 })
-    expect(stats.critRate).toBeCloseTo(0.05)
+    expect(stats.critRate).toBe(0)
+  })
+})
+
+describe("accumulateScaledStatEffects", () => {
+  const scaledBuff = () =>
+    baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: {
+            kind: "scaledByStat",
+            stat: "energyRechargePct",
+            characterId: 99,
+            base: 1,
+            per: 0.002,
+            scale: 0.0001,
+            max: 0.125,
+          },
+        },
+      ],
+    })
+
+  it("reads from getCharStat and applies the formula", () => {
+    const stats = emptyStatTable()
+    // ER = 1.5 → total = 1 + 1.5 = 2.5 → min(2.5/0.002*0.0001, 0.125) = 0.125
+    accumulateScaledStatEffects(
+      stats,
+      { def: scaledBuff(), stacks: 1 },
+      () => 1.5,
+    )
+    expect(stats.critRate).toBeCloseTo(0.125)
+  })
+
+  it("caps at max", () => {
+    const stats = emptyStatTable()
+    accumulateScaledStatEffects(
+      stats,
+      { def: scaledBuff(), stacks: 1 },
+      () => 10.0,
+    )
+    expect(stats.critRate).toBeCloseTo(0.125)
+  })
+
+  it("ignores non-scaledByStat effects", () => {
+    const stats = emptyStatTable()
+    const def = baseBuff({
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "critRate" },
+          value: { kind: "const", v: 0.3 },
+        },
+      ],
+    })
+    accumulateScaledStatEffects(stats, { def, stacks: 1 }, () => 1.5)
+    expect(stats.critRate).toBe(0)
   })
 })
 
@@ -271,23 +278,13 @@ describe("scaledByStacks ValueExpr", () => {
 
   it("resolves base + per × stacks live from the stack-count callback", () => {
     const stats = emptyStatTable()
-    accumulateStatEffects(
-      stats,
-      { def: buff(false), stacks: 1 },
-      undefined,
-      () => 4,
-    )
+    accumulateStatEffects(stats, { def: buff(false), stacks: 1 }, () => 4)
     expect(stats.bonusMultiplier).toBeCloseTo(0.7)
   })
 
   it("clamps the stack count to max", () => {
     const stats = emptyStatTable()
-    accumulateStatEffects(
-      stats,
-      { def: buff(false), stacks: 1 },
-      undefined,
-      () => 25,
-    )
+    accumulateStatEffects(stats, { def: buff(false), stacks: 1 }, () => 25)
     expect(stats.bonusMultiplier).toBeCloseTo(1.0)
   })
 
@@ -296,12 +293,7 @@ describe("scaledByStacks ValueExpr", () => {
     const snapshots = freezeSnapshots(def, 1, () => 3)
     const stats = emptyStatTable()
     // Live callback now reports 0 buds; the frozen 0.65 must win.
-    accumulateStatEffects(
-      stats,
-      { def, stacks: 1, snapshots },
-      undefined,
-      () => 0,
-    )
+    accumulateStatEffects(stats, { def, stacks: 1, snapshots }, () => 0)
     expect(stats.bonusMultiplier).toBeCloseTo(0.65)
   })
 })
@@ -329,7 +321,6 @@ describe("fromStatusStacks ValueExpr", () => {
     accumulateStatEffects(
       stats,
       { def: vulBuff, stacks: 1 },
-      undefined,
       undefined,
       () => statusStacks,
     )

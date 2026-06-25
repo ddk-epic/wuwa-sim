@@ -77,14 +77,14 @@ export function matchesHit(filter: HitFilter, ctx: HitContext): boolean {
 }
 
 /**
- * Single accumulator for turning a contribution's Stat Effects into Stat Table
- * field writes. Used by both bootstrap (folding permanent buffs into the base
- * table) and resolveStats (layering active instances per query).
+ * Folds a contribution's intrinsic Stat Effects (everything except
+ * `scaledByStat`) into the Stat Table. Used by bootstrap (folding permanent
+ * buffs into the base table) and the intrinsic resolution pass. `scaledByStat`
+ * effects are layered separately by `accumulateScaledStatEffects`.
  */
 export function accumulateStatEffects(
   stats: StatTable,
   contribution: StatContribution,
-  getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
   getBuffStacks?: (characterId: number, buffId: string) => number,
   getStatusStacks?: (status: NegStatusType) => number,
 ): void {
@@ -92,16 +92,38 @@ export function accumulateStatEffects(
   for (let i = 0; i < def.effects.length; i++) {
     const effect = def.effects[i]
     if (effect.kind !== "stat") continue
+    if (effect.value.kind === "scaledByStat") continue
     const v = resolveValue(
       effect.value,
       stacks,
       snapshots,
       i,
-      getCharStat,
       getBuffStacks,
       getStatusStacks,
     )
     applyToPath(stats, effect.path, v)
+  }
+}
+
+/**
+ * Layers a contribution's `scaledByStat` effects on top of an already-resolved
+ * intrinsic table. `getCharStat` reads the *intrinsic* table of the referenced
+ * character, so this pass can never re-enter stat resolution.
+ */
+export function accumulateScaledStatEffects(
+  stats: StatTable,
+  contribution: StatContribution,
+  getCharStat: (characterId: number, stat: ScalarStatKey) => number,
+): void {
+  const { def } = contribution
+  for (const effect of def.effects) {
+    if (effect.kind !== "stat") continue
+    if (effect.value.kind !== "scaledByStat") continue
+    applyToPath(
+      stats,
+      effect.path,
+      resolveScaledByStatValue(effect.value, getCharStat),
+    )
   }
 }
 
@@ -136,12 +158,19 @@ export function freezeSnapshots(
   return out
 }
 
+function resolveScaledByStatValue(
+  value: Extract<ValueExpr, { kind: "scaledByStat" }>,
+  getCharStat: (characterId: number, stat: ScalarStatKey) => number,
+): number {
+  const statVal = (value.base ?? 0) + getCharStat(value.characterId, value.stat)
+  return Math.min((statVal / value.per) * value.scale, value.max)
+}
+
 function resolveValue(
-  value: ValueExpr,
+  value: Exclude<ValueExpr, { kind: "scaledByStat" }>,
   stacks: number,
   snapshots: Record<number, number> | undefined,
   effectIndex: number,
-  getCharStat?: (characterId: number, stat: ScalarStatKey) => number,
   getBuffStacks?: (characterId: number, buffId: string) => number,
   getStatusStacks?: (status: NegStatusType) => number,
 ): number {
@@ -153,11 +182,6 @@ function resolveValue(
       return value.v
     case "perStack":
       return value.v * stacks
-    case "scaledByStat": {
-      const raw = getCharStat?.(value.characterId, value.stat) ?? 0
-      const statVal = (value.base ?? 0) + raw
-      return Math.min((statVal / value.per) * value.scale, value.max)
-    }
     case "scaledByStacks": {
       const n = getBuffStacks?.(value.characterId, value.buff) ?? 0
       return value.base + value.per * Math.min(n, value.max)

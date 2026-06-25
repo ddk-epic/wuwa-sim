@@ -37,6 +37,20 @@ expanded from the `SlotLoadout`'s `echoBuild` pattern and main-stat choices into
 concrete main + substat rolls via `echo-stat-constants` — and finally the active
 `BuffDef`s, which resolve their `ValueExpr` and write into the matching field.
 
+### Intrinsic vs derived resolution
+
+Stat resolution runs in two tiers. The **intrinsic** pass folds base stats plus
+every non-`scaledByStat` buff (`const`, `perStack`, `scaledByStacks`,
+`fromStatusStacks`) — none of which read another character's stat table. The
+**derived** pass then applies `scaledByStat` effects, each reading the
+_intrinsic_ table of the character it points at (`scaledByStat.characterId`).
+
+Because the derived pass reads only intrinsic tables — never derived ones — a
+`scaledByStat` chain cannot feed back into itself: the cycle is unrepresentable,
+not guarded against. Concretely, Shorekeeper's Stellarealm Crit conversion reads
+her intrinsic Energy Regen — gear + weapon + Self Gravitation's +10% while a
+realm is up — but never Crit produced by another `scaledByStat`.
+
 ## Gotchas
 
 - The crit floor (5% / 150%) is applied in the builder, not stored on the
@@ -44,6 +58,9 @@ concrete main + substat rolls via `echo-stat-constants` — and finally the acti
 - `SkillType` here excludes `"Movement"`-only nuances and `"Forte Circuit"`
   (which is a `SkillGrouping`, not a `SkillType`); the map keys follow the
   `SkillType` union exactly.
+- `scaledByStat` reads the source character's **intrinsic** stats, not a
+  fully-resolved table. A `const`/`perStack` ER buff flows into a `scaledByStat`
+  ER reader; a (hypothetical) ER buff that was itself `scaledByStat` would not.
 
 ## Related
 

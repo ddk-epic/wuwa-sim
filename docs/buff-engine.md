@@ -50,7 +50,9 @@ Order is a data value, not inline control flow (see [ADR-0006](adr/0006-phase-ba
 
 ### Stat table snapshot
 
-`resolveHit(frame, …)` ticks expirations to `frame`, then `StatTableBuilder.accumulateStatEffects` walks active instances whose condition currently passes. Stat-effect conditions are evaluated lazily here (per `resolveStats` call), not at instance-creation time. The result is the Stat Table consumed by `compute-damage`.
+`resolveHit(frame, …)` ticks expirations to `frame`, then walks active instances whose condition currently passes. Stat-effect conditions are evaluated lazily here (per `resolveStats` call), not at instance-creation time. The result is the Stat Table consumed by `compute-damage`.
+
+Resolution runs in two passes (see [stat-table § Intrinsic vs derived resolution](stat-table.md#intrinsic-vs-derived-resolution)): `resolveIntrinsicStats` folds base stats and every non-`scaledByStat` buff, then `resolveStats` applies `scaledByStat` effects on top, reading the _intrinsic_ table of the referenced character. The derived pass reads intrinsic tables only, so a `scaledByStat` lookup can never re-enter stat resolution — no recursion guard exists.
 
 ## Gotchas
 

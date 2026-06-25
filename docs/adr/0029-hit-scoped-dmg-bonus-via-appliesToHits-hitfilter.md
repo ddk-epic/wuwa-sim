@@ -50,7 +50,7 @@ Both damage paths build a `HitContext` and thread it through `resolveHit(actor, 
 → `resolveStats(charId, hit?)`, and through `activeBuffs(charId, hit?)`: the synthetic-emit path
 (`emit-hit-dispatcher`, carrying `sourceBuffId`/`skillType`/`element`) and the authored path
 (`resolveTrailingBundle`, carrying `stageId`/`skillCategory`/`skillType`/`element` — all in hand
-at the call site). Non-hit callers (ER calc, forte-recharge, `scaledByStat` recursion) pass
+at the call site). Non-hit callers (ER calc, forte-recharge, `scaledByStat` intrinsic source lookup) pass
 nothing, so the second sub-pass is skipped and they behave exactly as before. Because
 `activeBuffs` also takes the hit, a non-matching `appliesToHits` buff is filtered out of a hit's
 `activeBuffs` list — preserving the invariant "a buff listed on a hit contributed to that hit."
