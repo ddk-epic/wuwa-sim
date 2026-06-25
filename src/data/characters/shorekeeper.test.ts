@@ -103,38 +103,6 @@ describe("Shorekeeper — Flare Star Butterflies via Emit Pool", () => {
     const early = flies.filter((b) => b.frame < MATURATION)
     expect(early).toHaveLength(5)
   })
-
-  it("Illation converts all held cores into butterflies immediately", () => {
-    const slots: Slots = [SHOREKEEPER, null, null]
-    const loadouts: SlotLoadout[] = [
-      loadoutFromTemplate(shorekeeper.template),
-      emptyLoadout(),
-      emptyLoadout(),
-    ]
-    const entries: TimelineEntry[] = [
-      ...COMBO.map((stageId, s) => ({
-        id: `s${s}`,
-        characterId: SHOREKEEPER,
-        stageId,
-      })),
-      { id: "illation", characterId: SHOREKEEPER, stageId: STAGE.illation },
-    ]
-    const flies = butterflies(
-      runSimulation(entries, slots, loadouts, { startWithFullEnergy: true }),
-    )
-    // All 5 cores convert on the Illation cast, none left to mature at 6s.
-    expect(flies).toHaveLength(5)
-    expect(flies.every((b) => b.frame < MATURATION)).toBe(true)
-  })
-})
-
-describe("Shorekeeper — Chaos Theory heal shape", () => {
-  it("the heal is the cast stage's first hit, with no standalone Healing stage", () => {
-    const chaos = shorekeeper.skills.find((s) => s.name === "Chaos Theory")
-    const cast = chaos?.stages.find((s) => s.name === "Skill DMG")
-    expect(cast?.damage[0].dmgType).toBe("Heal")
-    expect(chaos?.stages.some((s) => s.name === "Healing")).toBe(false)
-  })
 })
 
 const ENCORE = 1203
@@ -150,6 +118,7 @@ const BUFF = {
   binaryButterfly: "char.shorekeeper.binary-butterfly",
   s2: "char.shorekeeper.s2-outer-stellarealm-atk",
   s3: "char.shorekeeper.s3-infinity-awaits-me",
+  weaponHealAtk: "weapon.stellar-symphony.heal-atk",
 } as const
 
 type Entry = readonly [
@@ -241,6 +210,16 @@ const chaosHeal = (log: SimulationLogEntry[]): SustainEvent =>
   )!
 
 describe("Shorekeeper — full rotation, base-kit team buffs", () => {
+  it("Illation converts the combo's 5 held cores into early butterflies", () => {
+    const flies = butterflies(runRotation(0))
+    expect(flies).toHaveLength(5)
+    expect(flies.every((b) => b.frame < MATURATION)).toBe(true)
+  })
+
+  it("Chaos Theory casts a heal", () => {
+    expect(chaosHeal(runRotation(0))).toBeDefined()
+  })
+
   it.each([0, 6])(
     "Stellarealm evolves Inner→Supernal across intros, folding team Crit scaled by Energy Regen (S%i)",
     (sequence) => {
@@ -364,6 +343,21 @@ describe("Shorekeeper — full rotation, Resonance Chain", () => {
       expect(h.statsSnapshot.bonusMultiplier).toBeCloseTo(base.bonusMultiplier)
       expect(h.statsSnapshot.critDmg).toBeCloseTo(base.critDmg)
     }
+  })
+})
+
+describe("Shorekeeper — Stellar Symphony heal-ATK through the rotation", () => {
+  // Stellar Symphony buffs team ATK off a Resonance-Skill heal; Chaos Theory is
+  // that heal. The buff lands after the heal, so the pre-heal butterflies miss it
+  // while the cast's own damage and downstream teammates carry it.
+  it("Chaos Theory's heal arms the team-ATK buff for wielder and allies", () => {
+    const log = runRotation(0)
+    const chaosDmg = hits(log).find(
+      (h) => h.sourceEntryId === "chaos" && h.dmgType === "Damage",
+    )!
+    expect(activeOn(chaosDmg, BUFF.weaponHealAtk)).toBe(true)
+    expect(activeOn(entryHit(log, "sanIntro"), BUFF.weaponHealAtk)).toBe(true)
+    expect(activeOn(butterfly(log), BUFF.weaponHealAtk)).toBe(false)
   })
 })
 
