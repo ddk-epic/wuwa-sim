@@ -225,11 +225,14 @@ export const camellya = {
       id: "char.camellya.budding-mode",
       name: "Budding Mode",
       description:
-        "Casting Ephemeral consumes all Crimson Buds and enters Budding Mode: core attacks gain a Sweet Dream DMG Multiplier of 50% + 5% per Bud consumed (max 10). Ends on swap-out or when Crimson Pistils reach 0.",
+        "Casting Ephemeral or Perennial consumes all Crimson Buds and enters Budding Mode: core attacks gain a Sweet Dream DMG Multiplier of 50% + 5% per Bud consumed (max 10). Ends on swap-out or when Crimson Pistils reach 0.",
       trigger: {
         event: "skillCast",
         characterId: 1603,
-        stage: "vegetative-universe/ephemeral",
+        stage: [
+          "vegetative-universe/ephemeral",
+          "vegetative-universe/perennial",
+        ],
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
@@ -267,7 +270,9 @@ export const camellya = {
         direction: "down",
         characterId: 1603,
       },
-      effects: [{ kind: "removeBuffs", buffs: ["budding-mode"] }],
+      effects: [
+        { kind: "removeBuffs", buffs: ["budding-mode", "perennial-entry"] },
+      ],
     },
     {
       // +150% Energy Regen Multiplier on consuming attacks → 2.5× Resonance Energy.
@@ -339,7 +344,7 @@ export const camellya = {
       ],
     },
     {
-      id: "char.camellya.s6-sweet-dream-rider",
+      id: "char.camellya.s6-sweet-dream-bonus",
       name: "S6: Bloom For You Thousand Times Over",
       description:
         "While Budding Mode is active, the Sweet Dream DMG Multiplier is increased by an additional 150%.",
@@ -360,6 +365,54 @@ export const camellya = {
           kind: "stat",
           path: { stat: "bonusMultiplier" },
           value: { kind: "const", v: 1.5 },
+        },
+      ],
+    },
+    {
+      // Marker armed by Perennial, consumed by the next Ephemeral. Its presence
+      // promotes the S6 Sweet Dream bonus from +150% to +250%.
+      id: "char.camellya.perennial-entry",
+      name: "Perennial Entry",
+      hidden: true,
+      requiresSequence: 6,
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        stage: "vegetative-universe/perennial",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      expiresOnSourceSwapOut: true,
+      consumedBy: {
+        event: "skillCast",
+        characterId: 1603,
+        stage: "vegetative-universe/ephemeral",
+      },
+      effects: [],
+    },
+    {
+      // Budding Mode entered via Perennial: +100% on top of the +150% S6 bonus.
+      id: "char.camellya.s6-sweet-dream-bonus-perennial",
+      name: "S6: Bloom For You Thousand Times Over (Perennial)",
+      description:
+        "When Budding Mode is entered via Perennial, the Sweet Dream DMG Multiplier is increased by an additional 100%.",
+      requiresSequence: 6,
+      trigger: { event: "simStart" },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      condition: {
+        kind: "buffActive",
+        buff: "perennial-entry",
+        on: "source",
+      },
+      appliesToHits: {
+        stage: ["burgeoning", "valse-of-bloom-and-blight"],
+      },
+      effects: [
+        {
+          kind: "stat",
+          path: { stat: "bonusMultiplier" },
+          value: { kind: "const", v: 1.0 },
         },
       ],
     },

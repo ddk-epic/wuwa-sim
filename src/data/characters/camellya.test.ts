@@ -837,6 +837,158 @@ describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
   })
 })
 
+describe("Camellya — Perennial Budding Mode entry (S6 Sweet Dream)", () => {
+  const BUDDING = "char.camellya.budding-mode"
+  const BUD = "char.camellya.crimson-bud"
+  const MARKER = "char.camellya.perennial-entry"
+  const OUTRO_PRIMED = "char.camellya.outro-primed"
+  const PERENNIAL_STAGE =
+    "char.camellya.resonance-skill.vegetative-universe.perennial::basic-attack"
+  const CORE_HIT: HitContext = {
+    stageId:
+      "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+    skill: "burgeoning",
+    hitIndex: 1,
+    skillCategory: "Basic Attack",
+    skillType: "Basic Attack",
+    element: "Havoc",
+  }
+
+  function mintBuds(engine: ReturnType<typeof makeEngine>, buds: number) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Intro Skill",
+      dmgType: "Damage",
+      stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
+      frame: 0,
+      forte: 100,
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+      frame: 1,
+      forte: -10 * buds,
+    })
+  }
+
+  function cast(
+    engine: ReturnType<typeof makeEngine>,
+    stageId: string,
+    frame: number,
+  ) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId,
+      skillCategory: "Resonance Skill",
+      frame,
+    })
+  }
+
+  const ids = (engine: ReturnType<typeof makeEngine>) =>
+    engine.activeBuffIds(CAMELLYA)
+  const budStacks = (engine: ReturnType<typeof makeEngine>) =>
+    engine.activeBuffs(CAMELLYA).find((b) => b.id === BUD)?.stacks ?? 0
+
+  it("casting Perennial enters Budding Mode and removes all Crimson Buds", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 4)
+    expect(budStacks(engine)).toBe(4)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).toContain(BUDDING)
+    expect(budStacks(engine)).toBe(0)
+  })
+
+  it("Sweet Dream S6 portion is +2.5 via Perennial, +1.5 via Ephemeral", () => {
+    const viaPerennial = makeEngine(6)
+    mintBuds(viaPerennial, 3)
+    cast(viaPerennial, PERENNIAL_STAGE, 2)
+    // 0.65 base + 1.5 + 1.0 = 3.15.
+    expect(
+      viaPerennial.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier,
+    ).toBeCloseTo(3.15)
+
+    const viaEphemeral = makeEngine(6)
+    mintBuds(viaEphemeral, 3)
+    cast(viaEphemeral, EPHEMERAL_STAGE, 2)
+    // 0.65 base + 1.5 = 2.15.
+    expect(
+      viaEphemeral.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier,
+    ).toBeCloseTo(2.15)
+  })
+
+  it("re-entering via Ephemeral consumes the marker, dropping back to +1.5", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 3)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).toContain(MARKER)
+    // Re-snapshots Sweet Dream at 0 buds (none mint inside Budding Mode);
+    // the marker is consumed, so only the +1.5 S6 bonus remains: 0.5 + 1.5.
+    cast(engine, EPHEMERAL_STAGE, 5)
+    expect(ids(engine)).not.toContain(MARKER)
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      2.0,
+    )
+  })
+
+  it("swap-out clears the marker", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 3)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).toContain(MARKER)
+    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 3 })
+    expect(ids(engine)).not.toContain(MARKER)
+  })
+
+  it("pistils reaching 0 clears the marker", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 3) // forte at 70
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).toContain(MARKER)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+      frame: 3,
+      forte: -70,
+    })
+    expect(engine.getResource(CAMELLYA).forte).toBe(0)
+    expect(ids(engine)).not.toContain(MARKER)
+  })
+
+  it("shared S3 ATK +58% fires identically for a Perennial entry", () => {
+    const engine = makeEngine(6)
+    const before = engine.resolveStats(CAMELLYA).atkPct
+    mintBuds(engine, 2)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(engine.resolveStats(CAMELLYA).atkPct).toBeCloseTo(before + 0.58)
+  })
+
+  it("the marker requires S6 — Perennial below S6 does not set it", () => {
+    const engine = makeEngine(5)
+    mintBuds(engine, 3)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).not.toContain(MARKER)
+  })
+
+  it("Outro priming stays Ephemeral-only — Perennial does not arm it", () => {
+    const engine = makeEngine(6)
+    mintBuds(engine, 3)
+    cast(engine, PERENNIAL_STAGE, 2)
+    expect(ids(engine)).not.toContain(OUTRO_PRIMED)
+    cast(engine, EPHEMERAL_STAGE, 5)
+    expect(ids(engine)).toContain(OUTRO_PRIMED)
+  })
+})
+
 describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate)", () => {
   const BUD = "char.camellya.crimson-bud"
   const BASIC_STAGE =
