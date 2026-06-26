@@ -75,6 +75,8 @@ export interface SkillAttribute {
   staCost?: number
   cooldown?: number
   concerto?: number
+  /** Forte applied on cast (skillCast), before any hit lands. Capped by forteCap, floored at 0. */
+  forte?: number
   damage?: DamageEntry[]
   /** Minimum Resonance Chain sequence for this stage; below it, the stage is hidden and validated. */
   requiresSequence?: number

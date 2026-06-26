@@ -467,6 +467,7 @@ function fireSkillCast(
     skill: resolved.skillKey,
     frame,
     concerto: resolved.concerto,
+    forte: resolved.forte,
     resonanceCost: resolved.resonanceCost,
   })
   drainDispatch(ctx, result, entry.id)

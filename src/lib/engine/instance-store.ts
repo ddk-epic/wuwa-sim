@@ -26,6 +26,8 @@ export type EngineEvent =
       frame: number
       /** Stage-level concerto attached to this cast (action-level). */
       concerto?: number
+      /** Stage-level forte applied on cast (action-level). Capped by forteCap. */
+      forte?: number
       /** Energy consumed on cast (Resonance Liberation only). Defaults to 100. */
       resonanceCost?: number
     }

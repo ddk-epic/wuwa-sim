@@ -159,9 +159,12 @@ describe("Camellya — S4 Intro team Basic Attack DMG +25%", () => {
   })
 })
 
-describe("Camellya — Ephemeral concerto cost (on the hit)", () => {
-  const ephemeralCost = camellya.skills.find((s) => s.type === "Forte Circuit")!
-    .stages[0].damage[0].concerto
+describe("Camellya — Ephemeral on-cast concerto/forte", () => {
+  const ephemeralStage = camellya.skills.find(
+    (s) => s.type === "Forte Circuit",
+  )!.stages[0]
+  const concertoCost = ephemeralStage.concerto
+  const forteGain = ephemeralStage.forte
 
   function grantConcerto(engine: ReturnType<typeof makeEngine>, n: number) {
     engine.onEvent({
@@ -174,33 +177,41 @@ describe("Camellya — Ephemeral concerto cost (on the hit)", () => {
     })
   }
 
-  function landEphemeral(engine: ReturnType<typeof makeEngine>) {
+  function castEphemeral(engine: ReturnType<typeof makeEngine>) {
     engine.onEvent({
-      kind: "hitLanded",
+      kind: "skillCast",
       characterId: CAMELLYA,
       skillCategory: "Resonance Skill",
-      dmgType: "Damage",
       frame: 1,
-      concerto: ephemeralCost,
+      concerto: concertoCost,
+      forte: forteGain,
     })
   }
 
-  it("the Ephemeral hit carries a −70 concerto cost", () => {
-    expect(ephemeralCost).toBe(-70)
+  it("cost/gain live on the stage, not the damage entry", () => {
+    expect(concertoCost).toBe(-70)
+    expect(forteGain).toBe(100)
+    expect(ephemeralStage.damage[0].concerto).toBe(0)
   })
 
-  it("consumes 70 concerto", () => {
+  it("consumes 70 concerto on cast", () => {
     const engine = makeEngine()
     grantConcerto(engine, 70)
-    landEphemeral(engine)
+    castEphemeral(engine)
     expect(engine.getResource(CAMELLYA).concerto).toBe(0)
   })
 
-  it("floors at 0 when below the cost", () => {
+  it("floors concerto at 0 when below the cost", () => {
     const engine = makeEngine()
     grantConcerto(engine, 50)
-    landEphemeral(engine)
+    castEphemeral(engine)
     expect(engine.getResource(CAMELLYA).concerto).toBe(0)
+  })
+
+  it("recovers forte on cast, clamped to forteCap", () => {
+    const engine = makeEngine()
+    castEphemeral(engine)
+    expect(engine.getResource(CAMELLYA).forte).toBe(100)
   })
 })
 

@@ -1771,6 +1771,8 @@ export const camellya = {
           cooldown: 25,
           actionTime: 0,
           variants: {},
+          concerto: -70,
+          forte: 100,
           damage: [
             {
               type: "Basic Attack",
@@ -1779,10 +1781,9 @@ export const camellya = {
               actionFrame: 0,
               value: 12.6245,
               energy: 12,
-              concerto: -70,
+              concerto: 0,
               toughness: 2,
               weakness: 6.08,
-              forte: 100,
             },
           ],
         },

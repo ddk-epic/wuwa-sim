@@ -16,12 +16,12 @@ formula directly.
 `ResourceKind = "energy" | "concerto" | "forte" | "pool"`. Each character holds a
 `ResourceState { energy, concerto, forte, pool }` in the `ResourceLedger`.
 
-| Kind       | Cap                        | Scaled on gain                                                        | Spent by                                      |
-| ---------- | -------------------------- | --------------------------------------------------------------------- | --------------------------------------------- |
-| `energy`   | uncapped                   | ER (`× (1 + energyRechargePct)`)                                      | Resonance Liberation cast — drained to 0      |
-| `concerto` | uncapped                   | raw                                                                   | Outro Skill cast — drained to 0               |
-| `forte`    | `forteCap` (per character) | FR (`× (1 + forteRechargePct)`) on gains, raw on spend                | data-authored `resource` effects              |
-| `pool`     | `emitPool.cap` (optional)  | not accrued — projection of the [Emit Pool](#the-pool-resource) store | conversion (timer / displacement / `convert`) |
+| Kind       | Cap                        | Scaled on gain                                                        | Spent by                                                  |
+| ---------- | -------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| `energy`   | uncapped                   | ER (`× (1 + energyRechargePct)`)                                      | Resonance Liberation cast — drained to 0                  |
+| `concerto` | uncapped                   | raw                                                                   | Outro Skill cast (drained to 0); on-cast stage `concerto` |
+| `forte`    | `forteCap` (per character) | FR (`× (1 + forteRechargePct)`) on gains, raw on spend                | data-authored `resource` effects; on-cast stage `forte`   |
+| `pool`     | `emitPool.cap` (optional)  | not accrued — projection of the [Emit Pool](#the-pool-resource) store | conversion (timer / displacement / `convert`)             |
 
 ## Accrual from hits
 
@@ -44,6 +44,20 @@ post-hit value.
 
 `DamageEntry.spawn` is the exception: it routes to the Emit Pool's spawn op, not
 `accrueForHit`, and is never FR-scaled.
+
+## Accrual on cast
+
+Two **stage-level** fields apply a resource delta on the cast (`skillCast`),
+before any hit lands: `concerto` and `forte`. They thread as
+`ResolvedStage.concerto` / `ResolvedStage.forte` into the `skillCast` event and
+go through `applyResourceDelta` (cap + floor) in the buff engine's cast handler —
+**raw**, not FR-scaled (unlike the hit-accrual path above). Negative is a spend,
+positive a gain; `forteCap` clamps forte.
+
+This is the home for a cost or mode-resource that the cast commits **regardless of
+whether the damage resolves** — an interrupted stage still pays its concerto and
+recovers its pistils, because the player entered the mode on cast. It is distinct
+from the damage-entry `concerto` / `forte`, which accrue only on a landed hit.
 
 ## Caps
 

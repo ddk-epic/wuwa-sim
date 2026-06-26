@@ -416,6 +416,17 @@ export class BuffEngine {
           depth,
         )
       }
+      if (event.forte) {
+        this.applyResourceDelta(
+          event.characterId,
+          "forte",
+          event.forte,
+          event.frame,
+          out,
+          hitsOut,
+          depth,
+        )
+      }
       if (event.skillCategory === "Resonance Liberation") {
         const cost = event.resonanceCost ?? 100
         const energy = this.getResource(event.characterId).energy

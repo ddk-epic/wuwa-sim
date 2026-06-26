@@ -76,6 +76,7 @@ export interface ResolvedStage {
   skillKey?: string
   element: Element
   concerto: number
+  forte?: number
   resonanceCost?: number
   damage: DamageEntry[]
   skillGrouping: SkillGrouping

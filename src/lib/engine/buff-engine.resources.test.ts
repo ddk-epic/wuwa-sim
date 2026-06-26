@@ -912,6 +912,31 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     expect(engine.getResource(1).forte).toBe(50)
   })
 
+  it("on-cast forte applies on skillCast, raw and clamped to forteCap", () => {
+    testCharacters = [baseChar({ id: 1, forteCap: 100 })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+      forte: 40,
+    })
+    expect(engine.getResource(1).forte).toBe(40)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 10,
+      forte: 80,
+    })
+    expect(engine.getResource(1).forte).toBe(100)
+  })
+
   it("forte is actor-only and not shared with teammates", () => {
     testCharacters = [
       baseChar({ id: 1, forteCap: 100 }),

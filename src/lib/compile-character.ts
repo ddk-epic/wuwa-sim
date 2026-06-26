@@ -510,6 +510,7 @@ export function findStageByEntry(
       element: character.element,
       concerto:
         (stage.concerto ?? 0) + (isCastStage ? (skill.concerto ?? 0) : 0),
+      forte: stage.forte,
       resonanceCost: skill.resonanceCost,
       damage: stage.damage ?? [],
       skillGrouping: skill.type,
