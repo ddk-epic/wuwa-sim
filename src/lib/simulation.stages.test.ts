@@ -451,7 +451,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 6 },
-      stacking: { max: 4, onRetrigger: "addStack" },
+      stacking: { max: 4, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

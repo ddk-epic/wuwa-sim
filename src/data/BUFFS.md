@@ -171,9 +171,9 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
 
 **When to use**: "each hit grants a stack of X, up to N, lasts T seconds, refreshes/extends on retrigger".
 
-**Key fields**: `trigger.event = "hitLanded"` (filter by `actor`/`skillCategory`/`dmgType`/`source` as needed); `stacking: { max: N, onRetrigger: "addStack" | "addStackKeepTimer" | "refresh" }`; `value: { kind: "perStack", v: ... }` so the effect scales with stack count.
+**Key fields**: `trigger.event = "hitLanded"` (filter by `actor`/`skillCategory`/`dmgType`/`source` as needed); `stacking: { max: N, onRetrigger: "addStackRefresh" | "addStackKeep" | "addStackIndependent" | "refresh" }`; `value: { kind: "perStack", v: ... }` so the effect scales with stack count.
 
-**Gotchas**: pick `onRetrigger` deliberately — `addStack` resets the timer each hit, `addStackKeepTimer` doesn't. Use `perStack` not `const` for the value, otherwise stacks do nothing. Set `snapshot: true` on the value if it should freeze the underlying stat at apply time (e.g. for snapshotted ATK scaling).
+**Gotchas**: pick `onRetrigger` deliberately — `addStackRefresh` resets the shared timer each hit, `addStackKeep` doesn't, `addStackIndependent` gives each stack its own timer so they decay one at a time. Use `perStack` not `const` for the value, otherwise stacks do nothing. Set `snapshot: true` on the value if it should freeze the underlying stat at apply time (e.g. for snapshotted ATK scaling).
 
 ```ts
 {
@@ -182,7 +182,7 @@ See: `src/data/characters/sanhua.ts` — Freezing Thorns.
   trigger: { event: "hitLanded", actor: "self", skillCategory: "Basic Attack" },
   target: { kind: "self" },
   duration: { kind: "seconds", v: 8 },
-  stacking: { max: 5, onRetrigger: "addStack" },
+  stacking: { max: 5, onRetrigger: "addStackRefresh" },
   effects: [
     {
       kind: "stat",
@@ -467,13 +467,14 @@ A buff's `effects` is an array; entries can mix kinds.
 
 `stacking` defaults to `{ max: 1, onRetrigger: "refresh" }`.
 
-| `onRetrigger`       | Behavior on re-application                        |
-| ------------------- | ------------------------------------------------- |
-| `refresh`           | Reset duration to full. Stacks unchanged.         |
-| `addStack`          | +1 stack (clamped to `max`), reset duration.      |
-| `addStackKeepTimer` | +1 stack (clamped to `max`), keep existing timer. |
-| `ignore`            | Re-application does nothing.                      |
-| `replace`           | Remove existing instance and apply fresh.         |
+| `onRetrigger`         | Behavior on re-application                                  |
+| --------------------- | ----------------------------------------------------------- |
+| `refresh`             | Reset duration to full. Stacks unchanged.                   |
+| `addStackRefresh`     | +1 stack (clamped to `max`), reset shared duration.         |
+| `addStackKeep`        | +1 stack (clamped to `max`), keep existing timer.           |
+| `addStackIndependent` | +1 stack with its own timer; at cap drop the oldest (FIFO). |
+| `ignore`              | Re-application does nothing.                                |
+| `replace`             | Remove existing instance and apply fresh.                   |
 
 ### Conditions & gating
 

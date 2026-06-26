@@ -309,7 +309,21 @@ export class InstanceStore {
   tickToFrame(frame: number): { lifecycleEvents: BuffEvent[] } {
     const lifecycleEvents: BuffEvent[] = []
     const remaining: BuffInstance[] = []
+    let pruned = false
     for (const inst of this.active) {
+      if (inst.stackExpiries) {
+        while (
+          inst.stackExpiries.length > 0 &&
+          inst.stackExpiries[0] <= frame
+        ) {
+          inst.stackExpiries.shift()
+          pruned = true
+        }
+        inst.stacks = inst.stackExpiries.length
+        if (inst.stackExpiries.length > 0) {
+          inst.endTime = inst.stackExpiries[inst.stackExpiries.length - 1]
+        }
+      }
       if (inst.endTime <= frame) {
         lifecycleEvents.push({
           kind: "buffExpired",
@@ -325,7 +339,7 @@ export class InstanceStore {
         remaining.push(inst)
       }
     }
-    if (remaining.length !== this.active.length) this.version_++
+    if (remaining.length !== this.active.length || pruned) this.version_++
     this.active = remaining
     return { lifecycleEvents }
   }
@@ -418,7 +432,7 @@ export class InstanceStore {
           stacks: existing.stacks,
         })
         return
-      case "addStack":
+      case "addStackRefresh":
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
         existing.endTime = newEndTime
         existing.sourceCharacterId = sourceCharacterId
@@ -434,7 +448,7 @@ export class InstanceStore {
           stacks: existing.stacks,
         })
         return
-      case "addStackKeepTimer":
+      case "addStackKeep":
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
         this.version_++
         out.push({
@@ -448,6 +462,28 @@ export class InstanceStore {
           stacks: existing.stacks,
         })
         return
+      case "addStackIndependent": {
+        const queue = existing.stackExpiries ?? [existing.endTime]
+        queue.push(newEndTime)
+        queue.sort((a, b) => a - b)
+        while (queue.length > stacking.max) queue.shift()
+        existing.stackExpiries = queue
+        existing.stacks = queue.length
+        existing.endTime = queue[queue.length - 1]
+        existing.sourceCharacterId = sourceCharacterId
+        this.version_++
+        out.push({
+          kind: "buffRefreshed",
+          instanceId: existing.instanceId,
+          buffId: def.id,
+          buffName: def.name,
+          sourceCharacterId,
+          targetCharacterId,
+          frame,
+          stacks: existing.stacks,
+        })
+        return
+      }
       case "replace": {
         out.push({
           kind: "buffExpired",

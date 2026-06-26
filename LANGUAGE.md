@@ -70,18 +70,18 @@
 
 ## Buffs
 
-| Term                   | Definition                                                                                                                              | Aliases to avoid         |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| **Buff**               | A modifier that alters stats, resources, or hit behavior; authored as a BuffDef, realized at runtime as a Buff Instance                 | Effect, modifier, status |
-| **BuffDef**            | The authored definition of a Buff (Trigger, Condition, effects, stacking, duration) attached to a character, weapon, echo, or echo set  | Buff config              |
-| **Buff Instance**      | An active occurrence of a BuffDef on a Character at runtime, carrying end time, stacks, and stacking policy                             | Active buff              |
-| **Stat Effect**        | A BuffDef effect that writes a value into a Stat Table field, addressed by a Stat Path                                                  | Stat mod, stat buff      |
-| **Value Expr**         | The expression a Stat Effect resolves to produce the number written into the Stat Table                                                 | Formula, value           |
-| **Trigger**            | The event a BuffDef listens for (e.g. `skillCast`, `hitLanded`, `resourceCrossed`) to activate                                          | Event hook               |
-| **Condition**          | A predicate over engine world state that gates whether a triggered BuffDef applies                                                      | Trigger (when gating)    |
-| **Stacking Policy**    | How a re-applied BuffDef combines with its existing Instance: `ignore`, `refresh`, `addStack`, or `replace`                             | Stack mode               |
-| **Permanent Instance** | A Buff injected at engine bootstrap (passive, weapon, echo-set bonus) with no apply/expire lifecycle; its Condition is evaluated lazily | Static buff, base buff   |
-| **Attack Modifier**    | A Buff that targets a specific Skill Type bucket (e.g. Basic Attack DMG) rather than all damage                                         | Damage bonus             |
+| Term                   | Definition                                                                                                                                                | Aliases to avoid         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| **Buff**               | A modifier that alters stats, resources, or hit behavior; authored as a BuffDef, realized at runtime as a Buff Instance                                   | Effect, modifier, status |
+| **BuffDef**            | The authored definition of a Buff (Trigger, Condition, effects, stacking, duration) attached to a character, weapon, echo, or echo set                    | Buff config              |
+| **Buff Instance**      | An active occurrence of a BuffDef on a Character at runtime, carrying end time, stacks, and stacking policy                                               | Active buff              |
+| **Stat Effect**        | A BuffDef effect that writes a value into a Stat Table field, addressed by a Stat Path                                                                    | Stat mod, stat buff      |
+| **Value Expr**         | The expression a Stat Effect resolves to produce the number written into the Stat Table                                                                   | Formula, value           |
+| **Trigger**            | The event a BuffDef listens for (e.g. `skillCast`, `hitLanded`, `resourceCrossed`) to activate                                                            | Event hook               |
+| **Condition**          | A predicate over engine world state that gates whether a triggered BuffDef applies                                                                        | Trigger (when gating)    |
+| **Stacking Policy**    | How a re-applied BuffDef combines with its existing Instance: `ignore`, `refresh`, `addStackRefresh`, `addStackKeep`, `addStackIndependent`, or `replace` | Stack mode               |
+| **Permanent Instance** | A Buff injected at engine bootstrap (passive, weapon, echo-set bonus) with no apply/expire lifecycle; its Condition is evaluated lazily                   | Static buff, base buff   |
+| **Attack Modifier**    | A Buff that targets a specific Skill Type bucket (e.g. Basic Attack DMG) rather than all damage                                                           | Damage bonus             |
 
 ## Buff Engine & Pipeline
 

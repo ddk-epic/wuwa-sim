@@ -48,7 +48,7 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     },
     target: { kind: "self" },
     duration: { kind: "frames", v: 600 },
-    stacking: { max: 4, onRetrigger: "addStack" },
+    stacking: { max: 4, onRetrigger: "addStackRefresh" },
     effects: [
       {
         kind: "stat",

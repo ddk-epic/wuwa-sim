@@ -607,12 +607,12 @@ describe("InstanceStore — instanceId identity", () => {
     expect(out[1].instanceId).toBe(out[0].instanceId)
   })
 
-  it("addStack carries the original instanceId", () => {
+  it("addStackRefresh carries the original instanceId", () => {
     const s = new InstanceStore()
     const out: BuffEvent[] = []
     const d = def({
       duration: { kind: "frames", v: 60 },
-      stacking: { max: 3, onRetrigger: "addStack" },
+      stacking: { max: 3, onRetrigger: "addStackRefresh" },
     })
     s.applyBuff(d, 1, 1, 0, out)
     s.applyBuff(d, 1, 1, 10, out)
@@ -637,6 +637,77 @@ describe("InstanceStore — instanceId identity", () => {
     expect(secondApplied.instanceId).not.toBe(firstApplied.instanceId)
   })
 
+  it("addStackIndependent carries the original instanceId", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({
+      duration: { kind: "frames", v: 60 },
+      stacking: { max: 3, onRetrigger: "addStackIndependent" },
+    })
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 10, out)
+    expect(out[1].kind).toBe("buffRefreshed")
+    expect(out[1].instanceId).toBe(out[0].instanceId)
+  })
+})
+
+describe("InstanceStore — addStackIndependent per-stack timers", () => {
+  const indep = (max: number, frames: number): BuffDef =>
+    def({
+      duration: { kind: "frames", v: frames },
+      stacking: { max, onRetrigger: "addStackIndependent" },
+    })
+
+  it("staggered mints expire one at a time in mint order", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = indep(3, 100)
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 20, out)
+    s.applyBuff(d, 1, 1, 40, out)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(3)
+
+    s.tickToFrame(100)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(2)
+    s.tickToFrame(120)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(1)
+    s.tickToFrame(140)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(0)
+    expect(s.allActive()).toHaveLength(0)
+  })
+
+  it("emits buffExpired once the last stack drains", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = indep(2, 50)
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 10, out)
+    const { lifecycleEvents } = s.tickToFrame(49)
+    expect(lifecycleEvents).toHaveLength(0)
+    const drain = s.tickToFrame(60)
+    expect(drain.lifecycleEvents).toHaveLength(1)
+    expect(drain.lifecycleEvents[0].kind).toBe("buffExpired")
+  })
+
+  it("draining at cap keeps exactly max, dropping the oldest", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = indep(2, 100)
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 30, out)
+    s.applyBuff(d, 1, 1, 60, out)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(2)
+
+    s.tickToFrame(110)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(2)
+    s.tickToFrame(130)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(1)
+    s.tickToFrame(160)
+    expect(s.buffStacksOnTarget("b.test", 1)).toBe(0)
+  })
+})
+
+describe("InstanceStore — clear", () => {
   it("clear() resets the id counter for deterministic ids per run", () => {
     const s = new InstanceStore()
     const out: BuffEvent[] = []

@@ -170,7 +170,7 @@ const havocEclipse = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
-      stacking: { max: 4, onRetrigger: "addStack" },
+      stacking: { max: 4, onRetrigger: "addStackRefresh" },
       requiresPieces: 5,
       effects: [
         {

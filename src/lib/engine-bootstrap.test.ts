@@ -415,7 +415,7 @@ describe("validateBuffDef (#220)", () => {
             value: { kind: "const", v: 1 },
           },
         ],
-        stacking: { max: 2, onRetrigger: "addStack" },
+        stacking: { max: 2, onRetrigger: "addStackRefresh" },
       }),
     ).toThrow(/cannot declare stacking/)
   })

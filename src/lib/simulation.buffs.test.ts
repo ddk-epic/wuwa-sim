@@ -201,7 +201,7 @@ describe("runSimulation — post-actionTime hits resolve in frame order (stackin
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 1 }, // 60 frames
-      stacking: { max: 2, onRetrigger: "addStack" },
+      stacking: { max: 2, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

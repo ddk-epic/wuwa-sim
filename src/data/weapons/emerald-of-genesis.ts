@@ -37,7 +37,7 @@ export const emeraldOfGenesis = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
-      stacking: { max: 2, onRetrigger: "addStack" },
+      stacking: { max: 2, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

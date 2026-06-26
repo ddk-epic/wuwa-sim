@@ -37,7 +37,7 @@ export const stringmaster = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 5 },
-      stacking: { max: 2, onRetrigger: "addStack" },
+      stacking: { max: 2, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

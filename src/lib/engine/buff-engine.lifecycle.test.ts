@@ -337,7 +337,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
-      stacking: { max: 3, onRetrigger: "addStack" },
+      stacking: { max: 3, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

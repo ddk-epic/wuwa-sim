@@ -33,7 +33,7 @@
 Order is a data value, not inline control flow (see [ADR-0006](adr/0006-phase-based-effect-dispatch.md)):
 
 1. **`resource`** — apply `kind: "resource"` effects. Resource caps emit recursive `resourceCrossed` events.
-2. **`stat`** — `target: "nextOnField"` candidates push onto `pendingNextOnField`. Other candidates resolve target ids and call `InstanceStore.applyBuff`, which creates or refreshes an instance per its stacking policy (`ignore` / `refresh` / `addStack` / `replace`).
+2. **`stat`** — `target: "nextOnField"` candidates push onto `pendingNextOnField`. Other candidates resolve target ids and call `InstanceStore.applyBuff`, which creates or refreshes an instance per its stacking policy (`ignore` / `refresh` / `addStackRefresh` / `addStackKeep` / `addStackIndependent` / `replace`).
 3. **`negStatus`** — apply `kind: "negStatus"` / `negStatusMod` effects to the `Target` (apply / reduce / raise-to-max / raise-cap), scheduling the first tick and firing `negStatusInflicted`.
 4. **`emitHit`** — for each `kind: "emitHit"` effect, the dispatcher takes the emit decision (ICD + chain-depth cap) at the trigger frame. A top-level or offset emit surfaces a `DeferredEmit` at `frame + actionFrame` for the simulation to resolve in frame order (ADR-0028); only an in-frame chain emit (depth ≥ 1, offset 0) resolves inline, firing its own `hitLanded` (incremented depth) to chain further triggers.
 5. **`coordHit`** — like `emitHit` through the same ICD gate, but a coord emit carries no landing offset (it lands at the trigger frame) and never chains: synthetic coord hits are not re-entered into the trigger matcher.

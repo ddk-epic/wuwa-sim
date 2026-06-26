@@ -328,7 +328,7 @@ export const sanhua = {
       },
       target: { kind: "global" },
       duration: { kind: "seconds", v: 20 },
-      stacking: { max: 2, onRetrigger: "addStack" },
+      stacking: { max: 2, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

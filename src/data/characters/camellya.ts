@@ -215,7 +215,7 @@ export const camellya = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
-      stacking: { max: 10, onRetrigger: "addStack" },
+      stacking: { max: 10, onRetrigger: "addStackRefresh" },
       effects: [],
     },
     {

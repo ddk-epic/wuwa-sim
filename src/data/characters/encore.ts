@@ -91,7 +91,7 @@ export const encore = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 6 },
-      stacking: { max: 4, onRetrigger: "addStack" },
+      stacking: { max: 4, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",
@@ -157,7 +157,7 @@ export const encore = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 10 },
-      stacking: { max: 5, onRetrigger: "addStack" },
+      stacking: { max: 5, onRetrigger: "addStackRefresh" },
       effects: [
         {
           kind: "stat",

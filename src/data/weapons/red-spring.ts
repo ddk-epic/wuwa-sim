@@ -38,7 +38,7 @@ export const redSpring = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 14 },
-      stacking: { max: 3, onRetrigger: "addStack" },
+      stacking: { max: 3, onRetrigger: "addStackRefresh" },
       cooldown: 1,
       effects: [
         {

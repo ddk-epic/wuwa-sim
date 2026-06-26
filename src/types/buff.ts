@@ -330,8 +330,9 @@ export type StackingPolicy = {
   max: number
   onRetrigger:
     | "refresh"
-    | "addStack"
-    | "addStackKeepTimer"
+    | "addStackRefresh"
+    | "addStackKeep"
+    | "addStackIndependent"
     | "ignore"
     | "replace"
 }
@@ -402,6 +403,8 @@ export interface BuffInstance {
   targetCharacterId: number
   endTime: number
   stacks: number
+  /** Ascending per-stack expiries for `addStackIndependent`; FIFO drop-oldest at cap. */
+  stackExpiries?: number[]
   appliedFrame: number
   /** Frozen values per effect index, populated when a ValueExpr has `snapshot: true`. */
   snapshots?: Record<number, number>
