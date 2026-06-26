@@ -90,18 +90,15 @@ function buildShowMessageIds(
   logWarnings: Map<string, Diagnostic[]>,
 ): Set<string> {
   const ids = new Set<string>()
-  let remaining = 2
   for (const node of nodes) {
     const entries: Array<{ id: string }> =
       node.kind === "group" ? node.entries : [node]
     for (const e of entries) {
-      if (remaining === 0) return ids
       if (
         (validation.findings.get(e.id)?.length ?? 0) > 0 ||
         (logWarnings.get(e.id)?.length ?? 0) > 0
       ) {
         ids.add(e.id)
-        remaining--
       }
     }
   }
