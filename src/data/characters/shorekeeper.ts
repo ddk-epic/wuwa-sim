@@ -12,8 +12,8 @@ export const shorekeeper = {
     base: { hp: 1337, atk: 23, def: 90 },
     max: { hp: 16712.5, atk: 287.5, def: 1099.998 },
   },
-  // Flare Star Butterfly
   emitPool: {
+    name: "Flare Star Butterfly",
     cap: 5,
     maturation: 360,
     emit: {

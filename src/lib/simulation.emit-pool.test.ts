@@ -24,6 +24,7 @@ const TRAVEL = 40
 const poolChar = (spawn: number, cap?: number): EnrichedCharacter => {
   const char = makeChar(1, "Pool A")
   char.emitPool = {
+    name: "Pool Emit",
     ...(cap !== undefined ? { cap } : {}),
     maturation: MATURATION,
     emit: { ...dmgHit(2.0), actionFrame: TRAVEL },
@@ -129,6 +130,7 @@ const RESONANCE_STAGE =
 const convertChar = (count: number | "all"): EnrichedCharacter => {
   const char = makeChar(1, "Pool A")
   char.emitPool = {
+    name: "Pool Emit",
     maturation: CONVERT_MATURATION,
     emit: { ...dmgHit(2.0), actionFrame: TRAVEL },
   }

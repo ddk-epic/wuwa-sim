@@ -77,6 +77,9 @@ describe("Shorekeeper — Flare Star Butterflies via Emit Pool", () => {
     // The butterfly carries the payload moved out of the dead hidden stage.
     expect(flies.every((b) => b.multiplier === 0.3729)).toBe(true)
     expect(flies.every((b) => b.skillType === "Basic Attack")).toBe(true)
+    expect(flies.every((b) => b.skillName === "Flare Star Butterfly")).toBe(
+      true,
+    )
     // Each butterfly maturing late, none before its 6s maturation.
     expect(flies.every((b) => b.frame >= MATURATION)).toBe(true)
   })

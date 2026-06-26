@@ -9,7 +9,11 @@ import type {
   ResourceState,
 } from "#/types/buff"
 import { GLOBAL_TARGET_ID } from "#/types/buff"
-import type { DamageEntry, SkillCategory, SkillType } from "#/types/character"
+import type {
+  EmitPoolConfig,
+  SkillCategory,
+  SkillType,
+} from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type {
   ActiveBuff,
@@ -955,9 +959,7 @@ export class BuffEngine {
       })
     }
     for (const _ of displaced) {
-      this.deferredEmits.push(
-        this.buildPoolEmit(characterId, config.emit, frame),
-      )
+      this.deferredEmits.push(this.buildPoolEmit(characterId, config, frame))
     }
     this.setResource(
       characterId,
@@ -1003,7 +1005,7 @@ export class BuffEngine {
       0,
     )
     this.deferredEmits.push(
-      this.buildPoolEmit(characterId, config.emit, convertFrame),
+      this.buildPoolEmit(characterId, config, convertFrame),
     )
     return {
       lifecycleEvents,
@@ -1014,12 +1016,13 @@ export class BuffEngine {
 
   private buildPoolEmit(
     characterId: number,
-    emit: DamageEntry,
+    config: EmitPoolConfig,
     convertFrame: number,
   ): DeferredEmit {
+    const { emit } = config
     const input: EmitHitInput = {
       buffInstanceKey: buffInstanceKey(POOL_EMIT_DEF.id, characterId),
-      def: POOL_EMIT_DEF,
+      def: { ...POOL_EMIT_DEF, name: config.name },
       effect: { kind: "emitHit", damage: emit, icdFrames: 0 },
       effectIndex: 0,
       sourceCharacterId: characterId,
@@ -1062,9 +1065,7 @@ export class BuffEngine {
     const converted = this.pool.takeOldest(characterId, n)
     if (converted.length === 0) return
     for (const _ of converted) {
-      this.deferredEmits.push(
-        this.buildPoolEmit(characterId, config.emit, frame),
-      )
+      this.deferredEmits.push(this.buildPoolEmit(characterId, config, frame))
     }
     this.setResource(
       characterId,

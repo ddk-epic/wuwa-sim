@@ -116,6 +116,8 @@ export interface DamageEntry {
  * Synthetic Hit carrying `emit` (the same authoring shape as `emitHit`).
  */
 export interface EmitPoolConfig {
+  /** Display label each converted emission carries in the log. */
+  name: string
   /** Omit = uncapped. */
   cap?: number
   /** Frames from spawn to auto-conversion. */
