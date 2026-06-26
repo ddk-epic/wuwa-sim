@@ -255,7 +255,7 @@ export class InstanceStore {
         inst.def.expiresOnSourceSwapOut &&
         inst.sourceCharacterId === sourceCharacterId
       ) {
-        out.push({
+        emit(out, inst.def, {
           kind: "buffExpired",
           instanceId: inst.instanceId,
           buffId: inst.def.id,
@@ -285,7 +285,7 @@ export class InstanceStore {
       }
       const next = inst.stacks - 1
       if (next <= 0) {
-        out.push({
+        emit(out, inst.def, {
           kind: "buffConsumed",
           instanceId: inst.instanceId,
           buffId: inst.def.id,
@@ -324,11 +324,12 @@ export class InstanceStore {
         inst.stacks = inst.stackExpiries.length
         if (inst.stackExpiries.length > 0) {
           inst.endTime = inst.stackExpiries[inst.stackExpiries.length - 1]
-          if (dropped) lifecycleEvents.push(stacksChanged(inst, frame))
+          if (dropped)
+            emit(lifecycleEvents, inst.def, stacksChanged(inst, frame))
         }
       }
       if (inst.endTime <= frame) {
-        lifecycleEvents.push({
+        emit(lifecycleEvents, inst.def, {
           kind: "buffExpired",
           instanceId: inst.instanceId,
           buffId: inst.def.id,
@@ -403,7 +404,7 @@ export class InstanceStore {
         ...(isGlobal ? { global: true as const } : {}),
       })
       this.version_++
-      out.push({
+      emit(out, def, {
         kind: "buffApplied",
         instanceId,
         buffId: def.id,
@@ -424,7 +425,7 @@ export class InstanceStore {
         existing.endTime = newEndTime
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
-        out.push({
+        emit(out, def, {
           kind: "buffRefreshed",
           instanceId: existing.instanceId,
           buffId: def.id,
@@ -440,7 +441,7 @@ export class InstanceStore {
         existing.endTime = newEndTime
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
-        out.push({
+        emit(out, def, {
           kind: "buffRefreshed",
           instanceId: existing.instanceId,
           buffId: def.id,
@@ -454,7 +455,7 @@ export class InstanceStore {
       case "addStackKeep":
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
         this.version_++
-        out.push({
+        emit(out, def, {
           kind: "buffRefreshed",
           instanceId: existing.instanceId,
           buffId: def.id,
@@ -475,11 +476,11 @@ export class InstanceStore {
         existing.endTime = queue[queue.length - 1]
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
-        out.push(stacksChanged(existing, frame))
+        emit(out, def, stacksChanged(existing, frame))
         return
       }
       case "replace": {
-        out.push({
+        emit(out, def, {
           kind: "buffExpired",
           instanceId: existing.instanceId,
           buffId: def.id,
@@ -504,7 +505,7 @@ export class InstanceStore {
           ),
         })
         this.version_++
-        out.push({
+        emit(out, def, {
           kind: "buffApplied",
           instanceId,
           buffId: def.id,
@@ -543,7 +544,7 @@ export class InstanceStore {
     let mutated = false
     for (const inst of this.active) {
       if (idSet.has(inst.def.id)) {
-        out.push({
+        emit(out, inst.def, {
           kind: "buffConsumed",
           instanceId: inst.instanceId,
           buffId: inst.def.id,
@@ -726,6 +727,11 @@ export function matchesTrigger(
     return true
   }
   return false
+}
+
+/** Push a lifecycle event unless the buff is hidden (internal bookkeeping). */
+function emit(out: BuffEvent[], def: BuffDef, event: BuffEvent): void {
+  if (!def.hidden) out.push(event)
 }
 
 function stacksChanged(inst: BuffInstance, frame: number): BuffEvent {

@@ -4,6 +4,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import type { HitContext } from "#/types/buff"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/engine/buff-engine"
+import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
 import { camellya } from "./camellya"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -349,6 +350,80 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
     const engine = makeEngine()
     refillForte(engine, 0)
     expect(budStacks(engine)).toBe(0)
+  })
+})
+
+describe("Camellya — Outro post-Ephemeral +459% (hidden outro-primed flag)", () => {
+  const PRIMED = "char.camellya.outro-primed"
+
+  function castEphemeral(engine: ReturnType<typeof makeEngine>, frame: number) {
+    return engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId: EPHEMERAL_STAGE,
+      skillCategory: "Resonance Skill",
+      frame,
+    })
+  }
+  function castTwining(engine: ReturnType<typeof makeEngine>, frame: number) {
+    return onEventResolved(engine, {
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      skillCategory: "Outro Skill",
+      frame,
+    })
+  }
+
+  it("Ephemeral then Twining emits one extra 459.02% ATK Outro hit", () => {
+    const engine = makeEngine()
+    castEphemeral(engine, 0)
+    const { syntheticEvents } = castTwining(engine, 10)
+    expect(syntheticEvents).toHaveLength(1)
+    const hit = syntheticEvents[0]
+    expect(hit.kind).toBe("hit")
+    if (hit.kind !== "hit") return
+    expect(hit.skillType).toBe("Outro Skill")
+    expect(hit.multiplier).toBeCloseTo(4.5902)
+    expect(hit.damage).toBeGreaterThan(0)
+  })
+
+  it("the emitted Outro hit folds in S5's +68% multiplier (skillType axis)", () => {
+    const base = makeEngine(0)
+    castEphemeral(base, 0)
+    const baseHit = castTwining(base, 10).syntheticEvents[0]
+
+    const s5 = makeEngine(5)
+    castEphemeral(s5, 0)
+    const s5Hit = castTwining(s5, 10).syntheticEvents[0]
+
+    if (baseHit.kind !== "hit" || s5Hit.kind !== "hit")
+      throw new Error("no hit")
+    // Same 459.02% multiplier, but S5's bonusMultiplier lifts the emit's damage.
+    expect(s5Hit.multiplier).toBeCloseTo(baseHit.multiplier)
+    expect(s5Hit.damage).toBeGreaterThan(baseHit.damage)
+  })
+
+  it("fires only once per Ephemeral — a second Twining emits nothing", () => {
+    const engine = makeEngine()
+    castEphemeral(engine, 0)
+    expect(castTwining(engine, 10).syntheticEvents).toHaveLength(1)
+    expect(castTwining(engine, 20).syntheticEvents).toHaveLength(0)
+  })
+
+  it("a Twining with no prior Ephemeral emits nothing", () => {
+    const engine = makeEngine()
+    expect(castTwining(engine, 10).syntheticEvents).toHaveLength(0)
+  })
+
+  it("the outro-primed flag produces no lifecycle log entries", () => {
+    const engine = makeEngine()
+    const arm = castEphemeral(engine, 0)
+    const fire = castTwining(engine, 10)
+    const primedEvents = [
+      ...arm.lifecycleEvents,
+      ...fire.lifecycleEvents,
+    ].filter((e) => e.buffId === PRIMED)
+    expect(primedEvents).toHaveLength(0)
   })
 })
 

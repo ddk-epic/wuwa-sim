@@ -372,6 +372,12 @@ export interface BuffDef {
   /** When true, instance is removed when its source character swaps out. */
   expiresOnSourceSwapOut?: boolean
   /**
+   * Internal bookkeeping buff: applies its effect/gating normally but emits no
+   * lifecycle events, so it leaves no log footprint. For memory flags whose
+   * presence gates another buff.
+   */
+  hidden?: boolean
+  /**
    * When set, after each event is dispatched the engine walks active instances
    * and decrements stacks for those whose `consumedBy` filter matches the just-
    * fired event. When stacks reach 0 the instance is removed and a

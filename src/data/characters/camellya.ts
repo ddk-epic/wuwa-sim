@@ -162,7 +162,7 @@ export const camellya = {
         n: 0,
         on: "source",
       },
-      appliesToHits: { skillCategory: "Intro Skill" },
+      appliesToHits: { skillType: "Intro Skill" },
       effects: [
         {
           kind: "stat",
@@ -185,7 +185,7 @@ export const camellya = {
         n: 0,
         on: "source",
       },
-      appliesToHits: { skillCategory: "Outro Skill" },
+      appliesToHits: { skillType: "Outro Skill" },
       effects: [
         {
           kind: "stat",
@@ -360,6 +360,63 @@ export const camellya = {
           kind: "stat",
           path: { stat: "bonusMultiplier" },
           value: { kind: "const", v: 1.5 },
+        },
+      ],
+    },
+    {
+      // Memory flag armed by Ephemeral, consumed by the next Twining outro.
+      // Hidden: gates the post-Ephemeral bonus with no log footprint.
+      id: "char.camellya.outro-primed",
+      name: "Outro Primed",
+      hidden: true,
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        stage: "vegetative-universe/ephemeral",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      consumedBy: {
+        event: "skillCast",
+        characterId: 1603,
+        skillCategory: "Outro Skill",
+      },
+      effects: [],
+    },
+    {
+      // After Ephemeral, the next Twining deals extra Havoc DMG = 459.02% ATK.
+      // Typed Outro Skill so S5's +68% outro multiplier folds in like any outro.
+      id: "char.camellya.outro-post-ephemeral",
+      name: "Twining (Post-Ephemeral)",
+      description:
+        "After Ephemeral, the next Twining deals additional Havoc DMG equal to 459.02% of ATK.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        skillCategory: "Outro Skill",
+        precondition: {
+          kind: "buffActive",
+          buff: "outro-primed",
+          on: "source",
+        },
+      },
+      effects: [
+        {
+          kind: "emitHit",
+          icdFrames: 0,
+          skillType: "Outro Skill",
+          element: "Havoc",
+          damage: {
+            type: "Outro Skill",
+            dmgType: "Damage",
+            scalingStat: "ATK",
+            actionFrame: 0,
+            value: 4.5902,
+            energy: 0,
+            concerto: 0,
+            toughness: 0,
+            weakness: 0,
+          },
         },
       ],
     },

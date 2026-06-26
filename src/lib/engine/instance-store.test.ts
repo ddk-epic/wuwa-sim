@@ -723,6 +723,46 @@ describe("InstanceStore — addStackIndependent per-stack timers", () => {
   })
 })
 
+describe("InstanceStore — hidden buffs leave no log footprint", () => {
+  const consumeTrigger: Trigger = { event: "skillCast", actor: "self" }
+
+  it("applies and gates without emitting apply/expire/consume events", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({
+      hidden: true,
+      duration: { kind: "frames", v: 60 },
+      consumedBy: consumeTrigger,
+    })
+    s.applyBuff(d, 1, 1, 0, out)
+    expect(out).toHaveLength(0)
+    // Effect/gating still live: the instance exists and is queryable.
+    expect(s.hasActiveOnTarget("b.test", 1)).toBe(true)
+
+    s.runConsumePhase(
+      {
+        kind: "skillCast",
+        characterId: 1,
+        skillCategory: "Basic Attack",
+        frame: 5,
+      },
+      out,
+    )
+    expect(out).toHaveLength(0)
+    expect(s.hasActiveOnTarget("b.test", 1)).toBe(false)
+  })
+
+  it("expires silently in tickToFrame", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = def({ hidden: true, duration: { kind: "frames", v: 30 } })
+    s.applyBuff(d, 1, 1, 0, out)
+    const { lifecycleEvents } = s.tickToFrame(30)
+    expect(lifecycleEvents).toHaveLength(0)
+    expect(s.allActive()).toHaveLength(0)
+  })
+})
+
 describe("InstanceStore — clear", () => {
   it("clear() resets the id counter for deterministic ids per run", () => {
     const s = new InstanceStore()
