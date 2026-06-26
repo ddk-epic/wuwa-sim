@@ -352,6 +352,86 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
   })
 })
 
+describe("Camellya — Crimson Buds decay on independent 15s timers", () => {
+  const BUD = "char.camellya.crimson-bud"
+  const CORE_HIT: HitContext = {
+    stageId:
+      "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+    skill: "burgeoning",
+    hitIndex: 1,
+    skillCategory: "Basic Attack",
+    skillType: "Basic Attack",
+    element: "Havoc",
+  }
+
+  function refillForte(engine: ReturnType<typeof makeEngine>, frame: number) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Intro Skill",
+      dmgType: "Damage",
+      stageId: "char.camellya.intro-skill.everblooming.cast::intro-skill",
+      frame,
+      forte: 100,
+    })
+  }
+  function consumeForte(
+    engine: ReturnType<typeof makeEngine>,
+    forte: number,
+    frame: number,
+  ) {
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      stageId:
+        "char.camellya.basic-attack.burgeoning.basic-attack-1::basic-attack",
+      frame,
+      forte,
+    })
+  }
+  function budStacks(engine: ReturnType<typeof makeEngine>): number {
+    return engine.activeBuffs(CAMELLYA).find((b) => b.id === BUD)?.stacks ?? 0
+  }
+
+  it("an idle gap past 15s drops the oldest bud first, lowering the snapshotted Sweet Dream", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -10, 10) // 1 bud, expires at 910
+    consumeForte(engine, -20, 300) // 2 buds, expire at 1200
+    expect(budStacks(engine)).toBe(3)
+
+    // Past the first bud's 15s clock but not the later two.
+    engine.tickToFrame(950)
+    expect(budStacks(engine)).toBe(2)
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId: EPHEMERAL_STAGE,
+      skillCategory: "Resonance Skill",
+      frame: 960,
+    })
+    // 0.5 + 0.05 × 2 = 0.6 — lower than the 0.65 three undecayed buds would give.
+    expect(engine.resolveStats(CAMELLYA, CORE_HIT).bonusMultiplier).toBeCloseTo(
+      0.6,
+    )
+  })
+
+  it("10 buds minted in one frame share one expiry and drop together", () => {
+    const engine = makeEngine()
+    refillForte(engine, 0)
+    consumeForte(engine, -100, 5) // 10 buds, all expire at 905
+    expect(budStacks(engine)).toBe(10)
+
+    engine.tickToFrame(904)
+    expect(budStacks(engine)).toBe(10)
+    engine.tickToFrame(905)
+    expect(budStacks(engine)).toBe(0)
+  })
+})
+
 describe("Camellya — Budding Mode + Sweet Dream (scaledByStacks)", () => {
   const BUDDING = "char.camellya.budding-mode"
   const BUD = "char.camellya.crimson-bud"

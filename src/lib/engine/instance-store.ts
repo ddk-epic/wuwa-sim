@@ -312,16 +312,19 @@ export class InstanceStore {
     let pruned = false
     for (const inst of this.active) {
       if (inst.stackExpiries) {
+        let dropped = false
         while (
           inst.stackExpiries.length > 0 &&
           inst.stackExpiries[0] <= frame
         ) {
           inst.stackExpiries.shift()
+          dropped = true
           pruned = true
         }
         inst.stacks = inst.stackExpiries.length
         if (inst.stackExpiries.length > 0) {
           inst.endTime = inst.stackExpiries[inst.stackExpiries.length - 1]
+          if (dropped) lifecycleEvents.push(stacksChanged(inst, frame))
         }
       }
       if (inst.endTime <= frame) {
@@ -472,16 +475,7 @@ export class InstanceStore {
         existing.endTime = queue[queue.length - 1]
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
-        out.push({
-          kind: "buffRefreshed",
-          instanceId: existing.instanceId,
-          buffId: def.id,
-          buffName: def.name,
-          sourceCharacterId,
-          targetCharacterId,
-          frame,
-          stacks: existing.stacks,
-        })
+        out.push(stacksChanged(existing, frame))
         return
       }
       case "replace": {
@@ -732,6 +726,19 @@ export function matchesTrigger(
     return true
   }
   return false
+}
+
+function stacksChanged(inst: BuffInstance, frame: number): BuffEvent {
+  return {
+    kind: "buffStacksChanged",
+    instanceId: inst.instanceId,
+    buffId: inst.def.id,
+    buffName: inst.def.name,
+    sourceCharacterId: inst.sourceCharacterId,
+    targetCharacterId: inst.targetCharacterId,
+    frame,
+    stacks: inst.stacks,
+  }
 }
 
 function computeEndTime(

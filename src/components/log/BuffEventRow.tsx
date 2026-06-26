@@ -5,6 +5,7 @@ import { formatFrames } from "#/lib/format"
 const BUFF_KINDS = new Set([
   "buffApplied",
   "buffRefreshed",
+  "buffStacksChanged",
   "buffExpired",
   "buffConsumed",
 ])
@@ -27,9 +28,11 @@ export function BuffEventRow({
       ? "applied"
       : buff.kind === "buffRefreshed"
         ? "refreshed"
-        : buff.kind === "buffConsumed"
-          ? "consumed"
-          : "expired"
+        : buff.kind === "buffStacksChanged"
+          ? "stacks changed"
+          : buff.kind === "buffConsumed"
+            ? "consumed"
+            : "expired"
   const color =
     buff.kind === "buffExpired"
       ? "text-rose-400/70"

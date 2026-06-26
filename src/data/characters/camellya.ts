@@ -199,7 +199,7 @@ export const camellya = {
       id: "char.camellya.crimson-bud",
       name: "Crimson Bud",
       description:
-        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), lasting 15s. No Buds are gained while Budding Mode is active.",
+        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), each lasting 15s on its own timer. No Buds are gained while Budding Mode is active.",
       trigger: {
         event: "resourceStep",
         characterId: 1603,
@@ -215,7 +215,7 @@ export const camellya = {
       },
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
-      stacking: { max: 10, onRetrigger: "addStackRefresh" },
+      stacking: { max: 10, onRetrigger: "addStackIndependent" },
       effects: [],
     },
     {

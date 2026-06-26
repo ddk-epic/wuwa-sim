@@ -646,7 +646,7 @@ describe("InstanceStore — instanceId identity", () => {
     })
     s.applyBuff(d, 1, 1, 0, out)
     s.applyBuff(d, 1, 1, 10, out)
-    expect(out[1].kind).toBe("buffRefreshed")
+    expect(out[1].kind).toBe("buffStacksChanged")
     expect(out[1].instanceId).toBe(out[0].instanceId)
   })
 })
@@ -687,6 +687,22 @@ describe("InstanceStore — addStackIndependent per-stack timers", () => {
     const drain = s.tickToFrame(60)
     expect(drain.lifecycleEvents).toHaveLength(1)
     expect(drain.lifecycleEvents[0].kind).toBe("buffExpired")
+  })
+
+  it("emits buffStacksChanged rising on mint and falling on decay", () => {
+    const s = new InstanceStore()
+    const out: BuffEvent[] = []
+    const d = indep(3, 100)
+    s.applyBuff(d, 1, 1, 0, out)
+    s.applyBuff(d, 1, 1, 20, out)
+    const minted = out[1]
+    expect(minted.kind).toBe("buffStacksChanged")
+    expect(minted.stacks).toBe(2)
+
+    const decay = s.tickToFrame(100)
+    expect(decay.lifecycleEvents).toHaveLength(1)
+    expect(decay.lifecycleEvents[0].kind).toBe("buffStacksChanged")
+    expect(decay.lifecycleEvents[0].stacks).toBe(1)
   })
 
   it("draining at cap keeps exactly max, dropping the oldest", () => {

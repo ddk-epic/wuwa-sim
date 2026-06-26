@@ -16,6 +16,8 @@ function verbAndColor(kind: BuffGroupRow["buffKind"]) {
     return { verb: "applied", color: "text-emerald-400/80" }
   if (kind === "buffRefreshed")
     return { verb: "refreshed", color: "text-emerald-400/80" }
+  if (kind === "buffStacksChanged")
+    return { verb: "stacks changed", color: "text-emerald-400/80" }
   if (kind === "buffConsumed")
     return { verb: "consumed", color: "text-amber-400/80" }
   return { verb: "expired", color: "text-rose-400/70" }
