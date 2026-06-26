@@ -26,6 +26,7 @@ exports[`all shipped data compiles > stage-id snapshot (drift tripwire) 1`] = `
   "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack",
   "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack",
   "char.camellya.resonance-skill.vegetative-universe.ephemeral::basic-attack",
+  "char.camellya.resonance-skill.vegetative-universe.perennial::basic-attack",
   "char.cartethyia.basic-attack.sword-to-carve-my-forms.dodge-counter::basic-attack",
   "char.cartethyia.basic-attack.sword-to-carve-my-forms.heavy-attack::basic-attack",
   "char.cartethyia.basic-attack.sword-to-carve-my-forms.mid-air-attack::basic-attack",

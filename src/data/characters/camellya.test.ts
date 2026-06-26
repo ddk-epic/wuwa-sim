@@ -5,6 +5,8 @@ import type { HitContext } from "#/types/buff"
 import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/engine/buff-engine"
 import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
+import { getFocusedStageCatalog } from "#/components/skills/focused-stage-catalog"
+import { validateTimeline } from "#/lib/timeline/validate-timeline"
 import { camellya } from "./camellya"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -212,6 +214,100 @@ describe("Camellya — Ephemeral on-cast concerto/forte", () => {
     const engine = makeEngine()
     castEphemeral(engine)
     expect(engine.getResource(CAMELLYA).forte).toBe(100)
+  })
+})
+
+describe("Camellya — Perennial (S6) stage", () => {
+  const perennialStage = camellya.skills.find(
+    (s) => s.type === "Forte Circuit",
+  )!.stages[1]
+  const PERENNIAL_STAGE =
+    "char.camellya.resonance-skill.vegetative-universe.perennial::basic-attack"
+
+  function castPerennial(engine: ReturnType<typeof makeEngine>) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      skillCategory: "Resonance Skill",
+      frame: 1,
+      concerto: perennialStage.concerto,
+      forte: perennialStage.forte,
+    })
+  }
+
+  it("deals 1262.45% ATK Havoc as Basic Attack DMG", () => {
+    expect(perennialStage.newName).toBe("Perennial")
+    expect(perennialStage.value).toBe("1262.45%")
+    expect(perennialStage.damage[0].value).toBe(12.6245)
+    expect(perennialStage.damage[0].type).toBe("Basic Attack")
+    expect(camellya.element).toBe("Havoc")
+  })
+
+  it("spends 50 concerto and recovers 50 forte on cast", () => {
+    const engine = makeEngine(6)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 60,
+    })
+    castPerennial(engine)
+    expect(engine.getResource(CAMELLYA).concerto).toBe(10)
+    expect(engine.getResource(CAMELLYA).forte).toBe(50)
+  })
+
+  it("is hidden from the catalog below S6 and shown at S6", () => {
+    testCharacters = [makeCamellyaChar()]
+    const slots: [number, null, null] = [CAMELLYA, null, null]
+    const below = getFocusedStageCatalog(
+      slots,
+      [{ ...emptyLoadout, sequence: 5 }, emptyLoadout, emptyLoadout],
+      CAMELLYA,
+    )
+    expect(
+      below.characterStages.find((s) => s.label.includes("Perennial")),
+    ).toBeUndefined()
+    const at = getFocusedStageCatalog(
+      slots,
+      [{ ...emptyLoadout, sequence: 6 }, emptyLoadout, emptyLoadout],
+      CAMELLYA,
+    )
+    expect(
+      at.characterStages.find((s) => s.label.includes("Perennial")),
+    ).toBeDefined()
+  })
+
+  it("flags a Perennial entry on a sub-S6 slot as invalid", () => {
+    testCharacters = [makeCamellyaChar()]
+    const slots: [number, null, null] = [CAMELLYA, null, null]
+    const entry = { id: "p1", characterId: CAMELLYA, stageId: PERENNIAL_STAGE }
+    const result = validateTimeline([entry], slots, [
+      { ...emptyLoadout, sequence: 5 },
+      emptyLoadout,
+      emptyLoadout,
+    ])
+    expect(result.findings.get("p1")).toContainEqual({
+      message: {
+        kind: "stageRequiresSequence",
+        stageId: PERENNIAL_STAGE,
+        requiredSequence: 6,
+      },
+      severity: "invalid",
+    })
+  })
+
+  it("accepts a Perennial entry at S6", () => {
+    testCharacters = [makeCamellyaChar()]
+    const slots: [number, null, null] = [CAMELLYA, null, null]
+    const entry = { id: "p1", characterId: CAMELLYA, stageId: PERENNIAL_STAGE }
+    const result = validateTimeline([entry], slots, [
+      { ...emptyLoadout, sequence: 6 },
+      emptyLoadout,
+      emptyLoadout,
+    ])
+    expect(result.invalidRowIds.has("p1")).toBe(false)
   })
 })
 
