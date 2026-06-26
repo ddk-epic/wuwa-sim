@@ -11,6 +11,7 @@ export type ValidatorMessage =
   | { kind: "stageNotFound"; stageId: string }
   | { kind: "missingChainPrereq"; stageId: string; requiredStageId: string }
   | { kind: "missingWindowedPrereq"; stageId: string; requiredStageId: string }
+  | { kind: "stageRequiresSequence"; stageId: string; requiredSequence: number }
   | { kind: "swapForcesDifferentChar" }
 
 /**
@@ -50,6 +51,8 @@ export function renderMessage(
       return `"${resolveStageName(m.stageId)}" must immediately follow "${resolveStageName(m.requiredStageId)}"`
     case "missingWindowedPrereq":
       return `"${resolveStageName(m.stageId)}" requires an earlier "${resolveStageName(m.requiredStageId)}" on this character`
+    case "stageRequiresSequence":
+      return `"${resolveStageName(m.stageId)}" requires Sequence ${m.requiredSequence}`
     case "swapForcesDifferentChar":
       return "Swap forces the next entry to be a different character"
   }

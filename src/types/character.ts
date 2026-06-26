@@ -76,6 +76,8 @@ export interface SkillAttribute {
   cooldown?: number
   concerto?: number
   damage?: DamageEntry[]
+  /** Minimum Resonance Chain sequence for this stage; below it, the stage is hidden and validated. */
+  requiresSequence?: number
   /** Wall-clock frames (at 60fps) for a cutscene animation. Engine clock does not advance. */
   animationFrames?: number
 }

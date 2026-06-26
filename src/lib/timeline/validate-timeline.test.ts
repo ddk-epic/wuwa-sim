@@ -138,6 +138,57 @@ describe("validateTimeline — echo skill", () => {
   })
 })
 
+describe("validateTimeline — sequence-gated stage", () => {
+  const gatedChar = baseChar({
+    skills: [
+      {
+        id: 1,
+        name: "Resonance Skill",
+        type: "Resonance Skill",
+        stages: [
+          {
+            name: "Gated",
+            category: "Resonance Skill",
+            value: "1",
+            actionTime: 30,
+            requiresSequence: 6,
+            damage: [],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  })
+  const gatedStageId =
+    "char.test.resonance-skill.resonance-skill.gated::resonance-skill"
+
+  it("flags a gated stage on a slot below the required sequence", () => {
+    testCharacters = [gatedChar]
+    const e = entry(1, gatedStageId)
+    const result = validateTimeline([e], slots, loadouts)
+    expect(errorsOf(result, e.id)).toContainEqual({
+      message: {
+        kind: "stageRequiresSequence",
+        stageId: gatedStageId,
+        requiredSequence: 6,
+      },
+      severity: "invalid",
+    })
+  })
+
+  it("accepts a gated stage on a slot at the required sequence", () => {
+    testCharacters = [gatedChar]
+    const e = entry(1, gatedStageId)
+    const atSeq: [SlotLoadout, SlotLoadout, SlotLoadout] = [
+      { ...emptyLoadout, sequence: 6 },
+      emptyLoadout,
+      emptyLoadout,
+    ]
+    const result = validateTimeline([e], slots, atSeq)
+    expect(result.invalidRowIds.has(e.id)).toBe(false)
+  })
+})
+
 describe("validateTimeline — multiple entries", () => {
   it("validates each entry independently", () => {
     testCharacters = [baseChar()]

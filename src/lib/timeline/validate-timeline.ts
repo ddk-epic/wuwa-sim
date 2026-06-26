@@ -53,6 +53,7 @@ interface WalkContext {
   entries: TimelineEntry[]
   resolved: (ResolvedStage | null)[]
   slots: Slots
+  loadouts: SlotLoadout[]
   invalidRowIds: Set<string>
   /** Immediately preceding entry of each character, as of the current row. */
   lastByChar: Map<number, TimelineEntry>
@@ -69,6 +70,7 @@ export function validateTimeline(
     entries,
     resolved: entries.map((e) => findStageByEntry(e, slots, loadouts)),
     slots,
+    loadouts,
     invalidRowIds: new Set(),
     lastByChar: new Map(),
     stagesByChar: new Map(),
@@ -81,6 +83,7 @@ export function validateTimeline(
     const raw = [
       ...checkIntroFollowsOutro(i, ctx),
       ...checkReachability(i, ctx),
+      ...checkStageSequence(i, ctx),
       ...checkSwapForcesDifferentChar(i, ctx),
     ]
 
@@ -150,6 +153,23 @@ function pickChainAnchor(
   requiredStageId: string,
 ): TimelineEntry | undefined {
   return prev?.stageId === requiredStageId ? prev : undefined
+}
+
+function checkStageSequence(i: number, ctx: WalkContext): RawFinding[] {
+  const entry = ctx.entries[i]
+  const requiredSequence = ctx.resolved[i]?.requiresSequence ?? 0
+  if (requiredSequence === 0) return []
+  const slotIndex = ctx.slots.findIndex((id) => id === entry.characterId)
+  const sequence = slotIndex >= 0 ? (ctx.loadouts[slotIndex]?.sequence ?? 0) : 0
+  return sequence < requiredSequence
+    ? [
+        invalid({
+          kind: "stageRequiresSequence",
+          stageId: entry.stageId,
+          requiredSequence,
+        }),
+      ]
+    : []
 }
 
 function checkSwapForcesDifferentChar(

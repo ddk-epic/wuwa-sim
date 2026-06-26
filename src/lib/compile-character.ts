@@ -519,6 +519,7 @@ export function findStageByEntry(
         ? skill.name
         : stageLabel(skill.name, stage.newName),
       requiresPriorStageId: info.requiresPriorStageId,
+      requiresSequence: stage.requiresSequence,
       minDelay:
         stage.requiresPriorStage !== undefined ? stage.minDelay : undefined,
     }

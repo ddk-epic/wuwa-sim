@@ -39,6 +39,7 @@ export function getFocusedStageCatalog(
   const slotIndex = slots.findIndex((id) => id === focusedId)
   const echoId = slotIndex >= 0 ? (loadouts[slotIndex]?.echoId ?? null) : null
   const echo = echoId !== null ? getEchoById(echoId) : null
+  const sequence = slotIndex >= 0 ? (loadouts[slotIndex]?.sequence ?? 0) : 0
 
   const echoStages: FocusedStage[] = echo
     ? [...compileEcho(echo).stageIndex.values()]
@@ -51,7 +52,10 @@ export function getFocusedStageCatalog(
   ]
     .filter(
       (info) =>
-        !info.skill.hidden && !info.stage.hidden && info.stage.name !== "",
+        !info.skill.hidden &&
+        !info.stage.hidden &&
+        info.stage.name !== "" &&
+        (info.stage.requiresSequence ?? 0) <= sequence,
     )
     .map((info) => buildCharacterStage(character.id, info))
 

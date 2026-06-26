@@ -506,6 +506,51 @@ describe("focused-stage-catalog — echo stages", () => {
   })
 })
 
+describe("focused-stage-catalog — sequence gating", () => {
+  const gatedChar: EnrichedCharacter = {
+    ...char1,
+    id: 3,
+    skills: [
+      {
+        id: 301,
+        name: "S6 Skill",
+        type: "Resonance Skill",
+        stages: [
+          {
+            name: "Gated",
+            category: "Resonance Skill",
+            value: "1",
+            actionTime: 5,
+            requiresSequence: 6,
+            damage: [],
+          },
+        ],
+        damage: [],
+      },
+    ],
+  }
+
+  function seqLoadouts(sequence: number): SlotLoadout[] {
+    return noLoadouts.map((l) => ({ ...l, sequence }))
+  }
+
+  it("hides a sequence-gated stage below its gate", () => {
+    setCatalog([gatedChar], [])
+    const result = getFocusedStageCatalog([3, null, null], seqLoadouts(5), 3)
+    expect(
+      result.characterStages.find((s) => s.label === "S6 Skill"),
+    ).toBeUndefined()
+  })
+
+  it("shows a sequence-gated stage at its gate", () => {
+    setCatalog([gatedChar], [])
+    const result = getFocusedStageCatalog([3, null, null], seqLoadouts(6), 3)
+    expect(
+      result.characterStages.find((s) => s.label === "S6 Skill"),
+    ).toBeDefined()
+  })
+})
+
 describe("focused-stage-catalog — characterStages ordering", () => {
   const charWithIntroOutro: EnrichedCharacter = {
     ...char1,
