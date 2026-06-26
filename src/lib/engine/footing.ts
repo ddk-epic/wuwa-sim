@@ -11,7 +11,7 @@ export class FootingModule {
 
   /** Team footing — the field's vertical state (the On-field character's). */
   team(): "ground" | "air" {
-    return this.tracker.teamFooting()
+    return this.tracker.team()
   }
 
   /**
@@ -38,7 +38,7 @@ export class FootingModule {
    * footing. An untagged intro grounds (the default); only `"either"` keeps the
    * current footing.
    */
-  enterIntro(footing: Footing | undefined): void {
+  applyIntroFooting(footing: Footing | undefined): void {
     const exit = stageExitFooting(footing)
     if (exit !== undefined) this.tracker.setTeam(exit)
   }
@@ -51,7 +51,7 @@ export class FootingModule {
    * will take the field on at its next swap-in.
    */
   commitFor(characterId: number, exitFooting: "ground" | "air"): void {
-    this.tracker.setCarried(characterId, exitFooting)
+    this.tracker.setCarriedFooting(characterId, exitFooting)
   }
 
   /**
@@ -62,12 +62,12 @@ export class FootingModule {
    * to team footing — the field now reflects whoever is On-field.
    */
   resolveEntry(characterId: number): "ground" | "air" {
-    const carried = this.tracker.carriedFor(characterId)
+    const carried = this.tracker.carriedFooting(characterId)
     if (carried !== undefined) {
       this.tracker.setTeam(carried)
-      this.tracker.takeCarried(characterId)
+      this.tracker.clearCarriedFooting(characterId)
       return carried
     }
-    return this.tracker.teamFooting()
+    return this.tracker.team()
   }
 }

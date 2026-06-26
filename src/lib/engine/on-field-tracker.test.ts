@@ -43,50 +43,50 @@ describe("OnFieldTracker", () => {
 })
 
 describe("OnFieldTracker — swap-back clock", () => {
-  it("computeSwapBack returns 0 when character has no off-field record", () => {
+  it("computeSwapBackPad returns 0 when character has no off-field record", () => {
     const t = new OnFieldTracker()
-    expect(t.computeSwapBack(1, 100)).toBe(0)
+    expect(t.computeSwapBackPad(1, 100)).toBe(0)
   })
 
-  it("computeSwapBack returns full 60 when character just left the field", () => {
-    const t = new OnFieldTracker()
-    t.recordSwapOut(1, 100)
-    expect(t.computeSwapBack(1, 100)).toBe(60)
-  })
-
-  it("computeSwapBack returns remaining cooldown when partially elapsed", () => {
+  it("computeSwapBackPad returns full 60 when character just left the field", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
-    expect(t.computeSwapBack(1, 130)).toBe(30)
+    expect(t.computeSwapBackPad(1, 100)).toBe(60)
   })
 
-  it("computeSwapBack returns 0 once 60+ frames have elapsed", () => {
+  it("computeSwapBackPad returns remaining cooldown when partially elapsed", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
-    expect(t.computeSwapBack(1, 160)).toBe(0)
-    expect(t.computeSwapBack(1, 200)).toBe(0)
+    expect(t.computeSwapBackPad(1, 130)).toBe(30)
   })
 
-  it("recordSwapIn clears the off-field record so subsequent computeSwapBack returns 0", () => {
+  it("computeSwapBackPad returns 0 once 60+ frames have elapsed", () => {
+    const t = new OnFieldTracker()
+    t.recordSwapOut(1, 100)
+    expect(t.computeSwapBackPad(1, 160)).toBe(0)
+    expect(t.computeSwapBackPad(1, 200)).toBe(0)
+  })
+
+  it("recordSwapIn clears the off-field record so subsequent computeSwapBackPad returns 0", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
     t.recordSwapIn(1)
-    expect(t.computeSwapBack(1, 110)).toBe(0)
+    expect(t.computeSwapBackPad(1, 110)).toBe(0)
   })
 
   it("clear resets the off-field clock map", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
     t.clear()
-    expect(t.computeSwapBack(1, 110)).toBe(0)
+    expect(t.computeSwapBackPad(1, 110)).toBe(0)
   })
 
   it("tracks multiple characters independently", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
     t.recordSwapOut(2, 120)
-    expect(t.computeSwapBack(1, 140)).toBe(20)
-    expect(t.computeSwapBack(2, 140)).toBe(40)
+    expect(t.computeSwapBackPad(1, 140)).toBe(20)
+    expect(t.computeSwapBackPad(2, 140)).toBe(40)
   })
 })
 
@@ -95,14 +95,14 @@ describe("OnFieldTracker — advanceOffFieldClocks", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
     t.advanceOffFieldClocks(60)
-    expect(t.computeSwapBack(1, 100)).toBe(0)
+    expect(t.computeSwapBackPad(1, 100)).toBe(0)
   })
 
   it("partially reduces remaining CD", () => {
     const t = new OnFieldTracker()
     t.recordSwapOut(1, 100)
     t.advanceOffFieldClocks(20)
-    expect(t.computeSwapBack(1, 100)).toBe(40)
+    expect(t.computeSwapBackPad(1, 100)).toBe(40)
   })
 
   it("advances all off-field characters uniformly", () => {
@@ -110,8 +110,8 @@ describe("OnFieldTracker — advanceOffFieldClocks", () => {
     t.recordSwapOut(1, 100)
     t.recordSwapOut(2, 100)
     t.advanceOffFieldClocks(30)
-    expect(t.computeSwapBack(1, 100)).toBe(30)
-    expect(t.computeSwapBack(2, 100)).toBe(30)
+    expect(t.computeSwapBackPad(1, 100)).toBe(30)
+    expect(t.computeSwapBackPad(2, 100)).toBe(30)
   })
 
   it("sequential advances accumulate", () => {
@@ -119,13 +119,13 @@ describe("OnFieldTracker — advanceOffFieldClocks", () => {
     t.recordSwapOut(1, 100)
     t.advanceOffFieldClocks(20)
     t.advanceOffFieldClocks(20)
-    expect(t.computeSwapBack(1, 100)).toBe(20)
+    expect(t.computeSwapBackPad(1, 100)).toBe(20)
   })
 
   it("does not affect characters with no off-field record", () => {
     const t = new OnFieldTracker()
     t.advanceOffFieldClocks(60)
-    expect(t.computeSwapBack(1, 100)).toBe(0)
+    expect(t.computeSwapBackPad(1, 100)).toBe(0)
   })
 
   it("advance does not affect character that subsequently recordSwapIn", () => {
@@ -133,6 +133,6 @@ describe("OnFieldTracker — advanceOffFieldClocks", () => {
     t.recordSwapOut(1, 100)
     t.advanceOffFieldClocks(60)
     t.recordSwapIn(1)
-    expect(t.computeSwapBack(1, 100)).toBe(0)
+    expect(t.computeSwapBackPad(1, 100)).toBe(0)
   })
 })

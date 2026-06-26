@@ -21,7 +21,7 @@ export class FootingTracker {
     this.version_++
   }
 
-  teamFooting(): "ground" | "air" {
+  team(): "ground" | "air" {
     return this.team_
   }
 
@@ -31,16 +31,16 @@ export class FootingTracker {
     this.version_++
   }
 
-  carriedFor(characterId: number): "ground" | "air" | undefined {
+  carriedFooting(characterId: number): "ground" | "air" | undefined {
     return this.carried.get(characterId)
   }
 
-  setCarried(characterId: number, footing: "ground" | "air"): void {
+  setCarriedFooting(characterId: number, footing: "ground" | "air"): void {
     this.carried.set(characterId, footing)
     this.version_++
   }
 
-  takeCarried(characterId: number): void {
+  clearCarriedFooting(characterId: number): void {
     if (this.carried.delete(characterId)) this.version_++
   }
 

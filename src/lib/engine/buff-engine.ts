@@ -310,8 +310,8 @@ export class BuffEngine {
     this.onField.advanceOffFieldClocks(frames)
   }
 
-  computeSwapBack(characterId: number, arrivalFrame: number): number {
-    return this.onField.computeSwapBack(characterId, arrivalFrame)
+  computeSwapBackPad(characterId: number, arrivalFrame: number): number {
+    return this.onField.computeSwapBackPad(characterId, arrivalFrame)
   }
 
   /**
@@ -955,7 +955,9 @@ export class BuffEngine {
       })
     }
     for (const _ of displaced) {
-      this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
+      this.deferredEmits.push(
+        this.buildPoolEmit(characterId, config.emit, frame),
+      )
     }
     this.setResource(
       characterId,
@@ -1001,7 +1003,7 @@ export class BuffEngine {
       0,
     )
     this.deferredEmits.push(
-      this.poolEmit(characterId, config.emit, convertFrame),
+      this.buildPoolEmit(characterId, config.emit, convertFrame),
     )
     return {
       lifecycleEvents,
@@ -1010,7 +1012,7 @@ export class BuffEngine {
     }
   }
 
-  private poolEmit(
+  private buildPoolEmit(
     characterId: number,
     emit: DamageEntry,
     convertFrame: number,
@@ -1060,7 +1062,9 @@ export class BuffEngine {
     const converted = this.pool.takeOldest(characterId, n)
     if (converted.length === 0) return
     for (const _ of converted) {
-      this.deferredEmits.push(this.poolEmit(characterId, config.emit, frame))
+      this.deferredEmits.push(
+        this.buildPoolEmit(characterId, config.emit, frame),
+      )
     }
     this.setResource(
       characterId,

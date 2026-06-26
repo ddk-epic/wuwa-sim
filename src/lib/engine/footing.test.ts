@@ -45,39 +45,39 @@ describe("FootingModule.applyStageFooting", () => {
   })
 })
 
-describe("FootingModule.enterIntro", () => {
+describe("FootingModule.applyIntroFooting", () => {
   it("writes the intro's air exit footing", () => {
     const f = new FootingModule()
-    f.enterIntro("air")
+    f.applyIntroFooting("air")
     expect(f.team()).toBe("air")
   })
 
   it("writes the intro's ground exit footing", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
-    f.enterIntro("ground")
+    f.applyIntroFooting("ground")
     expect(f.team()).toBe("ground")
   })
 
   it("{ launch } intro lifts off, { land } intro settles", () => {
     const f = new FootingModule()
-    f.enterIntro({ launch: 30 })
+    f.applyIntroFooting({ launch: 30 })
     expect(f.team()).toBe("air")
-    f.enterIntro({ land: 30 })
+    f.applyIntroFooting({ land: 30 })
     expect(f.team()).toBe("ground")
   })
 
   it("an untagged intro grounds the field", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
-    f.enterIntro(undefined)
+    f.applyIntroFooting(undefined)
     expect(f.team()).toBe("ground")
   })
 
   it("an either intro keeps the current footing", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
-    f.enterIntro("either")
+    f.applyIntroFooting("either")
     expect(f.team()).toBe("air")
   })
 })

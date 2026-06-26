@@ -65,7 +65,7 @@ export class OnFieldTracker {
     }
   }
 
-  computeSwapBack(characterId: number, arrivalFrame: number): number {
+  computeSwapBackPad(characterId: number, arrivalFrame: number): number {
     const lastFrame = this.lastOffFieldFrame.get(characterId)
     if (lastFrame === undefined) return 0
     return Math.max(0, SWAP_BACK_CD - (arrivalFrame - lastFrame))

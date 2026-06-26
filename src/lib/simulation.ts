@@ -177,7 +177,10 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   // ahead of it in frame order. A surviving footing commit sets this character's
   // footing before its stage reads it for Fall Frames.
   drainSchedule(ctx, cursor.frame)
-  const swapBackWait = engine.computeSwapBack(entry.characterId, cursor.frame)
+  const swapBackWait = engine.computeSwapBackPad(
+    entry.characterId,
+    cursor.frame,
+  )
 
   if (!resolved) return
 
@@ -206,7 +209,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 
   if (resolved.skillType === "Intro Skill") {
     // An Intro establishes its own footing regardless of what it entered on.
-    engine.footing.enterIntro(resolved.stage.footing)
+    engine.footing.applyIntroFooting(resolved.stage.footing)
   } else {
     engine.footing.applyStageFooting(resolved.stage.footing, stageDuration)
   }
