@@ -7,6 +7,7 @@ import { BuffEngine } from "#/lib/engine/buff-engine"
 import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
 import { getFocusedStageCatalog } from "#/components/skills/focused-stage-catalog"
 import { validateTimeline } from "#/lib/timeline/validate-timeline"
+import { stageEntryFooting, stageExitFooting } from "#/lib/stage"
 import { camellya } from "./camellya"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -90,6 +91,42 @@ const OUTRO_HIT: HitContext = {
   skillType: "Outro Skill",
   element: "Havoc",
 }
+
+describe("Camellya — any-entry grounding stages", () => {
+  const forte = camellya.skills.find((s) => s.type === "Forte Circuit")!
+  const ephemeral = forte.stages[0]
+  const perennial = forte.stages[1]
+  const fervorCast = camellya.skills.find(
+    (s) => s.type === "Resonance Liberation",
+  )!.stages[0]
+
+  const cases = [
+    { name: "Fervor Efflorescent", stage: fervorCast, commit: 0 },
+    {
+      name: "Ephemeral",
+      stage: ephemeral,
+      commit: ephemeral.damage.at(-1)!.actionFrame,
+    },
+    {
+      name: "Perennial",
+      stage: perennial,
+      commit: perennial.damage.at(-1)!.actionFrame,
+    },
+  ]
+
+  for (const { name, stage, commit } of cases) {
+    it(`${name} is castable from either footing and grounds at its commit frame`, () => {
+      expect(stage.footing).toEqual({
+        entry: "any",
+        exit: "ground",
+        commit,
+      })
+      // No entry requirement: no violation from ground, no fall from air.
+      expect(stageEntryFooting(stage.footing)).toBeUndefined()
+      expect(stageExitFooting(stage.footing)).toBe("ground")
+    })
+  }
+})
 
 describe("Camellya — Seedbed / Epiphyte passives (folded at bootstrap)", () => {
   it("Seedbed: Havoc DMG Bonus +15%", () => {

@@ -1796,7 +1796,7 @@ export const camellya = {
           value: "1202.81%",
           actionTime: 8,
           animationFrames: 242,
-          footing: { entry: "air", exit: "ground", commit: 0 },
+          footing: { entry: "any", exit: "ground", commit: 0 },
           variants: {},
           damage: [
             {
@@ -1876,6 +1876,7 @@ export const camellya = {
           value: "1262.45%",
           cooldown: 25,
           actionTime: 85,
+          footing: { entry: "any", exit: "ground", commit: 58 },
           variants: {},
           concerto: -70,
           forte: 100,
@@ -1900,6 +1901,7 @@ export const camellya = {
           value: "1262.45%",
           cooldown: 25,
           actionTime: 85,
+          footing: { entry: "any", exit: "ground", commit: 58 },
           variants: {},
           requiresSequence: 6,
           concerto: -50,
