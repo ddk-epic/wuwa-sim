@@ -15,17 +15,13 @@ export class FootingModule {
   }
 
   /**
-   * On-field stage commit: a launch/land whose commit frame falls within the
-   * stage's own duration updates team footing immediately (the character never
-   * leaves the field, so it is not a stream event).
+   * On-field stage commit: a transition whose commit frame falls within the
+   * stage's own duration flips team footing to `exit` immediately (the character
+   * never leaves the field, so it is not a stream event).
    */
   applyStageFooting(footing: Footing | undefined, stageDuration: number): void {
     if (typeof footing === "object") {
-      if ("launch" in footing && footing.launch <= stageDuration) {
-        this.tracker.setTeam("air")
-      } else if ("land" in footing && footing.land <= stageDuration) {
-        this.tracker.setTeam("ground")
-      }
+      if (footing.commit <= stageDuration) this.tracker.setTeam(footing.exit)
       return
     }
     const exit = stageExitFooting(footing)

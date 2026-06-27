@@ -108,7 +108,7 @@ const charAerial: EnrichedCharacter = {
           category: "Resonance Skill",
           value: "100%",
           actionTime: 30,
-          footing: { launch: 15 },
+          footing: { entry: "ground", exit: "air", commit: 15 },
           damage: [],
         },
       ],
@@ -194,6 +194,22 @@ const charAerial: EnrichedCharacter = {
       ],
       damage: [],
     },
+    {
+      id: 106,
+      name: "Any Burst",
+      type: "Resonance Skill",
+      stages: [
+        {
+          name: "Any Burst Stage",
+          category: "Resonance Skill",
+          value: "100%",
+          actionTime: 40,
+          footing: { entry: "any", exit: "ground", commit: 10 },
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
   ],
 }
 
@@ -234,7 +250,7 @@ const charSnapA: EnrichedCharacter = {
           category: "Resonance Skill",
           value: "",
           actionTime: 30,
-          footing: { launch: 15 },
+          footing: { entry: "ground", exit: "air", commit: 15 },
           damage: [
             snapDmg(3), // immediate (<= swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window
@@ -269,7 +285,7 @@ const charSnapA: EnrichedCharacter = {
           category: "Basic Attack",
           value: "",
           actionTime: 5,
-          footing: { land: 2 }, // non-swap land: flips team to ground on-field
+          footing: { entry: "air", exit: "ground", commit: 2 }, // non-swap land: flips team to ground on-field
           damage: [],
         },
       ],
@@ -879,6 +895,60 @@ describe("runSimulation — footing violation diagnostics", () => {
       fallFrames: 21,
     })
     expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
+  })
+
+  it("an entry-any stage cast from the ground raises no diagnostic and exits ground", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.any-burst.any-burst-stage::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
+    expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
+    expect(actionFor(result, "e2")?.delayBreakdown?.pad.fall ?? 0).toBe(0)
+  })
+
+  it("an entry-any stage cast from the air pays no fall and grounds the field", () => {
+    testCharacters = [charAerial]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.launch.launch-stage::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.resonance-skill.any-burst.any-burst-stage::resonance-skill",
+        "e2",
+      ),
+      tlEntry(
+        50,
+        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
+        "e3",
+      ),
+    ]
+    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
+    expect(actionFor(result, "e2")?.diagnostics).toBeUndefined()
+    expect(actionFor(result, "e2")?.delayBreakdown?.pad.fall ?? 0).toBe(0)
+    expect(actionFor(result, "e3")?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("an insufficient-resource cast diagnostic reaches the ActionEvent", () => {

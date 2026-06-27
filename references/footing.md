@@ -27,9 +27,20 @@ buff conditioned on being airborne.
 A stage may declare its footing relationship:
 
 - **Sustained** — the stage happens entirely on `ground` or entirely in `air`.
-- **Transition** — the stage _changes_ footing partway through:
-  - **launch**: `ground → air` (e.g. Jump, a character's launch move).
-  - **land**: `air → ground`.
+- **Transition** — the stage _changes_ footing partway through, authored as
+  `{ entry, exit, commit }`: the footing it requires on entry, the footing it
+  commits to, and the commit frame.
+  - **launch**: `{ entry: "ground", exit: "air", commit }` (e.g. Jump, a launch move).
+  - **land**: `{ entry: "air", exit: "ground", commit }`.
+  - **any-entry**: `entry: "any"` carries **no entry requirement** — castable from
+    either footing, no fall and no violation — while still committing to a definite
+    `exit`. The motivating case is a Resonance Liberation that grounds you whether
+    cast from the ground or the air (`{ entry: "any", exit: "ground", commit }`).
+
+`entry` and `exit` are independent: `entry` gates what footing the stage may begin
+on; `exit` is the footing it leaves behind. `exit` is always definite (never
+`"any"`) — a transition always commits somewhere; "preserve" is what the sustained
+`either` tag means.
 
 A stage with no footing declaration is **grounded** by default: it requires the
 ground on entry and ends grounded. Most stages are grounded, so omission carries
@@ -43,12 +54,17 @@ stays airborne instead of falling.
 
 ## The commit frame (point of no return)
 
-A launch/land does not happen when you _press_ the button — it happens at a
+A transition does not happen when you _press_ the button — it happens at a
 specific **commit frame** inside the animation (the frame the body actually
 leaves the ground for a launch). The commit frame is a **point of no return**:
 
-- If you **swap-cancel before** the commit frame, the transition **never
-  happens** — you were still grounded (or still airborne) when you left.
+- If you **cut the stage short before** the commit frame, the transition **never
+  happens** — you were still grounded (or still airborne) when you left. Two
+  distinct mechanisms cut a stage short, and they are not the same thing:
+  - a **swap** hands the field to another character (the partial stage trails on
+    its owner, carrying that owner's footing — see facet 2 below);
+  - a **cancel** cuts the stage on the _same_ character with a follow-up input.
+    Either, if it lands before the commit frame, bails the transition.
 - If the commit frame is **reached**, the flip happens — **instantly**, a single-
   frame boolean flip of that character's footing.
 
@@ -107,29 +123,30 @@ never a standalone event — it is detected **only at a stage boundary**, by
 comparing the character's current footing against the next stage's **entry
 footing** (the footing it begins on):
 
-| stage                  | entry footing                              |
-| ---------------------- | ------------------------------------------ |
-| untagged (default)     | **ground**                                 |
-| sustained `ground`     | ground                                     |
-| sustained `air`        | air                                        |
-| `{ launch }`           | **ground** — it launches _from_ the ground |
-| `{ land }`             | **air** — it lands _from_ the air          |
-| `either` (transparent) | inherits current (no requirement)          |
+| stage                      | entry footing                              |
+| -------------------------- | ------------------------------------------ |
+| untagged (default)         | **ground**                                 |
+| sustained `ground`         | ground                                     |
+| sustained `air`            | air                                        |
+| launch (`entry: "ground"`) | **ground** — it launches _from_ the ground |
+| land (`entry: "air"`)      | **air** — it lands _from_ the air          |
+| any-entry (`entry: "any"`) | inherits current (no requirement)          |
+| `either` (transparent)     | inherits current (no requirement)          |
 
 When a character takes the field **airborne** and the next stage's entry footing
 is **ground**, the engine inserts **fall padding**: a startup delay of
 `fallFrames` before the stage, modeling the time spent falling before the action
 can begin.
 
-Crucially this **includes a `{ launch }` stage entered from the air**: the
-character first falls (`air → ground`), then the launch fires at its commit frame
+Crucially this **includes a launch stage entered from the air**: the character
+first falls (`air → ground`), then the launch fires at its commit frame
 (`ground → air`). The footing is evaluated _as the stage resolves_, by which point
 the fall has grounded the character — so launching from the air is legal, it just
 pays a fall first. An untagged stage entered from the air falls the same way (its
 default entry is ground), _landing_ as it does. Fall padding does **not** apply to
-a `{ land }` stage (entry is air — landing is its own animation), an `either`
-(footing-transparent) stage (it preserves the airborne state), or an `air` stage
-(no mismatch).
+a land stage (entry is air — landing is its own animation), an any-entry stage
+(`entry: "any"` — no requirement), an `either` (footing-transparent) stage (it
+preserves the airborne state), or an `air` stage (no mismatch).
 
 Going airborne is never padded: nothing lifts you off the ground without an
 explicit launch.
@@ -152,13 +169,14 @@ field footing. Only two outcomes are non-trivial:
 
 Spelled out across the stage kinds:
 
-- `air → untagged`, `air → sustained ground`, and **`air → { launch }`** — soft;
-  pay a fall (for `{ launch }`, the fall lands you, then the launch re-launches
-  you).
-- `ground → sustained air` and `ground → { land }` — hard errors; you can't
-  sustain air or land from it without a launch first.
-- `ground → { launch }` and `air → { land }` — the valid footing changes
-  themselves; no error, no fall.
+- `air → untagged`, `air → sustained ground`, and **`air → launch`** — soft;
+  pay a fall (for a launch, the fall lands you, then the launch re-launches you).
+- `ground → sustained air` and `ground → land` — hard errors; you can't sustain
+  air or land from it without a launch first.
+- `ground → launch` and `air → land` — the valid footing changes themselves; no
+  error, no fall.
+- any-entry (`entry: "any"`) stage — always valid from either footing, never
+  falls; still commits to its `exit`.
 - `either` (transparent) stage — always valid, never falls.
 
 The asymmetry is physical: gravity recovers you from the air for free (so any

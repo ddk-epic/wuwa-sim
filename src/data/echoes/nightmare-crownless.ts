@@ -60,7 +60,7 @@ export const nightmareCrownless = {
         name: "Tap",
         newName: "",
         actionTime: 72,
-        footing: { launch: 30 },
+        footing: { entry: "ground", exit: "air", commit: 30 },
         damage: [
           {
             type: "Echo Skill",

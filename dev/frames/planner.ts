@@ -95,9 +95,9 @@ function aerialInfo(stage: EnrichedSkillAttribute): {
 } {
   const f = stage.footing
   if (f === "air") return { aerial: true, footingGap: false }
-  if (f && typeof f === "object" && "land" in f)
+  if (f && typeof f === "object" && f.entry === "air")
     return { aerial: true, footingGap: false }
-  // A launch enters from the ground; "ground"/"either" are explicit. No airborne setup.
+  // Ground/any-entry transitions and "ground"/"either" need no airborne setup.
   if (f) return { aerial: false, footingGap: false }
   // Omitted footing defaults to ground, so not aerial. An aerial-sounding name with
   // no footing tag is a genuine data gap — the instruction likely needs one.

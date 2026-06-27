@@ -374,8 +374,12 @@ describe("stageEntryFooting", () => {
   })
 
   it("{ launch } enters on the ground, { land } in the air", () => {
-    expect(stageEntryFooting({ launch: 30 })).toBe("ground")
-    expect(stageEntryFooting({ land: 30 })).toBe("air")
+    expect(
+      stageEntryFooting({ entry: "ground", exit: "air", commit: 30 }),
+    ).toBe("ground")
+    expect(
+      stageEntryFooting({ entry: "air", exit: "ground", commit: 30 }),
+    ).toBe("air")
   })
 
   it("omitted footing enters on the ground", () => {
@@ -384,6 +388,12 @@ describe("stageEntryFooting", () => {
 
   it("either is footing-transparent", () => {
     expect(stageEntryFooting("either")).toBeUndefined()
+  })
+
+  it("entry any carries no entry requirement", () => {
+    expect(
+      stageEntryFooting({ entry: "any", exit: "ground", commit: 0 }),
+    ).toBeUndefined()
   })
 })
 
@@ -394,8 +404,12 @@ describe("stageExitFooting", () => {
   })
 
   it("{ launch } lifts off, { land } settles down", () => {
-    expect(stageExitFooting({ launch: 30 })).toBe("air")
-    expect(stageExitFooting({ land: 30 })).toBe("ground")
+    expect(stageExitFooting({ entry: "ground", exit: "air", commit: 30 })).toBe(
+      "air",
+    )
+    expect(stageExitFooting({ entry: "air", exit: "ground", commit: 30 })).toBe(
+      "ground",
+    )
   })
 
   it("omitted footing settles to the ground", () => {
@@ -404,5 +418,11 @@ describe("stageExitFooting", () => {
 
   it("either preserves the entry footing", () => {
     expect(stageExitFooting("either")).toBeUndefined()
+  })
+
+  it("entry any still exits to its definite footing", () => {
+    expect(stageExitFooting({ entry: "any", exit: "ground", commit: 0 })).toBe(
+      "ground",
+    )
   })
 })

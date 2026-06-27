@@ -25,15 +25,24 @@ describe("FootingModule.applyStageFooting", () => {
 
   it("{ launch } within the stage lifts off, { land } settles", () => {
     const f = new FootingModule()
-    f.applyStageFooting({ launch: 30 }, 60)
+    f.applyStageFooting({ entry: "ground", exit: "air", commit: 30 }, 60)
     expect(f.team()).toBe("air")
-    f.applyStageFooting({ land: 30 }, 60)
+    f.applyStageFooting({ entry: "air", exit: "ground", commit: 30 }, 60)
     expect(f.team()).toBe("ground")
   })
 
   it("a launch committing after the stage ends does not flip footing", () => {
     const f = new FootingModule()
-    f.applyStageFooting({ launch: 90 }, 60)
+    f.applyStageFooting({ entry: "ground", exit: "air", commit: 90 }, 60)
+    expect(f.team()).toBe("ground")
+  })
+
+  it("entry any commits to its exit footing from either footing", () => {
+    const f = new FootingModule()
+    f.applyStageFooting({ entry: "any", exit: "ground", commit: 0 }, 60)
+    expect(f.team()).toBe("ground")
+    f.applyStageFooting("air", 60)
+    f.applyStageFooting({ entry: "any", exit: "ground", commit: 0 }, 60)
     expect(f.team()).toBe("ground")
   })
 
@@ -61,9 +70,9 @@ describe("FootingModule.applyIntroFooting", () => {
 
   it("{ launch } intro lifts off, { land } intro settles", () => {
     const f = new FootingModule()
-    f.applyIntroFooting({ launch: 30 })
+    f.applyIntroFooting({ entry: "ground", exit: "air", commit: 30 })
     expect(f.team()).toBe("air")
-    f.applyIntroFooting({ land: 30 })
+    f.applyIntroFooting({ entry: "air", exit: "ground", commit: 30 })
     expect(f.team()).toBe("ground")
   })
 

@@ -490,7 +490,7 @@ export const shorekeeper = {
           newName: "Plunging Attack",
           value: "73.96%",
           actionTime: 60,
-          footing: { land: 42 },
+          footing: { entry: "air", exit: "ground", commit: 42 },
           variants: {},
           damage: [
             {
@@ -947,7 +947,7 @@ export const shorekeeper = {
           value: "73.96%",
           concerto: 6,
           actionTime: 50,
-          footing: { land: 42 },
+          footing: { entry: "air", exit: "ground", commit: 42 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 42 },

@@ -131,7 +131,10 @@ describe("trailing-window — partitionStage: non-swap partition", () => {
 describe("trailing-window — partitionStage: footingChanges", () => {
   it("launch past advance → [commit@(start+launch), reset@(start+actionTime)]", () => {
     const resolved = makeResolvedStage({
-      stage: { actionTime: 18, footing: { launch: 15 } },
+      stage: {
+        actionTime: 18,
+        footing: { entry: "ground", exit: "air", commit: 15 },
+      },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -153,7 +156,10 @@ describe("trailing-window — partitionStage: footingChanges", () => {
     // field on-field, but the air must still ride on the owner for a swap-back,
     // so the commit + window-end reset are emitted regardless of the advance.
     const resolved = makeResolvedStage({
-      stage: { actionTime: 24, footing: { launch: 5 } },
+      stage: {
+        actionTime: 24,
+        footing: { entry: "ground", exit: "air", commit: 5 },
+      },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -171,7 +177,10 @@ describe("trailing-window — partitionStage: footingChanges", () => {
 
   it("land past advance → [commit@(start+land)] with no reset", () => {
     const resolved = makeResolvedStage({
-      stage: { actionTime: 12, footing: { land: 20 } },
+      stage: {
+        actionTime: 12,
+        footing: { entry: "air", exit: "ground", commit: 20 },
+      },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -191,7 +200,10 @@ describe("trailing-window — partitionStage: footingChanges", () => {
     // still carries `ground` on the owner so a swap-back after a teammate went
     // airborne resumes the owner grounded. No reset (land ends grounded already).
     const resolved = makeResolvedStage({
-      stage: { actionTime: 18, footing: { land: 4 } },
+      stage: {
+        actionTime: 18,
+        footing: { entry: "air", exit: "ground", commit: 4 },
+      },
     })
     const result = partitionStage({
       entry: makeEntry(1),
@@ -208,7 +220,10 @@ describe("trailing-window — partitionStage: footingChanges", () => {
 
   it("no footingChanges for non-swap stages (even with {launch:N})", () => {
     const resolved = makeResolvedStage({
-      stage: { actionTime: 0, footing: { launch: 15 } },
+      stage: {
+        actionTime: 0,
+        footing: { entry: "ground", exit: "air", commit: 15 },
+      },
     })
     const result = partitionStage({
       entry: makeEntry(1),

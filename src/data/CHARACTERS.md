@@ -426,9 +426,9 @@ See: `src/data/characters/sanhua.ts` — Clarity of Mind.
 
 ### 9. Launching (footing) stage
 
-**When to use**: a stage that takes the character off the ground — a plunge launcher, an aerial attack, a skill that commits to a `{ launch }` or `{ land }`. `footing` declares the ground/air state the stage enters on so footing-aware combos and timing resolve correctly.
+**When to use**: a stage that changes the character's ground/air state — a plunge launcher, an aerial attack, a skill that lands you. `footing` declares how the stage relates to footing so footing-aware combos and timing resolve correctly.
 
-**Key fields**: `footing` — `{ launch: n }` (begins on the **ground**, launches at frame `n`), `{ land: n }` (begins in the **air**), or the sustained values `"ground"`/`"air"`. Omit it entirely for footing-transparent stages (no entry requirement). Per `stageEntryFooting`, a `{ launch }` enters on the ground and a `{ land }` enters in the air.
+**Key fields**: `footing` — a transition `{ entry, exit, commit }` or a sustained value. A transition's `entry` (`"ground"` / `"air"` / `"any"`) is the footing required on entry, `exit` (`"ground"` / `"air"`) the footing it commits to, `commit` the commit frame. A launch is `{ entry: "ground", exit: "air", commit: n }`; a land is `{ entry: "air", exit: "ground", commit: n }`; `entry: "any"` carries no entry requirement (castable from either footing, no fall) while still committing to `exit`. The sustained values `"ground"` / `"air"` / `"either"` carry no commit frame. Omit `footing` entirely for the grounded default.
 
 **Gotchas**: `footing` is the same field on character and echo stages — the example below is an echo (`EnrichedEcho.skill.stages`), the only authored use today, but a character stage carries it identically. The launch frame and the hit's `actionFrame` are independent numbers. Canonical concept: `references/footing.md`.
 
@@ -437,7 +437,7 @@ See: `src/data/characters/sanhua.ts` — Clarity of Mind.
   name: "Tap",
   newName: "",
   actionTime: 72,
-  footing: { launch: 30 }, // begins grounded, leaves the ground at frame 30
+  footing: { entry: "ground", exit: "air", commit: 30 }, // grounded, leaves the ground at frame 30
   damage: [
     {
       type: "Echo Skill",
@@ -522,7 +522,7 @@ A stage is an `EnrichedSkillAttribute`.
 | `damage`             | `DamageEntry[]` — the hits (see below).                                                                                                                                                                                |
 | `variants`           | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                     |
 | `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                     |
-| `footing`            | Entry footing — `"ground"`, `"air"`, `{ launch: n }`, `{ land: n }`.                                                                                                                                                   |
+| `footing`            | Footing — `"ground"`, `"air"`, `"either"`, or a transition `{ entry, exit, commit }` (`entry`: `"ground"`/`"air"`/`"any"`).                                                                                            |
 | `requiresPriorStage` | Combo gating — this stage only follows the predecessor named by a `"skill/stage"` token.                                                                                                                               |
 | `minDelay`           | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + minDelay`. See Cookbook recipe 4. |
 

@@ -537,7 +537,7 @@ function computeGateWait(
 
 /**
  * Warn when an entry begins grounded but its stage requires an airborne entry —
- * a sustained "air" stage or a { land } with nothing to land from. Impossible in
+ * a sustained "air" stage or an air-entry transition with nothing to land from. Impossible in
  * real play; the sim executes the stage anyway and reports the violation. The
  * reverse mismatch (airborne meeting a ground-entry stage) is legal — gravity
  * resolves it as Fall Frames, already visible in the delay breakdown. Intro
@@ -555,7 +555,7 @@ function footingDiagnostics(
   ) {
     return []
   }
-  const isLand = typeof footing === "object" && "land" in footing
+  const isLand = typeof footing === "object" && footing.entry === "air"
   return [{ kind: "footingViolation", isLand }]
 }
 
@@ -566,9 +566,9 @@ function computeFall(
 ): number {
   if (currentFooting !== "air") return 0
   // Fall when the next stage begins on the ground — an untagged stage, a sustained
-  // "ground" stage, or a { launch } (which launches *from* the ground, so an airborne
-  // entry falls first, then re-launches at the commit frame). { land } / "air" /
-  // "either": no fall.
+  // "ground" stage, or a ground-entry transition (which launches *from* the ground,
+  // so an airborne entry falls first, then re-launches at the commit frame).
+  // air-entry / "any" / "air" / "either": no fall.
   if (stageEntryFooting(stageFooting) !== "ground") return 0
   return fallFrames
 }

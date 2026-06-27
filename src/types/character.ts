@@ -187,8 +187,7 @@ export type Footing =
   | "ground"
   | "air"
   | "either"
-  | { launch: number }
-  | { land: number }
+  | { entry: "ground" | "air" | "any"; exit: "ground" | "air"; commit: number }
 
 type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   /** Override for `deriveKey(name)` collisions. */

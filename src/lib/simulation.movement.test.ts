@@ -214,7 +214,7 @@ const charAerial: EnrichedCharacter = {
           category: "Resonance Skill",
           value: "100%",
           actionTime: 30,
-          footing: { launch: 15 },
+          footing: { entry: "ground", exit: "air", commit: 15 },
           damage: [],
         },
       ],
@@ -309,7 +309,7 @@ const charSnapA: EnrichedCharacter = {
           category: "Resonance Skill",
           value: "",
           actionTime: 30,
-          footing: { launch: 15 },
+          footing: { entry: "ground", exit: "air", commit: 15 },
           damage: [
             snapDmg(3), // immediate (<= swapFrames=6)
             snapDmg(20), // trailing (> swapFrames=6) — activates window

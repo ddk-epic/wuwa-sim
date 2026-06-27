@@ -31,7 +31,7 @@ export const JUMP_SKILL: EnrichedSkill = {
       value: "",
       damage: [],
       actionTime: JUMP_ACTION_TIME,
-      footing: { launch: 9 },
+      footing: { entry: "ground", exit: "air", commit: 9 },
     },
   ],
   damage: [],

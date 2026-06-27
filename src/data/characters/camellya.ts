@@ -999,7 +999,7 @@ export const camellya = {
           newName: "Heavy Attack",
           value: "88.14%*3",
           actionTime: 86,
-          footing: { launch: 60 },
+          footing: { entry: "ground", exit: "air", commit: 70 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 79 },
@@ -1052,7 +1052,7 @@ export const camellya = {
           newName: "Mid-air Attack",
           value: "65.61%*2",
           actionTime: 43,
-          footing: { land: 30 },
+          footing: { entry: "air", exit: "ground", commit: 30 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 15 },
@@ -1578,7 +1578,7 @@ export const camellya = {
           newName: "Vining Ronde",
           value: "52.95%*3",
           actionTime: 87,
-          footing: { land: 60 },
+          footing: { entry: "air", exit: "ground", commit: 60 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 55 },
@@ -1671,7 +1671,7 @@ export const camellya = {
           value: "113.62%*2",
           concerto: 7,
           actionTime: 85,
-          footing: { launch: 60 },
+          footing: { entry: "ground", exit: "air", commit: 60 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 34 },
@@ -1710,7 +1710,7 @@ export const camellya = {
           value: "52.61%*5",
           concerto: 7,
           actionTime: 100,
-          footing: { land: 60 },
+          footing: { entry: "air", exit: "ground", commit: 60 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 74 },
@@ -1796,7 +1796,7 @@ export const camellya = {
           value: "1202.81%",
           actionTime: 8,
           animationFrames: 242,
-          footing: { land: 0 },
+          footing: { entry: "air", exit: "ground", commit: 0 },
           variants: {},
           damage: [
             {
@@ -1843,6 +1843,7 @@ export const camellya = {
           newName: "",
           value: "198.81%",
           actionTime: 76,
+          footing: "air",
           variants: {},
           damage: [
             {
@@ -1939,6 +1940,7 @@ export const camellya = {
           newName: "",
           value: "0%",
           actionTime: 0,
+          footing: "either",
           variants: {},
           damage: [
             {

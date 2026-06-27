@@ -950,7 +950,7 @@ export const cartethyia = {
           category: "Basic Attack",
           value: "",
           actionTime: 0,
-          footing: { land: 30 },
+          footing: { entry: "air", exit: "ground", commit: 30 },
           variants: {},
           damage: [],
         },
@@ -969,7 +969,7 @@ export const cartethyia = {
           value: "6.89%*3+8.86%",
           actionTime: 0,
           animationFrames: 60,
-          footing: { launch: 60 },
+          footing: { entry: "ground", exit: "air", commit: 60 },
           variants: {},
           damage: [
             {
@@ -1536,7 +1536,7 @@ export const cartethyia = {
           category: "Basic Attack",
           value: "4.54%*2",
           actionTime: 0,
-          footing: { launch: 30 },
+          footing: { entry: "ground", exit: "air", commit: 30 },
           variants: {},
           damage: [
             {
@@ -1752,7 +1752,7 @@ export const cartethyia = {
           value: "1.86%*4+17.36%",
           concerto: 10,
           actionTime: 0,
-          footing: { launch: 30 },
+          footing: { entry: "ground", exit: "air", commit: 30 },
           variants: {},
           damage: [
             {

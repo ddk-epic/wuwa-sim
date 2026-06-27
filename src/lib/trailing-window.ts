@@ -129,28 +129,20 @@ function buildFootingChanges(
   actionTime: number,
 ): FootingChange[] {
   if (!footing || typeof footing !== "object") return []
-  if ("launch" in footing) {
-    return [
-      {
-        atFrame: stageStartFrame + footing.launch,
-        exitFooting: "air",
-        kind: "commit",
-      },
-      {
-        atFrame: stageStartFrame + actionTime,
-        exitFooting: "ground",
-        kind: "reset",
-      },
-    ]
+  const changes: FootingChange[] = [
+    {
+      atFrame: stageStartFrame + footing.commit,
+      exitFooting: footing.exit,
+      kind: "commit",
+    },
+  ]
+  // Only a launch (exit air) needs the window-end return to ground.
+  if (footing.exit === "air") {
+    changes.push({
+      atFrame: stageStartFrame + actionTime,
+      exitFooting: "ground",
+      kind: "reset",
+    })
   }
-  if ("land" in footing) {
-    return [
-      {
-        atFrame: stageStartFrame + footing.land,
-        exitFooting: "ground",
-        kind: "commit",
-      },
-    ]
-  }
-  return []
+  return changes
 }
