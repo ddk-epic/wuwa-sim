@@ -259,6 +259,31 @@ export const camellya = {
       ],
     },
     {
+      // Visible presence buff for Blossom Mode. Correctness ("airborne while in
+      // mode") rides on the footing data, not this buff. Persists across swaps.
+      id: "char.camellya.blossom-mode",
+      name: "Blossom Mode",
+      description:
+        "Casting Crimson Blossom enters Blossom Mode. Ends on Floral Ravage or Vining Ronde.",
+      trigger: {
+        event: "skillCast",
+        characterId: 1603,
+        stage: "valse-of-bloom-and-blight/crimson-blossom",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      stacking: { max: 1, onRetrigger: "replace" },
+      consumedBy: {
+        event: "skillCast",
+        characterId: 1603,
+        stage: [
+          "valse-of-bloom-and-blight/floral-ravage",
+          "burgeoning/vining-ronde",
+        ],
+      },
+      effects: [],
+    },
+    {
       // Pistil-zero exit: when forte crosses 0 downward, Budding Mode ends.
       id: "char.camellya.budding-mode-end",
       name: "Budding Mode (End)",
@@ -999,7 +1024,7 @@ export const camellya = {
           newName: "Heavy Attack",
           value: "88.14%*3",
           actionTime: 86,
-          footing: { entry: "ground", exit: "air", commit: 70 },
+          footing: { entry: "ground", exit: "air", commit: 79 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 79 },
@@ -1578,7 +1603,7 @@ export const camellya = {
           newName: "Vining Ronde",
           value: "52.95%*3",
           actionTime: 87,
-          footing: { entry: "air", exit: "ground", commit: 60 },
+          footing: { entry: "air", exit: "ground", commit: 55 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 55 },
@@ -1671,7 +1696,7 @@ export const camellya = {
           value: "113.62%*2",
           concerto: 7,
           actionTime: 85,
-          footing: { entry: "ground", exit: "air", commit: 60 },
+          footing: { entry: "ground", exit: "air", commit: 9 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 34 },
@@ -1710,7 +1735,7 @@ export const camellya = {
           value: "52.61%*5",
           concerto: 7,
           actionTime: 100,
-          footing: { entry: "air", exit: "ground", commit: 60 },
+          footing: { entry: "air", exit: "ground", commit: 74 },
           variants: {
             swap: { actionTime: 0 },
             cancel: { actionTime: 74 },

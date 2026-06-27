@@ -1026,6 +1026,71 @@ describe("Camellya — Perennial Budding Mode entry (S6 Sweet Dream)", () => {
   })
 })
 
+describe("Camellya — Blossom Mode presence buff", () => {
+  const BLOSSOM = "char.camellya.blossom-mode"
+  const CRIMSON_BLOSSOM_STAGE =
+    "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack"
+  const FLORAL_RAVAGE_STAGE =
+    "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack"
+  const VINING_RONDE_STAGE =
+    "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack"
+
+  function cast(
+    engine: ReturnType<typeof makeEngine>,
+    stageId: string,
+    frame: number,
+  ) {
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId,
+      skillCategory: "Basic Attack",
+      frame,
+    })
+  }
+  const active = (engine: ReturnType<typeof makeEngine>) =>
+    engine.activeBuffIds(CAMELLYA).includes(BLOSSOM)
+
+  it("sets on Crimson Blossom and stays across Vining/Blazing Waltz", () => {
+    const engine = makeEngine()
+    expect(active(engine)).toBe(false)
+    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
+    expect(active(engine)).toBe(true)
+    for (const waltz of [
+      "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
+      "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
+      "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
+      "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
+      "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
+    ]) {
+      cast(engine, waltz, 1)
+      expect(active(engine)).toBe(true)
+    }
+  })
+
+  it("clears on Floral Ravage", () => {
+    const engine = makeEngine()
+    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
+    cast(engine, FLORAL_RAVAGE_STAGE, 1)
+    expect(active(engine)).toBe(false)
+  })
+
+  it("clears on Vining Ronde", () => {
+    const engine = makeEngine()
+    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
+    cast(engine, VINING_RONDE_STAGE, 1)
+    expect(active(engine)).toBe(false)
+  })
+
+  it("persists across a swap-out / swap-in", () => {
+    const engine = makeEngine()
+    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
+    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 1 })
+    engine.onEvent({ kind: "swapIn", characterId: CAMELLYA, frame: 2 })
+    expect(active(engine)).toBe(true)
+  })
+})
+
 describe("Camellya — Budding-mode suppressions (hit-scoped ERM + bud gate)", () => {
   const BUD = "char.camellya.crimson-bud"
   const BASIC_STAGE =
