@@ -80,6 +80,8 @@ export interface SkillAttribute {
   damage?: DamageEntry[]
   /** Minimum Resonance Chain sequence for this stage; below it, the stage is hidden and validated. */
   requiresSequence?: number
+  /** Concerto Energy required for this cast to be available; below it, an advisory diagnostic fires but the cast still resolves. */
+  requiresConcerto?: number
   /** Wall-clock frames (at 60fps) for a cutscene animation. Engine clock does not advance. */
   animationFrames?: number
 }

@@ -102,8 +102,12 @@ scaling with Energy Regen).
   proceeds but raises an `insufficientEnergy` diagnostic.
 - **Outro Skill** drains concerto to 0 on cast. The cost gate is
   `OUTRO_CONCERTO_COST` (100); surplus above it is wasted by the full drain, and
-  casting below it raises an `insufficientConcerto` diagnostic
+  casting below it raises an `insufficientOutroConcerto` diagnostic
   ([ADR-0031](adr/0031-concerto-consumption-model.md)).
+- **Forte-replacement availability gate** — a stage may set `requiresConcerto`
+  (Camellya's Ephemeral/Perennial require 100). Casting below it raises an
+  `insufficientConcerto` diagnostic but never blocks: the cast resolves and its
+  own concerto spend (subtract, floored at 0) applies unchanged.
 
 ## The pool resource
 

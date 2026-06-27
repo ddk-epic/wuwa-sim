@@ -36,6 +36,8 @@ export function renderMessage(
     case "insufficientEnergy":
       return `Liberation requires ${m.cost} energy`
     case "insufficientConcerto":
+      return `Requires ${m.required} Concerto Energy`
+    case "insufficientOutroConcerto":
       return `Outro requires ${m.cost} concerto`
 
     // --- ValidatorMessage (structural validator findings) ---

@@ -62,11 +62,25 @@ describe("renderMessage", () => {
     ).toBe("Liberation requires 125 energy")
   })
 
-  it("renders an insufficient-concerto diagnostic with only the cost", () => {
+  it("renders an availability-gate insufficient-concerto diagnostic with the requirement", () => {
     expect(
       renderMessage(
         {
           kind: "insufficientConcerto",
+          actor: "char-0",
+          concerto: 30,
+          required: 100,
+        },
+        identity,
+      ),
+    ).toBe("Requires 100 Concerto Energy")
+  })
+
+  it("renders an Outro insufficient-concerto diagnostic with only the cost", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "insufficientOutroConcerto",
           actor: "char-0",
           concerto: 30,
           cost: 100,

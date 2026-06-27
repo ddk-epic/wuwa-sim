@@ -317,9 +317,42 @@ describe("BuffEngine — resource state (#58)", () => {
     })
     expect(result.diagnostics).toHaveLength(1)
     const d = result.diagnostics[0]
-    if (d.kind !== "insufficientConcerto") throw new Error("unreachable")
+    if (d.kind !== "insufficientOutroConcerto") throw new Error("unreachable")
     expect(d.actor).toBe("Test Character")
     expect(d.concerto).toBe(50)
+    expect(engine.getResource(1).concerto).toBe(0)
+  })
+
+  it("cast below requiresConcerto raises insufficientConcerto, still spends, still dispatches", () => {
+    testCharacters = [baseChar({ id: 1, name: "Test Character" })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 30,
+    })
+    const result = engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 1,
+      requiresConcerto: 100,
+      concerto: -70,
+    })
+    expect(result.diagnostics).toHaveLength(1)
+    const d = result.diagnostics[0]
+    if (d.kind !== "insufficientConcerto") throw new Error("unreachable")
+    expect(d.actor).toBe("Test Character")
+    expect(d.concerto).toBe(30)
+    expect(d.required).toBe(100)
+    // Spend still applies, floored at 0; no full drain.
     expect(engine.getResource(1).concerto).toBe(0)
   })
 

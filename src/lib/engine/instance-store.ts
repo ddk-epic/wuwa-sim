@@ -30,6 +30,8 @@ export type EngineEvent =
       forte?: number
       /** Energy consumed on cast (Resonance Liberation only). Defaults to 100. */
       resonanceCost?: number
+      /** Concerto Energy required for this cast to be available; advisory only. */
+      requiresConcerto?: number
     }
   | {
       kind: "hitLanded"

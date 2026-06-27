@@ -42,6 +42,12 @@ export type Diagnostic =
       kind: "insufficientConcerto"
       actor: string
       concerto: number
+      required: number
+    }
+  | {
+      kind: "insufficientOutroConcerto"
+      actor: string
+      concerto: number
       cost: number
     }
 

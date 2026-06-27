@@ -11,6 +11,13 @@ Two finding sources feed the catalog:
 - **Diagnostic** — engine runtime findings. The action ran, but the sim observed something a real play could not do (impossible entry footing) or would not allow (casting below a resource cost). Carried on the `ActionEvent`.
 - **ValidatorMessage** — structural findings about the authored plan (intro needs outro, missing prereq, unknown character, …).
 
+Both sources are **advisory** — neither blocks or reshapes anything. The sim runs the authored timeline as-is; `validateTimeline` feeds only the render boundary (`timeline-render-items.ts`), never the engine, so a row flagged invalid is still simulated and only styled red. A Diagnostic likewise lets the cast dispatch and its resource spend apply — `insufficientEnergy` zeroes energy, `insufficientOutroConcerto` drains concerto, `insufficientConcerto` (an availability gate) leaves the authored spend untouched, a footing violation runs the stage anyway. A cast failing a resource check is flagged, never blocked or reshaped: the spend still applies exactly as authored. Findings report what the rotation did wrong; they never silently correct it.
+
+Two concerto diagnostics, distinct concerns:
+
+- **`insufficientConcerto { actor, concerto, required }`** — the general availability gate. A Forte-replacement cast is only available at a required concerto level (Camellya's Ephemeral/Perennial require 100), declared by the stage's `requiresConcerto`. Below it, the gate fires but the cast resolves and its own concerto spend (subtract, floored at 0) applies as usual. Row text: "Requires {required} Concerto Energy".
+- **`insufficientOutroConcerto { actor, concerto, cost }`** — Outro-specific, where concerto _is_ the cost. Below the cost the cast still drains concerto fully to 0. Row text: "Outro requires {cost} concerto".
+
 Every rendered message attaches to a **specific timeline row** that already shows the offending skill, the character, and the resource pools. The wording exploits that context instead of repeating it.
 
 **Rendering happens at one boundary, not in the producers.** Both `validateTimeline` and `deriveRowDiagnostics` emit purely structured findings — no strings. `buildTimelineRenderItems` is the single place that calls `renderMessage`, turning validator findings and engine Diagnostics into the row's `errors`/`warnings` text through one path, splitting by **severity** (invalid → `errors`, warning → `warnings`). This keeps "how to word it" out of the validator and "what is wrong" out of the view: the view styles a row red purely from `invalidRowIds` membership and renders whatever findings it is handed — it makes no domain judgment.
@@ -36,7 +43,7 @@ Engine Diagnostics never carry stage IDs, so the resolver is never consulted for
 
 ## Gotchas
 
-- The `insufficientEnergy` / `insufficientConcerto` Diagnostic types still carry `actor` and the current resource value, but `renderMessage` reads only `cost`. The unused fields are intentional — other consumers may use them; the wording deliberately drops them because the row shows them.
+- The `insufficientEnergy` / `insufficientOutroConcerto` / `insufficientConcerto` Diagnostic types still carry `actor` and the current resource value, but `renderMessage` reads only the requirement (`cost`, or `required` for the availability gate). The unused fields are intentional — other consumers may use them; the wording deliberately drops them because the row shows them.
 
 ## Related
 

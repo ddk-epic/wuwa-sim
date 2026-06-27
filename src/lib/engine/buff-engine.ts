@@ -405,6 +405,19 @@ export class BuffEngine {
       }
     }
     if (event.kind === "skillCast") {
+      if (event.requiresConcerto !== undefined) {
+        const concerto = this.getResource(event.characterId).concerto
+        if (concerto < event.requiresConcerto) {
+          const character = getCharacterById(event.characterId)
+          const name = character ? character.name : `id ${event.characterId}`
+          this.diagnostics.push({
+            kind: "insufficientConcerto",
+            actor: name,
+            concerto,
+            required: event.requiresConcerto,
+          })
+        }
+      }
       if (event.concerto) {
         this.applyResourceDelta(
           event.characterId,
@@ -456,7 +469,7 @@ export class BuffEngine {
           const character = getCharacterById(event.characterId)
           const name = character ? character.name : `id ${event.characterId}`
           this.diagnostics.push({
-            kind: "insufficientConcerto",
+            kind: "insufficientOutroConcerto",
             actor: name,
             concerto,
             cost: OUTRO_CONCERTO_COST,

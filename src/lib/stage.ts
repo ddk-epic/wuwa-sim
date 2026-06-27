@@ -83,6 +83,7 @@ export interface ResolvedStage {
   skillName: string
   requiresPriorStageId?: string
   requiresSequence?: number
+  requiresConcerto?: number
   minDelay?: number
 }
 

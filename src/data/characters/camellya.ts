@@ -1903,6 +1903,7 @@ export const camellya = {
           actionTime: 85,
           footing: { entry: "any", exit: "ground", commit: 58 },
           variants: {},
+          requiresConcerto: 100,
           concerto: -70,
           forte: 100,
           damage: [
@@ -1929,6 +1930,7 @@ export const camellya = {
           footing: { entry: "any", exit: "ground", commit: 58 },
           variants: {},
           requiresSequence: 6,
+          requiresConcerto: 100,
           concerto: -50,
           forte: 50,
           damage: [

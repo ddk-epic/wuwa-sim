@@ -469,6 +469,7 @@ function fireSkillCast(
     concerto: resolved.concerto,
     forte: resolved.forte,
     resonanceCost: resolved.resonanceCost,
+    requiresConcerto: resolved.requiresConcerto,
   })
   drainDispatch(ctx, result, entry.id)
   // Flush this cast's immediate (offset-0) synthetics in place so they log before
