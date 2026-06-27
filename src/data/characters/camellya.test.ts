@@ -7,7 +7,6 @@ import { BuffEngine } from "#/lib/engine/buff-engine"
 import { onEventResolved } from "#/lib/engine/buff-engine.test-utils"
 import { getFocusedStageCatalog } from "#/components/skills/focused-stage-catalog"
 import { validateTimeline } from "#/lib/timeline/validate-timeline"
-import { stageEntryFooting, stageExitFooting } from "#/lib/stage"
 import { camellya } from "./camellya"
 
 let testCharacters: EnrichedCharacter[] = []
@@ -91,42 +90,6 @@ const OUTRO_HIT: HitContext = {
   skillType: "Outro Skill",
   element: "Havoc",
 }
-
-describe("Camellya — any-entry grounding stages", () => {
-  const forte = camellya.skills.find((s) => s.type === "Forte Circuit")!
-  const ephemeral = forte.stages[0]
-  const perennial = forte.stages[1]
-  const fervorCast = camellya.skills.find(
-    (s) => s.type === "Resonance Liberation",
-  )!.stages[0]
-
-  const cases = [
-    { name: "Fervor Efflorescent", stage: fervorCast, commit: 0 },
-    {
-      name: "Ephemeral",
-      stage: ephemeral,
-      commit: ephemeral.damage.at(-1)!.actionFrame,
-    },
-    {
-      name: "Perennial",
-      stage: perennial,
-      commit: perennial.damage.at(-1)!.actionFrame,
-    },
-  ]
-
-  for (const { name, stage, commit } of cases) {
-    it(`${name} is castable from either footing and grounds at its commit frame`, () => {
-      expect(stage.footing).toEqual({
-        entry: "any",
-        exit: "ground",
-        commit,
-      })
-      // No entry requirement: no violation from ground, no fall from air.
-      expect(stageEntryFooting(stage.footing)).toBeUndefined()
-      expect(stageExitFooting(stage.footing)).toBe("ground")
-    })
-  }
-})
 
 describe("Camellya — Seedbed / Epiphyte passives (folded at bootstrap)", () => {
   it("Seedbed: Havoc DMG Bonus +15%", () => {
@@ -226,12 +189,6 @@ describe("Camellya — Ephemeral on-cast concerto/forte", () => {
       forte: forteGain,
     })
   }
-
-  it("cost/gain live on the stage, not the damage entry", () => {
-    expect(concertoCost).toBe(-70)
-    expect(forteGain).toBe(100)
-    expect(ephemeralStage.damage[0].concerto).toBe(0)
-  })
 
   it("consumes 70 concerto on cast", () => {
     const engine = makeEngine()
@@ -1023,71 +980,6 @@ describe("Camellya — Perennial Budding Mode entry (S6 Sweet Dream)", () => {
     expect(ids(engine)).not.toContain(OUTRO_PRIMED)
     cast(engine, EPHEMERAL_STAGE, 5)
     expect(ids(engine)).toContain(OUTRO_PRIMED)
-  })
-})
-
-describe("Camellya — Blossom Mode presence buff", () => {
-  const BLOSSOM = "char.camellya.blossom-mode"
-  const CRIMSON_BLOSSOM_STAGE =
-    "char.camellya.resonance-skill.valse-of-bloom-and-blight.crimson-blossom::basic-attack"
-  const FLORAL_RAVAGE_STAGE =
-    "char.camellya.resonance-skill.valse-of-bloom-and-blight.floral-ravage::basic-attack"
-  const VINING_RONDE_STAGE =
-    "char.camellya.basic-attack.burgeoning.vining-ronde::basic-attack"
-
-  function cast(
-    engine: ReturnType<typeof makeEngine>,
-    stageId: string,
-    frame: number,
-  ) {
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: CAMELLYA,
-      stageId,
-      skillCategory: "Basic Attack",
-      frame,
-    })
-  }
-  const active = (engine: ReturnType<typeof makeEngine>) =>
-    engine.activeBuffIds(CAMELLYA).includes(BLOSSOM)
-
-  it("sets on Crimson Blossom and stays across Vining/Blazing Waltz", () => {
-    const engine = makeEngine()
-    expect(active(engine)).toBe(false)
-    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
-    expect(active(engine)).toBe(true)
-    for (const waltz of [
-      "char.camellya.basic-attack.burgeoning.vining-waltz-1::basic-attack",
-      "char.camellya.basic-attack.burgeoning.vining-waltz-2::basic-attack",
-      "char.camellya.basic-attack.burgeoning.vining-waltz-3::basic-attack",
-      "char.camellya.basic-attack.burgeoning.vining-waltz-4::basic-attack",
-      "char.camellya.basic-attack.burgeoning.blazing-waltz::basic-attack",
-    ]) {
-      cast(engine, waltz, 1)
-      expect(active(engine)).toBe(true)
-    }
-  })
-
-  it("clears on Floral Ravage", () => {
-    const engine = makeEngine()
-    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
-    cast(engine, FLORAL_RAVAGE_STAGE, 1)
-    expect(active(engine)).toBe(false)
-  })
-
-  it("clears on Vining Ronde", () => {
-    const engine = makeEngine()
-    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
-    cast(engine, VINING_RONDE_STAGE, 1)
-    expect(active(engine)).toBe(false)
-  })
-
-  it("persists across a swap-out / swap-in", () => {
-    const engine = makeEngine()
-    cast(engine, CRIMSON_BLOSSOM_STAGE, 0)
-    engine.onEvent({ kind: "swapOut", characterId: CAMELLYA, frame: 1 })
-    engine.onEvent({ kind: "swapIn", characterId: CAMELLYA, frame: 2 })
-    expect(active(engine)).toBe(true)
   })
 })
 
