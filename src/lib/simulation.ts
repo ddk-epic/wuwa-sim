@@ -79,6 +79,8 @@ interface SimContext {
   schedule: Schedule<Work>
   /** Most-recent cast frame of each stage, keyed `${characterId}:${stageId}`. */
   priorCasts: Map<string, number>
+  /** Most-recent effectiveStart of each cooldown timer, keyed by skill or stage. */
+  lastCastByCooldownKey: Map<string, number>
 }
 
 /** Tuning knobs for a run; omitted fields fall back to {@link SIM_DEFAULTS}. */
@@ -136,6 +138,7 @@ export function runSimulation(
     cursor: { frame: 0 },
     schedule: new Schedule<Work>(),
     priorCasts: new Map(),
+    lastCastByCooldownKey: new Map(),
   }
 
   for (const entry of entries) processAuthoredEntry(entry, ctx)
@@ -184,11 +187,13 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 
   if (!resolved) return
 
-  // The two start-floors — swap-back cooldown and the windowed prior-stage gate —
-  // are absolute-frame floors on the same start, so the wait is their max.
+  // The start-floors — swap-back cooldown, the windowed prior-stage gate, and the
+  // skill cooldown — are absolute-frame floors on the same start, so the wait is
+  // their max.
   const wait = Math.max(
     swapBackWait,
     computeGateWait(ctx, entry, resolved, cursor.frame),
+    computeCooldown(ctx, entry, resolved, cursor.frame).pad,
   )
 
   const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
@@ -420,6 +425,8 @@ function processEntry(
 
   // Record this entry's cast frame for later prerequisite lookups.
   ctx.priorCasts.set(`${entry.characterId}:${resolved.stageId}`, effectiveStart)
+  for (const { key } of cooldownTimers(entry, resolved))
+    ctx.lastCastByCooldownKey.set(key, effectiveStart)
 
   // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
   // starts resolves ahead of it.
@@ -534,6 +541,54 @@ function computeGateWait(
   )
   if (anchor === undefined) return 0
   return Math.max(0, anchor + minDelay - cursorFrame)
+}
+
+/** Within this many frames of ready, a cooldown forces a micro-wait pad rather than a finding. */
+const COOLDOWN_PAD_WINDOW = 60
+
+/** Cooldown timers a cast arms and reads: skill-keyed (pooled across stages) and stage-keyed (independent). */
+function cooldownTimers(
+  entry: TimelineEntry,
+  resolved: ResolvedStage,
+): { key: string; cooldown: number }[] {
+  const timers: { key: string; cooldown: number }[] = []
+  if (resolved.skillCooldown !== undefined && resolved.skillKey !== undefined) {
+    timers.push({
+      key: `${entry.characterId}:skill:${resolved.skillKey}`,
+      cooldown: resolved.skillCooldown,
+    })
+  }
+  if (resolved.cooldown !== undefined) {
+    timers.push({
+      key: `${entry.characterId}:stage:${resolved.stageId}`,
+      cooldown: resolved.cooldown,
+    })
+  }
+  return timers
+}
+
+/**
+ * Frames the cast must pad to honour its skill cooldown. `remaining = lastCast +
+ * cooldown*60 − cursor`: ready (`remaining ≤ 0`) is free; within 1s of ready
+ * (`0 < remaining ≤ 60`) pads by `remaining`; placed earlier than that does not
+ * pad here. Skill- and stage-keyed timers `max`-combine.
+ */
+function computeCooldown(
+  ctx: SimContext,
+  entry: TimelineEntry,
+  resolved: ResolvedStage,
+  cursorFrame: number,
+): { pad: number } {
+  let pad = 0
+  for (const { key, cooldown } of cooldownTimers(entry, resolved)) {
+    const lastCast = ctx.lastCastByCooldownKey.get(key)
+    if (lastCast === undefined) continue
+    const remaining = lastCast + cooldown * 60 - cursorFrame
+    if (remaining > 0 && remaining <= COOLDOWN_PAD_WINDOW) {
+      pad = Math.max(pad, remaining)
+    }
+  }
+  return { pad }
 }
 
 /**

@@ -524,6 +524,8 @@ export function findStageByEntry(
       requiresConcerto: stage.requiresConcerto,
       minDelay:
         stage.requiresPriorStage !== undefined ? stage.minDelay : undefined,
+      skillCooldown: skill.cooldown,
+      cooldown: stage.cooldown,
     }
   }
 

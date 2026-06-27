@@ -15,8 +15,8 @@ interface SimulationLogBase {
  * Padding Delay breakdown. `pad` holds the action-cost components forming the
  * "+0.Xs" suffix beside the skill: `reaction`/`floor` are mutually exclusive (see
  * stage.ts), `trailing`/`fall` add on top. `wait` is the idle frames before the
- * action can begin (the wait badge) — `max(swap-back cooldown, prior-stage gate)`,
- * a single number since the two floors are never surfaced apart.
+ * action can begin (the wait badge) — `max(swap-back cooldown, prior-stage gate,
+ * skill cooldown)`, a single number since the floors are never surfaced apart.
  */
 export interface DelayBreakdown {
   pad: {

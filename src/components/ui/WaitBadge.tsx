@@ -1,6 +1,6 @@
 import { formatFrames } from "#/lib/format"
 
-/** Inline `+0.Xs` wait before an action starts — the start floor (swap-back / prior-gate, max-combined). `null` at 0. */
+/** Inline `+0.Xs` wait before an action starts — the start floor (swap-back / prior-gate / skill cooldown, max-combined). `null` at 0. */
 export function WaitBadge({
   wait = 0,
   className,

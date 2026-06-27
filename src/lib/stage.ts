@@ -85,6 +85,10 @@ export interface ResolvedStage {
   requiresSequence?: number
   requiresConcerto?: number
   minDelay?: number
+  /** Seconds shared across the skill's stages (skill-keyed cooldown). */
+  skillCooldown?: number
+  /** Seconds independent to this stage (stage-keyed cooldown). */
+  cooldown?: number
 }
 
 /** Derive the `::skill-type` segment of a character stageId. */
