@@ -90,6 +90,20 @@ describe("renderMessage", () => {
     ).toBe("Outro requires 100 concerto")
   })
 
+  it("renders a skill-on-cooldown diagnostic with the remaining frames", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "skillOnCooldown",
+          actor: "char-0",
+          remaining: 140,
+          severity: "invalid",
+        },
+        identity,
+      ),
+    ).toBe("Skill on cooldown for 140 more frames")
+  })
+
   it("renders the swap-forces-different-character warning", () => {
     expect(renderMessage({ kind: "swapForcesDifferentChar" }, identity)).toBe(
       "Swap forces the next entry to be a different character",

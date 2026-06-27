@@ -312,5 +312,31 @@ describe("buildTimelineRenderItems", () => {
     expect(e.warnings).toEqual([
       { message: "Launch/Jump required before an aerial stage" },
     ])
+    expect(e.isInvalid).toBe(false)
+    expect(e.errors).toEqual([])
+  })
+
+  it("routes an invalid-severity Diagnostic into errors and reddens the row", () => {
+    const logWarnings = new Map<string, Diagnostic[]>([
+      [
+        "e1",
+        [
+          {
+            kind: "skillOnCooldown",
+            actor: "Char1",
+            remaining: 140,
+            severity: "invalid",
+          },
+        ],
+      ],
+    ])
+    const e = entryItems(
+      call([topEntry("e1")], new Set(), emptyValidation(), logWarnings),
+    )[0]
+    expect(e.isInvalid).toBe(true)
+    expect(e.errors).toEqual([
+      { message: "Skill on cooldown for 140 more frames" },
+    ])
+    expect(e.warnings).toEqual([])
   })
 })

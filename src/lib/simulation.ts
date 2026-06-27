@@ -17,6 +17,7 @@ import type { PoolMaturation, ResolvedHit } from "./engine/buff-engine"
 import type { DeferredEmit } from "./engine/emit-hit-dispatcher"
 import { buildHitEvent, buildSustainEvent } from "./engine/log-event-builders"
 import { findStageByEntry } from "./compile-character"
+import { getCharacterById } from "./loadout/catalog"
 import { resolveStageExecution, stageEntryFooting } from "./stage"
 import type { ResolvedStage } from "./stage"
 import { resolveHealTargets } from "./heal-targets"
@@ -189,11 +190,12 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
 
   // The start-floors — swap-back cooldown, the windowed prior-stage gate, and the
   // skill cooldown — are absolute-frame floors on the same start, so the wait is
-  // their max.
+  // their max. An over-cooldown cast pads nothing but flags an invalid diagnostic.
+  const cooldown = computeCooldown(ctx, entry, resolved, cursor.frame)
   const wait = Math.max(
     swapBackWait,
     computeGateWait(ctx, entry, resolved, cursor.frame),
-    computeCooldown(ctx, entry, resolved, cursor.frame).pad,
+    cooldown.pad,
   )
 
   const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
@@ -203,6 +205,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     ctx,
     arrival.padFrames,
     wait,
+    cooldown.diagnostic,
   )
 
   // A cutscene animation freezes the stage timer while real time elapses. Credited
@@ -389,6 +392,7 @@ function processEntry(
   ctx: SimContext,
   trailingPad: number = 0,
   wait: number = 0,
+  cooldownDiagnostic?: Diagnostic,
 ): {
   allHits: DamageEntry[]
   stageDuration: number
@@ -420,6 +424,7 @@ function processEntry(
       : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
   const diagnostics = footingDiagnostics(effectiveFooting, resolved)
+  if (cooldownDiagnostic) diagnostics.push(cooldownDiagnostic)
 
   const effectiveStart = cursorFrame + fall + wait
 
@@ -571,21 +576,36 @@ function cooldownTimers(
  * Frames the cast must pad to honour its skill cooldown. `remaining = lastCast +
  * cooldown*60 − cursor`: ready (`remaining ≤ 0`) is free; within 1s of ready
  * (`0 < remaining ≤ 60`) pads by `remaining`; placed earlier than that does not
- * pad here. Skill- and stage-keyed timers `max`-combine.
+ * pad and instead raises an invalid `skillOnCooldown` diagnostic carrying the
+ * largest overshoot. Skill- and stage-keyed timers `max`-combine.
  */
 function computeCooldown(
   ctx: SimContext,
   entry: TimelineEntry,
   resolved: ResolvedStage,
   cursorFrame: number,
-): { pad: number } {
+): { pad: number; diagnostic?: Diagnostic } {
   let pad = 0
+  let overshoot = 0
   for (const { key, cooldown } of cooldownTimers(entry, resolved)) {
     const lastCast = ctx.lastCastByCooldownKey.get(key)
     if (lastCast === undefined) continue
     const remaining = lastCast + cooldown * 60 - cursorFrame
-    if (remaining > 0 && remaining <= COOLDOWN_PAD_WINDOW) {
-      pad = Math.max(pad, remaining)
+    if (remaining <= 0) continue
+    if (remaining <= COOLDOWN_PAD_WINDOW) pad = Math.max(pad, remaining)
+    else overshoot = Math.max(overshoot, remaining)
+  }
+  if (overshoot > 0) {
+    const character = getCharacterById(entry.characterId)
+    const actor = character ? character.name : `id ${entry.characterId}`
+    return {
+      pad,
+      diagnostic: {
+        kind: "skillOnCooldown",
+        actor,
+        remaining: overshoot,
+        severity: "invalid",
+      },
     }
   }
   return { pad }

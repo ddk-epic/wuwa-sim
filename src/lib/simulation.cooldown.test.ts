@@ -213,49 +213,32 @@ describe("simulation — skill cooldown as a Padding Delay", () => {
     expect(second?.delayBreakdown).toBeUndefined()
   })
 
-  it("pads at the 60-frame boundary", () => {
-    testCharacters = [
-      {
-        ...stageCdChar,
-        skills: [
-          {
-            ...stageCdChar.skills[0],
-            stages: [
-              { ...stageCdChar.skills[0].stages[0], actionTime: 180 },
-              stageCdChar.skills[0].stages[1],
-            ],
-          },
-        ],
-      },
-    ]
+  it("pads at the 60-frame boundary with no diagnostic", () => {
+    testCharacters = [boltChar(180)]
     // Bolt @0, cursor → 180. Second Bolt at 180 has remaining 60 (= window) ⇒ pads.
     const log = run([ent(1, BOLT, "a"), ent(1, BOLT, "b")])
     const second = actionFor(log, "b")
     expect(second?.frame).toBe(240)
     expect(second?.delayBreakdown?.wait).toBe(60)
+    expect(second?.diagnostics).toBeUndefined()
   })
 
-  it("does not pad a cast placed more than 1s before ready", () => {
-    testCharacters = [
-      {
-        ...stageCdChar,
-        skills: [
-          {
-            ...stageCdChar.skills[0],
-            stages: [
-              { ...stageCdChar.skills[0].stages[0], actionTime: 100 },
-              stageCdChar.skills[0].stages[1],
-            ],
-          },
-        ],
-      },
-    ]
-    // Bolt @0, cursor → 100. Second Bolt at 100 has remaining 140 (> 60) ⇒ no pad,
-    // cast fires at its authored start.
+  it("flags an over-1s cast invalid without padding it", () => {
+    testCharacters = [boltChar(100)]
+    // Bolt @0, cursor → 100. Second Bolt at 100 has remaining 140 (> 60) ⇒ no pad;
+    // cast fires at its authored start and carries an invalid diagnostic.
     const log = run([ent(1, BOLT, "a"), ent(1, BOLT, "b")])
     const second = actionFor(log, "b")
     expect(second?.frame).toBe(100)
     expect(second?.delayBreakdown).toBeUndefined()
+    expect(second?.diagnostics).toEqual([
+      {
+        kind: "skillOnCooldown",
+        actor: "Stagecd",
+        remaining: 140,
+        severity: "invalid",
+      },
+    ])
   })
 
   it("skill-level cooldown pools across sibling stages", () => {

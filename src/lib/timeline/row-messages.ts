@@ -39,6 +39,8 @@ export function renderMessage(
       return `Requires ${m.required} Concerto Energy`
     case "insufficientOutroConcerto":
       return `Outro requires ${m.cost} concerto`
+    case "skillOnCooldown":
+      return `Skill on cooldown for ${m.remaining} more frames`
 
     // --- ValidatorMessage (structural validator findings) ---
     case "introNeedsOutro":

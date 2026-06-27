@@ -35,7 +35,7 @@ export interface DelayBreakdown {
  * the action's ActionEvent and surfaced on its timeline row. Stores the data
  * each finding needs; the wording lives in the row-messages catalog.
  */
-export type Diagnostic =
+export type DiagnosticKind =
   | { kind: "footingViolation"; isLand: boolean }
   | { kind: "insufficientEnergy"; actor: string; energy: number; cost: number }
   | {
@@ -50,6 +50,16 @@ export type Diagnostic =
       concerto: number
       cost: number
     }
+  | { kind: "skillOnCooldown"; actor: string; remaining: number }
+
+/**
+ * `severity` defaults to `"warning"` at the render boundary (existing findings
+ * stay yellow); `"invalid"` routes the diagnostic into the row's error channel
+ * and styles it red.
+ */
+export type Diagnostic = DiagnosticKind & {
+  severity?: "invalid" | "warning"
+}
 
 export interface ActionEvent extends SimulationLogBase {
   kind: "action"

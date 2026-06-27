@@ -145,17 +145,22 @@ function resolveEntryFields(
       ? resolved.stage
       : null
 
-  const isInvalid = validation.invalidRowIds.has(entry.id)
+  const diagnostics = logWarnings.get(entry.id) ?? []
+  const invalidDiagnostics = diagnostics.filter((d) => d.severity === "invalid")
+  // A runtime invalid diagnostic reddens the row alongside the structural validator.
+  const isInvalid =
+    validation.invalidRowIds.has(entry.id) || invalidDiagnostics.length > 0
   const findings = validation.findings.get(entry.id) ?? []
-  const errors = findings
-    .filter((f) => f.severity === "invalid")
-    .map((f) => ({ message: renderMessage(f.message, resolveStageName) }))
+  const errors = [
+    ...findings.filter((f) => f.severity === "invalid").map((f) => f.message),
+    ...invalidDiagnostics,
+  ].map((m) => ({ message: renderMessage(m, resolveStageName) }))
   // Structural warnings (live, from the validator) + engine Diagnostics (from
   // the last run's log) share one display channel — collect both as structured
   // messages, then render once.
   const warnings = [
     ...findings.filter((f) => f.severity === "warning").map((f) => f.message),
-    ...(logWarnings.get(entry.id) ?? []),
+    ...diagnostics.filter((d) => d.severity !== "invalid"),
   ].map((m) => ({ message: renderMessage(m, resolveStageName) }))
   const showMessage = showMessageIds.has(entry.id)
 
