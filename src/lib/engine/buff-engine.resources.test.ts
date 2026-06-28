@@ -357,14 +357,16 @@ describe("BuffEngine — resource state (#58)", () => {
   })
 
   it("Outro drain fires resourceCrossed down for crossed thresholds (#323)", () => {
-    // Buff fires a synthetic hit when concerto crosses 100 downward.
+    // Buff fires a synthetic hit when concerto crosses 50 downward.
+    // The drain clamps the overbank to the 100 cap first, so the crossing runs
+    // over the real bar (100 → 0), never the discarded surplus above the cap.
     const onConcertoDrop: BuffDef = {
       id: "char.emit-on-concerto-down",
       name: "Emit on Concerto Down",
       trigger: {
         event: "resourceCrossed",
         resource: "concerto",
-        threshold: 100,
+        threshold: 50,
         direction: "down",
       },
       target: { kind: "self" },
@@ -496,6 +498,65 @@ describe("BuffEngine — resource state (#58)", () => {
       sourceBuffId: "char.emit-on-concerto-consumed",
       characterId: 1,
     })
+  })
+
+  it("an overbanked op:sub honors the nominal cap and reports the cost, not the ledger drop", () => {
+    const spendConcerto: BuffDef = {
+      id: "char.spend-concerto",
+      name: "Spend Concerto",
+      trigger: { event: "skillCast", characterId: 1 },
+      condition: {
+        kind: "resourceAtLeast",
+        resource: "concerto",
+        n: 70,
+        on: "source",
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "sub",
+          value: { kind: "const", v: 70 },
+        },
+      ],
+    }
+    testCharacters = [baseChar({ id: 1, buffs: [spendConcerto] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 180,
+    })
+    const dispatched: { kind: string; resource?: string; amount?: number }[] =
+      []
+    type Dispatcher = { dispatchEvent: (...a: unknown[]) => unknown }
+    const internals = engine as unknown as Dispatcher
+    const original = internals.dispatchEvent.bind(engine)
+    vi.spyOn(internals, "dispatchEvent").mockImplementation((...args) => {
+      dispatched.push(args[0] as { kind: string })
+      return original(...args)
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Echo Skill",
+      frame: 1,
+    })
+    // 180 clamps to the nominal 100 before the 70 draw — 30 left, not 110.
+    expect(engine.getResource(1).concerto).toBe(30)
+    const consumed = dispatched.filter((e) => e.kind === "resourceConsumed")
+    expect(consumed).toContainEqual(
+      expect.objectContaining({ resource: "concerto", amount: 70 }),
+    )
   })
 
   it("resourceConsumed fires on the engine-internal Outro drain (#324)", () => {

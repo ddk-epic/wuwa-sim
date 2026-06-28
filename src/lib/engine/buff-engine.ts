@@ -105,17 +105,17 @@ export interface BootstrapInput {
   loadouts: SlotLoadout[]
   /** Seed each occupied slot's energy to its own `maxEnergy` before sim start. */
   startWithFullEnergy?: boolean
-  /** Seed each occupied slot's concerto to `OUTRO_CONCERTO_COST` before sim start. */
+  /** Seed each occupied slot's concerto to `CONCERTO_CAP` before sim start. */
   startWithFullConcerto?: boolean
 }
 
 const EMIT_HIT_CHAIN_DEPTH_CAP = 8
 
 /**
- * Concerto an Outro Skill consumes on cast. Single source of truth.
- * Concerto stays uncapped, so surplus above this is wasted by the full drain.
+ * Concerto's nominal cap and the Outro Skill cost. Accrual stays uncapped for
+ * overcap-waste visibility; the cap is honored only inside `spend()`.
  */
-export const OUTRO_CONCERTO_COST = 100
+export const CONCERTO_CAP = 100
 
 /** Attribution carrier for the Synthetic Hit a converted Deferred Emit produces. */
 const POOL_EMIT_DEF: BuffDef = {
@@ -297,7 +297,7 @@ export class BuffEngine {
         this.resources.applyDelta(charId, "energy", character.maxEnergy)
       }
       if (input.startWithFullConcerto) {
-        this.resources.applyDelta(charId, "concerto", OUTRO_CONCERTO_COST)
+        this.resources.applyDelta(charId, "concerto", CONCERTO_CAP)
       }
     }
     this.store.setSlots(slots)
@@ -453,10 +453,10 @@ export class BuffEngine {
             cost,
           })
         }
-        this.setResource(
+        this.spend(
           event.characterId,
           "energy",
-          0,
+          cost,
           event.frame,
           out,
           hitsOut,
@@ -465,21 +465,20 @@ export class BuffEngine {
       }
       if (event.skillCategory === "Outro Skill") {
         const concerto = this.getResource(event.characterId).concerto
-        if (concerto < OUTRO_CONCERTO_COST) {
+        if (concerto < CONCERTO_CAP) {
           const character = getCharacterById(event.characterId)
           const name = character ? character.name : `id ${event.characterId}`
           this.diagnostics.push({
             kind: "insufficientOutroConcerto",
             actor: name,
             concerto,
-            cost: OUTRO_CONCERTO_COST,
+            cost: CONCERTO_CAP,
           })
         }
-        // Full drain — surplus above 100 is wasted by design.
-        this.setResource(
+        this.spend(
           event.characterId,
           "concerto",
-          0,
+          CONCERTO_CAP,
           event.frame,
           out,
           hitsOut,
@@ -1138,6 +1137,61 @@ export class BuffEngine {
     )
   }
 
+  /**
+   * Cap-honoring cost: silently clamp `before → min(before, cap)` (no event for
+   * the discarded overbank), then subtract `cost` through the ledger delta so
+   * `resourceCrossed` fires over the real bar and `resourceConsumed` reports the
+   * real draw (`amount = cost`), not the ledger's `before − after`.
+   */
+  private spend(
+    characterId: number,
+    resource: ResourceKind,
+    cost: number,
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    const cap = this.nominalCap(characterId, resource)
+    const raw = this.resources.getResource(characterId)[resource]
+    if (raw > cap) this.resources.setValue(characterId, resource, cap)
+    const { before, after } = this.resources.applyDelta(
+      characterId,
+      resource,
+      -cost,
+    )
+    this.fireResourceCrossed(
+      characterId,
+      resource,
+      before,
+      after,
+      frame,
+      out,
+      hitsOut,
+      depth,
+    )
+    this.fireResourceConsumed(
+      characterId,
+      resource,
+      before,
+      after,
+      frame,
+      out,
+      hitsOut,
+      depth,
+      cost,
+    )
+  }
+
+  /** Nominal cap read only by `spend()`; never registered, so accrual stays uncapped. */
+  private nominalCap(characterId: number, resource: ResourceKind): number {
+    const character = getCharacterById(characterId)
+    if (resource === "concerto") return CONCERTO_CAP
+    if (resource === "energy") return character?.maxEnergy ?? Infinity
+    if (resource === "forte") return character?.forteCap ?? Infinity
+    return character?.emitPool?.cap ?? Infinity
+  }
+
   private setResource(
     characterId: number,
     resource: ResourceKind,
@@ -1212,9 +1266,9 @@ export class BuffEngine {
   }
 
   /**
-   * Fires `resourceConsumed` on any net decrease, threshold-free —
-   * catching both the engine-internal Outro drain and data-authored `op: "sub"`
-   * spends. Never fires on accrual (`after >= before`).
+   * Fires `resourceConsumed` on any net decrease, threshold-free. `amount`
+   * defaults to the ledger drop; `spend()` overrides it with the real `cost` so
+   * a clamped overbank never inflates the draw. Never fires on accrual.
    */
   private fireResourceConsumed(
     characterId: number,
@@ -1225,6 +1279,7 @@ export class BuffEngine {
     out: BuffEvent[],
     hitsOut: (HitEvent | SustainEvent)[],
     depth: number,
+    amount = before - after,
   ): void {
     if (after >= before) return
     this.dispatchEvent(
@@ -1232,7 +1287,7 @@ export class BuffEngine {
         kind: "resourceConsumed",
         characterId,
         resource,
-        amount: before - after,
+        amount,
         frame,
       },
       out,
@@ -1258,17 +1313,13 @@ export class BuffEngine {
         : effect.target === "self"
           ? sourceCharacterId
           : targetCharacterId
-    const state = this.resources.getResource(subjectId)
-    const before = state[effect.resource]
-    let after = before
-    if (effect.op === "add") after = before + v
-    else if (effect.op === "sub") after = before - v
-    else after = v
-    if (effect.op === "set") {
+    if (effect.op === "sub") {
+      this.spend(subjectId, effect.resource, v, frame, out, hitsOut, depth)
+    } else if (effect.op === "set") {
       this.setResource(
         subjectId,
         effect.resource,
-        after,
+        v,
         frame,
         out,
         hitsOut,
@@ -1278,7 +1329,7 @@ export class BuffEngine {
       this.applyResourceDelta(
         subjectId,
         effect.resource,
-        after - before,
+        v,
         frame,
         out,
         hitsOut,

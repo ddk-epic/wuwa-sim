@@ -16,12 +16,15 @@ formula directly.
 `ResourceKind = "energy" | "concerto" | "forte" | "pool"`. Each character holds a
 `ResourceState { energy, concerto, forte, pool }` in the `ResourceLedger`.
 
-| Kind       | Cap                        | Scaled on gain                                                        | Spent by                                                  |
-| ---------- | -------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
-| `energy`   | uncapped                   | ER (`× (1 + energyRechargePct)`)                                      | Resonance Liberation cast — drained to 0                  |
-| `concerto` | uncapped                   | raw                                                                   | Outro Skill cast (drained to 0); on-cast stage `concerto` |
-| `forte`    | `forteCap` (per character) | FR (`× (1 + forteRechargePct)`) on gains, raw on spend                | data-authored `resource` effects; on-cast stage `forte`   |
-| `pool`     | `emitPool.cap` (optional)  | not accrued — projection of the [Emit Pool](#the-pool-resource) store | conversion (timer / displacement / `convert`)             |
+| Kind       | Cap                                            | Scaled on gain                                                        | Spent by                                                  |
+| ---------- | ---------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| `energy`   | uncapped accrual, nominal `maxEnergy`          | ER (`× (1 + energyRechargePct)`)                                      | Resonance Liberation cast — drained to 0                  |
+| `concerto` | uncapped accrual, nominal `CONCERTO_CAP` (100) | raw                                                                   | Outro Skill cast (drained to 0); on-cast stage `concerto` |
+| `forte`    | `forteCap` (per character)                     | FR (`× (1 + forteRechargePct)`) on gains, raw on spend                | data-authored `resource` effects; on-cast stage `forte`   |
+| `pool`     | `emitPool.cap` (optional)                      | not accrued — projection of the [Emit Pool](#the-pool-resource) store | conversion (timer / displacement / `convert`)             |
+
+`energy` and `concerto` accrue uncapped (overcap waste stays visible), but their
+nominal caps are honored at **spend** — see [Consumption](#consumption).
 
 ## Accrual from hits
 
@@ -52,7 +55,9 @@ before any hit lands: `concerto` and `forte`. They thread as
 `ResolvedStage.concerto` / `ResolvedStage.forte` into the `skillCast` event and
 go through `applyResourceDelta` (cap + floor) in the buff engine's cast handler —
 **raw**, not FR-scaled (unlike the hit-accrual path above). Negative is a spend,
-positive a gain; `forteCap` clamps forte.
+positive a gain; `forteCap` clamps forte. A negative stage-level `concerto` is a
+raw delta on this path, **not** a `spend()` — it does not clamp the overbank to
+the nominal cap (only `op: "sub"` effects, Outro, and Liberation do).
 
 This is the home for a cost or mode-resource that the cast commits **regardless of
 whether the damage resolves** — an interrupted stage still pays its concerto and
@@ -75,8 +80,9 @@ it (see [the Emit Pool](#the-pool-resource)).
 A buff moves a resource with `{ kind: "resource", resource, op: "add" | "sub" |
 "set", value, target? }`, applied in the pipeline's `resource` phase. `target`
 defaults to the buff's target (`"self"` / `"source"` / `"target"`). Only a
-`const` Value Expr is honored. `add`/`sub` go through `applyDelta` (cap + floor);
-`set` through `setValue`.
+`const` Value Expr is honored. `add` goes through `applyDelta` (cap + floor); `sub`
+is a **spend** — it routes through `spend()` (clamp to the nominal cap, then
+subtract, floored at 0); `set` writes verbatim through `setValue`.
 
 ## Triggers and conditions
 
@@ -97,13 +103,22 @@ scaling with Energy Regen).
 
 ## Consumption
 
-- **Resonance Liberation** drains energy to 0 on cast. Cost is
-  `resonanceCost ?? 100`; `maxEnergy` equals that cost. Casting below cost still
-  proceeds but raises an `insufficientEnergy` diagnostic.
-- **Outro Skill** drains concerto to 0 on cast. The cost gate is
-  `OUTRO_CONCERTO_COST` (100); surplus above it is wasted by the full drain, and
-  casting below it raises an `insufficientOutroConcerto` diagnostic
-  ([ADR-0031](adr/0031-concerto-consumption-model.md)).
+Every cost runs through one engine primitive, `spend(resource, cost)`: it
+silently clamps the value to the resource's nominal cap (no event for the
+discarded overbank), then subtracts `cost` through the ledger delta, yielding
+`min(before, cap) − cost`. `resourceConsumed` reports `amount = cost` (the real
+draw), not the ledger's `before − after`, so an overbanked spend (180 concerto,
+70 cost → 30) reports 70, never 150. The nominal cap is read only inside `spend()`
+and **never** registered via `registerCap`, so accrual stays uncapped
+([ADR-0031](adr/0031-concerto-consumption-model.md)).
+
+- **Resonance Liberation** drains energy to 0 on cast (`cost = cap = maxEnergy`).
+  Cost is `resonanceCost ?? 100`; `maxEnergy` equals that cost. Casting below cost
+  still proceeds but raises an `insufficientEnergy` diagnostic.
+- **Outro Skill** drains concerto to 0 on cast (`cost = cap = CONCERTO_CAP`, 100).
+  `CONCERTO_CAP` is the single source of truth — both the nominal cap and the Outro
+  cost. Surplus above it is silently discarded by the clamp; casting below it raises
+  an `insufficientOutroConcerto` diagnostic.
 - **Forte-replacement availability gate** — a stage may set `requiresConcerto`
   (Camellya's Ephemeral/Perennial require 100). Casting below it raises an
   `insufficientConcerto` diagnostic but never blocks: the cast resolves and its
@@ -137,8 +152,10 @@ cumulative column today.
 
 - **Implicit accrual precedes the `resource` phase.** A `hitLanded` has already
   mutated the ledger before any data-authored `resource` effect runs.
-- **`setValue` does not clamp or floor.** It is for drains-to-0 and the pool
-  projection. Authored `add`/`sub` (which do clamp/floor) are the normal path.
+- **`setValue` does not clamp or floor.** It is for the pool projection, `op:
+"set"` authoritative writes, and the silent overbank clamp inside `spend()`.
+  Spends (`op: "sub"`, Outro, Liberation) go through `spend()`; accrual (`op:
+"add"`, hit gains) through `applyDelta`.
 - **Pool is not FR-scaled and never routes through `accrueForHit`.** Spawning
   creates timed entities, not a gauge gain.
 

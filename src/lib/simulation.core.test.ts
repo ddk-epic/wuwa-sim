@@ -289,7 +289,7 @@ describe("runSimulation — multi-hit stage", () => {
     const seededHit = seeded[1]
     if (baseHit.kind !== "hit" || seededHit.kind !== "hit")
       throw new Error("expected hit rows")
-    // OUTRO_CONCERTO_COST === 100: the seeded run's first hit reads 100 higher.
+    // CONCERTO_CAP === 100: the seeded run's first hit reads 100 higher.
     expect(seededHit.cumulativeConcerto).toBe(baseHit.cumulativeConcerto + 100)
   })
 })

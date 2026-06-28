@@ -15,7 +15,7 @@ Both sources are **advisory** — neither blocks or reshapes anything. The sim r
 
 Two concerto diagnostics, distinct concerns:
 
-- **`insufficientConcerto { actor, concerto, required }`** — the general availability gate. A Forte-replacement cast is only available at a required concerto level (Camellya's Ephemeral/Perennial require 100), declared by the stage's `requiresConcerto`. Below it, the gate fires but the cast resolves and its own concerto spend (subtract, floored at 0) applies as usual. Row text: "Requires {required} Concerto Energy".
+- **`insufficientConcerto { actor, concerto, required }`** — the general availability gate. A Forte-replacement cast is only available at a required concerto level (Camellya's Ephemeral/Perennial require 100), declared by the stage's `requiresConcerto`. Below it, the gate fires but the cast resolves and its own concerto spend (clamp to the nominal cap, then subtract) applies as usual. Row text: "Requires {required} Concerto Energy".
 - **`insufficientOutroConcerto { actor, concerto, cost }`** — Outro-specific, where concerto _is_ the cost. Below the cost the cast still drains concerto fully to 0. Row text: "Outro requires {cost} concerto".
 
 **`skillOnCooldown { actor, remaining, severity: "invalid" }`** — a cast placed more than 1s (60 frames) before its skill is off cooldown. The sim does not pad it (a multi-second silent wait would distort the timeline); the cast fires at its authored start and the row turns red. Within 1s the cast is padded silently with no finding instead (Skill Cooldown). Row text: "Skill on cooldown for {remaining} more frames". The first runtime diagnostic to carry `severity: "invalid"`.
