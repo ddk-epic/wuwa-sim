@@ -204,6 +204,13 @@ describe("Camellya — Ephemeral on-cast concerto/forte", () => {
     expect(engine.getResource(CAMELLYA).concerto).toBe(0)
   })
 
+  it("clamps overbank to the cap before subtracting the cost", () => {
+    const engine = makeEngine()
+    grantConcerto(engine, 175)
+    castEphemeral(engine)
+    expect(engine.getResource(CAMELLYA).concerto).toBe(30)
+  })
+
   it("recovers forte on cast, clamped to forteCap", () => {
     const engine = makeEngine()
     castEphemeral(engine)
@@ -250,6 +257,20 @@ describe("Camellya — Perennial (S6) stage", () => {
     castPerennial(engine)
     expect(engine.getResource(CAMELLYA).concerto).toBe(10)
     expect(engine.getResource(CAMELLYA).forte).toBe(50)
+  })
+
+  it("clamps overbank to the cap before subtracting the cost", () => {
+    const engine = makeEngine(6)
+    engine.onEvent({
+      kind: "hitLanded",
+      characterId: CAMELLYA,
+      skillCategory: "Basic Attack",
+      dmgType: "Damage",
+      frame: 0,
+      concerto: 175,
+    })
+    castPerennial(engine)
+    expect(engine.getResource(CAMELLYA).concerto).toBe(50)
   })
 
   it("is hidden from the catalog below S6 and shown at S6", () => {
@@ -437,14 +458,30 @@ describe("Camellya — pistil drain mints Crimson Buds (resourceStep)", () => {
     expect(budStacks(engine)).toBe(10)
   })
 
-  it("the conversion leaves concerto untouched — buds are minted, not concerto", () => {
+  it("each 10 forte consumed recovers 4 Concerto alongside the bud", () => {
     const engine = makeEngine()
     refillForte(engine, 0)
-    // A consuming hit carries its own API concerto (5) and drains 30 forte.
+    // Consuming hit: API concerto 5, drains 30 forte → 3 conversion steps.
     consumeForte(engine, -30, 1, 5)
-    // Exactly the per-hit concerto — resourceStep adds no extra +4/bud.
-    expect(engine.getResource(CAMELLYA).concerto).toBe(5)
+    // 5 per-hit + 3 × 4 conversion.
+    expect(engine.getResource(CAMELLYA).concerto).toBe(17)
     expect(budStacks(engine)).toBe(3)
+  })
+
+  it("Budding Mode suppresses the whole conversion — no bud and no +4 Concerto", () => {
+    const engine = makeEngine()
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: CAMELLYA,
+      stageId: EPHEMERAL_STAGE,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+    })
+    refillForte(engine, 1)
+    consumeForte(engine, -30, 2, 5)
+    // Only the per-hit concerto; the forte-step conversion is gated off.
+    expect(engine.getResource(CAMELLYA).concerto).toBe(5)
+    expect(budStacks(engine)).toBe(0)
   })
 
   it("refills (gains) never mint buds", () => {

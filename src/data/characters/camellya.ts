@@ -195,11 +195,12 @@ export const camellya = {
       ],
     },
     {
-      // Every 10 forte consumed mints one Crimson Bud (capped at 10), read by Sweet Dream.
+      // Every 10 forte consumed: +4 concerto and one Crimson Bud (capped at 10,
+      // read by Sweet Dream). Both halves suppressed in Budding Mode.
       id: "char.camellya.crimson-bud",
       name: "Crimson Bud",
       description:
-        "Every 10 Crimson Pistils consumed generates 1 Crimson Bud (max 10), each lasting 15s on its own timer. No Buds are gained while Budding Mode is active.",
+        "Consuming 10 Crimson Pistils recovers 4 Concerto Energy and generates 1 Crimson Bud (max 10), each lasting 15s on its own timer. Neither is gained while Budding Mode is active.",
       trigger: {
         event: "resourceStep",
         characterId: 1603,
@@ -216,7 +217,14 @@ export const camellya = {
       target: { kind: "self" },
       duration: { kind: "seconds", v: 15 },
       stacking: { max: 10, onRetrigger: "addStackIndependent" },
-      effects: [],
+      effects: [
+        {
+          kind: "resource",
+          resource: "concerto",
+          op: "add",
+          value: { kind: "const", v: 4 },
+        },
+      ],
     },
     {
       // Budding Mode carries Sweet Dream: a `bonusMultiplier` read off the
@@ -1868,6 +1876,7 @@ export const camellya = {
           newName: "",
           value: "198.81%",
           actionTime: 76,
+          forte: 100,
           footing: "air",
           variants: {},
           damage: [
@@ -1881,7 +1890,6 @@ export const camellya = {
               concerto: 0,
               toughness: 1.2,
               weakness: 0.96,
-              forte: 100,
             },
           ],
         },
@@ -1901,11 +1909,11 @@ export const camellya = {
           value: "1262.45%",
           cooldown: 25,
           actionTime: 85,
-          footing: { entry: "any", exit: "ground", commit: 58 },
-          variants: {},
           requiresConcerto: 100,
           concerto: -70,
           forte: 100,
+          footing: { entry: "any", exit: "ground", commit: 58 },
+          variants: {},
           damage: [
             {
               type: "Basic Attack",
@@ -1927,12 +1935,12 @@ export const camellya = {
           value: "1262.45%",
           cooldown: 25,
           actionTime: 85,
-          footing: { entry: "any", exit: "ground", commit: 58 },
-          variants: {},
           requiresSequence: 6,
           requiresConcerto: 100,
           concerto: -50,
           forte: 50,
+          footing: { entry: "any", exit: "ground", commit: 58 },
+          variants: {},
           damage: [
             {
               type: "Basic Attack",

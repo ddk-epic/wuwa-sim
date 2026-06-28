@@ -419,15 +419,27 @@ export class BuffEngine {
         }
       }
       if (event.concerto) {
-        this.applyResourceDelta(
-          event.characterId,
-          "concerto",
-          event.concerto,
-          event.frame,
-          out,
-          hitsOut,
-          depth,
-        )
+        if (event.concerto < 0) {
+          this.spend(
+            event.characterId,
+            "concerto",
+            -event.concerto,
+            event.frame,
+            out,
+            hitsOut,
+            depth,
+          )
+        } else {
+          this.applyResourceDelta(
+            event.characterId,
+            "concerto",
+            event.concerto,
+            event.frame,
+            out,
+            hitsOut,
+            depth,
+          )
+        }
       }
       if (event.forte) {
         this.applyResourceDelta(

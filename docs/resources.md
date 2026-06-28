@@ -53,11 +53,11 @@ post-hit value.
 Two **stage-level** fields apply a resource delta on the cast (`skillCast`),
 before any hit lands: `concerto` and `forte`. They thread as
 `ResolvedStage.concerto` / `ResolvedStage.forte` into the `skillCast` event and
-go through `applyResourceDelta` (cap + floor) in the buff engine's cast handler —
-**raw**, not FR-scaled (unlike the hit-accrual path above). Negative is a spend,
-positive a gain; `forteCap` clamps forte. A negative stage-level `concerto` is a
-raw delta on this path, **not** a `spend()` — it does not clamp the overbank to
-the nominal cap (only `op: "sub"` effects, Outro, and Liberation do).
+thread into the buff engine's cast handler **raw**, not FR-scaled (unlike the
+hit-accrual path above). Positive is a gain — a raw `applyResourceDelta` (cap +
+floor); `forteCap` clamps forte. A negative stage-level `concerto` is a spend: it
+routes through `spend()` (clamp the overbank to the nominal cap, then subtract),
+like `op: "sub"` effects, Outro, and Liberation.
 
 This is the home for a cost or mode-resource that the cast commits **regardless of
 whether the damage resolves** — an interrupted stage still pays its concerto and
