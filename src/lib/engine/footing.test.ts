@@ -90,3 +90,34 @@ describe("FootingModule.applyIntroFooting", () => {
     expect(f.team()).toBe("air")
   })
 })
+
+describe("FootingModule.resolveEntry", () => {
+  it("inherits team footing with no carried override", () => {
+    const f = new FootingModule()
+    f.applyStageFooting("air", 60)
+    expect(f.resolveEntry(1)).toBe("air")
+  })
+
+  it("a carried override wins over team and is consumed", () => {
+    const f = new FootingModule()
+    f.applyStageFooting("air", 60)
+    f.commitFor(1, "ground")
+    expect(f.resolveEntry(1)).toBe("ground")
+    expect(f.team()).toBe("ground")
+    expect(f.resolveEntry(1)).toBe("ground")
+  })
+
+  it("a forced footing wins over a grounded team and promotes to team", () => {
+    const f = new FootingModule()
+    f.applyStageFooting("ground", 60)
+    expect(f.resolveEntry(1, "air")).toBe("air")
+    expect(f.team()).toBe("air")
+  })
+
+  it("a forced footing wins over a carried override and clears it", () => {
+    const f = new FootingModule()
+    f.commitFor(1, "ground")
+    expect(f.resolveEntry(1, "air")).toBe("air")
+    expect(f.resolveEntry(1)).toBe("air")
+  })
+})

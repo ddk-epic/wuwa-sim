@@ -399,6 +399,13 @@ export interface BuffDef {
    * axis must match the HitContext; absent = unconstrained.
    */
   appliesToHits?: HitFilter
+  /**
+   * A footing-forcing mode: while an instance is active on a character, that
+   * character's stage entries resolve to this footing, overriding team and
+   * carried footing. Models air-only states (Blossom Mode) where a momentary
+   * grounding action is re-overridden to airborne at the next entry.
+   */
+  forcesFooting?: "ground" | "air"
 }
 
 export interface BuffInstance {

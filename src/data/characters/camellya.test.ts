@@ -198,11 +198,19 @@ const stageTap = (log: SimulationLogEntry[], entryId: string): HitEvent =>
 const actionFor = (log: SimulationLogEntry[], entryId: string): ActionEvent =>
   actions(log).find((a) => a.sourceEntryId === entryId)!
 
-/** Diagnostics the resource/cooldown net guards. Footing stays constraint-only. */
+/** Diagnostics the resource/cooldown net guards. Footing is asserted separately. */
 const resourceDiagnostics = (log: SimulationLogEntry[]) =>
   actions(log).flatMap((a) =>
     (a.diagnostics ?? []).filter((d) => !d.kind.startsWith("footing")),
   )
+
+/** Entry ids of actions that raised a footing violation. */
+const footingViolations = (log: SimulationLogEntry[]): string[] =>
+  actions(log)
+    .filter((a) =>
+      (a.diagnostics ?? []).some((d) => d.kind === "footingViolation"),
+    )
+    .map((a) => a.sourceEntryId!)
 
 describe("Camellya — resource & cooldown net (rotation is castable)", () => {
   it("S0 raises no resource or cooldown diagnostic across the rotation", () => {
@@ -274,6 +282,18 @@ describe("Camellya — Blossom Mode presence lifecycle (S0)", () => {
       (b) => b.kind === "buffConsumed" || b.kind === "buffExpired",
     )
     expect(closed.length).toBeGreaterThan(0)
+  })
+})
+
+describe("Camellya — Blossom Mode air-only footing (S0)", () => {
+  it("keeps Camellya airborne through grounding actions — Floral Ravage's air entry is satisfied", () => {
+    const log = runS0()
+    // Fervor and Ephemeral momentarily ground; Blossom Mode re-forces air at the
+    // next entry, so Floral Ravage's air entry never violates.
+    expect(actionFor(log, "floral").diagnostics ?? []).not.toContainEqual(
+      expect.objectContaining({ kind: "footingViolation" }),
+    )
+    expect(footingViolations(log)).toEqual([])
   })
 })
 

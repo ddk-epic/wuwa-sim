@@ -413,10 +413,15 @@ function processEntry(
     ctx.variantFloor,
   )
 
-  // The footing this entry's character takes the field on: its carried override
-  // (a swap-back during its own Trailing Window enters airborne; a benched
-  // character carries ground) or the inherited team footing (a fresh swap-in).
-  const effectiveFooting = engine.footing.resolveEntry(entry.characterId)
+  // The footing this entry's character takes the field on: an active mode's
+  // forced footing (air-only Blossom Mode), else its carried override (a
+  // swap-back during its own Trailing Window enters airborne; a benched
+  // character carries ground), else the inherited team footing (a fresh swap-in).
+  const forcedFooting = engine.forcedFooting(entry.characterId)
+  const effectiveFooting = engine.footing.resolveEntry(
+    entry.characterId,
+    forcedFooting,
+  )
   // Intro Skills ignore incoming footing — they enter on any footing, so never fall.
   const fall =
     resolved.skillType === "Intro Skill"

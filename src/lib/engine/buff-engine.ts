@@ -1546,6 +1546,14 @@ export class BuffEngine {
     return this.store.activeBuffIds(characterId)
   }
 
+  /** Footing forced by an active mode buff on `characterId`, if any. */
+  forcedFooting(characterId: number): "ground" | "air" | undefined {
+    for (const inst of this.activeContributions(characterId)) {
+      if (inst.def.forcesFooting !== undefined) return inst.def.forcesFooting
+    }
+    return undefined
+  }
+
   /** Sorted active buff entries (id, name, stacks, sourceCharacterId) for `characterId`. Instances whose condition evaluates to false are excluded. When `hit` is provided, `appliesToHits` buffs that do not match the hit are also excluded. */
   activeBuffs(characterId: number, hit?: HitContext): ActiveBuff[] {
     const buffs: ActiveBuff[] = this.activeContributions(characterId, hit).map(

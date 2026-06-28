@@ -51,13 +51,23 @@ export class FootingModule {
   }
 
   /**
-   * The footing a character takes the field on as it begins an entry: its
-   * carried override if it has one (a swap-back during its trailing window, or a
-   * benched character carrying `ground`), otherwise team footing (a fresh
-   * swap-in inherits the field). Consumes the override and promotes the result
-   * to team footing — the field now reflects whoever is On-field.
+   * The footing a character takes the field on as it begins an entry. A
+   * `forced` footing from an active mode (air-only Blossom Mode) wins over
+   * everything; otherwise its carried override if it has one (a swap-back during
+   * its trailing window, or a benched character carrying `ground`), otherwise
+   * team footing (a fresh swap-in inherits the field). Consumes any carried
+   * override and promotes the result to team footing — the field now reflects
+   * whoever is On-field.
    */
-  resolveEntry(characterId: number): "ground" | "air" {
+  resolveEntry(
+    characterId: number,
+    forced?: "ground" | "air",
+  ): "ground" | "air" {
+    if (forced !== undefined) {
+      this.tracker.setTeam(forced)
+      this.tracker.clearCarriedFooting(characterId)
+      return forced
+    }
     const carried = this.tracker.carriedFooting(characterId)
     if (carried !== undefined) {
       this.tracker.setTeam(carried)

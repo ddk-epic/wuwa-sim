@@ -267,8 +267,9 @@ export const camellya = {
       ],
     },
     {
-      // Visible presence buff for Blossom Mode. Correctness ("airborne while in
-      // mode") rides on the footing data, not this buff. Persists across swaps.
+      // Blossom Mode is air-only: while active it forces airborne entry, so a
+      // grounding action (Fervor, Ephemeral) is re-overridden to air at the next
+      // entry. Persists across swaps.
       id: "char.camellya.blossom-mode",
       name: "Blossom Mode",
       description:
@@ -280,6 +281,7 @@ export const camellya = {
       },
       target: { kind: "self" },
       duration: { kind: "permanent" },
+      forcesFooting: "air",
       stacking: { max: 1, onRetrigger: "replace" },
       consumedBy: {
         event: "skillCast",
