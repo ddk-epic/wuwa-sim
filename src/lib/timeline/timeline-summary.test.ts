@@ -197,6 +197,7 @@ describe("getTimelineSummary — single entry", () => {
         damage: null,
         cumulativeConcerto: null,
         cumulativeEnergy: null,
+        cumulativeForte: null,
       },
     ])
     expect(result.totalDamage).toBe(0)
@@ -295,6 +296,7 @@ function makeActionEvent(
     frame,
     cumulativeEnergy: 0,
     cumulativeConcerto: 0,
+    cumulativeForte: 0,
     sourceEntryId: entryId,
     ...(delayBreakdown !== undefined ? { delayBreakdown } : {}),
   }
@@ -304,7 +306,11 @@ function makeHitEvent(
   entryId: string,
   frame: number,
   damage: number,
-  cumulatives?: { cumulativeConcerto?: number; cumulativeEnergy?: number },
+  cumulatives?: {
+    cumulativeConcerto?: number
+    cumulativeEnergy?: number
+    cumulativeForte?: number
+  },
 ): Extract<SimulationLogEntry, { kind: "hit" }> {
   return {
     kind: "hit",
@@ -314,6 +320,7 @@ function makeHitEvent(
     frame,
     cumulativeEnergy: cumulatives?.cumulativeEnergy ?? 0,
     cumulativeConcerto: cumulatives?.cumulativeConcerto ?? 0,
+    cumulativeForte: cumulatives?.cumulativeForte ?? 0,
     damage,
     element: "Fusion",
     dmgType: "Fusion",
@@ -465,6 +472,21 @@ describe("getTimelineSummary — post-stage cumulatives", () => {
     expect(result.rows[0].cumulativeEnergy).toBe(20)
   })
 
+  it("carries forte through hit and action cumulatives like the other resources", () => {
+    testCharacters = [charA]
+    const e1 = normalAttack(1, "e1")
+    const e2 = normalAttack(1, "e2")
+    const log: SimulationLogEntry[] = [
+      makeActionEvent("e1", 0),
+      makeHitEvent("e1", 5, 100, { cumulativeForte: 30 }),
+      makeHitEvent("e1", 10, 200, { cumulativeForte: 55 }),
+      { ...makeActionEvent("e2", 60), cumulativeForte: 12 },
+    ]
+    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
+    expect(result.rows[0].cumulativeForte).toBe(55)
+    expect(result.rows[1].cumulativeForte).toBe(12)
+  })
+
   it("falls back to action event cumulatives when no hits exist for the entry", () => {
     testCharacters = [charA]
     const e1 = normalAttack(1, "e1")
@@ -477,6 +499,7 @@ describe("getTimelineSummary — post-stage cumulatives", () => {
       frame: 0,
       cumulativeConcerto: 15,
       cumulativeEnergy: 8,
+      cumulativeForte: 0,
       sourceEntryId: "e1",
     }
     const log: SimulationLogEntry[] = [actionEvent]

@@ -144,9 +144,15 @@ the `PoolStore` ([ADR-0043](adr/0043-emit-pool-of-cancellable-deferred-emits.md)
 ## Display
 
 Resource snapshots ride the Simulation Log: every `ActionEvent`, `HitEvent`, and
-`SustainEvent` carries `cumulativeEnergy` and `cumulativeConcerto` at its frame.
-`ActionEvent` also carries `pool` (omitted when zero). Forte is not surfaced as a
-cumulative column today.
+`SustainEvent` carries `cumulativeEnergy`, `cumulativeConcerto`, and
+`cumulativeForte` at its frame. `ActionEvent` also carries `pool` (omitted when
+zero).
+
+The timeline surfaces concerto and energy as columns right of damage; forte gets
+its own column left of duration, sized as a quiet annotation. Because forte is
+per-character (gated on `forteCap`) rather than universal like energy/concerto,
+the cell is **empty for any character with no forte gauge** (`forteCap` 0) and
+when the row has no log data — unlike the con/res columns, which always render.
 
 ## Gotchas
 

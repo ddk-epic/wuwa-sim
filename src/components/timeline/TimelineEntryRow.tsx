@@ -7,6 +7,7 @@ import {
   TimeCell,
   WaitCell,
   DurationCell,
+  ForteCell,
   ResourceCell,
 } from "./timeline-cells"
 import { HexPill } from "#/components/ui/HexPill"
@@ -68,6 +69,7 @@ export function TimelineEntryRow({
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,
+    cumulativeForte: null,
   }
   const isDragging = drag.draggedId === entry.id
   const source = drag.entrySource(
@@ -83,7 +85,9 @@ export function TimelineEntryRow({
 
   const conVal = row.cumulativeConcerto
   const resVal = row.cumulativeEnergy
-  const maxEnergy = getCharacterById(entry.characterId)?.maxEnergy ?? 100
+  const character = getCharacterById(entry.characterId)
+  const maxEnergy = character?.maxEnergy ?? 100
+  const forteCap = character?.forteCap ?? 0
 
   const charSwitched =
     prevEntry === null || prevEntry.characterId !== entry.characterId
@@ -186,6 +190,11 @@ export function TimelineEntryRow({
           )}
         </div>
       </td>
+      <ForteCell
+        value={row.cumulativeForte}
+        forteCap={forteCap}
+        stale={stale}
+      />
       <DurationCell frames={row.durationFrames} />
       <ResourceCell
         value={conVal}

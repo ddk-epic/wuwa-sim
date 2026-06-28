@@ -1446,6 +1446,7 @@ export class BuffEngine {
         damage,
         cumulativeEnergy: post.energy,
         cumulativeConcerto: post.concerto,
+        cumulativeForte: post.forte,
         statsSnapshot: stats,
         activeBuffs: this.activeBuffs(inflictor, hitCtx),
         passiveBuffs: this.passiveBuffs(inflictor),

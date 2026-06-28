@@ -20,6 +20,7 @@ export interface HitEventCore {
   damage: number
   cumulativeEnergy: number
   cumulativeConcerto: number
+  cumulativeForte: number
   statsSnapshot: StatTable
   activeBuffs: ActiveBuff[]
   passiveBuffs: ActiveBuff[]
@@ -37,6 +38,7 @@ export interface SustainEventCore {
   targets: number[]
   cumulativeEnergy: number
   cumulativeConcerto: number
+  cumulativeForte: number
   statsSnapshot: StatTable
   activeBuffs: ActiveBuff[]
   passiveBuffs: ActiveBuff[]
@@ -77,6 +79,7 @@ export function buildHitEvent(
     frame: core.frame,
     cumulativeEnergy: core.cumulativeEnergy,
     cumulativeConcerto: core.cumulativeConcerto,
+    cumulativeForte: core.cumulativeForte,
     damage: core.damage,
     element: core.element,
     dmgType: core.dmgType,
@@ -104,6 +107,7 @@ export function buildSustainEvent(
     frame: core.frame,
     cumulativeEnergy: core.cumulativeEnergy,
     cumulativeConcerto: core.cumulativeConcerto,
+    cumulativeForte: core.cumulativeForte,
     amount: core.amount,
     targets: core.targets,
     scalingStat: core.scalingStat,

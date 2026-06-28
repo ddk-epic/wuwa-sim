@@ -29,6 +29,7 @@ function hit(
     frame: 0,
     cumulativeEnergy,
     cumulativeConcerto,
+    cumulativeForte: 0,
     damage,
     element: "Fusion",
     dmgType: "Fusion",
@@ -49,6 +50,7 @@ function heal(characterId: number, amount: number): SustainEvent {
     frame: 0,
     cumulativeEnergy: 999,
     cumulativeConcerto: 999,
+    cumulativeForte: 0,
     amount,
     targets: [characterId],
     multiplier: 1,
@@ -68,6 +70,7 @@ function action(characterId: number): ActionEvent {
     frame: 0,
     cumulativeEnergy: 0,
     cumulativeConcerto: 0,
+    cumulativeForte: 0,
   }
 }
 

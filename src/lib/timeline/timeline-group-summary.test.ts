@@ -11,6 +11,7 @@ function row(p: Partial<TimelineSummaryRow>): TimelineSummaryRow {
     damage: null,
     cumulativeConcerto: null,
     cumulativeEnergy: null,
+    cumulativeForte: null,
     ...p,
   }
 }
@@ -43,6 +44,7 @@ describe("summarizeGroups", () => {
       startTimeFrames: 30, // first row of the span, not row 0
       endConcerto: 18, // last row of the span
       endEnergy: 9,
+      endForte: null,
     })
   })
 
@@ -86,6 +88,7 @@ describe("summarizeGroups", () => {
       startTimeFrames: 0,
       endConcerto: null,
       endEnergy: null,
+      endForte: null,
     })
   })
 
@@ -108,6 +111,7 @@ describe("summarizeGroups", () => {
       startTimeFrames: 12,
       endConcerto: 3,
       endEnergy: 1,
+      endForte: null,
     })
   })
 

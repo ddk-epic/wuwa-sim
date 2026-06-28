@@ -20,6 +20,7 @@ const action = (
   skillName: "Attack",
   cumulativeEnergy: 0,
   cumulativeConcerto: 0,
+  cumulativeForte: 0,
   ...over,
 })
 

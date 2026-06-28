@@ -19,6 +19,7 @@ const base = {
   frame: 60,
   cumulativeEnergy: 10,
   cumulativeConcerto: 5,
+  cumulativeForte: 0,
 }
 
 const action: ActionEvent = {

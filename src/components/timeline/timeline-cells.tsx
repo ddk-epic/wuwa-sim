@@ -33,6 +33,29 @@ export function DurationCell({ frames }: { frames: number }) {
   )
 }
 
+/**
+ * Forte gauge balance, in the pad-delay font. Empty unless the acting
+ * character has a forte gauge (`forteCap > 0`) and the row carries log data.
+ */
+export function ForteCell({
+  value,
+  forteCap,
+  stale,
+}: {
+  value: number | null
+  forteCap: number
+  stale?: boolean
+}) {
+  const show = value !== null && forteCap > 0
+  return (
+    <td
+      className={`px-0 py-2 text-right text-xs text-muted${stale ? " opacity-40" : ""}`}
+    >
+      {show ? value.toFixed(1) : null}
+    </td>
+  )
+}
+
 /** Concerto/resonance resource cell. `stale` dims the entry row when the log is out of date. */
 export function ResourceCell({
   value,

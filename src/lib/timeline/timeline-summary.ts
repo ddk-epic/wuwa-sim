@@ -22,6 +22,7 @@ export interface TimelineSummaryRow {
   damage: number | null
   cumulativeConcerto: number | null
   cumulativeEnergy: number | null
+  cumulativeForte: number | null
 }
 
 export interface TimelineSummary {
@@ -45,6 +46,7 @@ export function getTimelineSummary(
   const hitDamageByEntryId = new Map<string, number>()
   const lastHitConcertoByEntryId = new Map<string, number>()
   const lastHitEnergyByEntryId = new Map<string, number>()
+  const lastHitForteByEntryId = new Map<string, number>()
 
   const entryCharById = new Map<string, number>()
   for (const entry of entries) entryCharById.set(entry.id, entry.characterId)
@@ -63,6 +65,7 @@ export function getTimelineSummary(
         if (e.characterId === entryCharById.get(e.sourceEntryId)) {
           lastHitConcertoByEntryId.set(e.sourceEntryId, e.cumulativeConcerto)
           lastHitEnergyByEntryId.set(e.sourceEntryId, e.cumulativeEnergy)
+          lastHitForteByEntryId.set(e.sourceEntryId, e.cumulativeForte)
         }
       }
     }
@@ -84,6 +87,7 @@ export function getTimelineSummary(
     let damage: number | null
     let cumulativeConcerto: number | null
     let cumulativeEnergy: number | null
+    let cumulativeForte: number | null
     // Wait owned by the NEXT entry but living in this row's gap — kept out of the
     // displayed duration, added back into the real clock below.
     let waitNext = 0
@@ -114,6 +118,8 @@ export function getTimelineSummary(
         lastHitConcertoByEntryId.get(entry.id) ?? ae.cumulativeConcerto
       cumulativeEnergy =
         lastHitEnergyByEntryId.get(entry.id) ?? ae.cumulativeEnergy
+      cumulativeForte =
+        lastHitForteByEntryId.get(entry.id) ?? ae.cumulativeForte
     } else {
       timeFrames = cumulativeFrames
 
@@ -141,6 +147,7 @@ export function getTimelineSummary(
       damage = null
       cumulativeConcerto = null
       cumulativeEnergy = null
+      cumulativeForte = null
     }
 
     cumulativeFrames += durationFrames + waitNext
@@ -152,6 +159,7 @@ export function getTimelineSummary(
       damage,
       cumulativeConcerto,
       cumulativeEnergy,
+      cumulativeForte,
     })
   }
 

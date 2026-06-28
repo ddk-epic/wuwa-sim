@@ -19,6 +19,7 @@ import {
   TimeCell,
   WaitCell,
   DurationCell,
+  ForteCell,
   ResourceCell,
 } from "./timeline-cells"
 import type { RenderItem } from "#/lib/timeline/timeline-render-items"
@@ -74,9 +75,11 @@ export function TimelineGroupHeader({
   const totalDamage = gs?.totalDamage ?? null
   const lastConVal = isExpanded ? null : (gs?.endConcerto ?? null)
   const lastResVal = isExpanded ? null : (gs?.endEnergy ?? null)
-  const lastMaxEnergy =
-    (lastCharId !== null ? getCharacterById(lastCharId)?.maxEnergy : null) ??
-    100
+  const lastForteVal = isExpanded ? null : (gs?.endForte ?? null)
+  const lastCharacter =
+    lastCharId !== null ? getCharacterById(lastCharId) : null
+  const lastMaxEnergy = lastCharacter?.maxEnergy ?? 100
+  const lastForteCap = lastCharacter?.forteCap ?? 0
 
   function handleToggleExpand(e: React.MouseEvent) {
     e.stopPropagation()
@@ -169,6 +172,7 @@ export function TimelineGroupHeader({
           </span>
         </div>
       </td>
+      <ForteCell value={lastForteVal} forteCap={lastForteCap} />
       <DurationCell frames={totalDurFrames} />
       <ResourceCell value={lastConVal} resource="concerto" threshold={100} />
       <ResourceCell

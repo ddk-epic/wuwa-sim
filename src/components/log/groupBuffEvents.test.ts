@@ -38,6 +38,7 @@ function hit(): SimulationLogEntry {
     passiveBuffs: [],
     cumulativeEnergy: 0,
     cumulativeConcerto: 0,
+    cumulativeForte: 0,
   }
 }
 

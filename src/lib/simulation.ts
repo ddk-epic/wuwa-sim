@@ -533,6 +533,7 @@ function buildActionEvent(
     frame,
     cumulativeEnergy: actorState.energy,
     cumulativeConcerto: actorState.concerto,
+    cumulativeForte: actorState.forte,
     variantKind: entry.variantKind,
     sourceEntryId: entry.id,
   }
@@ -746,6 +747,7 @@ function processHeal(
       ),
       cumulativeEnergy: dispatch.postState.energy,
       cumulativeConcerto: dispatch.postState.concerto,
+      cumulativeForte: dispatch.postState.forte,
       statsSnapshot: hitResolved.stats,
       activeBuffs: hitResolved.activeBuffs,
       passiveBuffs: hitResolved.passiveBuffs,
@@ -807,6 +809,7 @@ function processDamageHit(
       damage: dmg,
       cumulativeEnergy: dispatch.postState.energy,
       cumulativeConcerto: dispatch.postState.concerto,
+      cumulativeForte: dispatch.postState.forte,
       statsSnapshot: hitResolved.stats,
       activeBuffs: hitResolved.activeBuffs,
       passiveBuffs: hitResolved.passiveBuffs,

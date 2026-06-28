@@ -9,6 +9,7 @@ interface SimulationLogBase {
   frame: number
   cumulativeEnergy: number
   cumulativeConcerto: number
+  cumulativeForte: number
 }
 
 /**

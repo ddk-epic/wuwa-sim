@@ -167,6 +167,7 @@ export function TimelineView({
             <th className="px-2 py-2 w-36">char</th>
             <th className="px-2 py-2 w-16">type</th>
             <th className="px-2 py-2">skill</th>
+            <th className="px-0 py-2 text-right w-10">for</th>
             <th className="px-2 py-2 text-right w-16">dur</th>
             <th className="px-2 py-2 text-right w-16">con</th>
             <th className="px-2 py-2 text-right w-16">res</th>

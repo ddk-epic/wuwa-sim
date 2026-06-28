@@ -25,6 +25,7 @@ export interface GroupSummary {
   startTimeFrames: number
   endConcerto: number | null
   endEnergy: number | null
+  endForte: number | null
 }
 
 /** Roll the flat summary rows up into per-group totals, keyed by group id. */
@@ -54,6 +55,7 @@ export function summarizeGroups(
       startTimeFrames: firstRow?.timeFrames ?? 0,
       endConcerto: lastRow?.cumulativeConcerto ?? null,
       endEnergy: lastRow?.cumulativeEnergy ?? null,
+      endForte: lastRow?.cumulativeForte ?? null,
     })
   }
   return result
