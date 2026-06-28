@@ -58,6 +58,18 @@ coverage. Parametrize the _same_ timeline over `it.each([0, 6])`:
   bound or one that only matters at an intermediate sequence is the isolated-poke
   exception.
 
+### Same timeline vs. two timelines
+
+Pick by whether the chain only _adds buffs_ or _changes the rotation_:
+
+- **Same timeline (`it.each([0, 6])`)** — default. Every S6 stage is castable at S0;
+  the chain only layers buffs. Negative-assert chain buffs at S0. Model: Encore.
+- **Two timelines (`ROTATION_S0` / `ROTATION_S6`)** — when a `requiresSequence` stage
+  is `invalid` below its gate (can't sit in an S0 line), or the meta rotation diverges
+  (drops/adds stages). Cache each by key; assert across the two logs (S6-stage hit vs.
+  its S0 counterpart isolates the delta). Models: Verina (S6 Forte sheds opener),
+  Camellya (S6 Perennial extends the loop).
+
 ## What to assert
 
 Buff application and lifecycle are the core.
