@@ -201,7 +201,7 @@ const actionFor = (log: SimulationLogEntry[], entryId: string): ActionEvent =>
 /** Diagnostics the resource/cooldown net guards. Footing stays constraint-only. */
 const resourceDiagnostics = (log: SimulationLogEntry[]) =>
   actions(log).flatMap((a) =>
-    (a.diagnostics ?? []).filter((d) => d.kind !== "footingViolation"),
+    (a.diagnostics ?? []).filter((d) => !d.kind.startsWith("footing")),
   )
 
 describe("Camellya — resource & cooldown net (rotation is castable)", () => {

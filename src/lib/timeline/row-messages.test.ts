@@ -11,6 +11,12 @@ describe("renderMessage", () => {
     ).toBe("Airborne state required before a landing stage")
   })
 
+  it("renders footingFall as the consequence applied, not a violated precondition", () => {
+    expect(renderMessage({ kind: "footingFall" }, identity)).toBe(
+      "Fall padding inserted before a grounded entry",
+    )
+  })
+
   it("renders stageNotFound without leaking the stage id", () => {
     const message = renderMessage(
       {

@@ -731,9 +731,9 @@ describe("runSimulation — footing commit as trailing-window event", () => {
       fallFrames: 21,
     })
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
-    expect(
-      actions.find((a) => a.sourceEntryId === "e2")?.delayBreakdown?.pad.fall,
-    ).toBe(21)
+    const fallPadded = actions.find((a) => a.sourceEntryId === "e2")
+    expect(fallPadded?.delayBreakdown?.pad.fall).toBe(21)
+    expect(fallPadded?.diagnostics).toContainEqual({ kind: "footingFall" })
   })
 
   it("Intro exception: a grounded Intro entered from an airborne field pays no fall", () => {

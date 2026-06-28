@@ -424,6 +424,7 @@ function processEntry(
       : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
   const diagnostics = footingDiagnostics(effectiveFooting, resolved)
+  if (fall > 0) diagnostics.push({ kind: "footingFall" })
   if (cooldownDiagnostic) diagnostics.push(cooldownDiagnostic)
 
   const effectiveStart = cursorFrame + fall + wait

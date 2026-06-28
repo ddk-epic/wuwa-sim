@@ -33,6 +33,8 @@ export function renderMessage(
       return m.isLand
         ? "Airborne state required before a landing stage"
         : "Launch/Jump required before an aerial stage"
+    case "footingFall":
+      return "Fall padding inserted before a grounded entry"
     case "insufficientEnergy":
       return `Liberation requires ${m.cost} energy`
     case "insufficientConcerto":

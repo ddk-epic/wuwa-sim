@@ -34,6 +34,7 @@ One template for all messages: an **impersonal declarative requirement statement
 - **Omit anything the row already displays.** The character (CharCell) and the current resource value (energy/concerto cells) are visible on the row, so they never appear in the text. A diagnostic keeps only what the row does _not_ show — the required cost.
 - **"Skill" is the user-facing noun**, used loosely; proper ability names (Intro Skill, Outro Skill, Liberation, Outro) stay capitalized. "Stage" and stage IDs are engine-facing and must never reach a rendered message (see the resolver seam below).
 - **Sentence case, no trailing period, no em-dashes.** Use parallel construction for paired cases (e.g. the two footing cases share "… required before a … stage").
+- **Advisory consequence findings state the consequence, not a violated precondition.** When the engine applied a legal automatic consequence and nothing was violated (`footingFall` — fall padding inserted before a grounded entry), the message states the **consequence applied** rather than a requirement. The surface rules are unchanged: impersonal, sentence case, no trailing period, no em-dash, and omit anything the row already shows (the `+N` `DelayBadge` already carries the frame count, so the wording is frame-free).
 
 ## The resolver seam
 
