@@ -35,6 +35,10 @@ export function renderMessage(
         : "Launch/Jump required before an aerial stage"
     case "footingFall":
       return "Fall padding inserted before a grounded entry"
+    case "footingForced":
+      return m.footing === "air"
+        ? "Air-only mode forces an aerial entry"
+        : "Ground-only mode forces a grounded entry"
     case "insufficientEnergy":
       return `Liberation requires ${m.cost} energy`
     case "insufficientConcerto":

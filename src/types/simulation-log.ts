@@ -38,6 +38,7 @@ export interface DelayBreakdown {
 export type DiagnosticKind =
   | { kind: "footingViolation"; isLand: boolean }
   | { kind: "footingFall" }
+  | { kind: "footingForced"; footing: "air" | "ground" }
   | { kind: "insufficientEnergy"; actor: string; energy: number; cost: number }
   | {
       kind: "insufficientConcerto"

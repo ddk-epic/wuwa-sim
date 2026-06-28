@@ -422,14 +422,31 @@ function processEntry(
     entry.characterId,
     forcedFooting,
   )
-  // Intro Skills ignore incoming footing — they enter on any footing, so never fall.
+  // A forcesFooting mode overrides a conflicting stage entry: the mode wins, the
+  // would-be penalty (fall or violation) is suppressed, and a footingForced
+  // advisory records the override. "any"/"either" stages and Intro Skills (which
+  // ignore incoming footing) never conflict.
+  const stageEntry = stageEntryFooting(resolved.stage.footing)
+  const overrideFooting =
+    resolved.skillType !== "Intro Skill" &&
+    forcedFooting !== undefined &&
+    stageEntry !== undefined &&
+    forcedFooting !== stageEntry
+      ? forcedFooting
+      : undefined
+
+  // No fall when the mode overrode the entry, nor for an Intro (enters on any footing).
   const fall =
-    resolved.skillType === "Intro Skill"
+    overrideFooting !== undefined || resolved.skillType === "Intro Skill"
       ? 0
       : computeFall(effectiveFooting, resolved.stage.footing, ctx.fallFrames)
 
-  const diagnostics = footingDiagnostics(effectiveFooting, resolved)
-  if (fall > 0) diagnostics.push({ kind: "footingFall" })
+  const diagnostics: Diagnostic[] =
+    overrideFooting !== undefined
+      ? [{ kind: "footingForced", footing: overrideFooting }]
+      : footingDiagnostics(effectiveFooting, resolved)
+  if (overrideFooting === undefined && fall > 0)
+    diagnostics.push({ kind: "footingFall" })
   if (cooldownDiagnostic) diagnostics.push(cooldownDiagnostic)
 
   const effectiveStart = cursorFrame + fall + wait

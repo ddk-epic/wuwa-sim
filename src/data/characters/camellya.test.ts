@@ -295,6 +295,21 @@ describe("Camellya — Blossom Mode air-only footing (S0)", () => {
     )
     expect(footingViolations(log)).toEqual([])
   })
+
+  it("flags a grounded basic inside Blossom Mode as a forced aerial entry, not a fall", () => {
+    const log = runS0()
+    // A grounded basic authored inside air-only Blossom Mode runs aerial: no fall
+    // pad, a footingForced advisory instead of footingFall.
+    const diagnostics = actionFor(log, "i2_b1").diagnostics ?? []
+    expect(diagnostics).toContainEqual({
+      kind: "footingForced",
+      footing: "air",
+    })
+    expect(diagnostics).not.toContainEqual(
+      expect.objectContaining({ kind: "footingFall" }),
+    )
+    expect(actionFor(log, "i2_b1").delayBreakdown?.pad.fall ?? 0).toBe(0)
+  })
 })
 
 describe("Camellya — Energy Regen Multiplier split (S0)", () => {

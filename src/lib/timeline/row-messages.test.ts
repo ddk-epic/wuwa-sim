@@ -17,6 +17,15 @@ describe("renderMessage", () => {
     )
   })
 
+  it("renders footingForced naming the forced direction for each footing", () => {
+    expect(
+      renderMessage({ kind: "footingForced", footing: "air" }, identity),
+    ).toBe("Air-only mode forces an aerial entry")
+    expect(
+      renderMessage({ kind: "footingForced", footing: "ground" }, identity),
+    ).toBe("Ground-only mode forces a grounded entry")
+  })
+
   it("renders stageNotFound without leaking the stage id", () => {
     const message = renderMessage(
       {

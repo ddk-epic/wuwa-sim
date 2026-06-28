@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { DamageEntry, EnrichedCharacter } from "#/types/character"
+import type { BuffDef } from "#/types/buff"
 import type { SlotLoadout, Slots } from "#/types/loadout"
 import type { TimelineEntry } from "#/types/timeline"
 import type { ActionEvent } from "#/types/simulation-log"
@@ -295,6 +296,63 @@ const charSnapA: EnrichedCharacter = {
 }
 
 const charSnapB: EnrichedCharacter = { ...charSnapA, id: 53, name: "Snap B" }
+
+// A character whose Resonance Skill enters a permanent ground-only mode: the
+// symmetric counterpart to Camellya's air-only Blossom Mode. No live character
+// uses forcesFooting: "ground", so this exercises the ground override branch.
+const groundModeBuff: BuffDef = {
+  id: "char.ground-forced.ground-mode",
+  name: "Ground Mode",
+  trigger: {
+    event: "skillCast",
+    actor: "self",
+    skillCategory: "Resonance Skill",
+  },
+  target: { kind: "self" },
+  duration: { kind: "permanent" },
+  forcesFooting: "ground",
+  effects: [],
+}
+
+const charGroundForced: EnrichedCharacter = {
+  ...charA,
+  id: 60,
+  name: "Ground Forced",
+  buffs: [groundModeBuff],
+  skills: [
+    {
+      id: 600,
+      name: "Ground Mode",
+      type: "Resonance Skill",
+      stages: [
+        {
+          name: "Cast",
+          category: "Resonance Skill",
+          value: "100%",
+          actionTime: 30,
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+    {
+      id: 601,
+      name: "Aerial Attack",
+      type: "Normal Attack",
+      stages: [
+        {
+          name: "Aerial Stage",
+          category: "Basic Attack",
+          value: "100%",
+          actionTime: 40,
+          footing: "air",
+          damage: [],
+        },
+      ],
+      damage: [],
+    },
+  ],
+}
 
 function snapSlots(): Slots {
   return [52, 53, null]
@@ -734,6 +792,38 @@ describe("runSimulation — footing commit as trailing-window event", () => {
     const fallPadded = actions.find((a) => a.sourceEntryId === "e2")
     expect(fallPadded?.delayBreakdown?.pad.fall).toBe(21)
     expect(fallPadded?.diagnostics).toContainEqual({ kind: "footingFall" })
+  })
+
+  it("forced ground over an air-entry stage suppresses the violation, flags footingForced", () => {
+    testCharacters = [charGroundForced]
+    const entries: TimelineEntry[] = [
+      tlEntry(
+        60,
+        "char.ground-forced.resonance-skill.ground-mode.cast::resonance-skill",
+        "e1",
+      ),
+      tlEntry(
+        60,
+        "char.ground-forced.basic-attack.aerial-attack.aerial-stage::basic-attack",
+        "e2",
+      ),
+    ]
+    const result = runSimulation(entries, [60, null, null], emptyLoadouts, {
+      reactionDelay: 0,
+      swapFrames: 6,
+      variantFloor: 0,
+      fallFrames: 21,
+    })
+    const aerial = result
+      .filter((e): e is ActionEvent => e.kind === "action")
+      .find((a) => a.sourceEntryId === "e2")
+    expect(aerial?.diagnostics).toContainEqual({
+      kind: "footingForced",
+      footing: "ground",
+    })
+    expect(aerial?.diagnostics ?? []).not.toContainEqual(
+      expect.objectContaining({ kind: "footingViolation" }),
+    )
   })
 
   it("Intro exception: a grounded Intro entered from an airborne field pays no fall", () => {
