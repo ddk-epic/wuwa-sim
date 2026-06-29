@@ -1,22 +1,39 @@
 import { Fragment } from "react"
+import type { CSSProperties } from "react"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { characterVisual } from "#/components/ui/character-visual"
 import { getCharacterById } from "#/lib/loadout/catalog"
 import type { RotationCard, RotationCards } from "#/lib/share/rotation-cards"
 import type { Slots } from "#/types/loadout"
 
+export type ShareTheme = "dark" | "light"
+
 interface ShareCardProps {
   cards: RotationCards
   slots: Slots
+  /** Appended to the title as `{seconds}s` when set; omitted otherwise. */
+  seconds?: number
+  theme: ShareTheme
 }
 
 const CARD_WIDTH = 720
 
-function title(slots: Slots): string {
-  return slots
+// Light theme overrides the underlying palette vars on the card root; the token
+// utilities (bg-card, text-foreground, …) resolve through them. Dark inherits.
+const LIGHT_VARS: Record<string, string> = {
+  "--card": "#ffffff",
+  "--darkest": "#eef0f3",
+  "--foreground": "#18181b",
+  "--muted-foreground": "#6b7280",
+  "--border": "#d4d4d8",
+}
+
+function title(slots: Slots, seconds?: number): string {
+  const names = slots
     .filter((id): id is number => id !== null)
     .map((id) => getCharacterById(id)?.name ?? `#${id}`)
     .join(" / ")
+  return seconds === undefined ? names : `${names} ${Math.round(seconds)}s`
 }
 
 function StintCard({ card }: { card: RotationCard }) {
@@ -40,8 +57,8 @@ function StintCard({ card }: { card: RotationCard }) {
       </div>
       {card.hasIntro && (
         <span
-          className="rounded-sm px-1 py-0.5 text-[10px] font-bold leading-none text-darkest"
-          style={{ background: visual.hex }}
+          className="rounded-sm px-1 py-0.5 text-[10px] font-bold leading-none"
+          style={{ background: visual.hex, color: "#0a0b0d" }}
         >
           IN
         </span>
@@ -77,14 +94,15 @@ function RotationRow({
   )
 }
 
-export function ShareCard({ cards, slots }: ShareCardProps) {
+export function ShareCard({ cards, slots, seconds, theme }: ShareCardProps) {
+  const style: CSSProperties = {
+    width: CARD_WIDTH,
+    ...(theme === "light" ? LIGHT_VARS : {}),
+  }
   return (
-    <div
-      className="inline-block rounded-xl bg-card p-5"
-      style={{ width: CARD_WIDTH }}
-    >
+    <div className="inline-block rounded-xl bg-card p-5" style={style}>
       <div className="mb-4 text-2xl font-semibold text-foreground">
-        {title(slots)}
+        {title(slots, seconds)}
       </div>
       <div className="flex flex-col gap-3">
         <RotationRow label="Opener" cards={cards.opener} />

@@ -204,6 +204,7 @@ export function SimulatorPage() {
         autoRun={autoRun}
         needsRun={needsRun}
         nodes={nodes}
+        rotationSeconds={summary.totalTimeFrames / 60}
         exportString={exportString}
         onImport={handleImport}
         importError={importError}

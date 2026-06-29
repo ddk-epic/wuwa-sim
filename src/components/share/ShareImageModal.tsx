@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
-import { ImageIcon } from "lucide-react"
-import { toPng } from "html-to-image"
+import { ClipboardIcon, ImageIcon } from "lucide-react"
+import { toBlob, toPng } from "html-to-image"
 import { useAtomValue } from "jotai"
 import { Modal } from "#/components/ui/Modal"
 import { slotsAtom } from "#/state/team"
@@ -9,9 +9,11 @@ import { getCharacterById } from "#/lib/loadout/catalog"
 import type { TimelineNode } from "#/types/timeline"
 import type { Slots } from "#/types/loadout"
 import { ShareCard } from "./ShareCard"
+import type { ShareTheme } from "./ShareCard"
 
 interface ShareImageModalProps {
   nodes: TimelineNode[]
+  rotationSeconds: number
   onClose: () => void
 }
 
@@ -22,11 +24,17 @@ function fileName(slots: Slots) {
   return names.length > 0 ? `${names.join("-")}-rotation` : "rotation"
 }
 
-export function ShareImageModal({ nodes, onClose }: ShareImageModalProps) {
+export function ShareImageModal({
+  nodes,
+  rotationSeconds,
+  onClose,
+}: ShareImageModalProps) {
   const slots = useAtomValue(slotsAtom)
   const cards = useMemo(() => rotationCards(nodes), [nodes])
   const previewRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
+  const [showDuration, setShowDuration] = useState(true)
+  const [theme, setTheme] = useState<ShareTheme>("dark")
 
   async function handleDownload() {
     if (!previewRef.current || busy) return
@@ -45,23 +53,74 @@ export function ShareImageModal({ nodes, onClose }: ShareImageModalProps) {
     }
   }
 
+  async function handleCopy() {
+    if (!previewRef.current || busy) return
+    setBusy(true)
+    try {
+      const blob = await toBlob(previewRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+      })
+      if (blob) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ])
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <Modal variant="fullscreen" title="Share image" onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="overflow-x-auto">
           <div ref={previewRef} className="w-max">
-            <ShareCard cards={cards} slots={slots} />
+            <ShareCard
+              cards={cards}
+              slots={slots}
+              seconds={showDuration ? rotationSeconds : undefined}
+              theme={theme}
+            />
           </div>
         </div>
-        <div className="flex justify-end">
-          <button
-            className="flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 font-mono text-sm text-muted-foreground enabled:hover:text-foreground disabled:opacity-50"
-            onClick={handleDownload}
-            disabled={busy}
-          >
-            <ImageIcon className="h-4 w-4" />
-            <span>Download PNG</span>
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 font-mono text-sm text-muted-foreground">
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={showDuration}
+                onChange={(e) => setShowDuration(e.target.checked)}
+              />
+              <span>Duration</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={theme === "light"}
+                onChange={(e) => setTheme(e.target.checked ? "light" : "dark")}
+              />
+              <span>Light theme</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 font-mono text-sm text-muted-foreground enabled:hover:text-foreground disabled:opacity-50"
+              onClick={handleCopy}
+              disabled={busy}
+            >
+              <ClipboardIcon className="h-4 w-4" />
+              <span>Copy</span>
+            </button>
+            <button
+              className="flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 font-mono text-sm text-muted-foreground enabled:hover:text-foreground disabled:opacity-50"
+              onClick={handleDownload}
+              disabled={busy}
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span>Download PNG</span>
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

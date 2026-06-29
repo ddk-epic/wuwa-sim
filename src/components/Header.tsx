@@ -38,6 +38,7 @@ interface HeaderProps {
   autoRun: boolean
   needsRun: boolean
   nodes: TimelineNode[]
+  rotationSeconds: number
   exportString: string
   onImport: (value: string) => void
   importError: string | null
@@ -56,6 +57,7 @@ export function Header({
   autoRun,
   needsRun,
   nodes,
+  rotationSeconds,
   exportString,
   onImport,
   importError,
@@ -183,6 +185,7 @@ export function Header({
       {shareImageOpen && (
         <ShareImageModal
           nodes={nodes}
+          rotationSeconds={rotationSeconds}
           onClose={() => setShareImageOpen(false)}
         />
       )}
