@@ -421,6 +421,45 @@ describe("timeline encoding", () => {
     expect(decoded.timeline![0].kind).toBe("entry")
     expect(decoded.timeline![1].kind).toBe("group")
   })
+
+  it("roundtrips a loop marker as node tag 2, preserving its position", () => {
+    const payload: ImportExportPayload = {
+      ...basePayload(),
+      timeline: [
+        {
+          kind: "entry",
+          id: "e1",
+          characterId: CHAR_A.id,
+          stageId:
+            "char.sanhua.basic-attack.normal-attack.stage-3::basic-attack",
+          variantKind: undefined,
+        },
+        { kind: "loopMarker", id: "m1" },
+        {
+          kind: "entry",
+          id: "e2",
+          characterId: CHAR_B.id,
+          stageId: "char.encore.heavy-attack.heavy-attack.charge::heavy-attack",
+          variantKind: undefined,
+        },
+      ],
+    }
+    const decoded = decodePayload(encodePayload(payload))
+    expect(decoded.timeline!.map((n) => n.kind)).toEqual([
+      "entry",
+      "loopMarker",
+      "entry",
+    ])
+  })
+
+  it("a loop marker does not bump the format version", () => {
+    const payload: ImportExportPayload = {
+      ...basePayload(),
+      timeline: [{ kind: "loopMarker", id: "m1" }],
+    }
+    const bytes = base91Decode(encodePayload(payload))
+    expect(bytes[0]).toBe(5)
+  })
 })
 
 // ---- Error cases ----

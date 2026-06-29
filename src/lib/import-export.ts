@@ -144,12 +144,8 @@ export function encodePayload(payload: ImportExportPayload): string {
   if (timeline === null) {
     w.push(NULL_BYTE)
   } else {
-    const exportNodes = timeline.filter(
-      (n): n is Exclude<TimelineNode, { kind: "loopMarker" }> =>
-        n.kind !== "loopMarker",
-    )
-    w.push(exportNodes.length)
-    for (const node of exportNodes) {
+    w.push(timeline.length)
+    for (const node of timeline) {
       if (node.kind === "entry") {
         w.push(0)
         const ci = charIdx(node.characterId)
@@ -158,6 +154,8 @@ export function encodePayload(payload: ImportExportPayload): string {
         w.push(
           node.variantKind ? VARIANT_KINDS.indexOf(node.variantKind) + 1 : 0,
         )
+      } else if (node.kind === "loopMarker") {
+        w.push(2)
       } else {
         w.push(1)
         w.push(node.locked ? 1 : 0)
@@ -262,6 +260,8 @@ export function decodePayload(encoded: string): ImportExportPayload {
       const kind = r.next()
       if (kind === 0) {
         timeline.push({ kind: "entry", ...readEntry(r) })
+      } else if (kind === 2) {
+        timeline.push({ kind: "loopMarker", id: crypto.randomUUID() })
       } else {
         const locked = r.next() === 1
         const label = r.str()
