@@ -74,16 +74,6 @@ export function ShareImageModal({
   return (
     <Modal variant="fullscreen" title="Share image" onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <div className="overflow-x-auto">
-          <div ref={previewRef} className="w-max">
-            <ShareCard
-              cards={cards}
-              slots={slots}
-              seconds={showDuration ? rotationSeconds : undefined}
-              theme={theme}
-            />
-          </div>
-        </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 font-mono text-sm text-muted-foreground">
             <label className="flex cursor-pointer items-center gap-1.5">
@@ -120,6 +110,16 @@ export function ShareImageModal({
               <ImageIcon className="h-4 w-4" />
               <span>Download PNG</span>
             </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <div ref={previewRef} className="w-max">
+            <ShareCard
+              cards={cards}
+              slots={slots}
+              seconds={showDuration ? rotationSeconds : undefined}
+              theme={theme}
+            />
           </div>
         </div>
       </div>

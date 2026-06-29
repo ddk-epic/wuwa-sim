@@ -2,12 +2,12 @@ import { useRef, useState } from "react"
 import {
   CheckIcon,
   DownloadIcon,
-  ImageIcon,
   ListCheckIcon,
   PlayIcon,
   RotateCcw,
   SaveIcon,
   SettingsIcon,
+  Share2,
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
 import type { TimelineNode } from "#/types/timeline"
@@ -143,7 +143,7 @@ export function Header({
           aria-label="Share image"
           onClick={() => setShareImageOpen(true)}
         >
-          <ImageIcon className="w-4 h-4" />
+          <Share2 className="w-4 h-4" />
           <span>Share</span>
         </button>
         <button
