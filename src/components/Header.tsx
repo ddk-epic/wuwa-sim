@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import {
   CheckIcon,
   DownloadIcon,
+  ImageIcon,
   ListCheckIcon,
   PlayIcon,
   RotateCcw,
@@ -9,6 +10,7 @@ import {
   SettingsIcon,
 } from "lucide-react"
 import type { Slots } from "#/types/loadout"
+import type { TimelineNode } from "#/types/timeline"
 import {
   elementHex,
   portraitSrc,
@@ -19,6 +21,7 @@ import { useAtomValue } from "jotai"
 import { slotsAtom } from "#/state/team"
 import { ConfirmModal } from "./ui/ConfirmModal"
 import { ImportExportModal } from "./ImportExportModal"
+import { ShareImageModal } from "./share/ShareImageModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
 
@@ -34,6 +37,7 @@ interface HeaderProps {
   saveDisabled: boolean
   autoRun: boolean
   needsRun: boolean
+  nodes: TimelineNode[]
   exportString: string
   onImport: (value: string) => void
   importError: string | null
@@ -51,6 +55,7 @@ export function Header({
   saveDisabled,
   autoRun,
   needsRun,
+  nodes,
   exportString,
   onImport,
   importError,
@@ -58,6 +63,7 @@ export function Header({
   const slots = useAtomValue(slotsAtom)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [importExportOpen, setImportExportOpen] = useState(false)
+  const [shareImageOpen, setShareImageOpen] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const simulateDisabled = autoRun ? !needsRun : timelineEmpty
@@ -130,6 +136,15 @@ export function Header({
           <span>Save</span>
         </button>
         <button
+          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
+          disabled={timelineEmpty}
+          aria-label="Share image"
+          onClick={() => setShareImageOpen(true)}
+        >
+          <ImageIcon className="w-4 h-4" />
+          <span>Share</span>
+        </button>
+        <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground hover:text-foreground"
           aria-label="Import/Export"
           onClick={() => setImportExportOpen(true)}
@@ -163,6 +178,12 @@ export function Header({
           onImport={onImport}
           importError={importError}
           onClose={() => setImportExportOpen(false)}
+        />
+      )}
+      {shareImageOpen && (
+        <ShareImageModal
+          nodes={nodes}
+          onClose={() => setShareImageOpen(false)}
         />
       )}
     </div>

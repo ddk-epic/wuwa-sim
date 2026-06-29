@@ -203,6 +203,7 @@ export function SimulatorPage() {
         saveDisabled={slots.every((id) => id === null)}
         autoRun={autoRun}
         needsRun={needsRun}
+        nodes={nodes}
         exportString={exportString}
         onImport={handleImport}
         importError={importError}

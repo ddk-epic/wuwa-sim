@@ -17,6 +17,7 @@ Workflow rules: [conventions.md](conventions.md). Per-decision history: [log.md]
 - [enriched-model](enriched-model.md) — raw extracted data vs the `Enriched*` shapes the engine runs; enrichment as a manual authoring step
 - [loadout](loadout.md) — the configurable team unit: numeric-ID slots, sequences, echo build, main-stat choices, and how ids resolve to data
 - [stat-table](stat-table.md) — the flat aggregated stat sheet buffs write into and the damage formula reads
+- [share](share.md) — export a team + timeline as a share code, or render the rotation as a share image
 
 ## Data
 

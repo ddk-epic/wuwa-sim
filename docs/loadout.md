@@ -34,32 +34,6 @@ id up in the `ALL_*` registries (see [data](data.md)) and return the
 This is why a loadout can be serialized, shared, and reloaded without carrying
 the data itself.
 
-### Share codes
-
-`import-export.ts` packs a team **plus its timeline** into a Base91 string for
-sharing. To stay short it stores **array positions, not id values**: a character
-is its index in `ALL_CHARACTERS`, a weapon its index in `ALL_WEAPONS`, and so on.
-A timeline entry's stage is an ordinal into **its own character's** flattened
-stage list (echo stages share one suffix after every character's stages), keyed
-off the entry's character byte.
-
-This makes the format **append-only**. Appending a character, echo, weapon, etc.
-at the **end** of its registry — or a stage at the end of a character's stage
-list — leaves every existing code decoding to the same things. But **inserting,
-removing, or reordering** an entry mid-registry (or mid stage-list) renumbers the
-positions after it and silently makes already-shared codes decode to the wrong
-data. Such an edit is a breaking wire change: bump the `VERSION` byte (the decoder
-rejects versions it doesn't recognise).
-
-The current version is `4`. After the timeline it appends the team's
-[[Settings]] as five trailing bytes — the four frame knobs followed by
-`startWithFullEnergy` (`0`/`1`). This is a pure **append**: a `v3` code is a `v4`
-code minus those five bytes, so the decoder still accepts `v3` and fills the
-missing settings with `DEFAULT_SETTINGS` (back-compat). Versions outside `{3, 4}`
-are rejected, not migrated — a stale code is simply re-exported. A future
-trailing field should follow the same pattern (append + keep accepting the
-shorter prior version); only a mid-stream renumber forces a hard version cut.
-
 ### Templates
 
 A new slot is seeded from a `CharacterTemplate` — the recommended weapon / echo /
@@ -79,3 +53,4 @@ per-build main-stat defaults (`COST4_MAINS_DEFAULT` / `COST3_MAINS_DEFAULT`).
 - [enriched-model](enriched-model.md) — the shapes that ids resolve to
 - [data](data.md) — the registries `catalog.ts` searches
 - [stat-table](stat-table.md) — how a resolved loadout becomes computed stats
+- [share](share.md) — export a team + timeline as a code, or render the rotation as an image
