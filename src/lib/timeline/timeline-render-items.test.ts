@@ -316,6 +316,24 @@ describe("buildTimelineRenderItems", () => {
     expect(e.errors).toEqual([])
   })
 
+  // Loop Marker
+  it("emits an openerHeader and a loopMarker, leaving entry flatIndexes unbroken", () => {
+    const marker: TimelineNode = { kind: "loopMarker", id: "m1" }
+    const items = call([topEntry("e1"), marker, topEntry("e2")])
+    expect(items.map((i) => i.type)).toEqual([
+      "openerHeader",
+      "entry",
+      "loopMarker",
+      "entry",
+    ])
+    expect(entryItems(items).map((i) => i.flatIndex)).toEqual([0, 1])
+  })
+
+  it("omits the openerHeader when no marker is present", () => {
+    const items = call([topEntry("e1"), topEntry("e2")])
+    expect(items.some((i) => i.type === "openerHeader")).toBe(false)
+  })
+
   it("routes an invalid-severity Diagnostic into errors and reddens the row", () => {
     const logWarnings = new Map<string, Diagnostic[]>([
       [

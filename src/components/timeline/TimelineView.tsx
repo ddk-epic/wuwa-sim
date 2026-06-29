@@ -19,6 +19,7 @@ import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
 import { GhostEntryRow } from "./GhostEntryRow"
 import { GhostGroupRow } from "./GhostGroupRow"
+import { OpenerHeaderRow, LoopMarkerRow } from "./TimelineRotationRows"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -34,6 +35,7 @@ interface TimelineViewProps {
   onToggleGroupLock: (groupId: string) => void
   onDuplicateGroup: (groupId: string) => void
   onDeleteGroup: (groupId: string) => void
+  onDeleteLoopMarker: () => void
   onReorderGroupEntries: (
     groupId: string,
     fromId: string,
@@ -55,6 +57,7 @@ export function TimelineView({
   onToggleGroupLock,
   onDuplicateGroup,
   onDeleteGroup,
+  onDeleteLoopMarker,
   onReorderGroupEntries,
 }: TimelineViewProps) {
   const slots = useAtomValue(slotsAtom)
@@ -194,6 +197,22 @@ export function TimelineView({
                   item={item}
                   handlers={drag.ghostHandlers()}
                   showWait={showWait}
+                />
+              )
+            }
+            if (item.type === "openerHeader") {
+              return <OpenerHeaderRow key="opener-header" showWait={showWait} />
+            }
+            if (item.type === "loopMarker") {
+              return (
+                <LoopMarkerRow
+                  key={`loop-${item.markerId}`}
+                  markerId={item.markerId}
+                  containerIndex={item.containerIndex}
+                  drag={drag}
+                  hidden={item.hidden === true}
+                  showWait={showWait}
+                  onDelete={onDeleteLoopMarker}
                 />
               )
             }

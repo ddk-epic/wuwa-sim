@@ -62,6 +62,9 @@ function entrySrc(
 function groupSrc(id: string, containerIndex = 0): DragSource {
   return { kind: "group", id, containerIndex }
 }
+function markerSrc(id: string, containerIndex = 0): DragSource {
+  return { kind: "loopMarker", id, containerIndex }
+}
 function entryTgt(
   id: string,
   groupId: string | null,
@@ -187,6 +190,27 @@ describe("decideDrop policy table", () => {
       kind: "reorderNodes",
       from: "g1",
       to: "g2",
+    })
+  })
+
+  // ── loop marker → top-level only ──────────────────────────
+  it("loop marker → top-level entry: reorderNodes", () => {
+    expect(decideDrop(markerSrc("m"), entryTgt("b", null, false))).toEqual({
+      kind: "reorderNodes",
+      from: "m",
+      to: "b",
+    })
+  })
+  it("loop marker → group header: reorderNodes", () => {
+    expect(decideDrop(markerSrc("m"), groupTgt("g1"))).toEqual({
+      kind: "reorderNodes",
+      from: "m",
+      to: "g1",
+    })
+  })
+  it("loop marker → entry inside a group: none (cannot straddle a group)", () => {
+    expect(decideDrop(markerSrc("m"), entryTgt("b", "g1", false))).toEqual({
+      kind: "none",
     })
   })
 })

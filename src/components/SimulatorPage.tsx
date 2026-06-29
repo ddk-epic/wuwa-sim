@@ -41,6 +41,8 @@ export function SimulatorPage() {
     entries,
     addEntry,
     addGroup,
+    addLoopMarker,
+    removeLoopMarker,
     removeEntry,
     reorderEntries,
     reorderNodes,
@@ -216,7 +218,9 @@ export function SimulatorPage() {
             dps={summary.dps}
             totalTimeSec={summary.totalTimeFrames / 60}
             stale={stale}
+            hasLoopMarker={nodes.some((n) => n.kind === "loopMarker")}
             onAddGroup={addGroup}
+            onAddLoopMarker={addLoopMarker}
           />
           <TimelineView
             nodes={nodes}
@@ -231,6 +235,7 @@ export function SimulatorPage() {
             onToggleGroupLock={toggleGroupLock}
             onDuplicateGroup={duplicateGroup}
             onDeleteGroup={deleteGroup}
+            onDeleteLoopMarker={removeLoopMarker}
             onReorderGroupEntries={reorderGroupEntries}
           />
         </div>

@@ -111,9 +111,24 @@ export function useTimeline(onShapeChange?: () => void) {
     setNodes((prev) =>
       prev.flatMap<TimelineNode>((node) => {
         if (node.kind === "entry") return node.id === id ? [] : [node]
+        if (node.kind !== "group") return [node]
         return [{ ...node, entries: node.entries.filter((e) => e.id !== id) }]
       }),
     )
+    onShapeChange?.()
+  }
+
+  function addLoopMarker() {
+    setNodes((prev): TimelineNode[] =>
+      prev.some((n) => n.kind === "loopMarker")
+        ? prev
+        : [...prev, { kind: "loopMarker", id: crypto.randomUUID() }],
+    )
+    onShapeChange?.()
+  }
+
+  function removeLoopMarker() {
+    setNodes((prev) => prev.filter((n) => n.kind !== "loopMarker"))
     onShapeChange?.()
   }
 
@@ -182,6 +197,7 @@ export function useTimeline(onShapeChange?: () => void) {
         if (node.kind === "entry") {
           return node.id === id ? { ...node, ...patch } : node
         }
+        if (node.kind !== "group") return node
         return {
           ...node,
           entries: node.entries.map((e) =>
@@ -222,6 +238,8 @@ export function useTimeline(onShapeChange?: () => void) {
     entries,
     addEntry,
     addGroup,
+    addLoopMarker,
+    removeLoopMarker,
     removeEntry,
     reorderEntries,
     updateEntry,

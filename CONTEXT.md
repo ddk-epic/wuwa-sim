@@ -8,17 +8,31 @@ A Wuthering Waves damage simulator. Users author a **Timeline** of skill activat
 
 **Timeline**:
 The user-authored sequence of skill activations a team performs. Walked once by the simulator to produce the Simulation Log.
-_Avoid_: Rotation, sequence (overloaded with Resonance Chain Sequence)
+_Avoid_: the whole-Timeline sense of "Rotation" ([[Rotation]] now names a _region_ of the Timeline, not the whole thing); sequence (overloaded with Resonance Chain Sequence)
 
 **Timeline Entry**:
 One authored action in the Timeline — a skill cast by a specific character at a specific position. Always represents an on-field action.
 
 **Timeline Node**:
-The persisted unit of the Timeline. A discriminated union of `{kind: "entry", ...TimelineEntry}` and `{kind: "group", ...TimelineGroup}`. The simulator, `validateTimeline`, and `TimelineSummary` operate on the flattened entry list (`nodes.flatMap(n => n.kind === "group" ? n.entries : [n])`); group nodes never reach the engine.
+The persisted unit of the Timeline. A discriminated union of `{kind: "entry", ...TimelineEntry}`, `{kind: "group", ...TimelineGroup}`, and `{kind: "loopMarker"}` (the [[Loop Marker]]). The simulator, `validateTimeline`, and `TimelineSummary` operate on the flattened entry list (`flattenNodes`); group and loop-marker nodes never reach the engine.
 
 **Timeline Group**:
 A purely organizational, single-row-height labeled header that owns a contiguous run of Timeline Entries inline (`entries: TimelineEntry[]`). Has an open/locked lifecycle: at most one group is open at a time, the open group captures every new sidebar-added entry as a member, and locking seals the boundary against drag-in / drag-out while permitting internal reorder and per-entry deletion. Does not increment row numbers, does not affect the engine, does not affect validation. Empty groups are valid. Flat-only — groups cannot contain other groups. No character restriction — a group may mix entries from any characters. A group's displayed totals (damage, duration, end concerto/energy) are a **view-layer derivation** rolled up from the flat [[Simulation Log]] summary precisely because groups are visual-only — the engine-side summary stays group-blind (`summarizeGroups` in `src/lib/timeline`, never a field on `TimelineSummary`). See ADR-0016.
 _Avoid_: "Phase", "Section", "Block" (overloaded with other meanings in the codebase).
+
+**Rotation**:
+A contiguous region of the [[Timeline]] representing one pass of play. Exactly two, ordered and exhaustive: the [[Opener]] (everything above the [[Loop Marker]]) and the [[Loop]] (everything from the [[Loop Marker]] down). Distinct from the [[Timeline]] itself — a Rotation is a _part_ of the Timeline, which is why the old "Rotation = whole Timeline" usage is retired. The split exists to support a forthcoming two-minute DPS benchmark (run the Opener once, repeat the Loop until 120s is filled).
+_Avoid_: "Phase" (rejected naming), the whole-Timeline sense.
+
+**Opener**:
+The first [[Rotation]] — the un-loopable cold-start pass (intros, one-time setup, cold resources). Everything above the [[Loop Marker]]. A Timeline with no [[Loop Marker]] is _all_ Opener, with no [[Loop]] and the benchmark unavailable.
+
+**Loop**:
+The repeatable [[Rotation]] — everything from the [[Loop Marker]] down. The unit the two-minute benchmark repeats after the [[Opener]] runs once.
+
+**Loop Marker**:
+The single boundary node splitting the Timeline into [[Opener]] and [[Loop]]. A third [[Timeline Node]] kind at top level, so it sits _between_ nodes — a [[Timeline Group]] cannot straddle it. At most one; absent ⇒ all Opener. **Engine-blind** like a group header: `flattenNodes` strips it and the simulator/DPS are unchanged; a `splitRotations(nodes) → { opener, loop }` helper feeds the forthcoming benchmark. The top-of-list **Opener header** is an auto-rendered label, not a second marker — shown only while a Loop Marker exists, not draggable/deletable. Added via a disabled-when-present `+ Loop` button beside `+ Group` (appends at end, drag to boundary). Not numbered, no editable label, travels in the share code as node tag `2`.
+_Avoid_: "Phase Cut" (rejected naming), calling the Opener header a second marker.
 
 **Simulation Log**:
 The full ordered output of a simulation run — Action Events, Hit Events, and Buff Events interleaved by frame.

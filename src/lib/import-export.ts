@@ -144,8 +144,12 @@ export function encodePayload(payload: ImportExportPayload): string {
   if (timeline === null) {
     w.push(NULL_BYTE)
   } else {
-    w.push(timeline.length)
-    for (const node of timeline) {
+    const exportNodes = timeline.filter(
+      (n): n is Exclude<TimelineNode, { kind: "loopMarker" }> =>
+        n.kind !== "loopMarker",
+    )
+    w.push(exportNodes.length)
+    for (const node of exportNodes) {
       if (node.kind === "entry") {
         w.push(0)
         const ci = charIdx(node.characterId)

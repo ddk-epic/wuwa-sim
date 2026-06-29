@@ -44,6 +44,13 @@ export function migrateNodes(raw: unknown[]): TimelineNode[] {
   return raw.map((r): TimelineNode => {
     // Boundary: untyped legacy node; shape is probed via kind then field-checked.
     const item = r as { kind?: string }
+    if (item.kind === "loopMarker") {
+      const m = r as { id?: string }
+      return {
+        kind: "loopMarker",
+        id: typeof m.id === "string" ? m.id : crypto.randomUUID(),
+      }
+    }
     if (item.kind === "group") {
       const g = r as Partial<TimelineGroup>
       return {

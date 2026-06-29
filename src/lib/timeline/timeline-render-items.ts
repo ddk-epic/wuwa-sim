@@ -68,6 +68,17 @@ export type RenderItem =
       hidden?: boolean
     }
   | {
+      type: "openerHeader"
+    }
+  | {
+      type: "loopMarker"
+      markerId: string
+      /** Index of this marker among all top-level nodes. */
+      containerIndex: number
+      /** Set by applyDragPreview to collapse the marker row while dragging. */
+      hidden?: boolean
+    }
+  | {
       type: "ghost"
       /** ID of the entry being dragged — used as React key. */
       sourceId: string
@@ -194,8 +205,20 @@ export function buildTimelineRenderItems(
   const resolveStageName = (stageId: string): string =>
     stageLabels.get(stageId) ?? stageId
 
+  if (nodes.some((n) => n.kind === "loopMarker")) {
+    items.push({ type: "openerHeader" })
+  }
+
   for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
     const node = nodes[nodeIndex]
+    if (node.kind === "loopMarker") {
+      items.push({
+        type: "loopMarker",
+        markerId: node.id,
+        containerIndex: nodeIndex,
+      })
+      continue
+    }
     if (node.kind === "group") {
       const isExpanded = expandedGroupIds.has(node.id)
       const startFlatIndex = flatIndex

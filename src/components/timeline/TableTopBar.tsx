@@ -33,7 +33,9 @@ interface TableTopBarProps {
   dps: number
   totalTimeSec: number
   stale?: boolean
+  hasLoopMarker: boolean
   onAddGroup: () => string
+  onAddLoopMarker: () => void
 }
 
 export function TableTopBar({
@@ -42,7 +44,9 @@ export function TableTopBar({
   dps,
   totalTimeSec,
   stale,
+  hasLoopMarker,
   onAddGroup,
+  onAddLoopMarker,
 }: TableTopBarProps) {
   const setRenamingGroupId = useSetAtom(renamingGroupIdAtom)
   return (
@@ -69,6 +73,14 @@ export function TableTopBar({
         onClick={() => setRenamingGroupId(onAddGroup())}
       >
         + Group
+      </button>
+
+      <button
+        className="items-center gap-1 px-1.5 py-0.75 font-mono text-sm rounded-sm border border-muted-foreground text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:hover:text-muted-foreground disabled:cursor-not-allowed"
+        disabled={hasLoopMarker}
+        onClick={onAddLoopMarker}
+      >
+        + Loop
       </button>
 
       <div className="flex items-end gap-3">

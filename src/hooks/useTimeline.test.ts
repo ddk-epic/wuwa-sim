@@ -151,6 +151,13 @@ describe("migrateNodes", () => {
     expect(result[0].id).toBe("a")
   })
 
+  it("preserves a loop marker node, defaulting a missing id", () => {
+    const result = migrateNodes([{ kind: "loopMarker" }])
+    expect(result[0].kind).toBe("loopMarker")
+    expect(typeof result[0].id).toBe("string")
+    expect(result[0].id.length).toBeGreaterThan(0)
+  })
+
   it("preserves group nodes from new format", () => {
     const nodes = [
       {
@@ -268,6 +275,63 @@ describe("useTimeline group support", () => {
     expect(groups[1].entries[0].stageId).toBe(groups[0].entries[0].stageId)
     // duplicate of open group is locked
     expect(groups[1].locked).toBe(true)
+  })
+})
+
+describe("useTimeline loop marker", () => {
+  it("addLoopMarker appends a single marker, strips it from flat entries", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+      result.current.addLoopMarker()
+    })
+    expect(
+      result.current.nodes.filter((n) => n.kind === "loopMarker"),
+    ).toHaveLength(1)
+    expect(result.current.entries).toHaveLength(1)
+  })
+
+  it("addLoopMarker is a no-op when a marker already exists", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addLoopMarker()
+      result.current.addLoopMarker()
+    })
+    expect(
+      result.current.nodes.filter((n) => n.kind === "loopMarker"),
+    ).toHaveLength(1)
+  })
+
+  it("removeLoopMarker deletes the marker but keeps entries", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+      result.current.addLoopMarker()
+    })
+    act(() => {
+      result.current.removeLoopMarker()
+    })
+    expect(result.current.nodes.some((n) => n.kind === "loopMarker")).toBe(
+      false,
+    )
+    expect(result.current.entries).toHaveLength(1)
+  })
+
+  it("removeEntry and updateEntry leave the marker node untouched", () => {
+    const { result } = renderHook(() => useTimeline())
+    act(() => {
+      result.current.addEntry(sample)
+      result.current.addLoopMarker()
+    })
+    const id = result.current.entries[0].id
+    act(() => {
+      result.current.updateEntry(id, { variantKind: "cancel" })
+      result.current.removeEntry(id)
+    })
+    expect(
+      result.current.nodes.filter((n) => n.kind === "loopMarker"),
+    ).toHaveLength(1)
+    expect(result.current.entries).toHaveLength(0)
   })
 })
 

@@ -18,6 +18,7 @@ export type DragSource =
       containerIndex: number
     }
   | { kind: "group"; id: string; containerIndex: number }
+  | { kind: "loopMarker"; id: string; containerIndex: number }
 
 export type DropTarget =
   | { kind: "entry"; id: string; groupId: string | null; groupLocked: boolean }
@@ -48,6 +49,14 @@ export function isDropAllowed(
 }
 
 export function decideDrop(src: DragSource, target: DropTarget): DropDecision {
+  if (src.kind === "loopMarker") {
+    // The marker reorders among top-level nodes only; a group cannot straddle it.
+    if (target.kind === "group") {
+      return { kind: "reorderNodes", from: src.id, to: target.groupId }
+    }
+    if (target.id === src.id || target.groupId !== null) return { kind: "none" }
+    return { kind: "reorderNodes", from: src.id, to: target.id }
+  }
   if (target.kind === "entry") {
     if (src.kind === "entry" && src.id === target.id) return { kind: "none" }
     const srcCtx: DragSrcCtx | null =
@@ -155,6 +164,7 @@ export interface TimelineDrag {
   ) => DropHandlerBundle
   groupSource: (groupId: string, containerIndex: number) => DragHandlerBundle
   groupTarget: (groupId: string, containerIndex: number) => DropHandlerBundle
+  markerSource: (markerId: string, containerIndex: number) => DragHandlerBundle
   ghostHandlers: () => DropHandlerBundle
 }
 
@@ -311,6 +321,15 @@ export function useTimelineDrag(handlers: TimelineDropHandlers): TimelineDrag {
           dispatch(decision, position)
           clear()
         },
+      }
+    },
+    markerSource(markerId, containerIndex) {
+      return {
+        onDragStart(ev) {
+          ev.dataTransfer.effectAllowed = "move"
+          setSource({ kind: "loopMarker", id: markerId, containerIndex })
+        },
+        onDragEnd: clear,
       }
     },
     ghostHandlers() {
