@@ -1,5 +1,10 @@
-import { useMemo, useRef, useState } from "react"
-import { ClipboardIcon, ImageIcon } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  CheckIcon,
+  ClipboardIcon,
+  ImageIcon,
+  TriangleAlert,
+} from "lucide-react"
 import { toBlob, toPng } from "html-to-image"
 import { useAtomValue } from "jotai"
 import { Modal } from "#/components/ui/Modal"
@@ -17,6 +22,10 @@ interface ShareImageModalProps {
   onClose: () => void
 }
 
+const WORK_MS = 6000 // watchdog: force re-enable if a rasterize overruns
+const CONFIRM_MS = 1500 // success check dwell, matching Save/Export
+const WARN_MS = 3000 // failure warning dwell, longer so it isn't missed
+
 function fileName(slots: Slots) {
   const names = slots
     .filter((id): id is number => id !== null)
@@ -32,13 +41,32 @@ export function ShareImageModal({
   const slots = useAtomValue(slotsAtom)
   const cards = useMemo(() => rotationCards(nodes), [nodes])
   const previewRef = useRef<HTMLDivElement>(null)
-  const [busy, setBusy] = useState(false)
   const [showDuration, setShowDuration] = useState(true)
   const [theme, setTheme] = useState<ShareTheme>("dark")
+  const [copyState, setCopyState] = useState<
+    "idle" | "working" | "done" | "failed"
+  >("idle")
+  const [downloadWorking, setDownloadWorking] = useState(false)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const downloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function clear(timer: typeof copyTimer) {
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = null
+  }
+  useEffect(
+    () => () => {
+      clear(copyTimer)
+      clear(downloadTimer)
+    },
+    [],
+  )
 
   async function handleDownload() {
-    if (!previewRef.current || busy) return
-    setBusy(true)
+    if (!previewRef.current || downloadWorking) return
+    setDownloadWorking(true)
+    // Watchdog: a hung rasterize can't leave the button disabled forever.
+    downloadTimer.current = setTimeout(() => setDownloadWorking(false), WORK_MS)
     try {
       const dataUrl = await toPng(previewRef.current, {
         pixelRatio: 2,
@@ -49,25 +77,32 @@ export function ShareImageModal({
       link.href = dataUrl
       link.click()
     } finally {
-      setBusy(false)
+      clear(downloadTimer)
+      setDownloadWorking(false)
     }
   }
 
   async function handleCopy() {
-    if (!previewRef.current || busy) return
-    setBusy(true)
+    if (!previewRef.current || copyState === "working" || copyState === "done")
+      return
+    setCopyState("working")
+    copyTimer.current = setTimeout(() => setCopyState("idle"), WORK_MS)
     try {
       const blob = await toBlob(previewRef.current, {
         pixelRatio: 2,
         cacheBust: true,
       })
-      if (blob) {
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob }),
-        ])
-      }
-    } finally {
-      setBusy(false)
+      if (!blob) throw new Error("rasterization produced no image")
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ])
+      clear(copyTimer)
+      setCopyState("done")
+      copyTimer.current = setTimeout(() => setCopyState("idle"), CONFIRM_MS)
+    } catch {
+      clear(copyTimer)
+      setCopyState("failed")
+      copyTimer.current = setTimeout(() => setCopyState("idle"), WARN_MS)
     }
   }
 
@@ -97,15 +132,26 @@ export function ShareImageModal({
             <button
               className="flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 font-mono text-sm text-muted-foreground enabled:hover:text-foreground disabled:opacity-50"
               onClick={handleCopy}
-              disabled={busy}
+              disabled={copyState === "working" || copyState === "done"}
+              title={
+                copyState === "failed"
+                  ? "Couldn't copy to clipboard — try again"
+                  : undefined
+              }
             >
-              <ClipboardIcon className="h-4 w-4" />
+              {copyState === "done" ? (
+                <CheckIcon className="h-4 w-4 text-green-400" />
+              ) : copyState === "failed" ? (
+                <TriangleAlert className="h-4 w-4 text-amber-400" />
+              ) : (
+                <ClipboardIcon className="h-4 w-4" />
+              )}
               <span>Copy</span>
             </button>
             <button
               className="flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 font-mono text-sm text-muted-foreground enabled:hover:text-foreground disabled:opacity-50"
               onClick={handleDownload}
-              disabled={busy}
+              disabled={downloadWorking}
             >
               <ImageIcon className="h-4 w-4" />
               <span>Download PNG</span>
