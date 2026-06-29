@@ -1,6 +1,7 @@
-import { useState, useRef } from "react"
-import { CopyIcon, CheckIcon } from "lucide-react"
+import { useState } from "react"
+import { CopyIcon } from "lucide-react"
 import { Modal } from "./ui/Modal"
+import { AcknowledgeButton } from "./ui/AcknowledgeButton"
 
 /**
  * Self-contained Import panel: a textarea (local value), an inline error, and an
@@ -47,20 +48,6 @@ export function ImportPanel({
 
 /** Self-contained Export panel: a read-only code box + a Copy button. */
 export function ExportPanel({ exportString }: { exportString: string }) {
-  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  function handleCopy(e: React.MouseEvent<HTMLButtonElement>) {
-    navigator.clipboard.writeText(exportString)
-    const btn = e.currentTarget
-    btn.dataset.copied = "true"
-    btn.disabled = true
-    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current)
-    copyTimeoutRef.current = setTimeout(() => {
-      btn.removeAttribute("data-copied")
-      btn.disabled = false
-    }, 1500)
-  }
-
   return (
     <section className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-gray-300">Export</h3>
@@ -70,14 +57,14 @@ export function ExportPanel({ exportString }: { exportString: string }) {
         value={exportString}
         spellCheck={false}
       />
-      <button
-        className="self-end flex items-center gap-1 px-3 py-1.5 text-sm font-mono rounded border border-border text-muted-foreground enabled:hover:text-foreground disabled:text-muted-foreground/40"
-        onClick={handleCopy}
-      >
-        <CopyIcon className="w-4 h-4 in-data-copied:hidden" />
-        <CheckIcon className="w-4 h-4 hidden in-data-copied:block text-green-400" />
-        <span>Copy</span>
-      </button>
+      <AcknowledgeButton
+        className="self-end"
+        icon={CopyIcon}
+        label="Copy"
+        onClick={() => {
+          navigator.clipboard.writeText(exportString)
+        }}
+      />
     </section>
   )
 }

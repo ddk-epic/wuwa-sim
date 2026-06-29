@@ -1,6 +1,5 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import {
-  CheckIcon,
   DownloadIcon,
   ListCheckIcon,
   PlayIcon,
@@ -24,6 +23,7 @@ import { ImportExportModal } from "./ImportExportModal"
 import { ShareImageModal } from "./share/ShareImageModal"
 import { CharacterPortrait } from "#/components/ui/CharacterPortrait"
 import { IconBtn } from "#/components/ui/IconBtn"
+import { AcknowledgeButton } from "#/components/ui/AcknowledgeButton"
 
 interface HeaderProps {
   onEditTeam: () => void
@@ -66,21 +66,8 @@ export function Header({
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [importExportOpen, setImportExportOpen] = useState(false)
   const [shareImageOpen, setShareImageOpen] = useState(false)
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const simulateDisabled = autoRun ? !needsRun : timelineEmpty
-
-  function handleSave(e: React.MouseEvent<HTMLButtonElement>) {
-    onSaveTeam()
-    const btn = e.currentTarget
-    btn.dataset.saved = "true"
-    btn.disabled = true
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-    saveTimeoutRef.current = setTimeout(() => {
-      btn.removeAttribute("data-saved")
-      btn.disabled = false
-    }, 1500)
-  }
 
   return (
     <div className="h-12 flex items-stretch shrink-0">
@@ -127,16 +114,12 @@ export function Header({
       </div>
       {/* Right zone */}
       <div className="w-100 flex items-center gap-2 px-4 bg-darkest border-b border-border border-l">
-        <button
-          className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
+        <AcknowledgeButton
+          icon={SaveIcon}
+          label="Save"
           disabled={saveDisabled}
-          onClick={handleSave}
-          aria-label="Save team to library"
-        >
-          <SaveIcon className="w-4 h-4 in-data-saved:hidden" />
-          <CheckIcon className="w-4 h-4 hidden in-data-saved:block text-green-400" />
-          <span>Save</span>
-        </button>
+          onClick={onSaveTeam}
+        />
         <button
           className="flex items-center gap-1 px-2.5 py-1.25 font-mono text-sm rounded-sm border border-border text-muted-foreground disabled:text-muted-foreground/40 enabled:hover:text-foreground"
           disabled={timelineEmpty}
