@@ -31,4 +31,24 @@ describe("ShareCard", () => {
     expect(screen.getByText("AAERZ")).toBeTruthy()
     expect(screen.getByText("A")).toBeTruthy()
   })
+
+  it("renders an IN badge for an intro-led stint", () => {
+    render(<ShareCard cards={cards} slots={[SANHUA, ENCORE, null]} />)
+    expect(screen.getByText("IN")).toBeTruthy()
+  })
+
+  it("omits the Loop row when there is no loop rotation", () => {
+    render(<ShareCard cards={cards} slots={[SANHUA, null, null]} />)
+    expect(screen.queryByText("Loop")).toBeNull()
+  })
+
+  it("renders the Loop row when a loop rotation is present", () => {
+    const withLoop: RotationCards = {
+      opener: cards.opener,
+      loop: [{ characterId: SANHUA, letters: "ERQ", hasIntro: false }],
+    }
+    render(<ShareCard cards={withLoop} slots={[SANHUA, null, null]} />)
+    expect(screen.getByText("Loop")).toBeTruthy()
+    expect(screen.getByText("ERQ")).toBeTruthy()
+  })
 })

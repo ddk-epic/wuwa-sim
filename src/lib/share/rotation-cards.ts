@@ -18,14 +18,23 @@ export interface RotationCards {
   loop: RotationCard[]
 }
 
+const CARTETHYIA = 1409
+
+// Cartethyia's transformed moveset is authored wholly under the Forte Circuit
+// grouping, so the default grouping→Z rule would render her combo as ZZZZZ.
+// Until the data carries a real forte-cast signal, read her Forte Circuit stages
+// as their category letter instead. Temporary shim; also the home for D/J/F.
+const forteReadsAsCategory = new Set<number>([CARTETHYIA])
+
 // No model field marks a forte activation; the parent skill grouping is the
-// closest signal. Correct for every implemented character but Cartethyia, whose
-// transformed moveset is wholly authored under Forte Circuit.
+// closest signal. Correct for every implemented character but Cartethyia.
 function glyphFor(
+  characterId: number,
   grouping: SkillGrouping,
   category: SkillCategory,
 ): string | null {
-  if (grouping === "Forte Circuit") return "Z"
+  if (grouping === "Forte Circuit" && !forteReadsAsCategory.has(characterId))
+    return "Z"
   switch (category) {
     case "Basic Attack":
       return "A"
@@ -62,7 +71,8 @@ function toCards(entries: TimelineEntry[]): RotationCard[] {
       }
       cards.push(card)
     }
-    const glyph = info && glyphFor(info.skill.type, info.stage.category)
+    const glyph =
+      info && glyphFor(entry.characterId, info.skill.type, info.stage.category)
     if (glyph) card.letters += glyph
   }
   return cards.filter((c) => c.letters !== "" || c.hasIntro)

@@ -38,6 +38,14 @@ function StintCard({ card }: { card: RotationCard }) {
           className="h-full w-full object-cover"
         />
       </div>
+      {card.hasIntro && (
+        <span
+          className="rounded-sm px-1 py-0.5 text-[10px] font-bold leading-none text-darkest"
+          style={{ background: visual.hex }}
+        >
+          IN
+        </span>
+      )}
       <span className="font-mono text-lg font-semibold tracking-widest text-foreground">
         {card.letters}
       </span>
@@ -78,7 +86,12 @@ export function ShareCard({ cards, slots }: ShareCardProps) {
       <div className="mb-4 text-2xl font-semibold text-foreground">
         {title(slots)}
       </div>
-      <RotationRow label="Opener" cards={cards.opener} />
+      <div className="flex flex-col gap-3">
+        <RotationRow label="Opener" cards={cards.opener} />
+        {cards.loop.length > 0 && (
+          <RotationRow label="Loop" cards={cards.loop} />
+        )}
+      </div>
     </div>
   )
 }

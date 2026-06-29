@@ -9,6 +9,7 @@ import { rotationCards } from "./rotation-cards"
 const SANHUA = 1102
 const ENCORE = 1203
 const CAMELLYA = 1603
+const CARTETHYIA = 1409
 
 function stageId(charId: number, match: (i: StageInfo) => boolean): string {
   const char = getCharacterById(charId)
@@ -60,6 +61,19 @@ describe("rotationCards", () => {
     ])
     expect(opener).toEqual([
       { characterId: CAMELLYA, letters: "Z", hasIntro: false },
+    ])
+  })
+
+  it("reads Cartethyia's Forte Circuit moveset as its category, not Z", () => {
+    // Her whole transformed combo is authored under Forte Circuit; the override
+    // sends it back to natural letters so it doesn't render as ZZZZZ.
+    const basic = (i: StageInfo) =>
+      i.skill.type === "Forte Circuit" && i.stage.category === "Basic Attack"
+    const { opener } = rotationCards([
+      entry(CARTETHYIA, stageId(CARTETHYIA, basic)),
+    ])
+    expect(opener).toEqual([
+      { characterId: CARTETHYIA, letters: "A", hasIntro: false },
     ])
   })
 
