@@ -1,11 +1,6 @@
 import type { CharacterTemplate } from "#/types/character"
 import type { EchoSet } from "#/types/echo"
-import type {
-  Cost3Main,
-  Cost4Main,
-  EchoBuild,
-  SlotLoadout,
-} from "#/types/loadout"
+import type { SlotLoadout } from "#/types/loadout"
 import {
   findEchoByName,
   findEchoSetByName,
@@ -13,16 +8,7 @@ import {
   getEchoById,
   getEchoSetForEcho,
 } from "./catalog"
-
-export const COST4_MAINS_DEFAULT: Record<EchoBuild, Cost4Main[]> = {
-  "4-3-3-1-1": ["cd"],
-  "4-4-1-1-1": ["cr", "cd"],
-}
-
-export const COST3_MAINS_DEFAULT: Record<EchoBuild, Cost3Main[]> = {
-  "4-3-3-1-1": ["elemDmg", "elemDmg"],
-  "4-4-1-1-1": [],
-}
+import { DEFAULT_ECHO_BUILD, ECHO_BUILDS } from "./echo-stat-constants"
 
 export const emptyLoadout = (): SlotLoadout => ({
   weaponId: null,
@@ -31,9 +17,9 @@ export const emptyLoadout = (): SlotLoadout => ({
   echoSetSlot1Id: null,
   echoSetSlot2Id: null,
   sequence: 0,
-  echoBuild: "4-3-3-1-1",
-  cost4Mains: ["cd"],
-  cost3Mains: ["elemDmg", "elemDmg"],
+  echoBuild: DEFAULT_ECHO_BUILD,
+  cost4Mains: [...ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost4Default],
+  cost3Mains: [...ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost3Default],
 })
 
 export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
@@ -48,9 +34,9 @@ export function loadoutFromTemplate(template: CharacterTemplate): SlotLoadout {
     echoSetSlot1Id: setId,
     echoSetSlot2Id: echoSet?.type === "two-five" ? setId : null,
     sequence: 0,
-    echoBuild: "4-3-3-1-1",
-    cost4Mains: ["cd"],
-    cost3Mains: ["elemDmg", "elemDmg"],
+    echoBuild: DEFAULT_ECHO_BUILD,
+    cost4Mains: [...ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost4Default],
+    cost3Mains: [...ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost3Default],
   }
 }
 

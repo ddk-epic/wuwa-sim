@@ -1,3 +1,5 @@
+import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
+
 // Column-2 substat values from references/echo-stats.md
 export const ECHO_SUBSTAT = {
   critRate: 0.075,
@@ -46,8 +48,32 @@ export const ECHO_MAIN_3COST_VARIABLE = {
   elemDmg: 0.3,
 } as const
 
-// Echo cost slot counts per build
-export const ECHO_BUILD_LAYOUT = {
-  "4-3-3-1-1": { cost4: 1, cost3: 2, cost1: 2 },
-  "4-4-1-1-1": { cost4: 2, cost3: 0, cost1: 3 },
-} as const
+export const DEFAULT_ECHO_BUILD: EchoBuild = "4-3-3-1-1"
+
+export interface EchoBuildLayout {
+  cost4: number
+  cost3: number
+  cost1: number
+  cost4Default: Cost4Main[]
+  cost3Default: Cost3Main[]
+}
+
+// Single source of truth for Echo Build Presets: slot counts + default mains.
+export const ECHO_BUILDS: Record<EchoBuild, EchoBuildLayout> = {
+  "4-3-3-1-1": {
+    cost4: 1,
+    cost3: 2,
+    cost1: 2,
+    cost4Default: ["cd"],
+    cost3Default: ["elemDmg", "elemDmg"],
+  },
+  "4-4-1-1-1": {
+    cost4: 2,
+    cost3: 0,
+    cost1: 3,
+    cost4Default: ["cr", "cd"],
+    cost3Default: [],
+  },
+}
+
+export const ECHO_BUILD_LIST = Object.keys(ECHO_BUILDS) as EchoBuild[]

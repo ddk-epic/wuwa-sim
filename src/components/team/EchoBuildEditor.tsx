@@ -1,15 +1,9 @@
 import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
 import { listEchoes, listEchoSets } from "#/lib/loadout/catalog"
-import { ECHO_BUILD_LAYOUT } from "#/lib/loadout/echo-stat-constants"
-import {
-  COST3_MAINS_DEFAULT,
-  COST4_MAINS_DEFAULT,
-} from "#/lib/loadout/template"
+import { ECHO_BUILD_LIST, ECHO_BUILDS } from "#/lib/loadout/echo-stat-constants"
 import { elementHex } from "#/components/ui/character-visual"
 import { useSlot } from "#/state/team"
 import { ComboboxSelect } from "#/components/team/TeamSlotControls"
-
-const ECHO_BUILDS: EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
 
 const SCALING_LABEL: Record<"atk" | "hp" | "def", string> = {
   atk: "ATK%",
@@ -26,7 +20,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
   const hex = elementHex(character?.element ?? "")
   const scaling = character?.primaryScalingStat ?? "atk"
   const scalingLabel = SCALING_LABEL[scaling]
-  const layout = ECHO_BUILD_LAYOUT[loadout.echoBuild]
+  const layout = ECHO_BUILDS[loadout.echoBuild]
   const echoes = listEchoes()
   const echoSets = listEchoSets()
   const echo = echoes.find((e) => e.id === loadout.echoId) ?? null
@@ -52,8 +46,8 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
   function setBuild(b: EchoBuild) {
     setPatch({
       echoBuild: b,
-      cost4Mains: COST4_MAINS_DEFAULT[b],
-      cost3Mains: COST3_MAINS_DEFAULT[b],
+      cost4Mains: [...ECHO_BUILDS[b].cost4Default],
+      cost3Mains: [...ECHO_BUILDS[b].cost3Default],
     })
   }
 
@@ -137,7 +131,7 @@ function BuildToggle({
 }) {
   return (
     <div className="flex border border-border rounded-sm overflow-hidden">
-      {ECHO_BUILDS.map((b) => {
+      {ECHO_BUILD_LIST.map((b) => {
         const active = b === value
         return (
           <button

@@ -6,7 +6,7 @@ import type { SlotLoadout } from "#/types/loadout"
 import { BuffEngine } from "#/lib/engine/buff-engine"
 import type { HitLandedEvent } from "#/lib/engine/buff-engine"
 import {
-  ECHO_BUILD_LAYOUT,
+  ECHO_BUILDS,
   ECHO_MAIN_3COST_VARIABLE,
 } from "#/lib/loadout/echo-stat-constants"
 import { infernoRider } from "./inferno-rider"
@@ -15,7 +15,7 @@ import { reminiscenceFleurdelys } from "./reminiscence-fleurdelys"
 import type { EchoSet } from "#/types/echo-set"
 
 const BASE_ELEM_BONUS =
-  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
+  ECHO_BUILDS["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 // Integration tests for the Inferno Rider Tap 3rd-hit buff (#95)
 let testCharacters: EnrichedCharacter[] = []

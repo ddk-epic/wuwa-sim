@@ -10,7 +10,7 @@ import type { TimelineEntry } from "#/types/timeline"
 import type { BuffDef } from "#/types/buff"
 import type { ActionEvent } from "#/types/simulation-log"
 import {
-  ECHO_BUILD_LAYOUT,
+  ECHO_BUILDS,
   ECHO_MAIN_3COST_VARIABLE,
 } from "./loadout/echo-stat-constants"
 
@@ -18,7 +18,7 @@ import { runSimulation } from "./simulation"
 import { tlEntry } from "./simulation.test-fixtures"
 
 const BASE_ELEM_BONUS =
-  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
+  ECHO_BUILDS["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
 let testCharacters: EnrichedCharacter[] = []
 vi.mock("./loadout/catalog", () => ({

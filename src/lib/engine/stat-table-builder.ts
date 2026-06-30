@@ -19,8 +19,9 @@ import type { NegStatusType } from "#/data/neg-status-types"
 import type { HitLabel } from "#/data/hit-labels"
 import type { WeaponData } from "#/types/weapon"
 import {
+  DEFAULT_ECHO_BUILD,
   DEFAULT_SUBSTAT_ROLLS,
-  ECHO_BUILD_LAYOUT,
+  ECHO_BUILDS,
   ECHO_MAIN_1COST_SCALING,
   ECHO_MAIN_3COST_VARIABLE,
   ECHO_MAIN_4COST_VARIABLE,
@@ -298,7 +299,7 @@ function accumulateEchoMainBlock(
   echoBuild: EchoBuild,
   primaryScalingStat: "atk" | "hp" | "def",
 ): void {
-  const layout = ECHO_BUILD_LAYOUT[echoBuild]
+  const layout = ECHO_BUILDS[echoBuild]
   stats.atkFlat +=
     layout.cost4 * ECHO_MAIN_FIXED.cost4FlatAtk +
     layout.cost3 * ECHO_MAIN_FIXED.cost3FlatAtk
@@ -380,13 +381,17 @@ export function compileBaseStats(
   accumulateEchoSubstatBlock(stats, character, primaryScalingStat)
   accumulateEchoMainBlock(
     stats,
-    loadout?.echoBuild ?? "4-3-3-1-1",
+    loadout?.echoBuild ?? DEFAULT_ECHO_BUILD,
     primaryScalingStat,
   )
-  accumulateCost4Mains(stats, loadout?.cost4Mains ?? ["cd"], primaryScalingStat)
+  accumulateCost4Mains(
+    stats,
+    loadout?.cost4Mains ?? ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost4Default,
+    primaryScalingStat,
+  )
   accumulateCost3Mains(
     stats,
-    loadout?.cost3Mains ?? ["elemDmg", "elemDmg"],
+    loadout?.cost3Mains ?? ECHO_BUILDS[DEFAULT_ECHO_BUILD].cost3Default,
     primaryScalingStat,
     character.element,
   )

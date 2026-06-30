@@ -3,7 +3,7 @@ import type { DamageEntry, EnrichedCharacter } from "#/types/character"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import {
   DEFAULT_SUBSTAT_ROLLS,
-  ECHO_BUILD_LAYOUT,
+  ECHO_BUILDS,
   ECHO_MAIN_1COST_SCALING,
   ECHO_SUBSTAT,
 } from "../loadout/echo-stat-constants"
@@ -11,7 +11,7 @@ import {
 export const CHARACTER_BASE_CRIT_RATE = 0.05
 export const BASE_ATK_PCT =
   DEFAULT_SUBSTAT_ROLLS.scalingMain * ECHO_SUBSTAT.atkPct +
-  ECHO_BUILD_LAYOUT["4-3-3-1-1"].cost1 * ECHO_MAIN_1COST_SCALING.atk
+  ECHO_BUILDS["4-3-3-1-1"].cost1 * ECHO_MAIN_1COST_SCALING.atk
 export const BASE_CR =
   CHARACTER_BASE_CRIT_RATE +
   DEFAULT_SUBSTAT_ROLLS.critRate * ECHO_SUBSTAT.critRate
