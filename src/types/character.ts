@@ -174,7 +174,6 @@ export interface Character {
   skillTreeBonuses: SkillTreeStat[]
   buffs: CharacterBuffNames
   skillBonusPriority?: SubstatSkillType
-  primaryScalingStat?: "atk" | "hp" | "def"
 }
 
 export type VariantKind = "cancel" | "instantCancel" | "swap"

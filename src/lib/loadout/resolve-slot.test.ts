@@ -97,7 +97,7 @@ describe("resolveBaseStats", () => {
   })
 
   it("hp scaler routes cost-1 and cost-4 scaling to hpPct", () => {
-    const char = baseChar({ primaryScalingStat: "hp" })
+    const char = baseChar({ skillTreeBonuses: ["HP"] })
     const stats = resolveBaseStats(
       char,
       baseLoadout({

@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest"
+import { cartethyia } from "#/data/characters/cartethyia"
+import { shorekeeper } from "#/data/characters/shorekeeper"
+import { verina } from "#/data/characters/verina"
 import {
   DEFAULT_ECHO_BUILD,
   ECHO_BUILD_LIST,
   ECHO_BUILDS,
+  scalingStatFromSkillTree,
 } from "./echo-stat-constants"
 
 describe("ECHO_BUILDS presets", () => {
@@ -32,5 +36,23 @@ describe("ECHO_BUILDS presets", () => {
 
   it("has a default build present in the record", () => {
     expect(ECHO_BUILDS[DEFAULT_ECHO_BUILD]).toBeDefined()
+  })
+})
+
+describe("scalingStatFromSkillTree", () => {
+  it("reads HP scalers off their skill-tree base-stat node", () => {
+    expect(scalingStatFromSkillTree(shorekeeper)).toBe("hp")
+    expect(scalingStatFromSkillTree(cartethyia)).toBe("hp")
+  })
+
+  it("reads ATK scalers off their skill-tree base-stat node", () => {
+    expect(scalingStatFromSkillTree(verina)).toBe("atk")
+  })
+
+  it("defaults to atk when no base-stat node is present", () => {
+    expect(scalingStatFromSkillTree({ skillTreeBonuses: [] })).toBe("atk")
+    expect(scalingStatFromSkillTree({ skillTreeBonuses: ["Crit. Rate"] })).toBe(
+      "atk",
+    )
   })
 })

@@ -1,6 +1,10 @@
 import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
 import { listEchoes, listEchoSets } from "#/lib/loadout/catalog"
-import { ECHO_BUILD_LIST, ECHO_BUILDS } from "#/lib/loadout/echo-stat-constants"
+import {
+  ECHO_BUILD_LIST,
+  ECHO_BUILDS,
+  scalingStatFromSkillTree,
+} from "#/lib/loadout/echo-stat-constants"
 import { elementHex } from "#/components/ui/character-visual"
 import { useSlot } from "#/state/team"
 import { ComboboxSelect } from "#/components/team/TeamSlotControls"
@@ -18,7 +22,7 @@ interface EchoBuildEditorProps {
 export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
   const { character, loadout, setPatch } = useSlot(slotIndex)
   const hex = elementHex(character?.element ?? "")
-  const scaling = character?.primaryScalingStat ?? "atk"
+  const scaling = character ? scalingStatFromSkillTree(character) : "atk"
   const scalingLabel = SCALING_LABEL[scaling]
   const layout = ECHO_BUILDS[loadout.echoBuild]
   const echoes = listEchoes()
@@ -38,9 +42,9 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
     { value: "elemDmg", label: "Ele DMG" },
   ]
   const cost1Options = [
-    { value: "scaling", label: scalingLabel },
-    { value: "hp", label: "HP%" },
-    { value: "def", label: "DEF%" },
+    { value: "atk", label: SCALING_LABEL.atk },
+    { value: "hp", label: SCALING_LABEL.hp },
+    { value: "def", label: SCALING_LABEL.def },
   ]
 
   function setBuild(b: EchoBuild) {
@@ -110,7 +114,7 @@ export function EchoBuildEditor({ slotIndex }: EchoBuildEditorProps) {
           cost={1}
           capacity={layout.cost1}
           options={cost1Options}
-          mains={Array<string>(layout.cost1).fill("scaling")}
+          mains={Array<string>(layout.cost1).fill(scaling)}
           onChange={() => {}}
           hex={hex}
           disabled

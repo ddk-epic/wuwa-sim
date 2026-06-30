@@ -20,6 +20,7 @@ import {
   ECHO_MAIN_4COST_VARIABLE,
   ECHO_MAIN_FIXED,
   ECHO_SUBSTAT,
+  scalingStatFromSkillTree,
 } from "./echo-stat-constants"
 
 export interface ResolvedSet {
@@ -170,7 +171,7 @@ export function resolveEchoStats(
   character: EnrichedCharacter,
   loadout: SlotLoadout | null,
 ): void {
-  const primaryScalingStat = character.primaryScalingStat ?? "atk"
+  const primaryScalingStat = scalingStatFromSkillTree(character)
   accumulateEchoSubstatBlock(stats, character, primaryScalingStat)
   accumulateEchoMainBlock(
     stats,

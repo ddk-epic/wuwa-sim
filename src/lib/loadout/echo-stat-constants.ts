@@ -1,3 +1,4 @@
+import type { Character } from "#/types/character"
 import type { Cost3Main, Cost4Main, EchoBuild } from "#/types/loadout"
 
 // Column-2 substat values from references/echo-stats.md
@@ -47,6 +48,18 @@ export const ECHO_MAIN_3COST_VARIABLE = {
   er: 0.32,
   elemDmg: 0.3,
 } as const
+
+const BASE_STAT_NODES = ["ATK", "HP", "DEF"] as const
+
+// Echo build funnels rolls into the base stat the character's skill tree grants.
+export function scalingStatFromSkillTree(
+  character: Pick<Character, "skillTreeBonuses">,
+): "atk" | "hp" | "def" {
+  const node = character.skillTreeBonuses.find((n) =>
+    BASE_STAT_NODES.includes(n as (typeof BASE_STAT_NODES)[number]),
+  )
+  return node ? (node.toLowerCase() as "atk" | "hp" | "def") : "atk"
+}
 
 export const DEFAULT_ECHO_BUILD: EchoBuild = "4-3-3-1-1"
 
