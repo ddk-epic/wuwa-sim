@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { EchoSet } from "#/types/echo"
-import { resolveEchoSets } from "./resolve-echo-sets"
+import type { BuffDef } from "#/types/buff"
+import type { EchoSet, EnrichedEcho } from "#/types/echo"
+import {
+  resolveEchoBuffs,
+  resolveEchoSetBuffs,
+  resolveEchoSets,
+} from "./resolve-echo"
 
 let testEchoSets: EchoSet[] = []
 
@@ -98,5 +103,67 @@ describe("resolveEchoSets", () => {
   it("empty + 2/5 X → X at 2pc (slot 2 only)", () => {
     testEchoSets = [twoFiveA]
     expect(resolveEchoSets(null, 1)).toEqual([{ setId: 1, effectivePieces: 2 }])
+  })
+})
+
+const permBuff = (id: string): BuffDef => ({
+  id,
+  name: id,
+  trigger: { event: "simStart" },
+  target: { kind: "self" },
+  duration: { kind: "permanent" },
+  effects: [],
+})
+
+const twoFiveWithBuffs = (id: number, buffs: BuffDef[]): EchoSet => ({
+  id,
+  name: `Set${id}`,
+  type: "two-five",
+  effects: [],
+  buffs,
+})
+
+const echoWithBuffs = (buffs: BuffDef[]): EnrichedEcho => ({
+  id: 20,
+  name: "TestEcho",
+  cost: 3,
+  element: "Glacio",
+  sets: ["TestSet"],
+  buffs,
+  skill: { cooldown: 20, description: "", stages: [] },
+})
+
+describe("resolveEchoBuffs", () => {
+  it("returns the echo's compiled buffs", () => {
+    const buff = permBuff("echo.buff")
+    expect(resolveEchoBuffs(echoWithBuffs([buff]))).toContainEqual(buff)
+  })
+
+  it("returns empty when the echo has no buffs", () => {
+    expect(resolveEchoBuffs(echoWithBuffs([]))).toHaveLength(0)
+  })
+})
+
+describe("resolveEchoSetBuffs", () => {
+  it("returns empty when both slots are null", () => {
+    expect(resolveEchoSetBuffs(null, null)).toHaveLength(0)
+  })
+
+  it("includes a 5pc buff when both slots share one two-five set", () => {
+    const fivePc: BuffDef = { ...permBuff("set.5pc"), requiresPieces: 5 }
+    testEchoSets = [twoFiveWithBuffs(1, [fivePc])]
+    expect(resolveEchoSetBuffs(1, 1)).toContainEqual(fivePc)
+  })
+
+  it("excludes a 5pc buff when two different sets give 2 pieces each", () => {
+    const fivePc: BuffDef = { ...permBuff("set.5pc"), requiresPieces: 5 }
+    const twoPc: BuffDef = { ...permBuff("set.2pc"), requiresPieces: 2 }
+    testEchoSets = [
+      twoFiveWithBuffs(1, [fivePc, twoPc]),
+      twoFiveWithBuffs(2, []),
+    ]
+    const result = resolveEchoSetBuffs(1, 2)
+    expect(result).toContainEqual(twoPc)
+    expect(result).not.toContainEqual(fivePc)
   })
 })

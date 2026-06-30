@@ -2,7 +2,7 @@ import type { Element } from "#/data/elements"
 import type { SkillType } from "#/types/character"
 import type { ActiveBuff, HitEvent, SustainEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
-import { cloneStats } from "./stat-table-builder"
+import { cloneStats } from "./apply-stat-effects"
 
 /**
  * The damage/stat/resource block shared by authored and synthetic hits — every

@@ -57,7 +57,7 @@ import {
   accumulateScaledStatEffects,
   accumulateStatEffects,
   matchesHit,
-} from "./stat-table-builder"
+} from "./apply-stat-effects"
 import { TriggerIndex } from "./trigger-index"
 
 export type { EngineEvent } from "./instance-store"

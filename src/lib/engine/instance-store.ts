@@ -12,7 +12,7 @@ import type { ActiveBuff, BuffEvent } from "#/types/simulation-log"
 import type { StatTable } from "#/types/stat-table"
 import { emptyStatTable } from "#/types/stat-table"
 import { getCharacterById } from "../loadout/catalog"
-import { cloneStats, freezeSnapshots, matchesAxis } from "./stat-table-builder"
+import { cloneStats, freezeSnapshots, matchesAxis } from "./apply-stat-effects"
 
 const DEFAULT_STACKING: StackingPolicy = { max: 1, onRetrigger: "refresh" }
 

@@ -1,128 +1,11 @@
-import { ELEMENTS } from "#/data/elements"
-import type { BuffDef, BuffInstance, StatPath } from "#/types/buff"
-import type { EnrichedCharacter } from "#/types/character"
-import type { EnrichedEcho } from "#/types/echo"
+import type { BuffDef, BuffInstance } from "#/types/buff"
 import type { SlotLoadout } from "#/types/loadout"
 import type { StatTable } from "#/types/stat-table"
-import type { WeaponData } from "#/types/weapon"
-import {
-  getCharacterById,
-  getEchoById,
-  getEchoSetById,
-  getWeaponById,
-} from "./loadout/catalog"
-import { compileCharacter, compileEcho } from "./compile-character"
-import { resolveEchoSets } from "./loadout/resolve-echo-sets"
+import { resolveSlot } from "./loadout/resolve-slot"
 import {
   accumulateStatEffects,
-  compileBaseStats,
   freezeSnapshots,
-} from "./engine/stat-table-builder"
-import { resolveWeaponBuffs } from "./loadout/weapon-resolve"
-
-const FLAT_VALUE_BY_NAME: Record<
-  string,
-  { path: StatPath; v: number } | undefined
-> = {
-  ATK: { path: { stat: "atkPct" }, v: 0.12 },
-  HP: { path: { stat: "hpPct" }, v: 0.12 },
-  DEF: { path: { stat: "defPct" }, v: 0.12 },
-  "Crit. Rate": { path: { stat: "critRate" }, v: 0.08 },
-  "Crit. DMG": { path: { stat: "critDmg" }, v: 0.16 },
-}
-
-export function compileSkillTreeNode(
-  nodeName: string,
-  ctx: { characterId: number; characterElement: string },
-): BuffDef | null {
-  const elementMatch = ELEMENTS.find((e) => nodeName === `${e} DMG Bonus`)
-  if (elementMatch) {
-    return {
-      id: `skill-tree.${ctx.characterId}.${nodeName}`,
-      name: nodeName,
-      trigger: { event: "simStart" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "elementBonus", key: elementMatch },
-          value: { kind: "const", v: 0.12 },
-        },
-      ],
-    }
-  }
-
-  const flat = FLAT_VALUE_BY_NAME[nodeName]
-  if (flat) {
-    return {
-      id: `skill-tree.${ctx.characterId}.${nodeName}`,
-      name: nodeName,
-      trigger: { event: "simStart" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      effects: [
-        {
-          kind: "stat",
-          path: flat.path,
-          value: { kind: "const", v: flat.v },
-        },
-      ],
-    }
-  }
-
-  return null
-}
-
-export function buildCharacterBuffDefs(
-  char: EnrichedCharacter,
-  sequence: number,
-): BuffDef[] {
-  const buffs: BuffDef[] = []
-  for (const def of compileCharacter(char).buffs) {
-    if (
-      (def.requiresSequence ?? 0) <= sequence &&
-      (def.maxSequence === undefined || sequence <= def.maxSequence)
-    )
-      buffs.push(def)
-  }
-  for (const nodeName of char.skillTreeBonuses) {
-    const def = compileSkillTreeNode(nodeName, {
-      characterId: char.id,
-      characterElement: char.element,
-    })
-    if (def) buffs.push(def)
-  }
-  return buffs
-}
-
-export function buildWeaponBuffDefs(
-  weapon: WeaponData,
-  rank: number,
-): BuffDef[] {
-  return resolveWeaponBuffs(weapon, rank)
-}
-
-export function buildEchoBuffDefs(echo: EnrichedEcho): BuffDef[] {
-  return compileEcho(echo).buffs
-}
-
-export function buildEchoSetBuffDefs(
-  slot1Id: number | null,
-  slot2Id: number | null,
-): BuffDef[] {
-  const buffs: BuffDef[] = []
-  const resolvedSets = resolveEchoSets(slot1Id, slot2Id)
-  for (const { setId, effectivePieces } of resolvedSets) {
-    const echoSet = getEchoSetById(setId)
-    if (echoSet) {
-      for (const def of echoSet.buffs) {
-        if ((def.requiresPieces ?? 2) <= effectivePieces) buffs.push(def)
-      }
-    }
-  }
-  return buffs
-}
+} from "./engine/apply-stat-effects"
 
 export interface SlotBootstrap {
   charId: number
@@ -180,42 +63,17 @@ export function validateBuffDef(def: BuffDef): void {
 }
 
 /**
- * Resolve a single slot into base stats, triggerable BuffDefs, and permanent
- * sim-start instances (those with a Condition). Pure aside from catalog reads.
+ * Seed a single slot's engine state: resolve its base stats + BuffDefs, then
+ * partition the defs into folded permanents (into the base table), permanent
+ * sim-start instances (those needing a runtime gate), and triggerables.
  */
 export function bootstrapSlot(
   charId: number,
   loadout: SlotLoadout | null,
 ): SlotBootstrap | null {
-  const character = getCharacterById(charId)
-  if (!character) return null
-
-  const sequence = loadout?.sequence ?? 0
-
-  const weaponId = loadout?.weaponId ?? null
-  const weapon = weaponId !== null ? getWeaponById(weaponId) : null
-  const stats: StatTable = compileBaseStats(character, loadout, weapon)
-
-  const buffs: BuffDef[] = [...buildCharacterBuffDefs(character, sequence)]
-
-  if (weapon) {
-    buffs.push(...buildWeaponBuffDefs(weapon, loadout?.weaponRank ?? 1))
-  }
-
-  const echoId = loadout?.echoId ?? null
-  if (echoId !== null) {
-    const echo = getEchoById(echoId)
-    if (echo) buffs.push(...buildEchoBuffDefs(echo))
-  }
-
-  buffs.push(
-    ...buildEchoSetBuffDefs(
-      loadout?.echoSetSlot1Id ?? null,
-      loadout?.echoSetSlot2Id ?? null,
-    ),
-  )
-
-  buffs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  const resolved = resolveSlot(charId, loadout)
+  if (!resolved) return null
+  const { baseStats: stats, buffDefs: buffs } = resolved
 
   for (const buff of buffs) validateBuffDef(buff)
 
@@ -223,9 +81,9 @@ export function bootstrapSlot(
   const permanentInstances: Omit<BuffInstance, "instanceId">[] = []
   const foldedBuffs: BuffDef[] = []
   for (const buff of buffs) {
-    // self wielder-id filter (#343): the source is always this slot's char, so a
-    // self-target whose characterId list excludes charId never lands here — skip it
-    // entirely (no fold, no instance, no triggerable registration).
+    // self wielder-id filter: the source is always this slot's char, so a
+    // self-target whose characterId list excludes charId never lands — skip it
+    // (no fold, no instance, no triggerable registration).
     const target = buff.target
     if (target?.kind === "self" && target.characterId != null) {
       const allowed = Array.isArray(target.characterId)
@@ -235,10 +93,9 @@ export function bootstrapSlot(
     }
     const isPermanentSimStart =
       buff.trigger.event === "simStart" && buff.duration?.kind === "permanent"
-    // A hit-scoped (`appliesToHits`) buff must never be pre-folded into the base
-    // table: its effects are gated per-hit at resolveStats time via the
-    // `activeContributions` filter. Folding bypasses that gate and would leak the
-    // bonus onto every hit, so it stays a runtime instance like a conditional one.
+    // A hit-scoped (`appliesToHits`) buff must stay a runtime instance: its
+    // effects are gated per-hit at resolveStats time, so folding would leak the
+    // bonus onto every hit.
     const needsInstance = buff.condition != null || buff.appliesToHits != null
     if (isPermanentSimStart && !needsInstance) {
       accumulateStatEffects(stats, { def: buff, stacks: 1 })

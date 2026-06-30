@@ -6,7 +6,7 @@ import type {
   WeaponEffect,
   WeaponValueExpr,
 } from "#/types/weapon"
-import { resolveWeaponBuffs } from "./weapon-resolve"
+import { resolveWeaponBuffs } from "./resolve-weapon"
 
 const weaponEffect = (value: WeaponValueExpr): WeaponEffect => ({
   kind: "stat",
