@@ -123,7 +123,7 @@ export function ShareImageModal({
           </div>
         </div>
         <div className="overflow-x-auto">
-          <div ref={previewRef} className="w-max">
+          <div ref={previewRef} className="mx-auto w-max">
             <ShareCard
               cards={cards}
               slots={slots}

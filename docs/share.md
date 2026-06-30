@@ -44,17 +44,29 @@ bearing a string of action letters. Built off the live timeline and rasterized
 client-side with `html-to-image` (`toPng` on the preview node). Portraits are
 same-origin (`/portraits/*.png`), so the canvas is never CORS-tainted.
 
+**Source files:** `src/components/share/ShareCard.tsx` (the rasterized node),
+`src/components/share/ShareImageModal.tsx` (controls + capture), and
+`src/lib/share/rotation-cards.ts` (timeline → cards + glyphs).
+
 ### Cards
 
 One card per **stint** — a maximal run of consecutive entries by the same
-character. Card boundaries are therefore swaps. A card carries the slot
-character's portrait + element tint and a **letter string**, one glyph per entry.
+character. Card boundaries are therefore swaps. Each card is a fixed-height pill:
+a full-bleed square portrait on the left under a left **element accent bar** and a
+short hue wash, then the **letter string** (one glyph per entry), an `IN` diamond
+leading the string when the stint opens on an intro.
 
 The two rotations come straight from `splitRotations()`: an **Opener** section
 and a **Loop** section, each a wrapping horizontal flow of cards joined by `»`.
-With no loop marker, `splitRotations` returns an empty loop and the Loop block is
-**omitted from the DOM entirely** — the image is opener-only and shorter (output
-is content-sized, not a fixed canvas; no placeholder row).
+Every section is fronted by a vertical **label bar** tapered to a pen-nib point
+(the opener points down; the loop points at both ends), reserving a two-row
+minimum height and stretching as the cards wrap. When both sections are present a
+**dashed divider** sits between them.
+
+The card has a **fixed width** (`CARD_WIDTH`); only its height is content-sized,
+growing as rows wrap. With no loop marker, `splitRotations` returns an empty loop
+and the Loop block — and the divider — are **omitted from the DOM entirely**; an
+empty opener is likewise dropped.
 
 ### Letter legend
 
@@ -68,15 +80,15 @@ Each entry maps to one glyph off its resolved stage:
 | Resonance Liberation                | `R`                                          |
 | Echo Skill                          | `Q`                                          |
 | `skillGrouping === "Forte Circuit"` | `Z`                                          |
-| Intro Skill                         | `IN` badge (not a letter)                    |
+| Intro Skill                         | `IN` diamond (not a letter)                  |
 | Outro Skill                         | _dropped_                                    |
 | Movement — dodge / jump             | `D` / `J` (reserved; not yet mapped in data) |
 | Tune Break                          | `F` (reserved; unimplemented in data)        |
 | other Movement                      | _omitted_                                    |
 
-An **Intro Skill** that opens a stint shows as an `IN` badge on the card and
-consumes no letter. **Outro Skills** are dropped — a stint ending in a swap-out is
-implicit.
+An **Intro Skill** that opens a stint shows as an `IN` diamond leading the card's
+letter string and consumes no letter. **Outro Skills** are dropped — a stint
+ending in a swap-out is implicit.
 
 ### Forte (`Z`) detection
 
@@ -102,6 +114,13 @@ duration. Duration is on by default with an opt-out; the `{seconds}` come from
 simulation run required**. No difficulty tag.
 
 Entry point is a **Share image** button in the `Header` right zone, placed
-`Save → Share image → Import/Export`. It opens a modal with a live preview (the
-node that gets rasterized — WYSIWYG), **Download PNG** and **Copy to clipboard**,
-the duration toggle, and a **theme toggle** (dark default / light).
+`Save → Share image → Import/Export`. It opens a modal with a centered live
+preview (the node that gets rasterized — WYSIWYG), **Download PNG** and **Copy to
+clipboard**, the duration toggle, and a **theme toggle** (dark default / light).
+
+The theme selects one of two **self-contained palettes** in `ShareCard.tsx`
+(shell, card, glyph, label-bar, divider colors) — the card paints its own colors
+inline rather than inheriting the app's CSS tokens, so the rendered PNG looks the
+same regardless of the surrounding page theme. Light swaps to dark label bars and
+outlines the cards (border on the non-accent sides) instead of relying on
+luminance contrast.
