@@ -37,6 +37,37 @@ not migrated — a stale code is simply re-exported. A future trailing field sho
 follow the same pattern (append + keep accepting the shorter prior versions);
 only a mid-stream renumber forces a hard version cut.
 
+### Slug prefix
+
+The emitted string carries a human-readable label **outside** the Base91
+envelope:
+
+```
+<slug0>-<slug1>-<slug2>-<base91blob>
+```
+
+The three slugs are the team's slot characters, normalised from
+`character.name` (lowercase, non-alphanumerics stripped) — `none` for an empty
+slot. They let a person eyeball that a code is a real rotation for a known team.
+
+The prefix is **decorative**: the blob stays the single source of truth, and the
+slugs never resolve characters. It works because `-` is the one separator absent
+from the Base91 alphabet, so the blob is always the substring after the **last**
+hyphen (slugs are normalised hyphen-free, keeping the split unambiguous). The
+prefix sits outside the versioned byte stream, so this needs **no `VERSION`
+bump**: a legacy code has no hyphen and decodes as a bare blob.
+
+Validation is recompute-and-reject: decode the blob, recompute the canonical
+slugs from the decoded team, and **reject** a present-but-mismatched prefix as
+tampered. Display and re-export always use the recomputed canonical slugs, never
+the raw incoming prefix — a malicious author can't make the label say anything
+other than the true team. This makes the **slug normaliser a frozen contract**:
+changing how a name maps to a slug invalidates every prior code's prefix.
+
+This prefix is legibility only — it does **not** address the array-position
+order-dependence above (weapons, echoes, stages, enums, `focusedId`, and timeline
+character refs are still positional).
+
 ## Share image
 
 A rotation rendered as a picture: each on-field stint becomes a character card

@@ -111,6 +111,20 @@ const stageId = (charByte: number, ord: number) => {
   return ord < own.length ? own[ord] : ECHO_STAGE_IDS[ord - own.length]
 }
 
+// ---- Slug prefix (legible label outside the Base91 envelope) ----
+// Frozen contract: changing this normalisation invalidates the prefix of every
+// previously emitted code, which decode then rejects as mismatched. Output is
+// hyphen-free so the prefix splits unambiguously from the blob.
+const EMPTY_SLOT_SLUG = "none"
+const charSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "")
+const slotSlug = (id: number | null) => {
+  if (id === null) return EMPTY_SLOT_SLUG
+  const char = ALL_CHARACTERS.find((c) => c.id === id)
+  if (!char) throw new Error(`Unknown character id ${id}`)
+  return charSlug(char.name)
+}
+const slugPrefix = (slots: Slots) => slots.map(slotSlug).join("-")
+
 // ---- Encode ----
 // v4 appends the per-team Settings block after the timeline; v5 adds the
 // startWithFullConcerto bit. Older codes lack these and decode to defaults.
@@ -179,7 +193,7 @@ export function encodePayload(payload: ImportExportPayload): string {
   w.push(s.startWithFullEnergy ? 1 : 0)
   w.push(s.startWithFullConcerto ? 1 : 0)
 
-  return base91Encode(w.bytes())
+  return `${slugPrefix(team.slots)}-${base91Encode(w.bytes())}`
 }
 
 // ---- Decode ----
@@ -196,9 +210,17 @@ function readEntry(r: Reader): TimelineEntry {
 }
 
 export function decodePayload(encoded: string): ImportExportPayload {
+  // The slug prefix lives outside the Base91 envelope; the blob is the substring
+  // after the last hyphen (hyphen is absent from the Base91 alphabet). A legacy
+  // code has no hyphen and is a bare blob.
+  const trimmed = encoded.trim()
+  const lastHyphen = trimmed.lastIndexOf("-")
+  const incomingPrefix = lastHyphen === -1 ? null : trimmed.slice(0, lastHyphen)
+  const blob = lastHyphen === -1 ? trimmed : trimmed.slice(lastHyphen + 1)
+
   let data: Uint8Array
   try {
-    data = base91Decode(encoded.trim())
+    data = base91Decode(blob)
   } catch {
     throw new Error("Invalid export code")
   }
@@ -219,6 +241,10 @@ export function decodePayload(encoded: string): ImportExportPayload {
     return i === null ? null : ALL_CHARACTERS[i].id
   }
   const slots: Slots = [readSlot(), readSlot(), readSlot()]
+
+  // Reject a present-but-mismatched label as tampered; the blob is authoritative.
+  if (incomingPrefix !== null && incomingPrefix !== slugPrefix(slots))
+    throw new Error("Export code label does not match its contents")
 
   const readLoadout = (): SlotLoadout => {
     const wIdx = r.nullable()

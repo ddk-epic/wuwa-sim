@@ -82,6 +82,9 @@ function basePayload(): ImportExportPayload {
   }
 }
 
+// The Base91 blob is the substring after the slug prefix's last hyphen.
+const blobOf = (code: string) => code.slice(code.lastIndexOf("-") + 1)
+
 // ---- Base91 ----
 describe("Base91 codec", () => {
   // Access the private functions indirectly: encode then decode a known payload
@@ -89,8 +92,7 @@ describe("Base91 codec", () => {
   const B91_RE = /^[A-Za-z0-9!#$%&()*+,./:;<=>?@[\]^_`{|}~"]*$/
 
   it("produces only Base91 characters", () => {
-    const code = encodePayload(basePayload())
-    expect(code).toMatch(B91_RE)
+    expect(blobOf(encodePayload(basePayload()))).toMatch(B91_RE)
   })
 
   it("roundtrips arbitrary byte patterns via the payload codec", () => {
@@ -173,7 +175,7 @@ describe("team encoding", () => {
   })
 
   it("rejects a superseded v2 code", () => {
-    const bytes = base91Decode(encodePayload(basePayload()))
+    const bytes = base91Decode(blobOf(encodePayload(basePayload())))
     const v2Bytes = new Uint8Array([2, ...bytes.slice(1)])
     expect(() => decodePayload(base91Encode(v2Bytes))).toThrow(/version/i)
   })
@@ -209,7 +211,7 @@ describe("settings encoding", () => {
     // with the version byte rolled back to 3.
     const payload = basePayload()
     payload.team.settings = NON_DEFAULT
-    const current = base91Decode(encodePayload(payload))
+    const current = base91Decode(blobOf(encodePayload(payload)))
     const v3 = new Uint8Array([3, ...current.slice(1, current.length - 6)])
     const decoded = decodePayload(base91Encode(v3))
     expect(decoded.team.settings).toEqual(DEFAULT_SETTINGS)
@@ -457,8 +459,26 @@ describe("timeline encoding", () => {
       ...basePayload(),
       timeline: [{ kind: "loopMarker", id: "m1" }],
     }
-    const bytes = base91Decode(encodePayload(payload))
+    const bytes = base91Decode(blobOf(encodePayload(payload)))
     expect(bytes[0]).toBe(5)
+  })
+})
+
+describe("slug prefix", () => {
+  it("prefixes the code with the slot character slugs", () => {
+    const payload = basePayload()
+    payload.team.slots = [CHAR_A.id, CHAR_B.id, null]
+    expect(encodePayload(payload).startsWith("sanhua-encore-none-")).toBe(true)
+  })
+
+  it("decodes a legacy code carrying no prefix", () => {
+    const payload = basePayload()
+    expect(decodePayload(blobOf(encodePayload(payload)))).toMatchObject(payload)
+  })
+
+  it("rejects a code whose label was tampered to a different team", () => {
+    const blob = blobOf(encodePayload(basePayload()))
+    expect(() => decodePayload(`encore-none-none-${blob}`)).toThrow(/label/i)
   })
 })
 
