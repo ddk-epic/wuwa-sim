@@ -18,10 +18,10 @@ At the highest level:
 
 Modules are grouped into sub-folders under `src/lib/`:
 
-- **`engine/`** — buff pipeline core: `buff-engine` (coordinator, Phase Pipeline), `instance-store`, `resource-ledger`, `on-field-tracker`, `emit-hit-dispatcher`, `stat-table-builder`, `condition-evaluator`, `trigger-index`. See [buff-engine](buff-engine.md).
+- **`engine/`** — buff pipeline core: `buff-engine` (coordinator, Phase Pipeline), `instance-store`, `resource-ledger`, `on-field-tracker`, `emit-hit-dispatcher`, `apply-stat-effects` (per-hit `stat`-effect fold + hit matchers), `condition-evaluator`, `trigger-index`. See [buff-engine](buff-engine.md).
 - **`damage/`** — pure formulas: `compute-damage`, `compute-healing`, `hit-formula`.
 - **`timeline/`** — timeline tooling: `validate-timeline`, `migrate-timeline`, `timeline-summary`, `timeline-render-items`, `timeline-group-formatting`, `timeline-drag-preview`.
-- **`loadout/`** — data resolution: `catalog`, `template`, `resolve-echo-sets`, `weapon-resolve`, `echo-stat-constants`.
+- **`loadout/`** — slot resolution: the per-entity peers `resolve-character`, `resolve-weapon`, `resolve-echo` (each owning its entity's base stats + BuffDefs) composed by the `resolve-slot` coordinator (`resolveSlot → { baseStats, buffDefs }`), plus `catalog` (lookups), `template` / `team-ops` (authoring), and `echo-stat-constants`.
 - **`stage.ts`** — stage resolution (one Timeline Entry → one Stage); at `src/lib/` root.
 - **`trailing-window.ts`** — pure helpers (`partitionStage`, `isCancelCapable`) splitting a swap stage's hits into immediate vs. trailing; consumed by `simulation.ts`. The former per-character state machine dissolved onto the frame-ordered stream (ADR-0028). At `src/lib/` root.
 - **`schedule.ts`** — the `Schedule<Work>` frame-ordered pending-work pool: ordering, the watermark drain, and the same-character drop/pad/reset collision policy (`resolveArrival`). Mechanism-only and generic over its payload — resolution runs in a caller-supplied callback, so it imports nothing from the engine, damage, or log (ADR-0028). At `src/lib/` root.

@@ -2,7 +2,7 @@
 
 `BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`), selects matching buff candidates, and routes them through a fixed phase pipeline. It composes its internal modules rather than owning their state directly.
 
-**Source files:** `src/lib/engine/buff-engine.ts`, `src/lib/engine/instance-store.ts`, `src/lib/engine/emit-hit-dispatcher.ts`, `src/lib/engine/on-field-tracker.ts`, `src/lib/engine/resource-ledger.ts`, `src/lib/engine/stat-table-builder.ts`, `src/lib/engine-bootstrap.ts`
+**Source files:** `src/lib/engine/buff-engine.ts`, `src/lib/engine/instance-store.ts`, `src/lib/engine/emit-hit-dispatcher.ts`, `src/lib/engine/on-field-tracker.ts`, `src/lib/engine/resource-ledger.ts`, `src/lib/engine/apply-stat-effects.ts`, `src/lib/engine-bootstrap.ts`
 
 ## How it works
 
@@ -13,12 +13,12 @@
 - **`PoolStore`** — per-character Emit Pool: the FIFO of Deferred Emits the `pool` resource projects
 - **`OnFieldTracker`** — current on-field character; swap inference
 - **`EmitHitDispatcher`** — synthetic hit firing with ICD
-- **`StatTableBuilder`** — base stats + per-hit `stat`-effect accumulation
+- **`apply-stat-effects`** — the per-hit `stat`-effect fold + hit matchers (base-stat building moved to `loadout/resolve-slot`)
 - **`FootingModule`** — ground/air footing per character, swap-back carry
 - **`Target`** — target params + Negative Statuses
 - **`TriggerIndex`** / **`ConditionEvaluator`** — triggerable-def lookup and condition evaluation against the engine's world
 
-`engine-bootstrap.ts` seeds the engine: it resolves each slot's loadout into base stats and pushes permanent instances for passives, weapon effects, and echo set bonuses.
+`engine-bootstrap.ts` seeds the engine: it calls `resolveSlot` (`loadout/resolve-slot`) for each slot's base stats + BuffDefs, then partitions the defs — folding permanent unconditional passives into the base table and pushing permanent instances for conditional/hit-scoped passives, weapon effects, and echo set bonuses.
 
 ### Event dispatch
 

@@ -6,7 +6,7 @@ recharge value the damage formula needs, already summed across character, weapon
 echoes, and active buffs. It is the single object buffs write into and the damage
 pipeline reads from.
 
-**Source files:** `src/types/stat-table.ts`, `src/lib/engine/stat-table-builder.ts`
+**Source files:** `src/types/stat-table.ts`, `src/lib/loadout/resolve-slot.ts` (base table), `src/lib/engine/apply-stat-effects.ts` (buff fold)
 
 ## How it works
 
@@ -30,12 +30,14 @@ than duplicating it here.
 
 ### How it's built
 
-`stat-table-builder.ts` starts from `emptyStatTable()` and layers contributions
-in order: character base stats (with the intrinsic 5% crit-rate / 150% crit-dmg
-floor every character starts at), the weapon main/sub stats, the echo build —
-expanded from the `SlotLoadout`'s `echoBuild` pattern and main-stat choices into
-concrete main + substat rolls via `echo-stat-constants` — and finally the active
-`BuffDef`s, which resolve their `ValueExpr` and write into the matching field.
+`resolve-slot.ts` (`resolveBaseStats`) starts from `emptyStatTable()` and layers
+the base contributions via the per-entity peers: `resolve-character` (character
+base stats, with the intrinsic 5% crit-rate / 150% crit-dmg floor every character
+starts at), `resolve-weapon` (weapon main/sub stats), and `resolve-echo` (the echo
+build — expanded from the `SlotLoadout`'s `echoBuild` pattern and main-stat choices
+into concrete main + substat rolls via `echo-stat-constants`). The active
+`BuffDef`s are folded on top later by `apply-stat-effects` (`accumulateStatEffects`),
+which resolves each `ValueExpr` and writes into the matching field.
 
 ### Intrinsic vs derived resolution
 

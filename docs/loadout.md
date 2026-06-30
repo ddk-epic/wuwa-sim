@@ -39,7 +39,7 @@ the data itself.
 A new slot is seeded from a `CharacterTemplate` — the recommended weapon / echo /
 echo-set _names_ an author ships with a character. `template.ts` resolves those
 names (`findWeaponByName`, etc.) into a populated `SlotLoadout`, applying the
-per-build main-stat defaults (`COST4_MAINS_DEFAULT` / `COST3_MAINS_DEFAULT`).
+per-build main-stat defaults from the `ECHO_BUILDS` record (`echo-stat-constants`).
 
 ## Gotchas
 

@@ -13,3 +13,7 @@ Echo main stats and the default substat block accumulate directly into the base 
 - The Stat Table glossary entry's phrase "Permanent buffs are folded into a base table at sim start" must be read narrowly — echo stats _are_ the base table for that purpose, not buffs folded into it.
 - Echo stat-roll constants live in one file (`src/lib/loadout/echo-stat-constants.ts`) so revising values when sourced data arrives is a single-file edit.
 - Adding a new echo stat _kind_ (a new main-stat option, a new substat) means editing the constants file and possibly the Stat Table type — not authoring a BuffDef.
+
+## Amendment — resolver reorg
+
+The direct-accumulation path moved out of `bootstrapSlot` into the per-entity `resolve-*` peers: echo rolls now accumulate in `resolveEchoStats` (`loadout/resolve-echo.ts`) and weapon main/sub in `resolveWeaponStats` (`loadout/resolve-weapon.ts`), composed by `resolveSlot` (`loadout/resolve-slot.ts`); `bootstrapSlot` keeps only the fold-vs-seed seeding. The decision is unchanged — flat rolls still bypass the buff pipeline as base-value contributions, still alongside the `applyWeaponIntrinsic` precedent (which moved into `resolve-weapon` with them).
