@@ -301,7 +301,7 @@ function resolveMaturation(
   ctx: SimContext,
 ): void {
   const { engine, log } = ctx
-  pushAdvance(log, engine.tickToFrame(work.frame))
+  advanceWithinDrain(ctx, work.frame)
   const r = engine.matureMember(work.characterId, work.memberId, work.frame)
   pushBuffEvents(log, r.lifecycleEvents)
   for (const synth of r.syntheticEvents) {
@@ -313,16 +313,22 @@ function resolveMaturation(
 }
 
 /**
- * Advance the engine clock to `frame`, draining any pending stream member at or
- * before it first so the monotonic clock never snapshots past a member's frame.
- * Returns the tick's lifecycle events for the caller to log.
+ * Drain pending stream members at or before `frame`, then advance the engine
+ * clock to it and log the tick — the main-cursor advance. Draining first keeps
+ * the monotonic clock from snapshotting past a member's frame.
  */
-function advanceTo(
-  ctx: SimContext,
-  frame: number,
-): { lifecycleEvents: BuffEvent[]; tickEvents: HitEvent[] } {
+function advanceTo(ctx: SimContext, frame: number): void {
   drainSchedule(ctx, frame)
-  return ctx.engine.tickToFrame(frame)
+  pushAdvance(ctx.log, ctx.engine.tickToFrame(frame))
+}
+
+/**
+ * Advance the engine clock to `frame` and log the tick, without draining — the
+ * re-entrant-safe advance for a resolve callback already running inside a drain,
+ * where re-draining would re-enter `drainUpTo`.
+ */
+function advanceWithinDrain(ctx: SimContext, frame: number): void {
+  pushAdvance(ctx.log, ctx.engine.tickToFrame(frame))
 }
 
 /** Log a clock-advance's expiry lifecycle events and its Negative Status ticks. */
@@ -342,7 +348,7 @@ function resolvePendingSynthetic(
   const { engine, log } = ctx
   // Advance to the landing frame for a frame-honest snapshot, then resolve and
   // run the synthetic chain.
-  pushAdvance(log, engine.tickToFrame(sd.emit.landingFrame))
+  advanceWithinDrain(ctx, sd.emit.landingFrame)
   const r = engine.resolveDeferredEmit(sd.emit)
   r.event.sourceEntryId = sd.sourceEntryId
   log.push(r.event)
@@ -458,7 +464,7 @@ function processEntry(
 
   // Pre-drain to effectiveStart so a deferred synthetic landing before this stage
   // starts resolves ahead of it.
-  pushAdvance(log, advanceTo(ctx, effectiveStart))
+  advanceTo(ctx, effectiveStart)
 
   if (isCancelCapable(resolved.skillType)) {
     ctx.schedule.cancelResidue(entry.characterId, effectiveStart)
