@@ -8,6 +8,7 @@ import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
 import { deriveKey, STAGE_CAST_NAME } from "./stage"
 import {
+  buildStageLabels,
   compileCharacter,
   compileEcho,
   findStageByEntry,
@@ -137,6 +138,15 @@ describe("deriveKey", () => {
   it("keeps echo tap/hold names faithful", () => {
     expect(deriveKey("Tap")).toBe("tap")
     expect(deriveKey("Hold")).toBe("hold")
+  })
+})
+
+describe("buildStageLabels", () => {
+  it("labels each compiled stage by skill name and newName", () => {
+    testCharacters = [baseChar()]
+    const labels = buildStageLabels(slots, loadouts)
+    expect(labels.get(STAGE_1_ID)).toBe("Normal Attack")
+    expect(labels.get(NAMED_ID)).toBe("Normal Attack · 3rd")
   })
 })
 

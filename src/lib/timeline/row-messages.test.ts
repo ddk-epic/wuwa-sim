@@ -37,4 +37,55 @@ describe("renderMessage", () => {
     expect(message).toBe("This skill is no longer available for this character")
     expect(message).not.toContain("char.foo")
   })
+
+  // A Map-backed resolver distinguishes a resolved name from a leaked raw id;
+  // identity could not.
+  const resolveName = (id: string): string =>
+    ({
+      "stage-2-id": "Normal Attack · Stage 2",
+      "stage-1-id": "Normal Attack · Stage 1",
+    })[id] ?? id
+
+  it("renders missingChainPrereq with both stage ids resolved to names", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "missingChainPrereq",
+          stageId: "stage-2-id",
+          requiredStageId: "stage-1-id",
+        },
+        resolveName,
+      ),
+    ).toBe(
+      '"Normal Attack · Stage 2" must immediately follow "Normal Attack · Stage 1"',
+    )
+  })
+
+  it("renders missingWindowedPrereq with both stage ids resolved to names", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "missingWindowedPrereq",
+          stageId: "stage-2-id",
+          requiredStageId: "stage-1-id",
+        },
+        resolveName,
+      ),
+    ).toBe(
+      '"Normal Attack · Stage 2" requires an earlier "Normal Attack · Stage 1" on this character',
+    )
+  })
+
+  it("renders stageRequiresSequence with the stage id resolved to a name", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "stageRequiresSequence",
+          stageId: "stage-2-id",
+          requiredSequence: 2,
+        },
+        resolveName,
+      ),
+    ).toBe('"Normal Attack · Stage 2" requires Sequence 2')
+  })
 })

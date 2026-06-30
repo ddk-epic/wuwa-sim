@@ -95,34 +95,12 @@ export type RenderItem =
       distinctCharIds: number[]
     }
 
-function buildShowMessageIds(
-  nodes: TimelineNode[],
-  validation: ValidationResult,
-  logWarnings: Map<string, Diagnostic[]>,
-): Set<string> {
-  const ids = new Set<string>()
-  for (const node of nodes) {
-    const entries: Array<{ id: string }> =
-      node.kind === "group" ? node.entries : [node]
-    for (const e of entries) {
-      if (
-        (validation.findings.get(e.id)?.length ?? 0) > 0 ||
-        (logWarnings.get(e.id)?.length ?? 0) > 0
-      ) {
-        ids.add(e.id)
-      }
-    }
-  }
-  return ids
-}
-
 function resolveEntryFields(
   entry: TimelineEntry,
   slots: Slots,
   loadouts: SlotLoadout[],
   validation: ValidationResult,
   logWarnings: Map<string, Diagnostic[]>,
-  showMessageIds: Set<string>,
   resolveStageName: (stageId: string) => string,
 ): Pick<
   Extract<RenderItem, { type: "entry" }>,
@@ -173,7 +151,7 @@ function resolveEntryFields(
     ...findings.filter((f) => f.severity === "warning").map((f) => f.message),
     ...diagnostics.filter((d) => d.severity !== "invalid"),
   ].map((m) => ({ message: renderMessage(m, resolveStageName) }))
-  const showMessage = showMessageIds.has(entry.id)
+  const showMessage = errors.length + warnings.length > 0
 
   return {
     charName,
@@ -200,7 +178,6 @@ export function buildTimelineRenderItems(
 ): RenderItem[] {
   const items: RenderItem[] = []
   let flatIndex = 0
-  const showMessageIds = buildShowMessageIds(nodes, validation, logWarnings)
   const stageLabels = buildStageLabels(slots, loadouts)
   const resolveStageName = (stageId: string): string =>
     stageLabels.get(stageId) ?? stageId
@@ -259,7 +236,6 @@ export function buildTimelineRenderItems(
               loadouts,
               validation,
               logWarnings,
-              showMessageIds,
               resolveStageName,
             ),
           })
@@ -291,7 +267,6 @@ export function buildTimelineRenderItems(
           loadouts,
           validation,
           logWarnings,
-          showMessageIds,
           resolveStageName,
         ),
       })

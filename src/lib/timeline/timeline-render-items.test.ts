@@ -300,6 +300,14 @@ describe("buildTimelineRenderItems", () => {
     expect(e.warnings).toEqual([
       { message: "Swap forces the next entry to be a different character" },
     ])
+    expect(e.showMessage).toBe(true)
+  })
+
+  it("showMessage is false when a row has no findings or diagnostics", () => {
+    const e = entryItems(call([topEntry("e1")]))[0]
+    expect(e.errors).toEqual([])
+    expect(e.warnings).toEqual([])
+    expect(e.showMessage).toBe(false)
   })
 
   it("merges engine Diagnostics into the warning channel", () => {
@@ -314,6 +322,7 @@ describe("buildTimelineRenderItems", () => {
     ])
     expect(e.isInvalid).toBe(false)
     expect(e.errors).toEqual([])
+    expect(e.showMessage).toBe(true)
   })
 
   // Loop Marker
