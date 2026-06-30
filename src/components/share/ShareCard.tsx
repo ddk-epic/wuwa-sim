@@ -19,43 +19,43 @@ interface ShareCardProps {
 const CARD_WIDTH = 1152
 const STINT_HEIGHT = 60
 const ROW_GAP = 8
-// Label bar floors at two stint-rows, then stretches as the section wraps.
+// Section bar floors at two stint-rows, then stretches as the section wraps.
 const ROW_MIN_HEIGHT = 2 * STINT_HEIGHT + 1 * ROW_GAP
 const TIP_DEPTH = 12
 
 interface Palette {
-  shell: string
-  card: string
-  glyph: string
-  label: string // `»` arrows on the shell
-  barBg: string // opener/loop label bars
-  barText: string
-  line: string // dashed opener/loop divider
-  border?: string // border on a stint card's non-left sides
+  shellBg: string
+  stintBg: string
+  glyphColor: string
+  arrowColor: string
+  labelBarBg: string
+  labelBarText: string
+  dividerLine: string
+  stintBorder?: string
 }
 
 const DARK: Palette = {
-  shell: "#0a0d12",
-  card: "#222b39",
-  glyph: "#f5f7fa",
-  label: "#8b95a7",
-  barBg: "#222b39",
-  barText: "#8b95a7",
-  line: "#3a4458",
+  shellBg: "#0a0d12",
+  stintBg: "#222b39",
+  glyphColor: "#f5f7fa",
+  arrowColor: "#8b95a7",
+  labelBarBg: "#222b39",
+  labelBarText: "#8b95a7",
+  dividerLine: "#3a4458",
 }
 
 const LIGHT: Palette = {
-  shell: "#eef1f5",
-  card: "#ffffff",
-  glyph: "#1b2430",
-  label: "#5b6573",
-  barBg: "#181d26",
-  barText: "#eef1f5",
-  line: "#c4cad3",
-  border: "#c4cad3",
+  shellBg: "#eef1f5",
+  stintBg: "#ffffff",
+  glyphColor: "#1b2430",
+  arrowColor: "#5b6573",
+  labelBarBg: "#181d26",
+  labelBarText: "#eef1f5",
+  dividerLine: "#c4cad3",
+  stintBorder: "#c4cad3",
 }
 
-function title(slots: Slots, seconds?: number): string {
+function cardHeading(slots: Slots, seconds?: number): string {
   const names = slots
     .filter((id): id is number => id !== null)
     .map((id) => getCharacterById(id)?.name ?? `#${id}`)
@@ -87,7 +87,7 @@ function IntroDiamond({ hex, size }: { hex: string; size: number }) {
 
 // Vertical strip tapered to a pen-nib point. Clip lives on the un-rotated
 // wrapper so the inner text rotation doesn't flip the point's direction.
-function Label({
+function SectionBar({
   children,
   tip,
   palette,
@@ -105,7 +105,7 @@ function Label({
       className="flex shrink-0 items-center justify-center px-1.5"
       style={{
         clipPath,
-        background: palette.barBg,
+        background: palette.labelBarBg,
         paddingTop: tip === "both" ? TIP_DEPTH + 8 : 8,
         paddingBottom: TIP_DEPTH + 8,
       }}
@@ -113,7 +113,7 @@ function Label({
       <span
         className="font-semibold uppercase tracking-widest"
         style={{
-          color: palette.barText,
+          color: palette.labelBarText,
           writingMode: "vertical-rl",
           transform: "rotate(180deg)",
         }}
@@ -138,12 +138,14 @@ function StintCard({
       style={{
         height: STINT_HEIGHT,
         // Element hue holds across the portrait, then fades into the card.
-        background: `linear-gradient(to right, ${visual.hex}1f ${STINT_HEIGHT - 2}px, transparent ${STINT_HEIGHT + 6}px), ${palette.card}`,
-        borderColor: palette.border
-          ? `${palette.border} ${palette.border} ${palette.border} ${visual.hex}`
+        background: `linear-gradient(to right, ${visual.hex}1f ${STINT_HEIGHT - 2}px, transparent ${STINT_HEIGHT + 6}px), ${palette.stintBg}`,
+        borderColor: palette.stintBorder
+          ? `${palette.stintBorder} ${palette.stintBorder} ${palette.stintBorder} ${visual.hex}`
           : visual.hex,
         borderStyle: "solid",
-        borderWidth: palette.border ? "1px 1px 1px 3px" : "0px 0px 0px 3px",
+        borderWidth: palette.stintBorder
+          ? "1px 1px 1px 3px"
+          : "0px 0px 0px 3px",
       }}
     >
       <div className="aspect-square h-full shrink-0">
@@ -159,7 +161,7 @@ function StintCard({
         {card.hasIntro && <IntroDiamond hex={visual.hex} size={28} />}
         <span
           className="font-mono text-lg tracking-wide"
-          style={{ color: palette.glyph }}
+          style={{ color: palette.glyphColor }}
         >
           {card.letters}
         </span>
@@ -169,28 +171,28 @@ function StintCard({
 }
 
 function RotationRow({
-  label,
+  section,
   cards,
   tip,
   palette,
 }: {
-  label: string
+  section: string
   cards: RotationCard[]
   tip: "bottom" | "both"
   palette: Palette
 }) {
   return (
     <div className="flex gap-3" style={{ minHeight: ROW_MIN_HEIGHT }}>
-      <Label tip={tip} palette={palette}>
-        {label}
-      </Label>
+      <SectionBar tip={tip} palette={palette}>
+        {section}
+      </SectionBar>
       <div className="flex flex-1 flex-wrap content-start items-center gap-x-4 gap-y-4">
         {cards.map((card, i) => (
           <Fragment key={i}>
             {i > 0 && (
               <span
                 className="text-4xl leading-none"
-                style={{ color: palette.label }}
+                style={{ color: palette.arrowColor }}
               >
                 »
               </span>
@@ -205,19 +207,22 @@ function RotationRow({
 
 export function ShareCard({ cards, slots, seconds, theme }: ShareCardProps) {
   const palette = theme === "light" ? LIGHT : DARK
-  const style: CSSProperties = { width: CARD_WIDTH, background: palette.shell }
+  const style: CSSProperties = {
+    width: CARD_WIDTH,
+    background: palette.shellBg,
+  }
   return (
     <div className="inline-block p-5" style={style}>
       <div
         className="mb-4 text-2xl font-semibold"
-        style={{ color: palette.glyph }}
+        style={{ color: palette.glyphColor }}
       >
-        {title(slots, seconds)}
+        {cardHeading(slots, seconds)}
       </div>
       <div className="flex flex-col gap-3">
         {cards.opener.length > 0 && (
           <RotationRow
-            label="Opener"
+            section="Opener"
             cards={cards.opener}
             tip="bottom"
             palette={palette}
@@ -231,14 +236,14 @@ export function ShareCard({ cards, slots, seconds, theme }: ShareCardProps) {
             <div
               className="h-0.5 w-full"
               style={{
-                background: `repeating-linear-gradient(to right, ${palette.line} 0 20px, transparent 20px 32px)`,
+                background: `repeating-linear-gradient(to right, ${palette.dividerLine} 0 20px, transparent 20px 32px)`,
               }}
             />
           </div>
         )}
         {cards.loop.length > 0 && (
           <RotationRow
-            label="Loop"
+            section="Loop"
             cards={cards.loop}
             tip="both"
             palette={palette}
