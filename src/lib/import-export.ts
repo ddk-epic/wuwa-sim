@@ -4,7 +4,8 @@ import { ALL_ECHOES } from "#/data/echoes"
 import { ALL_ECHO_SETS } from "#/data/echo-sets"
 import { ALL_WEAPONS } from "#/data/weapons"
 import { compileCharacter, compileEcho } from "#/lib/compile-character"
-import type { SlotLoadout, Slots } from "#/types/loadout"
+import type { EchoBuild, SlotLoadout, Slots } from "#/types/loadout"
+import { ECHO_BUILDS as ECHO_BUILD_LAYOUTS } from "#/lib/loadout/echo-stat-constants"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { DEFAULT_SETTINGS } from "#/lib/settings"
 import type { Settings } from "#/lib/settings"
@@ -23,7 +24,9 @@ export interface ImportExportPayload {
 
 // ---- Static lookup tables ----
 const NULL_BYTE = 0xff
-const ECHO_BUILDS = ["4-3-3-1-1", "4-4-1-1-1"] as const
+// Frozen wire order: append only, never reorder or remove. Ordinals come from
+// this tuple; slot counts come from ECHO_BUILD_LAYOUTS.
+const BUILD_WIRE_ORDER: readonly EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
 const COST4_MAINS = ["scaling", "cr", "cd"] as const
 const COST3_MAINS = ["scaling", "er", "elemDmg"] as const
 const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
@@ -146,11 +149,8 @@ export function encodePayload(payload: ImportExportPayload): string {
     w.push(echoSetIdx(l.echoSetSlot1Id))
     w.push(echoSetIdx(l.echoSetSlot2Id))
     w.push(l.sequence)
-    const bi = ECHO_BUILDS.indexOf(l.echoBuild)
-    w.push(bi)
-    // counts fixed by echoBuild: "4-3-3-1-1" → (1 cost4, 2 cost3), "4-4-1-1-1" → (2 cost4, 0 cost3)
-    const c4 = bi === 0 ? 1 : 2
-    const c3 = bi === 0 ? 2 : 0
+    w.push(BUILD_WIRE_ORDER.indexOf(l.echoBuild))
+    const { cost4: c4, cost3: c3 } = ECHO_BUILD_LAYOUTS[l.echoBuild]
     for (let j = 0; j < c4; j++) w.push(COST4_MAINS.indexOf(l.cost4Mains[j]))
     for (let j = 0; j < c3; j++) w.push(COST3_MAINS.indexOf(l.cost3Mains[j]))
   }
@@ -253,10 +253,8 @@ export function decodePayload(encoded: string): ImportExportPayload {
     const es1Idx = r.nullable()
     const es2Idx = r.nullable()
     const sequence = r.next()
-    const bi = r.next()
-    const echoBuild = ECHO_BUILDS[bi]
-    const c4 = bi === 0 ? 1 : 2
-    const c3 = bi === 0 ? 2 : 0
+    const echoBuild = BUILD_WIRE_ORDER[r.next()]
+    const { cost4: c4, cost3: c3 } = ECHO_BUILD_LAYOUTS[echoBuild]
     return {
       weaponId: wIdx === null ? null : ALL_WEAPONS[wIdx].id,
       weaponRank,
