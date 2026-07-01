@@ -15,6 +15,7 @@ import {
   ECHO_SET_WIRE,
   ECHO_WIRE,
   fromWire,
+  SKILL_WIRE,
   toWire,
   VARIANT_KINDS,
   WEAPON_WIRE,
@@ -34,19 +35,49 @@ export interface ImportExportPayload {
 
 // ---- Static lookup tables ----
 const NULL_BYTE = 0xff
+const ECHO_STAGE_FLAG = 0x80
 
-// A stage encodes as an ordinal into its character's own stages, with echo
-// stages appended as a shared suffix. Keyed by character id so the ordinal
-// survives an ALL_CHARACTERS reorder. Append-only — see docs/share.md.
-const CHAR_STAGE_IDS = new Map<number, readonly string[]>(
-  ALL_CHARACTERS.map((char) => [
-    char.id,
-    [...compileCharacter(char).stageIndex.keys()],
-  ]),
-)
-const ECHO_STAGE_IDS: readonly string[] = ALL_ECHOES.flatMap((echo) => [
-  ...compileEcho(echo).stageIndex.keys(),
-])
+// A stage's wire identity is (skill, ordinal-within-skill): a selector byte —
+// the skill's index in the character's SKILL_WIRE (high bit clear) or the echo's
+// index in ECHO_WIRE (high bit set) — then the stage's ordinal within that
+// skill. Rebuilt from the compiled data. See docs/share.md.
+interface OwnStage {
+  skillId: number
+  ordinal: number
+}
+const ownStageToWire = new Map<number, Map<string, OwnStage>>()
+const ownStagesBySkill = new Map<number, Map<number, string[]>>()
+for (const char of ALL_CHARACTERS) {
+  const stageWire = new Map<string, OwnStage>()
+  const bySkill = new Map<number, string[]>()
+  for (const info of compileCharacter(char).stageIndex.values()) {
+    const skillId = info.skill.id
+    let stages = bySkill.get(skillId)
+    if (stages === undefined) bySkill.set(skillId, (stages = []))
+    stageWire.set(info.stageId, { skillId, ordinal: stages.length })
+    stages.push(info.stageId)
+  }
+  ownStageToWire.set(char.id, stageWire)
+  ownStagesBySkill.set(char.id, bySkill)
+}
+
+interface EchoStage {
+  echoId: number
+  ordinal: number
+}
+const echoStageToWire = new Map<string, EchoStage>()
+const echoStagesById = new Map<number, string[]>()
+for (const echo of ALL_ECHOES) {
+  const stages: string[] = []
+  for (const info of compileEcho(echo).stageIndex.values()) {
+    echoStageToWire.set(info.stageId, {
+      echoId: echo.id,
+      ordinal: stages.length,
+    })
+    stages.push(info.stageId)
+  }
+  echoStagesById.set(echo.id, stages)
+}
 
 // ---- Byte writer / reader ----
 class Writer {
@@ -93,22 +124,47 @@ const echoIdx = (id: number | null) =>
 const echoSetIdx = (id: number | null) =>
   id === null ? NULL_BYTE : toWire(ECHO_SET_WIRE, id, "echo set")
 
-const ownStages = (charId: number) => {
-  const own = CHAR_STAGE_IDS.get(charId)
-  if (own === undefined) throw new Error(`Unknown character id ${charId}`)
-  return own
+const skillWireFor = (charId: number): readonly number[] => {
+  const wire = SKILL_WIRE[charId] as readonly number[] | undefined
+  if (wire === undefined)
+    throw new Error(`No skill wire for character ${charId}`)
+  return wire
 }
-const stageIdx = (charId: number, stageId: string) => {
-  const own = ownStages(charId)
-  const i = own.indexOf(stageId)
-  if (i >= 0) return i
-  const j = ECHO_STAGE_IDS.indexOf(stageId)
-  if (j >= 0) return own.length + j
+
+// (selector, ordinal) for a stage cast by the given character.
+const stageBytes = (charId: number, stageId: string): [number, number] => {
+  const own = ownStageToWire.get(charId)?.get(stageId)
+  if (own !== undefined) {
+    const skillWire = skillWireFor(charId).indexOf(own.skillId)
+    if (skillWire < 0) throw new Error(`Unknown skill id ${own.skillId}`)
+    if (skillWire >= ECHO_STAGE_FLAG)
+      throw new Error(`Skill wire index ${skillWire} overflows selector`)
+    return [skillWire, own.ordinal]
+  }
+  const echo = echoStageToWire.get(stageId)
+  if (echo !== undefined) {
+    const echoWire = toWire(ECHO_WIRE, echo.echoId, "echo")
+    if (echoWire >= ECHO_STAGE_FLAG)
+      throw new Error(`Echo wire index ${echoWire} overflows selector`)
+    return [ECHO_STAGE_FLAG | echoWire, echo.ordinal]
+  }
   throw new Error(`Unknown stageId "${stageId}"`)
 }
-const stageId = (charId: number, ord: number) => {
-  const own = ownStages(charId)
-  return ord < own.length ? own[ord] : ECHO_STAGE_IDS[ord - own.length]
+
+const stageId = (charId: number, selector: number, ordinal: number): string => {
+  if (selector & ECHO_STAGE_FLAG) {
+    const echoId = fromWire(ECHO_WIRE, selector & ~ECHO_STAGE_FLAG, "echo")
+    const stage = echoStagesById.get(echoId)?.[ordinal]
+    if (stage === undefined)
+      throw new Error(`Unknown echo stage ${echoId}:${ordinal}`)
+    return stage
+  }
+  const wire = skillWireFor(charId)
+  if (selector >= wire.length)
+    throw new Error(`Unknown skill wire index ${charId}:${selector}`)
+  const stage = ownStagesBySkill.get(charId)?.get(wire[selector])?.[ordinal]
+  if (stage === undefined) throw new Error(`Unknown stage ${charId}:${ordinal}`)
+  return stage
 }
 
 // ---- Slug prefix (legible label outside the Base91 envelope) ----
@@ -126,9 +182,9 @@ const slotSlug = (id: number | null) => {
 const slugPrefix = (slots: Slots) => slots.map(slotSlug).join("-")
 
 // ---- Encode ----
-// v4 appends the per-team Settings block after the timeline; v5 adds the
-// startWithFullConcerto bit. Older codes lack these and decode to defaults.
-const VERSION = 5
+// v6 is a hard cut: entity refs index the frozen wire tables, and a stage is a
+// (skill selector, ordinal) pair. Earlier versions are rejected, not migrated.
+const VERSION = 6
 
 export function encodePayload(payload: ImportExportPayload): string {
   const w = new Writer()
@@ -160,7 +216,7 @@ export function encodePayload(payload: ImportExportPayload): string {
       if (node.kind === "entry") {
         w.push(0)
         w.push(charIdx(node.characterId))
-        w.push(stageIdx(node.characterId, node.stageId))
+        for (const b of stageBytes(node.characterId, node.stageId)) w.push(b)
         w.push(
           node.variantKind ? VARIANT_KINDS.indexOf(node.variantKind) + 1 : 0,
         )
@@ -173,7 +229,7 @@ export function encodePayload(payload: ImportExportPayload): string {
         w.push(node.entries.length)
         for (const e of node.entries) {
           w.push(charIdx(e.characterId))
-          w.push(stageIdx(e.characterId, e.stageId))
+          for (const b of stageBytes(e.characterId, e.stageId)) w.push(b)
           w.push(e.variantKind ? VARIANT_KINDS.indexOf(e.variantKind) + 1 : 0)
         }
       }
@@ -194,12 +250,13 @@ export function encodePayload(payload: ImportExportPayload): string {
 // ---- Decode ----
 function readEntry(r: Reader): TimelineEntry {
   const charId = fromWire(CHARACTER_WIRE, r.next(), "character")
-  const si = r.next()
+  const selector = r.next()
+  const ordinal = r.next()
   const vk = r.next()
   return {
     id: crypto.randomUUID(),
     characterId: charId,
-    stageId: stageId(charId, si),
+    stageId: stageId(charId, selector, ordinal),
     variantKind: vk === 0 ? undefined : VARIANT_KINDS[vk - 1],
   }
 }
@@ -223,8 +280,10 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const r = new Reader(data)
 
   const version = r.next()
-  if (version !== 3 && version !== 4 && version !== 5)
-    throw new Error(`Unsupported format version ${version}`)
+  if (version !== VERSION)
+    throw new Error(
+      `Unsupported format version ${version}; re-export this code from the current app`,
+    )
 
   const name = r.str()
 
@@ -301,17 +360,14 @@ export function decodePayload(encoded: string): ImportExportPayload {
     }
   }
 
-  const settings: Settings =
-    version >= 4
-      ? {
-          reactionDelay: r.next(),
-          swapFrames: r.next(),
-          variantFloor: r.next(),
-          fallFrames: r.next(),
-          startWithFullEnergy: r.next() === 1,
-          startWithFullConcerto: version >= 5 ? r.next() === 1 : false,
-        }
-      : { ...DEFAULT_SETTINGS }
+  const settings: Settings = {
+    reactionDelay: r.next(),
+    swapFrames: r.next(),
+    variantFloor: r.next(),
+    fallFrames: r.next(),
+    startWithFullEnergy: r.next() === 1,
+    startWithFullConcerto: r.next() === 1,
+  }
 
   return { team: { name, slots, loadouts, focusedId, settings }, timeline }
 }

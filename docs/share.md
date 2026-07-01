@@ -13,29 +13,42 @@ Two ways to hand a rotation to someone else:
 ## Share code
 
 `import-export.ts` packs a team **plus its timeline** into a Base91 string. To
-stay short it stores **array positions, not id values**: a character is its index
-in `ALL_CHARACTERS`, a weapon its index in `ALL_WEAPONS`, and so on. A timeline
-entry's stage is an ordinal into **its own character's** flattened stage list
-(echo stages share one suffix after every character's stages), keyed off the
-entry's character byte.
+stay short it stores **small wire ids, not the game's id values**: every registry
+has a **frozen, append-only `*_WIRE` table** (`CHARACTER_WIRE`, `WEAPON_WIRE`,
+`ECHO_WIRE`, `ECHO_SET_WIRE`, and a per-character `SKILL_WIRE`) — an ordered list
+of stable game ids — and the byte on the wire is the **index into that table**. A
+timeline entry's stage is `(skillId, stageOrdinalWithinSkill)`: a selector byte
+(high bit flags character-skill vs echo, low seven bits index `SKILL_WIRE` or
+`ECHO_WIRE`) followed by the stage's position within that skill.
 
-This makes the format **append-only**. Appending a character, echo, weapon, etc.
-at the **end** of its registry — or a stage at the end of a character's stage
-list — leaves every existing code decoding to the same things. But **inserting,
-removing, or reordering** an entry mid-registry (or mid stage-list) renumbers the
-positions after it and silently makes already-shared codes decode to the wrong
-data. Such an edit is a breaking wire change: bump the `VERSION` byte (the decoder
-rejects versions it doesn't recognise).
+The wire tables are the frozen contract; the **display arrays** (`ALL_CHARACTERS`,
+…) are a separate concern and may be reordered, sorted, or take mid-array inserts
+freely — encode/decode look up by id through the table, never by array position.
+Adding an entity **appends one row** to its wire table and shifts no existing
+index, so already-shared codes keep decoding to the same things with **no
+`VERSION` bump**. Append-only is enforced, not just documented: a generator
+(`scripts/generate-wire-tables.ts --check`, emitting `wire-tables.generated.ts`)
+fails on a stale table or a dropped live row, and a guard test asserts coverage
+(every live entity and skill resolves) and no duplicate ids. A self-consistent
+reorder of the committed file has no baseline but itself, so it's caught by review
+of that artifact, not the check. See
+[ADR-0046](adr/0046-share-code-wire-ids-from-frozen-tables-not-array-position.md).
 
-The current version is `5`. After the timeline it appends the team's
+The only residual order-dependence is reordering stages **within a single skill**
+(a local, rare edit). Stage identity keys on the skill's stable game id, so
+renaming a skill, stage, or category never breaks a code. The stage-ordinal byte
+is always written even for single-stage skills — eliding it would tie the wire
+length to a skill's stage-count, which grows by append, misparsing older codes.
+
+The current version is `6`; the decoder accepts **only** `6` (the move to wire
+tables was a hard cut — `v3`/`v4`/`v5` codes are rejected with a re-export
+prompt, not migrated). After the timeline it appends the team's
 [[Settings]] as trailing bytes — the four frame knobs, then `startWithFullEnergy`
-(`0`/`1`), then `startWithFullConcerto` (`0`/`1`, added by `v5`). Each is a pure
-**append**: a `v3` code is a `v4` code minus the settings block, a `v4` code is a
-`v5` code minus the last bit; the decoder accepts `v3`/`v4`/`v5` and fills the
-missing fields from `DEFAULT_SETTINGS`. Versions outside `{3, 4, 5}` are rejected,
-not migrated — a stale code is simply re-exported. A future trailing field should
-follow the same pattern (append + keep accepting the shorter prior versions);
-only a mid-stream renumber forces a hard version cut.
+(`0`/`1`), then `startWithFullConcerto` (`0`/`1`). A **new trailing field** can
+still append without a hard cut: widen the accepted set to `{6, 7}`, read the
+extra field only for `version >= 7`, and fill it from `DEFAULT_SETTINGS` on a
+`v6` code. Only a mid-stream change to the wire tables or the stage layout forces
+a hard version cut like the one that produced `v6`.
 
 ### Slug prefix
 
@@ -64,9 +77,10 @@ the raw incoming prefix — a malicious author can't make the label say anything
 other than the true team. This makes the **slug normaliser a frozen contract**:
 changing how a name maps to a slug invalidates every prior code's prefix.
 
-This prefix is legibility only — it does **not** address the array-position
-order-dependence above (weapons, echoes, stages, enums, `focusedId`, and timeline
-character refs are still positional).
+This prefix is legibility only, orthogonal to the wire tables: it labels the
+blob, the wire tables make the blob stable. The enum tuples (`BUILD_WIRE_ORDER`,
+`COST4_MAINS`, `COST3_MAINS`, `VARIANT_KINDS`) stay index-into-tuple — closed
+domains with no separate display array, guarded append-only by the same test.
 
 ## Share image
 

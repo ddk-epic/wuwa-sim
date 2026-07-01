@@ -34,3 +34,14 @@ export const ECHO_SET_WIRE: readonly number[] = [
   6, // Havoc Eclipse
   17, // Windward Pilgrimage
 ]
+
+// Per-character stage-bearing skill ids, in wire order. A stage's selector
+// byte indexes this list (own skills) with the high bit clear.
+export const SKILL_WIRE: Record<number, readonly number[]> = {
+  1102: [1000501, 1000502, 1000503, 1000506, 1000507, 1000509, 9001, 9002], // Sanhua
+  1203: [1000701, 1000702, 1000703, 1000706, 1000707, 1000709, 9001, 9002], // Encore
+  1409: [1003501, 1003502, 1003503, 1003506, 1003507, 1003509, 9001, 9002], // Cartethyia
+  1503: [1000301, 1000302, 1000303, 1000306, 1000307, 1000309, 9001, 9002], // Verina
+  1505: [1002501, 1002502, 1002503, 1002506, 1002507, 1002509, 9001, 9002], // Shorekeeper
+  1603: [1001301, 1001302, 1001303, 1001306, 1001307, 1001309, 9001, 9002], // Camellya
+}

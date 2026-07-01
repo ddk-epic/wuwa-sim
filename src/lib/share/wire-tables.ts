@@ -12,6 +12,7 @@ export {
   WEAPON_WIRE,
   ECHO_WIRE,
   ECHO_SET_WIRE,
+  SKILL_WIRE,
 } from "./wire-tables.generated"
 
 // Closed-domain enum wire orders: index-into-tuple, append-only. No game ids, so

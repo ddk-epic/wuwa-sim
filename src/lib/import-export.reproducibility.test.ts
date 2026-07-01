@@ -69,6 +69,7 @@ vi.mock("#/lib/share/wire-tables", async (importActual) => ({
   WEAPON_WIRE: [],
   ECHO_WIRE: [],
   ECHO_SET_WIRE: [],
+  SKILL_WIRE: { [char.id]: [char.skills[0].id] },
 }))
 vi.mock("./loadout/catalog", () => ({
   getCharacterById: (id: number) => (id === char.id ? char : null),

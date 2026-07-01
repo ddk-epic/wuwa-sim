@@ -11,6 +11,7 @@ const CHAR_A = {
   name: "Sanhua",
   skills: [
     {
+      id: 1000501,
       name: "Normal Attack",
       stages: [
         { name: "Stage 1 DMG", category: "Basic Attack" },
@@ -19,6 +20,7 @@ const CHAR_A = {
       ],
     },
     {
+      id: 1000502,
       name: "Resonance Skill",
       stages: [{ name: "Skill DMG", category: "Resonance Skill" }],
     },
@@ -30,6 +32,7 @@ const CHAR_B = {
   name: "Encore",
   skills: [
     {
+      id: 1000701,
       name: "Heavy Attack",
       stages: [{ name: "Charge DMG", category: "Heavy Attack" }],
     },
@@ -51,6 +54,17 @@ vi.mock("#/data/characters", () => ({ ALL_CHARACTERS: [CHAR_A, CHAR_B] }))
 vi.mock("#/data/weapons", () => ({ ALL_WEAPONS: [WEAPON_A] }))
 vi.mock("#/data/echoes", () => ({ ALL_ECHOES: [ECHO_A] }))
 vi.mock("#/data/echo-sets", () => ({ ALL_ECHO_SETS: [ECHO_SET_A, ECHO_SET_B] }))
+vi.mock("#/lib/share/wire-tables", async (importActual) => ({
+  ...(await importActual<Record<string, unknown>>()),
+  CHARACTER_WIRE: [CHAR_A.id, CHAR_B.id],
+  WEAPON_WIRE: [WEAPON_A.id],
+  ECHO_WIRE: [ECHO_A.id],
+  ECHO_SET_WIRE: [ECHO_SET_A.id, ECHO_SET_B.id],
+  SKILL_WIRE: {
+    [CHAR_A.id]: [1000501, 1000502],
+    [CHAR_B.id]: [1000701],
+  },
+}))
 
 // Import after mocks are hoisted.
 const { encodePayload, decodePayload } = await import("#/lib/import-export")
@@ -206,17 +220,12 @@ describe("settings encoding", () => {
     )
   })
 
-  it("decodes a settings-less v3 code to the constant defaults (back-compat)", () => {
-    // A genuine v3 code is a current code minus the 6 trailing settings bytes,
-    // with the version byte rolled back to 3.
-    const payload = basePayload()
-    payload.team.settings = NON_DEFAULT
-    const current = base91Decode(blobOf(encodePayload(payload)))
-    const v3 = new Uint8Array([3, ...current.slice(1, current.length - 6)])
-    const decoded = decodePayload(base91Encode(v3))
-    expect(decoded.team.settings).toEqual(DEFAULT_SETTINGS)
-    // The rest of the team still decodes correctly.
-    expect(decoded.team.slots).toEqual(payload.team.slots)
+  it("rejects a superseded v3/v4/v5 code (hard cut)", () => {
+    const current = base91Decode(blobOf(encodePayload(basePayload())))
+    for (const v of [3, 4, 5]) {
+      const old = new Uint8Array([v, ...current.slice(1)])
+      expect(() => decodePayload(base91Encode(old))).toThrow(/version/i)
+    }
   })
 })
 
@@ -460,7 +469,7 @@ describe("timeline encoding", () => {
       timeline: [{ kind: "loopMarker", id: "m1" }],
     }
     const bytes = base91Decode(blobOf(encodePayload(payload)))
-    expect(bytes[0]).toBe(5)
+    expect(bytes[0]).toBe(6)
   })
 })
 
