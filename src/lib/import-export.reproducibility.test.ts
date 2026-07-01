@@ -61,6 +61,15 @@ vi.mock("#/data/characters", () => ({ ALL_CHARACTERS: [char] }))
 vi.mock("#/data/weapons", () => ({ ALL_WEAPONS: [] }))
 vi.mock("#/data/echoes", () => ({ ALL_ECHOES: [] }))
 vi.mock("#/data/echo-sets", () => ({ ALL_ECHO_SETS: [] }))
+// Frozen wire tables are constants, blind to the #/data mocks; point them at the
+// synthetic character so encode/decode resolve it.
+vi.mock("#/lib/share/wire-tables", async (importActual) => ({
+  ...(await importActual<Record<string, unknown>>()),
+  CHARACTER_WIRE: [char.id],
+  WEAPON_WIRE: [],
+  ECHO_WIRE: [],
+  ECHO_SET_WIRE: [],
+}))
 vi.mock("./loadout/catalog", () => ({
   getCharacterById: (id: number) => (id === char.id ? char : null),
   getEchoById: () => null,

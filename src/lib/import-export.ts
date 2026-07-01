@@ -1,14 +1,24 @@
 import { decode as base91Decode, encode as base91Encode } from "./base91"
 import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_ECHOES } from "#/data/echoes"
-import { ALL_ECHO_SETS } from "#/data/echo-sets"
-import { ALL_WEAPONS } from "#/data/weapons"
 import { compileCharacter, compileEcho } from "#/lib/compile-character"
-import type { EchoBuild, SlotLoadout, Slots } from "#/types/loadout"
+import type { SlotLoadout, Slots } from "#/types/loadout"
 import { ECHO_BUILDS as ECHO_BUILD_LAYOUTS } from "#/lib/loadout/echo-stat-constants"
 import type { TimelineEntry, TimelineNode } from "#/types/timeline"
 import { DEFAULT_SETTINGS } from "#/lib/settings"
 import type { Settings } from "#/lib/settings"
+import {
+  BUILD_WIRE_ORDER,
+  CHARACTER_WIRE,
+  COST3_MAINS,
+  COST4_MAINS,
+  ECHO_SET_WIRE,
+  ECHO_WIRE,
+  fromWire,
+  toWire,
+  VARIANT_KINDS,
+  WEAPON_WIRE,
+} from "#/lib/share/wire-tables"
 
 export interface ImportExportPayload {
   team: {
@@ -24,18 +34,15 @@ export interface ImportExportPayload {
 
 // ---- Static lookup tables ----
 const NULL_BYTE = 0xff
-// Frozen wire order: append only, never reorder or remove. Ordinals come from
-// this tuple; slot counts come from ECHO_BUILD_LAYOUTS.
-const BUILD_WIRE_ORDER: readonly EchoBuild[] = ["4-3-3-1-1", "4-4-1-1-1"]
-const COST4_MAINS = ["scaling", "cr", "cd"] as const
-const COST3_MAINS = ["scaling", "er", "elemDmg"] as const
-const VARIANT_KINDS = ["cancel", "instantCancel", "swap"] as const
 
 // A stage encodes as an ordinal into its character's own stages, with echo
-// stages appended as a shared suffix; appending a character shifts neither.
-// Append-only — see docs/share.md "Share code".
-const CHAR_STAGE_IDS: readonly (readonly string[])[] = ALL_CHARACTERS.map(
-  (char) => [...compileCharacter(char).stageIndex.keys()],
+// stages appended as a shared suffix. Keyed by character id so the ordinal
+// survives an ALL_CHARACTERS reorder. Append-only — see docs/share.md.
+const CHAR_STAGE_IDS = new Map<number, readonly string[]>(
+  ALL_CHARACTERS.map((char) => [
+    char.id,
+    [...compileCharacter(char).stageIndex.keys()],
+  ]),
 )
 const ECHO_STAGE_IDS: readonly string[] = ALL_ECHOES.flatMap((echo) => [
   ...compileEcho(echo).stageIndex.keys(),
@@ -76,41 +83,31 @@ class Reader {
   }
 }
 
-// ---- Index helpers (game ID → array index, null → NULL_BYTE) ----
-const charIdx = (id: number | null) => {
-  if (id === null) return NULL_BYTE
-  const i = ALL_CHARACTERS.findIndex((c) => c.id === id)
-  if (i < 0) throw new Error(`Unknown character id ${id}`)
-  return i
+// ---- Index helpers (game ID → wire index, null → NULL_BYTE) ----
+const charIdx = (id: number | null) =>
+  id === null ? NULL_BYTE : toWire(CHARACTER_WIRE, id, "character")
+const weaponIdx = (id: number | null) =>
+  id === null ? NULL_BYTE : toWire(WEAPON_WIRE, id, "weapon")
+const echoIdx = (id: number | null) =>
+  id === null ? NULL_BYTE : toWire(ECHO_WIRE, id, "echo")
+const echoSetIdx = (id: number | null) =>
+  id === null ? NULL_BYTE : toWire(ECHO_SET_WIRE, id, "echo set")
+
+const ownStages = (charId: number) => {
+  const own = CHAR_STAGE_IDS.get(charId)
+  if (own === undefined) throw new Error(`Unknown character id ${charId}`)
+  return own
 }
-const weaponIdx = (id: number | null) => {
-  if (id === null) return NULL_BYTE
-  const i = ALL_WEAPONS.findIndex((w) => w.id === id)
-  if (i < 0) throw new Error(`Unknown weapon id ${id}`)
-  return i
-}
-const echoIdx = (id: number | null) => {
-  if (id === null) return NULL_BYTE
-  const i = ALL_ECHOES.findIndex((e) => e.id === id)
-  if (i < 0) throw new Error(`Unknown echo id ${id}`)
-  return i
-}
-const echoSetIdx = (id: number | null) => {
-  if (id === null) return NULL_BYTE
-  const i = ALL_ECHO_SETS.findIndex((s) => s.id === id)
-  if (i < 0) throw new Error(`Unknown echo set id ${id}`)
-  return i
-}
-const stageIdx = (charByte: number, stageId: string) => {
-  const own = CHAR_STAGE_IDS[charByte]
+const stageIdx = (charId: number, stageId: string) => {
+  const own = ownStages(charId)
   const i = own.indexOf(stageId)
   if (i >= 0) return i
   const j = ECHO_STAGE_IDS.indexOf(stageId)
   if (j >= 0) return own.length + j
   throw new Error(`Unknown stageId "${stageId}"`)
 }
-const stageId = (charByte: number, ord: number) => {
-  const own = CHAR_STAGE_IDS[charByte]
+const stageId = (charId: number, ord: number) => {
+  const own = ownStages(charId)
   return ord < own.length ? own[ord] : ECHO_STAGE_IDS[ord - own.length]
 }
 
@@ -162,9 +159,8 @@ export function encodePayload(payload: ImportExportPayload): string {
     for (const node of timeline) {
       if (node.kind === "entry") {
         w.push(0)
-        const ci = charIdx(node.characterId)
-        w.push(ci)
-        w.push(stageIdx(ci, node.stageId))
+        w.push(charIdx(node.characterId))
+        w.push(stageIdx(node.characterId, node.stageId))
         w.push(
           node.variantKind ? VARIANT_KINDS.indexOf(node.variantKind) + 1 : 0,
         )
@@ -176,9 +172,8 @@ export function encodePayload(payload: ImportExportPayload): string {
         w.str(node.label)
         w.push(node.entries.length)
         for (const e of node.entries) {
-          const ci = charIdx(e.characterId)
-          w.push(ci)
-          w.push(stageIdx(ci, e.stageId))
+          w.push(charIdx(e.characterId))
+          w.push(stageIdx(e.characterId, e.stageId))
           w.push(e.variantKind ? VARIANT_KINDS.indexOf(e.variantKind) + 1 : 0)
         }
       }
@@ -198,13 +193,13 @@ export function encodePayload(payload: ImportExportPayload): string {
 
 // ---- Decode ----
 function readEntry(r: Reader): TimelineEntry {
-  const ci = r.next()
+  const charId = fromWire(CHARACTER_WIRE, r.next(), "character")
   const si = r.next()
   const vk = r.next()
   return {
     id: crypto.randomUUID(),
-    characterId: ALL_CHARACTERS[ci].id,
-    stageId: stageId(ci, si),
+    characterId: charId,
+    stageId: stageId(charId, si),
     variantKind: vk === 0 ? undefined : VARIANT_KINDS[vk - 1],
   }
 }
@@ -234,11 +229,14 @@ export function decodePayload(encoded: string): ImportExportPayload {
   const name = r.str()
 
   const focusedIdx = r.nullable()
-  const focusedId = focusedIdx === null ? null : ALL_CHARACTERS[focusedIdx].id
+  const focusedId =
+    focusedIdx === null
+      ? null
+      : fromWire(CHARACTER_WIRE, focusedIdx, "character")
 
   const readSlot = (): number | null => {
     const i = r.nullable()
-    return i === null ? null : ALL_CHARACTERS[i].id
+    return i === null ? null : fromWire(CHARACTER_WIRE, i, "character")
   }
   const slots: Slots = [readSlot(), readSlot(), readSlot()]
 
@@ -256,11 +254,13 @@ export function decodePayload(encoded: string): ImportExportPayload {
     const echoBuild = BUILD_WIRE_ORDER[r.next()]
     const { cost4: c4, cost3: c3 } = ECHO_BUILD_LAYOUTS[echoBuild]
     return {
-      weaponId: wIdx === null ? null : ALL_WEAPONS[wIdx].id,
+      weaponId: wIdx === null ? null : fromWire(WEAPON_WIRE, wIdx, "weapon"),
       weaponRank,
-      echoId: eIdx === null ? null : ALL_ECHOES[eIdx].id,
-      echoSetSlot1Id: es1Idx === null ? null : ALL_ECHO_SETS[es1Idx].id,
-      echoSetSlot2Id: es2Idx === null ? null : ALL_ECHO_SETS[es2Idx].id,
+      echoId: eIdx === null ? null : fromWire(ECHO_WIRE, eIdx, "echo"),
+      echoSetSlot1Id:
+        es1Idx === null ? null : fromWire(ECHO_SET_WIRE, es1Idx, "echo set"),
+      echoSetSlot2Id:
+        es2Idx === null ? null : fromWire(ECHO_SET_WIRE, es2Idx, "echo set"),
       sequence,
       echoBuild,
       cost4Mains: Array.from({ length: c4 }, () => COST4_MAINS[r.next()]),
