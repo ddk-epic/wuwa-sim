@@ -19,7 +19,11 @@ import { TimelineEntryRow } from "./TimelineEntryRow"
 import { TimelineGroupHeader } from "./TimelineGroupHeader"
 import { GhostEntryRow } from "./GhostEntryRow"
 import { GhostGroupRow } from "./GhostGroupRow"
-import { OpenerHeaderRow, LoopMarkerRow } from "./TimelineRotationRows"
+import {
+  OpenerHeaderRow,
+  LoopMarkerRow,
+  GhostLoopMarkerRow,
+} from "./TimelineRotationRows"
 
 interface TimelineViewProps {
   nodes: TimelineNode[]
@@ -195,6 +199,15 @@ export function TimelineView({
                 <GhostGroupRow
                   key={`groupGhost-${item.sourceGroupId}`}
                   item={item}
+                  handlers={drag.ghostHandlers()}
+                  showWait={showWait}
+                />
+              )
+            }
+            if (item.type === "loopMarkerGhost") {
+              return (
+                <GhostLoopMarkerRow
+                  key={`loop-ghost-${item.sourceId}`}
                   handlers={drag.ghostHandlers()}
                   showWait={showWait}
                 />

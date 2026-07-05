@@ -1,6 +1,7 @@
+import type { ReactNode } from "react"
 import { Trash2 } from "lucide-react"
 import { IconBtn } from "#/components/ui/IconBtn"
-import type { TimelineDrag } from "#/hooks/useTimelineDrag"
+import type { TimelineDrag, DropHandlerBundle } from "#/hooks/useTimelineDrag"
 
 function colCount(showWait: boolean): number {
   return showWait ? 12 : 11
@@ -11,13 +12,26 @@ const bandClass =
 const labelClass =
   "py-0.75 text-xs font-semibold uppercase leading-none tracking-[1.5px] text-ui-damage"
 
+function RotationBand({
+  label,
+  children,
+}: {
+  label: string
+  children?: ReactNode
+}) {
+  return (
+    <div className={bandClass}>
+      <span className={labelClass}>{label}</span>
+      {children}
+    </div>
+  )
+}
+
 export function OpenerHeaderRow({ showWait = false }: { showWait?: boolean }) {
   return (
     <tr>
       <td colSpan={colCount(showWait)}>
-        <div className={bandClass}>
-          <span className={labelClass}>Opener</span>
-        </div>
+        <RotationBand label="Opener" />
       </td>
     </tr>
   )
@@ -51,8 +65,7 @@ export function LoopMarkerRow({
       style={hidden ? { display: "none" } : undefined}
     >
       <td colSpan={colCount(showWait)}>
-        <div className={bandClass}>
-          <span className={labelClass}>Loop</span>
+        <RotationBand label="Loop">
           <span className="absolute right-2 top-1/2 -translate-y-1/2">
             <IconBtn
               icon={Trash2}
@@ -63,7 +76,27 @@ export function LoopMarkerRow({
               onClick={onDelete}
             />
           </span>
-        </div>
+        </RotationBand>
+      </td>
+    </tr>
+  )
+}
+
+export function GhostLoopMarkerRow({
+  handlers,
+  showWait = false,
+}: {
+  handlers: DropHandlerBundle
+  showWait?: boolean
+}) {
+  return (
+    <tr
+      className="opacity-40"
+      onDragOver={handlers.onDragOver}
+      onDrop={handlers.onDrop}
+    >
+      <td colSpan={colCount(showWait)}>
+        <RotationBand label="Loop" />
       </td>
     </tr>
   )

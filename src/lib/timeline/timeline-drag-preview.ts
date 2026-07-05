@@ -6,14 +6,44 @@ export interface DragPreviewState {
   dropTarget: { id: string; position: DropPosition } | null
 }
 
+/** Insert index for a node-level target (`group:<id>` or a top-level entry). */
+function resolveNodeInsertIdx(
+  items: RenderItem[],
+  dropTarget: { id: string; position: DropPosition },
+): number {
+  if (dropTarget.id.startsWith("group:")) {
+    const targetGroupId = dropTarget.id.slice(6)
+    const targetHeaderIdx = items.findIndex(
+      (item) => item.type === "groupHeader" && item.groupId === targetGroupId,
+    )
+    if (targetHeaderIdx === -1) return -1
+    if (dropTarget.position === "above") return targetHeaderIdx
+    // Below: insert after the last visible row of the target group.
+    let lastIdx = targetHeaderIdx
+    for (let j = targetHeaderIdx + 1; j < items.length; j++) {
+      const it = items[j]
+      if (it.type === "entry" && it.groupId === targetGroupId) lastIdx = j
+      else break
+    }
+    return lastIdx + 1
+  }
+  const targetEntryIdx = items.findIndex(
+    (item) => item.type === "entry" && item.entry.id === dropTarget.id,
+  )
+  if (targetEntryIdx === -1) return -1
+  return dropTarget.position === "above" ? targetEntryIdx : targetEntryIdx + 1
+}
+
 /**
  * Inserts a ghost render item at the resolved drop destination and marks
- * the source entry or group as hidden. Returns items unchanged when no drag
- * is active or when there is no drop target.
+ * the source entry, group, or loop marker as hidden. Returns items unchanged
+ * when no drag is active or when there is no drop target.
  *
  * Entry source: inserts a `type: 'ghost'` row at the resolved entry target.
  * Group source: inserts a `type: 'groupGhost'` row at the resolved node target
  * (group or top-level entry); hides the entire group block.
+ * Loop-marker source: inserts a `type: 'loopMarkerGhost'` row at the resolved
+ * node target; hides the marker's own row.
  */
 export function applyDragPreview(
   items: RenderItem[],
@@ -21,6 +51,23 @@ export function applyDragPreview(
 ): RenderItem[] {
   const { draggedId, dropTarget } = dragState
   if (!draggedId || !dropTarget) return items
+
+  // --- Loop-marker source branch ---
+  const markerIdx = items.findIndex(
+    (item) => item.type === "loopMarker" && item.markerId === draggedId,
+  )
+  if (markerIdx !== -1) {
+    const insertIdx = resolveNodeInsertIdx(items, dropTarget)
+    if (insertIdx === -1) return items
+    const result: RenderItem[] = items.map((item, i) =>
+      i === markerIdx ? { ...item, hidden: true } : item,
+    )
+    result.splice(insertIdx, 0, {
+      type: "loopMarkerGhost",
+      sourceId: draggedId,
+    })
+    return result
+  }
 
   // --- Entry source branch ---
   if (!dropTarget.id.startsWith("group:")) {
@@ -58,37 +105,8 @@ export function applyDragPreview(
   )
   if (!sourceHeader) return items
 
-  // Resolve target insert index
-  let targetInsertIdx: number
-  if (dropTarget.id.startsWith("group:")) {
-    const targetGroupId = dropTarget.id.slice(6)
-    const targetHeaderIdx = items.findIndex(
-      (item) => item.type === "groupHeader" && item.groupId === targetGroupId,
-    )
-    if (targetHeaderIdx === -1) return items
-    if (dropTarget.position === "above") {
-      targetInsertIdx = targetHeaderIdx
-    } else {
-      // Below: insert after the last visible row of the target group
-      let lastIdx = targetHeaderIdx
-      for (let j = targetHeaderIdx + 1; j < items.length; j++) {
-        const it = items[j]
-        if (it.type === "entry" && it.groupId === targetGroupId) {
-          lastIdx = j
-        } else {
-          break
-        }
-      }
-      targetInsertIdx = lastIdx + 1
-    }
-  } else {
-    const targetEntryIdx = items.findIndex(
-      (item) => item.type === "entry" && item.entry.id === dropTarget.id,
-    )
-    if (targetEntryIdx === -1) return items
-    targetInsertIdx =
-      dropTarget.position === "above" ? targetEntryIdx : targetEntryIdx + 1
-  }
+  const targetInsertIdx = resolveNodeInsertIdx(items, dropTarget)
+  if (targetInsertIdx === -1) return items
 
   // Hide source group header and all its expanded entry rows
   const result: RenderItem[] = items.map((item) => {

@@ -94,6 +94,11 @@ export type RenderItem =
       dominantHex: string
       distinctCharIds: number[]
     }
+  | {
+      type: "loopMarkerGhost"
+      /** ID of the marker being dragged — used as React key. */
+      sourceId: string
+    }
 
 function resolveEntryFields(
   entry: TimelineEntry,
