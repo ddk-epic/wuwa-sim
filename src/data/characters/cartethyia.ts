@@ -21,8 +21,7 @@ export const cartethyia = {
   },
   buffs: [
     {
-      // Fleurdelys-form presence flag. No timer.
-      // Cleared by manifest-end. Gates every Fleurdelys-only buff.
+      // Transformation window. Gates every Fleurdelys-only buff.
       id: "char.cartethyia.manifest",
       name: "Manifest",
       trigger: {
@@ -33,6 +32,32 @@ export const cartethyia = {
       target: { kind: "self" },
       duration: { kind: "permanent" },
       effects: [],
+    },
+    {
+      id: "char.cartethyia.fleurdelys-form",
+      name: "Fleurdelys Form",
+      trigger: {
+        event: "skillCast",
+        characterId: 1409,
+        stage: [
+          "a-knight-s-heartfelt-prayers/cast",
+          "a-knight-s-heartfelt-prayers/avatar-fleurdelys",
+        ],
+      },
+      target: { kind: "self" },
+      duration: { kind: "permanent" },
+      effects: [],
+    },
+    {
+      // Avatar - Cartethyia swaps to base without ending the window.
+      id: "char.cartethyia.avatar-cartethyia-swap",
+      name: "Avatar - Cartethyia Swap",
+      trigger: {
+        event: "skillCast",
+        characterId: 1409,
+        stage: "a-knight-s-heartfelt-prayers/avatar-cartethyia",
+      },
+      effects: [{ kind: "removeBuffs", buffs: ["fleurdelys-form"] }],
     },
     {
       id: "char.cartethyia.manifest-end",
@@ -47,6 +72,7 @@ export const cartethyia = {
           kind: "removeBuffs",
           buffs: [
             "manifest",
+            "fleurdelys-form",
             "heart-of-virtue",
             "mandate-of-divinity",
             "power-of-discord",
@@ -436,8 +462,7 @@ export const cartethyia = {
     },
     {
       // Mandate of Divinity: amplifies Aero Erosion DMG and halves its tick
-      // interval. Gated on the Mandate flag, which lives from recall until
-      // Manifest ends, so no separate Manifest gate is needed.
+      // interval.
       id: "char.cartethyia.mandate-amp",
       name: "Mandate of Divinity (Aero Erosion Amplify)",
       trigger: { event: "simStart" },
@@ -943,8 +968,7 @@ export const cartethyia = {
           ],
         },
         {
-          // Plunge that recalls all Sword Shadows. Damage is emitted by the
-          // recall buffs, keyed on how many shadows are recalled.
+          // Plunge that recalls all Sword Shadows.
           name: "Mid-air Attack",
           newName: "Mid-air Attack",
           category: "Basic Attack",
@@ -1037,6 +1061,26 @@ export const cartethyia = {
           value: "",
           actionTime: 0,
           animationFrames: 60,
+          variants: {},
+          damage: [],
+        },
+        {
+          name: "Avatar - Cartethyia",
+          newSkillName: "Avatar",
+          newName: "Cartethyia",
+          category: "Resonance Liberation",
+          value: "",
+          actionTime: 0,
+          variants: {},
+          damage: [],
+        },
+        {
+          name: "Avatar - Fleurdelys",
+          newSkillName: "Avatar",
+          newName: "Fleurdelys",
+          category: "Resonance Liberation",
+          value: "",
+          actionTime: 0,
           variants: {},
           damage: [],
         },

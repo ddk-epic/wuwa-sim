@@ -51,6 +51,8 @@ exports[`all shipped data compiles > stage-id snapshot (drift tripwire) 1`] = `
   "char.cartethyia.movement.dodge.dodge::movement",
   "char.cartethyia.movement.jump.jump::movement",
   "char.cartethyia.outro-skill.wind-s-divine-blessing.cast::outro-skill",
+  "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.avatar-cartethyia::resonance-liberation",
+  "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.avatar-fleurdelys::resonance-liberation",
   "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.blade-of-howling-squall::resonance-liberation",
   "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.cast::resonance-liberation",
   "char.cartethyia.resonance-skill.sword-to-bear-their-names.cast::basic-attack",
