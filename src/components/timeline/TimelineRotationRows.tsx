@@ -61,12 +61,12 @@ export function LoopMarkerRow({
       draggable
       onDragStart={source.onDragStart}
       onDragEnd={source.onDragEnd}
-      className={`cursor-grab ${isDragging ? "opacity-40" : ""}`}
+      className={`group cursor-grab ${isDragging ? "opacity-40" : ""}`}
       style={hidden ? { display: "none" } : undefined}
     >
       <td colSpan={colCount(showWait)}>
         <RotationBand label="Loop">
-          <span className="absolute right-2 top-1/2 -translate-y-1/2">
+          <span className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
             <IconBtn
               icon={Trash2}
               label="Delete loop marker"
