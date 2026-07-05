@@ -36,6 +36,12 @@ function groupEntryItem(
   })
 }
 
+function loopMarkerItem(
+  markerId: string,
+): Extract<RenderItem, { type: "loopMarker" }> {
+  return { type: "loopMarker", markerId, containerIndex: 0 }
+}
+
 function entryItem(
   id: string,
   charHex = "#888",
@@ -114,8 +120,10 @@ describe("applyDragPreview — no-op cases", () => {
   })
 })
 
+// Source is marked hidden, not removed, so the splice index is independent of
+// whether the source sits before or after the target — one case per position.
 describe("applyDragPreview — ghost insertion above", () => {
-  it("inserts ghost before target and hides source (source before target)", () => {
+  it("inserts ghost before target and hides source", () => {
     const a = entryItem("a", "#f00", "Alpha", { containerIndex: 0 })
     const b = entryItem("b", "#0f0", "Beta", { containerIndex: 1 })
     const c = entryItem("c", "#00f", "Gamma", { containerIndex: 2 })
@@ -140,35 +148,10 @@ describe("applyDragPreview — ghost insertion above", () => {
     })
     expect(result[3]).toMatchObject({ type: "entry", entry: { id: "c" } })
   })
-
-  it("inserts ghost before target and hides source (source after target)", () => {
-    const a = entryItem("a", "#f00", "Alpha", { containerIndex: 0 })
-    const b = entryItem("b", "#0f0", "Beta", { containerIndex: 1 })
-    const c = entryItem("c", "#00f", "Gamma", { containerIndex: 2 })
-    const state: DragPreviewState = {
-      draggedId: "c",
-      dropTarget: { id: "a", position: "above" },
-    }
-    const result = applyDragPreview([a, b, c], state)
-
-    expect(result).toHaveLength(4)
-    expect(result[0]).toMatchObject({
-      type: "ghost",
-      sourceId: "c",
-      charHex: "#00f",
-    })
-    expect(result[1]).toMatchObject({ type: "entry", entry: { id: "a" } })
-    expect(result[2]).toMatchObject({ type: "entry", entry: { id: "b" } })
-    expect(result[3]).toMatchObject({
-      type: "entry",
-      entry: { id: "c" },
-      hidden: true,
-    })
-  })
 })
 
 describe("applyDragPreview — ghost insertion below", () => {
-  it("inserts ghost after target and hides source (source before target)", () => {
+  it("inserts ghost after target and hides source", () => {
     const a = entryItem("a", "#f00", "Alpha", { containerIndex: 0 })
     const b = entryItem("b", "#0f0", "Beta", { containerIndex: 1 })
     const c = entryItem("c", "#00f", "Gamma", { containerIndex: 2 })
@@ -191,31 +174,6 @@ describe("applyDragPreview — ghost insertion below", () => {
       charHex: "#f00",
     })
     expect(result[3]).toMatchObject({ type: "entry", entry: { id: "c" } })
-  })
-
-  it("inserts ghost after target and hides source (source after target)", () => {
-    const a = entryItem("a", "#f00", "Alpha", { containerIndex: 0 })
-    const b = entryItem("b", "#0f0", "Beta", { containerIndex: 1 })
-    const c = entryItem("c", "#00f", "Gamma", { containerIndex: 2 })
-    const state: DragPreviewState = {
-      draggedId: "c",
-      dropTarget: { id: "a", position: "below" },
-    }
-    const result = applyDragPreview([a, b, c], state)
-
-    expect(result).toHaveLength(4)
-    expect(result[0]).toMatchObject({ type: "entry", entry: { id: "a" } })
-    expect(result[1]).toMatchObject({
-      type: "ghost",
-      sourceId: "c",
-      charHex: "#00f",
-    })
-    expect(result[2]).toMatchObject({ type: "entry", entry: { id: "b" } })
-    expect(result[3]).toMatchObject({
-      type: "entry",
-      entry: { id: "c" },
-      hidden: true,
-    })
   })
 })
 
@@ -247,6 +205,40 @@ describe("applyDragPreview — ghost carries source metadata", () => {
     const result = applyDragPreview([src, tgt], state)
     const ghost = result.find((r) => r.type === "ghost")
     expect(ghost).toMatchObject({ type: "ghost", skillName: null })
+  })
+})
+
+describe("applyDragPreview — loop-marker source", () => {
+  it("inserts marker ghost above a top-level entry and hides the marker", () => {
+    const m = loopMarkerItem("m")
+    const a = entryItem("a", "#f00", "Alpha", { containerIndex: 1 })
+    const b = entryItem("b", "#0f0", "Beta", { containerIndex: 2 })
+    const result = applyDragPreview([m, a, b], {
+      draggedId: "m",
+      dropTarget: { id: "b", position: "above" },
+    })
+
+    expect(result).toHaveLength(4)
+    expect(result[0]).toMatchObject({ type: "loopMarker", hidden: true })
+    expect(result[1]).toMatchObject({ type: "entry", entry: { id: "a" } })
+    expect(result[2]).toMatchObject({ type: "loopMarkerGhost", sourceId: "m" })
+    expect(result[3]).toMatchObject({ type: "entry", entry: { id: "b" } })
+  })
+
+  it("inserts marker ghost below a group and hides the marker", () => {
+    const g1 = groupHeaderItem("g1", { entryCount: 1, containerIndex: 0 })
+    const g1e1 = groupEntryItem("g1e1", "g1", 0)
+    const m = loopMarkerItem("m")
+    const result = applyDragPreview([g1, g1e1, m], {
+      draggedId: "m",
+      dropTarget: { id: "group:g1", position: "below" },
+    })
+
+    expect(result).toHaveLength(4)
+    expect(result[0]).toMatchObject({ type: "groupHeader", groupId: "g1" })
+    expect(result[1]).toMatchObject({ type: "entry", entry: { id: "g1e1" } })
+    expect(result[2]).toMatchObject({ type: "loopMarkerGhost", sourceId: "m" })
+    expect(result[3]).toMatchObject({ type: "loopMarker", hidden: true })
   })
 })
 
