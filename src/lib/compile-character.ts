@@ -18,6 +18,7 @@ import { getCharacterById, getEchoById } from "./loadout/catalog"
 import type { ResolvedStage } from "./stage"
 import {
   STAGE_CAST_NAME,
+  resolveStageLabel,
   deriveKey,
   stageLabel,
   stageSkillType,
@@ -521,8 +522,8 @@ export function findStageByEntry(
       skillCategory: stage.category,
       skillType,
       skillName: isCastStage
-        ? skill.name
-        : stageLabel(skill.name, stage.newName),
+        ? (stage.newSkillName ?? skill.name)
+        : resolveStageLabel(skill.name, stage),
       requiresPriorStageId: info.requiresPriorStageId,
       requiresSequence: stage.requiresSequence,
       requiresConcerto: stage.requiresConcerto,
@@ -578,10 +579,7 @@ export function buildStageLabels(
     const character = getCharacterById(characterId)
     if (character) {
       for (const info of compileCharacter(character).stageIndex.values()) {
-        labels.set(
-          info.stageId,
-          stageLabel(info.skill.name, info.stage.newName),
-        )
+        labels.set(info.stageId, resolveStageLabel(info.skill.name, info.stage))
       }
     }
     const echoId = loadouts[i]?.echoId ?? null

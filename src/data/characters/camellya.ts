@@ -1166,6 +1166,7 @@ export const camellya = {
         {
           name: "Vining Waltz 1 DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Vining Waltz 1",
           value: "96.33%",
           actionTime: 48,
@@ -1192,6 +1193,7 @@ export const camellya = {
         {
           name: "Vining Waltz 2 DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Vining Waltz 2",
           value: "45.63%*2",
           actionTime: 42,
@@ -1230,6 +1232,7 @@ export const camellya = {
         {
           name: "Vining Waltz 3 DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Vining Waltz 3",
           value: "21.95%*6",
           actionTime: 55,
@@ -1316,6 +1319,7 @@ export const camellya = {
         {
           name: "Vining Waltz 4 DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Vining Waltz 4",
           value: "67.59%*3",
           actionTime: 78,
@@ -1368,6 +1372,7 @@ export const camellya = {
         {
           name: "Blazing Waltz DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Blazing Waltz",
           value: "21.95%*19",
           actionTime: 115,
@@ -1610,6 +1615,7 @@ export const camellya = {
         {
           name: "Vining Ronde DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Vining Ronde",
           value: "52.95%*3",
           actionTime: 87,
@@ -1660,6 +1666,7 @@ export const camellya = {
         {
           name: "Atonement DMG",
           category: "Basic Attack",
+          newSkillName: "Blossom Mode",
           newName: "Atonement",
           value: "113.33%*2",
           hidden: true,

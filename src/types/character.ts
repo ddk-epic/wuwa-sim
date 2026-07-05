@@ -195,6 +195,9 @@ type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
   key?: string
   actionTime: number
   hidden?: boolean
+  /** Display prefix override; defaults to the skill name. */
+  newSkillName?: string
+  /** Display suffix override; empty/absent shows the prefix alone. */
   newName?: string
   variants?: Partial<Record<VariantKind, StageVariant>>
   footing?: Footing

@@ -108,6 +108,14 @@ export function stageLabel(skillName: string, newName?: string): string {
   return `${skillName} · ${newName}`
 }
 
+/** A stage's label: its `newSkillName` prefix (default `skillName`) joined with `newName`. */
+export function resolveStageLabel(
+  skillName: string,
+  stage: { newSkillName?: string; newName?: string },
+): string {
+  return stageLabel(stage.newSkillName ?? skillName, stage.newName)
+}
+
 export function resolveStageExecution(
   stage: ActionTimeStage & { damage?: DamageEntry[] },
   variantKind: VariantKind | undefined,

@@ -5,7 +5,7 @@ import { STAGE_TYPE_LABELS } from "#/data/skill-types"
 import { getCharacterById, getEchoById } from "../../lib/loadout/catalog"
 import type { EchoStageInfo, StageInfo } from "../../lib/compile-character"
 import { compileCharacter, compileEcho } from "../../lib/compile-character"
-import { stageLabel } from "../../lib/stage"
+import { resolveStageLabel, stageLabel } from "../../lib/stage"
 
 export interface FocusedStage {
   key: string
@@ -99,7 +99,7 @@ function buildCharacterStage(
   const { skill, stage } = info
   return {
     key: info.stageId,
-    label: stageLabel(skill.name, stage.newName),
+    label: resolveStageLabel(skill.name, stage),
     typeLabel: STAGE_TYPE_LABELS[stage.category],
     skillType: info.skillType,
     skillGrouping: skill.type,
