@@ -55,6 +55,10 @@ const STAGE = {
     "char.cartethyia.resonance-skill.sword-to-bear-their-names.cast::basic-attack",
   liberationCast:
     "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.cast::resonance-liberation",
+  avatarCartethyia:
+    "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.avatar-cartethyia::resonance-liberation",
+  avatarFleurdelys:
+    "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.avatar-fleurdelys::resonance-liberation",
   blade:
     "char.cartethyia.resonance-liberation.a-knight-s-heartfelt-prayers.blade-of-howling-squall::resonance-liberation",
 }
@@ -137,6 +141,39 @@ describe("Cartethyia — Sword Shadows & recall", () => {
     expect(after).not.toContain("char.cartethyia.heart-of-virtue")
     expect(after).not.toContain("char.cartethyia.mandate-of-divinity")
     expect(after).not.toContain("char.cartethyia.power-of-discord")
+  })
+
+  it("Manifest is a 12s window that counts only Fleurdelys-form time", () => {
+    const engine = makeEngine()
+    cast(engine, STAGE.liberationCast, "Resonance Liberation", 0)
+    expect(engine.activeBuffIds(1409)).toEqual(
+      expect.arrayContaining([
+        "char.cartethyia.manifest",
+        "char.cartethyia.fleurdelys-form",
+      ]),
+    )
+
+    // 300 frames of Fleurdelys time elapse, then Avatar - Cartethyia pauses it.
+    engine.tickToFrame(300)
+    cast(engine, STAGE.avatarCartethyia, "Resonance Liberation", 300)
+    expect(engine.activeBuffIds(1409)).not.toContain(
+      "char.cartethyia.fleurdelys-form",
+    )
+
+    // Paused: the window outlasts an arbitrarily long base-form excursion.
+    engine.tickToFrame(100000)
+    expect(engine.activeBuffIds(1409)).toContain("char.cartethyia.manifest")
+
+    // Avatar - Fleurdelys resumes; 420 banked frames remain (720 − 300).
+    cast(engine, STAGE.avatarFleurdelys, "Resonance Liberation", 100000)
+    expect(engine.tickToFrame(100419).lifecycleEvents).toEqual([])
+    expect(engine.activeBuffIds(1409)).toContain("char.cartethyia.manifest")
+
+    // The 12th accumulated second ends the window; the fan-out clears the powers.
+    engine.tickToFrame(100420)
+    const after = engine.activeBuffIds(1409)
+    expect(after).not.toContain("char.cartethyia.manifest")
+    expect(after).not.toContain("char.cartethyia.fleurdelys-form")
   })
 })
 

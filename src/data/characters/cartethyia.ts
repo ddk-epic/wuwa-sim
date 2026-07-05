@@ -30,7 +30,7 @@ export const cartethyia = {
         stage: "a-knight-s-heartfelt-prayers/cast",
       },
       target: { kind: "self" },
-      duration: { kind: "permanent" },
+      duration: { kind: "seconds", v: 12, while: { buff: "fleurdelys-form" } },
       effects: [],
     },
     {
