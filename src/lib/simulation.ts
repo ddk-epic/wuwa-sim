@@ -8,6 +8,7 @@ import type {
   Diagnostic,
   HitEvent,
   SimulationLogEntry,
+  SustainEvent,
 } from "#/types/simulation-log"
 import type { TimelineEntry } from "#/types/timeline"
 import { computeDamage } from "./damage/compute-damage"
@@ -334,7 +335,10 @@ function advanceWithinDrain(ctx: SimContext, frame: number): void {
 /** Log a clock-advance's expiry lifecycle events and its Negative Status ticks. */
 function pushAdvance(
   log: SimulationLogEntry[],
-  result: { lifecycleEvents: BuffEvent[]; tickEvents: HitEvent[] },
+  result: {
+    lifecycleEvents: BuffEvent[]
+    tickEvents: (HitEvent | SustainEvent)[]
+  },
 ): void {
   for (const e of result.lifecycleEvents) log.push(e)
   for (const t of result.tickEvents) log.push(t)

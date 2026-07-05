@@ -323,9 +323,14 @@ export class InstanceStore {
     this.active = remaining
   }
 
-  tickToFrame(frame: number): { lifecycleEvents: BuffEvent[] } {
+  /** `expired` carries instances fully pruned by timer, for buffExpired dispatch. */
+  tickToFrame(frame: number): {
+    lifecycleEvents: BuffEvent[]
+    expired: BuffInstance[]
+  } {
     const lifecycleEvents: BuffEvent[] = []
     const remaining: BuffInstance[] = []
+    const expired: BuffInstance[] = []
     let pruned = false
     for (const inst of this.active) {
       if (inst.stackExpiries) {
@@ -356,13 +361,14 @@ export class InstanceStore {
           frame: inst.endTime,
           stacks: inst.stacks,
         })
+        expired.push(inst)
       } else {
         remaining.push(inst)
       }
     }
     if (remaining.length !== this.active.length || pruned) this.version_++
     this.active = remaining
-    return { lifecycleEvents }
+    return { lifecycleEvents, expired }
   }
 
   /**

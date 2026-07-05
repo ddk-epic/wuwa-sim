@@ -529,4 +529,76 @@ describe("BuffEngine.onEvent — buffExpired trigger", () => {
     expect(engine.activeBuffIds(1)).not.toContain("char.gate")
     expect(engine.activeBuffIds(1)).toContain("char.reactor")
   })
+
+  const timed: BuffDef = {
+    id: "char.timed",
+    name: "Timed",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 100 },
+    effects: [],
+  }
+
+  const dependent: BuffDef = {
+    id: "char.dependent",
+    name: "Dependent",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [],
+  }
+
+  const timerReactor: BuffDef = {
+    id: "char.timer-reactor",
+    name: "Timer Reactor",
+    trigger: { event: "buffExpired", buff: "timed" },
+    effects: [{ kind: "removeBuffs", buffs: ["dependent"] }],
+  }
+
+  it("fires a buffExpired dependent when a timed buff expires via tickToFrame", () => {
+    testCharacters = [
+      baseChar({ id: 1, buffs: [timed, dependent, timerReactor] }),
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+      frame: 0,
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1)).toEqual(
+      expect.arrayContaining(["char.timed", "char.dependent"]),
+    )
+
+    const { lifecycleEvents } = engine.tickToFrame(100)
+    expect(lifecycleEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "buffExpired", buffId: "char.timed" }),
+        expect.objectContaining({
+          kind: "buffConsumed",
+          buffId: "char.dependent",
+        }),
+      ]),
+    )
+    expect(engine.activeBuffIds(1)).not.toContain("char.timed")
+    expect(engine.activeBuffIds(1)).not.toContain("char.dependent")
+  })
 })

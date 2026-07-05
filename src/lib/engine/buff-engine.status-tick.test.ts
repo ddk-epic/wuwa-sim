@@ -2,8 +2,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { BuffDef } from "#/types/buff"
 import type { EnrichedCharacter } from "#/types/character"
+import type { HitEvent, SustainEvent } from "#/types/simulation-log"
 import { BuffEngine } from "./buff-engine"
 import { baseChar, emptyLoadout, slotsOf } from "./buff-engine.test-fixtures"
+
+const hitTicks = (events: (HitEvent | SustainEvent)[]): HitEvent[] =>
+  events.filter((e): e is HitEvent => e.kind === "hit")
 
 let testCharacters: EnrichedCharacter[] = []
 
@@ -55,7 +59,7 @@ describe("Aero Erosion tick cadence", () => {
     const engine = bootstrap([applyErosion(1)])
     castResoSkill(engine, 0)
 
-    const ticks = engine.tickToFrame(2000).tickEvents
+    const ticks = hitTicks(engine.tickToFrame(2000).tickEvents)
     expect(ticks.map((t) => t.frame)).toEqual([150, 300, 450, 600, 750])
     expect(ticks.every((t) => t.damage === tickDmg(0.8))).toBe(true)
     expect(ticks[0].characterId).toBe(1)
@@ -64,15 +68,15 @@ describe("Aero Erosion tick cadence", () => {
   it("reads the live stack count at each tick", () => {
     const engine = bootstrap([applyErosion(1)])
     castResoSkill(engine, 0)
-    expect(engine.tickToFrame(200).tickEvents.map((t) => t.damage)).toEqual([
-      tickDmg(0.8),
-    ])
+    expect(
+      hitTicks(engine.tickToFrame(200).tickEvents).map((t) => t.damage),
+    ).toEqual([tickDmg(0.8)])
 
     castResoSkill(engine, 210)
     castResoSkill(engine, 220)
     expect(engine.getTarget().stacksOf("Aero Erosion")).toBe(3)
 
-    const next = engine.tickToFrame(350).tickEvents
+    const next = hitTicks(engine.tickToFrame(350).tickEvents)
     expect(next.map((t) => t.frame)).toEqual([300])
     expect(next[0].damage).toBe(tickDmg(4))
   })
@@ -100,7 +104,7 @@ describe("Aero Erosion tick cadence", () => {
     }
     const engine = bootstrap([applyErosion(1), critBuff])
     castResoSkill(engine, 0)
-    const ticks = engine.tickToFrame(200).tickEvents
+    const ticks = hitTicks(engine.tickToFrame(200).tickEvents)
     expect(ticks[0].damage).toBe(tickDmg(0.8))
   })
 })
@@ -126,7 +130,7 @@ describe("Aero Erosion label-scoped Amplify", () => {
     const engine = bootstrap([applyErosion(1), erosionAmp])
     castResoSkill(engine, 0)
 
-    const ticks = engine.tickToFrame(200).tickEvents
+    const ticks = hitTicks(engine.tickToFrame(200).tickEvents)
     expect(ticks[0].damage).toBe(Math.round(2150 * 0.8 * 1.5 * DEFRES))
 
     expect(

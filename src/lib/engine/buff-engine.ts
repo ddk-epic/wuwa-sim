@@ -70,7 +70,7 @@ export interface ResolvedHit {
   activeBuffs: ActiveBuff[]
   passiveBuffs: ActiveBuff[]
   lifecycleEvents: BuffEvent[]
-  tickEvents: HitEvent[]
+  tickEvents: (HitEvent | SustainEvent)[]
 }
 
 /** A scheduled Emit Pool maturation the simulation parks on its Schedule. */
@@ -1400,15 +1400,16 @@ export class BuffEngine {
    */
   tickToFrame(frame: number): {
     lifecycleEvents: BuffEvent[]
-    tickEvents: HitEvent[]
+    tickEvents: (HitEvent | SustainEvent)[]
   } {
     const lifecycleEvents: BuffEvent[] = []
-    const tickEvents: HitEvent[] = []
+    const tickEvents: (HitEvent | SustainEvent)[] = []
     for (;;) {
       const tf = this.earliestDueTick(frame)
       if (tf === null) break
-      for (const e of this.store.tickToFrame(tf).lifecycleEvents)
-        lifecycleEvents.push(e)
+      const { lifecycleEvents: le, expired } = this.store.tickToFrame(tf)
+      for (const e of le) lifecycleEvents.push(e)
+      this.dispatchTimerExpiries(expired, tf, lifecycleEvents, tickEvents)
       this.target.expireBefore(tf)
       for (const inst of this.target.list()) {
         if (inst.nextTickFrame > tf) continue
@@ -1419,10 +1420,39 @@ export class BuffEngine {
         )
       }
     }
-    for (const e of this.store.tickToFrame(frame).lifecycleEvents)
-      lifecycleEvents.push(e)
+    const { lifecycleEvents: le, expired } = this.store.tickToFrame(frame)
+    for (const e of le) lifecycleEvents.push(e)
+    this.dispatchTimerExpiries(expired, frame, lifecycleEvents, tickEvents)
     this.target.expireBefore(frame)
     return { lifecycleEvents, tickEvents }
+  }
+
+  /**
+   * Dispatch a `buffExpired` engine event for each timer-pruned instance so its
+   * dependents fan out identically to an explicit removal. Runs outside any
+   * dispatch context, so a positive depth resolves in-frame emits inline into
+   * the tick stream rather than deferring them. Cascades terminate because each
+   * instance is already gone from `active`.
+   */
+  private dispatchTimerExpiries(
+    expired: BuffInstance[],
+    frame: number,
+    out: BuffEvent[],
+    tickEvents: (HitEvent | SustainEvent)[],
+  ): void {
+    for (const inst of expired) {
+      this.dispatchEvent(
+        {
+          kind: "buffExpired",
+          characterId: inst.targetCharacterId,
+          buffId: inst.def.id,
+          frame,
+        },
+        out,
+        tickEvents,
+        1,
+      )
+    }
   }
 
   /**
