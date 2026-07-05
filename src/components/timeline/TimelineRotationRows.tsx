@@ -6,14 +6,18 @@ function colCount(showWait: boolean): number {
   return showWait ? 12 : 11
 }
 
+const bandClass =
+  "relative flex items-center justify-center border-y border-ui-damage/20 bg-gradient-to-r from-transparent via-ui-damage/20 to-transparent px-3 py-0.5"
+const labelClass =
+  "py-0.75 text-xs font-semibold uppercase leading-none tracking-[1.5px] text-ui-damage"
+
 export function OpenerHeaderRow({ showWait = false }: { showWait?: boolean }) {
   return (
-    <tr className="border-t border-border bg-darkest">
-      <td
-        colSpan={colCount(showWait)}
-        className="px-3 py-1 font-mono text-xs uppercase tracking-[1px] text-muted-foreground"
-      >
-        Opener
+    <tr>
+      <td colSpan={colCount(showWait)}>
+        <div className={bandClass}>
+          <span className={labelClass}>Opener</span>
+        </div>
       </td>
     </tr>
   )
@@ -43,28 +47,22 @@ export function LoopMarkerRow({
       draggable
       onDragStart={source.onDragStart}
       onDragEnd={source.onDragEnd}
-      className={[
-        "border-t-2 border-glacio cursor-grab bg-darkest",
-        isDragging ? "opacity-40" : "",
-      ].join(" ")}
+      className={`cursor-grab ${isDragging ? "opacity-40" : ""}`}
       style={hidden ? { display: "none" } : undefined}
     >
-      <td
-        colSpan={colCount(showWait) - 1}
-        className="px-3 py-1 font-mono text-xs font-bold uppercase tracking-[1px] text-glacio"
-      >
-        Loop
-      </td>
-      <td className="px-1 py-1">
-        <div className="flex items-center justify-end pr-px -my-1">
-          <IconBtn
-            icon={Trash2}
-            label="Delete loop marker"
-            variant="destructive"
-            w={24}
-            h={30}
-            onClick={onDelete}
-          />
+      <td colSpan={colCount(showWait)}>
+        <div className={bandClass}>
+          <span className={labelClass}>Loop</span>
+          <span className="absolute right-2 top-1/2 -translate-y-1/2">
+            <IconBtn
+              icon={Trash2}
+              label="Delete loop marker"
+              variant="destructive"
+              w={24}
+              h={26}
+              onClick={onDelete}
+            />
+          </span>
         </div>
       </td>
     </tr>
