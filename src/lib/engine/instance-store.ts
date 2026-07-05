@@ -90,6 +90,13 @@ export type EngineEvent =
       status: NegStatusType
       frame: number
     }
+  | {
+      kind: "buffExpired"
+      /** Target character of the ended instance. */
+      characterId: number
+      buffId: string
+      frame: number
+    }
 
 export interface Candidate {
   def: BuffDef
@@ -247,13 +254,17 @@ export class InstanceStore {
     return candidates
   }
 
-  /** Drop instances whose source matches `sourceCharacterId` and that opt into expiry on swapOut. */
+  /**
+   * Drop instances whose source matches `sourceCharacterId` and that opt into
+   * expiry on swapOut. Returns the removed instances for buffExpired fan-out.
+   */
   expireOnSourceSwapOut(
     sourceCharacterId: number,
     frame: number,
     out: BuffEvent[],
-  ): void {
+  ): BuffInstance[] {
     const remaining: BuffInstance[] = []
+    const removed: BuffInstance[] = []
     for (const inst of this.active) {
       if (
         inst.def.expiresOnSourceSwapOut &&
@@ -269,12 +280,14 @@ export class InstanceStore {
           frame,
           stacks: inst.stacks,
         })
+        removed.push(inst)
       } else {
         remaining.push(inst)
       }
     }
-    if (remaining.length !== this.active.length) this.version_++
+    if (removed.length > 0) this.version_++
     this.active = remaining
+    return removed
   }
 
   /** Decrement stacks for instances whose consumedBy filter matches `event`. */
@@ -541,11 +554,18 @@ export class InstanceStore {
     )
   }
 
-  /** Remove all active instances whose def.id is in `ids`. Emits buffConsumed for each. */
-  removeBuffsById(ids: string[], frame: number, out: BuffEvent[]): void {
+  /**
+   * Remove all active instances whose def.id is in `ids`. Emits buffConsumed for
+   * each and returns the removed instances so the caller can fan out buffExpired.
+   */
+  removeBuffsById(
+    ids: string[],
+    frame: number,
+    out: BuffEvent[],
+  ): BuffInstance[] {
     const idSet = new Set(ids)
     const remaining: BuffInstance[] = []
-    let mutated = false
+    const removed: BuffInstance[] = []
     for (const inst of this.active) {
       if (idSet.has(inst.def.id)) {
         emit(out, inst.def, {
@@ -558,15 +578,16 @@ export class InstanceStore {
           frame,
           stacks: 0,
         })
-        mutated = true
+        removed.push(inst)
       } else {
         remaining.push(inst)
       }
     }
-    if (mutated) {
+    if (removed.length > 0) {
       this.active = remaining
       this.version_++
     }
+    return removed
   }
 }
 
@@ -700,6 +721,20 @@ export function matchesTrigger(
     event.kind === "resourceConsumed"
   ) {
     if (trigger.resource !== event.resource) return false
+    if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
+      return false
+    }
+    if (
+      trigger.characterId !== undefined &&
+      trigger.characterId !== event.characterId
+    ) {
+      return false
+    }
+    return true
+  }
+
+  if (trigger.event === "buffExpired" && event.kind === "buffExpired") {
+    if (!matchesAxis(trigger.buff, event.buffId)) return false
     if (trigger.actor !== "any" && sourceCharacterId !== event.characterId) {
       return false
     }

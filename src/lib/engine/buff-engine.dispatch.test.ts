@@ -469,3 +469,64 @@ describe("BuffEngine.passiveBuffs", () => {
     expect(resolved.passiveBuffs).toEqual(engine.passiveBuffs(1))
   })
 })
+
+describe("BuffEngine.onEvent — buffExpired trigger", () => {
+  const gate: BuffDef = {
+    id: "char.gate",
+    name: "Gate",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [],
+  }
+
+  const remover: BuffDef = {
+    id: "char.remover",
+    name: "Remover",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
+    effects: [{ kind: "removeBuffs", buffs: ["gate"] }],
+  }
+
+  const reactor: BuffDef = {
+    id: "char.reactor",
+    name: "Reactor",
+    trigger: { event: "buffExpired", buff: "gate" },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [],
+  }
+
+  it("fires a buff whose trigger is buffExpired when the named buff is removed", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [gate, remover, reactor] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1)).toContain("char.gate")
+    expect(engine.activeBuffIds(1)).not.toContain("char.reactor")
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 30,
+    })
+    expect(engine.activeBuffIds(1)).not.toContain("char.gate")
+    expect(engine.activeBuffIds(1)).toContain("char.reactor")
+  })
+})

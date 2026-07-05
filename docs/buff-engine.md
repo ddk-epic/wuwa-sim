@@ -1,6 +1,6 @@
 # Buff Engine
 
-`BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`), selects matching buff candidates, and routes them through a fixed phase pipeline. It composes its internal modules rather than owning their state directly.
+`BuffEngine` is the state machine that coordinates buff lifecycle, resource changes, on-field tracking, synthetic hit emission, and per-hit Stat Table composition. It receives authored events (`skillCast`, `hitLanded`, `swapIn`/`swapOut`, `simStart`, `resourceCrossed`) plus synthetic ones it dispatches itself (e.g. `buffExpired`), selects matching buff candidates, and routes them through a fixed phase pipeline. It composes its internal modules rather than owning their state directly.
 
 **Source files:** `src/lib/engine/buff-engine.ts`, `src/lib/engine/instance-store.ts`, `src/lib/engine/emit-hit-dispatcher.ts`, `src/lib/engine/on-field-tracker.ts`, `src/lib/engine/resource-ledger.ts`, `src/lib/engine/apply-stat-effects.ts`, `src/lib/engine-bootstrap.ts`
 
@@ -44,7 +44,8 @@ Order is a data value, not inline control flow (see [ADR-0006](adr/0006-phase-ba
 ### Instance lifecycle
 
 - **Apply** — `applyBuff` creates a new instance (pushes to `active`, emits `buffApplied`) or refreshes an existing one (updates `endTime`, mutates stacks per policy).
-- **Expire** — `tickToFrame` removes instances whose `endTime ≤ frame` (emits `buffExpired`). `expireOnSourceSwapOut` removes instances flagged to die when their source character leaves the field.
+- **Expire** — `tickToFrame` removes instances whose `endTime ≤ frame` (emits the `buffExpired` lifecycle event). `expireOnSourceSwapOut` removes instances flagged to die when their source character leaves the field.
+- **buffExpired propagation** — a buff can trigger on another buff ending via `trigger: { event: "buffExpired", buff: <id> }`. When an instance is removed inside a dispatch context (the `removeBuffs` phase or source swap-out), `dispatchExpiries` synthesizes a `buffExpired` engine event per removed instance and re-dispatches it, so removals propagate identically regardless of what ended the buff. Each instance is dropped from `active` before its `buffExpired` fires, so a cascade of removals that re-ends the same buff finds nothing and terminates. Timer-expiry dispatch (from `tickToFrame`) is a separate seam outside any dispatch context.
 - **Pending nextOnField** — stored in `pendingNextOnField`; on `swapIn`, `drainPendingNextOnField` materializes them onto the incoming character via `applyBuff` (see [ADR-0013](adr/0013-outro-pending-buff-queue-on-buff-engine.md)).
 - **Consume** — handled by the `consume` phase above.
 

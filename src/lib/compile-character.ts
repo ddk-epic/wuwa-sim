@@ -228,6 +228,9 @@ function lowerTrigger(
     if (axes.skill !== undefined) next.skill = axes.skill
     return next
   }
+  if (t.event === "buffExpired") {
+    return { ...t, buff: resolveBuffRefs(t.buff, resolveBuff) }
+  }
   if (t.event === "hitLanded" || t.event === "healLanded") {
     let next = t
     if (t.stage !== undefined) {

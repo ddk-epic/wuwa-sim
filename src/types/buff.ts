@@ -249,6 +249,15 @@ export type TriggerEvent =
       actor?: "self" | "any"
       characterId?: number
     }
+  | {
+      // Fires when a buff instance ends, from any end path (removal, source
+      // swap-out, or timer expiry). `characterId`/`actor` filter on the ended
+      // instance's target character.
+      event: "buffExpired"
+      buff: string | string[]
+      actor?: "self" | "any"
+      characterId?: number
+    }
 
 export type Trigger = TriggerEvent & {
   /**

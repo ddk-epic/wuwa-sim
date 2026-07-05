@@ -133,7 +133,10 @@ describe("Cartethyia — Sword Shadows & recall", () => {
     cast(engine, STAGE.blade, "Resonance Liberation", 90)
     const after = engine.activeBuffIds(1409)
     expect(after).not.toContain("char.cartethyia.manifest")
+    expect(after).not.toContain("char.cartethyia.fleurdelys-form")
     expect(after).not.toContain("char.cartethyia.heart-of-virtue")
+    expect(after).not.toContain("char.cartethyia.mandate-of-divinity")
+    expect(after).not.toContain("char.cartethyia.power-of-discord")
   })
 })
 

@@ -500,7 +500,12 @@ export class BuffEngine {
     }
 
     if (event.kind === "swapOut") {
-      this.store.expireOnSourceSwapOut(event.characterId, event.frame, out)
+      const expired = this.store.expireOnSourceSwapOut(
+        event.characterId,
+        event.frame,
+        out,
+      )
+      this.dispatchExpiries(expired, event.frame, out, hitsOut, depth)
     }
 
     if (event.kind === "swapIn") {
@@ -656,8 +661,46 @@ export class BuffEngine {
     for (const { def } of ctx.candidates) {
       for (const effect of def.effects) {
         if (effect.kind !== "removeBuffs") continue
-        this.store.removeBuffsById(effect.buffs, ctx.event.frame, ctx.out)
+        const removed = this.store.removeBuffsById(
+          effect.buffs,
+          ctx.event.frame,
+          ctx.out,
+        )
+        this.dispatchExpiries(
+          removed,
+          ctx.event.frame,
+          ctx.out,
+          ctx.hitsOut,
+          ctx.depth,
+        )
       }
+    }
+  }
+
+  /**
+   * Dispatch a `buffExpired` engine event per ended instance. Each instance is
+   * already dropped from the active set, so a cascade of removals that re-ends
+   * the same buff finds nothing and terminates.
+   */
+  private dispatchExpiries(
+    removed: BuffInstance[],
+    frame: number,
+    out: BuffEvent[],
+    hitsOut: (HitEvent | SustainEvent)[],
+    depth: number,
+  ): void {
+    for (const inst of removed) {
+      this.dispatchEvent(
+        {
+          kind: "buffExpired",
+          characterId: inst.targetCharacterId,
+          buffId: inst.def.id,
+          frame,
+        },
+        out,
+        hitsOut,
+        depth + 1,
+      )
     }
   }
 

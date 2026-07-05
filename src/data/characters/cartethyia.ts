@@ -60,18 +60,23 @@ export const cartethyia = {
       effects: [{ kind: "removeBuffs", buffs: ["fleurdelys-form"] }],
     },
     {
-      id: "char.cartethyia.manifest-end",
-      name: "Manifest End",
+      id: "char.cartethyia.blade-ends-manifest",
+      name: "Blade of Howling Squall",
       trigger: {
         event: "skillCast",
         characterId: 1409,
         stage: "a-knight-s-heartfelt-prayers/blade-of-howling-squall",
       },
+      effects: [{ kind: "removeBuffs", buffs: ["manifest"] }],
+    },
+    {
+      id: "char.cartethyia.manifest-end",
+      name: "Manifest End",
+      trigger: { event: "buffExpired", buff: "manifest" },
       effects: [
         {
           kind: "removeBuffs",
           buffs: [
-            "manifest",
             "fleurdelys-form",
             "heart-of-virtue",
             "mandate-of-divinity",
