@@ -215,6 +215,45 @@ describe("buildBuffTimelineModel", () => {
     expect(m.actionBlocks[0].laneSpan).toBe(2)
   })
 
+  it("swap stage's actionTime becomes a trailingEnd past the truncated block", () => {
+    // Swap block cut at frame 6 by the next action; its animation runs 120 frames.
+    const log: SimulationLogEntry[] = [
+      action({
+        characterId: 1,
+        frame: 0,
+        variantKind: "swap",
+        actionTime: 120,
+      }),
+      action({ characterId: 2, frame: 6 }),
+    ]
+    const m = buildBuffTimelineModel(log, [1, 2])
+    expect(m.actionBlocks[0].end).toBeCloseTo(6 / FPS, 5)
+    expect(m.actionBlocks[0].trailingEnd).toBeCloseTo(120 / FPS, 5)
+  })
+
+  it("no actionTime (non-swap) → no trailingEnd", () => {
+    const m = buildBuffTimelineModel(
+      [action({ characterId: 1, frame: 0 })],
+      [1],
+    )
+    expect(m.actionBlocks[0].trailingEnd).toBeUndefined()
+  })
+
+  it("a swap window that never overruns the block end yields no trailingEnd", () => {
+    // Next action lands at frame 120, at/after the window close → no tail to draw.
+    const log: SimulationLogEntry[] = [
+      action({
+        characterId: 1,
+        frame: 0,
+        variantKind: "swap",
+        actionTime: 120,
+      }),
+      action({ characterId: 2, frame: 120 }),
+    ]
+    const m = buildBuffTimelineModel(log, [1, 2])
+    expect(m.actionBlocks[0].trailingEnd).toBeUndefined()
+  })
+
   it("same-frame action yields a zero-width block (frozen: end === start)", () => {
     // two actions on the same frame; the first's end is the next action's frame → equal
     const log: SimulationLogEntry[] = [

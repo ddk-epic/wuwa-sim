@@ -74,6 +74,8 @@ export interface ActionEvent extends SimulationLogBase {
   delayBreakdown?: DelayBreakdown
   diagnostics?: Diagnostic[]
   sourceEntryId?: string
+  /** Full-stage animation frames; set only for swap stages (their trailing window length). */
+  actionTime?: number
 }
 
 export interface ActiveBuff {

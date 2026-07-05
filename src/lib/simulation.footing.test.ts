@@ -393,6 +393,10 @@ describe("runSimulation — trailing-window footing snapshot", () => {
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const reentry = actions.find((a) => a.sourceEntryId === "e3")
     expect(reentry?.delayBreakdown?.pad.fall ?? 0).toBe(0)
+    // the swap cast carries its full-stage actionTime (its trailing window length)
+    const swapCast = actions.find((a) => a.sourceEntryId === "e1")
+    expect(swapCast?.actionTime).toBe(30)
+    expect(reentry?.actionTime).toBeUndefined()
   })
 
   it("swap-variant with {launch:N}: re-entry past window -> carried air reset to ground (no fall)", () => {

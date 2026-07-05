@@ -45,6 +45,16 @@ function ActionLane({
         {actions.map((b, i) => {
           const active = hoverT != null && hoverT >= b.start && hoverT <= b.end
           const dim = hoverT != null && !active
+          // Trailing window: extend the block past its end and fade the tail.
+          const trails = b.trailingEnd != null
+          const renderEnd = trails ? b.trailingEnd! : b.end
+          const headFrac = trails
+            ? (b.end - b.start) / (renderEnd - b.start)
+            : 1
+          const p = (headFrac * 100).toFixed(1)
+          const tailMask = trails
+            ? `linear-gradient(to right, #000 ${p}%, rgba(0,0,0,0.32) ${p}%, rgba(0,0,0,0.32) 100%)`
+            : undefined
           return (
             <div
               key={i}
@@ -52,8 +62,10 @@ function ActionLane({
               className="absolute flex overflow-hidden rounded-[3px] outline outline-darkest transition-[filter,box-shadow] duration-100"
               style={{
                 left: px(b.start),
-                width: Math.max(px(b.end - b.start), 3),
+                width: Math.max(px(renderEnd - b.start), 3),
                 minWidth: 40,
+                maskImage: tailMask,
+                WebkitMaskImage: tailMask,
                 top: 1 - h * (b.laneSpan - 1),
                 height: h * b.laneSpan - 2,
                 background: hex,

@@ -544,6 +544,7 @@ function buildActionEvent(
     sourceEntryId: entry.id,
   }
   if (actorState.pool > 0) event.pool = actorState.pool
+  if (entry.variantKind === "swap") event.actionTime = resolved.stage.actionTime
   if (diagnostics.length > 0) event.diagnostics = diagnostics
   if (
     pad.reaction > 0 ||
