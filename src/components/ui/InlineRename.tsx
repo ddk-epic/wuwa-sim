@@ -159,6 +159,7 @@ export function InlineRename({
       {isEditing ? (
         <input
           ref={inputRef}
+          size={box ? 1 : undefined}
           defaultValue={value}
           placeholder={placeholder}
           aria-label={ariaLabel}
