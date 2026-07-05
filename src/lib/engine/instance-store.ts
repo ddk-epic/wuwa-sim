@@ -112,6 +112,8 @@ export interface Candidate {
 export class InstanceStore {
   private active: BuffInstance[] = []
   private triggerableBySource = new Map<number, BuffDef[]>()
+  /** Gate buff id → def ids of gated (suspendable-duration) buffs it drives. */
+  private gatedByGate = new Map<string, Set<string>>()
   private baseStats = new Map<number, StatTable>()
   private slotsBySlotIndex: number[] = []
   private version_ = 0
@@ -120,6 +122,7 @@ export class InstanceStore {
   clear(): void {
     this.active = []
     this.triggerableBySource.clear()
+    this.gatedByGate.clear()
     this.baseStats.clear()
     this.slotsBySlotIndex = []
     this.nextInstanceId = 0
@@ -145,11 +148,26 @@ export class InstanceStore {
 
   setTriggerable(characterId: number, defs: BuffDef[]): void {
     this.triggerableBySource.set(characterId, defs)
+    this.indexGates(defs)
   }
 
   appendTriggerable(characterId: number, defs: BuffDef[]): void {
     const existing = this.triggerableBySource.get(characterId) ?? []
     this.triggerableBySource.set(characterId, [...existing, ...defs])
+    this.indexGates(defs)
+  }
+
+  private indexGates(defs: BuffDef[]): void {
+    for (const def of defs) {
+      const gate = durationGate(def)
+      if (gate === undefined) continue
+      let gated = this.gatedByGate.get(gate)
+      if (gated === undefined) {
+        gated = new Set()
+        this.gatedByGate.set(gate, gated)
+      }
+      gated.add(def.id)
+    }
   }
 
   pushPermanentInstance(inst: Omit<BuffInstance, "instanceId">): void {
@@ -287,7 +305,53 @@ export class InstanceStore {
     }
     if (removed.length > 0) this.version_++
     this.active = remaining
+    this.pauseGatedByRemoved(removed, frame)
     return removed
+  }
+
+  /** Resume gated instances on `targetId` whose gate `gateId` just became present. */
+  private resumeGatedBy(gateId: string, targetId: number, frame: number): void {
+    const gated = this.gatedByGate.get(gateId)
+    if (gated === undefined) return
+    for (const inst of this.active) {
+      if (inst.targetCharacterId !== targetId) continue
+      if (inst.gatedRemaining === undefined) continue
+      if (!gated.has(inst.def.id)) continue
+      // endTime is mutable and non-monotonic here: a paused gated instance
+      // resumes from its banked frames, so it can move past any value stamped
+      // at apply. latestActiveEndFrame and the trailing-expiry flush must read
+      // it live, never cache it.
+      inst.endTime = frame + inst.gatedRemaining
+      inst.gatedRemaining = undefined
+      this.version_++
+    }
+  }
+
+  /** Pause gated instances on `targetId` whose gate `gateId` just left; bank remaining frames. */
+  private pauseGatedInstances(
+    gateId: string,
+    targetId: number,
+    frame: number,
+  ): void {
+    const gated = this.gatedByGate.get(gateId)
+    if (gated === undefined) return
+    for (const inst of this.active) {
+      if (inst.targetCharacterId !== targetId) continue
+      if (inst.gatedRemaining !== undefined) continue
+      if (!gated.has(inst.def.id)) continue
+      inst.gatedRemaining = Math.max(0, inst.endTime - frame)
+      inst.endTime = Number.POSITIVE_INFINITY
+      this.version_++
+    }
+  }
+
+  /** Pause gated instances relying on any gate among the removed instances. */
+  private pauseGatedByRemoved(removed: BuffInstance[], frame: number): void {
+    for (const inst of removed) {
+      if (this.gatedByGate.has(inst.def.id)) {
+        this.pauseGatedInstances(inst.def.id, inst.targetCharacterId, frame)
+      }
+    }
   }
 
   /** Decrement stacks for instances whose consumedBy filter matches `event`. */
@@ -368,6 +432,7 @@ export class InstanceStore {
     }
     if (remaining.length !== this.active.length || pruned) this.version_++
     this.active = remaining
+    this.pauseGatedByRemoved(expired, frame)
     return { lifecycleEvents, expired }
   }
 
@@ -409,6 +474,14 @@ export class InstanceStore {
       },
     )
 
+    // A gated duration whose gate is absent at apply starts paused: endTime
+    // frozen at infinity with its full length banked to resume later.
+    const gateId = durationGate(def)
+    const gatePaused =
+      gateId !== undefined && !this.hasActiveOnTarget(gateId, targetCharacterId)
+    const appliedEndTime = gatePaused ? Number.POSITIVE_INFINITY : newEndTime
+    const bankedRemaining = gatePaused ? durationFrames(def) : undefined
+
     if (!existing) {
       const isGlobal = targetCharacterId === GLOBAL_TARGET_ID
       const instanceId = this.nextInstanceId++
@@ -417,12 +490,15 @@ export class InstanceStore {
         instanceId,
         sourceCharacterId,
         targetCharacterId,
-        endTime: newEndTime,
+        endTime: appliedEndTime,
         stacks: 1,
         appliedFrame: frame,
         snapshots: freezeSnapshots(def, 1, (cid, buffId) =>
           this.buffStacksOnTarget(buffId, cid),
         ),
+        ...(bankedRemaining !== undefined
+          ? { gatedRemaining: bankedRemaining }
+          : {}),
         // global is typed `?: true`; the assertion stops it widening to boolean.
         ...(isGlobal ? { global: true as const } : {}),
       })
@@ -438,6 +514,7 @@ export class InstanceStore {
         stacks: 1,
       })
       this.checkNonStackingGroup(def, targetCharacterId)
+      this.resumeGatedBy(def.id, targetCharacterId, frame)
       return
     }
 
@@ -445,7 +522,8 @@ export class InstanceStore {
       case "ignore":
         return
       case "refresh":
-        existing.endTime = newEndTime
+        existing.endTime = appliedEndTime
+        existing.gatedRemaining = bankedRemaining
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
         emit(out, def, {
@@ -461,7 +539,8 @@ export class InstanceStore {
         return
       case "addStackRefresh":
         existing.stacks = Math.min(existing.stacks + 1, stacking.max)
-        existing.endTime = newEndTime
+        existing.endTime = appliedEndTime
+        existing.gatedRemaining = bankedRemaining
         existing.sourceCharacterId = sourceCharacterId
         this.version_++
         emit(out, def, {
@@ -593,6 +672,7 @@ export class InstanceStore {
       this.active = remaining
       this.version_++
     }
+    this.pauseGatedByRemoved(removed, frame)
     return removed
   }
 }
@@ -809,4 +889,19 @@ function computeEndTime(
     case "inherit":
       return getParentEndTime(def.duration.buff, targetCharacterId) ?? frame
   }
+}
+
+/** Gating buff id of a suspendable duration, or undefined when ungated. */
+function durationGate(def: BuffDef): string | undefined {
+  const d = def.duration
+  if (d && (d.kind === "frames" || d.kind === "seconds")) return d.while?.buff
+  return undefined
+}
+
+/** Authored frame length of a timed duration (0 for non-timed kinds). */
+function durationFrames(def: BuffDef): number {
+  const d = def.duration
+  if (d?.kind === "frames") return d.v
+  if (d?.kind === "seconds") return d.v * 60
+  return 0
 }

@@ -319,6 +319,15 @@ function lowerBuffDef(
   if (def.duration?.kind === "inherit") {
     next.duration = { ...def.duration, buff: resolveBuff(def.duration.buff) }
   }
+  if (
+    (def.duration?.kind === "frames" || def.duration?.kind === "seconds") &&
+    def.duration.while !== undefined
+  ) {
+    next.duration = {
+      ...def.duration,
+      while: { buff: resolveBuff(def.duration.while.buff) },
+    }
+  }
   return next
 }
 

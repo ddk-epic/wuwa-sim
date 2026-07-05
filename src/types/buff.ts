@@ -329,10 +329,15 @@ export function emptyResourceState(): ResourceState {
   return { energy: 0, concerto: 0, forte: 0, pool: 0 }
 }
 
+/**
+ * A timed duration may be gated by a buff's presence via `while`: the timer only
+ * elapses while the named buff is present on the same target. Absent gate =
+ * paused (endTime frozen at infinity, remaining frames banked).
+ */
 export type Duration =
   | { kind: "permanent" }
-  | { kind: "frames"; v: number }
-  | { kind: "seconds"; v: number }
+  | { kind: "frames"; v: number; while?: { buff: string } }
+  | { kind: "seconds"; v: number; while?: { buff: string } }
   | { kind: "inherit"; buff: string }
 
 export type StackingPolicy = {
@@ -430,6 +435,8 @@ export interface BuffInstance {
   appliedFrame: number
   /** Frozen values per effect index, populated when a ValueExpr has `snapshot: true`. */
   snapshots?: Record<number, number>
+  /** Banked frames for a gated (suspendable) duration while its gate is absent; endTime is infinity meanwhile. */
+  gatedRemaining?: number
   /** True for global (team-wide shared) instances; every character reads this instance. */
   global?: true
 }

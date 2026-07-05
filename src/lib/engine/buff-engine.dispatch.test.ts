@@ -602,3 +602,98 @@ describe("BuffEngine.onEvent — buffExpired trigger", () => {
     expect(engine.activeBuffIds(1)).not.toContain("char.dependent")
   })
 })
+
+describe("BuffEngine — gated (suspendable) buff duration", () => {
+  // Gate opens on Intro and re-opens on Resonance Skill so the test can pause
+  // then resume it.
+  const openGate: BuffDef = {
+    id: "char.open-gate",
+    name: "Open Gate",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: ["Intro Skill", "Resonance Skill"],
+    },
+    target: { kind: "self" },
+    duration: { kind: "permanent" },
+    effects: [],
+  }
+
+  const closeGate: BuffDef = {
+    id: "char.close-gate",
+    name: "Close Gate",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+    },
+    effects: [{ kind: "removeBuffs", buffs: ["open-gate"] }],
+  }
+
+  // Lex order puts "char.open-gate" before "char.window", so the gate is present
+  // when the window applies on the shared Intro cast.
+  const window: BuffDef = {
+    id: "char.window",
+    name: "Window",
+    trigger: {
+      event: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+    },
+    target: { kind: "self" },
+    duration: { kind: "frames", v: 100, while: { buff: "open-gate" } },
+    effects: [],
+  }
+
+  it("freezes endTime while the gate is absent and resumes on re-apply", () => {
+    testCharacters = [baseChar({ id: 1, buffs: [openGate, closeGate, window] })]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: slotsOf(1),
+      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
+    })
+
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Intro Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1)).toEqual(
+      expect.arrayContaining(["char.open-gate", "char.window"]),
+    )
+
+    // 50 frames of active time elapse, then the gate closes and banks 50 left.
+    engine.tickToFrame(50)
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Basic Attack",
+      frame: 50,
+    })
+    expect(engine.activeBuffIds(1)).not.toContain("char.open-gate")
+
+    // Gate absent: the window never expires no matter how far the clock runs.
+    engine.tickToFrame(100000)
+    expect(engine.activeBuffIds(1)).toContain("char.window")
+
+    // Re-open the gate; the banked 50 frames resume from here.
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 100000,
+    })
+    const beforeEnd = engine.tickToFrame(100049)
+    expect(beforeEnd.lifecycleEvents).toEqual([])
+    expect(engine.activeBuffIds(1)).toContain("char.window")
+
+    const atEnd = engine.tickToFrame(100050)
+    expect(atEnd.lifecycleEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "buffExpired", buffId: "char.window" }),
+      ]),
+    )
+    expect(engine.activeBuffIds(1)).not.toContain("char.window")
+  })
+})
