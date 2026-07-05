@@ -84,8 +84,9 @@ export interface ResolvedStage {
   requiresPriorStageId?: string
   requiresSequence?: number
   requiresConcerto?: number
-  minDelay?: number
-  /** Seconds shared across the skill's stages (skill-keyed cooldown). */
+  /** Frames a windowed follow-up must wait past its prerequisite's cast. */
+  followUpDelay?: number
+  /** Skill-keyed cooldown; unset on a same-skill follow-up (it continues the cast). */
   skillCooldown?: number
   /** Seconds independent to this stage (stage-keyed cooldown). */
   cooldown?: number

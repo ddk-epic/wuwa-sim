@@ -249,13 +249,13 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 3.
 
 See: `src/data/characters/sanhua.ts` — Frigid Light.
 
-### 4. Windowed follow-up (`minDelay`)
+### 4. Windowed follow-up (`followUpDelay`)
 
 **When to use**: a stage that follows a prerequisite cast but is **not** a strict combo link — it stays available after swaps and the actor's own other actions, and only becomes castable a fixed time after the prerequisite. Encore's Energetic Welcome (castable ~103 frames after Flaming Woolies, surviving a swap-out) is the canonical case.
 
-**Key fields**: same `requiresPriorStage` gate as the combo chain (recipe 3), **plus** a sibling `minDelay` (frames). Presence of `minDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + minDelay`, surfaced as a `prior-gate` Padding Delay component.
+**Key fields**: same `requiresPriorStage` gate as the combo chain (recipe 3), **plus** a sibling `followUpDelay` (frames). Presence of `followUpDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + followUpDelay`, surfaced as a `prior-gate` Padding Delay component.
 
-**Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `minDelay`, the pad is **0**. Set `minDelay` to the prerequisite's "castable-after" delay (Energetic Welcome uses `103`, Flaming Woolies' last-hit `actionFrame`). See ADR-0036.
+**Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `followUpDelay`, the pad is **0**. Set `followUpDelay` to the prerequisite's "castable-after" delay (Energetic Welcome uses `103`, Flaming Woolies' last-hit `actionFrame`). See ADR-0036.
 
 ```ts
 {
@@ -265,7 +265,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
   // Window-mode follow-up to Flaming Woolies: castable ~103 frames after its
   // cast, staying available across a swap-out. Timing pad is computed sim-side.
   requiresPriorStage: "flaming-woolies/flaming-woolies",
-  minDelay: 103,
+  followUpDelay: 103,
   value: "339.16%",
   actionTime: 51,
   variants: { cancel: { actionTime: 15 }, swap: { actionTime: 0 } },
@@ -510,20 +510,20 @@ Concept-grouped lookup, organized by tier: **Character shell → Skill → Stage
 
 A stage is an `EnrichedSkillAttribute`.
 
-| Field                | Drives                                                                                                                                                                                                                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`               | Raw stage name. `"Skill DMG"` (the `STAGE_CAST_NAME` constant) marks the **cast stage** — the one that collects the skill-level `concerto`.                                                                            |
-| `category`           | `SkillCategory` — the player action / **trigger** axis.                                                                                                                                                                |
-| `newName`            | Display label only — never part of the stageId. Renaming it is always safe.                                                                                                                                            |
-| `key`                | Explicit stage-key override for the rare within-skill `deriveKey(name)` collision (e.g. Camellya's held Basic Attack 4 → `basic-attack-4-hold`). Normally omit — the key derives from `name`.                          |
-| `value`              | Human-readable scaling string (`"233.81%"`, `"21.58%*4"`). UI only — the engine reads `damage[].value`.                                                                                                                |
-| `actionTime`         | Frames the stage advances the timeline. **Scaffolded as `0` — you author the real value.** See [timing model](#stage-timing-model).                                                                                    |
-| `damage`             | `DamageEntry[]` — the hits (see below).                                                                                                                                                                                |
-| `variants`           | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                     |
-| `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                     |
-| `footing`            | Footing — `"ground"`, `"air"`, `"either"`, or a transition `{ entry, exit, commit }` (`entry`: `"ground"`/`"air"`/`"any"`).                                                                                            |
-| `requiresPriorStage` | Combo gating — this stage only follows the predecessor named by a `"skill/stage"` token.                                                                                                                               |
-| `minDelay`           | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + minDelay`. See Cookbook recipe 4. |
+| Field                | Drives                                                                                                                                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | Raw stage name. `"Skill DMG"` (the `STAGE_CAST_NAME` constant) marks the **cast stage** — the one that collects the skill-level `concerto`.                                                                                 |
+| `category`           | `SkillCategory` — the player action / **trigger** axis.                                                                                                                                                                     |
+| `newName`            | Display label only — never part of the stageId. Renaming it is always safe.                                                                                                                                                 |
+| `key`                | Explicit stage-key override for the rare within-skill `deriveKey(name)` collision (e.g. Camellya's held Basic Attack 4 → `basic-attack-4-hold`). Normally omit — the key derives from `name`.                               |
+| `value`              | Human-readable scaling string (`"233.81%"`, `"21.58%*4"`). UI only — the engine reads `damage[].value`.                                                                                                                     |
+| `actionTime`         | Frames the stage advances the timeline. **Scaffolded as `0` — you author the real value.** See [timing model](#stage-timing-model).                                                                                         |
+| `damage`             | `DamageEntry[]` — the hits (see below).                                                                                                                                                                                     |
+| `variants`           | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                          |
+| `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                          |
+| `footing`            | Footing — `"ground"`, `"air"`, `"either"`, or a transition `{ entry, exit, commit }` (`entry`: `"ground"`/`"air"`/`"any"`).                                                                                                 |
+| `requiresPriorStage` | Combo gating — this stage only follows the predecessor named by a `"skill/stage"` token.                                                                                                                                    |
+| `followUpDelay`      | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + followUpDelay`. See Cookbook recipe 4. |
 
 **Rare fields:**
 

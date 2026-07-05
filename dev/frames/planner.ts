@@ -139,9 +139,9 @@ function comboChains(cands: Candidate[]): Candidate[][] {
   const children = new Map<Candidate, Candidate[]>()
   for (const c of cands) {
     const req = c.stage.requiresPriorStage
-    // A window follow-up (minDelay) is not a tight combo link — don't chain it.
+    // A window follow-up (followUpDelay) is not a tight combo link — don't chain it.
     const parent =
-      req && c.stage.minDelay == null ? byToken.get(req) : undefined
+      req && c.stage.followUpDelay == null ? byToken.get(req) : undefined
     parentOf.set(c, parent)
     if (parent) {
       const list = children.get(parent) ?? []
@@ -181,7 +181,7 @@ function preconditionsFor(cands: Candidate[]): Precondition[] {
     }
     if (c.isForte) set.add("verify-forte")
     if (c.aerial) set.add("airborne")
-    if (c.stage.requiresPriorStage && c.stage.minDelay != null)
+    if (c.stage.requiresPriorStage && c.stage.followUpDelay != null)
       set.add("requires-prior")
   }
   return [...set]

@@ -205,7 +205,7 @@ export type EnrichedSkillAttribute =
       requiresPriorStage: string
       // Frames. Absent ⇒ prerequisite must immediately precede; present ⇒
       // prerequisite need only have cast earlier on the same character.
-      minDelay?: number
+      followUpDelay?: number
     })
   | (EnrichedSkillAttributeBase & {
       requiresPriorStage?: never

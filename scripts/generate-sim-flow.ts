@@ -97,7 +97,7 @@ const STATIONS: Station[] = [
     title: "Arrival collision & pads",
     module:
       "schedule.resolveArrival + computePriorGatePad / computeFall / computeSwapBackPad",
-    desc: "The entry collides with its own character's in-flight residue (trailing hits, parked footing). A cancel-capable re-entry tombstones (drops) that residue; otherwise the entry pads to land after it. Then the wait stack: swap-back, prior-stage gate (requiresPriorStageId + minDelay), and fall frames if entering a ground stage while airborne.",
+    desc: "The entry collides with its own character's in-flight residue (trailing hits, parked footing). A cancel-capable re-entry tombstones (drops) that residue; otherwise the entry pads to land after it. Then the wait stack: swap-back, prior-stage gate (requiresPriorStageId + followUpDelay), and fall frames if entering a ground stage while airborne.",
     reads: [
       { store: "schedule", what: "same-character residue members" },
       { store: "footing", what: "carried footing → fall frames" },

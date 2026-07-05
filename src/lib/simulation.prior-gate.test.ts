@@ -34,11 +34,11 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [lo, lo, lo]
 
 const PREREQ = "char.wt.resonance-skill.woolies.prereq::resonance-skill"
 const FOLLOW = "char.wt.resonance-skill.woolies.follow::resonance-skill"
-const MIN_DELAY = 103
+const FOLLOW_UP_DELAY = 103
 
 // A Flaming-Woolies-shaped windowed follow-up: Prereq advances its full 108
-// frames (≥ minDelay) on a full cast but truncates to 0 on a swap; Follow gates
-// on Prereq with minDelay 103.
+// frames (≥ followUpDelay) on a full cast but truncates to 0 on a swap; Follow
+// gates on Prereq with followUpDelay 103.
 const windowChar: EnrichedCharacter = {
   id: 1,
   name: "WT",
@@ -73,7 +73,7 @@ const windowChar: EnrichedCharacter = {
           value: "100%",
           actionTime: 51,
           requiresPriorStage: "woolies/prereq",
-          minDelay: MIN_DELAY,
+          followUpDelay: FOLLOW_UP_DELAY,
           damage: [dmgHit(1, 0, 0, "Resonance Skill")],
         },
       ],
@@ -133,11 +133,11 @@ const actionFor = (log: ReturnType<typeof runSimulation>, id: string) =>
 const run = (entries: TimelineEntry[]) =>
   runSimulation(entries, slots, loadouts, { reactionDelay: 0 })
 
-describe("simulation — windowed Prior-Stage Gate minDelay pad", () => {
+describe("simulation — windowed Prior-Stage Gate followUpDelay pad", () => {
   it("full-cast prerequisite → follow-up needs no pad (priorGate 0)", () => {
     testCharacters = [windowChar]
-    // Prereq advances 108 ≥ minDelay 103, so the follow-up at frame 108 is
-    // already past the anchor + minDelay floor (103).
+    // Prereq advances 108 ≥ followUpDelay 103, so the follow-up at frame 108 is
+    // already past the anchor + followUpDelay floor (103).
     const log = run([ent(1, PREREQ, "p"), ent(1, FOLLOW, "f")])
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(108)

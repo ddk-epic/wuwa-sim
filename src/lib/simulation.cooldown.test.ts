@@ -117,6 +117,20 @@ const skillCdChar: EnrichedCharacter = {
 const ARC = "char.skillcd.resonance-skill.arc.arc::resonance-skill"
 const SIBLING = "char.skillcd.resonance-skill.arc.sibling::resonance-skill"
 
+// A `Skillcd` whose second stage continues the first (same-skill follow-up).
+const followUpChar: EnrichedCharacter = {
+  ...skillCdChar,
+  skills: [
+    {
+      ...skillCdChar.skills[0],
+      stages: [
+        skillCdChar.skills[0].stages[0],
+        { ...skillCdChar.skills[0].stages[1], requiresPriorStage: "arc/arc" },
+      ],
+    },
+  ],
+}
+
 // A `Stagecd` whose Bolt runs `actionTime` frames, for tuning the swap-back
 // window against the cooldown pad.
 const boltChar = (actionTime: number): EnrichedCharacter => ({
@@ -249,6 +263,17 @@ describe("simulation — skill cooldown as a Padding Delay", () => {
     const sibling = actionFor(log, "s")
     expect(sibling?.frame).toBe(240)
     expect(sibling?.delayBreakdown?.wait).toBe(40)
+  })
+
+  it("skill-level cooldown exempts a same-skill follow-up", () => {
+    testCharacters = [followUpChar]
+    // Arc @0 arms the shared skill timer; cursor → 200. Sibling continues Arc,
+    // so it neither reads nor re-arms the timer — no pad, no finding.
+    const log = run([ent(1, ARC, "a"), ent(1, SIBLING, "s")])
+    const sibling = actionFor(log, "s")
+    expect(sibling?.frame).toBe(200)
+    expect(sibling?.delayBreakdown).toBeUndefined()
+    expect(sibling?.diagnostics).toBeUndefined()
   })
 
   it("stage-level cooldown stays independent across stages", () => {

@@ -2,6 +2,12 @@
 
 Per-decision history. Newest first.
 
+## 2026-07-05 — Skill cooldown exempts same-skill follow-ups
+
+Refines ADR-0045's "skill-keyed cooldown pools across every stage." A stage that continues a prior stage of the **same skill** (its `requiresPriorStage` names another stage under the same `skillKey`) is one activation, not a re-press, so it neither arms nor is gated by the skill timer — `findStageByEntry` leaves its `skillCooldown` unset, and `cooldownTimers` (unchanged) simply finds no skill-keyed timer for it (stage-keyed timers and genuine sibling stages are unchanged). Fixes Encore's Energetic Welcome spuriously flagging `skillOnCooldown` behind Flaming Woolies' 10s cooldown, and covers the chained Cosmos: Frolicking follow-ups too. Independent of the follow-up's gate mode (window vs. chain): the signal is `requiresPriorStage` same-skill. Latent case flagged: Cosmos: Frolicking Stage 1 and Cosmos Rampage carry no `requiresPriorStage`, so they'd still read the liberation's pooled timer if placed inside it — the deeper "initiating cast owns the cooldown" rework stays deferred.
+
+Pages touched: CONTEXT.md (Skill Cooldown).
+
 ## 2026-06-19 — Page state moves to Jotai atoms; draft isolation via Provider scoping
 
 `SimulatorPage`'s growing stack of hand-rolled context providers (four deep: team, settings, UI preferences, renaming-group) becomes Jotai atoms — one `atomWithStorage` base per persisted object with derived field atoms for subscription granularity, killing both the boilerplate and the coarse-object re-render churn. Jotai over Zustand because `TeamContext` is polymorphic (live `useTeam` vs. throwaway `useDraftTeam`), and Jotai's `<Provider>` natively models "same atoms, isolated instance" — the draft survives as a bare `<Provider>` around the create modal while `useDraftTeam`/`DraftTeamProvider` are deleted. Settings stay a derived atom of the team (per ADR-0040); UI-preference boundary unchanged (ADR-0027). The five localStorage keys stay split (merging would reintroduce whole-blob write churn). Two-pass leaf-first migration. Implementation pending. Flagged for later: `EditTeamModal`'s no-cancel edit-through asymmetry, inlining the `EditTeamModal` wrapper, renaming `reviveActiveTeam`.
@@ -64,7 +70,7 @@ Pages touched: CONTEXT.md (Padding Delay surfacing).
 
 ## 2026-06-11 — Cancel-capable residue drop reads `effectiveStart`, not the pre-pad cursor
 
-`Flaming Woolies (swap) → Eternal Frost → Energetic Welcome` dropped 4 of 8 trailing woolies: the cancel-capable drop ran in `resolveArrival` at the pre-pad cursor (`S+64`) before the `minDelay: 103` gate pushed Energetic Welcome's start to `S+103`, cancelling residue that lands during the gate wait. Split the two collision behaviors by the frame each must read — the non-cancel pad _produces_ a start floor (input cursor, stays in `resolveArrival`); the cancel-capable drop _consumes_ the final start (`effectiveStart`, moved to a new `Schedule.cancelResidue`, run after the pre-drain so the boundary hit lands and only the strict overlap is cancelled). Rejected `minDelay: 104` (moves the start, not the cursor the drop reads) and an explicit max-of-floors rewrite of `computePriorGatePad` (lateral, behavior-neutral churn). Corrects ADR-0036's claim that the In-trailing swap-back needed no machinery.
+`Flaming Woolies (swap) → Eternal Frost → Energetic Welcome` dropped 4 of 8 trailing woolies: the cancel-capable drop ran in `resolveArrival` at the pre-pad cursor (`S+64`) before the `followUpDelay: 103` gate pushed Energetic Welcome's start to `S+103`, cancelling residue that lands during the gate wait. Split the two collision behaviors by the frame each must read — the non-cancel pad _produces_ a start floor (input cursor, stays in `resolveArrival`); the cancel-capable drop _consumes_ the final start (`effectiveStart`, moved to a new `Schedule.cancelResidue`, run after the pre-drain so the boundary hit lands and only the strict overlap is cancelled). Rejected `followUpDelay: 104` (moves the start, not the cursor the drop reads) and an explicit max-of-floors rewrite of `computePriorGatePad` (lateral, behavior-neutral churn). Corrects ADR-0036's claim that the In-trailing swap-back needed no machinery.
 
 Pages touched: ADR-0037 (new), CONTEXT.md (Trailing Window, Schedule, Prior-Stage Gate).
 

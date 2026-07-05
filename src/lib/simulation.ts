@@ -560,8 +560,8 @@ function buildActionEvent(
 
 /**
  * Frames the follow-up's start must wait to begin no earlier than
- * `anchorCastFrame + minDelay` (the windowed prior-stage gate). Returns 0 when
- * `minDelay` is absent or no anchor was recorded. The caller `max`-combines this
+ * `anchorCastFrame + followUpDelay` (the windowed prior-stage gate). Returns 0 when
+ * `followUpDelay` is absent or no anchor was recorded. The caller `max`-combines this
  * with the swap-back wait — both are absolute-frame floors on the same start.
  */
 function computeGateWait(
@@ -570,13 +570,14 @@ function computeGateWait(
   resolved: ResolvedStage,
   cursorFrame: number,
 ): number {
-  const { requiresPriorStageId, minDelay } = resolved
-  if (requiresPriorStageId === undefined || minDelay === undefined) return 0
+  const { requiresPriorStageId, followUpDelay } = resolved
+  if (requiresPriorStageId === undefined || followUpDelay === undefined)
+    return 0
   const anchor = ctx.priorCasts.get(
     `${entry.characterId}:${requiresPriorStageId}`,
   )
   if (anchor === undefined) return 0
-  return Math.max(0, anchor + minDelay - cursorFrame)
+  return Math.max(0, anchor + followUpDelay - cursorFrame)
 }
 
 /** Within this many frames of ready, a cooldown forces a micro-wait pad rather than a finding. */

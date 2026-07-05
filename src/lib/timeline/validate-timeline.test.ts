@@ -472,13 +472,13 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
   })
 })
 
-describe("validateTimeline — window mode (minDelay)", () => {
+describe("validateTimeline — window mode (followUpDelay)", () => {
   const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
   const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"
   const SKILL = "char.test.basic-attack.resonance-skill.skill::basic-attack"
 
   // Stage 2 is a window-mode follow-up to Stage 1: requires a prior Stage 1 on
-  // the same character at any distance; minDelay present ⇒ intervening entries
+  // the same character at any distance; followUpDelay present ⇒ intervening entries
   // (swaps, teammate entries, own actions) do not break the gate.
   const windowChar = (id: number): EnrichedCharacter =>
     baseChar({
@@ -505,7 +505,7 @@ describe("validateTimeline — window mode (minDelay)", () => {
               actionTime: 30,
               damage: [],
               requiresPriorStage: "normal-attack/stage-1",
-              minDelay: 50,
+              followUpDelay: 50,
             },
           ],
           damage: [],

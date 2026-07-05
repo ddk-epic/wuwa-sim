@@ -134,7 +134,7 @@ function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
   // Window mode: any earlier matching stage on this character satisfies the gate,
   // regardless of intervening entries. Chain mode: the immediately preceding
   // same-character entry must BE the prerequisite.
-  const windowed = resolved?.minDelay !== undefined
+  const windowed = resolved?.followUpDelay !== undefined
   const anchor = windowed
     ? ctx.stagesByChar.get(entry.characterId)?.get(requiredStageId)
     : pickChainAnchor(ctx.lastByChar.get(entry.characterId), requiredStageId)

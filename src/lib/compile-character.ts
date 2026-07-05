@@ -483,12 +483,16 @@ export function findStageByEntry(
   loadouts: SlotLoadout[],
 ): ResolvedStage | null {
   const character = getCharacterById(entry.characterId)
-  const info = character
-    ? compileCharacter(character).stageIndex.get(entry.stageId)
-    : undefined
+  const compiled = character ? compileCharacter(character) : undefined
+  const info = compiled?.stageIndex.get(entry.stageId)
 
-  if (character && info) {
+  if (character && compiled && info) {
     const { skill, stage } = info
+    // Same-skill follow-up shares the initiating cast's cooldown, not its own.
+    const continuesSkillCast =
+      info.requiresPriorStageId !== undefined &&
+      compiled.stageIndex.get(info.requiresPriorStageId)?.skillKey ===
+        info.skillKey
     const isCastStage = stage.name === STAGE_CAST_NAME
     // Stage-level skillType, collapsed from the parent skill grouping.
     // Grouping-only labels that are not SkillTypes (Normal Attack,
@@ -522,9 +526,12 @@ export function findStageByEntry(
       requiresPriorStageId: info.requiresPriorStageId,
       requiresSequence: stage.requiresSequence,
       requiresConcerto: stage.requiresConcerto,
-      minDelay:
-        stage.requiresPriorStage !== undefined ? stage.minDelay : undefined,
-      skillCooldown: skill.cooldown,
+      followUpDelay:
+        stage.requiresPriorStage !== undefined
+          ? stage.followUpDelay
+          : undefined,
+      // A same-skill follow-up continues the initiating cast; it doesn't arm the timer.
+      skillCooldown: continuesSkillCast ? undefined : skill.cooldown,
       cooldown: stage.cooldown,
     }
   }
