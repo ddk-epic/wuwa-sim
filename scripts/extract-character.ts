@@ -221,21 +221,34 @@ export function enrichSkill(
 
     const matched: DamageEntry[] = []
     for (const { value: rate, count } of parsedRates) {
+      // A stage's hits are contiguous in the pool. Locate the first block of
+      // this rate, then consume only the adjacent run of the same rate — never
+      // skip past a differing block to grab a later, identically-rated hit that
+      // belongs to the next stage. Short runs are filled by duplication below.
+      let start = 0
+      while (start < pool.length && pool[start].value !== rate) start++
       let consumed = 0
-      for (let i = 0; i < pool.length && consumed < count; i++) {
-        if (pool[i].value === rate) {
-          matched.push(...pool.splice(i, 1))
-          i--
-          consumed++
-        }
+      while (
+        start < pool.length &&
+        consumed < count &&
+        pool[start].value === rate
+      ) {
+        matched.push(...pool.splice(start, 1))
+        consumed++
       }
-      if (consumed > 0 && consumed < count) {
+      if (consumed < count) {
         const missing = count - consumed
-        console.warn(
-          `  [fill] "${attr.attributeName}" expects ${count}× value ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
-        )
-        for (let i = 0; i < missing; i++) {
-          matched.push({ ...matched[matched.length - 1] })
+        if (consumed === 0) {
+          console.warn(
+            `  [miss] "${attr.attributeName}" expects ${count}× value ${rate} but the pool has no matching hit — skipping`,
+          )
+        } else {
+          console.warn(
+            `  [fill] "${attr.attributeName}" expects ${count}× value ${rate} but only ${consumed} found — duplicating last entry ${missing} time(s)`,
+          )
+          for (let i = 0; i < missing; i++) {
+            matched.push({ ...matched[matched.length - 1] })
+          }
         }
       }
     }

@@ -409,6 +409,17 @@
           "dmgType": "Damage",
           "scalingStat": "HP",
           "actionFrame": 0,
+          "value": 0.0252,
+          "energy": 0.37,
+          "concerto": 0.52,
+          "toughness": 0.1474,
+          "weakness": 0.1179
+        },
+        {
+          "type": "Basic Attack",
+          "dmgType": "Damage",
+          "scalingStat": "HP",
+          "actionFrame": 0,
           "value": 0.0754,
           "energy": 1.11,
           "concerto": 1.55,
@@ -1593,9 +1604,9 @@
               "scalingStat": "HP",
               "actionFrame": 0,
               "value": 0.0186,
-              "energy": 0.66,
+              "energy": 0.18,
               "concerto": 0,
-              "toughness": 0.0688,
+              "toughness": 0.4,
               "weakness": 0.0551
             },
             {
@@ -1604,9 +1615,9 @@
               "scalingStat": "HP",
               "actionFrame": 0,
               "value": 0.0186,
-              "energy": 0.66,
+              "energy": 0.18,
               "concerto": 0,
-              "toughness": 0.0688,
+              "toughness": 0.4,
               "weakness": 0.0551
             },
             {
@@ -1615,9 +1626,9 @@
               "scalingStat": "HP",
               "actionFrame": 0,
               "value": 0.0186,
-              "energy": 0.66,
+              "energy": 0.18,
               "concerto": 0,
-              "toughness": 0.0688,
+              "toughness": 0.4,
               "weakness": 0.0551
             },
             {
@@ -1639,6 +1650,28 @@
           "value": "1.86%*2+7.03%*3",
           "concerto": 10,
           "damage": [
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.66,
+              "concerto": 0,
+              "toughness": 0.0688,
+              "weakness": 0.0551
+            },
+            {
+              "type": "Resonance Skill",
+              "dmgType": "Damage",
+              "scalingStat": "HP",
+              "actionFrame": 0,
+              "value": 0.0186,
+              "energy": 0.66,
+              "concerto": 0,
+              "toughness": 0.0688,
+              "weakness": 0.0551
+            },
             {
               "type": "Resonance Skill",
               "dmgType": "Damage",
