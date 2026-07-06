@@ -762,6 +762,13 @@ export const cartethyia = {
           name: "Stage 2 DMG",
           newName: "Stage 2",
           category: "Basic Attack",
+          requiresPriorStage: [
+            "sword-to-carve-my-forms/stage-1",
+            "sword-to-mark-tide-s-trace/sword-to-mark-tide-s-trace",
+            "sword-to-carve-my-forms/mid-air-attack",
+            "a-knight-s-heartfelt-prayers/avatar-cartethyia",
+            "swap-in",
+          ],
           value: "3.94%*2+5.25%",
           actionTime: 46,
           variants: {
@@ -808,6 +815,7 @@ export const cartethyia = {
           name: "Stage 3 DMG",
           newName: "Stage 3",
           category: "Basic Attack",
+          requiresPriorStage: "sword-to-carve-my-forms/stage-2",
           value: "4.28%*4",
           actionTime: 68,
           variants: {
@@ -865,6 +873,7 @@ export const cartethyia = {
           name: "Stage 4 DMG",
           newName: "Stage 4",
           category: "Basic Attack",
+          requiresPriorStage: "sword-to-carve-my-forms/stage-3",
           value: "2.52%*3+7.54%",
           actionTime: 66,
           variants: {
@@ -978,6 +987,7 @@ export const cartethyia = {
           newName: "Heavy Attack",
           category: "Basic Attack",
           value: "2.08%*3+6.24%",
+          footing: { entry: "any", exit: "ground", commit: 30 },
           actionTime: 62,
           variants: {
             cancel: { actionTime: 53 },
@@ -1057,7 +1067,7 @@ export const cartethyia = {
           category: "Resonance Skill",
           value: "6.89%*3+8.86%",
           actionTime: 53,
-          footing: { entry: "ground", exit: "air", commit: 60 },
+          footing: { entry: "any", exit: "air", commit: 60 },
           variants: {
             cancel: { actionTime: 38 },
             swap: { actionTime: 0 },
@@ -1126,6 +1136,7 @@ export const cartethyia = {
           newName: "A Knight's Heartfelt Prayers",
           category: "Resonance Liberation",
           value: "",
+          footing: { entry: "any", exit: "ground", commit: 0 },
           actionTime: 7,
           animationFrames: 195,
           variants: {},
@@ -1137,6 +1148,7 @@ export const cartethyia = {
           newName: "Cartethyia",
           category: "Resonance Liberation",
           value: "",
+          footing: { entry: "any", exit: "air", commit: 0 },
           actionTime: 0,
           variants: {},
           damage: [],
@@ -1147,6 +1159,7 @@ export const cartethyia = {
           newName: "Fleurdelys",
           category: "Resonance Liberation",
           value: "",
+          footing: "either",
           actionTime: 0,
           variants: {},
           damage: [],
@@ -1158,6 +1171,7 @@ export const cartethyia = {
           value: "13.12%*7",
           cooldown: 25,
           concerto: 20,
+          footing: { entry: "any", exit: "ground", commit: 0 },
           actionTime: 3,
           animationFrames: 295,
           variants: {},
@@ -1388,6 +1402,12 @@ export const cartethyia = {
           name: "Basic Attack Stage 2 DMG",
           newName: "Basic Attack Stage 2",
           category: "Basic Attack",
+          requiresPriorStage: [
+            "tempest/basic-attack-stage-1",
+            "sword-to-mark-tide-s-trace/sword-to-call-for-freedom",
+            "a-knight-s-heartfelt-prayers/avatar-fleurdelys",
+            "swap-in",
+          ],
           value: "3.63%+1.82%*3",
           actionTime: 46,
           variants: {
@@ -1445,6 +1465,10 @@ export const cartethyia = {
           name: "Basic Attack Stage 3 DMG",
           newName: "Basic Attack Stage 3",
           category: "Basic Attack",
+          requiresPriorStage: [
+            "tempest/basic-attack-stage-2",
+            "tempest/may-tempest-break-the-tides",
+          ],
           value: "2.13%*3+4.26%",
           actionTime: 56,
           variants: {
@@ -1502,6 +1526,7 @@ export const cartethyia = {
           name: "Basic Attack Stage 4 DMG",
           newName: "Basic Attack Stage 4",
           category: "Basic Attack",
+          requiresPriorStage: "tempest/basic-attack-stage-3",
           value: "2.74%*5",
           actionTime: 61,
           variants: {
@@ -1570,6 +1595,7 @@ export const cartethyia = {
           name: "Basic Attack Stage 5 DMG",
           newName: "Basic Attack Stage 5",
           category: "Basic Attack",
+          requiresPriorStage: "tempest/basic-attack-stage-4",
           value: "7.20%+28.80%",
           actionTime: 53,
           variants: {
@@ -1773,6 +1799,7 @@ export const cartethyia = {
           newName: "Mid-air Attack 1",
           category: "Basic Attack",
           value: "2.99%*2+3.08%",
+          footing: "air",
           actionTime: 51,
           variants: {
             cancel: { actionTime: 40 },
@@ -1819,6 +1846,7 @@ export const cartethyia = {
           newName: "Mid-air Attack 2",
           category: "Basic Attack",
           value: "7.39%*2+14.77%",
+          footing: "air",
           actionTime: 75,
           variants: {
             cancel: { actionTime: 51 },
@@ -1865,6 +1893,7 @@ export const cartethyia = {
           newName: "Mid-air Attack 3",
           category: "Basic Attack",
           value: "2.20%",
+          footing: "air",
           actionTime: 51,
           variants: {
             cancel: { actionTime: 38 },
@@ -1891,7 +1920,7 @@ export const cartethyia = {
           value: "1.86%*4+17.36%",
           concerto: 10,
           actionTime: 56,
-          footing: { entry: "ground", exit: "air", commit: 30 },
+          footing: { entry: "any", exit: "air", commit: 30 },
           variants: {
             cancel: { actionTime: 40 },
             swap: { actionTime: 0 },
@@ -1958,9 +1987,12 @@ export const cartethyia = {
           name: "May Tempest Break the Tides DMG",
           newName: "May Tempest Break the Tides",
           category: "Resonance Skill",
+          requiresPriorStage: ["tempest/sword-to-answer-waves-call"],
+          followUpMaxDelay: 480,
           value: "1.86%*2+7.03%*3",
           concerto: 10,
           actionTime: 102,
+          footing: { entry: "any", exit: "ground", commit: 30 },
           variants: {
             cancel: { actionTime: 45 },
             swap: { actionTime: 0 },
