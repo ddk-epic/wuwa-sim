@@ -254,11 +254,6 @@ function Scrub({
   onSetIn: (f: number) => void
   onSetOut: (f: number) => void
 }) {
-  // Dragging a cut handle also drives the live preview to that frame.
-  const cut = (set: (f: number) => void) => (f: number) => {
-    set(f)
-    setPlayhead(f)
-  }
   const cutHandle =
     "absolute top-0 z-10 flex h-full w-2.5 -translate-x-1/2 cursor-ew-resize items-stretch justify-center"
 
@@ -278,14 +273,16 @@ function Scrub({
           />
           <TrackMarker
             frame={inCut}
-            onDrag={cut(onSetIn)}
+            onDrag={setPlayhead}
+            onCommit={onSetIn}
             className={cutHandle}
           >
             <div className="w-0.5 bg-primary" />
           </TrackMarker>
           <TrackMarker
             frame={outCut}
-            onDrag={cut(onSetOut)}
+            onDrag={setPlayhead}
+            onCommit={onSetOut}
             className={cutHandle}
           >
             <div className="w-0.5 bg-primary" />

@@ -98,6 +98,60 @@ describe("TrackMarker drag vs select", () => {
   })
 })
 
+describe("TrackMarker onDrag / onCommit split", () => {
+  it("fires onDrag per move and onCommit once on release, tracking the cursor while dragging", () => {
+    const onDrag = vi.fn()
+    const onCommit = vi.fn()
+    vi.spyOn(Element.prototype, "setPointerCapture").mockImplementation(
+      () => {},
+    )
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue(
+      rect(0, 200),
+    )
+    const { container } = render(
+      <FrameTrack lo={0} hi={100}>
+        <TrackMarker frame={10} onDrag={onDrag} onCommit={onCommit} title="m" />
+      </FrameTrack>,
+    )
+    const marker = container.querySelector('[title="m"]') as HTMLElement
+    fireEvent.pointerDown(marker)
+    fireEvent.pointerMove(marker, { buttons: 1, clientX: 100 })
+    fireEvent.pointerMove(marker, { buttons: 1, clientX: 120 })
+    expect(onDrag).toHaveBeenCalledTimes(2)
+    expect(onDrag).toHaveBeenLastCalledWith(60)
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(marker.style.left).toBe("60%")
+
+    fireEvent.lostPointerCapture(marker)
+    expect(onCommit).toHaveBeenCalledTimes(1)
+    expect(onCommit).toHaveBeenCalledWith(60)
+    expect(marker.style.left).toBe("10%")
+    vi.restoreAllMocks()
+  })
+
+  it("a marker with only onCommit is draggable and commits the released frame", () => {
+    const onCommit = vi.fn()
+    vi.spyOn(Element.prototype, "setPointerCapture").mockImplementation(
+      () => {},
+    )
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue(
+      rect(0, 200),
+    )
+    const { container } = render(
+      <FrameTrack lo={0} hi={100}>
+        <TrackMarker frame={10} onCommit={onCommit} title="m" />
+      </FrameTrack>,
+    )
+    const marker = container.querySelector('[title="m"]')!
+    fireEvent.pointerDown(marker)
+    fireEvent.pointerMove(marker, { buttons: 1, clientX: 100 })
+    fireEvent.lostPointerCapture(marker)
+    expect(onCommit).toHaveBeenCalledOnce()
+    expect(onCommit).toHaveBeenCalledWith(50)
+    vi.restoreAllMocks()
+  })
+})
+
 describe("FrameTrack scrub", () => {
   it("seeks on pointer down through the rounded, clamped mapping", () => {
     const onScrub = vi.fn()

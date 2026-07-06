@@ -108,7 +108,8 @@ export function Ruler({
           </TrackRegion>
           <TrackMarker
             frame={clip.restStart}
-            onDrag={
+            onDrag={locked ? undefined : onSeek}
+            onCommit={
               locked
                 ? undefined
                 : (frame) => onEdit({ type: "moveRestStart", frame })
@@ -126,7 +127,8 @@ export function Ruler({
           key={b.id}
           frame={b.frame}
           onSelect={() => setSelected({ type: "boundary", id: b.id })}
-          onDrag={
+          onDrag={locked ? undefined : onSeek}
+          onCommit={
             locked
               ? undefined
               : (frame) => onEdit({ type: "moveBoundary", index: i, frame })
@@ -144,7 +146,8 @@ export function Ruler({
             key={`split-${i}`}
             frame={split.frame}
             onSelect={() => setSelected({ type: "split", index: i })}
-            onDrag={(frame) =>
+            onDrag={onSeek}
+            onCommit={(frame) =>
               onEdit({ type: "moveAnimationSplit", stageIndex: i, frame })
             }
             className="absolute top-0 z-10 flex h-full w-3 -translate-x-1/2 cursor-ew-resize flex-col items-center"
@@ -163,7 +166,8 @@ export function Ruler({
           key={h.id}
           frame={h.frame}
           onSelect={() => setSelected({ type: "hit", id: h.id })}
-          onDrag={(frame) => onEdit({ type: "moveHit", id: h.id, frame })}
+          onDrag={onSeek}
+          onCommit={(frame) => onEdit({ type: "moveHit", id: h.id, frame })}
           className="absolute bottom-2 z-20 -translate-x-1/2 cursor-grab"
           title={`hit @ ${h.frame} (${h.cue})`}
         >

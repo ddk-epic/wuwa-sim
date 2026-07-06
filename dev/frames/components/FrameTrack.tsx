@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from "react"
+import { createContext, useContext, useRef, useState } from "react"
 import type { CSSProperties, ReactNode } from "react"
 import { clamp } from "../shared"
 
@@ -76,12 +76,16 @@ export function FrameTrack({
   )
 }
 
-// A point at `frame`. Draggable iff `onDrag` given; `onSelect` is press-to-select
-// independent of drag, so a locked-but-selectable mark passes onSelect without
-// onDrag. Owns horizontal placement only; the caller styles the rest.
+// A point at `frame`. Draggable iff `onDrag` or `onCommit` given; `onSelect` is
+// press-to-select independent of drag, so a locked-but-selectable mark passes
+// onSelect alone. `onDrag` fires live per move (cheap preview); `onCommit` fires
+// once on release for the expensive edit. While dragging the marker renders at
+// its local frame so it tracks the cursor without mutating the clip. Owns
+// horizontal placement only; the caller styles the rest.
 export function TrackMarker({
   frame,
   onDrag,
+  onCommit,
   onSelect,
   className,
   style,
@@ -90,6 +94,7 @@ export function TrackMarker({
 }: {
   frame: number
   onDrag?: (frame: number) => void
+  onCommit?: (frame: number) => void
   onSelect?: () => void
   className?: string
   style?: CSSProperties
@@ -97,21 +102,35 @@ export function TrackMarker({
   children?: ReactNode
 }) {
   const { pct, frameAt } = useFrameTrack()
+  const [dragFrame, setDragFrame] = useState<number | null>(null)
+  const draggable = !!(onDrag || onCommit)
   return (
     <div
       onPointerDown={(e) => {
         e.stopPropagation()
         onSelect?.()
-        if (onDrag) e.currentTarget.setPointerCapture(e.pointerId)
+        if (draggable) e.currentTarget.setPointerCapture(e.pointerId)
       }}
       onPointerMove={
-        onDrag &&
-        ((e) => {
-          if (e.buttons) onDrag(frameAt(e.clientX))
-        })
+        draggable
+          ? (e) => {
+              if (!e.buttons) return
+              const f = frameAt(e.clientX)
+              setDragFrame(f)
+              onDrag?.(f)
+            }
+          : undefined
+      }
+      onLostPointerCapture={
+        draggable
+          ? () => {
+              if (dragFrame != null) onCommit?.(dragFrame)
+              setDragFrame(null)
+            }
+          : undefined
       }
       className={className}
-      style={{ left: `${pct(frame)}%`, ...style }}
+      style={{ left: `${pct(dragFrame ?? frame)}%`, ...style }}
       title={title}
     >
       {children}
