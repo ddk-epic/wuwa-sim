@@ -5,7 +5,7 @@ import type {
   EnrichedSkillAttribute,
   SkillGrouping,
 } from "#/types/character"
-import type { StageRef } from "./types"
+import type { Clip, StageRef } from "./types"
 
 export const CHARACTERS = ALL_CHARACTERS
 
@@ -45,6 +45,19 @@ export function stageRefOf(
     hitCount: stage.damage?.length ?? 0,
     expectsSplit: (stage.animationFrames ?? 0) > 0,
   }
+}
+
+// Catalog-derived fields (hitCount, name, expectsSplit) get baked into a clip's
+// stored refs at add time; the catalog is the truth, so refresh them by id on
+// load. Ids gone from the catalog (renamed/removed) and the spacer keep the stored ref.
+export function rehydrateClips(clips: Clip[], char: EnrichedCharacter): Clip[] {
+  const catalog = new Map<string, StageRef>()
+  for (const group of stageGroups(char))
+    for (const ref of group.stages) catalog.set(ref.id, ref)
+  return clips.map((clip) => ({
+    ...clip,
+    stageRefs: clip.stageRefs.map((ref) => catalog.get(ref.id) ?? ref),
+  }))
 }
 
 /** Flatten a character's skills/stages into pickable StageRefs, grouped by skill. */

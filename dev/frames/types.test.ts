@@ -405,16 +405,17 @@ describe("applyClipEdit", () => {
     expect(rejected).toBe(withRest)
   })
 
-  it("rejects a hit that would exceed the owning stage's capacity", () => {
+  it("places a hit past the owning stage's capacity, marked exceeding", () => {
     const filled = applyClipEdit(capped, {
       type: "addHit",
       hit: { id: "h0", frame: 10, cue: "impactFlash" },
     })
-    const rejected = applyClipEdit(filled, {
+    const over = applyClipEdit(filled, {
       type: "addHit",
       hit: { id: "h1", frame: 20, cue: "impactFlash" },
     })
-    expect(rejected).toBe(filled)
+    expect(over.hits.map((h) => h.id)).toEqual(["h0", "h1"])
+    expect(exceedingHitIds(over).has("h1")).toBe(true)
   })
 
   it("drags a hit across a boundary without re-homing or a capacity check", () => {

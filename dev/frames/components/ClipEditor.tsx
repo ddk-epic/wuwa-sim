@@ -121,16 +121,14 @@ export function ClipEditor({
   const videoFrame = playhead + (clip.offset ?? 0)
   const scrubHi = scoping ? (video ? video.frameCount - 1 : clip.end) : clip.end
 
-  // A hit is placeable only where the playhead lands in a stage with spare
-  // capacity; an over-capacity or zero-hit stage rejects it. Surface the reason
-  // so the button reads as disabled rather than dead.
+  // A hit needs a stage at the playhead to own it; the rest zone has none, so
+  // that alone disables the button. Over-capacity is allowed but warned: the
+  // stage still owns the hit, it just reads as exceeding.
   const hitOwner = stageIndexOf(clip, playhead)
-  const hitReason =
-    hitOwner === -1
-      ? "no stage at the playhead"
-      : hitsInStage(clip, hitOwner) >= stageCapacity(clip, hitOwner)
-        ? "can not place more hits"
-        : null
+  const hitReason = hitOwner === -1 ? "no stage at the playhead" : null
+  const overCapacity =
+    hitOwner !== -1 &&
+    hitsInStage(clip, hitOwner) >= stageCapacity(clip, hitOwner)
 
   return (
     <div className="space-y-4" onPointerDown={() => setSelected(null)}>
@@ -205,10 +203,18 @@ export function ClipEditor({
                 <button
                   onClick={addHitHere}
                   disabled={hitReason != null}
-                  className="p-1.5 text-muted-foreground hover:bg-border hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-                  title={hitReason ?? "drop a hit at the playhead"}
+                  className="relative p-1.5 text-muted-foreground hover:bg-border hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                  title={
+                    hitReason ??
+                    (overCapacity
+                      ? "over the recorded hit count — places anyway"
+                      : "drop a hit at the playhead")
+                  }
                 >
                   <Crosshair className="size-4" />
+                  {overCapacity && (
+                    <span className="absolute right-0.5 top-0.5 size-1.5 rounded-full bg-destructive" />
+                  )}
                 </button>
                 <button
                   onClick={addSplitHere}

@@ -536,14 +536,11 @@ export function applyClipEdit(clip: Clip, edit: ClipEdit): Clip {
     }
     case "addHit": {
       // Placement sets ownership: a hit is born owned by the stage it lands in,
-      // so clicking the rest zone (no stage) is rejected.
+      // so clicking the rest zone (no stage) is rejected. Over-capacity is
+      // allowed: the hit lands and surfaces as exceeding rather than being blocked.
       const frame = clamp(edit.hit.frame, clip.start, clip.end)
       const owner = stageIndexOf(clip, frame)
-      if (
-        owner === -1 ||
-        hitsInStage(clip, owner) >= stageCapacity(clip, owner)
-      )
-        return clip
+      if (owner === -1) return clip
       return { ...clip, hits: [...clip.hits, { ...edit.hit, frame, owner }] }
     }
     case "removeHit":

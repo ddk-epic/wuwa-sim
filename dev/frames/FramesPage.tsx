@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Film, Plus } from "lucide-react"
-import { CHARACTERS, findCharacter, stageGroups } from "./stages"
+import {
+  CHARACTERS,
+  findCharacter,
+  rehydrateClips,
+  stageGroups,
+} from "./stages"
 import {
   loadClips,
   loadSelectedCharacter,
@@ -54,7 +59,8 @@ export function FramesPage() {
   }, [])
 
   function loadInto(name: string) {
-    const loaded = loadClips(name)
+    const c = findCharacter(name)
+    const loaded = c ? rehydrateClips(loadClips(name), c) : loadClips(name)
     clipsRef.current = loaded
     setClips(loaded)
     setSelectedId(loaded[0]?.id ?? null)
