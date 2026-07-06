@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { StageGroup } from "../stages"
 import type { StageRef } from "../types"
+import { useFlashFlag } from "../useFlashFlag"
 
 // Anchored, stays-open-while-picking catalog. Adding never dismisses it; Esc, the
 // X, or an outside click do. Duplicates are intentional — an action string can
@@ -14,14 +15,11 @@ export function AddStagePopover({
   onAdd: (ref: StageRef) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [flashId, setFlashId] = useState<string | null>(null)
+  const [flashId, flashStage] = useFlashFlag<string | null>(null, 300)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  )
 
   useEffect(() => {
     if (!open) return
@@ -74,9 +72,7 @@ export function AddStagePopover({
 
   function add(stage: StageRef) {
     onAdd(stage)
-    setFlashId(stage.id)
-    clearTimeout(flashTimer.current)
-    flashTimer.current = setTimeout(() => setFlashId(null), 300)
+    flashStage(stage.id)
   }
 
   return (

@@ -6,6 +6,7 @@ import {
   Plus,
   TriangleAlert,
 } from "lucide-react"
+import { useFlashFlag } from "../useFlashFlag"
 import { coverageOf } from "../planner"
 import type { Precondition, SuggestedClip } from "../planner"
 import type { Clip } from "../types"
@@ -75,7 +76,7 @@ function SuggestionRow({
   coverage: ReturnType<typeof coverageOf>
   onSeed: () => void
 }) {
-  const [seeded, setSeeded] = useState(false)
+  const [seeded, flashSeeded] = useFlashFlag(false, 1200)
   const gap = suggestion.stages.some((s) => s.footingGap)
 
   return (
@@ -135,8 +136,7 @@ function SuggestionRow({
       <button
         onClick={() => {
           onSeed()
-          setSeeded(true)
-          setTimeout(() => setSeeded(false), 1200)
+          flashSeeded(true)
         }}
         title="Create a clip pre-loaded with these stages"
         className="flex shrink-0 items-center rounded border border-dashed border-gray-700 px-1.5 py-1 text-muted-foreground hover:border-muted-foreground hover:text-foreground"

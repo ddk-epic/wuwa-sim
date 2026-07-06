@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react"
 import { AlertTriangle, Check, Copy } from "lucide-react"
+import { useFlashFlag } from "../useFlashFlag"
 import type { EnrichedCharacter } from "#/types/character"
 import { Modal } from "#/components/ui/Modal"
 import { diffHunks } from "../diff"
@@ -197,14 +198,11 @@ function DiffCell({
 }
 
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, flashCopied] = useFlashFlag(false, 1200)
   return (
     <button
       onClick={() => {
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true)
-          setTimeout(() => setCopied(false), 1200)
-        })
+        navigator.clipboard.writeText(text).then(() => flashCopied(true))
       }}
       className="flex items-center gap-1.5 rounded border border-border px-2.5 py-1 text-detail text-muted-foreground hover:bg-card hover:text-foreground"
     >
