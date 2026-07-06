@@ -18,6 +18,7 @@ import { reconcile } from "./reconcile"
 import { planClips } from "./planner"
 import type { SuggestedClip } from "./planner"
 import { uid } from "./shared"
+import { useDebouncedSave } from "./useDebouncedSave"
 import { ClipEditor } from "./components/ClipEditor"
 import { ExportMenu } from "./components/ExportMenu"
 import { PlannerPanel } from "./components/PlannerPanel"
@@ -43,6 +44,14 @@ export function FramesPage() {
   // compose instead of racing on a stale state closure.
   const clipsRef = useRef<Clip[]>([])
 
+  // Persist off the edit hot path. Payload carries its own character so a write
+  // that lands after a character switch still targets the right storage key.
+  const { queue: queueSave, flush: flushSave } = useDebouncedSave(
+    (w: { character: string; clips: Clip[] }) =>
+      saveClips(w.character, w.clips),
+    400,
+  )
+
   const char = findCharacter(characterName)
   const groups = useMemo(() => (char ? stageGroups(char) : []), [char])
   const suggestions = useMemo(() => (char ? planClips(char) : []), [char])
@@ -59,6 +68,7 @@ export function FramesPage() {
   }, [])
 
   function loadInto(name: string) {
+    flushSave()
     const c = findCharacter(name)
     const loaded = c ? rehydrateClips(loadClips(name), c) : loadClips(name)
     clipsRef.current = loaded
@@ -66,12 +76,12 @@ export function FramesPage() {
     setSelectedId(loaded[0]?.id ?? null)
   }
 
-  // Persisting writer: every clip mutation funnels through here, so storage stays
-  // in sync without a save-effect racing the load on character switch.
+  // Every clip mutation funnels through here: reads (state + ref) update
+  // synchronously; the storage write is debounced and flushed on switch/unload.
   function commit(next: Clip[]) {
     clipsRef.current = next
     setClips(next)
-    saveClips(characterName, next)
+    queueSave({ character: characterName, clips: next })
   }
 
   function pickCharacter(name: string) {
