@@ -11,6 +11,11 @@ import type {
 
 export const STAGE_CAST_NAME = "Skill DMG"
 
+// Reserved prior-stage token: not a real stageId. Chain gate satisfied when the
+// actor is a fresh swap-in. Real stageIds are dotted/colon-namespaced, so the
+// bare token never collides.
+export const SWAP_IN_SENTINEL = "swap-in"
+
 /**
  * The footing a stage begins on (its "entry footing"). Omission means `ground`:
  * an untagged stage requires the ground, so an airborne character falls first.

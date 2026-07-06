@@ -551,6 +551,84 @@ describe("validateTimeline — any-of prior-stage gate", () => {
   })
 })
 
+describe("validateTimeline — swap-in opener sentinel", () => {
+  const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
+  const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"
+
+  // Stage 2 opens from Stage 1 mid-combo, or immediately on a fresh swap-in.
+  const charWithSwapIn = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1 DMG",
+              category: "Basic Attack",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2 DMG",
+              category: "Basic Attack",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresPriorStage: ["normal-attack/stage-1", "swap-in"],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("opens Stage 2 as the first timeline entry", () => {
+    testCharacters = [charWithSwapIn(1)]
+    const s2 = entry(1, STAGE_2, "s2")
+    const result = validateTimeline([s2], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("opens Stage 2 immediately after a different character swaps in", () => {
+    testCharacters = [charWithSwapIn(1), baseChar({ id: 2 })]
+    const other = entry(
+      2,
+      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      "other",
+    )
+    const s2 = entry(1, STAGE_2, "s2")
+    const result = validateTimeline([other, s2], [1, 2, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+
+  it("still requires Stage 1 mid-combo when not a fresh swap-in", () => {
+    testCharacters = [charWithSwapIn(1)]
+    const first = entry(1, STAGE_2, "first")
+    const second = entry(1, STAGE_2, "second")
+    const result = validateTimeline([first, second], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("second")).toBe(true)
+    expect(errorsOf(result, "second")[0].message).toEqual({
+      kind: "missingChainPrereq",
+      stageId: STAGE_2,
+      requiredStageIds: [STAGE_1],
+    })
+  })
+
+  it("accepts Stage 2 after Stage 1 mid-combo", () => {
+    testCharacters = [charWithSwapIn(1)]
+    const s1 = entry(1, STAGE_1, "s1")
+    const s2 = entry(1, STAGE_2, "s2")
+    const result = validateTimeline([s1, s2], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s2")).toBe(false)
+  })
+})
+
 describe("validateTimeline — window mode (followUpDelay)", () => {
   const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
   const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"

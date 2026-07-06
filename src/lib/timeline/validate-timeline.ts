@@ -3,6 +3,7 @@ import type { TimelineEntry } from "#/types/timeline"
 import { getCharacterById } from "../loadout/catalog"
 import { findStageByEntry } from "../compile-character"
 import type { ResolvedStage } from "../stage"
+import { SWAP_IN_SENTINEL } from "../stage"
 import type { ValidatorMessage } from "./row-messages"
 
 // Footing is deliberately NOT validated here. Footing rules are frame-dependent
@@ -131,25 +132,40 @@ function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
   const requiredStageIds = resolved?.requiresPriorStageId
   if (skillType === "Echo Skill" || requiredStageIds === undefined) return []
 
+  // Chain mode honors the swap-in opener: a fresh swap-in satisfies the gate
+  // with no stage anchor. Only real stageIds anchor the stage/window scans.
+  const windowed = resolved?.followUpDelay !== undefined
+  if (
+    !windowed &&
+    requiredStageIds.includes(SWAP_IN_SENTINEL) &&
+    isFreshSwapIn(i, ctx)
+  ) {
+    return []
+  }
+  const stageIds = requiredStageIds.filter((id) => id !== SWAP_IN_SENTINEL)
+
   // Window mode: any earlier matching stage on this character satisfies the gate,
   // regardless of intervening entries. Chain mode: the immediately preceding
   // same-character entry must BE one of the prerequisites. Either mode is
   // satisfied by any listed prerequisite (OR / any-of).
-  const windowed = resolved?.followUpDelay !== undefined
   const anchor = windowed
-    ? pickWindowAnchor(
-        ctx.stagesByChar.get(entry.characterId),
-        requiredStageIds,
-      )
-    : pickChainAnchor(ctx.lastByChar.get(entry.characterId), requiredStageIds)
+    ? pickWindowAnchor(ctx.stagesByChar.get(entry.characterId), stageIds)
+    : pickChainAnchor(ctx.lastByChar.get(entry.characterId), stageIds)
 
   const message: ValidatorMessage = {
     kind: windowed ? "missingWindowedPrereq" : "missingChainPrereq",
     stageId: entry.stageId,
-    requiredStageIds,
+    requiredStageIds: stageIds,
   }
   if (!anchor) return [invalid(message)]
   return ctx.invalidRowIds.has(anchor.id) ? [consequence(message)] : []
+}
+
+// Fresh swap-in: no immediately-preceding entry, or the previous entry belongs
+// to a different character.
+function isFreshSwapIn(i: number, ctx: WalkContext): boolean {
+  if (i === 0) return true
+  return ctx.entries[i - 1].characterId !== ctx.entries[i].characterId
 }
 
 function pickChainAnchor(

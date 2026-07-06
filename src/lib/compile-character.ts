@@ -18,6 +18,7 @@ import { getCharacterById, getEchoById } from "./loadout/catalog"
 import type { ResolvedStage } from "./stage"
 import {
   STAGE_CAST_NAME,
+  SWAP_IN_SENTINEL,
   resolveStageLabel,
   deriveKey,
   stageLabel,
@@ -414,6 +415,7 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
     if (ref === undefined) continue
     const refs = Array.isArray(ref) ? ref : [ref]
     info.requiresPriorStageId = refs.map((r) => {
+      if (r === SWAP_IN_SENTINEL) return r
       const axes = lowerStage(r)
       if (typeof axes.stageId !== "string" || axes.hitIndex !== undefined) {
         throw new Error(

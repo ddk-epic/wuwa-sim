@@ -464,6 +464,16 @@ describe("findStageByEntry — character skill", () => {
     }
     expect(() => compileCharacter(char)).toThrow()
   })
+
+  it("passes the swap-in sentinel through unresolved", () => {
+    const char = baseChar()
+    char.skills[0].stages[1] = {
+      ...char.skills[0].stages[1],
+      requiresPriorStage: ["normal-attack/stage-1", "swap-in"],
+    }
+    const info = compileCharacter(char).stageIndex.get(NAMED_ID)
+    expect(info?.requiresPriorStageId).toEqual([STAGE_1_ID, "swap-in"])
+  })
 })
 
 describe("findStageByEntry — echo skill", () => {

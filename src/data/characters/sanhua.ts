@@ -372,7 +372,7 @@ export const sanhua = {
           name: "Stage 2 DMG",
           category: "Basic Attack",
           newName: "Stage 2",
-          requiresPriorStage: "frigid-light/stage-1",
+          requiresPriorStage: ["frigid-light/stage-1", "swap-in"],
           value: "73.76%",
           actionTime: 31,
           variants: {
