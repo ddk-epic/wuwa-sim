@@ -6,6 +6,7 @@ import {
   CUES,
   exceedingHitIds,
   hitsByStage,
+  isPlaceholder,
   resolveVariantTarget,
   sections,
   stageIndexOf,
@@ -128,12 +129,14 @@ export function MarksTable({
                 </span>
                 <span className="w-2" />
               </div>
-              <VariantRow
-                clip={clip}
-                stageIndex={i}
-                hitCount={hits.length}
-                onEdit={onEdit}
-              />
+              {!isPlaceholder(sec.ref) && (
+                <VariantRow
+                  clip={clip}
+                  stageIndex={i}
+                  hitCount={hits.length}
+                  onEdit={onEdit}
+                />
+              )}
               <SplitRow
                 clip={clip}
                 stageIndex={i}
@@ -148,9 +151,12 @@ export function MarksTable({
               ) : (
                 hits.map((h, idx) => {
                   const posIdx = stageIndexOf(clip, h.frame)
-                  // Displaced = the frame sits in a different real stage than its
-                  // owner. In the rest zone (posIdx === -1) there's no stage, so no badge.
-                  const displaced = posIdx !== -1 && posIdx !== i
+                  // Displaced = the frame left its owner's section: into another
+                  // real stage, or past the sequence into the end zone (posIdx -1,
+                  // in-bounds only reachable via the trailing rest zone).
+                  const displaced = posIdx !== i
+                  const landing =
+                    posIdx === -1 ? "end zone" : secs[posIdx].ref.stage
                   return (
                     <div
                       key={h.id}
@@ -169,9 +175,9 @@ export function MarksTable({
                         {displaced && (
                           <span
                             className="max-w-24 truncate rounded bg-amber-500/15 px-1 text-micro text-amber-500"
-                            title={`delayed — frame lands in ${secs[posIdx].ref.stage}`}
+                            title={`delayed — frame lands in ${landing}`}
                           >
-                            ⤶ {secs[posIdx].ref.stage}
+                            ⤶ {landing}
                           </span>
                         )}
                       </span>
