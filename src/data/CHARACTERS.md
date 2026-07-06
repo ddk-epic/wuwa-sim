@@ -215,7 +215,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light, Stage 3.
 
 **Key fields**: multiple entries in `stages[]`, each its own stage with a distinct `name` (its key derives from `name`, not `newName`). They share the parent skill, so their stage keys differ only by stage. **`requiresPriorStage`** enforces the order: gate every stage after the first on its predecessor's `"skill/stage"` token, and leave stage 1 ungated. The chain only advances when the prior stage was the one that just played.
 
-**Gotchas**: each stage's key comes from its `name` (`deriveKey`), so two stages of one skill must have distinct names (or an explicit `key`). `requiresPriorStage` names exactly one stage with a `"skill/stage"` token — see [stageId lineage](#stageid-lineage).
+**Gotchas**: each stage's key comes from its `name` (`deriveKey`), so two stages of one skill must have distinct names (or an explicit `key`). `requiresPriorStage` takes a `"skill/stage"` token, or an array of tokens for a follow-up reachable from any of several predecessors (OR / any-of); a bare string is one-element sugar — see [stageId lineage](#stageid-lineage).
 
 ```ts
 {
@@ -522,7 +522,7 @@ A stage is an `EnrichedSkillAttribute`.
 | `variants`           | Partial map of `cancel`/`instantCancel`/`swap` → `{ actionTime }`, alternate costs when cut short.                                                                                                                          |
 | `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                          |
 | `footing`            | Footing — `"ground"`, `"air"`, `"either"`, or a transition `{ entry, exit, commit }` (`entry`: `"ground"`/`"air"`/`"any"`).                                                                                                 |
-| `requiresPriorStage` | Combo gating — this stage only follows the predecessor named by a `"skill/stage"` token.                                                                                                                                    |
+| `requiresPriorStage` | Combo gating (`string \| string[]`) — this stage follows the predecessor named by a `"skill/stage"` token, or any predecessor in the array (OR / any-of).                                                                   |
 | `followUpDelay`      | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + followUpDelay`. See Cookbook recipe 4. |
 
 **Rare fields:**

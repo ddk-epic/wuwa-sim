@@ -128,21 +128,25 @@ function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
       : [invalid({ kind: "unknownCharacter" })]
   }
 
-  const requiredStageId = resolved?.requiresPriorStageId
-  if (skillType === "Echo Skill" || requiredStageId === undefined) return []
+  const requiredStageIds = resolved?.requiresPriorStageId
+  if (skillType === "Echo Skill" || requiredStageIds === undefined) return []
 
   // Window mode: any earlier matching stage on this character satisfies the gate,
   // regardless of intervening entries. Chain mode: the immediately preceding
-  // same-character entry must BE the prerequisite.
+  // same-character entry must BE one of the prerequisites. Either mode is
+  // satisfied by any listed prerequisite (OR / any-of).
   const windowed = resolved?.followUpDelay !== undefined
   const anchor = windowed
-    ? ctx.stagesByChar.get(entry.characterId)?.get(requiredStageId)
-    : pickChainAnchor(ctx.lastByChar.get(entry.characterId), requiredStageId)
+    ? pickWindowAnchor(
+        ctx.stagesByChar.get(entry.characterId),
+        requiredStageIds,
+      )
+    : pickChainAnchor(ctx.lastByChar.get(entry.characterId), requiredStageIds)
 
   const message: ValidatorMessage = {
     kind: windowed ? "missingWindowedPrereq" : "missingChainPrereq",
     stageId: entry.stageId,
-    requiredStageId,
+    requiredStageIds,
   }
   if (!anchor) return [invalid(message)]
   return ctx.invalidRowIds.has(anchor.id) ? [consequence(message)] : []
@@ -150,9 +154,20 @@ function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
 
 function pickChainAnchor(
   prev: TimelineEntry | undefined,
-  requiredStageId: string,
+  requiredStageIds: string[],
 ): TimelineEntry | undefined {
-  return prev?.stageId === requiredStageId ? prev : undefined
+  return prev && requiredStageIds.includes(prev.stageId) ? prev : undefined
+}
+
+function pickWindowAnchor(
+  seen: Map<string, TimelineEntry> | undefined,
+  requiredStageIds: string[],
+): TimelineEntry | undefined {
+  for (const id of requiredStageIds) {
+    const hit = seen?.get(id)
+    if (hit) return hit
+  }
+  return undefined
 }
 
 function checkStageSequence(i: number, ctx: WalkContext): RawFinding[] {

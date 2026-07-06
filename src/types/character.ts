@@ -205,7 +205,8 @@ type EnrichedSkillAttributeBase = Omit<SkillAttribute, "staCost"> & {
 
 export type EnrichedSkillAttribute =
   | (EnrichedSkillAttributeBase & {
-      requiresPriorStage: string
+      // Array ⇒ any-of: gate satisfied when any listed stage qualifies.
+      requiresPriorStage: string | string[]
       // Frames. Absent ⇒ prerequisite must immediately precede; present ⇒
       // prerequisite need only have cast earlier on the same character.
       followUpDelay?: number

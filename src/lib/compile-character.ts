@@ -34,7 +34,7 @@ export interface StageInfo {
   skillType: SkillType
   skill: EnrichedSkill
   stage: EnrichedSkillAttribute
-  requiresPriorStageId?: string
+  requiresPriorStageId?: string[]
 }
 
 export interface CompiledCharacter {
@@ -412,13 +412,16 @@ function compile(char: EnrichedCharacter): CompiledCharacter {
   for (const info of stageIndex.values()) {
     const ref = info.stage.requiresPriorStage
     if (ref === undefined) continue
-    const axes = lowerStage(ref)
-    if (typeof axes.stageId !== "string" || axes.hitIndex !== undefined) {
-      throw new Error(
-        `${owner}: requiresPriorStage must name exactly one stage, got "${ref}"`,
-      )
-    }
-    info.requiresPriorStageId = axes.stageId
+    const refs = Array.isArray(ref) ? ref : [ref]
+    info.requiresPriorStageId = refs.map((r) => {
+      const axes = lowerStage(r)
+      if (typeof axes.stageId !== "string" || axes.hitIndex !== undefined) {
+        throw new Error(
+          `${owner}: requiresPriorStage must name exactly one stage, got "${r}"`,
+        )
+      }
+      return axes.stageId
+    })
   }
 
   return {
@@ -502,10 +505,13 @@ export function findStageByEntry(
   if (character && compiled && info) {
     const { skill, stage } = info
     // Same-skill follow-up shares the initiating cast's cooldown, not its own.
+    // Any-of gate: holds only if every predecessor shares the follow-up's skill.
     const continuesSkillCast =
       info.requiresPriorStageId !== undefined &&
-      compiled.stageIndex.get(info.requiresPriorStageId)?.skillKey ===
-        info.skillKey
+      info.requiresPriorStageId.length > 0 &&
+      info.requiresPriorStageId.every(
+        (id) => compiled.stageIndex.get(id)?.skillKey === info.skillKey,
+      )
     const isCastStage = stage.name === STAGE_CAST_NAME
     // Stage-level skillType, collapsed from the parent skill grouping.
     // Grouping-only labels that are not SkillTypes (Normal Attack,

@@ -395,8 +395,9 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     expect(errorsOf(result, "s2")[0].message).toEqual({
       kind: "missingChainPrereq",
       stageId: "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-      requiredStageId:
+      requiredStageIds: [
         "char.test.basic-attack.normal-attack.stage-1::basic-attack",
+      ],
     })
   })
 
@@ -469,6 +470,84 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     )
     const result = validateTimeline([s1], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s1")).toBe(false)
+  })
+})
+
+describe("validateTimeline — any-of prior-stage gate", () => {
+  const STAGE_1 = "char.test.basic-attack.normal-attack.stage-1::basic-attack"
+  const STAGE_2 = "char.test.basic-attack.normal-attack.stage-2::basic-attack"
+  const STAGE_3 = "char.test.basic-attack.normal-attack.stage-3::basic-attack"
+
+  // Stage 3 opens from either Stage 1 or Stage 2 (OR / any-of).
+  const charWithAnyOf = (id: number): EnrichedCharacter =>
+    baseChar({
+      id,
+      skills: [
+        {
+          id: 1,
+          name: "Normal Attack",
+          type: "Normal Attack",
+          stages: [
+            {
+              name: "Stage 1 DMG",
+              category: "Basic Attack",
+              newName: "Stage 1",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 2 DMG",
+              category: "Basic Attack",
+              newName: "Stage 2",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+            },
+            {
+              name: "Stage 3 DMG",
+              category: "Basic Attack",
+              newName: "Stage 3",
+              value: "1",
+              actionTime: 30,
+              damage: [],
+              requiresPriorStage: [
+                "normal-attack/stage-1",
+                "normal-attack/stage-2",
+              ],
+            },
+          ],
+          damage: [],
+        },
+      ],
+    })
+
+  it("accepts the follow-up after the first listed prerequisite", () => {
+    testCharacters = [charWithAnyOf(1)]
+    const s1 = entry(1, STAGE_1, "s1")
+    const s3 = entry(1, STAGE_3, "s3")
+    const result = validateTimeline([s1, s3], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s3")).toBe(false)
+  })
+
+  it("accepts the follow-up after the second listed prerequisite", () => {
+    testCharacters = [charWithAnyOf(1)]
+    const s2 = entry(1, STAGE_2, "s2")
+    const s3 = entry(1, STAGE_3, "s3")
+    const result = validateTimeline([s2, s3], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s3")).toBe(false)
+  })
+
+  it("flags the follow-up when no listed prerequisite precedes it", () => {
+    testCharacters = [charWithAnyOf(1)]
+    const s3 = entry(1, STAGE_3, "s3")
+    const result = validateTimeline([s3], [1, null, null], loadouts)
+    expect(result.invalidRowIds.has("s3")).toBe(true)
+    expect(errorsOf(result, "s3")[0].message).toEqual({
+      kind: "missingChainPrereq",
+      stageId: STAGE_3,
+      requiredStageIds: [STAGE_1, STAGE_2],
+    })
   })
 })
 

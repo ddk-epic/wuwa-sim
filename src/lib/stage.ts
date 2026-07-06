@@ -81,7 +81,7 @@ export interface ResolvedStage {
   skillCategory: SkillCategory
   skillType: SkillType
   skillName: string
-  requiresPriorStageId?: string
+  requiresPriorStageId?: string[]
   requiresSequence?: number
   requiresConcerto?: number
   /** Frames a windowed follow-up must wait past its prerequisite's cast. */

@@ -367,7 +367,7 @@ describe("compileCharacter — reference lowering", () => {
       requiresPriorStage: "normal-attack/stage-1",
     }
     const info = compileCharacter(char).stageIndex.get(NAMED_ID)
-    expect(info?.requiresPriorStageId).toBe(STAGE_1_ID)
+    expect(info?.requiresPriorStageId).toEqual([STAGE_1_ID])
 
     const bad = baseChar()
     bad.skills[0].stages[1] = {
@@ -443,7 +443,26 @@ describe("findStageByEntry — character skill", () => {
     testCharacters = [char]
     const entry = { id: "e5", characterId: 1, stageId: NAMED_ID }
     const result = findStageByEntry(entry, slots, loadouts)
-    expect(result?.requiresPriorStageId).toBe(STAGE_1_ID)
+    expect(result?.requiresPriorStageId).toEqual([STAGE_1_ID])
+  })
+
+  it("lowers an any-of requiresPriorStage array, resolving each element", () => {
+    const char = baseChar()
+    char.skills[0].stages[1] = {
+      ...char.skills[0].stages[1],
+      requiresPriorStage: ["normal-attack/stage-1", "normal-attack/named"],
+    }
+    const info = compileCharacter(char).stageIndex.get(NAMED_ID)
+    expect(info?.requiresPriorStageId).toEqual([STAGE_1_ID, NAMED_ID])
+  })
+
+  it("rejects an unresolvable element in an any-of array", () => {
+    const char = baseChar()
+    char.skills[0].stages[1] = {
+      ...char.skills[0].stages[1],
+      requiresPriorStage: ["normal-attack/stage-1", "normal-attack/nope"],
+    }
+    expect(() => compileCharacter(char)).toThrow()
   })
 })
 

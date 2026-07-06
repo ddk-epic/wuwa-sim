@@ -52,12 +52,27 @@ describe("renderMessage", () => {
         {
           kind: "missingChainPrereq",
           stageId: "stage-2-id",
-          requiredStageId: "stage-1-id",
+          requiredStageIds: ["stage-1-id"],
         },
         resolveName,
       ),
     ).toBe(
       '"Normal Attack · Stage 2" must immediately follow "Normal Attack · Stage 1"',
+    )
+  })
+
+  it("renders missingChainPrereq any-of list joined with or", () => {
+    expect(
+      renderMessage(
+        {
+          kind: "missingChainPrereq",
+          stageId: "stage-2-id",
+          requiredStageIds: ["stage-1-id", "stage-2-id"],
+        },
+        resolveName,
+      ),
+    ).toBe(
+      '"Normal Attack · Stage 2" must immediately follow "Normal Attack · Stage 1" or "Normal Attack · Stage 2"',
     )
   })
 
@@ -67,7 +82,7 @@ describe("renderMessage", () => {
         {
           kind: "missingWindowedPrereq",
           stageId: "stage-2-id",
-          requiredStageId: "stage-1-id",
+          requiredStageIds: ["stage-1-id"],
         },
         resolveName,
       ),

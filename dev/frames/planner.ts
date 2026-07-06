@@ -139,9 +139,12 @@ function comboChains(cands: Candidate[]): Candidate[][] {
   const children = new Map<Candidate, Candidate[]>()
   for (const c of cands) {
     const req = c.stage.requiresPriorStage
+    // Any-of gate: the first listed prerequisite anchors the combo-tree link.
     // A window follow-up (followUpDelay) is not a tight combo link — don't chain it.
     const parent =
-      req && c.stage.followUpDelay == null ? byToken.get(req) : undefined
+      req !== undefined && c.stage.followUpDelay == null
+        ? byToken.get(Array.isArray(req) ? req[0] : req)
+        : undefined
     parentOf.set(c, parent)
     if (parent) {
       const list = children.get(parent) ?? []

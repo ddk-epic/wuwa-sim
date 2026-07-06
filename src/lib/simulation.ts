@@ -577,9 +577,13 @@ function computeGateWait(
   const { requiresPriorStageId, followUpDelay } = resolved
   if (requiresPriorStageId === undefined || followUpDelay === undefined)
     return 0
-  const anchor = ctx.priorCasts.get(
-    `${entry.characterId}:${requiresPriorStageId}`,
-  )
+  // Any listed prerequisite can anchor the window; the most recent cast wins.
+  let anchor: number | undefined
+  for (const id of requiresPriorStageId) {
+    const cast = ctx.priorCasts.get(`${entry.characterId}:${id}`)
+    if (cast !== undefined && (anchor === undefined || cast > anchor))
+      anchor = cast
+  }
   if (anchor === undefined) return 0
   return Math.max(0, anchor + followUpDelay - cursorFrame)
 }

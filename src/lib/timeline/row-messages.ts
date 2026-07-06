@@ -9,8 +9,12 @@ export type ValidatorMessage =
   | { kind: "characterNotInTeam" }
   | { kind: "unknownCharacter" }
   | { kind: "stageNotFound"; stageId: string }
-  | { kind: "missingChainPrereq"; stageId: string; requiredStageId: string }
-  | { kind: "missingWindowedPrereq"; stageId: string; requiredStageId: string }
+  | { kind: "missingChainPrereq"; stageId: string; requiredStageIds: string[] }
+  | {
+      kind: "missingWindowedPrereq"
+      stageId: string
+      requiredStageIds: string[]
+    }
   | { kind: "stageRequiresSequence"; stageId: string; requiredSequence: number }
   | { kind: "swapForcesDifferentChar" }
 
@@ -19,6 +23,13 @@ export type ValidatorMessage =
  * emit structured findings; this is the only place that turns them into English.
  */
 export type RowMessage = ValidatorMessage | Diagnostic
+
+function renderStageList(
+  stageIds: string[],
+  resolveStageName: (stageId: string) => string,
+): string {
+  return stageIds.map((id) => `"${resolveStageName(id)}"`).join(" or ")
+}
 
 export function renderMessage(
   m: RowMessage,
@@ -58,9 +69,9 @@ export function renderMessage(
     case "stageNotFound":
       return "This skill is no longer available for this character"
     case "missingChainPrereq":
-      return `"${resolveStageName(m.stageId)}" must immediately follow "${resolveStageName(m.requiredStageId)}"`
+      return `"${resolveStageName(m.stageId)}" must immediately follow ${renderStageList(m.requiredStageIds, resolveStageName)}`
     case "missingWindowedPrereq":
-      return `"${resolveStageName(m.stageId)}" requires an earlier "${resolveStageName(m.requiredStageId)}" on this character`
+      return `"${resolveStageName(m.stageId)}" requires an earlier ${renderStageList(m.requiredStageIds, resolveStageName)} on this character`
     case "stageRequiresSequence":
       return `"${resolveStageName(m.stageId)}" requires Sequence ${m.requiredSequence}`
     case "swapForcesDifferentChar":
