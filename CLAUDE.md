@@ -1,3 +1,18 @@
+<preferences>
+
+# Personal preferences
+
+## Code style
+
+- Always strive for clean, simple solutions.
+- When suggesting solutions or implementations, always include an option that disregards blast radius (the "right" design). Don't default to the minimal-diff solution.
+
+## General Preferences
+
+- After finding a solution after asked to look into a problem, stop and summarize clearly what the changes are about to be made first.
+
+</preferences>
+
 <docs>
 
 # Project docs
@@ -14,12 +29,14 @@ Workflow: `docs/conventions.md`.
 
 </docs>
 
-<code-style>
+<code-comments>
 
 # Code comments — STRICT, NON-NEGOTIABLE
 
 Apply to every edit, in source AND test files.
 
+- **Never use em-dashes.** Not in comments, not in test titles. Rewrite with a
+  comma, colon, or separate clause.
 - **Never reference issues, PRs, or ADRs in code** — no `#356`, no `ADR-0039`,
   no "see issue X" — not in comments, not in `describe(...)` / `it(...)` test
   titles. They belong only in Markdown docs (`docs/`, ADRs) and commit messages;
@@ -28,18 +45,18 @@ Apply to every edit, in source AND test files.
   Comment only what code can't say: a non-obvious _why_, invariant, gotcha, or
   magic value — never the _what_.
 - **Terse, not prose.** A comment is a clause of fact, not a sentence explaining
-  yourself. Cut em-dash asides, "so it … ", "the X must be a real Y:", and any
-  framing around the fact. If it reads like a sentence you'd say aloud, compress it.
+  yourself. Cut "so it … ", "the X must be a real Y:", and any framing around the
+  fact. If it reads like a sentence you'd say aloud, compress it.
 
   ```
-  BAD:  // Silversnow's amp is keyed to Basic Attack — only a Basic-Attack hit exercises it.
-  GOOD: // Silversnow's amp only applies to basic attacks.
+  BAD:  // We cache this for 5 minutes because the upstream API is slow and we don't want to hammer it on every request.
+  GOOD: // Cache 5 min: upstream API is rate-limited.
   ```
 
 After finishing an edit, re-read every comment and test title you added and
 delete or compress each one that breaks the above.
 
-</code-style>
+</code-comments>
 
 <shell>
 
@@ -54,7 +71,7 @@ a task genuinely requires a Windows-specific cmdlet that has no POSIX equivalent
 
 # Cheap-Worker Delegation Tools (Token Saving)
 
-Three CLI tools delegate bulk I/O to a cheap worker model. Use them to save tokens.
+CLI tools to delegate bulk I/O to a cheap worker model. Use them to save tokens.
 
 ## ask-deepseek — bulk reading
 
@@ -76,14 +93,6 @@ For generating tests, config files, docstrings, or repetitive code patterns:
 ```
 
 Then review the output and edit only what needs fixing.
-
-## extract-chat — chat transcript extraction
-
-Extracts human-readable text from Claude Code JSONL transcripts:
-
-```bash
-.tools/extract-chat <session.jsonl> -o /tmp/chat.txt
-```
 
 ## When NOT to delegate
 
