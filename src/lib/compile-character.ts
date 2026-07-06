@@ -547,9 +547,13 @@ export function findStageByEntry(
       requiresPriorStageId: info.requiresPriorStageId,
       requiresSequence: stage.requiresSequence,
       requiresConcerto: stage.requiresConcerto,
-      followUpDelay:
+      followUpMinDelay:
         stage.requiresPriorStage !== undefined
-          ? stage.followUpDelay
+          ? stage.followUpMinDelay
+          : undefined,
+      followUpMaxDelay:
+        stage.requiresPriorStage !== undefined
+          ? stage.followUpMaxDelay
           : undefined,
       // A same-skill follow-up continues the initiating cast; it doesn't arm the timer.
       skillCooldown: continuesSkillCast ? undefined : skill.cooldown,

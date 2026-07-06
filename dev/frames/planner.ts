@@ -89,6 +89,12 @@ function isOmitted(
   return category === "Outro Skill" && (stage.damage?.length ?? 0) === 0
 }
 
+// Window mode: either delay bound present flips the gate off the tight combo chain.
+function isWindowFollowUp(stage: EnrichedSkillAttribute): boolean {
+  if (!stage.requiresPriorStage) return false
+  return stage.followUpMinDelay != null || stage.followUpMaxDelay != null
+}
+
 function aerialInfo(stage: EnrichedSkillAttribute): {
   aerial: boolean
   footingGap: boolean
@@ -140,9 +146,9 @@ function comboChains(cands: Candidate[]): Candidate[][] {
   for (const c of cands) {
     const req = c.stage.requiresPriorStage
     // Any-of gate: the first listed prerequisite anchors the combo-tree link.
-    // A window follow-up (followUpDelay) is not a tight combo link — don't chain it.
+    // A window follow-up (either delay set) is not a tight combo link — don't chain it.
     const parent =
-      req !== undefined && c.stage.followUpDelay == null
+      req !== undefined && !isWindowFollowUp(c.stage)
         ? byToken.get(Array.isArray(req) ? req[0] : req)
         : undefined
     parentOf.set(c, parent)
@@ -184,7 +190,7 @@ function preconditionsFor(cands: Candidate[]): Precondition[] {
     }
     if (c.isForte) set.add("verify-forte")
     if (c.aerial) set.add("airborne")
-    if (c.stage.requiresPriorStage && c.stage.followUpDelay != null)
+    if (c.stage.requiresPriorStage && isWindowFollowUp(c.stage))
       set.add("requires-prior")
   }
   return [...set]

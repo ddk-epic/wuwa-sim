@@ -58,6 +58,8 @@ export function renderMessage(
       return `Outro requires ${m.cost} concerto`
     case "skillOnCooldown":
       return `Skill on cooldown for ${m.remaining} more frames`
+    case "priorGateWindowClosed":
+      return `Follow-up window closed ${m.overshoot} frames ago`
 
     // --- ValidatorMessage (structural validator findings) ---
     case "introNeedsOutro":

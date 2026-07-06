@@ -255,7 +255,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
 
 **Key fields**: an **array** `requiresPriorStage` listing the normal predecessor **and** the reserved `"swap-in"` token. The gate is satisfied by either: the predecessor immediately precedes (normal combo), or the actor is a **fresh swap-in** — the immediately-preceding timeline entry is a different character, or this is the first entry. `"swap-in"` is not a real stage; it is passed through compile untouched and recognized only by the validator's chain-mode check.
 
-**Gotchas**: `"swap-in"` only makes sense in **chain mode** (no `followUpDelay`); it never anchors the window scan. Mid-combo (a same-character entry that is not the predecessor precedes it), the gate still requires the real predecessor.
+**Gotchas**: `"swap-in"` only makes sense in **chain mode** (no delay bound); it never anchors the window scan. Mid-combo (a same-character entry that is not the predecessor precedes it), the gate still requires the real predecessor.
 
 ```ts
 {
@@ -271,13 +271,16 @@ See: `src/data/characters/sanhua.ts` — Frigid Light.
 
 See: `src/data/characters/sanhua.ts` — Frigid Light Stage 2.
 
-### 4. Windowed follow-up (`followUpDelay`)
+### 4. Windowed follow-up (`followUpMinDelay` / `followUpMaxDelay`)
 
-**When to use**: a stage that follows a prerequisite cast but is **not** a strict combo link — it stays available after swaps and the actor's own other actions, and only becomes castable a fixed time after the prerequisite. Encore's Energetic Welcome (castable ~103 frames after Flaming Woolies, surviving a swap-out) is the canonical case.
+**When to use**: a stage that follows a prerequisite cast but is **not** a strict combo link — it stays available after swaps and the actor's own other actions, and is castable only inside a time window relative to the prerequisite. Encore's Energetic Welcome (castable ~103 frames after Flaming Woolies, surviving a swap-out) needs the lower bound; Cartethyia's May Tempest (castable within an 8s window after its prerequisite) needs the upper bound.
 
-**Key fields**: same `requiresPriorStage` gate as the combo chain (recipe 3), **plus** a sibling `followUpDelay` (frames). Presence of `followUpDelay` flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it. The simulator then pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + followUpDelay`, surfaced as a `prior-gate` Padding Delay component.
+**Key fields**: same `requiresPriorStage` gate as the combo chain (recipe 3), **plus** at least one delay bound (frames). Either bound flips the gate from **chain mode** (prerequisite must immediately precede) to **window mode**: the prerequisite need only have cast earlier on the **same character** at any distance — intervening swaps, teammate entries, and the actor's own other actions do not break it.
 
-**Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `followUpDelay`, the pad is **0**. Set `followUpDelay` to the prerequisite's "castable-after" delay (Energetic Welcome uses `103`, Flaming Woolies' last-hit `actionFrame`). See ADR-0036.
+- **`followUpMinDelay`** — lower bound. The simulator pads the follow-up's start so it cannot begin before `prerequisiteCastFrame + followUpMinDelay`, surfaced as a `prior-gate` Padding Delay component. Too soon ⇒ **pad** (the player cannot violate it).
+- **`followUpMaxDelay`** — upper bound. When the follow-up is placed later than `prerequisiteCastFrame + followUpMaxDelay`, the window has **closed** and the sim raises an invalid `priorGateWindowClosed` finding. Too late ⇒ **finding** (the player _can_ miss it).
+
+**Gotchas**: the anchor is the prerequisite's **cast frame**, recorded even on a swap-cancel, so a swap-cancelled prerequisite still arms the gate. The min pad **`max`-combines with swap-back** (both are floors on the same start), so it bites only when the prerequisite was swap-cancelled and the actor returns early; on a full cast that advances ≥ `followUpMinDelay`, the pad is **0**. The max check reads the follow-up's pre-pad cursor. Both live in the sim, since `validate-timeline` is frame-agnostic. See ADR-0036.
 
 ```ts
 {
@@ -287,7 +290,7 @@ See: `src/data/characters/sanhua.ts` — Frigid Light Stage 2.
   // Window-mode follow-up to Flaming Woolies: castable ~103 frames after its
   // cast, staying available across a swap-out. Timing pad is computed sim-side.
   requiresPriorStage: "flaming-woolies/flaming-woolies",
-  followUpDelay: 103,
+  followUpMinDelay: 103,
   value: "339.16%",
   actionTime: 51,
   variants: { cancel: { actionTime: 15 }, swap: { actionTime: 0 } },
@@ -545,7 +548,8 @@ A stage is an `EnrichedSkillAttribute`.
 | `hidden`             | Hide the stage from the sidebar (still schedulable/referenceable).                                                                                                                                                                                                     |
 | `footing`            | Footing — `"ground"`, `"air"`, `"either"`, or a transition `{ entry, exit, commit }` (`entry`: `"ground"`/`"air"`/`"any"`).                                                                                                                                            |
 | `requiresPriorStage` | Combo gating (`string \| string[]`) — this stage follows the predecessor named by a `"skill/stage"` token, or any predecessor in the array (OR / any-of). The reserved `"swap-in"` token in the array also opens the stage on a fresh swap-in. See Cookbook recipe 3a. |
-| `followUpDelay`      | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + followUpDelay`. See Cookbook recipe 4.                                            |
+| `followUpMinDelay`   | Frames. Only alongside `requiresPriorStage`; flips the gate to window mode (prerequisite cast earlier anywhere on the same character) and pads the start to `prerequisiteCastFrame + followUpMinDelay`. See Cookbook recipe 4.                                         |
+| `followUpMaxDelay`   | Frames. Only alongside `requiresPriorStage`; also flips the gate to window mode and raises an invalid finding when the follow-up is placed later than `prerequisiteCastFrame + followUpMaxDelay` (window closed). See Cookbook recipe 4.                               |
 
 **Rare fields:**
 

@@ -193,12 +193,12 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
   // skill cooldown — are absolute-frame floors on the same start, so the wait is
   // their max. An over-cooldown cast pads nothing but flags an invalid diagnostic.
   const cooldown = computeCooldown(ctx, entry, resolved, cursor.frame)
-  const wait = Math.max(
-    swapBackWait,
-    computeGateWait(ctx, entry, resolved, cursor.frame),
-    cooldown.pad,
-  )
+  const gate = computeGateWindow(ctx, entry, resolved, cursor.frame)
+  const wait = Math.max(swapBackWait, gate.wait, cooldown.pad)
 
+  const gateDiagnostics = [cooldown.diagnostic, gate.diagnostic].filter(
+    (d): d is Diagnostic => d !== undefined,
+  )
   const { allHits, stageDuration, stageStartFrame, nextFrame } = processEntry(
     entry,
     cursor.frame,
@@ -206,7 +206,7 @@ function processAuthoredEntry(entry: TimelineEntry, ctx: SimContext): void {
     ctx,
     arrival.padFrames,
     wait,
-    cooldown.diagnostic,
+    gateDiagnostics,
   )
 
   // A cutscene animation freezes the stage timer while real time elapses. Credited
@@ -402,7 +402,7 @@ function processEntry(
   ctx: SimContext,
   trailingPad: number = 0,
   wait: number = 0,
-  cooldownDiagnostic?: Diagnostic,
+  startFloorDiagnostics: Diagnostic[] = [],
 ): {
   allHits: DamageEntry[]
   stageDuration: number
@@ -457,7 +457,7 @@ function processEntry(
       : footingDiagnostics(effectiveFooting, resolved)
   if (overrideFooting === undefined && fall > 0)
     diagnostics.push({ kind: "footingFall" })
-  if (cooldownDiagnostic) diagnostics.push(cooldownDiagnostic)
+  diagnostics.push(...startFloorDiagnostics)
 
   const effectiveStart = cursorFrame + fall + wait
 
@@ -563,20 +563,26 @@ function buildActionEvent(
 }
 
 /**
- * Frames the follow-up's start must wait to begin no earlier than
- * `anchorCastFrame + followUpDelay` (the windowed prior-stage gate). Returns 0 when
- * `followUpDelay` is absent or no anchor was recorded. The caller `max`-combines this
- * with the swap-back wait — both are absolute-frame floors on the same start.
+ * The windowed prior-stage gate's two clocks, keyed off the prerequisite's most
+ * recent cast frame. `followUpMinDelay` floors the follow-up's start at
+ * `anchorCastFrame + followUpMinDelay` (too soon ⇒ `wait`, `max`-combined with
+ * swap-back). `followUpMaxDelay` flags when the follow-up is placed later than
+ * `anchorCastFrame + followUpMaxDelay` (too late ⇒ window closed). Returns no
+ * wait and no diagnostic when neither delay is set or no anchor was recorded.
  */
-function computeGateWait(
+function computeGateWindow(
   ctx: SimContext,
   entry: TimelineEntry,
   resolved: ResolvedStage,
   cursorFrame: number,
-): number {
-  const { requiresPriorStageId, followUpDelay } = resolved
-  if (requiresPriorStageId === undefined || followUpDelay === undefined)
-    return 0
+): { wait: number; diagnostic?: Diagnostic } {
+  const { requiresPriorStageId, followUpMinDelay, followUpMaxDelay } = resolved
+  if (
+    requiresPriorStageId === undefined ||
+    (followUpMinDelay === undefined && followUpMaxDelay === undefined)
+  ) {
+    return { wait: 0 }
+  }
   // Any listed prerequisite can anchor the window; the most recent cast wins.
   let anchor: number | undefined
   for (const id of requiresPriorStageId) {
@@ -584,8 +590,29 @@ function computeGateWait(
     if (cast !== undefined && (anchor === undefined || cast > anchor))
       anchor = cast
   }
-  if (anchor === undefined) return 0
-  return Math.max(0, anchor + followUpDelay - cursorFrame)
+  if (anchor === undefined) return { wait: 0 }
+
+  const wait =
+    followUpMinDelay !== undefined
+      ? Math.max(0, anchor + followUpMinDelay - cursorFrame)
+      : 0
+  if (
+    followUpMaxDelay !== undefined &&
+    cursorFrame - anchor > followUpMaxDelay
+  ) {
+    const character = getCharacterById(entry.characterId)
+    const actor = character ? character.name : `id ${entry.characterId}`
+    return {
+      wait,
+      diagnostic: {
+        kind: "priorGateWindowClosed",
+        actor,
+        overshoot: cursorFrame - anchor - followUpMaxDelay,
+        severity: "invalid",
+      },
+    }
+  }
+  return { wait }
 }
 
 /** Within this many frames of ready, a cooldown forces a micro-wait pad rather than a finding. */

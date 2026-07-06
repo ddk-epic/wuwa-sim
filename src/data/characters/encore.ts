@@ -539,7 +539,7 @@ export const encore = {
           category: "Resonance Skill",
           newName: "Energetic Welcome",
           requiresPriorStage: "flaming-woolies/flaming-woolies",
-          followUpDelay: 103,
+          followUpMinDelay: 103,
           value: "339.16%",
           concerto: 5,
           actionTime: 51,

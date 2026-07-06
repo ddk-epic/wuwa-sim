@@ -26,6 +26,15 @@ describe("renderMessage", () => {
     ).toBe("Ground-only mode forces a grounded entry")
   })
 
+  it("renders priorGateWindowClosed with the overshoot", () => {
+    expect(
+      renderMessage(
+        { kind: "priorGateWindowClosed", actor: "Cartethyia", overshoot: 12 },
+        identity,
+      ),
+    ).toBe("Follow-up window closed 12 frames ago")
+  })
+
   it("renders stageNotFound without leaking the stage id", () => {
     const message = renderMessage(
       {

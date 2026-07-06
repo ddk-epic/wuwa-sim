@@ -207,9 +207,11 @@ export type EnrichedSkillAttribute =
   | (EnrichedSkillAttributeBase & {
       // Array ⇒ any-of: gate satisfied when any listed stage qualifies.
       requiresPriorStage: string | string[]
-      // Frames. Absent ⇒ prerequisite must immediately precede; present ⇒
-      // prerequisite need only have cast earlier on the same character.
-      followUpDelay?: number
+      // Frames. Either delay flips the gate to window mode: prerequisite need
+      // only have cast earlier on the same character.
+      // Min: too soon ⇒ pad the follow-up's start. Max: too late ⇒ window closed.
+      followUpMinDelay?: number
+      followUpMaxDelay?: number
     })
   | (EnrichedSkillAttributeBase & {
       requiresPriorStage?: never

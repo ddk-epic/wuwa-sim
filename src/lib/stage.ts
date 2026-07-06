@@ -89,8 +89,10 @@ export interface ResolvedStage {
   requiresPriorStageId?: string[]
   requiresSequence?: number
   requiresConcerto?: number
-  /** Frames a windowed follow-up must wait past its prerequisite's cast. */
-  followUpDelay?: number
+  /** Frames a windowed follow-up must wait past its prerequisite's cast (too soon ⇒ pad). */
+  followUpMinDelay?: number
+  /** Frames past the prerequisite's cast after which the window has closed (too late ⇒ finding). */
+  followUpMaxDelay?: number
   /** Skill-keyed cooldown; unset on a same-skill follow-up (it continues the cast). */
   skillCooldown?: number
   /** Seconds independent to this stage (stage-keyed cooldown). */

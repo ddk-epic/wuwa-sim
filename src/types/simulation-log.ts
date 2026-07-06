@@ -54,6 +54,7 @@ export type DiagnosticKind =
       cost: number
     }
   | { kind: "skillOnCooldown"; actor: string; remaining: number }
+  | { kind: "priorGateWindowClosed"; actor: string; overshoot: number }
 
 /**
  * `severity` defaults to `"warning"` at the render boundary (existing findings

@@ -34,11 +34,13 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [lo, lo, lo]
 
 const PREREQ = "char.wt.resonance-skill.woolies.prereq::resonance-skill"
 const FOLLOW = "char.wt.resonance-skill.woolies.follow::resonance-skill"
-const FOLLOW_UP_DELAY = 103
+const FOLLOW_MAX = "char.wt.resonance-skill.woolies.follow-max::resonance-skill"
+const FOLLOW_UP_MIN_DELAY = 103
+const FOLLOW_UP_MAX_DELAY = 480
 
 // A Flaming-Woolies-shaped windowed follow-up: Prereq advances its full 108
-// frames (≥ followUpDelay) on a full cast but truncates to 0 on a swap; Follow
-// gates on Prereq with followUpDelay 103.
+// frames (≥ followUpMinDelay) on a full cast but truncates to 0 on a swap; Follow
+// gates on Prereq with followUpMinDelay 103.
 const windowChar: EnrichedCharacter = {
   id: 1,
   name: "WT",
@@ -73,7 +75,17 @@ const windowChar: EnrichedCharacter = {
           value: "100%",
           actionTime: 51,
           requiresPriorStage: "woolies/prereq",
-          followUpDelay: FOLLOW_UP_DELAY,
+          followUpMinDelay: FOLLOW_UP_MIN_DELAY,
+          damage: [dmgHit(1, 0, 0, "Resonance Skill")],
+        },
+        {
+          name: "FollowMax",
+          category: "Resonance Skill",
+          newName: "FollowMax",
+          value: "100%",
+          actionTime: 51,
+          requiresPriorStage: "woolies/prereq",
+          followUpMaxDelay: FOLLOW_UP_MAX_DELAY,
           damage: [dmgHit(1, 0, 0, "Resonance Skill")],
         },
       ],
@@ -133,11 +145,11 @@ const actionFor = (log: ReturnType<typeof runSimulation>, id: string) =>
 const run = (entries: TimelineEntry[]) =>
   runSimulation(entries, slots, loadouts, { reactionDelay: 0 })
 
-describe("simulation — windowed Prior-Stage Gate followUpDelay pad", () => {
+describe("simulation — windowed Prior-Stage Gate followUpMinDelay pad", () => {
   it("full-cast prerequisite → follow-up needs no pad (priorGate 0)", () => {
     testCharacters = [windowChar]
-    // Prereq advances 108 ≥ followUpDelay 103, so the follow-up at frame 108 is
-    // already past the anchor + followUpDelay floor (103).
+    // Prereq advances 108 ≥ followUpMinDelay 103, so the follow-up at frame 108 is
+    // already past the anchor + followUpMinDelay floor (103).
     const log = run([ent(1, PREREQ, "p"), ent(1, FOLLOW, "f")])
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(108)
@@ -190,6 +202,34 @@ describe("simulation — windowed Prior-Stage Gate followUpDelay pad", () => {
     const follow = actionFor(log, "f")
     expect(follow?.frame).toBe(211)
     expect(follow?.delayBreakdown?.wait).toBe(103)
+  })
+})
+
+describe("simulation — windowed Prior-Stage Gate followUpMaxDelay window", () => {
+  it("within the window: follow-up passes with no finding", () => {
+    testCharacters = [windowChar]
+    // Prereq anchors at frame 0; FollowMax lands at cursor 108 ≤ max 480.
+    const log = run([ent(1, PREREQ, "p"), ent(1, FOLLOW_MAX, "f")])
+    const follow = actionFor(log, "f")
+    expect(follow?.frame).toBe(108)
+    expect(follow?.diagnostics).toBeUndefined()
+  })
+
+  it("past the window: follow-up flags an invalid finding", () => {
+    testCharacters = [windowChar, filler(500)]
+    // Prereq anchors at 0; a 500-frame filler pushes the follow-up's cursor to
+    // 608, past the 480 window ⇒ overshoot 128.
+    const log = run([
+      ent(1, PREREQ, "p"),
+      ent(2, FILLER_STAGE, "x"),
+      ent(1, FOLLOW_MAX, "f"),
+    ])
+    expect(actionFor(log, "f")?.diagnostics).toContainEqual({
+      kind: "priorGateWindowClosed",
+      actor: "WT",
+      overshoot: 128,
+      severity: "invalid",
+    })
   })
 })
 

@@ -134,7 +134,9 @@ function checkReachability(i: number, ctx: WalkContext): RawFinding[] {
 
   // Chain mode honors the swap-in opener: a fresh swap-in satisfies the gate
   // with no stage anchor. Only real stageIds anchor the stage/window scans.
-  const windowed = resolved?.followUpDelay !== undefined
+  const windowed =
+    resolved?.followUpMinDelay !== undefined ||
+    resolved?.followUpMaxDelay !== undefined
   if (
     !windowed &&
     requiredStageIds.includes(SWAP_IN_SENTINEL) &&
