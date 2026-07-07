@@ -3,7 +3,7 @@ import type { EnrichedCharacter } from "#/types/character"
 import { snapshotMarkdown } from "./snapshot"
 import { projectStages } from "./projection"
 import { reconcile } from "./reconcile"
-import type { Clip, HitMark, StageRef } from "./types"
+import type { Clip, HitMark, StageRef } from "./clip"
 
 const snapshotOf = (char: EnrichedCharacter, clips: Clip[]) =>
   snapshotMarkdown(char, projectStages(clips, reconcile(clips)))

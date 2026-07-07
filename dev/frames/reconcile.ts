@@ -1,5 +1,5 @@
-import { isPlaceholder, sections, stageTiming } from "./types"
-import type { Clip, CueTag } from "./types"
+import { isPlaceholder, sections, stageTiming } from "./clip"
+import type { Clip, CueTag } from "./clip"
 
 /** One clip's reading of a stage's `actionTime`, tagged with the cue bounding it. */
 export interface Observation {

@@ -12,8 +12,8 @@ import {
   saveClips,
   saveSelectedCharacter,
 } from "./storage"
-import { applyClipEdit, clipDisplayName } from "./types"
-import type { Clip, ClipEdit } from "./types"
+import { applyClipEdit, clipDisplayName } from "./clip"
+import type { Clip, ClipEdit } from "./clip"
 import { reconcile } from "./reconcile"
 import { planClips } from "./planner"
 import type { SuggestedClip } from "./planner"

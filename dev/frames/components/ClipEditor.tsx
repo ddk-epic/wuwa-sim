@@ -18,8 +18,8 @@ import {
   placeholderRef,
   stageCapacity,
   stageIndexOf,
-} from "../types"
-import type { Clip, ClipEdit, StageRef } from "../types"
+} from "../clip"
+import type { Clip, ClipEdit, StageRef } from "../clip"
 import type { VideoSource } from "../video"
 import { AddStagePopover } from "./AddStagePopover"
 import { MarksTable } from "./MarksTable"

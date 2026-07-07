@@ -11,14 +11,14 @@ import {
   sections,
   stageIndexOf,
   stageTiming,
-} from "../types"
+} from "../clip"
 import type {
   Clip,
   ClipEdit,
   CueTag,
   VariantTarget,
   VariantTrack,
-} from "../types"
+} from "../clip"
 
 // The trailing column (delete button, or empty) is fixed (not `auto`) so it holds
 // the same width on every row — otherwise the 1fr first column absorbs the

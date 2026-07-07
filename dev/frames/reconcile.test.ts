@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { reconcile, statusOf } from "./reconcile"
-import type { CueTag, Clip, StageRef } from "./types"
+import type { CueTag, Clip, StageRef } from "./clip"
 
 const ref = (name: string): StageRef => ({
   id: `skill::${name}`,

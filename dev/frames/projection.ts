@@ -5,7 +5,7 @@ import {
   resolveVariantTarget,
   sections,
   stageTiming,
-} from "./types"
+} from "./clip"
 import type {
   Clip,
   CueTag,
@@ -13,7 +13,7 @@ import type {
   VariantResolution,
   VariantTarget,
   VariantTrack,
-} from "./types"
+} from "./clip"
 import { statusOf } from "./reconcile"
 import type { Reconciliation, StageStatus } from "./reconcile"
 

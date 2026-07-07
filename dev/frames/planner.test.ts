@@ -3,7 +3,7 @@ import { sanhua } from "#/data/characters/sanhua"
 import type { EnrichedCharacter, Footing } from "#/types/character"
 import { coverageOf, planClips } from "./planner"
 import type { SuggestedClip } from "./planner"
-import type { Clip } from "./types"
+import type { Clip } from "./clip"
 
 const labels = (s: SuggestedClip) => s.stages.map((st) => st.label)
 const find = (plan: SuggestedClip[], first: string) =>

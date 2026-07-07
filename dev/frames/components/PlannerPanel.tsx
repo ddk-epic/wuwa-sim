@@ -9,7 +9,7 @@ import {
 import { useFlashFlag } from "../useFlashFlag"
 import { coverageOf } from "../planner"
 import type { Precondition, SuggestedClip } from "../planner"
-import type { Clip } from "../types"
+import type { Clip } from "../clip"
 
 const PRECONDITION_LABEL: Record<Precondition, string> = {
   "swap-in": "swap-in",

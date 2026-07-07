@@ -3,8 +3,8 @@ import type {
   EnrichedSkillAttribute,
   StageVariant,
 } from "#/types/character"
-import { isPlaceholder } from "./types"
-import type { Clip, StageRef, VariantTrack } from "./types"
+import { isPlaceholder } from "./clip"
+import type { Clip, StageRef, VariantTrack } from "./clip"
 import { projectionOf } from "./projection"
 import type { StageProjection } from "./projection"
 import { characterToTs } from "./character-ts"

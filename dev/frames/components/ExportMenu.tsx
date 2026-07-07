@@ -9,7 +9,7 @@ import { buildExport } from "../export"
 import { characterToTs } from "../character-ts"
 import { snapshotMarkdown } from "../snapshot"
 import { projectStages } from "../projection"
-import type { Clip } from "../types"
+import type { Clip } from "../clip"
 import type { Reconciliation } from "../reconcile"
 
 type Tab = "ts" | "md"

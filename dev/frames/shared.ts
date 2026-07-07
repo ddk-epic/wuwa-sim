@@ -1,4 +1,4 @@
-import type { CueTag } from "./types"
+import type { CueTag } from "./clip"
 
 export const uid = () => Math.random().toString(36).slice(2, 9)
 

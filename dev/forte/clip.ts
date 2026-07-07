@@ -1,8 +1,8 @@
 import type { EnrichedCharacter } from "#/types/character"
 import { stageGroups } from "../frames/stages"
-import type { StageRef } from "../frames/types"
+import type { StageRef } from "../frames/clip"
 
-export type { StageRef } from "../frames/types"
+export type { StageRef } from "../frames/clip"
 
 /**
  * One recording of a repeated stage sequence (`b1 b1 b1 b1`). The foundation

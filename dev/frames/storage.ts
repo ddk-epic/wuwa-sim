@@ -1,4 +1,4 @@
-import type { Clip } from "./types"
+import type { Clip } from "./clip"
 
 const keyFor = (character: string) => `wuwa.dev.frames.${character}`
 const SELECTED_KEY = "wuwa.dev.frames.selected"

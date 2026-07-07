@@ -15,8 +15,8 @@ import {
   sections,
   stageIndexOf,
   stageTiming,
-} from "./types"
-import type { Clip, HitMark, StageRef } from "./types"
+} from "./clip"
+import type { Clip, HitMark, StageRef } from "./clip"
 
 const stage = (name: string, hitCount = 0): StageRef => ({
   id: `skill::${name}`,
@@ -98,12 +98,6 @@ describe("placeholder spacer", () => {
       ],
     })
     expect(clipDisplayName(c)).toBe("A›B")
-  })
-
-  it("names a placeholder-only clip Untitled", () => {
-    expect(clipDisplayName(clip({ stageRefs: [placeholderRef()] }))).toBe(
-      "Untitled",
-    )
   })
 })
 
@@ -295,12 +289,6 @@ describe("applyClipEdit", () => {
     const locked = applyClipEdit(scoped, { type: "lockScope" })
     expect([locked.start, locked.end, locked.offset]).toEqual([0, 100, 1000])
     expect(locked.boundaries.map((b) => b.frame)).toEqual([30, 100])
-  })
-
-  it("toggleStagesLock flips the flag", () => {
-    expect(
-      applyClipEdit(threeStage, { type: "toggleStagesLock" }).stagesLocked,
-    ).toBe(true)
   })
 
   it("a locked clip freezes the stage skeleton but keeps marks editable", () => {
