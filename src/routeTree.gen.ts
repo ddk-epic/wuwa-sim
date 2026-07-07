@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SimRouteImport } from './routes/sim'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevForteRouteImport } from './routes/dev.forte'
 import { Route as DevFramesRouteImport } from './routes/dev.frames'
 
 const SimRoute = SimRouteImport.update({
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevForteRoute = DevForteRouteImport.update({
+  id: '/dev/forte',
+  path: '/dev/forte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevFramesRoute = DevFramesRouteImport.update({
   id: '/dev/frames',
   path: '/dev/frames',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
   '/sim': typeof SimRoute
+  '/dev/forte': typeof DevForteRoute
   '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
   '/sim': typeof SimRoute
+  '/dev/forte': typeof DevForteRoute
   '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
   '/sim': typeof SimRoute
+  '/dev/forte': typeof DevForteRoute
   '/dev/frames': typeof DevFramesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/library' | '/sim' | '/dev/frames'
+  fullPaths: '/' | '/library' | '/sim' | '/dev/forte' | '/dev/frames'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library' | '/sim' | '/dev/frames'
-  id: '__root__' | '/' | '/library' | '/sim' | '/dev/frames'
+  to: '/' | '/library' | '/sim' | '/dev/forte' | '/dev/frames'
+  id: '__root__' | '/' | '/library' | '/sim' | '/dev/forte' | '/dev/frames'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibraryRoute: typeof LibraryRoute
   SimRoute: typeof SimRoute
+  DevForteRoute: typeof DevForteRoute
   DevFramesRoute: typeof DevFramesRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/forte': {
+      id: '/dev/forte'
+      path: '/dev/forte'
+      fullPath: '/dev/forte'
+      preLoaderRoute: typeof DevForteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/frames': {
       id: '/dev/frames'
       path: '/dev/frames'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibraryRoute: LibraryRoute,
   SimRoute: SimRoute,
+  DevForteRoute: DevForteRoute,
   DevFramesRoute: DevFramesRoute,
 }
 export const routeTree = rootRouteImport
