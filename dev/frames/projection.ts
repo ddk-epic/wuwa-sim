@@ -1,19 +1,19 @@
 import {
   animationSplitOf,
   hitsByStage,
-  isPlaceholder,
   resolveVariantTarget,
   sections,
   stageTiming,
 } from "./clip"
+import { isPlaceholder } from "./stage-ref"
 import type {
   Clip,
   CueTag,
-  StageRef,
   VariantResolution,
   VariantTarget,
   VariantTrack,
 } from "./clip"
+import type { StageRef } from "./stage-ref"
 import { statusOf } from "./reconcile"
 import type { Reconciliation, StageStatus } from "./reconcile"
 

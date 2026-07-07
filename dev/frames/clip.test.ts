@@ -7,16 +7,16 @@ import {
   exceedingHitIds,
   hitsByStage,
   hitsInStage,
-  isPlaceholder,
   ownerIndexOf,
-  placeholderRef,
   removeStageAt,
   resolveVariantTarget,
   sections,
   stageIndexOf,
   stageTiming,
 } from "./clip"
-import type { Clip, HitMark, StageRef } from "./clip"
+import { isPlaceholder, placeholderRef } from "./stage-ref"
+import type { Clip, HitMark } from "./clip"
+import type { StageRef } from "./stage-ref"
 
 const stage = (name: string, hitCount = 0): StageRef => ({
   id: `skill::${name}`,

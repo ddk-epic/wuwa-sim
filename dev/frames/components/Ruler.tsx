@@ -1,7 +1,8 @@
 import { X } from "lucide-react"
 import { CUE_COLOR } from "../shared"
 import type { Selected } from "../shared"
-import { exceedingHitIds, isPlaceholder, sections } from "../clip"
+import { exceedingHitIds, sections } from "../clip"
+import { isPlaceholder } from "../stage-ref"
 import type { Clip, ClipEdit } from "../clip"
 import { FrameTrack, TrackMarker, TrackRegion } from "./FrameTrack"
 

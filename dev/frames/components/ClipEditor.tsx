@@ -14,12 +14,12 @@ import type { StageGroup } from "../stages"
 import {
   clipDisplayName,
   hitsInStage,
-  isPlaceholder,
-  placeholderRef,
   stageCapacity,
   stageIndexOf,
 } from "../clip"
-import type { Clip, ClipEdit, StageRef } from "../clip"
+import type { Clip, ClipEdit } from "../clip"
+import { isPlaceholder, placeholderRef } from "../stage-ref"
+import type { StageRef } from "../stage-ref"
 import type { VideoSource } from "../video"
 import { AddStagePopover } from "./AddStagePopover"
 import { MarksTable } from "./MarksTable"

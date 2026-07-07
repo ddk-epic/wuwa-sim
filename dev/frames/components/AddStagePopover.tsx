@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { StageGroup } from "../stages"
-import type { StageRef } from "../clip"
+import type { StageRef } from "../stage-ref"
 import { useFlashFlag } from "../useFlashFlag"
 
 // Anchored, stays-open-while-picking catalog. Adding never dismisses it; Esc, the

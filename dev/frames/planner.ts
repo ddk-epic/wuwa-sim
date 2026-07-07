@@ -5,7 +5,8 @@ import type {
   SkillCategory,
 } from "#/types/character"
 import { isMeasurableSkill, isMeasurableStage, stageRefOf } from "./stages"
-import type { Clip, StageRef } from "./clip"
+import type { Clip } from "./clip"
+import type { StageRef } from "./stage-ref"
 
 /**
  * The prep step: suggest the minimal set of action-string clips an author must

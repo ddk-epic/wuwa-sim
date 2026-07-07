@@ -5,7 +5,8 @@ import type {
   EnrichedSkillAttribute,
   SkillGrouping,
 } from "#/types/character"
-import type { Clip, StageRef } from "./clip"
+import type { Clip } from "./clip"
+import type { StageRef } from "./stage-ref"
 
 export const CHARACTERS = ALL_CHARACTERS
 

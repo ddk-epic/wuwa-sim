@@ -6,12 +6,12 @@ import {
   CUES,
   exceedingHitIds,
   hitsByStage,
-  isPlaceholder,
   resolveVariantTarget,
   sections,
   stageIndexOf,
   stageTiming,
 } from "../clip"
+import { isPlaceholder } from "../stage-ref"
 import type {
   Clip,
   ClipEdit,

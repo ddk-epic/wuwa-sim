@@ -3,7 +3,8 @@ import type { EnrichedCharacter } from "#/types/character"
 import { buildExport } from "./export"
 import { projectStages } from "./projection"
 import { reconcile } from "./reconcile"
-import type { Clip, HitMark, StageRef } from "./clip"
+import type { Clip, HitMark } from "./clip"
+import type { StageRef } from "./stage-ref"
 
 const exportOf = (char: EnrichedCharacter, clips: Clip[]) =>
   buildExport(char, clips, projectStages(clips, reconcile(clips)))
