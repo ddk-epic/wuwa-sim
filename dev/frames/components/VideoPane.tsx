@@ -36,6 +36,7 @@ export function VideoPane({
   onLock,
   onAttach,
   storedSource,
+  overlay,
 }: {
   source: VideoSource | null
   videoFrame: number
@@ -51,6 +52,8 @@ export function VideoPane({
   onLock: () => void
   onAttach: (s: VideoSource) => void
   storedSource?: string
+  /** Positioned over the canvas, sharing its box exactly. */
+  overlay?: React.ReactNode
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -178,10 +181,13 @@ export function VideoPane({
         </p>
       )}
       <div className={half ? "mx-auto w-1/2" : ""}>
-        <canvas
-          ref={canvasRef}
-          className="w-full rounded border border-border bg-black"
-        />
+        <div className="relative">
+          <canvas
+            ref={canvasRef}
+            className="w-full rounded border border-border bg-black"
+          />
+          {overlay}
+        </div>
       </div>
 
       <div className={`${TRACK_COLS} items-center`}>

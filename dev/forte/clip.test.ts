@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { applyForteEdit, clipDisplayName } from "./clip"
-import type { ForteClip, StageRef } from "./clip"
+import type { ForteClip } from "./clip"
+import type { StageRef } from "../frames/stage-ref"
 
 const stage = (name: string): StageRef => ({
   id: `skill::${name}`,
@@ -71,5 +72,23 @@ describe("applyForteEdit scoping", () => {
       frame: 5,
     })
     expect(c.end).toBe(11)
+  })
+})
+
+describe("applyForteEdit calibration", () => {
+  const cal = { empty: { x: 0.2, y: 0.8 }, full: { x: 0.7, y: 0.8 } }
+
+  it("stores the calibration axis on the clip", () => {
+    expect(
+      applyForteEdit(clip(), { type: "setCalibration", calibration: cal }),
+    ).toMatchObject({ calibration: cal })
+  })
+
+  it("sets calibration even while the sequence is locked", () => {
+    const c = clip({ stagesLocked: true })
+    expect(
+      applyForteEdit(c, { type: "setCalibration", calibration: cal })
+        .calibration,
+    ).toEqual(cal)
   })
 })

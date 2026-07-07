@@ -1,8 +1,7 @@
 import type { EnrichedCharacter } from "#/types/character"
 import { stageGroups } from "../frames/stages"
-import type { StageRef } from "../frames/clip"
-
-export type { StageRef } from "../frames/clip"
+import type { StageRef } from "../frames/stage-ref"
+import type { Calibration } from "./calibration"
 
 /**
  * One recording of a repeated stage sequence (`b1 b1 b1 b1`). The foundation
@@ -22,6 +21,8 @@ export interface ForteClip {
   offset?: number
   /** Freezes the sequence: no stage add/remove. */
   stagesLocked?: boolean
+  /** The on-screen gauge's `empty→full` axis, normalized [0,1] video-frame coords. */
+  calibration?: Calibration
 }
 
 export function clipDisplayName(clip: ForteClip): string {
@@ -63,6 +64,7 @@ export type ForteClipEdit =
   | { type: "setEnd"; frame: number }
   | { type: "addStage"; ref: StageRef }
   | { type: "removeStage"; index: number }
+  | { type: "setCalibration"; calibration: Calibration }
 
 // Edits that reshape the sequence, frozen while `stagesLocked`.
 const STRUCTURE_EDITS = new Set<ForteClipEdit["type"]>([
@@ -115,5 +117,7 @@ export function applyForteEdit(
         ...clip,
         stageRefs: clip.stageRefs.filter((_, i) => i !== edit.index),
       }
+    case "setCalibration":
+      return { ...clip, calibration: edit.calibration }
   }
 }

@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react"
-import { Crop, Lock, LockOpen, Trash2, X } from "lucide-react"
+import { Crop, Lock, LockOpen, Ruler, Trash2, X } from "lucide-react"
 import { clamp } from "../../frames/shared"
 import type { StageGroup } from "../../frames/stages"
 import { AddStagePopover } from "../../frames/components/AddStagePopover"
 import { VideoPane } from "../../frames/components/VideoPane"
 import type { VideoSource } from "../../frames/video"
 import { clipDisplayName } from "../clip"
-import type { ForteClip, ForteClipEdit, StageRef } from "../clip"
+import type { ForteClip, ForteClipEdit } from "../clip"
+import type { StageRef } from "../../frames/stage-ref"
+import { DEFAULT_CALIBRATION } from "../calibration"
+import { CalibrationOverlay } from "./CalibrationOverlay"
 
 export function ForteClipEditor({
   clip,
@@ -22,6 +25,7 @@ export function ForteClipEditor({
   const [video, setVideo] = useState<VideoSource | null>(null)
   const [playhead, setPlayhead] = useState(0)
   const [scoping, setScoping] = useState(false)
+  const [calibrating, setCalibrating] = useState(false)
   const [warn, setWarn] = useState<string | null>(null)
 
   // Dispose the decode pipeline when it's replaced or the editor unmounts (clip
@@ -96,6 +100,22 @@ export function ForteClipEditor({
             <Crop className="size-3.5" /> Re-scope
           </button>
         )}
+        {video && !scoping && (
+          <button
+            onClick={() => {
+              if (!clip.calibration)
+                onEdit({
+                  type: "setCalibration",
+                  calibration: DEFAULT_CALIBRATION,
+                })
+              setCalibrating((c) => !c)
+            }}
+            className={`flex items-center gap-1 rounded border px-3 py-1 text-sm ${calibrating ? "border-sky-400 text-sky-400" : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"}`}
+          >
+            <Ruler className="size-3.5" />{" "}
+            {calibrating ? "Done" : "Calibrate bar"}
+          </button>
+        )}
         <button
           onClick={onRemove}
           className="ml-auto flex items-center gap-1 rounded border border-border px-3 py-1 text-sm text-muted-foreground hover:border-destructive hover:text-destructive"
@@ -123,6 +143,16 @@ export function ForteClipEditor({
         onLock={lock}
         onAttach={attach}
         storedSource={clip.source}
+        overlay={
+          calibrating && !scoping && clip.calibration ? (
+            <CalibrationOverlay
+              calibration={clip.calibration}
+              onChange={(calibration) =>
+                onEdit({ type: "setCalibration", calibration })
+              }
+            />
+          ) : undefined
+        }
       />
 
       {!scoping && (
