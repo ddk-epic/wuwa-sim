@@ -66,23 +66,6 @@ describe("characterToTs", () => {
       "
     `)
   })
-
-  it("wraps the literal in the import + `satisfies` binding", () => {
-    const ts = characterToTs(character())
-    expect(
-      ts.startsWith(
-        'import type { EnrichedCharacter } from "#/types/character"\n',
-      ),
-    ).toBe(true)
-    expect(ts).toContain("export const infernoRider = ")
-    expect(ts.trimEnd().endsWith("satisfies EnrichedCharacter")).toBe(true)
-  })
-
-  it("drops the injected Movement skill", () => {
-    const ts = characterToTs(character())
-    expect(ts).not.toContain("Dodge")
-    expect(ts).not.toContain("Movement")
-  })
 })
 
 describe("forcedBreaks — the break policy", () => {

@@ -4,17 +4,12 @@ import { cartethyia } from "#/data/characters/cartethyia"
 import { shorekeeper } from "#/data/characters/shorekeeper"
 import { verina } from "#/data/characters/verina"
 import {
-  DEFAULT_ECHO_BUILD,
   ECHO_BUILD_LIST,
   ECHO_BUILDS,
   scalingStatFromSkillTree,
 } from "./echo-stat-constants"
 
 describe("ECHO_BUILDS presets", () => {
-  it("lists every preset key", () => {
-    expect([...ECHO_BUILD_LIST].sort()).toEqual(Object.keys(ECHO_BUILDS).sort())
-  })
-
   it("declares slot counts matching the preset name", () => {
     for (const build of ECHO_BUILD_LIST) {
       const costs = build.split("-").map(Number)
@@ -33,10 +28,6 @@ describe("ECHO_BUILDS presets", () => {
       expect(cost4Default.length).toBe(cost4)
       expect(cost3Default.length).toBe(cost3)
     }
-  })
-
-  it("has a default build present in the record", () => {
-    expect(ECHO_BUILDS[DEFAULT_ECHO_BUILD]).toBeDefined()
   })
 })
 

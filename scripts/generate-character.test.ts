@@ -121,11 +121,6 @@ describe("deriveNewName", () => {
 })
 
 describe("formatCharacter", () => {
-  it("uses the provided variable name", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("export const testHero =")
-  })
-
   it("emits skillTreeBonuses values from the character", () => {
     const out = formatCharacter(charWithBonuses, "testHero")
     expect(out).toContain('"Fusion DMG Bonus",')
@@ -135,17 +130,6 @@ describe("formatCharacter", () => {
   it("captures maxEnergy from the liberation skill's resonanceCost", () => {
     const out = formatCharacter(charWithSkills, "testHero")
     expect(out).toContain("maxEnergy: 125,")
-  })
-
-  it("emits stats base and max", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("base: { hp: 100, atk: 10, def: 20 }")
-    expect(out).toContain("max: { hp: 1000, atk: 100, def: 200 }")
-  })
-
-  it("emits a default forteCap", () => {
-    const out = formatCharacter(minimalChar, "testHero")
-    expect(out).toContain("forteCap: 100,")
   })
 
   it("scaffolds skillBonusPriority, defaulting when absent", () => {

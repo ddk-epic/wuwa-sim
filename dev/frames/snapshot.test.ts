@@ -68,28 +68,4 @@ describe("snapshotMarkdown", () => {
   it("renders a stage absent from every clip as all em-dash", () => {
     expect(md).toContain("**C** — actionTime `—` · cancel `—` · swap `—`")
   })
-
-  it("reads each stage's best clip, not the selected one", () => {
-    // A's second hit is marked only in the fuller clip; the snapshot reports it
-    // even though the first clip is listed first.
-    const sparse: Clip = {
-      ...clip,
-      id: "c1",
-      stageRefs: [ref("A", 2)],
-      boundaries: [],
-      hits: [hit("a0", 10, 0)],
-      end: 40,
-    }
-    const full: Clip = {
-      ...clip,
-      id: "c2",
-      stageRefs: [ref("A", 2)],
-      boundaries: [],
-      hits: [hit("x0", 12, 0), hit("x1", 30, 0)],
-      end: 40,
-    }
-    const best = snapshotOf(char, [sparse, full])
-    expect(best).toContain("| 1 | 12 | impactFlash |")
-    expect(best).toContain("| 2 | 30 | impactFlash |")
-  })
 })

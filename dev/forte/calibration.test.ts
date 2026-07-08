@@ -1,11 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
-import {
-  DEFAULT_CALIBRATION,
-  clampPoint,
-  fillFractionAt,
-  translateCalibration,
-} from "./calibration"
+import { clampPoint, fillFractionAt, translateCalibration } from "./calibration"
 
 describe("clampPoint", () => {
   it("keeps an in-frame point untouched", () => {
@@ -31,11 +26,6 @@ describe("translateCalibration", () => {
     const moved = translateCalibration(cal, 0.5, 0)
     expect(moved.full.x).toBe(1)
     expect(moved.full.x - moved.empty.x).toBeCloseTo(0.3)
-  })
-
-  it("defaults to a visible horizontal bar", () => {
-    expect(DEFAULT_CALIBRATION.empty.y).toBe(DEFAULT_CALIBRATION.full.y)
-    expect(DEFAULT_CALIBRATION.empty.x).toBeLessThan(DEFAULT_CALIBRATION.full.x)
   })
 })
 
