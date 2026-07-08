@@ -6,7 +6,6 @@ A dev-only authoring aid for deriving stage timing — `actionTime` and per-hit 
 
 - `types.ts` — the `Clip` model and the single mutation door, `applyClipEdit`. Marks are stored as absolute clip-frames; stage membership and per-hit `actionFrame` are derived projections, never stored.
 - `stages.ts` — flattens the bundled character registry into pickable `StageRef`s, applying the same catalog-visibility filter the main app uses (skips hidden skills, hidden stages, and empty-named stages).
-- `planner.ts` — the clip planner: suggests the minimal covering set of clips to record before any solving (see below).
 - `storage.ts` — localStorage persistence, keyed per character.
 - `video.ts` — the throwaway mediabunny decode pipeline behind the frame stepper (session-only, per clip).
 - `FramesPage.tsx` — the editor (ruler, marks table, stage overview).
@@ -32,35 +31,6 @@ Note the term collision: `pnpm extract` already means "pull raw character JSON f
 - **Stage** — the unknown being solved for. A stage is a **shared identity across clips** (a real stage key from the bundled character registry): "Basic 1" has one true `actionTime`, and every clip containing it is one observation constraining that single unknown. This is what makes differencing valid.
 
 - **Frame unit** — every number is a **60fps engine frame**, matching the simulator's timing model. Recordings are 60fps CFR, so a video frame is an engine frame 1:1 and the anticipated source-fps conversion seam (`engineFrame = videoFrame × 60 / sourceFps`) collapses to identity; only ~60fps input is supported, verified on attach.
-
-## The clip planner
-
-Before any marking or solving, an author has to **record** the clips — and each
-recording is a ritual, so the planner suggests the **minimal covering set** for a
-character, from static data alone (no annotation). It targets two things, both met
-by the same set: every stage's natural `actionTime` (pinned by a trailing basic
-**sentinel**, or an interior cutoff), and every stage visible in ≥1 clip so its
-hits can be marked. Variants are out of scope — they project off hit marks.
-
-It reasons from the cancel/pin rules in [`references/cancellation.md`](../../references/cancellation.md):
-
-- **Combo chains** (`requiresPriorStage`) become one clip each — internal cutoffs
-  are the visible swings, and the tail is pinned by a loop-restart sentinel.
-- **Standalone stages** pack **aggressively** into clips up to a stage cap, ordered
-  so each stage's natural end is pinned by its successor: liberations first
-  (uncancellable → anything waits), each skill trailed by a non-cancelling stage,
-  the rest after, sentinel last. Only two link kinds are **proven** (combo links
-  and `liberation → skill`); the rest are flagged **`verify`** — the pin is valid,
-  but the author must confirm the transition records in one take.
-- **Preconditions** are read off the data and badged, never composed: `swap-in`
-  (Intro), `full-energy`/`cutscene` (Liberation), `airborne` (footing), an advisory
-  `verify-forte`. Swap-in and aerial stages stay singletons; zero-damage Outros are
-  omitted. A stage that's aerial-by-name but has no `footing` raises a **footing
-  gap** warning rather than guessing a grounded plan.
-
-The panel computes **coverage live** against the clips that already exist, so it
-doubles as a checklist; each row **seeds** a real `Clip` pre-loaded with its stage
-sequence (the sentinel is a recording instruction, never a stored stage).
 
 ## The reconciler
 
