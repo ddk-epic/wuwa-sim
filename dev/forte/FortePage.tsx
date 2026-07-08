@@ -149,6 +149,7 @@ export function FortePage() {
             key={clip.id}
             clip={clip}
             groups={groups}
+            forteCap={char?.forteCap ?? 100}
             onEdit={(edit) => editClip(clip.id, edit)}
             onRemove={() => removeClip(clip.id)}
           />

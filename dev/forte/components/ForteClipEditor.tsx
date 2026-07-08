@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react"
-import { Crop, Lock, LockOpen, Ruler, Trash2, X } from "lucide-react"
-import { clamp } from "../../frames/shared"
+import {
+  Crop,
+  Gauge,
+  Lock,
+  LockOpen,
+  Plus,
+  Ruler,
+  Trash2,
+  X,
+} from "lucide-react"
+import { clamp, uid } from "../../frames/shared"
 import type { StageGroup } from "../../frames/stages"
 import { AddStagePopover } from "../../frames/components/AddStagePopover"
 import { VideoPane } from "../../frames/components/VideoPane"
@@ -9,16 +18,30 @@ import { clipDisplayName } from "../clip"
 import type { ForteClip, ForteClipEdit } from "../clip"
 import type { StageRef } from "../../frames/stage-ref"
 import { DEFAULT_CALIBRATION } from "../calibration"
+import type { Point } from "../calibration"
 import { CalibrationOverlay } from "./CalibrationOverlay"
+import { FillOverlay } from "./FillOverlay"
+import { SeparatorTable } from "./SeparatorTable"
+
+// Midpoint of the calibrated bar: where a fresh fill handle starts.
+function barMidpoint(clip: ForteClip): Point {
+  const cal = clip.calibration ?? DEFAULT_CALIBRATION
+  return {
+    x: (cal.empty.x + cal.full.x) / 2,
+    y: (cal.empty.y + cal.full.y) / 2,
+  }
+}
 
 export function ForteClipEditor({
   clip,
   groups,
+  forteCap,
   onEdit,
   onRemove,
 }: {
   clip: ForteClip
   groups: StageGroup[]
+  forteCap: number
   onEdit: (edit: ForteClipEdit) => ForteClip
   onRemove: () => void
 }) {
@@ -26,6 +49,8 @@ export function ForteClipEditor({
   const [playhead, setPlayhead] = useState(0)
   const [scoping, setScoping] = useState(false)
   const [calibrating, setCalibrating] = useState(false)
+  const [measuring, setMeasuring] = useState(false)
+  const [fillPoint, setFillPoint] = useState<Point>(() => barMidpoint(clip))
   const [warn, setWarn] = useState<string | null>(null)
 
   // Dispose the decode pipeline when it's replaced or the editor unmounts (clip
@@ -108,12 +133,28 @@ export function ForteClipEditor({
                   type: "setCalibration",
                   calibration: DEFAULT_CALIBRATION,
                 })
+              setMeasuring(false)
               setCalibrating((c) => !c)
             }}
             className={`flex items-center gap-1 rounded border px-3 py-1 text-sm ${calibrating ? "border-sky-400 text-sky-400" : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"}`}
           >
             <Ruler className="size-3.5" />{" "}
             {calibrating ? "Done" : "Calibrate bar"}
+          </button>
+        )}
+        {video && !scoping && clip.calibration && (
+          <button
+            onClick={() => {
+              setCalibrating(false)
+              setMeasuring((m) => {
+                if (!m) setFillPoint(barMidpoint(clip))
+                return !m
+              })
+            }}
+            className={`flex items-center gap-1 rounded border px-3 py-1 text-sm ${measuring ? "border-amber-400 text-amber-400" : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"}`}
+          >
+            <Gauge className="size-3.5" />{" "}
+            {measuring ? "Done" : "Measure forte"}
           </button>
         )}
         <button
@@ -144,16 +185,54 @@ export function ForteClipEditor({
         onAttach={attach}
         storedSource={clip.source}
         overlay={
-          calibrating && !scoping && clip.calibration ? (
+          scoping || !clip.calibration ? undefined : calibrating ? (
             <CalibrationOverlay
               calibration={clip.calibration}
               onChange={(calibration) =>
                 onEdit({ type: "setCalibration", calibration })
               }
             />
+          ) : measuring ? (
+            <FillOverlay
+              calibration={clip.calibration}
+              fill={fillPoint}
+              onChange={setFillPoint}
+            />
           ) : undefined
         }
       />
+
+      {measuring && !scoping && (
+        <div className="flex items-center gap-3 text-detail text-muted-foreground">
+          <span>
+            Drag the fill handle to the gauge edge, then place a separator on
+            this frame.
+          </span>
+          <button
+            onClick={() =>
+              onEdit({
+                type: "addSeparator",
+                id: uid(),
+                frame: playhead,
+                fill: fillPoint,
+              })
+            }
+            className="ml-auto flex items-center gap-1 rounded border border-amber-400 bg-amber-400/10 px-3 py-1 text-amber-400 hover:bg-amber-400/20"
+          >
+            <Plus className="size-3.5" /> Separator @ {playhead}
+          </button>
+        </div>
+      )}
+
+      {!scoping && clip.stageRefs.length > 0 && (
+        <SeparatorTable
+          clip={clip}
+          forteCap={forteCap}
+          onEdit={onEdit}
+          playhead={playhead}
+          hasVideo={!!video}
+        />
+      )}
 
       {!scoping && (
         <div className="space-y-2">

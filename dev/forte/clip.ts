@@ -1,12 +1,27 @@
 import type { EnrichedCharacter } from "#/types/character"
+import { clamp } from "../frames/shared"
 import { stageGroups } from "../frames/stages"
 import type { StageRef } from "../frames/stage-ref"
-import type { Calibration } from "./calibration"
+import { clampPoint } from "./calibration"
+import type { Calibration, Point } from "./calibration"
+
+/**
+ * One reading of the gauge fill at a settle plateau, credited to a stage
+ * occurrence. `fill` is the raw handle point (normalized canvas coords); the
+ * gauge level and gain are projected through the clip's calibration, so
+ * re-calibrating reflows them. `owner` is set sticky at placement.
+ */
+export interface ForteSeparator {
+  id: string
+  frame: number
+  fill: Point
+  owner: number
+}
 
 /**
  * One recording of a repeated stage sequence (`b1 b1 b1 b1`). The foundation
  * slice authors the sequence and scopes the footage; calibration and forte
- * separators land in later phases. No shared state with the timing `Clip`.
+ * separators layer on top. No shared state with the timing `Clip`.
  */
 export interface ForteClip {
   id: string
@@ -23,6 +38,44 @@ export interface ForteClip {
   stagesLocked?: boolean
   /** The on-screen gauge's `empty→full` axis, normalized [0,1] video-frame coords. */
   calibration?: Calibration
+  /** Gauge readings, one per sequence repeat; ordering by `owner` is the solver's job. */
+  separators?: ForteSeparator[]
+  /** Gauge level the sequence starts from, fraction [0,1]; 0 unless set. */
+  baseline?: number
+}
+
+export interface ForteSection {
+  ref: StageRef
+  start: number
+  end: number
+}
+
+/**
+ * The clip has no dividers, so a repeated sequence's occurrences split the span
+ * evenly. Contiguous, last section ends exactly on `end`.
+ */
+export function forteSections(clip: ForteClip): ForteSection[] {
+  const n = clip.stageRefs.length
+  if (n === 0) return []
+  const span = clip.end - clip.start
+  return clip.stageRefs.map((ref, i) => ({
+    ref,
+    start: clip.start + Math.round((span * i) / n),
+    end: clip.start + Math.round((span * (i + 1)) / n),
+  }))
+}
+
+/**
+ * Which occurrence a frame lands in, or -1 outside the clip. A frame on a divider
+ * opens the later section; the last occurrence owns its end frame.
+ */
+export function forteStageIndexOf(clip: ForteClip, frame: number): number {
+  const secs = forteSections(clip)
+  return secs.findIndex(
+    (s, i) =>
+      frame >= s.start &&
+      (i === secs.length - 1 ? frame <= s.end : frame < s.end),
+  )
 }
 
 export function clipDisplayName(clip: ForteClip): string {
@@ -65,6 +118,11 @@ export type ForteClipEdit =
   | { type: "addStage"; ref: StageRef }
   | { type: "removeStage"; index: number }
   | { type: "setCalibration"; calibration: Calibration }
+  | { type: "addSeparator"; id: string; frame: number; fill: Point }
+  | { type: "moveSeparator"; id: string; frame: number }
+  | { type: "moveSeparatorFill"; id: string; fill: Point }
+  | { type: "removeSeparator"; id: string }
+  | { type: "setBaseline"; fraction: number }
 
 // Edits that reshape the sequence, frozen while `stagesLocked`.
 const STRUCTURE_EDITS = new Set<ForteClipEdit["type"]>([
@@ -119,5 +177,47 @@ export function applyForteEdit(
       }
     case "setCalibration":
       return { ...clip, calibration: edit.calibration }
+    case "addSeparator": {
+      const frame = clamp(edit.frame, clip.start, clip.end)
+      const sep: ForteSeparator = {
+        id: edit.id,
+        frame,
+        fill: clampPoint(edit.fill),
+        owner: Math.max(0, forteStageIndexOf(clip, frame)),
+      }
+      return { ...clip, separators: [...(clip.separators ?? []), sep] }
+    }
+    case "moveSeparator":
+      // Frame moves, owner stays: credit is sticky to the placement occurrence.
+      return {
+        ...clip,
+        separators: mapSeparator(clip, edit.id, (s) => ({
+          ...s,
+          frame: clamp(edit.frame, clip.start, clip.end),
+        })),
+      }
+    case "moveSeparatorFill":
+      return {
+        ...clip,
+        separators: mapSeparator(clip, edit.id, (s) => ({
+          ...s,
+          fill: clampPoint(edit.fill),
+        })),
+      }
+    case "removeSeparator":
+      return {
+        ...clip,
+        separators: (clip.separators ?? []).filter((s) => s.id !== edit.id),
+      }
+    case "setBaseline":
+      return { ...clip, baseline: clamp(edit.fraction, 0, 1) }
   }
+}
+
+function mapSeparator(
+  clip: ForteClip,
+  id: string,
+  fn: (s: ForteSeparator) => ForteSeparator,
+): ForteSeparator[] {
+  return (clip.separators ?? []).map((s) => (s.id === id ? fn(s) : s))
 }

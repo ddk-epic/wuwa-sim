@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { applyForteEdit, clipDisplayName } from "./clip"
+import {
+  applyForteEdit,
+  clipDisplayName,
+  forteSections,
+  forteStageIndexOf,
+} from "./clip"
 import type { ForteClip } from "./clip"
 import type { StageRef } from "../frames/stage-ref"
 
@@ -90,5 +95,106 @@ describe("applyForteEdit calibration", () => {
       applyForteEdit(c, { type: "setCalibration", calibration: cal })
         .calibration,
     ).toEqual(cal)
+  })
+})
+
+describe("forteSections", () => {
+  it("splits the span evenly across occurrences", () => {
+    const c = clip({ stageRefs: [stage("b1"), stage("b1"), stage("b1")] })
+    expect(forteSections(c).map((s) => [s.start, s.end])).toEqual([
+      [0, 20],
+      [20, 40],
+      [40, 60],
+    ])
+  })
+
+  it("has no sections without stages", () => {
+    expect(forteSections(clip())).toEqual([])
+  })
+})
+
+describe("forteStageIndexOf", () => {
+  const c = clip({ stageRefs: [stage("b1"), stage("b1"), stage("b1")] })
+
+  it("maps a frame to its occurrence, divider opening the later one", () => {
+    expect(forteStageIndexOf(c, 10)).toBe(0)
+    expect(forteStageIndexOf(c, 20)).toBe(1)
+    expect(forteStageIndexOf(c, 60)).toBe(2)
+  })
+
+  it("is -1 outside the clip", () => {
+    expect(forteStageIndexOf(c, -1)).toBe(-1)
+    expect(forteStageIndexOf(c, 61)).toBe(-1)
+  })
+})
+
+describe("applyForteEdit separators", () => {
+  const fill = { x: 0.5, y: 0.8 }
+  const seqClip = () =>
+    clip({ stageRefs: [stage("b1"), stage("b1"), stage("b1")] })
+
+  it("adds a separator, setting owner from the placement frame", () => {
+    const c = applyForteEdit(seqClip(), {
+      type: "addSeparator",
+      id: "s1",
+      frame: 30,
+      fill,
+    })
+    expect(c.separators).toEqual([{ id: "s1", frame: 30, fill, owner: 1 }])
+  })
+
+  it("keeps the sticky owner when the frame moves into another section", () => {
+    let c = applyForteEdit(seqClip(), {
+      type: "addSeparator",
+      id: "s1",
+      frame: 10,
+      fill,
+    })
+    c = applyForteEdit(c, { type: "moveSeparator", id: "s1", frame: 50 })
+    expect(c.separators?.[0]).toMatchObject({ frame: 50, owner: 0 })
+  })
+
+  it("clamps the placement frame into the clip", () => {
+    const c = applyForteEdit(seqClip(), {
+      type: "addSeparator",
+      id: "s1",
+      frame: 999,
+      fill,
+    })
+    expect(c.separators?.[0].frame).toBe(60)
+  })
+
+  it("moves fill and removes by id", () => {
+    let c = applyForteEdit(seqClip(), {
+      type: "addSeparator",
+      id: "s1",
+      frame: 10,
+      fill,
+    })
+    c = applyForteEdit(c, {
+      type: "moveSeparatorFill",
+      id: "s1",
+      fill: { x: 0.9, y: 0.8 },
+    })
+    expect(c.separators?.[0].fill).toEqual({ x: 0.9, y: 0.8 })
+    c = applyForteEdit(c, { type: "removeSeparator", id: "s1" })
+    expect(c.separators).toEqual([])
+  })
+
+  it("adds separators even while the sequence is locked", () => {
+    const c = applyForteEdit(
+      { ...seqClip(), stagesLocked: true },
+      { type: "addSeparator", id: "s1", frame: 10, fill },
+    )
+    expect(c.separators).toHaveLength(1)
+  })
+
+  it("sets and clamps the baseline", () => {
+    expect(
+      applyForteEdit(clip(), { type: "setBaseline", fraction: 0.3 }),
+    ).toMatchObject({ baseline: 0.3 })
+    expect(
+      applyForteEdit(clip(), { type: "setBaseline", fraction: 2 }).baseline,
+    ).toBe(1)
   })
 })
