@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SimRouteImport } from './routes/sim'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DevForteRouteImport } from './routes/dev.forte'
 import { Route as DevFramesRouteImport } from './routes/dev.frames'
+import { Route as DevForteRouteImport } from './routes/dev.forte'
 
 const SimRoute = SimRouteImport.update({
   id: '/sim',
@@ -30,14 +30,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevForteRoute = DevForteRouteImport.update({
-  id: '/dev/forte',
-  path: '/dev/forte',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DevFramesRoute = DevFramesRouteImport.update({
   id: '/dev/frames',
   path: '/dev/frames',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevForteRoute = DevForteRouteImport.update({
+  id: '/dev/forte',
+  path: '/dev/forte',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -102,18 +102,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dev/forte': {
-      id: '/dev/forte'
-      path: '/dev/forte'
-      fullPath: '/dev/forte'
-      preLoaderRoute: typeof DevForteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dev/frames': {
       id: '/dev/frames'
       path: '/dev/frames'
       fullPath: '/dev/frames'
       preLoaderRoute: typeof DevFramesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/forte': {
+      id: '/dev/forte'
+      path: '/dev/forte'
+      fullPath: '/dev/forte'
+      preLoaderRoute: typeof DevForteRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

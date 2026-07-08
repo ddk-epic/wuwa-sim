@@ -18,7 +18,7 @@ export const DEFAULT_CALIBRATION: Calibration = {
   full: { x: 0.65, y: 0.9 },
 }
 
-const clamp01 = (v: number) => clamp(v, 0, 1)
+export const clamp01 = (v: number) => clamp(v, 0, 1)
 
 export function clampPoint(p: Point): Point {
   return { x: clamp01(p.x), y: clamp01(p.y) }

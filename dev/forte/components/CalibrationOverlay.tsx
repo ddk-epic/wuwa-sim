@@ -1,13 +1,16 @@
 import { useRef } from "react"
 import type { PointerEvent as ReactPointerEvent } from "react"
-import { clampPoint, translateCalibration } from "../calibration"
+import { clamp01, translateCalibration } from "../calibration"
 import type { Calibration, Point } from "../calibration"
 
+const BAR_HEIGHT_PX = 36
+
 /**
- * The forte gauge calibration, overlaid on the video canvas: a bar with a move
- * handle and two draggable endpoints (`empty`, `full`). Coords are normalized
- * [0,1] against the canvas box, so the 50%/100% toggle and window resize leave
- * the bar on the gauge. Pointer positions convert through the box rect only here.
+ * The forte gauge calibration, overlaid on the video canvas: a white-bordered
+ * rectangle you drag as a unit, with two endpoints (`empty`, `full`) that slide
+ * horizontally along the gauge. Coords are normalized [0,1] against the canvas
+ * box, so the 50%/100% toggle and window resize leave the bar on the gauge.
+ * Pointer positions convert through the box rect only here.
  */
 export function CalibrationOverlay({
   calibration,
@@ -17,9 +20,11 @@ export function CalibrationOverlay({
   onChange: (cal: Calibration) => void
 }) {
   const boxRef = useRef<HTMLDivElement>(null)
-  const lastNorm = useRef<Point | null>(null)
+  // Handlers captured at pointerdown read the live value, not the render's stale one.
+  const calRef = useRef(calibration)
+  calRef.current = calibration
 
-  function normFromEvent(e: ReactPointerEvent): Point | null {
+  function normFromEvent(e: PointerEvent): Point | null {
     const rect = boxRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0 || rect.height === 0) return null
     return {
@@ -28,36 +33,20 @@ export function CalibrationOverlay({
     }
   }
 
-  function dragEndpoint(which: "empty" | "full") {
-    return (e: ReactPointerEvent) => {
-      e.stopPropagation()
-      e.currentTarget.setPointerCapture(e.pointerId)
-      const move = (ev: PointerEvent) => {
-        const p = normFromEvent(ev as unknown as ReactPointerEvent)
-        if (p) onChange({ ...calibration, [which]: clampPoint(p) })
-      }
-      const up = () => {
-        window.removeEventListener("pointermove", move)
-        window.removeEventListener("pointerup", up)
-      }
-      window.addEventListener("pointermove", move)
-      window.addEventListener("pointerup", up)
-    }
-  }
-
-  function dragBox(e: ReactPointerEvent) {
+  function drag(
+    e: ReactPointerEvent,
+    onMove: (start: Calibration, from: Point, to: Point) => void,
+  ) {
     e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
-    lastNorm.current = normFromEvent(e)
+    const startCal = calRef.current
+    const startNorm = normFromEvent(e.nativeEvent)
+    if (!startNorm) return
     const move = (ev: PointerEvent) => {
-      const p = normFromEvent(ev as unknown as ReactPointerEvent)
-      const prev = lastNorm.current
-      if (!p || !prev) return
-      onChange(translateCalibration(calibration, p.x - prev.x, p.y - prev.y))
-      lastNorm.current = p
+      const to = normFromEvent(ev)
+      if (to) onMove(startCal, startNorm, to)
     }
     const up = () => {
-      lastNorm.current = null
       window.removeEventListener("pointermove", move)
       window.removeEventListener("pointerup", up)
     }
@@ -65,101 +54,67 @@ export function CalibrationOverlay({
     window.addEventListener("pointerup", up)
   }
 
-  const mid = {
-    x: (calibration.empty.x + calibration.full.x) / 2,
-    y: (calibration.empty.y + calibration.full.y) / 2,
-  }
+  const dragBox = (e: ReactPointerEvent) =>
+    drag(e, (start, from, to) =>
+      onChange(translateCalibration(start, to.x - from.x, to.y - from.y)),
+    )
+
+  // Endpoints slide along the gauge only: x follows the pointer, y stays put.
+  const dragEndpoint = (which: "empty" | "full") => (e: ReactPointerEvent) =>
+    drag(e, (start, _from, to) =>
+      onChange({ ...start, [which]: { x: clamp01(to.x), y: start[which].y } }),
+    )
+
+  const left = Math.min(calibration.empty.x, calibration.full.x)
+  const width = Math.abs(calibration.full.x - calibration.empty.x)
   const pct = (v: number) => `${v * 100}%`
 
   return (
     <div ref={boxRef} className="absolute inset-0 touch-none select-none">
-      <svg
-        className="pointer-events-none absolute inset-0 h-full w-full"
-        preserveAspectRatio="none"
-        viewBox="0 0 1 1"
-      >
-        <line
-          x1={calibration.empty.x}
-          y1={calibration.empty.y}
-          x2={calibration.full.x}
-          y2={calibration.full.y}
-          stroke="rgb(56 189 248)"
-          strokeWidth={0.006}
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-
-      <Handle
-        point={mid}
-        pct={pct}
+      <div
         onPointerDown={dragBox}
-        className="cursor-move rounded-sm border border-sky-400 bg-sky-400/30"
-        title="move the whole bar"
+        title="drag to move the whole bar"
+        style={{
+          left: pct(left),
+          top: pct(calibration.empty.y),
+          width: pct(width),
+          height: BAR_HEIGHT_PX,
+        }}
+        className="absolute -translate-y-1/2 cursor-move rounded-sm border-2 border-white"
       />
-      <Endpoint
-        point={calibration.empty}
+      <Wall
+        x={calibration.empty.x}
+        y={calibration.empty.y}
         pct={pct}
         onPointerDown={dragEndpoint("empty")}
-        className="border-sky-400 bg-background"
-        label="0"
       />
-      <Endpoint
-        point={calibration.full}
+      <Wall
+        x={calibration.full.x}
+        y={calibration.full.y}
         pct={pct}
         onPointerDown={dragEndpoint("full")}
-        className="border-sky-400 bg-sky-400"
-        label="max"
       />
     </div>
   )
 }
 
-function Handle({
-  point,
+// Transparent hit strip over a left/right wall; drag it to slide that endpoint.
+function Wall({
+  x,
+  y,
   pct,
   onPointerDown,
-  className,
-  title,
 }: {
-  point: Point
+  x: number
+  y: number
   pct: (v: number) => string
   onPointerDown: (e: ReactPointerEvent) => void
-  className: string
-  title: string
 }) {
   return (
     <div
       onPointerDown={onPointerDown}
-      title={title}
-      style={{ left: pct(point.x), top: pct(point.y) }}
-      className={`absolute size-4 -translate-x-1/2 -translate-y-1/2 ${className}`}
+      style={{ left: pct(x), top: pct(y), height: BAR_HEIGHT_PX + 8 }}
+      className="absolute w-2.5 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize"
     />
-  )
-}
-
-function Endpoint({
-  point,
-  pct,
-  onPointerDown,
-  className,
-  label,
-}: {
-  point: Point
-  pct: (v: number) => string
-  onPointerDown: (e: ReactPointerEvent) => void
-  className: string
-  label: string
-}) {
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      style={{ left: pct(point.x), top: pct(point.y) }}
-      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab"
-    >
-      <div className={`size-3 rounded-full border-2 ${className}`} />
-      <span className="absolute left-1/2 top-4 -translate-x-1/2 font-mono text-[10px] text-sky-300">
-        {label}
-      </span>
-    </div>
   )
 }
