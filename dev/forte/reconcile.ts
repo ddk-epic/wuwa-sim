@@ -1,18 +1,17 @@
 import { fillFractionAt } from "./calibration"
-import type { ForteClip, ForteSeparator } from "./clip"
+import type { ForteClip } from "./clip"
 
-/** One repeat's forte gain, credited to the separator that closed it. */
+/** One repeat's forte gain, credited to the slot (occurrence) that closed it. */
 export interface ForteObservation {
-  sepId: string
   owner: number
   gain: number
 }
 
 /**
- * A clip's per-repeat forte, averaged across its separators. Statistical, not
- * the timing tool's exact-agreement check: repeats are independent samples of
- * the same quantity, so they average with a spread. `unmeasured` below two
- * fenceposts (baseline plus at least one separator).
+ * A clip's per-repeat forte, averaged across its measured slots. Statistical,
+ * not the timing tool's exact-agreement check: repeats are independent samples
+ * of the same quantity, so they average with a spread. `unmeasured` when no
+ * slot carries a reading.
  */
 export type ForteReading =
   | { status: "unmeasured" }
@@ -23,25 +22,20 @@ export type ForteReading =
       observations: ForteObservation[]
     }
 
-/** Separators in derivation order: by owner, then frame as a stable tiebreak. */
-export function orderedSeparators(clip: ForteClip): ForteSeparator[] {
-  return [...(clip.separators ?? [])].sort(
-    (a, b) => a.owner - b.owner || a.frame - b.frame,
-  )
-}
-
-// Consecutive-diff observations off the ordered fenceposts: baseline, then each
-// separator's gauge level. Reads nothing derived, so it reflows on recalibrate.
+// Consecutive-diff observations off the sequence: a depleted (0) start, then
+// each measured slot's gauge level. Reads nothing derived, so it reflows on
+// recalibrate.
 function observe(clip: ForteClip, forteCap: number): ForteObservation[] {
   const cal = clip.calibration
-  const seps = orderedSeparators(clip)
-  let prev = clip.baseline ?? 0
-  return seps.map((s) => {
-    const level = cal ? fillFractionAt(cal, s.fill) : 0
-    const gain = (level - prev) * forteCap
+  let prev = 0
+  const obs: ForteObservation[] = []
+  clip.slots.forEach((slot, i) => {
+    if (!slot.reading) return
+    const level = cal ? fillFractionAt(cal, slot.reading) : 0
+    obs.push({ owner: i, gain: (level - prev) * forteCap })
     prev = level
-    return { sepId: s.id, owner: s.owner, gain }
   })
+  return obs
 }
 
 function mean(xs: number[]): number {

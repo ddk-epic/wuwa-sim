@@ -5,17 +5,27 @@ import { uid } from "../frames/shared"
 import { useDebouncedSave } from "../frames/useDebouncedSave"
 import {
   loadClips,
+  loadLastCalibration,
   loadSelectedCharacter,
   saveClips,
+  saveLastCalibration,
   saveSelectedCharacter,
 } from "./storage"
 import { applyForteEdit, clipDisplayName, rehydrateForteClips } from "./clip"
 import type { ForteClip, ForteClipEdit } from "./clip"
+import { DEFAULT_CALIBRATION } from "./calibration"
 import { ForteClipEditor } from "./components/ForteClipEditor"
 import { SummaryModal } from "./components/SummaryModal"
 
+// Seed from the last calibrated axis: the gauge sits at a fixed screen spot, so
+// the previous bar is the right starting guess for a fresh clip.
 function emptyClip(): ForteClip {
-  return { id: uid(), name: "", start: 0, end: 60, stageRefs: [] }
+  return {
+    id: uid(),
+    name: "",
+    slots: [],
+    calibration: loadLastCalibration() ?? DEFAULT_CALIBRATION,
+  }
 }
 
 export function FortePage() {
@@ -81,6 +91,8 @@ export function FortePage() {
       clipsRef.current.find((c) => c.id === id)!,
       edit,
     )
+    // Remember the axis so the next fresh clip inherits it.
+    if (edit.type === "setCalibration") saveLastCalibration(edit.calibration)
     commit(clipsRef.current.map((c) => (c.id === id ? next : c)))
     return next
   }
