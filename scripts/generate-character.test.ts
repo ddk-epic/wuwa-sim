@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import type { Character } from "../src/types/character.js"
 import { deriveNewName, formatCharacter } from "./generate-character.js"

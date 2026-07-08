@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { ALL_CHARACTERS } from "#/data/characters"
 import { ALL_WEAPONS } from "#/data/weapons"

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { reconcileForte } from "./reconcile"
 import type { ForteClip, ForteSeparator } from "./clip"

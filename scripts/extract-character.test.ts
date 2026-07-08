@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
 import type { ApiDamageEntry, ApiSkillAttribute } from "./extract-character.js"
 import {

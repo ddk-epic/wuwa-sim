@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { forteSummaryRows, summaryToText } from "./summary"
 import type { ForteClip, ForteSeparator } from "./clip"

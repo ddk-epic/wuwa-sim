@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { reconcile, statusOf } from "./reconcile"
 import type { CueTag, Clip } from "./clip"
