@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Gauge, Plus } from "lucide-react"
+import { Gauge, Plus, Table2 } from "lucide-react"
 import { CHARACTERS, findCharacter, stageGroups } from "../frames/stages"
 import { uid } from "../frames/shared"
 import { useDebouncedSave } from "../frames/useDebouncedSave"
@@ -12,6 +12,7 @@ import {
 import { applyForteEdit, clipDisplayName, rehydrateForteClips } from "./clip"
 import type { ForteClip, ForteClipEdit } from "./clip"
 import { ForteClipEditor } from "./components/ForteClipEditor"
+import { SummaryModal } from "./components/SummaryModal"
 
 function emptyClip(): ForteClip {
   return { id: uid(), name: "", start: 0, end: 60, stageRefs: [] }
@@ -21,6 +22,7 @@ export function FortePage() {
   const [characterName, setCharacterName] = useState(CHARACTERS[0]?.name ?? "")
   const [clips, setClips] = useState<ForteClip[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [showSummary, setShowSummary] = useState(false)
   // Mirrors `clips` synchronously so several edits in one handler compose.
   const clipsRef = useRef<ForteClip[]>([])
 
@@ -116,9 +118,21 @@ export function FortePage() {
         </h2>
 
         <div className="rounded-lg border border-border bg-card p-3">
-          <p className="mb-2 text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
-            Clips
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-micro font-medium uppercase tracking-[1px] text-muted-foreground/70">
+              Clips
+            </p>
+            <button
+              onClick={() => setShowSummary(true)}
+              disabled={clips.length === 0}
+              className="flex items-center gap-1 rounded border border-border px-2.5 py-1 text-detail text-muted-foreground hover:bg-background hover:text-foreground disabled:opacity-40"
+              title={
+                clips.length === 0 ? "no clips yet" : "forte summary table"
+              }
+            >
+              <Table2 className="size-3.5" /> Summary
+            </button>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {clips.map((c) => (
@@ -155,6 +169,14 @@ export function FortePage() {
           />
         )}
       </main>
+
+      {showSummary && (
+        <SummaryModal
+          clips={clips}
+          forteCap={char?.forteCap ?? 100}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
     </div>
   )
 }
