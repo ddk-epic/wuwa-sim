@@ -11,6 +11,7 @@ import {
 import { TRACK_COLS, clamp, uid } from "../../frames/shared"
 import type { StageGroup } from "../../frames/stages"
 import { AddStagePopover } from "../../frames/components/AddStagePopover"
+import { FrameTrack, TrackMarker } from "../../frames/components/FrameTrack"
 import type { StageRef } from "../../frames/stage-ref"
 import { DEFAULT_CALIBRATION } from "../calibration"
 import type { Point } from "../calibration"
@@ -149,16 +150,17 @@ export function ForteClipEditor({
             <ChevronRight className="size-4" />
           </StepButton>
         </div>
-        <input
-          type="range"
-          min={0}
-          max={Math.max(0, count - 1)}
-          step={1}
-          value={sel}
-          disabled={count <= 1}
-          onChange={(e) => setSelected(Number(e.target.value))}
-          className="w-full"
-        />
+        <FrameTrack
+          lo={0}
+          hi={Math.max(0, count - 1)}
+          onScrub={setSelected}
+          className="relative h-6 cursor-ew-resize rounded border border-border bg-border/30"
+        >
+          <TrackMarker
+            frame={sel}
+            className="pointer-events-none absolute top-0 h-full w-px -translate-x-1/2 bg-foreground"
+          />
+        </FrameTrack>
       </div>
 
       <div className={`${TRACK_COLS} items-start`}>
