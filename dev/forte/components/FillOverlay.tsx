@@ -1,12 +1,14 @@
 import { useRef } from "react"
 import type { PointerEvent as ReactPointerEvent } from "react"
-import { clampPoint, fillFractionAt } from "../calibration"
+import { clamp01, fillFractionAt } from "../calibration"
 import type { Calibration, Point } from "../calibration"
+import { BAR_HEIGHT_PX, BarOutline } from "./BarOutline"
 
 /**
- * Placement overlay: the calibrated bar drawn for reference plus one draggable
- * fill handle you drop on the gauge's current fill edge. Its projected fraction
- * along the bar becomes a separator's reading. Coords are normalized [0,1].
+ * Placement overlay: the calibrated bar drawn as a static reference plus one
+ * divider you slide along it to the gauge's current fill edge. It rides on the
+ * bar (y pinned to empty.y); a 1px hairline crosses the bar so the fill edge
+ * stays visible, and its projected fraction becomes a separator's reading.
  */
 export function FillOverlay({
   calibration,
@@ -25,12 +27,11 @@ export function FillOverlay({
     const move = (ev: PointerEvent) => {
       const rect = boxRef.current?.getBoundingClientRect()
       if (!rect || rect.width === 0 || rect.height === 0) return
-      onChange(
-        clampPoint({
-          x: (ev.clientX - rect.left) / rect.width,
-          y: (ev.clientY - rect.top) / rect.height,
-        }),
-      )
+      // x-only: y stays pinned to the bar.
+      onChange({
+        x: clamp01((ev.clientX - rect.left) / rect.width),
+        y: calibration.empty.y,
+      })
     }
     const up = () => {
       window.removeEventListener("pointermove", move)
@@ -45,30 +46,32 @@ export function FillOverlay({
 
   return (
     <div ref={boxRef} className="absolute inset-0 touch-none select-none">
-      <svg
-        className="pointer-events-none absolute inset-0 h-full w-full"
-        preserveAspectRatio="none"
-        viewBox="0 0 1 1"
-      >
-        <line
-          x1={calibration.empty.x}
-          y1={calibration.empty.y}
-          x2={calibration.full.x}
-          y2={calibration.full.y}
-          stroke="rgba(255,255,255,0.5)"
-          strokeWidth={2}
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
+      <BarOutline calibration={calibration} />
+      {/* Divider anchored at (fill.x, bar center); children position off it. */}
       <div
-        onPointerDown={drag}
-        title="drag to the gauge's fill edge"
-        style={{ left: pct(fill.x), top: pct(fill.y) }}
-        className="absolute size-4 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-white bg-amber-400"
+        style={{ left: pct(fill.x), top: pct(calibration.empty.y) }}
+        className="absolute -translate-x-1/2"
       >
-        <span className="absolute left-1/2 top-4 -translate-x-1/2 rounded bg-black/60 px-1 font-mono text-[10px] tabular-nums text-amber-300">
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 w-px -translate-x-1/2 -translate-y-1/2 bg-amber-400"
+          style={{ height: BAR_HEIGHT_PX }}
+        />
+        <span
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/60 px-1 font-mono text-[10px] tabular-nums text-amber-300"
+          style={{ bottom: BAR_HEIGHT_PX / 2 + 2 }}
+        >
           {(fraction * 100).toFixed(1)}%
         </span>
+        <div
+          className="pointer-events-none absolute left-1/2 size-3 -translate-x-1/2 rounded-sm border border-white bg-amber-400"
+          style={{ top: BAR_HEIGHT_PX / 2 + 2 }}
+        />
+        <div
+          onPointerDown={drag}
+          title="drag to the gauge's fill edge"
+          className="absolute left-1/2 w-3 -translate-x-1/2 cursor-ew-resize"
+          style={{ top: -BAR_HEIGHT_PX / 2, height: BAR_HEIGHT_PX + 16 }}
+        />
       </div>
     </div>
   )

@@ -2,8 +2,7 @@ import { useRef } from "react"
 import type { PointerEvent as ReactPointerEvent } from "react"
 import { clamp01, translateCalibration } from "../calibration"
 import type { Calibration, Point } from "../calibration"
-
-const BAR_HEIGHT_PX = 36
+import { BAR_HEIGHT_PX, BarOutline } from "./BarOutline"
 
 /**
  * The forte gauge calibration, overlaid on the video canvas: a white-bordered
@@ -65,22 +64,14 @@ export function CalibrationOverlay({
       onChange({ ...start, [which]: { x: clamp01(to.x), y: start[which].y } }),
     )
 
-  const left = Math.min(calibration.empty.x, calibration.full.x)
-  const width = Math.abs(calibration.full.x - calibration.empty.x)
   const pct = (v: number) => `${v * 100}%`
 
   return (
     <div ref={boxRef} className="absolute inset-0 touch-none select-none">
-      <div
+      <BarOutline
+        calibration={calibration}
         onPointerDown={dragBox}
         title="drag to move the whole bar"
-        style={{
-          left: pct(left),
-          top: pct(calibration.empty.y),
-          width: pct(width),
-          height: BAR_HEIGHT_PX,
-        }}
-        className="absolute -translate-y-1/2 cursor-move rounded-sm border-2 border-white"
       />
       <Wall
         x={calibration.empty.x}
