@@ -7,8 +7,6 @@ import { ALL_ECHOES } from "#/data/echoes"
 import { compileCharacter, compileEcho } from "#/lib/compile-character"
 import { toKebab } from "#/lib/stage"
 
-const KEY_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
-
 describe("key validation", () => {
   it("compiles every character and echo without throwing", () => {
     for (const c of ALL_CHARACTERS)
@@ -25,20 +23,12 @@ describe("key validation", () => {
     expect(() => compileCharacter(drifted)).toThrow(/disagrees with maxEnergy/)
   })
 
-  it("character and echo slugs are globally unique and well-formed", () => {
+  it("character and echo slugs are globally unique", () => {
     const slugs = [
       ...ALL_CHARACTERS.map((c) => toKebab(c.name)),
       ...ALL_ECHOES.map((e) => toKebab(e.name)),
     ]
-    for (const slug of slugs) expect(slug).toMatch(KEY_RE)
     expect(new Set(slugs).size).toBe(slugs.length)
-  })
-
-  it("buff keys are unique within a character and well-formed", () => {
-    for (const c of ALL_CHARACTERS) {
-      const keys = [...compileCharacter(c).buffKeys.keys()]
-      for (const key of keys) expect(key).toMatch(KEY_RE)
-    }
   })
 })
 

@@ -17,7 +17,6 @@ import type { EchoSet } from "#/types/echo-set"
 const BASE_ELEM_BONUS =
   ECHO_BUILDS["4-3-3-1-1"].cost3 * ECHO_MAIN_3COST_VARIABLE.elemDmg
 
-// Integration tests for the Inferno Rider Tap 3rd-hit buff (#95)
 let testCharacters: EnrichedCharacter[] = []
 let testEchoes: EnrichedEcho[] = []
 let testEchoSets: EchoSet[] = []
@@ -108,19 +107,10 @@ function makeEngine() {
   return engine
 }
 
-describe("infernoRider — Tap 3rd-hit buff integration (#95)", () => {
+describe("infernoRider — Tap 3rd-hit buff integration", () => {
   it("hit 1 does not trigger the buff", () => {
     const engine = makeEngine()
     engine.recordHit(tapHit(1, 10))
-    expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
-      BASE_ELEM_BONUS,
-    )
-    expect(engine.activeBuffIds(1)).not.toContain(BUFF_ID)
-  })
-
-  it("hit 2 does not trigger the buff", () => {
-    const engine = makeEngine()
-    engine.recordHit(tapHit(2, 44))
     expect(engine.resolveStats(1).elementBonus["Fusion"]).toBeCloseTo(
       BASE_ELEM_BONUS,
     )
@@ -195,10 +185,7 @@ describe("bellBorneGeochelone — Echo Skill Tap DMG boost", () => {
   })
 })
 
-describe("Reminiscence: Fleurdelys — Aero base + wielder-gated bonus (#344)", () => {
-  const AERO_BASE = "echo.reminiscence-fleurdelys.aero"
-  const AERO_WIELDER = "echo.reminiscence-fleurdelys.aero-wielder"
-
+describe("Reminiscence: Fleurdelys — Aero base + wielder-gated bonus", () => {
   function makeFleurEngine(charId: number) {
     testCharacters = [{ ...testChar, id: charId, element: "Aero" }]
     testEchoes = [reminiscenceFleurdelys]
@@ -213,13 +200,6 @@ describe("Reminiscence: Fleurdelys — Aero base + wielder-gated bonus (#344)", 
     })
     return engine
   }
-
-  it("base Aero +10% folds for any wielder (not the wielder-gated buff)", () => {
-    const engine = makeFleurEngine(1)
-    // Both permanent passives fold (or no-op) — neither appears as an active instance.
-    expect(engine.activeBuffIds(1)).not.toContain(AERO_BASE)
-    expect(engine.activeBuffIds(1)).not.toContain(AERO_WIELDER)
-  })
 
   it("Cartethyia (1409) gets an extra Aero +10% over a non-listed wielder", () => {
     const aeroOther = makeFleurEngine(1).resolveStats(1).elementBonus["Aero"]

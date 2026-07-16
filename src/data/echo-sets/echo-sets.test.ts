@@ -96,7 +96,7 @@ describe("Rejuvenating Glow — 2pc healingBonus + 5pc team ATK on heal", () => 
   })
 })
 
-describe("Windward Pilgrimage — 2pc Aero fold + 5pc Aero-Erosion hit gate (#344)", () => {
+describe("Windward Pilgrimage — 2pc Aero fold + 5pc Aero-Erosion hit gate", () => {
   const windwardPilgrimage = ALL_ECHO_SETS.find((s) => s.id === 17)!
   const WP_2PC = "echo-set.windward-pilgrimage.2pc.aero-bonus"
   const WP_5PC = "echo-set.windward-pilgrimage.5pc.aero-crit"
