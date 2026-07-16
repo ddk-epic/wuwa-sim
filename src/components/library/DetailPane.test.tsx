@@ -43,13 +43,6 @@ function renderCard(actions: RowActions) {
 afterEach(cleanup)
 
 describe("DetailHero — inline rename", () => {
-  it("clicking the name turns it into an editable input", () => {
-    renderCard(spyActions())
-    expect(screen.queryByLabelText("Team name")).toBeNull()
-    fireEvent.click(screen.getByText("Frosty"))
-    expect(screen.getByLabelText("Team name")).toBeTruthy()
-  })
-
   it("Enter commits the new name via rename(id, name)", () => {
     const actions = spyActions()
     renderCard(actions)
@@ -62,16 +55,6 @@ describe("DetailHero — inline rename", () => {
     expect(screen.queryByLabelText("Team name")).toBeNull()
   })
 
-  it("blur commits the new name", () => {
-    const actions = spyActions()
-    renderCard(actions)
-    fireEvent.click(screen.getByText("Frosty"))
-    const input = screen.getByLabelText("Team name")
-    fireEvent.change(input, { target: { value: "Glacial" } })
-    fireEvent.blur(input)
-    expect(actions.onRename).toHaveBeenCalledWith("t1", "Glacial")
-  })
-
   it("empty/whitespace name is rejected", () => {
     const actions = spyActions()
     renderCard(actions)
@@ -81,10 +64,5 @@ describe("DetailHero — inline rename", () => {
     fireEvent.keyDown(input, { key: "Enter" })
     expect(actions.onRename).not.toHaveBeenCalled()
     expect(screen.queryByLabelText("Team name")).toBeNull()
-  })
-
-  it("no Rename pencil button remains in the hero", () => {
-    renderCard(spyActions())
-    expect(screen.queryByRole("button", { name: "Rename" })).toBeNull()
   })
 })

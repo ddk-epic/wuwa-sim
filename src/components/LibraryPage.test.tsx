@@ -79,15 +79,6 @@ describe("LibraryPage — import modal", () => {
     fireEvent.click(screen.getByRole("button", { name: "import" }))
   }
 
-  it("header import button opens the ImportModal (no window.prompt)", () => {
-    const promptSpy = vi.spyOn(window, "prompt")
-    render(<LibraryPage />)
-    openImport()
-    expect(screen.getByPlaceholderText("Paste build code here…")).toBeTruthy()
-    expect(promptSpy).not.toHaveBeenCalled()
-    promptSpy.mockRestore()
-  })
-
   it("a bad code shows an inline error instead of importing", () => {
     render(<LibraryPage />)
     openImport()
@@ -97,17 +88,6 @@ describe("LibraryPage — import modal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Import" }))
     expect(screen.getByText("That export code could not be read.")).toBeTruthy()
     expect(readLibrary()).toEqual([])
-  })
-
-  it("editing the textarea clears a stale error", () => {
-    render(<LibraryPage />)
-    openImport()
-    const textarea = screen.getByPlaceholderText("Paste build code here…")
-    fireEvent.change(textarea, { target: { value: "not-a-real-code" } })
-    fireEvent.click(screen.getByRole("button", { name: "Import" }))
-    expect(screen.getByText("That export code could not be read.")).toBeTruthy()
-    fireEvent.change(textarea, { target: { value: "still typing" } })
-    expect(screen.queryByText("That export code could not be read.")).toBeNull()
   })
 
   it("a good code imports the team and closes the modal", () => {

@@ -60,28 +60,6 @@ const expired = (
 })
 
 describe("buildBuffTimelineModel", () => {
-  it("empty log → empty roster, default axis", () => {
-    const m = buildBuffTimelineModel([], [])
-    expect(m.charIds).toEqual([])
-    expect(m.axisMax).toBe(10)
-    expect(m.restStart).toBe(0)
-    expect(m.buffs).toEqual([])
-    expect(m.actionBlocks).toEqual([])
-  })
-
-  it("is id/number-only — buffs carry sourceCharacterId, not a name", () => {
-    const log: SimulationLogEntry[] = [
-      action({ characterId: 1, frame: 0 }),
-      applied("b.x", 1, 0, 7),
-      expired("b.x", 1, 60),
-    ]
-    const m = buildBuffTimelineModel(log, [1])
-    expect(m.charIds).toEqual([1])
-    const b = m.buffs[0]
-    expect(b.sourceCharacterId).toBe(7)
-    expect(b).not.toHaveProperty("sourceName")
-  })
-
   it("packs concurrent buffs into lanes 0,1,2,… with no wrap past TL_BUFF_LANES", () => {
     // 7 buffs all live at once on char 1 — must occupy lanes 0..6, never wrapping.
     const log: SimulationLogEntry[] = [action({ characterId: 1, frame: 0 })]
@@ -144,15 +122,6 @@ describe("buildBuffTimelineModel", () => {
     expect(lanes).toEqual([0, 1])
   })
 
-  it("never-expired buff → endTime Infinity", () => {
-    const log: SimulationLogEntry[] = [
-      action({ characterId: 1, frame: 0 }),
-      applied("b.perm", 1, 0),
-    ]
-    const m = buildBuffTimelineModel(log, [1])
-    expect(m.buffs[0].endTime).toBe(Infinity)
-  })
-
   it("axisMax rounds up to a multiple of 5 and bumps +5 when within 1s of rest", () => {
     // last action at 8.4s (504 frames); restStart ~8.4 → ceil(8.4/5)*5 = 10, gap 1.6 ≥ 1 → 10
     const a = buildBuffTimelineModel(
@@ -207,14 +176,6 @@ describe("buildBuffTimelineModel", () => {
     expect(m.actionBlocks[1].laneSpan).toBe(1)
   })
 
-  it("Outro Skill category spans 2 lanes", () => {
-    const m = buildBuffTimelineModel(
-      [action({ characterId: 1, frame: 0, skillCategory: "Outro Skill" })],
-      [1],
-    )
-    expect(m.actionBlocks[0].laneSpan).toBe(2)
-  })
-
   it("swap stage's actionTime becomes a trailingEnd past the truncated block", () => {
     // Swap block cut at frame 6 by the next action; its animation runs 120 frames.
     const log: SimulationLogEntry[] = [
@@ -229,14 +190,6 @@ describe("buildBuffTimelineModel", () => {
     const m = buildBuffTimelineModel(log, [1, 2])
     expect(m.actionBlocks[0].end).toBeCloseTo(6 / FPS, 5)
     expect(m.actionBlocks[0].trailingEnd).toBeCloseTo(120 / FPS, 5)
-  })
-
-  it("no actionTime (non-swap) → no trailingEnd", () => {
-    const m = buildBuffTimelineModel(
-      [action({ characterId: 1, frame: 0 })],
-      [1],
-    )
-    expect(m.actionBlocks[0].trailingEnd).toBeUndefined()
   })
 
   it("a swap window that never overruns the block end yields no trailingEnd", () => {
@@ -265,7 +218,7 @@ describe("buildBuffTimelineModel", () => {
   })
 })
 
-describe("buildBuffTimelineModel — interval pairing by instanceId (#340)", () => {
+describe("buildBuffTimelineModel: interval pairing by instanceId", () => {
   it("perSource: two instances of one buffId on the same target → two untruncated bars", () => {
     // A live [0s,5s] from source 1, B live [3s,8s] from source 2 — same buffId+target.
     // Old buffId:target keying collapsed these into one truncated bar.

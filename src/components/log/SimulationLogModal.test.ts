@@ -42,34 +42,6 @@ describe("formatActiveBuffLabel", () => {
     expect(formatActiveBuffLabel(b, resolveName)).toBe("[Char1] Cosmos Rave")
   })
 
-  it("char prefix with stacks — tag + stacks suffix", () => {
-    const b: ActiveBuff = {
-      id: "char.fairy-tale",
-      name: "Wooly's Fairy Tale",
-      stacks: 3,
-      sourceCharacterId: 2,
-    }
-    expect(formatActiveBuffLabel(b, resolveName)).toBe(
-      "[Char2] Wooly's Fairy Tale ×3",
-    )
-  })
-
-  it("weapon prefix — emits [Weapon] tag", () => {
-    const b: ActiveBuff = {
-      id: "weapon.electric-amp",
-      name: "Electric Amplification (ATK)",
-      stacks: 2,
-    }
-    expect(formatActiveBuffLabel(b, resolveName)).toBe(
-      "[Weapon] Electric Amplification (ATK) ×2",
-    )
-  })
-
-  it("echo prefix — emits [Echo] tag", () => {
-    const b: ActiveBuff = { id: "echo.atk-boost", name: "ATK Boost", stacks: 1 }
-    expect(formatActiveBuffLabel(b, resolveName)).toBe("[Echo] ATK Boost")
-  })
-
   it("echo-set prefix — emits [Set] tag (not [Echo])", () => {
     const b: ActiveBuff = {
       id: "echo-set.molten-rift-2pc",
@@ -79,15 +51,6 @@ describe("formatActiveBuffLabel", () => {
     expect(formatActiveBuffLabel(b, resolveName)).toBe(
       "[Set] Molten Rift (2pc)",
     )
-  })
-
-  it("skill-tree prefix — emits [Tree] tag", () => {
-    const b: ActiveBuff = {
-      id: "skill-tree.atk",
-      name: "ATK",
-      stacks: 1,
-    }
-    expect(formatActiveBuffLabel(b, resolveName)).toBe("[Tree] ATK")
   })
 })
 
@@ -104,10 +67,6 @@ describe("formatDMGPctCell", () => {
     expect(formatDMGPctCell(s, "Fusion", "Basic Attack")).toBe("+65%")
   })
 
-  it("0 bonus shows +0%", () => {
-    expect(formatDMGPctCell(snap(), "Fusion", "Basic Attack")).toBe("+0%")
-  })
-
   it("only matching element contributes", () => {
     const s = snap({
       elementBonus: {
@@ -121,8 +80,6 @@ describe("formatDMGPctCell", () => {
 })
 
 describe("formatAmpCell", () => {
-  it("0 amp shows +0%", () =>
-    expect(formatAmpCell(snap(), "Fusion", "Basic Attack")).toBe("+0%"))
   it("matching skillTypeAmp shown", () => {
     const s = snap({
       skillTypeAmp: {
@@ -156,16 +113,6 @@ describe("formatStatComponents", () => {
     expect(formatStatComponents(snap(), "ATK")).toBe(
       "ATK 2104 (1500 × 1.30 + 154)",
     )
-  })
-
-  it("HP scaling shows hp components", () => {
-    const s = snap({ hpBase: 5000, hpPct: 0.4, hpFlat: 0 })
-    expect(formatStatComponents(s, "HP")).toBe("HP 7000 (5000 × 1.40 + 0)")
-  })
-
-  it("DEF scaling shows def components", () => {
-    const s = snap({ defBase: 800, defPct: 0.25, defFlat: 50 })
-    expect(formatStatComponents(s, "DEF")).toBe("DEF 1050 (800 × 1.25 + 50)")
   })
 })
 

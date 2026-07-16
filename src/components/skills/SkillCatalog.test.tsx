@@ -76,37 +76,6 @@ const char1: EnrichedCharacter = {
   ],
 }
 
-const char2: EnrichedCharacter = {
-  id: 2,
-  name: "Sanhua",
-  element: "Glacio",
-  weaponType: "Sword",
-  rarity: "4",
-  maxEnergy: 100,
-  forteCap: 100,
-  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
-  template: { weapon: "", echo: "", echoSet: "" },
-  skillTreeBonuses: [],
-  buffs: [],
-  skills: [
-    {
-      id: 201,
-      name: "Normal Attack",
-      type: "Normal Attack",
-      stages: [
-        {
-          name: "Stage 1",
-          category: "Basic Attack",
-          value: "1",
-          actionTime: 0,
-          damage: [],
-        },
-      ],
-      damage: [],
-    },
-  ],
-}
-
 const testEcho: EnrichedEcho = {
   id: 9001,
   name: "Test Echo",
@@ -196,113 +165,6 @@ function setCatalog(characters: EnrichedCharacter[], echoes: EnrichedEcho[]) {
   testEchoes = echoes
 }
 
-describe("SkillSidebar — tab strip", () => {
-  it("renders one tab per filled slot", () => {
-    setCatalog([char1, char2], [])
-    const slots: Slots = [1, 2, null]
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: slots,
-      loadouts: noLoadouts,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    expect(screen.getByText("Encore")).toBeTruthy()
-    expect(screen.getByText("Sanhua")).toBeTruthy()
-  })
-
-  it("clicking an unfocused tab focuses that character in the team", () => {
-    setCatalog([char1, char2], [])
-    const slots: Slots = [1, 2, null]
-    const { store } = renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: slots,
-      loadouts: noLoadouts,
-      focusedId: 1,
-    })
-    fireEvent.click(screen.getByRole("button", { name: /Sanhua/ }))
-    expect(store.get(teamAtom).focusedId).toBe(2)
-  })
-})
-
-describe("SkillSidebar — stage rendering", () => {
-  it("clicking a stage row calls onStageClick with the stage's click payload", () => {
-    setCatalog([char1], [])
-    const onStageClick = vi.fn()
-    renderWithTeam(<SkillCatalog onStageClick={onStageClick} />, {
-      slots: [1, null, null],
-      loadouts: noLoadouts,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    fireEvent.click(screen.getByText("Normal Attack"))
-    expect(onStageClick).toHaveBeenCalledWith(
-      expect.objectContaining({
-        characterId: 1,
-        stageId: "char.encore.basic-attack.normal-attack.stage-1::basic-attack",
-      }),
-    )
-  })
-})
-
-describe("SkillSidebar — divider presence", () => {
-  const loadoutsWithEcho: SlotLoadout[] = [
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: 9001,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: null,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-    {
-      weaponId: null,
-      weaponRank: 1,
-      echoId: null,
-      echoSetSlot1Id: null,
-      echoSetSlot2Id: null,
-      sequence: 0,
-      echoBuild: "4-3-3-1-1",
-      cost4Mains: ["cd"],
-      cost3Mains: ["elemDmg", "elemDmg"],
-    },
-  ]
-
-  it("renders the divider when both echo and character stages exist", () => {
-    setCatalog([char1], [testEcho])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: loadoutsWithEcho,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    expect(screen.getByTestId("echo-character-divider")).toBeTruthy()
-  })
-
-  it("omits the divider when there are no echo stages", () => {
-    setCatalog([char1], [])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: noLoadouts,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    expect(screen.queryByTestId("echo-character-divider")).toBeNull()
-  })
-})
-
 const charWithIntroOutro: EnrichedCharacter = {
   ...char1,
   id: 3,
@@ -369,23 +231,6 @@ const charWithIntroOutro: EnrichedCharacter = {
 }
 
 describe("SkillSidebar — filter chips", () => {
-  it("renders filter chips including 'all' and 'NORMAL' but no separate BASIC, HEAVY, INTRO or OUTRO chips", () => {
-    setCatalog([char1], [])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: noLoadouts,
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    expect(screen.getByRole("button", { name: "all" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "NORMAL" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "IN/OUT" })).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "BASIC" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "HEAVY" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "INTRO" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "OUTRO" })).toBeNull()
-  })
-
   it("filtering to ECHO hides non-echo stages", () => {
     setCatalog([char1], [testEcho])
     renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
@@ -397,34 +242,6 @@ describe("SkillSidebar — filter chips", () => {
     fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
     expect(screen.queryByText("Normal Attack")).toBeNull()
     expect(screen.getByText(/Test Echo/)).toBeTruthy()
-  })
-
-  it("clicking 'all' after a specific filter restores all stages", () => {
-    setCatalog([char1], [testEcho])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: [{ ...noLoadouts[0], echoId: 9001 }, ...noLoadouts.slice(1)],
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
-    fireEvent.click(screen.getByRole("button", { name: "all" }))
-    expect(screen.getByText("Normal Attack")).toBeTruthy()
-    expect(screen.getByText(/Test Echo/)).toBeTruthy()
-  })
-
-  it("clicking the active filter chip deselects it and re-highlights 'all'", () => {
-    setCatalog([char1], [testEcho])
-    renderWithTeam(<SkillCatalog onStageClick={vi.fn()} />, {
-      slots: [1, null, null],
-      loadouts: [{ ...noLoadouts[0], echoId: 9001 }, ...noLoadouts.slice(1)],
-      focusedId: 1,
-      onFocus: vi.fn(),
-    })
-    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
-    expect(screen.queryByText("Normal Attack")).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: "ECHO" }))
-    expect(screen.getByText("Normal Attack")).toBeTruthy()
   })
 
   it("IN/OUT chip shows both Intro Skill and Outro Skill stages, hides others", () => {

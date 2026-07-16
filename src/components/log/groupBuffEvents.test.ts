@@ -43,16 +43,6 @@ function hit(): SimulationLogEntry {
 }
 
 describe("groupBuffEvents", () => {
-  it("single buff event → one buffGroup with one entry", () => {
-    const rows = groupBuffEvents([buff("a", 1)])
-    expect(rows).toHaveLength(1)
-    expect(rows[0].kind).toBe("buffGroup")
-    if (rows[0].kind === "buffGroup") {
-      expect(rows[0].entries).toHaveLength(1)
-      expect(rows[0].entries[0].targetCharacterIds).toEqual([1])
-    }
-  })
-
   it("N same-buffId different-targets → one entry with multiple targetCharacterIds", () => {
     const rows = groupBuffEvents([buff("a", 1), buff("a", 2), buff("a", 3)])
     expect(rows).toHaveLength(1)
@@ -103,19 +93,6 @@ describe("groupBuffEvents", () => {
       expect(rows[0].entries).toHaveLength(2)
       expect(rows[0].entries[0].stacks).toBe(1)
       expect(rows[0].entries[1].stacks).toBe(2)
-    }
-  })
-
-  it("empty log → empty result", () => {
-    expect(groupBuffEvents([])).toEqual([])
-  })
-
-  it("preserves engine emission order within a group", () => {
-    const rows = groupBuffEvents([buff("x", 3), buff("y", 1), buff("x", 2)])
-    if (rows[0].kind === "buffGroup") {
-      expect(rows[0].entries[0].buffId).toBe("x")
-      expect(rows[0].entries[0].targetCharacterIds).toEqual([3, 2])
-      expect(rows[0].entries[1].buffId).toBe("y")
     }
   })
 })

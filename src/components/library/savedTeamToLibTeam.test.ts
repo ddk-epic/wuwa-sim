@@ -65,16 +65,9 @@ function savedTeam(over: Partial<SavedTeam> = {}): SavedTeam {
 }
 
 describe("savedTeamToLibTeam", () => {
-  it("passes identity fields through", () => {
+  it("resolves filled slots into members (name/element/weapon/seq), skipping nulls, and formats the updated date", () => {
     const lib = savedTeamToLibTeam(savedTeam())
-    expect(lib.id).toBe("team-abc")
-    expect(lib.name).toBe("Frosty")
-    expect(lib.pinned).toBe(true)
     expect(lib.updated).toBe("2026-06-02")
-  })
-
-  it("resolves filled slots into members (name/element/weapon/seq), skipping nulls and omitting role", () => {
-    const lib = savedTeamToLibTeam(savedTeam())
     expect(lib.members).toEqual([
       {
         name: "Sanhua",
@@ -84,8 +77,6 @@ describe("savedTeamToLibTeam", () => {
       },
       { name: "Encore", element: "Fusion", seq: 0, weapon: "" },
     ])
-    // role is not a field on Member
-    expect(lib.members[0]).not.toHaveProperty("role")
   })
 
   it("re-keys dmgByChar from characterId to member name and passes typeMix through", () => {

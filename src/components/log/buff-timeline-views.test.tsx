@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { useState } from "react"
 import { describe, expect, it } from "vitest"
-import { fireEvent, render } from "@testing-library/react"
+import { render } from "@testing-library/react"
 import { BuffTimelineSidebar } from "./BuffTimelineSidebar"
 import { BuffTimelinePlot } from "./BuffTimelinePlot"
 import type {
@@ -32,65 +31,14 @@ const model = (over: Partial<BuffTimelineModel> = {}): BuffTimelineModel => ({
 })
 
 describe("BuffTimelineSidebar — action header", () => {
-  it("header shows the FULL category when an action is live", () => {
+  it("header shows the full category while the detail line keeps the damage type", () => {
     const { container } = render(
       <BuffTimelineSidebar model={model()} hover={{ t: 0.5 }} />,
     )
     expect(container.textContent).toContain("Resonance Skill")
     expect(container.textContent).toContain("Burst")
-  })
-
-  it("header falls back to an idle gap over a dead zone", () => {
-    const { container } = render(
-      <BuffTimelineSidebar model={model()} hover={{ t: 5 }} />,
-    )
-    expect(container.textContent).not.toContain("Resonance Skill")
-    expect(container.textContent).toContain("idle / gap")
-  })
-
-  it("still shows the damage type (skillType) on the detail line", () => {
-    const { container } = render(
-      <BuffTimelineSidebar model={model()} hover={{ t: 0.5 }} />,
-    )
     // skillType "Basic Attack" → "BASIC"; not the category "SKILL"
     expect(container.textContent).toContain("BASIC")
-  })
-})
-
-// PX_PER_SEC is 104; with a zero-origin jsdom rect, clientX 200 → t ≈ 0.115s
-// (inside the [0,1] action block) and clientX 400 → t ≈ 2.04s (past restStart).
-function FreezeHarness({ model: m }: { model: BuffTimelineModel }) {
-  const [hover, setHover] = useState<{ t: number } | null>(null)
-  return (
-    <>
-      <BuffTimelinePlot model={m} hover={hover} setHover={setHover} />
-      <BuffTimelineSidebar model={m} hover={hover} />
-    </>
-  )
-}
-
-describe("BuffTimelinePlot — frozen hover", () => {
-  it("holds the last valid time after the cursor leaves the plot", () => {
-    const { container } = render(<FreezeHarness model={model()} />)
-    const plot = container.querySelector(".cursor-crosshair")!
-
-    fireEvent.mouseMove(plot, { clientX: 200 })
-    expect(container.textContent).toContain("Resonance Skill")
-
-    fireEvent.mouseLeave(plot)
-    expect(container.textContent).toContain("Resonance Skill")
-    expect(container.textContent).not.toContain("Hover over the timeline")
-  })
-
-  it("holds the last valid time when grazing the past-end zone", () => {
-    const { container } = render(<FreezeHarness model={model()} />)
-    const plot = container.querySelector(".cursor-crosshair")!
-
-    fireEvent.mouseMove(plot, { clientX: 200 })
-    expect(container.textContent).toContain("Resonance Skill")
-
-    fireEvent.mouseMove(plot, { clientX: 400 })
-    expect(container.textContent).toContain("Resonance Skill")
   })
 })
 

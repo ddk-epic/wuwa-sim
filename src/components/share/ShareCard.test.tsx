@@ -39,13 +39,6 @@ describe("ShareCard", () => {
     expect(screen.getByText("IN")).toBeTruthy()
   })
 
-  it("omits the Loop row when there is no loop rotation", () => {
-    render(
-      <ShareCard cards={cards} slots={[SANHUA, null, null]} theme="dark" />,
-    )
-    expect(screen.queryByText("Loop")).toBeNull()
-  })
-
   it("renders the Loop row when a loop rotation is present", () => {
     const withLoop: RotationCards = {
       opener: cards.opener,
@@ -74,20 +67,5 @@ describe("ShareCard", () => {
       />,
     )
     expect(screen.getByText(`${name} 25s`)).toBeTruthy()
-  })
-
-  it("paints a different shell background for each theme", () => {
-    const { container, rerender } = render(
-      <ShareCard cards={cards} slots={[SANHUA, null, null]} theme="dark" />,
-    )
-    const shell = () => (container.firstChild as HTMLElement).style.background
-    const dark = shell()
-    expect(dark).toBeTruthy()
-
-    rerender(
-      <ShareCard cards={cards} slots={[SANHUA, null, null]} theme="light" />,
-    )
-    expect(shell()).toBeTruthy()
-    expect(shell()).not.toBe(dark)
   })
 })

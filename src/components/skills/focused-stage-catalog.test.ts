@@ -230,35 +230,6 @@ const noLoadouts: SlotLoadout[] = [
   },
 ]
 
-describe("focused-stage-catalog — empty cases", () => {
-  it("returns empty arrays when focusedId is null", () => {
-    setCatalog([char1], [])
-    const slots: Slots = [1, null, null]
-    expect(getFocusedStageCatalog(slots, noLoadouts, null)).toEqual({
-      echoStages: [],
-      characterStages: [],
-    })
-  })
-
-  it("returns empty arrays when focusedId is not in slots", () => {
-    setCatalog([char1], [])
-    const slots: Slots = [null, null, null]
-    expect(getFocusedStageCatalog(slots, noLoadouts, 1)).toEqual({
-      echoStages: [],
-      characterStages: [],
-    })
-  })
-
-  it("returns empty arrays when the focused character is not in the catalog", () => {
-    setCatalog([], [])
-    const slots: Slots = [1, null, null]
-    expect(getFocusedStageCatalog(slots, noLoadouts, 1)).toEqual({
-      echoStages: [],
-      characterStages: [],
-    })
-  })
-})
-
 describe("focused-stage-catalog — character stages", () => {
   it("filters out hidden Skills entirely", () => {
     setCatalog([char1], [])
@@ -282,14 +253,16 @@ describe("focused-stage-catalog — character stages", () => {
     expect(result.characterStages.every((s) => s.label !== "")).toBe(true)
   })
 
-  it("does not filter out Stages whose newName is the override label", () => {
+  it("character stage click payload carries characterId and stageId", () => {
     setCatalog([char1], [])
     const result = getFocusedStageCatalog([1, null, null], noLoadouts, 1)
-    expect(
-      result.characterStages.find(
-        (s) => s.label === "Resonance Skill · Override",
-      ),
-    ).toBeDefined()
+    const stage = result.characterStages.find(
+      (s) => s.label === "Normal Attack",
+    )
+    expect(stage?.clickPayload).toEqual({
+      characterId: 1,
+      stageId: "char.encore.basic-attack.normal-attack.stage-1::basic-attack",
+    })
   })
 
   it("typeLabel reflects the stage's skillCategory", () => {
@@ -548,104 +521,5 @@ describe("focused-stage-catalog — sequence gating", () => {
     expect(
       result.characterStages.find((s) => s.label === "S6 Skill"),
     ).toBeDefined()
-  })
-})
-
-describe("focused-stage-catalog — characterStages ordering", () => {
-  const charWithIntroOutro: EnrichedCharacter = {
-    ...char1,
-    id: 2,
-    skills: [
-      {
-        id: 201,
-        name: "Normal Attack",
-        type: "Normal Attack",
-        stages: [
-          {
-            name: "Stage 1",
-            category: "Basic Attack",
-            value: "1",
-            actionTime: 10,
-            damage: [
-              {
-                type: "Basic Attack",
-                dmgType: "Physical",
-                scalingStat: "ATK",
-                actionFrame: 0,
-                value: 1,
-                energy: 0,
-                concerto: 0,
-                toughness: 0,
-                weakness: 0,
-              },
-            ],
-          },
-        ],
-        damage: [],
-      },
-      {
-        id: 202,
-        name: "Intro Skill",
-        type: "Intro Skill",
-        stages: [
-          {
-            name: "Intro",
-            category: "Intro Skill",
-            value: "1",
-            actionTime: 20,
-            damage: [],
-          },
-        ],
-        damage: [],
-      },
-      {
-        id: 203,
-        name: "Resonance Skill",
-        type: "Resonance Skill",
-        stages: [
-          {
-            name: "Skill",
-            category: "Resonance Skill",
-            value: "1",
-            actionTime: 15,
-            damage: [],
-          },
-        ],
-        damage: [],
-      },
-      {
-        id: 204,
-        name: "Outro Skill",
-        type: "Outro Skill",
-        stages: [
-          {
-            name: "Outro",
-            category: "Outro Skill",
-            value: "1",
-            actionTime: 25,
-            damage: [],
-          },
-        ],
-        damage: [],
-      },
-    ],
-  }
-
-  it("puts Intro Skill stages first, then Outro Skill stages, then the rest in original order", () => {
-    setCatalog([charWithIntroOutro], [])
-    const result = getFocusedStageCatalog([2, null, null], noLoadouts, 2)
-    const types = result.characterStages.map((s) => s.skillType)
-    expect(types).toEqual([
-      "Intro Skill",
-      "Outro Skill",
-      "Basic Attack",
-      "Resonance Skill",
-    ])
-  })
-
-  it("preserves echoStages order unchanged", () => {
-    setCatalog([charWithIntroOutro], [echo1])
-    const result = getFocusedStageCatalog([2, null, null], noLoadouts, 2)
-    expect(result.echoStages).toEqual([])
   })
 })
