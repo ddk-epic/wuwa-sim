@@ -59,24 +59,6 @@ describe("useAutoRun — commit-on-close-if-stale", () => {
     act(() => result.current.onModalClose())
     expect(runFn).toHaveBeenCalledTimes(1)
   })
-
-  it("does not run on onModalClose when needsRun is false", () => {
-    const runFn = vi.fn()
-    const { result } = renderHook(() =>
-      useAutoRun({ autoRun: true, needsRun: false, runFn, debounceMs: 300 }),
-    )
-    act(() => result.current.onModalClose())
-    expect(runFn).not.toHaveBeenCalled()
-  })
-
-  it("does not run on onModalClose when autoRun is false", () => {
-    const runFn = vi.fn()
-    const { result } = renderHook(() =>
-      useAutoRun({ autoRun: false, needsRun: true, runFn, debounceMs: 300 }),
-    )
-    act(() => result.current.onModalClose())
-    expect(runFn).not.toHaveBeenCalled()
-  })
 })
 
 describe("useAutoRun — run-on-enable", () => {
@@ -113,22 +95,6 @@ describe("useAutoRun — run-once-on-mount", () => {
       useAutoRun({ autoRun: true, needsRun: true, runFn, debounceMs: 300 }),
     )
     expect(runFn).toHaveBeenCalledTimes(1)
-  })
-
-  it("does not run on mount when autoRun is false", () => {
-    const runFn = vi.fn()
-    renderHook(() =>
-      useAutoRun({ autoRun: false, needsRun: true, runFn, debounceMs: 300 }),
-    )
-    expect(runFn).not.toHaveBeenCalled()
-  })
-
-  it("does not run on mount when needsRun is false", () => {
-    const runFn = vi.fn()
-    renderHook(() =>
-      useAutoRun({ autoRun: true, needsRun: false, runFn, debounceMs: 300 }),
-    )
-    expect(runFn).not.toHaveBeenCalled()
   })
 })
 

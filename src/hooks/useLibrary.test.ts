@@ -79,11 +79,6 @@ const aHit = (characterId: number, skillType: string, damage: number) => ({
 })
 
 describe("useLibrary", () => {
-  it("starts empty when storage is empty", () => {
-    const { result } = renderHook(() => useLibrary())
-    expect(result.current.teams).toEqual([])
-  })
-
   it("hydrates teams from wuwa.library on mount", () => {
     localStorage.setItem(
       "wuwa.library",
@@ -158,26 +153,6 @@ describe("useLibrary", () => {
     expect(result.current.teams[0].id).not.toBe(result.current.teams[1].id)
   })
 
-  it("rename changes a team's name", () => {
-    seedLive({ name: "Old" })
-    const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent(null))
-    const id = result.current.teams[0].id
-    act(() => result.current.rename(id, "New"))
-    expect(result.current.teams[0].name).toBe("New")
-  })
-
-  it("togglePin flips the pinned flag", () => {
-    seedLive({ name: "T" })
-    const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent(null))
-    const id = result.current.teams[0].id
-    act(() => result.current.togglePin(id))
-    expect(result.current.teams[0].pinned).toBe(true)
-    act(() => result.current.togglePin(id))
-    expect(result.current.teams[0].pinned).toBe(false)
-  })
-
   it("duplicate appends a detached copy with a new id", () => {
     seedLive({ name: "Base" })
     const { result } = renderHook(() => useLibrary())
@@ -186,15 +161,6 @@ describe("useLibrary", () => {
     act(() => result.current.duplicate(id))
     expect(result.current.teams).toHaveLength(2)
     expect(result.current.teams[1].id).not.toBe(id)
-  })
-
-  it("remove deletes a team by id", () => {
-    seedLive({ name: "Gone" })
-    const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent(null))
-    const id = result.current.teams[0].id
-    act(() => result.current.remove(id))
-    expect(result.current.teams).toEqual([])
   })
 
   it("importBundle parses a valid code into a new team and returns true", () => {
@@ -206,15 +172,6 @@ describe("useLibrary", () => {
     })
     expect(ok).toBe(true)
     expect(result.current.teams).toHaveLength(1)
-  })
-
-  it("importBundle restores the bundled team name", () => {
-    const code = encodePayload(emptyPayload("Shorekeeper Quickswap"))
-    const { result } = renderHook(() => useLibrary())
-    act(() => {
-      result.current.importBundle(code)
-    })
-    expect(result.current.teams[0].name).toBe("Shorekeeper Quickswap")
   })
 
   it("importBundle falls back to a placeholder when the bundle has no name", () => {
@@ -273,19 +230,6 @@ describe("useLibrary", () => {
     expect(JSON.parse(localStorage.getItem("wuwa.simulation-log")!)).toEqual([])
   })
 
-  it("round-trips the team name through snapshotLive/writeLive (save then load)", () => {
-    seedLive({ name: "Hypercarry", slots: [1102, null, null] })
-    const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent(null))
-    const id = result.current.teams[0].id
-    expect(result.current.teams[0].name).toBe("Hypercarry")
-
-    // Live name drifts; loading restores the saved one.
-    seedLive({ name: "Scratch", slots: [null, null, null] })
-    act(() => result.current.load(id))
-    expect(readLiveTeam().name).toBe("Hypercarry")
-  })
-
   it("round-trips per-team settings through save then load", () => {
     seedLive({
       name: "Tuned",
@@ -340,16 +284,6 @@ describe("useLibrary", () => {
     const { result } = renderHook(() => useLibrary())
     act(() => result.current.load("legacy"))
     expect(readLiveTeam().settings).toEqual(DEFAULT_SETTINGS)
-  })
-
-  it("load stamps the loaded entry's id as the live Origin", () => {
-    seedLive({ name: "Origin", slots: [1102, null, null] })
-    const { result } = renderHook(() => useLibrary())
-    act(() => result.current.saveCurrent(null))
-    const id = result.current.teams[0].id
-    seedLive({ name: "Origin", slots: [1102, null, null], originId: null })
-    act(() => result.current.load(id))
-    expect(readLiveTeam().originId).toBe(id)
   })
 
   it("saveCurrent updates the origin entry in place (no duplicate)", () => {

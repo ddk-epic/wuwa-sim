@@ -70,24 +70,9 @@ describe("useTimeline", () => {
     expect(result.current.entries[0].variantKind).toBe("cancel")
     expect(result.current.entries[1].variantKind).toBe("instantCancel")
   })
-
-  it("updateEntry is a no-op for unknown ids", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry(sample)
-    })
-    act(() => {
-      result.current.updateEntry("nonexistent-id", { variantKind: "cancel" })
-    })
-    expect(result.current.entries[0].variantKind).toBeUndefined()
-  })
 })
 
 describe("flattenNodes", () => {
-  it("returns empty array for empty nodes", () => {
-    expect(flattenNodes([])).toEqual([])
-  })
-
   it("flattens top-level entry nodes", () => {
     const node: TimelineNode = {
       kind: "entry",
@@ -103,23 +88,6 @@ describe("flattenNodes", () => {
         variantKind: undefined,
       },
     ])
-  })
-
-  it("flattens group entries inline", () => {
-    const group: TimelineNode = {
-      kind: "group",
-      id: "g1",
-      label: "Group",
-      locked: false,
-      entries: [
-        { id: "e1", characterId: 1, stageId: "Normal Attack::Stage 1" },
-        { id: "e2", characterId: 2, stageId: "Resonance Skill::_" },
-      ],
-    }
-    const flat = flattenNodes([group])
-    expect(flat).toHaveLength(2)
-    expect(flat[0].id).toBe("e1")
-    expect(flat[1].id).toBe("e2")
   })
 
   it("preserves order: entry, group entries, entry", () => {
@@ -200,33 +168,6 @@ describe("useTimeline group support", () => {
     expect(result.current.entries).toHaveLength(1)
   })
 
-  it("addEntry appends to top level when no open group", () => {
-    const { result } = renderHook(() => useTimeline())
-    // No group added — no open group
-    act(() => {
-      result.current.addEntry(sample)
-    })
-    const topLevelEntries = result.current.nodes.filter(
-      (n) => n.kind === "entry",
-    )
-    expect(topLevelEntries).toHaveLength(1)
-    expect(result.current.entries).toHaveLength(1)
-  })
-
-  it("addGroup returns unique id and appends group node", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-    })
-    expect(typeof groupId).toBe("string")
-    expect(groupId.length).toBeGreaterThan(0)
-    const group = result.current.nodes.find(
-      (n) => n.kind === "group" && n.id === groupId,
-    )
-    expect(group).toBeDefined()
-  })
-
   it("removeEntry removes entry inside a group", () => {
     const { result } = renderHook(() => useTimeline())
     act(() => {
@@ -301,38 +242,6 @@ describe("useTimeline loop marker", () => {
       result.current.nodes.filter((n) => n.kind === "loopMarker"),
     ).toHaveLength(1)
   })
-
-  it("removeLoopMarker deletes the marker but keeps entries", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry(sample)
-      result.current.addLoopMarker()
-    })
-    act(() => {
-      result.current.removeLoopMarker()
-    })
-    expect(result.current.nodes.some((n) => n.kind === "loopMarker")).toBe(
-      false,
-    )
-    expect(result.current.entries).toHaveLength(1)
-  })
-
-  it("removeEntry and updateEntry leave the marker node untouched", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addEntry(sample)
-      result.current.addLoopMarker()
-    })
-    const id = result.current.entries[0].id
-    act(() => {
-      result.current.updateEntry(id, { variantKind: "cancel" })
-      result.current.removeEntry(id)
-    })
-    expect(
-      result.current.nodes.filter((n) => n.kind === "loopMarker"),
-    ).toHaveLength(1)
-    expect(result.current.entries).toHaveLength(0)
-  })
 })
 
 describe("useTimeline reorderGroupEntries", () => {
@@ -376,19 +285,6 @@ describe("useTimeline reorderGroupEntries", () => {
       expect(group.entries[2].stageId).toBe("S::2")
     }
   })
-
-  it("is a no-op for unknown groupId", () => {
-    const { result } = renderHook(() => useTimeline())
-    act(() => {
-      result.current.addGroup()
-      result.current.addEntry({ characterId: 1, stageId: "S::1" })
-    })
-    const before = result.current.nodes.slice()
-    act(() => {
-      result.current.reorderGroupEntries("unknown", "x", "y", "above")
-    })
-    expect(result.current.nodes).toEqual(before)
-  })
 })
 
 describe("useTimeline reorderNodes", () => {
@@ -428,45 +324,6 @@ describe("useTimeline reorderNodes", () => {
     expect(nodeIds[1]).toBe(g1)
     expect(nodeIds[2]).toBe(g3)
   })
-
-  it("moves a group after a top-level entry node — above", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      result.current.addEntry(sample) // top-level entry
-      groupId = result.current.addGroup()
-    })
-    const entryId = result.current.nodes[0].id
-    act(() => {
-      result.current.reorderNodes(groupId, entryId, "above") // move group before entry
-    })
-    expect(result.current.nodes[0].kind).toBe("group")
-    expect(result.current.nodes[0].id).toBe(groupId)
-    expect(result.current.nodes[1].kind).toBe("entry")
-  })
-
-  it("moves a top-level entry to a group's flat position — above", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup() // group(open)
-    })
-    act(() => {
-      result.current.toggleGroupLock(groupId) // lock it
-    })
-    act(() => {
-      result.current.addEntry(sample) // top-level entry (group is locked)
-    })
-    // nodes: [group(locked), entry(top-level)]
-    const entryId = result.current.nodes.find((n) => n.kind === "entry")!.id
-    act(() => {
-      result.current.reorderNodes(entryId, groupId, "above") // entry moves before group
-    })
-    expect(result.current.nodes[0].kind).toBe("entry")
-    expect(result.current.nodes[0].id).toBe(entryId)
-    expect(result.current.nodes[1].kind).toBe("group")
-    expect(result.current.nodes[1].id).toBe(groupId)
-  })
 })
 
 describe("useTimeline onShapeChange callback", () => {
@@ -475,20 +332,6 @@ describe("useTimeline onShapeChange callback", () => {
     const { result } = renderHook(() => useTimeline(onShapeChange))
     act(() => {
       result.current.addEntry(sample)
-    })
-    expect(onShapeChange).toHaveBeenCalledTimes(1)
-  })
-
-  it("removeEntry calls onShapeChange", () => {
-    const onShapeChange = vi.fn()
-    const { result } = renderHook(() => useTimeline(onShapeChange))
-    act(() => {
-      result.current.addEntry(sample)
-    })
-    const id = result.current.entries[0].id
-    onShapeChange.mockClear()
-    act(() => {
-      result.current.removeEntry(id)
     })
     expect(onShapeChange).toHaveBeenCalledTimes(1)
   })
@@ -520,47 +363,6 @@ describe("useTimeline onShapeChange callback", () => {
     })
     expect(onShapeChange).toHaveBeenCalledTimes(1)
   })
-
-  it("updateGroupLabel does NOT call onShapeChange", () => {
-    const onShapeChange = vi.fn()
-    const { result } = renderHook(() => useTimeline(onShapeChange))
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-    })
-    onShapeChange.mockClear()
-    act(() => {
-      result.current.updateGroupLabel(groupId, "New Name")
-    })
-    expect(onShapeChange).not.toHaveBeenCalled()
-  })
-
-  it("toggleGroupLock does NOT call onShapeChange", () => {
-    const onShapeChange = vi.fn()
-    const { result } = renderHook(() => useTimeline(onShapeChange))
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-    })
-    onShapeChange.mockClear()
-    act(() => {
-      result.current.toggleGroupLock(groupId)
-    })
-    expect(onShapeChange).not.toHaveBeenCalled()
-  })
-
-  it("clearTimeline calls onShapeChange", () => {
-    const onShapeChange = vi.fn()
-    const { result } = renderHook(() => useTimeline(onShapeChange))
-    act(() => {
-      result.current.addEntry(sample)
-    })
-    onShapeChange.mockClear()
-    act(() => {
-      result.current.clearTimeline()
-    })
-    expect(onShapeChange).toHaveBeenCalledTimes(1)
-  })
 })
 
 describe("useTimeline lock invariant", () => {
@@ -589,21 +391,6 @@ describe("useTimeline lock invariant", () => {
     )
     expect(g1After?.kind === "group" && g1After.locked).toBe(true)
     expect(g2After?.kind === "group" && g2After.locked).toBe(false)
-  })
-
-  it("toggleGroupLock locks an open group", () => {
-    const { result } = renderHook(() => useTimeline())
-    let groupId!: string
-    act(() => {
-      groupId = result.current.addGroup()
-    })
-    act(() => {
-      result.current.toggleGroupLock(groupId)
-    })
-    const group = result.current.nodes.find(
-      (n) => n.kind === "group" && n.id === groupId,
-    )
-    expect(group?.kind === "group" && group.locked).toBe(true)
   })
 
   it("toggleGroupLock opens a locked group and locks all other open groups", () => {

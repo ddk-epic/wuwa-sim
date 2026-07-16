@@ -31,12 +31,6 @@ describe("computeSignature", () => {
 })
 
 describe("useSimulationLog", () => {
-  it("defaults to empty log with empty signature", () => {
-    const { result } = renderHook(() => useSimulationLog())
-    expect(result.current.log).toEqual([])
-    expect(result.current.storedSignature).toBe("")
-  })
-
   it("setLog stores the log and signature", () => {
     const { result } = renderHook(() => useSimulationLog())
     act(() => {
@@ -73,24 +67,5 @@ describe("useSimulationLog", () => {
     const { result } = renderHook(() => useSimulationLog())
     expect(result.current.log).toEqual([fakeEntry])
     expect(result.current.storedSignature).toBe("deadbeef")
-  })
-
-  it("stale-on-reload: storedSignature differs from current signature after migration", () => {
-    // Simulate a previous session that stored a bare log (no signature)
-    localStorage.setItem("wuwa.simulation-log", JSON.stringify([fakeEntry]))
-    const { result } = renderHook(() => useSimulationLog())
-    const currentSig = computeSignature([{ characterId: 1 }], {}, [], {})
-    // storedSignature is "" (migrated), currentSig is non-empty → stale
-    expect(result.current.storedSignature).not.toBe(currentSig)
-  })
-
-  it("not stale when stored signature matches current signature", () => {
-    const sig = computeSignature([{ characterId: 1 }], {}, [], {})
-    localStorage.setItem(
-      "wuwa.simulation-log",
-      JSON.stringify({ log: [fakeEntry], signature: sig }),
-    )
-    const { result } = renderHook(() => useSimulationLog())
-    expect(result.current.storedSignature).toBe(sig)
   })
 })

@@ -36,7 +36,7 @@ export type DropResolution = {
   decision: Exclude<DropDecision, { kind: "none" }>
 }
 
-export function isDropAllowed(
+function isDropAllowed(
   srcCtx: DragSrcCtx | null,
   targetGroupId: string | null,
   targetGroupLocked: boolean,
