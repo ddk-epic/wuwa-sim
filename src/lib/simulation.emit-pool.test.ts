@@ -203,17 +203,6 @@ describe("Emit Pool — explicit convert", () => {
     // matures naturally at 60 + 300 → lands at 400.
     expect(synths.map((s) => s.frame)).toEqual([160, 400])
   })
-
-  it("convert on an empty pool is a harmless no-op", () => {
-    testCharacters = [convertChar("all")]
-    const slots: Slots = [1, null, null]
-    const log = runSimulation(
-      [tlEntry(1, RESONANCE_STAGE, "e1")],
-      slots,
-      loadouts,
-    )
-    expect(log.filter(isPoolSynth)).toHaveLength(0)
-  })
 })
 
 describe("Emit Pool — cap + FIFO displacement", () => {

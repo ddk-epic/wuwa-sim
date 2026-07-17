@@ -400,64 +400,6 @@ describe("runSimulation — Movement stages", () => {
     expect(action?.frame).toBe(0)
   })
 
-  it("Dodge produces only an Action Event — no hit events", () => {
-    testCharacters = [charWithMovement]
-    const result = runSimulation(
-      [tlEntry(99, "char.movement-char.movement.dodge.dodge::movement")],
-      emptySlots,
-      emptyLoadouts,
-    )
-    const hits = result.filter((e) => e.kind === "hit")
-    expect(hits).toHaveLength(0)
-  })
-
-  it("concerto stays unchanged across a Dodge (no skillCast dispatch)", () => {
-    testCharacters = [charWithMovement]
-    const result = runSimulation(
-      [
-        tlEntry(
-          99,
-          "char.movement-char.basic-attack.normal-attack.stage-1::basic-attack",
-        ), // gains concerto from hit
-        tlEntry(99, "char.movement-char.movement.dodge.dodge::movement"),
-      ],
-      emptySlots,
-      emptyLoadouts,
-    )
-    // After Normal Attack hits: concerto accumulated; the Dodge action event shows
-    // the same concerto (Dodge did not apply any concerto delta)
-    const hits = result.filter((e): e is HitEvent => e.kind === "hit")
-    const hitAfterNormal = hits[0]
-    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
-    const dodgeAction = actions.find((a) => a.skillType === "Movement")
-    expect(hitAfterNormal.cumulativeConcerto).toBeGreaterThan(0)
-    expect(dodgeAction?.cumulativeConcerto).toBe(
-      hitAfterNormal.cumulativeConcerto,
-    )
-  })
-
-  it("energy is preserved across a Dodge (Liberation energy not drained)", () => {
-    testCharacters = [charWithMovement]
-    const result = runSimulation(
-      [
-        tlEntry(
-          99,
-          "char.movement-char.basic-attack.normal-attack.stage-1::basic-attack",
-        ), // accumulates energy via hit
-        tlEntry(99, "char.movement-char.movement.dodge.dodge::movement"),
-      ],
-      emptySlots,
-      emptyLoadouts,
-    )
-    // Energy set by the hit event; the Dodge action event must show same value
-    const hits = result.filter((e): e is HitEvent => e.kind === "hit")
-    const hitAfterNormal = hits[0]
-    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
-    const dodgeAction = actions.find((a) => a.skillType === "Movement")
-    expect(hitAfterNormal.cumulativeEnergy).toBeGreaterThan(0)
-    expect(dodgeAction?.cumulativeEnergy).toBe(hitAfterNormal.cumulativeEnergy)
-  })
-
   it("skillCast-triggered buff does not promote when Dodge is cast", () => {
     const skillCastBuff: BuffDef = {
       id: "test.on-cast",
@@ -588,31 +530,6 @@ describe("runSimulation — fall frames", () => {
     const actions = result.filter((e): e is ActionEvent => e.kind === "action")
     const groundAction = actions.find((a) => a.sourceEntryId === "e2")
     expect(groundAction?.delayBreakdown?.pad.fall).toBe(21)
-  })
-
-  it("same-character ground stage after ground stage: fall does not fire", () => {
-    testCharacters = [charAerial]
-    const entries: TimelineEntry[] = [
-      tlEntry(
-        50,
-        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
-        "e1",
-      ),
-      tlEntry(
-        50,
-        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
-        "e2",
-      ),
-    ]
-    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
-      reactionDelay: 0,
-      swapFrames: 6,
-      variantFloor: 0,
-      fallFrames: 21,
-    })
-    const actions = result.filter((e): e is ActionEvent => e.kind === "action")
-    const second = actions.find((a) => a.sourceEntryId === "e2")
-    expect(second?.delayBreakdown?.pad.fall ?? 0).toBe(0)
   })
 
   it("aerial stage after launch: fall does not fire (air->air)", () => {

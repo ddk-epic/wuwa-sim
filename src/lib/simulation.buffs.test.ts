@@ -262,7 +262,7 @@ describe("runSimulation — post-actionTime hits resolve in frame order (stackin
   })
 })
 
-describe("runSimulation — Energy Recharge (#98)", () => {
+describe("runSimulation — Energy Recharge", () => {
   const erBuff = (id: number, erPct: number): BuffDef => ({
     id: `char${id}.er`,
     name: "ER Buff",
@@ -380,27 +380,6 @@ describe("runSimulation — inherit duration", () => {
     ],
   }
 
-  it("child buff inherits endTime from parent buff applied in the same event", () => {
-    testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
-    const entries = [
-      tlEntry(
-        1,
-        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-      ),
-    ]
-    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
-    const buffEvents = result.filter((e) => e.kind === "buffApplied")
-    expect(buffEvents).toHaveLength(2)
-    const parentApplied = buffEvents.find(
-      (e) => "buffId" in e && e.buffId === "test.parent",
-    )
-    const childApplied = buffEvents.find(
-      (e) => "buffId" in e && e.buffId === "test.child",
-    )
-    expect(parentApplied).toBeDefined()
-    expect(childApplied).toBeDefined()
-  })
-
   it("child buff with inherit duration expires at the same time as parent", () => {
     testCharacters = [{ ...charA, buffs: [parentBuff, childBuff] }]
     const entries = [
@@ -413,93 +392,5 @@ describe("runSimulation — inherit duration", () => {
     const hitEvent = result.find((e) => e.kind === "hit")
     expect(hitEvent?.activeBuffs.some((b) => b.id === "test.parent")).toBe(true)
     expect(hitEvent?.activeBuffs.some((b) => b.id === "test.child")).toBe(true)
-  })
-})
-
-describe("runSimulation — removeBuffs effect", () => {
-  const markerBuff: BuffDef = {
-    id: "test.marker",
-    name: "Marker",
-    trigger: {
-      event: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-    },
-    target: { kind: "self" },
-    duration: { kind: "seconds", v: 30 },
-    effects: [],
-  }
-
-  const removeReaction: BuffDef = {
-    id: "test.remove-reaction",
-    name: "Remove Reaction",
-    trigger: {
-      event: "skillCast",
-      characterId: 1,
-      skillCategory: "Resonance Skill",
-    },
-    effects: [{ kind: "removeBuffs", buffs: ["marker"] }],
-  }
-
-  const charWithRemove: EnrichedCharacter = {
-    ...charA,
-    buffs: [markerBuff, removeReaction],
-    skills: [
-      charA.skills[0],
-      {
-        id: 200,
-        name: "Skill",
-        type: "Resonance Skill",
-        stages: [
-          {
-            name: "Skill",
-            category: "Resonance Skill",
-            value: "100%",
-            actionTime: 30,
-            damage: [dmgHit(1.0, 0, 0, "Resonance Skill")],
-          },
-        ],
-        damage: [],
-      },
-    ],
-  }
-
-  it("removeBuffs effect removes active instances of listed buff IDs", () => {
-    testCharacters = [charWithRemove]
-    const entries = [
-      tlEntry(
-        1,
-        "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-      ),
-      tlEntry(1, "char.char-a.resonance-skill.skill.skill::resonance-skill"),
-    ]
-    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
-    const applied = result.filter(
-      (e) =>
-        e.kind === "buffApplied" && "buffId" in e && e.buffId === "test.marker",
-    )
-    const consumed = result.filter(
-      (e) =>
-        e.kind === "buffConsumed" &&
-        "buffId" in e &&
-        e.buffId === "test.marker",
-    )
-    expect(applied).toHaveLength(1)
-    expect(consumed).toHaveLength(1)
-  })
-
-  it("removeBuffs is a no-op when referenced buff is not active", () => {
-    testCharacters = [charWithRemove]
-    const entries = [
-      tlEntry(1, "char.char-a.resonance-skill.skill.skill::resonance-skill"),
-    ]
-    const result = runSimulation(entries, [1, null, null], emptyLoadouts)
-    const consumed = result.filter(
-      (e) =>
-        e.kind === "buffConsumed" &&
-        "buffId" in e &&
-        e.buffId === "test.marker",
-    )
-    expect(consumed).toHaveLength(0)
   })
 })

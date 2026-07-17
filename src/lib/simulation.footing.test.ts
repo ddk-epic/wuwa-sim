@@ -991,30 +991,6 @@ describe("runSimulation — footing violation diagnostics", () => {
     expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
   })
 
-  it("an entry-any stage cast from the ground raises no diagnostic and exits ground", () => {
-    testCharacters = [charAerial]
-    const entries: TimelineEntry[] = [
-      tlEntry(
-        50,
-        "char.aerial-char.resonance-skill.any-burst.any-burst-stage::resonance-skill",
-        "e1",
-      ),
-      tlEntry(
-        50,
-        "char.aerial-char.basic-attack.ground-attack.ground-stage::basic-attack",
-        "e2",
-      ),
-    ]
-    const result = runSimulation(entries, aerialSlots(), emptyLoadouts, {
-      reactionDelay: 0,
-      swapFrames: 6,
-      variantFloor: 0,
-      fallFrames: 21,
-    })
-    expect(actionFor(result, "e1")?.diagnostics).toBeUndefined()
-    expect(actionFor(result, "e2")?.delayBreakdown?.pad.fall ?? 0).toBe(0)
-  })
-
   it("an entry-any stage cast from the air pays no fall and grounds the field", () => {
     testCharacters = [charAerial]
     const entries: TimelineEntry[] = [

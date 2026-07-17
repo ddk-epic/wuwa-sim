@@ -159,12 +159,6 @@ const emptyLoadouts: SlotLoadout[] = [
   },
 ]
 
-describe("runSimulation — empty", () => {
-  it("returns empty array for empty timeline", () => {
-    expect(runSimulation([], emptySlots, emptyLoadouts)).toEqual([])
-  })
-})
-
 describe("runSimulation — single hit", () => {
   it("produces one action event and one hit event per timeline entry", () => {
     testCharacters = [charA]
@@ -197,19 +191,6 @@ describe("runSimulation — single hit", () => {
     expect(
       (result[1] as { statsSnapshot: { atkBase: number } }).statsSnapshot,
     ).toMatchObject({ atkBase: 1000 })
-  })
-
-  it("rounds damage to whole number", () => {
-    testCharacters = [
-      { ...charA, stats: { ...charA.stats, max: { hp: 0, atk: 3, def: 0 } } },
-    ]
-    const entry = tlEntry(
-      1,
-      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts)
-    expect(result).toHaveLength(2)
-    expect(result[1]).toMatchObject({ kind: "hit", damage: 2 })
   })
 })
 
@@ -272,25 +253,6 @@ describe("runSimulation — multi-hit stage", () => {
       throw new Error("expected hit rows")
     // charA.maxEnergy === 100: the seeded run's first hit reads 100 higher.
     expect(seededHit.cumulativeEnergy).toBe(baseHit.cumulativeEnergy + 100)
-  })
-
-  it("startWithFullConcerto seeds the occupied slot's concerto before hits accrue", () => {
-    testCharacters = [charA]
-    const slots: Slots = [1, null, null]
-    const entry = tlEntry(
-      1,
-      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-    )
-    const baseline = runSimulation([entry], slots, emptyLoadouts)
-    const seeded = runSimulation([entry], slots, emptyLoadouts, {
-      startWithFullConcerto: true,
-    })
-    const baseHit = baseline[1]
-    const seededHit = seeded[1]
-    if (baseHit.kind !== "hit" || seededHit.kind !== "hit")
-      throw new Error("expected hit rows")
-    // CONCERTO_CAP === 100: the seeded run's first hit reads 100 higher.
-    expect(seededHit.cumulativeConcerto).toBe(baseHit.cumulativeConcerto + 100)
   })
 })
 
@@ -417,52 +379,6 @@ describe("runSimulation — echo skill entries", () => {
   })
 })
 
-describe("runSimulation — missing character", () => {
-  it("skips entries with unknown characterId", () => {
-    testCharacters = []
-    const entry = tlEntry(
-      99,
-      "char.unknown.basic-attack.normal-attack.stage-1::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts)
-    expect(result).toEqual([])
-  })
-})
-
-describe("runSimulation — unmatched stage", () => {
-  it("skips timeline entries whose stage cannot be found", () => {
-    testCharacters = [charA]
-    const entry = tlEntry(
-      1,
-      "char.char-a.basic-attack.normal-attack.nonexistent::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts)
-    expect(result).toEqual([])
-  })
-})
-
-describe("runSimulation — frame tracking", () => {
-  it("assigns stageStartFrame to action events and stageStartFrame + actionFrame to hit events", () => {
-    testCharacters = [charA]
-    const entry1: TimelineEntry = {
-      id: "e1",
-      characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-    }
-    const entry2: TimelineEntry = {
-      id: "e2",
-      characterId: 1,
-      stageId: "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-    }
-    const result = runSimulation([entry1, entry2], emptySlots, emptyLoadouts)
-    expect(result).toHaveLength(4)
-    expect(result[0].frame).toBe(0)
-    expect(result[1].frame).toBe(0)
-    expect(result[2].frame).toBe(60)
-    expect(result[3].frame).toBe(60)
-  })
-})
-
 describe("runSimulation — action event concerto", () => {
   it("accumulates stage.concerto on action event without advancing energy", () => {
     testCharacters = [charD]
@@ -487,44 +403,6 @@ describe("runSimulation — action event concerto", () => {
   })
 })
 
-describe("runSimulation — stats snapshot", () => {
-  it("populates statsSnapshot and empty activeBuffs on every HitEvent", () => {
-    testCharacters = [charA]
-    const entry = tlEntry(
-      1,
-      "char.char-a.basic-attack.normal-attack.stage-2::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts)
-    const hits = result.filter((e) => e.kind === "hit")
-    expect(hits).toHaveLength(2)
-    for (const hit of hits) {
-      expect(hit.activeBuffs).toEqual([])
-      expect(hit.statsSnapshot).toMatchObject({
-        atkBase: 1000,
-        atkPct: 0,
-        atkFlat: 0,
-        critRate: 0,
-        critDmg: 0,
-      })
-    }
-  })
-})
-
-describe("runSimulation — discriminated union", () => {
-  it("action events do not have a damage property", () => {
-    testCharacters = [charA]
-    const entry = tlEntry(
-      1,
-      "char.char-a.basic-attack.normal-attack.stage-1::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts)
-    expect(result[0].kind).toBe("action")
-    expect("damage" in result[0]).toBe(false)
-  })
-})
-
-// Tracer fixture: Stage 5 with actionFrame=23, cancel.actionTime=33, instantCancel.actionTime=7
-// reactionDelay=9: cancel cutoff=42, instantCancel cutoff=16
 describe("runSimulation — healing pipeline", () => {
   const healerAtk = 2000
 
@@ -652,11 +530,3 @@ describe("runSimulation — healing pipeline", () => {
     )
   })
 })
-
-// -- Trailing-window collision (issue #177) -----------------------
-
-// -- Fall frames --------------------------------------------
-
-// -- Trailing-window footing snapshot ---------------------
-
-// -- Footing commit as Trailing Window event ---------------

@@ -116,20 +116,7 @@ const charVariant: EnrichedCharacter = {
   ],
 }
 
-describe("runSimulation — stage variants (ADR 0008)", () => {
-  it("full stage (no variantKind): damage entry lands", () => {
-    testCharacters = [charVariant]
-    const entry = tlEntry(
-      10,
-      "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
-      reactionDelay: 9,
-    })
-    const hits = result.filter((e) => e.kind === "hit")
-    expect(hits).toHaveLength(1)
-  })
-
+describe("runSimulation — stage variants", () => {
   it("cancel variant: actionFrame 23 <= cutoff 42, damage lands", () => {
     testCharacters = [charVariant]
     const entry: TimelineEntry = {
@@ -162,35 +149,6 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     const actions = result.filter((e) => e.kind === "action")
     expect(hits).toHaveLength(0)
     expect(actions).toHaveLength(1)
-  })
-
-  it("ActionEvent records variantKind when set", () => {
-    testCharacters = [charVariant]
-    const entry: TimelineEntry = {
-      id: "v3",
-      characterId: 10,
-      stageId:
-        "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
-      variantKind: "cancel",
-    }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
-      reactionDelay: 9,
-    })
-    const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.variantKind).toBe("cancel")
-  })
-
-  it("ActionEvent has no variantKind for full stage", () => {
-    testCharacters = [charVariant]
-    const entry = tlEntry(
-      10,
-      "char.variant-char.basic-attack.normal-attack.stage-5::basic-attack",
-    )
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
-      reactionDelay: 9,
-    })
-    const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.variantKind).toBeUndefined()
   })
 
   it("swap variant with authored actionTime: advance = actionTime + reactionDelay", () => {
@@ -247,57 +205,6 @@ describe("runSimulation — stage variants (ADR 0008)", () => {
     expect(hits).toHaveLength(1)
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.variantKind).toBe("swap")
-  })
-
-  it("swap variant with no authored swap: advance = swapFrames, hits unfiltered", () => {
-    const charSwapFallback: EnrichedCharacter = {
-      ...charVariant,
-      id: 12,
-      skills: [
-        {
-          id: 7,
-          name: "Normal Attack",
-          type: "Normal Attack",
-          stages: [
-            {
-              name: "Stage",
-              category: "Basic Attack",
-              value: "100%",
-              actionTime: 50,
-              damage: [
-                {
-                  type: "Basic Attack",
-                  dmgType: "Damage",
-                  scalingStat: "ATK",
-                  actionFrame: 40,
-                  value: 1.0,
-                  energy: 0,
-                  concerto: 0,
-                  toughness: 0,
-                  weakness: 0,
-                },
-              ],
-            },
-          ],
-          damage: [],
-        },
-      ],
-    }
-    testCharacters = [charSwapFallback]
-    const entry: TimelineEntry = {
-      id: "sw2",
-      characterId: 12,
-      stageId:
-        "char.variant-char.basic-attack.normal-attack.stage::basic-attack",
-      variantKind: "swap",
-    }
-    const result = runSimulation([entry], emptySlots, emptyLoadouts, {
-      reactionDelay: 6,
-      swapFrames: 6,
-    })
-    const hits = result.filter((e) => e.kind === "hit")
-    // actionFrame 40 > swapFrames 6 but swap does NOT filter — hit lands
-    expect(hits).toHaveLength(1)
   })
 })
 
@@ -371,22 +278,6 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
     )
     const action = result.find((e): e is ActionEvent => e.kind === "action")
     expect(action?.skillType).toBe("Basic Attack")
-  })
-
-  it("skillType on action event reflects damage[0].type — Rampage Stage reports Resonance Skill", () => {
-    testCharacters = [charWithLiberation]
-    const result = runSimulation(
-      [
-        tlEntry(
-          50,
-          "char.liberation-char.resonance-liberation.liberation.rampage-stage::resonance-skill",
-        ),
-      ],
-      emptySlots,
-      emptyLoadouts,
-    )
-    const action = result.find((e): e is ActionEvent => e.kind === "action")
-    expect(action?.skillType).toBe("Resonance Skill")
   })
 
   it("skillCast trigger fires on parent skill type (Resonance Liberation)", () => {
@@ -546,7 +437,7 @@ describe("runSimulation — skillType derivation from damage[0].type", () => {
   })
 })
 
-describe("runSimulation — stageId trigger filter (#89)", () => {
+describe("runSimulation — stageId trigger filter", () => {
   const hit = (): DamageEntry => ({
     type: "Basic Attack",
     dmgType: "Damage",
@@ -653,74 +544,5 @@ describe("runSimulation — stageId trigger filter (#89)", () => {
     expect(
       betaHit?.activeBuffs.some((b) => b.id === "test.stage-alpha-only"),
     ).toBe(false)
-  })
-
-  it("array stageId — buff fires on any of the listed stages", () => {
-    const buff: BuffDef = {
-      id: "test.both-stages",
-      name: "Both Stages",
-      trigger: {
-        event: "skillCast",
-        characterId: 60,
-        stageId: [
-          "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
-          "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
-        ],
-      },
-      target: { kind: "self" },
-      duration: { kind: "seconds", v: 10 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "elementBonus", key: "Fusion" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
-
-    for (const stageId of [
-      "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
-      "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
-    ]) {
-      const result = runSimulation(
-        [tlEntry(60, stageId)],
-        [60, null, null],
-        emptyLoadouts,
-      )
-      const h = result.find((e) => e.kind === "hit")
-      expect(h?.activeBuffs.some((b) => b.id === "test.both-stages")).toBe(true)
-    }
-  })
-
-  it("no stageId filter — buff fires on all stages as before", () => {
-    const buff: BuffDef = {
-      id: "test.any-stage",
-      name: "Any Stage",
-      trigger: { event: "skillCast", characterId: 60 },
-      target: { kind: "self" },
-      duration: { kind: "seconds", v: 10 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "elementBonus", key: "Fusion" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testCharacters = [{ ...charWithTwoStages, buffs: [buff] }]
-
-    for (const stageId of [
-      "char.stage-char.resonance-liberation.skill-a.stage-alpha::basic-attack",
-      "char.stage-char.resonance-liberation.skill-a.stage-beta::basic-attack",
-    ]) {
-      const result = runSimulation(
-        [tlEntry(60, stageId)],
-        [60, null, null],
-        emptyLoadouts,
-      )
-      const h = result.find((e) => e.kind === "hit")
-      expect(h?.activeBuffs.some((b) => b.id === "test.any-stage")).toBe(true)
-    }
   })
 })

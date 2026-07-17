@@ -9,7 +9,7 @@ import { runSimulation } from "./simulation"
 import { makeChar, stageOf, tlEntry } from "./simulation.test-fixtures"
 
 /**
- * Authored-path HitContext threading (issue #289).
+ * Authored-path HitContext threading.
  *
  * The authored walk (`resolveTrailingBundle`) builds a HitContext from the
  * resolved stage + DamageEntry (`stageId`/`skillCategory`/`skillType`/`element`)
@@ -72,7 +72,7 @@ const loadouts: SlotLoadout[] = [loadout, loadout, loadout]
 const authoredHit = (log: SimulationLogEntry[]): HitEvent | undefined =>
   log.find((e): e is HitEvent => e.kind === "hit" && e.sourceEntryId === "e1")
 
-describe("authored-path HitContext — stageId-scoped appliesToHits (#289)", () => {
+describe("authored-path HitContext — stageId-scoped appliesToHits", () => {
   it("folds a matching stageId bonus into the authored hit's allDmgBonus and lists it", () => {
     const matching = hitStageId("gold-a", 0)
     testCharacters = [makeChar(1, "Gold A", [stageScopedBonus(matching)])]
