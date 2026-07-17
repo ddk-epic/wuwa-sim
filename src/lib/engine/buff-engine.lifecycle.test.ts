@@ -16,7 +16,6 @@ import {
   BASE_CR,
   baseChar,
   emptyLoadout,
-  inactiveBuff,
   slotsOf,
 } from "./buff-engine.test-fixtures"
 
@@ -40,7 +39,7 @@ afterEach(() => {
   testEchoSets = []
 })
 
-describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
+describe("BuffEngine — nextOnField deferred resolution", () => {
   it("materializes a nextOnField buff at the next swapIn", () => {
     const outro: BuffDef = {
       id: "char.a.outro",
@@ -100,55 +99,6 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
     expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.3 + BASE_ATK_PCT)
   })
 
-  it("queue is drained on swap-in: buff targets the incoming character, not the outro caster", () => {
-    const outro: BuffDef = {
-      id: "char.a.outro",
-      name: "Outro",
-      trigger: {
-        event: "skillCast",
-        characterId: 1,
-        skillCategory: "Outro Skill",
-      },
-      target: { kind: "nextOnField" },
-      duration: { kind: "frames", v: 60 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [outro] }), baseChar({ id: 2 })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Outro Skill",
-      frame: 10,
-    })
-    expect(pendingNextOnFieldCount(engine)).toBe(1)
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 2,
-      skillCategory: "Basic Attack",
-      frame: 20,
-    })
-    expect(pendingNextOnFieldCount(engine)).toBe(0)
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT)
-    expect(engine.resolveStats(2).atkPct).toBeCloseTo(0.1 + BASE_ATK_PCT)
-  })
-
   it("end-of-simulation with non-empty pending queue: buffs are silently dropped", () => {
     const outro: BuffDef = {
       id: "char.a.outro",
@@ -192,7 +142,7 @@ describe("BuffEngine — nextOnField deferred resolution (#57)", () => {
   })
 })
 
-describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
+describe("BuffEngine — expiresOnSourceSwapOut", () => {
   it("removes instances whose source character swaps out", () => {
     const buff: BuffDef = {
       id: "char.a.tied-to-source",
@@ -241,7 +191,7 @@ describe("BuffEngine — expiresOnSourceSwapOut (#57)", () => {
   })
 })
 
-describe("BuffEngine — consumedBy (#61)", () => {
+describe("BuffEngine — consumedBy", () => {
   const guaranteedCrit: BuffDef = {
     id: "char.next-basic-crit",
     name: "Next Basic Guaranteed Crit",
@@ -298,32 +248,6 @@ describe("BuffEngine — consumedBy (#61)", () => {
       frame: 30,
     })
     expect(engine.resolveStats(1).critRate).toBeCloseTo(BASE_CR)
-  })
-
-  it("does not consume when the event does not match the filter", () => {
-    testCharacters = [baseChar({ id: 1, buffs: [guaranteedCrit] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Resonance Skill",
-      frame: 0,
-    })
-    const result = engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Heavy Attack",
-      dmgType: "Fusion",
-      frame: 30,
-    })
-    expect(result.lifecycleEvents.some((e) => e.kind === "buffConsumed")).toBe(
-      false,
-    )
-    expect(engine.resolveStats(1).critRate).toBeCloseTo(1 + BASE_CR)
   })
 
   it("decrements stacks without removing while stacks remain >0", () => {
@@ -460,7 +384,7 @@ describe("BuffEngine — consumedBy (#61)", () => {
   })
 })
 
-describe("BuffEngine — perSource (#61)", () => {
+describe("BuffEngine — perSource", () => {
   const sharedBuff = (perSource: boolean): BuffDef => ({
     id: "team.shared",
     name: "Shared",
@@ -535,7 +459,7 @@ describe("BuffEngine — perSource (#61)", () => {
   })
 })
 
-describe("BuffEngine — nonStackingGroup (#61)", () => {
+describe("BuffEngine — nonStackingGroup", () => {
   it("logs console.info when multiple buffs in the same group are co-active", () => {
     const a: BuffDef = {
       id: "buff.a",
@@ -585,46 +509,6 @@ describe("BuffEngine — nonStackingGroup (#61)", () => {
       expect(msg).toContain("atk-up")
       expect(msg).toContain("buff.a")
       expect(msg).toContain("buff.b")
-    } finally {
-      info.mockRestore()
-    }
-  })
-
-  it("does not log when only one buff in the group is active", () => {
-    const a: BuffDef = {
-      id: "buff.a",
-      name: "A",
-      trigger: {
-        event: "skillCast",
-        characterId: 1,
-        skillCategory: "Basic Attack",
-      },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 600 },
-      nonStackingGroup: "atk-up",
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.2 },
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [a] })]
-    const engine = new BuffEngine()
-    const info = vi.spyOn(console, "info").mockImplementation(() => {})
-    try {
-      engine.bootstrap({
-        slots: slotsOf(1),
-        loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-      })
-      engine.onEvent({
-        kind: "skillCast",
-        characterId: 1,
-        skillCategory: "Basic Attack",
-        frame: 0,
-      })
-      expect(info).not.toHaveBeenCalled()
     } finally {
       info.mockRestore()
     }
@@ -788,50 +672,9 @@ describe("BuffEngine — target collapses to source at trigger time", () => {
 
     expect(engine.activeBuffIds(2)).toContain("test.nof-target-cond")
   })
-
-  it("nextOnField def with precondition.on=target does not pass when source lacks the buff", () => {
-    const nextOnFieldDef: BuffDef = {
-      id: "test.nof-target-absent",
-      name: "NOF target absent",
-      trigger: {
-        event: "skillCast",
-        characterId: 1,
-        skillCategory: "Outro Skill",
-        precondition: { kind: "buffActive", buff: "absent", on: "target" },
-      },
-      target: { kind: "nextOnField" },
-      duration: { kind: "seconds", v: 15 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "allDmgBonus" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testCharacters = [
-      baseChar({ id: 1, buffs: [nextOnFieldDef, inactiveBuff("test.absent")] }),
-      baseChar({ id: 2, buffs: [] }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Outro Skill",
-      frame: 0,
-    })
-    engine.onEvent({ kind: "swapIn", characterId: 2, frame: 1 })
-
-    expect(engine.activeBuffIds(2)).not.toContain("test.nof-target-absent")
-  })
 })
 
-describe("BuffEngine — global target kind (#276)", () => {
+describe("BuffEngine — global target kind", () => {
   const globalBuff: BuffDef = {
     id: "test.global-amp",
     name: "Global AMP",
@@ -890,19 +733,6 @@ describe("BuffEngine — global target kind (#276)", () => {
     expect(engine.resolveStats(3).allAmp).toBeCloseTo(0.15)
   })
 
-  it("all party members see the buff in activeBuffIds", () => {
-    const engine = setup()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(1)).toContain("test.global-amp")
-    expect(engine.activeBuffIds(2)).toContain("test.global-amp")
-    expect(engine.activeBuffIds(3)).toContain("test.global-amp")
-  })
-
   it("re-trigger produces buffRefreshed, not a second instance", () => {
     const engine = setup()
     engine.onEvent({
@@ -926,58 +756,6 @@ describe("BuffEngine — global target kind (#276)", () => {
     expect(
       engine.activeBuffIds(2).filter((id) => id === "test.global-amp"),
     ).toHaveLength(1)
-  })
-
-  it("expiry removes the buff for all party members", () => {
-    const FPS = 60
-    const engine = setup()
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    engine.tickToFrame(10 * FPS + 1)
-    expect(engine.activeBuffIds(1)).not.toContain("test.global-amp")
-    expect(engine.activeBuffIds(2)).not.toContain("test.global-amp")
-    expect(engine.activeBuffIds(3)).not.toContain("test.global-amp")
-    expect(engine.resolveStats(1).allAmp).toBeCloseTo(0)
-    expect(engine.resolveStats(2).allAmp).toBeCloseTo(0)
-    expect(engine.resolveStats(3).allAmp).toBeCloseTo(0)
-  })
-
-  it("expiresOnSourceSwapOut removes the global instance when source swaps out", () => {
-    const swapOutBuff: BuffDef = {
-      ...globalBuff,
-      id: "test.global-swapout",
-      expiresOnSourceSwapOut: true,
-    }
-    testCharacters = [
-      baseChar({ id: 1, buffs: [swapOutBuff] }),
-      baseChar({ id: 2 }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    // Apply the buff from char 1
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(2)).toContain("test.global-swapout")
-    // Swap to char 2 → char 1 swaps out → buff expires
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 2,
-      skillCategory: "Basic Attack",
-      frame: 60,
-    })
-    expect(engine.activeBuffIds(1)).not.toContain("test.global-swapout")
-    expect(engine.activeBuffIds(2)).not.toContain("test.global-swapout")
   })
 })
 

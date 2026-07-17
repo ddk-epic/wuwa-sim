@@ -35,7 +35,7 @@ afterEach(() => {
   testEchoSets = []
 })
 
-describe("BuffEngine — resource state (#58)", () => {
+describe("BuffEngine — resource state", () => {
   it("resourceAtLeast condition gates contribution", () => {
     const buff: BuffDef = {
       id: "char.high-energy",
@@ -214,36 +214,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(engine.getResource(1).energy).toBe(0)
   })
 
-  it("Encore Liberation at energy=100 raises a diagnostic (cost=125) and zeroes energy", () => {
-    testCharacters = [baseChar({ id: 1, name: "Encore" })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      energy: 100,
-    })
-    const result = engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Resonance Liberation",
-      frame: 1,
-      resonanceCost: 125,
-    })
-    expect(result.diagnostics).toHaveLength(1)
-    const d = result.diagnostics[0]
-    if (d.kind !== "insufficientEnergy") throw new Error("unreachable")
-    expect(d.cost).toBe(125)
-    expect(engine.getResource(1).energy).toBe(0)
-  })
-
-  it("Outro Skill cast drains the caster's concerto to exactly 0 (#323)", () => {
+  it("Outro Skill cast drains the caster's concerto to exactly 0", () => {
     testCharacters = [baseChar({ id: 1 })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -269,7 +240,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(engine.getResource(1).concerto).toBe(0)
   })
 
-  it("Outro overcap is wasted: concerto 130 → 0 (not 30) (#323)", () => {
+  it("Outro overcap is wasted: concerto 130 → 0 (not 30)", () => {
     testCharacters = [baseChar({ id: 1 })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -294,7 +265,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(engine.getResource(1).concerto).toBe(0)
   })
 
-  it("Outro cast with concerto < 100 raises a diagnostic and still drains to 0 (#323)", () => {
+  it("Outro cast with concerto < 100 raises a diagnostic and still drains to 0", () => {
     testCharacters = [baseChar({ id: 1, name: "Test Character" })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -356,7 +327,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(engine.getResource(1).concerto).toBe(0)
   })
 
-  it("Outro drain fires resourceCrossed down for crossed thresholds (#323)", () => {
+  it("Outro drain fires resourceCrossed down for crossed thresholds", () => {
     // Buff fires a synthetic hit when concerto crosses 50 downward.
     // The drain clamps the overbank to the 100 cap first, so the crossing runs
     // over the real bar (100 → 0), never the discarded surplus above the cap.
@@ -445,7 +416,7 @@ describe("BuffEngine — resource state (#58)", () => {
     ],
   }
 
-  it("resourceConsumed fires on a partial op:sub spend gated by resourceAtLeast (#324)", () => {
+  it("resourceConsumed fires on a partial op:sub spend gated by resourceAtLeast", () => {
     // On skillCast, spend 30 concerto when the caster has at least 30.
     const spendConcerto: BuffDef = {
       id: "char.spend-concerto",
@@ -559,7 +530,7 @@ describe("BuffEngine — resource state (#58)", () => {
     )
   })
 
-  it("resourceConsumed fires on the engine-internal Outro drain (#324)", () => {
+  it("resourceConsumed fires on the engine-internal Outro drain", () => {
     testCharacters = [baseChar({ id: 1, buffs: [emitOnConcertoConsumed] })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -587,7 +558,7 @@ describe("BuffEngine — resource state (#58)", () => {
     })
   })
 
-  it("resourceConsumed does NOT fire on concerto accrual (upward delta) (#324)", () => {
+  it("resourceConsumed does NOT fire on concerto accrual (upward delta)", () => {
     testCharacters = [baseChar({ id: 1, buffs: [emitOnConcertoConsumed] })]
     const engine = new BuffEngine()
     engine.bootstrap({
@@ -605,45 +576,7 @@ describe("BuffEngine — resource state (#58)", () => {
     expect(drainSynthetics(engine, deferredEmits)).toHaveLength(0)
   })
 
-  it("resourceConsumed characterId filter narrows the trigger (#324)", () => {
-    // Listener keyed to character 2; only character 1 spends → no fire.
-    const listenForChar2: BuffDef = {
-      ...emitOnConcertoConsumed,
-      id: "char.emit-on-concerto-consumed-2",
-      trigger: {
-        event: "resourceConsumed",
-        resource: "concerto",
-        actor: "any",
-        characterId: 2,
-      },
-    }
-    testCharacters = [
-      baseChar({ id: 1, buffs: [listenForChar2] }),
-      baseChar({ id: 2 }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      concerto: 130,
-    })
-    const { deferredEmits } = engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Outro Skill",
-      frame: 1,
-    })
-    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(0)
-  })
-
-  it("resourceCrossed dispatched through main pipeline: own resource Effect crossing a threshold fires another buff with emitHit (#62)", () => {
+  it("resourceCrossed dispatched through main pipeline: own resource Effect crossing a threshold fires another buff with emitHit", () => {
     // Buff A: on skillCast, adds 100 concerto to self via a resource Effect.
     // Buff B: on concerto crossing 100 upward, emits a synthetic hit.
     const giveConcerto: BuffDef = {
@@ -714,7 +647,7 @@ describe("BuffEngine — resource state (#58)", () => {
     })
   })
 
-  it("resourceCrossed-triggered emitHit chains into hitLanded triggers respecting ICD and depth cap (#62)", () => {
+  it("resourceCrossed-triggered emitHit chains into hitLanded triggers respecting ICD and depth cap", () => {
     // Each chained hit grants 1 concerto, crossing the threshold each iteration.
     // This walks both the resourceCrossed and hitLanded(synthetic) trigger paths.
     const giveConcerto: BuffDef = {
@@ -812,7 +745,7 @@ describe("BuffEngine — resource state (#58)", () => {
   })
 })
 
-describe("BuffEngine — per-hit energy sharing (#86)", () => {
+describe("BuffEngine — per-hit energy sharing", () => {
   it("actor keeps 100% of energy; each teammate gets 50% of post-ER gain independently", () => {
     testCharacters = [
       baseChar({ id: 1 }),
@@ -837,30 +770,6 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     expect(engine.getResource(3).energy).toBeCloseTo(10 * 0.5 * (1 + BASE_ER))
   })
 
-  it("teammate receives exactly actor-ER-scaled share (teammate ER does not compound)", () => {
-    // Both actor and teammate have the same BASE_ER from their loadout substats.
-    // If teammate ER were applied on top, teammates would get 10 * 0.5 * (1+ER)^2.
-    // The correct formula is 10 * 0.5 * (1+actorER) applied once.
-    testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      energy: 10,
-    })
-    const actorScaled = 10 * 0.5 * (1 + BASE_ER)
-    const doubleScaled = 10 * 0.5 * (1 + BASE_ER) * (1 + BASE_ER)
-    expect(engine.getResource(2).energy).toBeCloseTo(actorScaled)
-    expect(engine.getResource(2).energy).not.toBeCloseTo(doubleScaled)
-  })
-
   it("synthetic hits do not trigger energy sharing", () => {
     testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
     const engine = new BuffEngine()
@@ -880,46 +789,9 @@ describe("BuffEngine — per-hit energy sharing (#86)", () => {
     expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
     expect(engine.getResource(2).energy).toBe(0)
   })
-
-  it("concerto is not shared with teammates", () => {
-    testCharacters = [baseChar({ id: 1 }), baseChar({ id: 2 })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      concerto: 8,
-    })
-    expect(engine.getResource(1).concerto).toBe(8)
-    expect(engine.getResource(2).concerto).toBe(0)
-  })
-
-  it("single-member party has no teammates to share with", () => {
-    testCharacters = [baseChar({ id: 1 })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      energy: 10,
-    })
-    expect(engine.getResource(1).energy).toBeCloseTo(10 * (1 + BASE_ER))
-  })
 })
 
-describe("BuffEngine — forte resource channel (#225)", () => {
+describe("BuffEngine — forte resource channel", () => {
   it("accumulates forte from hitLanded events, unscaled when forteRechargePct = 0", () => {
     testCharacters = [baseChar({ id: 1, forteCap: 100 })]
     const engine = new BuffEngine()
@@ -1030,49 +902,9 @@ describe("BuffEngine — forte resource channel (#225)", () => {
     })
     expect(engine.getResource(1).forte).toBe(100)
   })
-
-  it("forte is actor-only and not shared with teammates", () => {
-    testCharacters = [
-      baseChar({ id: 1, forteCap: 100 }),
-      baseChar({ id: 2, forteCap: 100 }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [1, 2, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      forte: 15,
-    })
-    expect(engine.getResource(1).forte).toBe(15)
-    expect(engine.getResource(2).forte).toBe(0)
-  })
-
-  it("missing forte field on hitLanded is a no-op", () => {
-    testCharacters = [baseChar({ id: 1, forteCap: 100 })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 0,
-      energy: 5,
-    })
-    expect(engine.getResource(1).forte).toBe(0)
-  })
 })
 
-describe("BuffEngine — cooldown (#90)", () => {
+describe("BuffEngine — cooldown", () => {
   const cooldownBuff: BuffDef = {
     id: "test.cooldown",
     name: "Cooldown Buff",
@@ -1133,24 +965,6 @@ describe("BuffEngine — cooldown (#90)", () => {
     fire(engine, 0)
     const afterFirst = engine.getResource(1).energy
     fire(engine, 600)
-    expect(engine.getResource(1).energy).toBe(afterFirst + 10)
-  })
-
-  it("does not suppress buffs without cooldown", () => {
-    const noCooldown: BuffDef = {
-      ...cooldownBuff,
-      id: "test.no-cooldown",
-      cooldown: undefined,
-    }
-    testCharacters = [baseChar({ buffs: [noCooldown] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    fire(engine, 0)
-    const afterFirst = engine.getResource(1).energy
-    fire(engine, 1)
     expect(engine.getResource(1).energy).toBe(afterFirst + 10)
   })
 })

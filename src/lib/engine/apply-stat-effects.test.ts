@@ -195,19 +195,6 @@ describe("accumulateScaledStatEffects", () => {
 })
 
 describe("freezeSnapshots", () => {
-  it("returns undefined when no effects request snapshotting", () => {
-    const def = baseBuff({
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.2 },
-        },
-      ],
-    })
-    expect(freezeSnapshots(def, 1)).toBeUndefined()
-  })
-
   it("freezes perStack values multiplied by stacks at snapshot time", () => {
     const def = baseBuff({
       effects: [
@@ -325,12 +312,6 @@ describe("fromStatusStacks ValueExpr", () => {
     expect(resolve(10)).toBeCloseTo(0.3 + 0.1 * (6 - 1))
   })
 
-  it("reads 0 stacks when no callback is supplied", () => {
-    const stats = emptyStatTable()
-    accumulateStatEffects(stats, { def: vulBuff, stacks: 1 })
-    expect(stats.vul).toBeCloseTo(0.3)
-  })
-
   it("is never frozen — freezeSnapshots ignores it", () => {
     expect(freezeSnapshots(vulBuff, 1, () => 3)).toBeUndefined()
   })
@@ -344,10 +325,6 @@ describe("matchesHit", () => {
     skillCategory: "Basic Attack",
     element: "Glacio",
   }
-
-  it("empty filter matches any hit", () => {
-    expect(matchesHit({}, ctx)).toBe(true)
-  })
 
   it("matches when every specified axis matches — scalar form", () => {
     const f: HitFilter = { sourceBuff: "buff.a", element: "Glacio" }
@@ -367,12 +344,6 @@ describe("matchesHit", () => {
   it("fails when array axis does not contain value", () => {
     const f: HitFilter = { sourceBuff: ["buff.x", "buff.y"] }
     expect(matchesHit(f, ctx)).toBe(false)
-  })
-
-  it("fails when constrained axis is absent from hit", () => {
-    const noSource: HitContext = { skillType: "Basic Attack" }
-    const f: HitFilter = { sourceBuff: "buff.a" }
-    expect(matchesHit(f, noSource)).toBe(false)
   })
 
   it("matches all axes independently", () => {

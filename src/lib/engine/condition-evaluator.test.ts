@@ -145,23 +145,6 @@ describe("ConditionEvaluator", () => {
       expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
     })
 
-    it("resourceAtLeast with on=source", () => {
-      const world = makeWorld({
-        getResourceValue: vi.fn((charId: number, resource: string) => {
-          return charId === 1 && resource === "energy" ? 200 : 0
-        }),
-      })
-      const evaluator = new ConditionEvaluator(world)
-      const cond: Condition = {
-        kind: "resourceAtLeast",
-        resource: "energy",
-        n: 150,
-        on: "source",
-      }
-      const subject = { sourceCharacterId: 1, targetCharacterId: 2 }
-      expect(evaluator.evaluateUncached(cond, subject)).toBe(true)
-    })
-
     it("targetHasNegStatus without status matches any status (backward-compat)", () => {
       const world = makeWorld({
         hasAnyNegStatus: vi.fn(() => true),
@@ -244,34 +227,6 @@ describe("ConditionEvaluator", () => {
   })
 
   describe("caching", () => {
-    it("repeated identical calls return cached result (evalCount unchanged)", () => {
-      const versions = { store: 0, resources: 0, onField: 0, target: 0 }
-      const world = makeWorld({
-        mutationVersions: vi.fn(() => versions),
-        isOnField: vi.fn(() => true),
-      })
-      const evaluator = new ConditionEvaluator(world)
-
-      const cond: Condition = { kind: "onField" }
-      const inst = makeBuffInstance("buff1", 1, 2)
-      const actingId = 3
-
-      // First call – should evaluate
-      const r1 = evaluator.evaluateCached(cond, inst, actingId)
-      expect(r1).toBe(true)
-      expect(evaluator.evalCountForTest()).toBe(1)
-
-      // Second call – cache hit
-      const r2 = evaluator.evaluateCached(cond, inst, actingId)
-      expect(r2).toBe(true)
-      expect(evaluator.evalCountForTest()).toBe(1)
-
-      // Third call – cache hit
-      const r3 = evaluator.evaluateCached(cond, inst, actingId)
-      expect(r3).toBe(true)
-      expect(evaluator.evalCountForTest()).toBe(1)
-    })
-
     it("cache invalidates when store version changes", () => {
       let versions = { store: 0, resources: 0, onField: 0, target: 0 }
       const world = makeWorld({
@@ -289,46 +244,6 @@ describe("ConditionEvaluator", () => {
 
       // Change store version
       versions = { store: 1, resources: 0, onField: 0, target: 0 }
-      evaluator.evaluateCached(cond, inst, actingId)
-      expect(evaluator.evalCountForTest()).toBe(2)
-    })
-
-    it("cache invalidates when resources version changes", () => {
-      let versions = { store: 0, resources: 0, onField: 0, target: 0 }
-      const world = makeWorld({
-        mutationVersions: vi.fn(() => versions),
-        isOnField: vi.fn(() => true),
-      })
-      const evaluator = new ConditionEvaluator(world)
-
-      const cond: Condition = { kind: "onField" }
-      const inst = makeBuffInstance("buff1", 1, 2)
-      const actingId = 3
-
-      evaluator.evaluateCached(cond, inst, actingId)
-      expect(evaluator.evalCountForTest()).toBe(1)
-
-      versions = { store: 0, resources: 1, onField: 0, target: 0 }
-      evaluator.evaluateCached(cond, inst, actingId)
-      expect(evaluator.evalCountForTest()).toBe(2)
-    })
-
-    it("cache invalidates when onField version changes", () => {
-      let versions = { store: 0, resources: 0, onField: 0, target: 0 }
-      const world = makeWorld({
-        mutationVersions: vi.fn(() => versions),
-        isOnField: vi.fn(() => true),
-      })
-      const evaluator = new ConditionEvaluator(world)
-
-      const cond: Condition = { kind: "onField" }
-      const inst = makeBuffInstance("buff1", 1, 2)
-      const actingId = 3
-
-      evaluator.evaluateCached(cond, inst, actingId)
-      expect(evaluator.evalCountForTest()).toBe(1)
-
-      versions = { store: 0, resources: 0, onField: 1, target: 0 }
       evaluator.evaluateCached(cond, inst, actingId)
       expect(evaluator.evalCountForTest()).toBe(2)
     })

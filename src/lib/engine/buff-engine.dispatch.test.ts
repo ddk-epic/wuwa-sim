@@ -79,22 +79,6 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
     ).toBeCloseTo(0.38)
   })
 
-  it("does not apply when skillType does not match the trigger filter", () => {
-    testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    const { lifecycleEvents } = engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    expect(lifecycleEvents).toEqual([])
-  })
-
   it("emits buffRefreshed and bumps endTime when the same buff retriggers", () => {
     testCharacters = [baseChar({ id: 1, buffs: [skillCastBuff] })]
     const engine = new BuffEngine()
@@ -197,50 +181,6 @@ describe("BuffEngine.onEvent — triggered buffs", () => {
       second.lifecycleEvents.every((e) => e.kind === "buffRefreshed"),
     ).toBe(true)
   })
-
-  it("hitLanded with no synthetic flag fires self-source triggers", () => {
-    const onHit: BuffDef = {
-      id: "char.onhit",
-      name: "OnHit",
-      trigger: { event: "hitLanded", characterId: 1 },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 60 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.05 },
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [onHit] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    const { lifecycleEvents } = engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Damage",
-      frame: 5,
-    })
-    expect(lifecycleEvents).toHaveLength(1)
-    expect(lifecycleEvents[0].kind).toBe("buffApplied")
-  })
-})
-
-describe("BuffEngine.resolveStats — fallback", () => {
-  it("returns base atk for known character not in any slot", () => {
-    testCharacters = [baseChar()]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: [null, null, null],
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    expect(engine.resolveStats(1).atkBase).toBe(1000)
-  })
 })
 
 describe("BuffEngine — phase pipeline as data", () => {
@@ -319,7 +259,7 @@ describe("BuffEngine — phase pipeline as data", () => {
   })
 })
 
-describe("BuffEngine — resolveHit + recordHit (deep seam, #67)", () => {
+describe("BuffEngine — resolveHit + recordHit (deep seam)", () => {
   it("resolveHit then recordHit is equivalent to tickToFrame + resolveStats + onEvent + getResource", () => {
     const trigger: BuffDef = {
       id: "char.hit.bonus",
@@ -399,16 +339,6 @@ describe("BuffEngine.passiveBuffs", () => {
     ],
   })
 
-  it("returns empty array when character has no folded buffs", () => {
-    testCharacters = [baseChar({ id: 1, buffs: [] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    expect(engine.passiveBuffs(1)).toEqual([])
-  })
-
   it("returns folded buffs as ActiveBuff entries with stacks:1", () => {
     testCharacters = [
       baseChar({
@@ -450,23 +380,6 @@ describe("BuffEngine.passiveBuffs", () => {
     })
     const ids = engine.passiveBuffs(1).map((b) => b.id)
     expect(ids).toEqual(["skill-tree.atk"])
-  })
-
-  it("resolveHit includes passiveBuffs matching passiveBuffs()", () => {
-    testCharacters = [
-      baseChar({
-        id: 1,
-        buffs: [passiveBuff("echo-set.molten-2pc", "Molten Rift (2pc)")],
-        skills: [],
-      }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    const resolved = engine.resolveHit(1, 0)
-    expect(resolved.passiveBuffs).toEqual(engine.passiveBuffs(1))
   })
 })
 

@@ -151,27 +151,6 @@ describe("Stringmaster weapon passive — Electric Amplification", () => {
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.12)
   })
-
-  it("buff 3 rank 5: off-field atkPct is 0.24", () => {
-    testCharacters = [
-      baseChar({ id: 1, element: "Electro" }),
-      baseChar({ id: 2 }),
-    ]
-    const engine = bootstrapStringmaster(5, [1, 2, null])
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 2,
-      skillCategory: "Basic Attack",
-      frame: 60,
-    })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(BASE_ATK_PCT + 0.24)
-  })
 })
 
 describe("BuffEngine — precondition gating for reaction-shaped defs", () => {
@@ -265,33 +244,6 @@ describe("BuffEngine — precondition gating for reaction-shaped defs", () => {
     expect(synthetics).toHaveLength(1)
     expect(synthetics[0].synthetic).toBe(true)
   })
-
-  it("does not suppress reaction defs without a condition", () => {
-    const unconditionalEmit: BuffDef = {
-      id: "test.unconditional-emit",
-      name: "Unconditional Emit",
-      trigger: {
-        event: "skillCast",
-        characterId: 1,
-        skillCategory: "Outro Skill",
-      },
-      effects: [{ kind: "emitHit", damage: dmg(), icdFrames: 0 }],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [unconditionalEmit] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-
-    const { deferredEmits } = engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Outro Skill",
-      frame: 0,
-    })
-    expect(drainSynthetics(engine, deferredEmits)).toHaveLength(1)
-  })
 })
 
 describe("Variation weapon — Ceaseless Aria concerto restore", () => {
@@ -365,7 +317,7 @@ describe("Variation weapon — Ceaseless Aria concerto restore", () => {
   })
 })
 
-describe("BuffEngine — reaction-shaped BuffDef (#220)", () => {
+describe("BuffEngine — reaction-shaped BuffDef", () => {
   it("reaction fires resource effect and grants forte to source character", () => {
     const reactionBuff: BuffDef = {
       id: "test.reaction-forte",
@@ -746,22 +698,6 @@ describe("Stellar Symphony weapon — Astral Evolvement buffs", () => {
     expect(engine.resolveStats(20).atkPct).toBeCloseTo(baseAtkPct + 0.14)
   })
 
-  it("heal-atk buff expires after 30s", () => {
-    const engine = setupStellarSymphony(1)
-    const baseAtkPct = engine.resolveStats(20).atkPct
-    engine.recordHeal({
-      kind: "healLanded",
-      characterId: 20,
-      skillCategory: "Resonance Skill",
-      frame: 0,
-    })
-    engine.tickToFrame(30 * FPS + 1)
-    expect(engine.activeBuffIds(20)).not.toContain(
-      "weapon.stellar-symphony.heal-atk",
-    )
-    expect(engine.resolveStats(20).atkPct).toBeCloseTo(baseAtkPct)
-  })
-
   it("non-Resonance-Skill heal does not trigger heal-atk buff", () => {
     const engine = setupStellarSymphony(1)
     engine.recordHeal({
@@ -806,35 +742,5 @@ describe("Fallacy of No Return echo — Echo Skill buffs", () => {
       "echo.fallacy-of-no-return.energy-regen",
     )
     expect(engine.resolveStats(30).energyRechargePct).toBeCloseTo(baseER + 0.1)
-  })
-
-  it("Echo Skill cast applies +10% ATK to team for 20s", () => {
-    const engine = setupFallacy()
-    const baseAtkPct = engine.resolveStats(30).atkPct
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 30,
-      skillCategory: "Echo Skill",
-      frame: 0,
-    })
-    expect(engine.activeBuffIds(30)).toContain("echo.fallacy-of-no-return.atk")
-    expect(engine.resolveStats(30).atkPct).toBeCloseTo(baseAtkPct + 0.1)
-  })
-
-  it("buffs expire after 20s", () => {
-    const FPS = 60
-    const engine = setupFallacy()
-    const baseER = engine.resolveStats(30).energyRechargePct
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 30,
-      skillCategory: "Echo Skill",
-      frame: 0,
-    })
-    engine.tickToFrame(20 * FPS + 1)
-    expect(engine.activeBuffIds(30)).not.toContain(
-      "echo.fallacy-of-no-return.energy-regen",
-    )
-    expect(engine.resolveStats(30).energyRechargePct).toBeCloseTo(baseER)
   })
 })

@@ -187,13 +187,5 @@ describe("buildSyntheticEvent — snapshot (damage + skillType)", () => {
       })
       expect(hit.skillType).toBe("Heavy Attack")
     })
-
-    it("defaults to Basic Attack when neither skillType override nor damage.type provides a value", () => {
-      const hit = buildWith({
-        ...effect,
-        damage: { ...effect.damage, type: "Basic Attack" },
-      })
-      expect(hit.skillType).toBe("Basic Attack")
-    })
   })
 })

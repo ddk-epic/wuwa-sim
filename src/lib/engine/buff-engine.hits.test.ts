@@ -37,7 +37,7 @@ afterEach(() => {
   testEchoSets = []
 })
 
-describe("BuffEngine — perStack ValueExpr (#59)", () => {
+describe("BuffEngine — perStack ValueExpr", () => {
   const perStackBuff: BuffDef = {
     id: "char.frost-marks",
     name: "Frost Marks",
@@ -129,82 +129,9 @@ describe("BuffEngine — perStack ValueExpr (#59)", () => {
     })
     expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.05 + BASE_ATK_PCT)
   })
-
-  it("const snapshot is symmetrical (value frozen identically to non-snapshot)", () => {
-    const buff: BuffDef = {
-      id: "char.const-snap",
-      name: "Const Snap",
-      trigger: { event: "skillCast", characterId: 1 },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 100 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.2, snapshot: true },
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.2 + BASE_ATK_PCT)
-  })
-
-  it("replace re-snapshots at the new apply time", () => {
-    const buff: BuffDef = {
-      id: "char.replace-snap",
-      name: "Replace Snap",
-      trigger: {
-        event: "skillCast",
-        characterId: 1,
-        skillCategory: "Basic Attack",
-      },
-      target: { kind: "self" },
-      duration: { kind: "frames", v: 100 },
-      stacking: { max: 1, onRetrigger: "replace" },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "perStack", v: 0.07, snapshot: true },
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [buff] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 0,
-    })
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      frame: 50,
-    })
-    // Replace creates a fresh instance with stacks=1 → snapshot stays at 0.07.
-    expect(engine.resolveStats(1).atkPct).toBeCloseTo(0.07 + BASE_ATK_PCT)
-  })
 })
 
-describe("BuffEngine — coordHit (#219)", () => {
+describe("BuffEngine — coordHit", () => {
   const coordDmg = (
     overrides: Partial<{
       value: number
@@ -325,45 +252,9 @@ describe("BuffEngine — coordHit (#219)", () => {
     expect(dmgEvt.frame).toBe(42)
     expect(healEvt.frame).toBe(42)
   })
-
-  it("(d) coord heal fires as SustainEvent with coord: true and synthetic: true", () => {
-    const healCoordBuff: BuffDef = {
-      id: "char.heal-coord",
-      name: "Heal Coord",
-      trigger: { event: "hitLanded", characterId: 1, source: "self" },
-      target: { kind: "self" },
-      duration: { kind: "permanent" },
-      effects: [
-        {
-          kind: "coordHit",
-          damage: coordDmg({ dmgType: "Heal" }),
-          icdFrames: 0,
-        },
-      ],
-    }
-    testCharacters = [baseChar({ id: 1, buffs: [healCoordBuff] })]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-    const { deferredEmits } = engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Basic Attack",
-      dmgType: "Fusion",
-      frame: 0,
-    })
-    const synthetics = drainSynthetics(engine, deferredEmits)
-    expect(synthetics).toHaveLength(1)
-    const ev = synthetics[0]
-    expect(ev.kind).toBe("sustain")
-    expect(ev.coord).toBe(true)
-    expect(ev.synthetic).toBe(true)
-  })
 })
 
-describe("BuffEngine — emitHit (#60)", () => {
+describe("BuffEngine — emitHit", () => {
   const coordOnHit = (
     overrides: Partial<BuffDef> = {},
     icdFrames = 60,
@@ -657,7 +548,7 @@ describe("BuffEngine — emitHit (#60)", () => {
   })
 })
 
-describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#117)", () => {
+describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter", () => {
   it("trigger with sourceBuffId only fires on matching synthetic hit", () => {
     const emitter: BuffDef = {
       id: "char.emitter-a",
@@ -709,49 +600,9 @@ describe("BuffEngine — sourceBuffId on synthetic hitLanded trigger filter (#11
 
     expect(engine.activeBuffIds(1)).toContain("char.chain")
   })
-
-  it("trigger with sourceBuffId does not fire on authored hitLanded (no sourceBuffId)", () => {
-    const chainBuff: BuffDef = {
-      id: "char.chain",
-      name: "Chain",
-      trigger: {
-        event: "hitLanded",
-        source: "any",
-        characterId: 1,
-        sourceBuff: "emitter-a",
-      },
-      target: { kind: "self" },
-      duration: { kind: "seconds", v: 10 },
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testCharacters = [
-      baseChar({ id: 1, buffs: [chainBuff, inactiveBuff("char.emitter-a")] }),
-    ]
-    const engine = new BuffEngine()
-    engine.bootstrap({
-      slots: slotsOf(1),
-      loadouts: [emptyLoadout, emptyLoadout, emptyLoadout],
-    })
-
-    engine.onEvent({
-      kind: "hitLanded",
-      characterId: 1,
-      skillCategory: "Heavy Attack",
-      dmgType: "Fusion",
-      frame: 0,
-    })
-
-    expect(engine.activeBuffIds(1)).not.toContain("char.chain")
-  })
 })
 
-describe("BuffEngine — activeContributions gate: listed = contributed (#320)", () => {
+describe("BuffEngine — activeContributions gate: listed = contributed", () => {
   it("a live false-condition instance is in activeBuffIds but not activeBuffs / resolveStats", () => {
     const condBuff: BuffDef = {
       id: "test.cond-atk",

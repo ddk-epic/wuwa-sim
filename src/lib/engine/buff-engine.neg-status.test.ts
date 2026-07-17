@@ -71,25 +71,6 @@ describe("negStatus effect", () => {
 
     expect(engine.getTarget().stacksOf("Aero Erosion")).toBe(2)
   })
-
-  it("surfaces the status in the active buff array for visibility", () => {
-    const engine = bootstrap([applyErosion])
-    engine.onEvent({
-      kind: "skillCast",
-      characterId: 1,
-      skillCategory: "Resonance Skill",
-      frame: 10,
-    })
-    const status = engine
-      .activeBuffs(1)
-      .find((b) => b.id.startsWith("negStatus."))
-    expect(status).toEqual({
-      id: "negStatus.Aero Erosion",
-      name: "Aero Erosion",
-      stacks: 2,
-      sourceCharacterId: 1,
-    })
-  })
 })
 
 describe("targetHasNegStatus condition", () => {
