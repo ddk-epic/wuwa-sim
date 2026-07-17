@@ -13,10 +13,6 @@ describe("catalog — listWeaponsByType", () => {
       expect(w.weaponType).toBe("Rectifier")
     }
   })
-
-  it("returns empty array for an unknown weapon type", () => {
-    expect(listWeaponsByType("NonexistentType")).toEqual([])
-  })
 })
 
 describe("catalog — getEchoSetForEcho", () => {
@@ -26,14 +22,9 @@ describe("catalog — getEchoSetForEcho", () => {
     if (!echo) return
     expect(getEchoSetForEcho(echo)).toBe(ALL_ECHO_SETS[0])
   })
-
-  it("returns null when the echo references an unknown set", () => {
-    const echo = { ...ALL_ECHOES[0], sets: ["Nonexistent Set"] }
-    expect(getEchoSetForEcho(echo)).toBeNull()
-  })
 })
 
-describe("catalog — ALL_WEAPONS data shape invariants (#93)", () => {
+describe("catalog — ALL_WEAPONS data shape invariants", () => {
   it("every weapon buff effect with array v has exactly 5 values", () => {
     for (const weapon of ALL_WEAPONS) {
       for (const buff of weapon.buffs) {

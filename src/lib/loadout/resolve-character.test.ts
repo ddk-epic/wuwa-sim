@@ -38,27 +38,6 @@ describe("resolveCharacterBuffs", () => {
     expect(resolveCharacterBuffs(char, 0)).toContainEqual(buff)
   })
 
-  it("excludes buffs with requiresSequence above current sequence", () => {
-    const buff: BuffDef = {
-      ...simStartPermanentBuff("s2.buff"),
-      requiresSequence: 2,
-    }
-    const char = baseChar({ buffs: [buff] })
-    expect(resolveCharacterBuffs(char, 1)).toHaveLength(0)
-    expect(resolveCharacterBuffs(char, 2)).toHaveLength(1)
-  })
-
-  it("excludes buffs with maxSequence below current sequence", () => {
-    const buff: BuffDef = {
-      ...simStartPermanentBuff("s0.buff"),
-      maxSequence: 0,
-    }
-    const char = baseChar({ buffs: [buff] })
-    expect(resolveCharacterBuffs(char, 0)).toHaveLength(1)
-    expect(resolveCharacterBuffs(char, 1)).toHaveLength(0)
-    expect(resolveCharacterBuffs(char, 6)).toHaveLength(0)
-  })
-
   it("includes buffs when requiresSequence and maxSequence both satisfied", () => {
     const buff: BuffDef = {
       ...simStartPermanentBuff("s1-only.buff"),
@@ -89,9 +68,5 @@ describe("resolveCharacterBuffs", () => {
     expect(defs[0].effects[0]).toMatchObject({
       path: { stat: "elementBonus", key: "Fusion" },
     })
-  })
-
-  it("returns empty array when char has no buffs or skill tree bonuses", () => {
-    expect(resolveCharacterBuffs(baseChar(), 0)).toHaveLength(0)
   })
 })

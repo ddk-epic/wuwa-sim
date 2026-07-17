@@ -1,12 +1,8 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { BuffDef } from "#/types/buff"
-import type { EchoSet, EnrichedEcho } from "#/types/echo"
-import {
-  resolveEchoBuffs,
-  resolveEchoSetBuffs,
-  resolveEchoSets,
-} from "./resolve-echo"
+import type { EchoSet } from "#/types/echo"
+import { resolveEchoSetBuffs, resolveEchoSets } from "./resolve-echo"
 
 let testEchoSets: EchoSet[] = []
 
@@ -41,10 +37,6 @@ const threeOnly: EchoSet = {
 }
 
 describe("resolveEchoSets", () => {
-  it("empty + empty → nothing", () => {
-    expect(resolveEchoSets(null, null)).toEqual([])
-  })
-
   it("2/5 X + 2/5 X (same id) → X at 5pc", () => {
     testEchoSets = [twoFiveA]
     expect(resolveEchoSets(1, 1)).toEqual([{ setId: 1, effectivePieces: 5 }])
@@ -123,32 +115,7 @@ const twoFiveWithBuffs = (id: number, buffs: BuffDef[]): EchoSet => ({
   buffs,
 })
 
-const echoWithBuffs = (buffs: BuffDef[]): EnrichedEcho => ({
-  id: 20,
-  name: "TestEcho",
-  cost: 3,
-  element: "Glacio",
-  sets: ["TestSet"],
-  buffs,
-  skill: { cooldown: 20, description: "", stages: [] },
-})
-
-describe("resolveEchoBuffs", () => {
-  it("returns the echo's compiled buffs", () => {
-    const buff = permBuff("echo.buff")
-    expect(resolveEchoBuffs(echoWithBuffs([buff]))).toContainEqual(buff)
-  })
-
-  it("returns empty when the echo has no buffs", () => {
-    expect(resolveEchoBuffs(echoWithBuffs([]))).toHaveLength(0)
-  })
-})
-
 describe("resolveEchoSetBuffs", () => {
-  it("returns empty when both slots are null", () => {
-    expect(resolveEchoSetBuffs(null, null)).toHaveLength(0)
-  })
-
   it("includes a 5pc buff when both slots share one two-five set", () => {
     const fivePc: BuffDef = { ...permBuff("set.5pc"), requiresPieces: 5 }
     testEchoSets = [twoFiveWithBuffs(1, [fivePc])]

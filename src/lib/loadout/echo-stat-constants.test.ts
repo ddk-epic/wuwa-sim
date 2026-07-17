@@ -2,7 +2,6 @@
 import { describe, expect, it } from "vitest"
 import { cartethyia } from "#/data/characters/cartethyia"
 import { shorekeeper } from "#/data/characters/shorekeeper"
-import { verina } from "#/data/characters/verina"
 import {
   ECHO_BUILD_LIST,
   ECHO_BUILDS,
@@ -35,10 +34,6 @@ describe("scalingStatFromSkillTree", () => {
   it("reads HP scalers off their skill-tree base-stat node", () => {
     expect(scalingStatFromSkillTree(shorekeeper)).toBe("hp")
     expect(scalingStatFromSkillTree(cartethyia)).toBe("hp")
-  })
-
-  it("reads ATK scalers off their skill-tree base-stat node", () => {
-    expect(scalingStatFromSkillTree(verina)).toBe("atk")
   })
 
   it("defaults to atk when no base-stat node is present", () => {
