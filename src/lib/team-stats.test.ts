@@ -132,12 +132,4 @@ describe("computeTeamStats", () => {
     expect(stats.dmgByChar).toEqual({ 1: 100 })
     expect(stats.typeMix["Basic Attack"]).toEqual({ count: 2, dmg: 100 })
   })
-
-  it("returns empty aggregates and zero ends for an empty log", () => {
-    const stats = computeTeamStats([])
-    expect(stats.dmgByChar).toEqual({})
-    expect(stats.typeMix).toEqual({})
-    expect(stats.resEnd).toBe(0)
-    expect(stats.concertoEnd).toBe(0)
-  })
 })

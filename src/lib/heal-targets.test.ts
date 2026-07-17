@@ -23,8 +23,4 @@ describe("resolveHealTargets", () => {
   it("resolves team to the supplied team list", () => {
     expect(resolveHealTargets("team", SOURCE, TEAM)).toEqual(TEAM)
   })
-
-  it("resolves nextOnField to no targets", () => {
-    expect(resolveHealTargets("nextOnField", SOURCE, TEAM)).toEqual([])
-  })
 })

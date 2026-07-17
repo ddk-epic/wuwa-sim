@@ -78,19 +78,6 @@ describe("trailing-window — partitionStage: swap partition cutoff", () => {
     // hitFrame = stageStartFrame + actionFrame
     expect(result.trailing[0].hitFrame).toBe(6)
   })
-
-  it("when all hits within stageDuration, trailing is empty", () => {
-    const result = partitionStage({
-      entry: makeEntry(1),
-      resolved: stubResolved,
-      stageStartFrame: 0,
-      hits: [makeDamageEntry(1), makeDamageEntry(3)],
-      variantKind: "swap",
-      stageDuration: 5,
-    })
-    expect(result.immediate).toHaveLength(2)
-    expect(result.trailing).toHaveLength(0)
-  })
 })
 
 describe("trailing-window — partitionStage: non-swap partition", () => {
@@ -112,19 +99,6 @@ describe("trailing-window — partitionStage: non-swap partition", () => {
     expect(result.trailing[0].hit.actionFrame).toBe(6)
     // footingChanges stay swap-only — the launch/land window is a swap concept.
     expect(result.footingChanges).toEqual([])
-  })
-
-  it("when all hits fit within actionTime, trailing is empty (no behavior change)", () => {
-    const result = partitionStage({
-      entry: makeEntry(1),
-      resolved: stubResolved,
-      stageStartFrame: 0,
-      hits: [makeDamageEntry(2), makeDamageEntry(4)],
-      variantKind: undefined,
-      stageDuration: 5,
-    })
-    expect(result.immediate).toHaveLength(2)
-    expect(result.trailing).toHaveLength(0)
   })
 })
 

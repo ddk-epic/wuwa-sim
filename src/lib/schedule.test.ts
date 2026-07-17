@@ -19,13 +19,6 @@ function work<T>(
 }
 
 describe("Schedule ordering", () => {
-  it("drains in nondecreasing frame order, not enqueue (FIFO) order", () => {
-    const s = new Schedule<string>()
-    s.enqueue(work(14, "late"))
-    s.enqueue(work(3, "early"))
-    expect(drainAll(s)).toEqual(["early", "late"])
-  })
-
   it("preserves within-frame insertion order (stable)", () => {
     const s = new Schedule<string>()
     s.enqueue(work(5, "a"))

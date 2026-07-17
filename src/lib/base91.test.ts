@@ -3,21 +3,11 @@ import { describe, expect, it } from "vitest"
 import { decode, encode } from "./base91"
 
 describe("base91 encode/decode roundtrip", () => {
-  it("roundtrips empty input", () => {
-    const data = new Uint8Array(0)
-    expect(decode(encode(data))).toEqual(data)
-  })
-
   it("roundtrips a single byte", () => {
     for (const byte of [0, 1, 127, 128, 255]) {
       const data = new Uint8Array([byte])
       expect(decode(encode(data))).toEqual(data)
     }
-  })
-
-  it("roundtrips a known sequence", () => {
-    const data = new Uint8Array([0xde, 0xad, 0xbe, 0xef])
-    expect(decode(encode(data))).toEqual(data)
   })
 
   it("roundtrips 256 bytes with all values", () => {

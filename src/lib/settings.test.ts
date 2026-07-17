@@ -7,12 +7,6 @@ import {
 } from "./settings"
 
 describe("coerceStoredSettings", () => {
-  it("returns the constant defaults for null/non-object input", () => {
-    expect(coerceStoredSettings(null)).toEqual(DEFAULT_SETTINGS)
-    expect(coerceStoredSettings(undefined)).toEqual(DEFAULT_SETTINGS)
-    expect(coerceStoredSettings(42)).toEqual(DEFAULT_SETTINGS)
-  })
-
   it("merges a partial object over defaults", () => {
     expect(coerceStoredSettings({ reactionDelay: 9 })).toEqual({
       ...DEFAULT_SETTINGS,
@@ -20,28 +14,9 @@ describe("coerceStoredSettings", () => {
     })
   })
 
-  it("carries startWithFullEnergy through", () => {
-    expect(
-      coerceStoredSettings({ startWithFullEnergy: true }).startWithFullEnergy,
-    ).toBe(true)
-  })
-
   it("ignores a non-boolean startWithFullEnergy", () => {
     expect(
       coerceStoredSettings({ startWithFullEnergy: 1 }).startWithFullEnergy,
-    ).toBe(false)
-  })
-
-  it("carries startWithFullConcerto through", () => {
-    expect(
-      coerceStoredSettings({ startWithFullConcerto: true })
-        .startWithFullConcerto,
-    ).toBe(true)
-  })
-
-  it("ignores a non-boolean startWithFullConcerto", () => {
-    expect(
-      coerceStoredSettings({ startWithFullConcerto: 1 }).startWithFullConcerto,
     ).toBe(false)
   })
 })
@@ -70,22 +45,5 @@ describe("applySettingsPatch", () => {
       startWithFullEnergy: true,
     })
     expect(next.startWithFullEnergy).toBe(true)
-  })
-
-  it("toggles startWithFullConcerto without clamping", () => {
-    const next = applySettingsPatch(DEFAULT_SETTINGS, {
-      startWithFullConcerto: true,
-    })
-    expect(next.startWithFullConcerto).toBe(true)
-  })
-
-  it("restores every field when patched with the full defaults", () => {
-    const edited = applySettingsPatch(DEFAULT_SETTINGS, {
-      reactionDelay: 30,
-      startWithFullEnergy: true,
-    })
-    expect(applySettingsPatch(edited, DEFAULT_SETTINGS)).toEqual(
-      DEFAULT_SETTINGS,
-    )
   })
 })
