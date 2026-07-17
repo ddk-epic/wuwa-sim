@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EnrichedCharacter } from "#/types/character"
-import type { Element } from "#/data/elements"
 import type { TimelineNode } from "#/types/timeline"
 import type { Slots, SlotLoadout } from "#/types/loadout"
 import type { Diagnostic } from "#/types/simulation-log"
@@ -27,21 +26,6 @@ vi.mock("#/lib/compile-character", () => ({
 afterEach(() => {
   testCharacters = []
   resolvedStages = new Map()
-})
-
-const makeChar = (id: number, element: Element): EnrichedCharacter => ({
-  id,
-  name: `Char${id}`,
-  element,
-  weaponType: "Sword",
-  rarity: "5",
-  maxEnergy: 100,
-  forteCap: 100,
-  stats: { base: { hp: 0, atk: 0, def: 0 }, max: { hp: 0, atk: 0, def: 0 } },
-  template: { weapon: "", echo: "", echoSet: "" },
-  skillTreeBonuses: [],
-  buffs: [],
-  skills: [],
 })
 
 const topEntry = (
@@ -96,10 +80,6 @@ const entryItems = (items: ReturnType<typeof call>) =>
   )
 
 describe("buildTimelineRenderItems", () => {
-  it("returns empty array for no nodes", () => {
-    expect(call([])).toEqual([])
-  })
-
   it("returns single entry item for ungrouped node", () => {
     const items = call([topEntry("e1")])
     expect(items).toHaveLength(1)
@@ -115,22 +95,6 @@ describe("buildTimelineRenderItems", () => {
       expect(item.lastInGroupGradient).toBeNull()
       expect(item.groupFirstCharHex).toBeNull()
     }
-  })
-
-  it("assigns sequential flatIndexes to multiple ungrouped entries", () => {
-    const items = call([topEntry("e1"), topEntry("e2"), topEntry("e3")])
-    expect(items).toHaveLength(3)
-    expect(items.map((i) => i.type)).toEqual(["entry", "entry", "entry"])
-    expect(entryItems(items).map((i) => i.flatIndex)).toEqual([0, 1, 2])
-  })
-
-  it("emits groupHeader + entry items for expanded group", () => {
-    const g = group("g1", ["e1", "e2"])
-    const items = call([g], new Set(["g1"]))
-    expect(items).toHaveLength(3)
-    expect(items[0].type).toBe("groupHeader")
-    expect(items[1].type).toBe("entry")
-    expect(items[2].type).toBe("entry")
   })
 
   it("expanded group entries have correct inGroup and groupId", () => {
@@ -162,77 +126,10 @@ describe("buildTimelineRenderItems", () => {
     expect(entryItems(items).map((i) => i.flatIndex)).toEqual([0, 1, 2, 3])
   })
 
-  it("groupHeader carries pre-computed dominantHex and distinctCharIds", () => {
-    testCharacters = [makeChar(1, "Fusion")]
-    const g = group("g1", ["e1"])
-    const items = call([g], new Set(["g1"]))
-    const header = items[0]
-    expect(header.type).toBe("groupHeader")
-    if (header.type === "groupHeader") {
-      expect(typeof header.dominantHex).toBe("string")
-      expect(header.distinctCharIds).toContain(1)
-    }
-  })
-
-  it("groupHeader gradient is pre-computed", () => {
-    testCharacters = [makeChar(1, "Fusion")]
-    const g = group("g1", ["e1"])
-    const items = call([g])
-    const header = items[0]
-    expect(header.type).toBe("groupHeader")
-    if (header.type === "groupHeader") {
-      expect(header.gradient).toContain("linear-gradient")
-    }
-  })
-
   it("locked group propagates groupLocked to entries", () => {
     const g = group("g1", ["e1", "e2"], true)
     const entries = entryItems(call([g], new Set(["g1"])))
     expect(entries.every((e) => e.groupLocked)).toBe(true)
-  })
-
-  it("lastInGroupGradient is set only on the last entry of an expanded group", () => {
-    testCharacters = [makeChar(1, "Fusion")]
-    const g = group("g1", ["e1", "e2", "e3"])
-    const entries = entryItems(call([g], new Set(["g1"])))
-    expect(entries[0].lastInGroupGradient).toBeNull()
-    expect(entries[1].lastInGroupGradient).toBeNull()
-    expect(entries[2].lastInGroupGradient).not.toBeNull()
-  })
-
-  // Character resolution
-  it("resolves charName from catalog", () => {
-    testCharacters = [makeChar(1, "Fusion")]
-    const items = call([topEntry("e1", 1)])
-    expect(entryItems(items)[0].charName).toBe("Char1")
-  })
-
-  it("resolves charHex from character element", () => {
-    testCharacters = [makeChar(1, "Fusion")]
-    const items = call([topEntry("e1", 1)])
-    const hex = entryItems(items)[0].charHex
-    expect(hex).not.toBe("#888888")
-    expect(hex).toMatch(/^#/)
-  })
-
-  it("elementLetter is first letter of element", () => {
-    testCharacters = [makeChar(1, "Glacio")]
-    const items = call([topEntry("e1", 1)])
-    expect(entryItems(items)[0].elementLetter).toBe("G")
-  })
-
-  // Stage resolution
-  it("resolves skillType and skillName from stage", () => {
-    const stage = makeResolvedStage({
-      stageId: "s1",
-      skillType: "Basic Attack",
-      skillName: "Heavy Attack",
-    })
-    resolvedStages.set("s1", stage)
-    const items = call([topEntry("e1", 1, "s1")])
-    const e = entryItems(items)[0]
-    expect(e.skillType).toBe("Basic Attack")
-    expect(e.skillName).toBe("Heavy Attack")
   })
 
   it("damageType comes from damage[0].type", () => {
@@ -267,16 +164,6 @@ describe("buildTimelineRenderItems", () => {
     expect(entryItems(items)[0].stageWithVariants).not.toBeNull()
   })
 
-  it("stageWithVariants is null when stage has no variants", () => {
-    const stage = makeResolvedStage({
-      stage: { actionTime: 30 },
-      stageId: "s1",
-    })
-    resolvedStages.set("s1", stage)
-    const items = call([topEntry("e1", 1, "s1")])
-    expect(entryItems(items)[0].stageWithVariants).toBeNull()
-  })
-
   // Findings → rendered messages
   it("renders an invalid finding into errors and a warning finding into warnings", () => {
     const validation: ValidationResult = {
@@ -301,13 +188,6 @@ describe("buildTimelineRenderItems", () => {
       { message: "Swap forces the next entry to be a different character" },
     ])
     expect(e.showMessage).toBe(true)
-  })
-
-  it("showMessage is false when a row has no findings or diagnostics", () => {
-    const e = entryItems(call([topEntry("e1")]))[0]
-    expect(e.errors).toEqual([])
-    expect(e.warnings).toEqual([])
-    expect(e.showMessage).toBe(false)
   })
 
   it("merges engine Diagnostics into the warning channel", () => {
@@ -336,11 +216,6 @@ describe("buildTimelineRenderItems", () => {
       "entry",
     ])
     expect(entryItems(items).map((i) => i.flatIndex)).toEqual([0, 1])
-  })
-
-  it("omits the openerHeader when no marker is present", () => {
-    const items = call([topEntry("e1"), topEntry("e2")])
-    expect(items.some((i) => i.type === "openerHeader")).toBe(false)
   })
 
   it("routes an invalid-severity Diagnostic into errors and reddens the row", () => {

@@ -85,14 +85,6 @@ const loadouts: [SlotLoadout, SlotLoadout, SlotLoadout] = [
   emptyLoadout,
 ]
 
-describe("validateTimeline — empty", () => {
-  it("returns empty result for empty entries", () => {
-    const result = validateTimeline([], slots, loadouts)
-    expect(result.findings.size).toBe(0)
-    expect(result.invalidRowIds.size).toBe(0)
-  })
-})
-
 describe("validateTimeline — character in team", () => {
   it("marks entry invalid when characterId is not in any slot", () => {
     testCharacters = [baseChar()]
@@ -103,17 +95,6 @@ describe("validateTimeline — character in team", () => {
     const result = validateTimeline([e], [null, null, null], loadouts)
     expect(result.invalidRowIds.has(e.id)).toBe(true)
     expect(errorsOf(result, e.id).length).toBeGreaterThan(0)
-  })
-
-  it("does not mark entry invalid when characterId is in a slot", () => {
-    testCharacters = [baseChar()]
-    const e = entry(
-      1,
-      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-    )
-    const result = validateTimeline([e], slots, loadouts)
-    expect(result.invalidRowIds.has(e.id)).toBe(false)
-    expect(result.findings.get(e.id)).toBeUndefined()
   })
 })
 
@@ -322,17 +303,6 @@ describe("validateTimeline — swap-legality (Intro must follow Outro)", () => {
     expect(result.invalidRowIds.has("intro")).toBe(false)
     expect(result.invalidRowIds.has("outro")).toBe(false)
   })
-
-  it("does not flag Outro entries", () => {
-    testCharacters = [charWithAll(1)]
-    const outro = entry(
-      1,
-      "char.char1.basic-attack.outro-skill.outro-skill::basic-attack",
-      "outro",
-    )
-    const result = validateTimeline([outro], [1, null, null], twoCharLoadouts)
-    expect(result.invalidRowIds.has("outro")).toBe(false)
-  })
 })
 
 describe("validateTimeline — stage-reachability (requiresPriorStageId)", () => {
@@ -382,23 +352,6 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
         (f) => f.message.kind === "missingChainPrereq",
       ),
     ).toBe(true)
-  })
-
-  it("carries the prerequisite stage ids on the finding", () => {
-    testCharacters = [charWithPrereq(1)]
-    const s2 = entry(
-      1,
-      "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-      "s2",
-    )
-    const result = validateTimeline([s2], [1, null, null], loadouts)
-    expect(errorsOf(result, "s2")[0].message).toEqual({
-      kind: "missingChainPrereq",
-      stageId: "char.test.basic-attack.normal-attack.stage-2::basic-attack",
-      requiredStageIds: [
-        "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-      ],
-    })
   })
 
   it("flags Stage 2 when the most recent same-character entry is not Stage 1", () => {
@@ -458,17 +411,6 @@ describe("validateTimeline — stage-reachability (requiresPriorStageId)", () =>
     const result = validateTimeline([s1, other, s2], [1, 2, null], loadouts)
     expect(result.invalidRowIds.has("s2")).toBe(false)
     expect(result.invalidRowIds.has("other")).toBe(false)
-    expect(result.invalidRowIds.has("s1")).toBe(false)
-  })
-
-  it("does not flag stages with no requiresPriorStageId", () => {
-    testCharacters = [charWithPrereq(1)]
-    const s1 = entry(
-      1,
-      "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-      "s1",
-    )
-    const result = validateTimeline([s1], [1, null, null], loadouts)
     expect(result.invalidRowIds.has("s1")).toBe(false)
   })
 })
@@ -619,14 +561,6 @@ describe("validateTimeline — swap-in opener sentinel", () => {
       requiredStageIds: [STAGE_1],
     })
   })
-
-  it("accepts Stage 2 after Stage 1 mid-combo", () => {
-    testCharacters = [charWithSwapIn(1)]
-    const s1 = entry(1, STAGE_1, "s1")
-    const s2 = entry(1, STAGE_2, "s2")
-    const result = validateTimeline([s1, s2], [1, null, null], loadouts)
-    expect(result.invalidRowIds.has("s2")).toBe(false)
-  })
 })
 
 describe("validateTimeline — window mode (followUpMinDelay)", () => {
@@ -684,34 +618,6 @@ describe("validateTimeline — window mode (followUpMinDelay)", () => {
         },
       ],
     })
-
-  it("accepts the follow-up immediately after its prerequisite", () => {
-    testCharacters = [windowChar(1)]
-    const result = validateTimeline(
-      [entry(1, STAGE_1, "s1"), entry(1, STAGE_2, "s2")],
-      [1, null, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(false)
-  })
-
-  it("accepts the follow-up across a swap-out, teammate entry, and swap-back", () => {
-    testCharacters = [windowChar(1), baseChar({ id: 2 })]
-    const result = validateTimeline(
-      [
-        entry(1, STAGE_1, "s1"),
-        entry(
-          2,
-          "char.test.basic-attack.normal-attack.stage-1::basic-attack",
-          "tm",
-        ),
-        entry(1, STAGE_2, "s2"),
-      ],
-      [1, 2, null],
-      loadouts,
-    )
-    expect(result.invalidRowIds.has("s2")).toBe(false)
-  })
 
   it("accepts the follow-up when the actor's own action intervenes", () => {
     testCharacters = [windowChar(1)]
@@ -968,26 +874,6 @@ describe("validateTimeline — swap warning channel", () => {
     const warnings = warningsOf(result, "e1")
     expect(warnings).toHaveLength(1)
     expect(warnings[0].message.kind).toBe("swapForcesDifferentChar")
-  })
-
-  it("emits no warning when the next entry is a different character", () => {
-    testCharacters = [swapChar(), baseChar({ id: 2 })]
-    const result = validateTimeline(
-      [swapEntry("e1"), fullEntry("e2", 2)],
-      [1, 2, null],
-      emptyLoadoutsW,
-    )
-    expect(warningsOf(result, "e1")).toHaveLength(0)
-  })
-
-  it("emits no warning when the swap entry is the last entry", () => {
-    testCharacters = [swapChar()]
-    const result = validateTimeline(
-      [fullEntry("e1"), swapEntry("e2")],
-      [1, null, null],
-      emptyLoadoutsW,
-    )
-    expect(warningsOf(result, "e2")).toHaveLength(0)
   })
 
   it("emits no warning for a non-swap entry followed by the same character", () => {

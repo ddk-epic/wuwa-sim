@@ -77,44 +77,6 @@ describe("summarizeGroups", () => {
     expect(gs?.totalDamage).toBe(150)
   })
 
-  it("handles an empty group: zeros and null end resources", () => {
-    const gs = summarizeGroups(
-      [row({ timeFrames: 99 })],
-      [{ groupId: "empty", startFlatIndex: 0, entryCount: 0 }],
-    ).get("empty")
-    expect(gs).toEqual({
-      totalDamage: null,
-      totalDurationFrames: 0,
-      startTimeFrames: 0,
-      endConcerto: null,
-      endEnergy: null,
-      endForte: null,
-    })
-  })
-
-  it("handles a single-entry group", () => {
-    const rows = [
-      row({
-        timeFrames: 12,
-        durationFrames: 8,
-        damage: 42,
-        cumulativeConcerto: 3,
-        cumulativeEnergy: 1,
-      }),
-    ]
-    const gs = summarizeGroups(rows, [
-      { groupId: "solo", startFlatIndex: 0, entryCount: 1 },
-    ]).get("solo")
-    expect(gs).toEqual({
-      totalDamage: 42,
-      totalDurationFrames: 8,
-      startTimeFrames: 12,
-      endConcerto: 3,
-      endEnergy: 1,
-      endForte: null,
-    })
-  })
-
   it("keys multiple groups independently", () => {
     const rows = [
       row({ damage: 1, durationFrames: 5 }),

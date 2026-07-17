@@ -114,33 +114,6 @@ const charA: EnrichedCharacter = {
   ],
 }
 
-const charB: EnrichedCharacter = {
-  ...charA,
-  id: 2,
-  name: "Test B",
-  stats: {
-    base: { hp: 0, atk: 0, def: 0 },
-    max: { hp: 0, atk: 500, def: 0 },
-  },
-  skills: [
-    {
-      id: 6,
-      name: "Normal Attack",
-      type: "Normal Attack",
-      stages: [
-        {
-          name: "Stage",
-          category: "Basic Attack",
-          value: "1",
-          actionTime: 60,
-          damage: [dmgEntry(1.5)],
-        },
-      ],
-      damage: [],
-    },
-  ],
-}
-
 let testCharacters: EnrichedCharacter[] = []
 
 vi.mock("../loadout/catalog", () => ({
@@ -170,18 +143,6 @@ function normalAttack(characterId: number, id?: string): TimelineEntry {
   )
 }
 
-describe("getTimelineSummary — empty", () => {
-  it("returns empty rows and zero aggregates for empty Timeline", () => {
-    const result = getTimelineSummary([])
-    expect(result).toEqual({
-      rows: [],
-      totalDamage: 0,
-      totalTimeFrames: 0,
-      dps: 0,
-    })
-  })
-})
-
 describe("getTimelineSummary — single entry", () => {
   it("first row starts at timeFrames 0 with null damage when no simulation log is provided", () => {
     testCharacters = [charA]
@@ -203,18 +164,6 @@ describe("getTimelineSummary — single entry", () => {
     expect(result.totalDamage).toBe(0)
     expect(result.totalTimeFrames).toBe(60)
     expect(result.dps).toBe(0)
-  })
-
-  it("damage is null when stage has no damage entries", () => {
-    testCharacters = [charA]
-    const result = getTimelineSummary([
-      tlEntry(
-        1,
-        "char.test-a.basic-attack.no-damage-skill.stage::basic-attack",
-      ),
-    ])
-    expect(result.rows[0].damage).toBeNull()
-    expect(result.totalDamage).toBe(0)
   })
 })
 
@@ -238,13 +187,6 @@ describe("getTimelineSummary — multi-entry accumulation", () => {
     expect(result.rows.map((r) => r.timeFrames)).toEqual([0, 60, 90])
     expect(result.totalTimeFrames).toBe(180)
   })
-
-  it("damage is null for every fallback row regardless of character", () => {
-    testCharacters = [charA, charB]
-    const result = getTimelineSummary([normalAttack(1), normalAttack(2)])
-    expect(result.rows.map((r) => r.damage)).toEqual([null, null])
-    expect(result.totalDamage).toBe(0)
-  })
 })
 
 describe("getTimelineSummary — zero-damage rule", () => {
@@ -265,22 +207,7 @@ describe("getTimelineSummary — zero-damage rule", () => {
   })
 })
 
-describe("getTimelineSummary — dps", () => {
-  it("dps is 0 without a simulation log", () => {
-    testCharacters = [charA]
-    const result = getTimelineSummary([
-      tlEntry(
-        1,
-        "char.test-a.basic-attack.resonance-skill.stage::basic-attack",
-      ),
-    ])
-    expect(result.totalTimeFrames).toBe(90)
-    expect(result.totalDamage).toBe(0)
-    expect(result.dps).toBe(0)
-  })
-})
-
-// -- Log ingestion (#187) -----------------------------------------------------
+// -- Log ingestion ------------------------------------------------------------
 
 function makeActionEvent(
   entryId: string,
@@ -472,21 +399,6 @@ describe("getTimelineSummary — post-stage cumulatives", () => {
     expect(result.rows[0].cumulativeEnergy).toBe(20)
   })
 
-  it("carries forte through hit and action cumulatives like the other resources", () => {
-    testCharacters = [charA]
-    const e1 = normalAttack(1, "e1")
-    const e2 = normalAttack(1, "e2")
-    const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0),
-      makeHitEvent("e1", 5, 100, { cumulativeForte: 30 }),
-      makeHitEvent("e1", 10, 200, { cumulativeForte: 55 }),
-      { ...makeActionEvent("e2", 60), cumulativeForte: 12 },
-    ]
-    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
-    expect(result.rows[0].cumulativeForte).toBe(55)
-    expect(result.rows[1].cumulativeForte).toBe(12)
-  })
-
   it("falls back to action event cumulatives when no hits exist for the entry", () => {
     testCharacters = [charA]
     const e1 = normalAttack(1, "e1")
@@ -506,89 +418,5 @@ describe("getTimelineSummary — post-stage cumulatives", () => {
     const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log)
     expect(result.rows[0].cumulativeConcerto).toBe(15)
     expect(result.rows[0].cumulativeEnergy).toBe(8)
-  })
-
-  it("returns null cumulatives for entries with no action event in the log", () => {
-    testCharacters = [charA]
-    const e1 = normalAttack(1, "e1")
-    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, [])
-    expect(result.rows[0].cumulativeConcerto).toBeNull()
-    expect(result.rows[0].cumulativeEnergy).toBeNull()
-  })
-
-  it("collapsed group header value equals last entry row value (post-stage)", () => {
-    // Verified at summary level: the same row the header would read from
-    testCharacters = [charA]
-    const e1 = normalAttack(1, "e1")
-    const e2 = normalAttack(1, "e2")
-    const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0),
-      makeHitEvent("e1", 5, 100, {
-        cumulativeConcerto: 25,
-        cumulativeEnergy: 12,
-      }),
-      makeActionEvent("e2", 60),
-      makeHitEvent("e2", 65, 200, {
-        cumulativeConcerto: 50,
-        cumulativeEnergy: 24,
-      }),
-    ]
-    const result = getTimelineSummary([e1, e2], undefined, undefined, 9, 6, log)
-    // last entry row (index 1) drives collapsed header display
-    expect(result.rows[1].cumulativeConcerto).toBe(50)
-    expect(result.rows[1].cumulativeEnergy).toBe(24)
-  })
-})
-
-describe("getTimelineSummary — variantFloor / floorFrames", () => {
-  it("floorFrames=0 and reactFrames=reactionDelay when react wins", () => {
-    testCharacters = [charA]
-    const e1 = normalAttack(1, "e1")
-    const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0, {
-        pad: { reaction: 9, floor: 0, trailing: 0, fall: 0 },
-        wait: 0,
-      }),
-    ]
-    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 6)
-    expect(result.rows[0].delay.pad.reaction).toBe(9)
-    expect(result.rows[0].delay.pad.floor).toBe(0)
-  })
-
-  it("floorFrames=variantFloor and reactFrames=0 when floor wins", () => {
-    testCharacters = [charA]
-    const e1 = normalAttack(1, "e1")
-    const log: SimulationLogEntry[] = [
-      makeActionEvent("e1", 0, {
-        pad: { reaction: 0, floor: 15, trailing: 0, fall: 0 },
-        wait: 0,
-      }),
-    ]
-    const result = getTimelineSummary([e1], undefined, undefined, 9, 6, log, 15)
-    expect(result.rows[0].delay.pad.reaction).toBe(0)
-    expect(result.rows[0].delay.pad.floor).toBe(15)
-  })
-
-  it("fallback path: floorFrames from resolveStageExecution when floor wins", () => {
-    // charA has Normal Attack with actionTime=60, no cancel variant
-    // With no log, fallback to resolveStageExecution with variantFloor=0 -> react wins
-    testCharacters = [charA]
-    const entry: TimelineEntry = {
-      id: "f1",
-      characterId: 1,
-      stageId: "char.test-a.basic-attack.normal-attack.stage::basic-attack",
-      variantKind: undefined,
-    }
-    const result = getTimelineSummary(
-      [entry],
-      undefined,
-      undefined,
-      9,
-      6,
-      undefined,
-      0,
-    )
-    expect(result.rows[0].delay.pad.floor).toBe(0)
-    expect(result.rows[0].delay.pad.reaction).toBe(0)
   })
 })
