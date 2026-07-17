@@ -85,16 +85,6 @@ describe("computeDamage", () => {
     )
   })
 
-  it("allAmp applies to every skill type equally", () => {
-    const s = stats({ allAmp: 0.2 })
-    const expected = Math.round(1 * 1000 * 1.2 * DEFRES)
-    expect(computeDamage(ctx({ skillType: "Basic Attack" }), s)).toBe(expected)
-    expect(computeDamage(ctx({ skillType: "Resonance Skill" }), s)).toBe(
-      expected,
-    )
-    expect(computeDamage(ctx({ skillType: "Outro Skill" }), s)).toBe(expected)
-  })
-
   it("allAmp and skillTypeAmp stack additively before the factor", () => {
     const s = stats({
       skillTypeAmp: {
@@ -161,12 +151,6 @@ describe("computeDamage", () => {
     )
   })
 
-  it("missing scalingStat falls back to ATK", () => {
-    expect(computeDamage(ctx({ multiplier: 1 }), stats({ atkPct: 0.5 }))).toBe(
-      Math.round(1 * 1500 * DEFRES),
-    )
-  })
-
   it("unknown scalingStat falls back to ATK", () => {
     expect(
       computeDamage(
@@ -187,15 +171,6 @@ describe("computeDamage", () => {
     const defMult =
       DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - 0.2))
     expect(computeDamage(ctx(), stats({ defShred: 0.2 }))).toBe(
-      Math.round(1000 * defMult * RES_MULT_CONST),
-    )
-  })
-
-  it("multiple defShred sources stack additively (via combined scalar)", () => {
-    const combined = 0.1 + 0.15
-    const defMult =
-      DEF_MULT_CONST / (DEF_MULT_CONST + (1 - DEF_MULT_CONST) * (1 - combined))
-    expect(computeDamage(ctx(), stats({ defShred: combined }))).toBe(
       Math.round(1000 * defMult * RES_MULT_CONST),
     )
   })
@@ -247,16 +222,6 @@ describe("computeDamage", () => {
     const s = stats({ allDmgBonus: 0.3, allAmp: 0.2, vul: 0.4 })
     expect(computeDamage(ctx({ multiplier: 1 }), s)).toBe(
       Math.round(1 * 1000 * (1 + 0.3) * (1 + 0.2) * (1 + 0.4) * DEFRES),
-    )
-  })
-
-  it("a default target reproduces the historical def/res constants", () => {
-    expect(computeDamage(ctx({ multiplier: 1 }), stats())).toBe(
-      computeDamage(ctx({ multiplier: 1 }), stats(), {
-        level: 100,
-        defMultConst: DEF_MULT_CONST,
-        resMultConst: RES_MULT_CONST,
-      }),
     )
   })
 

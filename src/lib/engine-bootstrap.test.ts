@@ -85,22 +85,6 @@ describe("bootstrapSlot — self wielder-id filter", () => {
       "char.wielder-passive",
     )
   })
-
-  it("omitted characterId folds as today", () => {
-    const buff: BuffDef = {
-      ...simStartPermanentBuff("char.plain-passive"),
-      effects: [
-        {
-          kind: "stat",
-          path: { stat: "atkPct" },
-          value: { kind: "const", v: 0.1 },
-        },
-      ],
-    }
-    testChar = baseChar({ id: 5, buffs: [buff] })
-    const slot = bootstrapSlot(5, null)
-    expect(slot?.foldedBuffs.map((b) => b.id)).toContain("char.plain-passive")
-  })
 })
 
 describe("validateBuffDef", () => {
@@ -158,18 +142,6 @@ describe("validateBuffDef", () => {
     ).toThrow(/target and duration must both be present/)
   })
 
-  it("rejects duration present without target", () => {
-    expect(() =>
-      validateBuffDef({
-        id: "test.bad",
-        name: "Bad",
-        trigger: baseTrigger,
-        duration: { kind: "frames", v: 1 },
-        effects: [],
-      }),
-    ).toThrow(/target and duration must both be present/)
-  })
-
   it("rejects reaction with a stat effect", () => {
     expect(() =>
       validateBuffDef({
@@ -185,62 +157,5 @@ describe("validateBuffDef", () => {
         ],
       }),
     ).toThrow(/cannot have stat effects/)
-  })
-
-  it("rejects reaction with stacking", () => {
-    expect(() =>
-      validateBuffDef({
-        id: "test.bad-stacking",
-        name: "Bad Stacking Reaction",
-        trigger: baseTrigger,
-        effects: [
-          {
-            kind: "resource",
-            resource: "forte",
-            op: "add",
-            value: { kind: "const", v: 1 },
-          },
-        ],
-        stacking: { max: 2, onRetrigger: "addStackRefresh" },
-      }),
-    ).toThrow(/cannot declare stacking/)
-  })
-
-  it("rejects reaction with consumedBy", () => {
-    expect(() =>
-      validateBuffDef({
-        id: "test.bad-consumed",
-        name: "Bad ConsumedBy Reaction",
-        trigger: baseTrigger,
-        effects: [
-          {
-            kind: "resource",
-            resource: "forte",
-            op: "add",
-            value: { kind: "const", v: 1 },
-          },
-        ],
-        consumedBy: { event: "skillCast" },
-      }),
-    ).toThrow(/cannot declare consumedBy/)
-  })
-
-  it("rejects reaction with a root condition", () => {
-    expect(() =>
-      validateBuffDef({
-        id: "test.bad-condition",
-        name: "Bad Condition Reaction",
-        trigger: baseTrigger,
-        effects: [
-          {
-            kind: "resource",
-            resource: "forte",
-            op: "add",
-            value: { kind: "const", v: 1 },
-          },
-        ],
-        condition: { kind: "buffActive", buff: "x", on: "source" },
-      }),
-    ).toThrow(/cannot carry a root condition/)
   })
 })

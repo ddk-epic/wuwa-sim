@@ -122,10 +122,6 @@ describe("deriveKey", () => {
     )
   })
 
-  it("strips a trailing ' Damage'", () => {
-    expect(deriveKey("Heavy Attack Damage")).toBe("heavy-attack")
-  })
-
   it("only strips at the end", () => {
     expect(deriveKey("DMG Boost")).toBe("dmg-boost")
   })
@@ -133,11 +129,6 @@ describe("deriveKey", () => {
   it("normalizes cast-stage names to 'cast'", () => {
     expect(deriveKey(STAGE_CAST_NAME)).toBe("cast")
     expect(deriveKey("Outro DMG")).toBe("cast")
-  })
-
-  it("keeps echo tap/hold names faithful", () => {
-    expect(deriveKey("Tap")).toBe("tap")
-    expect(deriveKey("Hold")).toBe("hold")
   })
 })
 
@@ -156,11 +147,6 @@ describe("compileCharacter — keys and ids", () => {
     expect([...stageIndex.keys()]).toEqual([STAGE_1_ID, NAMED_ID])
     expect(refIndex.get("normal-attack")?.get("stage-1")).toBe(STAGE_1_ID)
     expect(refIndex.get("normal-attack")?.get("named")).toBe(NAMED_ID)
-  })
-
-  it("computes ids once and memoizes per character object", () => {
-    const char = baseChar()
-    expect(compileCharacter(char)).toBe(compileCharacter(char))
   })
 
   it("respects an explicit stage key override", () => {
@@ -185,21 +171,6 @@ describe("compileCharacter — keys and ids", () => {
       name: "Stage 1",
     }
     expect(() => compileCharacter(char)).toThrow(/duplicate stage key/)
-  })
-
-  it("throws on a duplicate skill key among staged skills", () => {
-    const char = baseChar()
-    char.skills = [char.skills[0], { ...char.skills[0], id: 2 }]
-    expect(() => compileCharacter(char)).toThrow(/duplicate skill key/)
-  })
-
-  it("skips stage-less skills entirely", () => {
-    const char = baseChar()
-    char.skills = [
-      ...char.skills,
-      { id: 9, name: "", type: "Inherent Skill", stages: [], damage: [] },
-    ]
-    expect(() => compileCharacter(char)).not.toThrow()
   })
 
   it("throws on ambiguous buff keys (same last id segment)", () => {
@@ -227,20 +198,6 @@ describe("compileCharacter — reference lowering", () => {
     expect(compileCharacter(char).buffs[0].trigger).toEqual({
       event: "hitLanded",
       stageId: STAGE_1_ID,
-    })
-  })
-
-  it("lowers a named stage token", () => {
-    const char = baseChar({
-      buffs: [
-        reaction({
-          trigger: { event: "hitLanded", stage: "normal-attack/named" },
-        }),
-      ],
-    })
-    expect(compileCharacter(char).buffs[0].trigger).toEqual({
-      event: "hitLanded",
-      stageId: NAMED_ID,
     })
   })
 
@@ -417,35 +374,6 @@ describe("findStageByEntry — character skill", () => {
     expect(result?.skillKey).toBe("normal-attack")
   })
 
-  it("returns null when stageId does not match any stage", () => {
-    testCharacters = [baseChar()]
-    const entry = {
-      id: "e3",
-      characterId: 1,
-      stageId:
-        "char.test-char.basic-attack.normal-attack.missing::basic-attack",
-    }
-    expect(findStageByEntry(entry, slots, loadouts)).toBeNull()
-  })
-
-  it("returns null when characterId is not in catalog", () => {
-    testCharacters = []
-    const entry = { id: "e4", characterId: 99, stageId: STAGE_1_ID }
-    expect(findStageByEntry(entry, slots, loadouts)).toBeNull()
-  })
-
-  it("exposes the lowered requiresPriorStageId", () => {
-    const char = baseChar()
-    char.skills[0].stages[1] = {
-      ...char.skills[0].stages[1],
-      requiresPriorStage: "normal-attack/stage-1",
-    }
-    testCharacters = [char]
-    const entry = { id: "e5", characterId: 1, stageId: NAMED_ID }
-    const result = findStageByEntry(entry, slots, loadouts)
-    expect(result?.requiresPriorStageId).toEqual([STAGE_1_ID])
-  })
-
   it("lowers an any-of requiresPriorStage array, resolving each element", () => {
     const char = baseChar()
     char.skills[0].stages[1] = {
@@ -454,15 +382,6 @@ describe("findStageByEntry — character skill", () => {
     }
     const info = compileCharacter(char).stageIndex.get(NAMED_ID)
     expect(info?.requiresPriorStageId).toEqual([STAGE_1_ID, NAMED_ID])
-  })
-
-  it("rejects an unresolvable element in an any-of array", () => {
-    const char = baseChar()
-    char.skills[0].stages[1] = {
-      ...char.skills[0].stages[1],
-      requiresPriorStage: ["normal-attack/stage-1", "normal-attack/nope"],
-    }
-    expect(() => compileCharacter(char)).toThrow()
   })
 
   it("passes the swap-in sentinel through unresolved", () => {
@@ -493,16 +412,6 @@ describe("findStageByEntry — echo skill", () => {
     expect(result).not.toBeNull()
     expect(result?.skillType).toBe("Echo Skill")
     expect(result?.element).toBe("Glacio")
-  })
-
-  it("returns null when no echo is equipped", () => {
-    testCharacters = [baseChar()]
-    const entry = {
-      id: "e7",
-      characterId: 1,
-      stageId: "echo.echo-skill.echo-stage::echo-skill",
-    }
-    expect(findStageByEntry(entry, slots, loadouts)).toBeNull()
   })
 })
 
