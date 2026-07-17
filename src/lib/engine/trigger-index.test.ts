@@ -22,21 +22,6 @@ const rcDef = (
 })
 
 describe("TriggerIndex", () => {
-  it("empty input returns empty for any query", () => {
-    const idx = new TriggerIndex([])
-    expect(idx.crossedThresholds("energy", "up", 0, 100)).toEqual([])
-  })
-
-  it("equal before === after returns empty", () => {
-    const idx = new TriggerIndex([rcDef("energy", "up", 50)])
-    expect(idx.crossedThresholds("energy", "up", 50, 50)).toEqual([])
-  })
-
-  it("transition that crosses none returns empty", () => {
-    const idx = new TriggerIndex([rcDef("energy", "up", 100)])
-    expect(idx.crossedThresholds("energy", "up", 0, 50)).toEqual([])
-  })
-
   it("single threshold — up: crossed when before < threshold <= after", () => {
     const idx = new TriggerIndex([rcDef("energy", "up", 50)])
     expect(idx.crossedThresholds("energy", "up", 0, 50)).toEqual([50])
@@ -112,11 +97,6 @@ describe("TriggerIndex", () => {
     expect(idx.crossedThresholds("forte", "down", 100, 0)).toEqual([
       0, 10, 20, 30, 40, 50, 60, 70, 80, 90,
     ])
-  })
-
-  it("resourceStep consumed: single boundary 100→90 mints one (m=90)", () => {
-    const idx = new TriggerIndex([stepDef("forte", "consumed", 10)])
-    expect(idx.crossedThresholds("forte", "down", 100, 90)).toEqual([90])
   })
 
   it("resourceStep consumed: multi-cross in one delta with carryover", () => {

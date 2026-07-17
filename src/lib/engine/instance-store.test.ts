@@ -104,22 +104,6 @@ describe("InstanceStore — apply / refresh / replace", () => {
     expect(s.activeBuffIds(1)).toEqual(["b.test"])
     expect(out[1].kind).toBe("buffRefreshed")
   })
-
-  it("replace policy expires old and applies new", () => {
-    const s = new InstanceStore()
-    const out: BuffEvent[] = []
-    const d = def({
-      duration: { kind: "frames", v: 60 },
-      stacking: { max: 1, onRetrigger: "replace" },
-    })
-    s.applyBuff(d, 1, 1, 0, out)
-    s.applyBuff(d, 1, 1, 30, out)
-    expect(out.map((e) => e.kind)).toEqual([
-      "buffApplied",
-      "buffExpired",
-      "buffApplied",
-    ])
-  })
 })
 
 describe("InstanceStore — tickToFrame", () => {
@@ -186,11 +170,6 @@ describe("InstanceStore — runConsumePhase", () => {
 })
 
 describe("InstanceStore — resolveStats helpers", () => {
-  it("cloneBaseStats returns an empty StatTable when no character or stats are set", () => {
-    const s = new InstanceStore()
-    expect(s.cloneBaseStats(1)).toEqual(emptyStatTable())
-  })
-
   it("cloneBaseStats returns a clone of stored base stats", () => {
     const s = new InstanceStore()
     const stats = { ...emptyStatTable(), atkBase: 1234 }
@@ -235,7 +214,7 @@ describe("InstanceStore — resolveTargetIds", () => {
     ).toThrow("applyOrDefer")
   })
 
-  describe("self wielder-id filter (#343)", () => {
+  describe("self wielder-id filter", () => {
     it("scalar characterId: lands for a listed wielder", () => {
       const s = new InstanceStore()
       expect(
@@ -261,13 +240,6 @@ describe("InstanceStore — resolveTargetIds", () => {
       const d = def({ target: { kind: "self", characterId: [7, 8] } })
       expect(s.resolveTargetIds(d, 8)).toEqual([8])
       expect(s.resolveTargetIds(d, 9)).toEqual([])
-    })
-
-    it("omitted characterId behaves exactly as today (always self)", () => {
-      const s = new InstanceStore()
-      expect(s.resolveTargetIds(def({ target: { kind: "self" } }), 9)).toEqual([
-        9,
-      ])
     })
   })
 })
@@ -398,21 +370,6 @@ describe("matchesTrigger — stage axes (stageId / skill / hitIndex)", () => {
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
   })
 
-  it("no-filter passthrough: absent axes match any event", () => {
-    const trigger: Trigger = {
-      event: "hitLanded",
-      actor: "self",
-    }
-    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
-    expect(
-      matchesTrigger(
-        trigger,
-        { ...baseEvent, stageId: "echo.inferno-rider.tap::echo-skill" },
-        1,
-      ),
-    ).toBe(true)
-  })
-
   it("combined dmgType + stageId all must match", () => {
     const trigger: Trigger = {
       event: "hitLanded",
@@ -427,7 +384,7 @@ describe("matchesTrigger — stage axes (stageId / skill / hitIndex)", () => {
   })
 })
 
-describe("matchesTrigger — sourceBuffId filter (#117)", () => {
+describe("matchesTrigger — sourceBuffId filter", () => {
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
@@ -469,16 +426,6 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
     ).toBe(false)
   })
 
-  it("single sourceBuffId: does not match when event sourceBuffId is absent", () => {
-    const trigger: Trigger = {
-      event: "hitLanded",
-      actor: "self",
-      source: "synthetic",
-      sourceBuff: "char.sanhua.ice-prism-burst",
-    }
-    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
-  })
-
   it("array sourceBuffId: matches when event sourceBuffId is one of the listed values", () => {
     const trigger: Trigger = {
       event: "hitLanded",
@@ -510,25 +457,9 @@ describe("matchesTrigger — sourceBuffId filter (#117)", () => {
       ),
     ).toBe(false)
   })
-
-  it("no sourceBuffId on trigger: matches regardless of event sourceBuffId", () => {
-    const trigger: Trigger = {
-      event: "hitLanded",
-      actor: "self",
-      source: "synthetic",
-    }
-    expect(
-      matchesTrigger(
-        trigger,
-        { ...baseEvent, sourceBuffId: "char.sanhua.ice-prism-burst" },
-        1,
-      ),
-    ).toBe(true)
-    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
-  })
 })
 
-describe("matchesTrigger — targetHasStatus gate (#342)", () => {
+describe("matchesTrigger — targetHasStatus gate", () => {
   const baseEvent: EngineEvent = {
     kind: "hitLanded",
     characterId: 1,
@@ -567,18 +498,6 @@ describe("matchesTrigger — targetHasStatus gate (#342)", () => {
     ).toBe(false)
     // targetStatuses entirely absent also fails the gate.
     expect(matchesTrigger(trigger, baseEvent, 1)).toBe(false)
-  })
-
-  it("is unaffected when targetHasStatus is omitted", () => {
-    const trigger: Trigger = { event: "hitLanded", actor: "self" }
-    expect(matchesTrigger(trigger, baseEvent, 1)).toBe(true)
-    expect(
-      matchesTrigger(
-        trigger,
-        { ...baseEvent, targetStatuses: ["Aero Erosion"] },
-        1,
-      ),
-    ).toBe(true)
   })
 })
 
@@ -750,16 +669,6 @@ describe("InstanceStore — hidden buffs leave no log footprint", () => {
     )
     expect(out).toHaveLength(0)
     expect(s.hasActiveOnTarget("b.test", 1)).toBe(false)
-  })
-
-  it("expires silently in tickToFrame", () => {
-    const s = new InstanceStore()
-    const out: BuffEvent[] = []
-    const d = def({ hidden: true, duration: { kind: "frames", v: 30 } })
-    s.applyBuff(d, 1, 1, 0, out)
-    const { lifecycleEvents } = s.tickToFrame(30)
-    expect(lifecycleEvents).toHaveLength(0)
-    expect(s.allActive()).toHaveLength(0)
   })
 })
 

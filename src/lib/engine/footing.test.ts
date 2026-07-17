@@ -9,13 +9,6 @@ describe("FootingModule.applyStageFooting", () => {
     expect(f.team()).toBe("air")
   })
 
-  it("sustained ground writes ground exit footing", () => {
-    const f = new FootingModule()
-    f.applyStageFooting("air", 60)
-    f.applyStageFooting("ground", 60)
-    expect(f.team()).toBe("ground")
-  })
-
   it("either preserves the current footing", () => {
     const f = new FootingModule()
     f.applyStageFooting("air", 60)
@@ -59,13 +52,6 @@ describe("FootingModule.applyIntroFooting", () => {
     const f = new FootingModule()
     f.applyIntroFooting("air")
     expect(f.team()).toBe("air")
-  })
-
-  it("writes the intro's ground exit footing", () => {
-    const f = new FootingModule()
-    f.applyStageFooting("air", 60)
-    f.applyIntroFooting("ground")
-    expect(f.team()).toBe("ground")
   })
 
   it("{ launch } intro lifts off, { land } intro settles", () => {

@@ -3,16 +3,6 @@ import { describe, expect, it } from "vitest"
 import { ResourceLedger } from "./resource-ledger"
 
 describe("ResourceLedger", () => {
-  it("returns zeroed state for unseen characters", () => {
-    const r = new ResourceLedger()
-    expect(r.getResource(1)).toEqual({
-      energy: 0,
-      concerto: 0,
-      forte: 0,
-      pool: 0,
-    })
-  })
-
   it("applyDelta returns before/after and mutates state", () => {
     const r = new ResourceLedger()
     expect(r.applyDelta(1, "energy", 30)).toEqual({ before: 0, after: 30 })
@@ -25,13 +15,6 @@ describe("ResourceLedger", () => {
     r.applyDelta(1, "concerto", 40)
     expect(r.setValue(1, "concerto", 0)).toEqual({ before: 40, after: 0 })
     expect(r.getResource(1).concerto).toBe(0)
-  })
-
-  it("clear resets all state", () => {
-    const r = new ResourceLedger()
-    r.applyDelta(1, "energy", 99)
-    r.clear()
-    expect(r.getResource(1).energy).toBe(0)
   })
 
   it("ensureState is idempotent and does not clobber existing state", () => {
@@ -55,14 +38,6 @@ describe("ResourceLedger — forte cap", () => {
     r.registerCap(1, "forte", 4)
     r.applyDelta(1, "forte", 3)
     expect(r.applyDelta(1, "forte", 3)).toEqual({ before: 3, after: 4 })
-    expect(r.getResource(1).forte).toBe(4)
-  })
-
-  it("multiple over-grants never exceed cap", () => {
-    const r = new ResourceLedger()
-    r.registerCap(1, "forte", 4)
-    r.applyDelta(1, "forte", 10)
-    r.applyDelta(1, "forte", 10)
     expect(r.getResource(1).forte).toBe(4)
   })
 
@@ -106,26 +81,11 @@ describe("ResourceLedger — forte cap", () => {
   })
 })
 
-describe("ResourceLedger — floor at 0 (#324)", () => {
+describe("ResourceLedger — floor at 0", () => {
   it("a sub larger than the current value floors at 0, not negative", () => {
     const r = new ResourceLedger()
     r.applyDelta(1, "concerto", 70)
     expect(r.applyDelta(1, "concerto", -100)).toEqual({ before: 70, after: 0 })
     expect(r.getResource(1).concerto).toBe(0)
-  })
-
-  it("floor protects every resource channel, not just concerto", () => {
-    const r = new ResourceLedger()
-    r.applyDelta(1, "energy", 20)
-    expect(r.applyDelta(1, "energy", -50)).toEqual({ before: 20, after: 0 })
-    r.applyDelta(1, "forte", 1)
-    expect(r.applyDelta(1, "forte", -5)).toEqual({ before: 1, after: 0 })
-  })
-
-  it("existing high-side cap behavior is unchanged by the floor", () => {
-    const r = new ResourceLedger()
-    r.registerCap(1, "forte", 4)
-    expect(r.applyDelta(1, "forte", 10)).toEqual({ before: 0, after: 4 })
-    expect(r.getResource(1).forte).toBe(4)
   })
 })

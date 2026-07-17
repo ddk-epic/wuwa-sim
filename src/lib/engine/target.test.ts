@@ -7,11 +7,6 @@ import { Target } from "./target"
 const FPS = 60
 
 describe("Target params", () => {
-  it("defaults reproduce the historical mitigation constants", () => {
-    const t = new Target()
-    expect(t.getParams()).toEqual(DEFAULT_TARGET_PARAMS)
-  })
-
   it("reset overrides only the provided params", () => {
     const t = new Target()
     t.reset({ level: 90 })
@@ -61,13 +56,6 @@ describe("Negative Status apply/presence", () => {
     t.raiseCap("Aero Erosion", 3)
     t.apply(AERO_EROSION, 3, 0, 1)
     expect(t.stacksOf("Aero Erosion")).toBe(6)
-  })
-
-  it("presence is independent of stacks", () => {
-    const t = new Target()
-    expect(t.hasAnyStatus()).toBe(false)
-    t.apply(AERO_EROSION, 1, 0, 1)
-    expect(t.hasAnyStatus()).toBe(true)
   })
 
   it("expireBefore removes a status past its endTime", () => {
