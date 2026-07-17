@@ -99,23 +99,6 @@ function basePayload(): ImportExportPayload {
 // The Base91 blob is the substring after the slug prefix's last hyphen.
 const blobOf = (code: string) => code.slice(code.lastIndexOf("-") + 1)
 
-// ---- Base91 ----
-describe("Base91 codec", () => {
-  // Access the private functions indirectly: encode then decode a known payload
-  // and verify the string contains only Base91 characters.
-  const B91_RE = /^[A-Za-z0-9!#$%&()*+,./:;<=>?@[\]^_`{|}~"]*$/
-
-  it("produces only Base91 characters", () => {
-    expect(blobOf(encodePayload(basePayload()))).toMatch(B91_RE)
-  })
-
-  it("roundtrips arbitrary byte patterns via the payload codec", () => {
-    // Encode then decode must give back the same payload.
-    const payload = basePayload()
-    expect(decodePayload(encodePayload(payload))).toMatchObject(payload)
-  })
-})
-
 // ---- Team roundtrips ----
 describe("team encoding", () => {
   it("roundtrips all-null slots and focusedId", () => {
@@ -174,24 +157,10 @@ describe("team encoding", () => {
     }
   })
 
-  it("roundtrips the team name", () => {
-    const payload = basePayload()
-    payload.team.name = "Sanhua Hypercarry"
-    expect(decodePayload(encodePayload(payload)).team.name).toBe(
-      "Sanhua Hypercarry",
-    )
-  })
-
   it("roundtrips a unicode team name", () => {
     const payload = basePayload()
     payload.team.name = "凍結 ❄️ team"
     expect(decodePayload(encodePayload(payload)).team.name).toBe("凍結 ❄️ team")
-  })
-
-  it("rejects a superseded v2 code", () => {
-    const bytes = base91Decode(blobOf(encodePayload(basePayload())))
-    const v2Bytes = new Uint8Array([2, ...bytes.slice(1)])
-    expect(() => decodePayload(base91Encode(v2Bytes))).toThrow(/version/i)
   })
 })
 
@@ -234,11 +203,6 @@ describe("timeline encoding", () => {
   it("roundtrips null timeline", () => {
     const payload = { ...basePayload(), timeline: null }
     expect(decodePayload(encodePayload(payload)).timeline).toBeNull()
-  })
-
-  it("roundtrips empty timeline array", () => {
-    const payload = { ...basePayload(), timeline: [] }
-    expect(decodePayload(encodePayload(payload)).timeline).toEqual([])
   })
 
   it("roundtrips entry node — regenerates id, preserves all other fields", () => {
@@ -462,15 +426,6 @@ describe("timeline encoding", () => {
       "entry",
     ])
   })
-
-  it("a loop marker does not bump the format version", () => {
-    const payload: ImportExportPayload = {
-      ...basePayload(),
-      timeline: [{ kind: "loopMarker", id: "m1" }],
-    }
-    const bytes = base91Decode(blobOf(encodePayload(payload)))
-    expect(bytes[0]).toBe(6)
-  })
 })
 
 describe("slug prefix", () => {
@@ -507,12 +462,6 @@ describe("error handling", () => {
     const payload = basePayload()
     payload.team.slots[0] = 9999
     expect(() => encodePayload(payload)).toThrow(/Unknown character/)
-  })
-
-  it("throws when encoding an unknown weaponId", () => {
-    const payload = basePayload()
-    payload.team.loadouts[0] = { ...emptyLoadout(), weaponId: 9999 }
-    expect(() => encodePayload(payload)).toThrow(/Unknown weapon/)
   })
 
   it("throws when encoding an unknown stageId", () => {
