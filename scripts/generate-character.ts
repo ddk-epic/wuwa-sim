@@ -6,6 +6,7 @@ import type {
   DamageEntry,
   SkillAttribute,
 } from "../src/types/character.js"
+import { toVarName } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -248,7 +249,7 @@ async function generateCharacter(name: string): Promise<void> {
   }
 
   const char: Character = JSON.parse(raw)
-  const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+  const varName = toVarName(name)
 
   await fs.writeFile(outputPath, formatCharacter(char, varName))
   console.log(`Written to src/data/characters/${name}.ts`)

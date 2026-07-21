@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Weapon } from "../src/types/weapon.js"
+import { toVarName } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -55,7 +56,7 @@ async function generateWeapon(slug: string): Promise<void> {
   }
 
   const weapon: Weapon = JSON.parse(raw)
-  const varName = slug.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+  const varName = toVarName(slug)
 
   await fs.writeFile(outputPath, formatWeapon(weapon, varName))
   console.log(`Written to src/data/weapons/${slug}.ts`)

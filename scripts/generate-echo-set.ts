@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type { EchoSet } from "../src/types/echo-set.js"
+import { toVarName } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -55,7 +56,7 @@ async function generateEchoSet(name: string): Promise<void> {
 
   // extract-echo strips buffs before writing raw
   const set: Omit<EchoSet, "buffs"> = JSON.parse(raw)
-  const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+  const varName = toVarName(name)
 
   await fs.writeFile(outputPath, formatEchoSet(set.type, varName, name))
   console.log(`Written to src/data/echo-sets/${name}.ts`)

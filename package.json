@@ -16,6 +16,7 @@
     "check": "prettier --write . && eslint --fix",
     "prepare": "husky",
     "ralph": "bash scripts/ralph/ralph-once.sh",
+    "new:character": "tsx scripts/new-character.ts",
     "catalog:refresh": "tsx scripts/catalog-refresh.ts",
     "extract": "tsx scripts/extract.ts",
     "gen:character": "tsx scripts/generate-character.ts",

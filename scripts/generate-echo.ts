@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Echo, DamageEntry } from "../src/types/echo.js"
+import { toVarName } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -59,31 +60,7 @@ export function formatStage(
   return lines.join("\n")
 }
 
-async function generateEcho(name: string): Promise<void> {
-  const rawPath = path.join(PROJECT_ROOT, "src/data/echoes/raw", `${name}.json`)
-  const outputPath = path.join(PROJECT_ROOT, "src/data/echoes", `${name}.ts`)
-
-  try {
-    await fs.access(outputPath)
-    console.warn(
-      `Warning: src/data/echoes/${name}.ts already exists — refusing to overwrite`,
-    )
-    process.exit(1)
-  } catch {
-    // File doesn't exist, proceed
-  }
-
-  let raw: string
-  try {
-    raw = await fs.readFile(rawPath, "utf-8")
-  } catch {
-    console.error(`Error: src/data/echoes/raw/${name}.json not found`)
-    process.exit(1)
-  }
-
-  const echo: Echo = JSON.parse(raw)
-  const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
-
+export function formatEcho(echo: Echo, varName: string): string {
   const lines: string[] = [
     `import type { EnrichedEcho } from "#/types/echo"`,
     ``,
@@ -108,7 +85,35 @@ async function generateEcho(name: string): Promise<void> {
   lines.push(`} satisfies EnrichedEcho`)
   lines.push(``)
 
-  await fs.writeFile(outputPath, lines.join("\n"))
+  return lines.join("\n")
+}
+
+async function generateEcho(name: string): Promise<void> {
+  const rawPath = path.join(PROJECT_ROOT, "src/data/echoes/raw", `${name}.json`)
+  const outputPath = path.join(PROJECT_ROOT, "src/data/echoes", `${name}.ts`)
+
+  try {
+    await fs.access(outputPath)
+    console.warn(
+      `Warning: src/data/echoes/${name}.ts already exists — refusing to overwrite`,
+    )
+    process.exit(1)
+  } catch {
+    // File doesn't exist, proceed
+  }
+
+  let raw: string
+  try {
+    raw = await fs.readFile(rawPath, "utf-8")
+  } catch {
+    console.error(`Error: src/data/echoes/raw/${name}.json not found`)
+    process.exit(1)
+  }
+
+  const echo: Echo = JSON.parse(raw)
+  const varName = toVarName(name)
+
+  await fs.writeFile(outputPath, formatEcho(echo, varName))
   console.log(`Written to src/data/echoes/${name}.ts`)
 }
 

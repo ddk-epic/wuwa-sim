@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
-import { slugify } from "./slugify"
+import { slugify, toVarName } from "./slugify"
 
 describe("slugify", () => {
   it("lowercases and hyphenates words", () => {
@@ -27,5 +27,11 @@ describe("slugify", () => {
 
   it("refuses a name that slugs to nothing", () => {
     expect(() => slugify("鳴潮")).toThrow(/no sluggable characters/)
+  })
+})
+
+describe("toVarName", () => {
+  it("camelCases a hyphenated slug", () => {
+    expect(toVarName("reminiscence-fleurdelys")).toBe("reminiscenceFleurdelys")
   })
 })

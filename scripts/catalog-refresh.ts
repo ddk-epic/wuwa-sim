@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import prettier from "prettier"
 import type { Element } from "../src/data/elements.js"
 import { ELEMENTS } from "../src/data/elements.js"
+import type { CharacterEntry, EchoEntry, WeaponEntry } from "./lib/catalog.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -55,33 +56,6 @@ interface ApiEchoListEntry {
   Name: string
   Type: string
   FetterGroups?: ApiFetterGroup[]
-}
-
-// --- Catalog shapes ---
-
-interface CharacterEntry {
-  id: number
-  name: string
-  element: Element
-  weaponType: string
-}
-
-interface WeaponEntry {
-  id: number
-  name: string
-  weaponType: string
-}
-
-interface EchoSetRef {
-  name: string
-  elements: Element[]
-}
-
-interface EchoEntry {
-  id: number
-  name: string
-  cost: number
-  sets: EchoSetRef[]
 }
 
 // --- Derivation (pure) ---
