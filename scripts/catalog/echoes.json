@@ -1,0 +1,819 @@
+[
+  {
+    "id": 6000077,
+    "name": "Abyssal Gladius",
+    "cost": 3,
+    "sets": [
+      { "name": "Tidebreaking Courage", "elements": [] },
+      { "name": "Midnight Veil", "elements": ["Havoc"] },
+      { "name": "Thread of Severed Fate", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000078,
+    "name": "Abyssal Mercator",
+    "cost": 3,
+    "sets": [
+      { "name": "Frosty Resolve", "elements": ["Glacio"] },
+      { "name": "Eternal Radiance", "elements": ["Spectro"] }
+    ]
+  },
+  {
+    "id": 6000076,
+    "name": "Abyssal Patricius",
+    "cost": 3,
+    "sets": [
+      { "name": "Empyrean Anthem", "elements": [] },
+      { "name": "Frosty Resolve", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6000049,
+    "name": "Autopuppet Scout",
+    "cost": 3,
+    "sets": [
+      { "name": "Celestial Light", "elements": ["Spectro"] },
+      { "name": "Freezing Frost", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6020003,
+    "name": "Autopuppet Scout",
+    "cost": 3,
+    "sets": [
+      { "name": "Celestial Light", "elements": ["Spectro"] },
+      { "name": "Freezing Frost", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6020023,
+    "name": "Autopuppet Scout",
+    "cost": 3,
+    "sets": [
+      { "name": "Celestial Light", "elements": ["Spectro"] },
+      { "name": "Freezing Frost", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 390080005,
+    "name": "Bell-Borne Geochelone",
+    "cost": 4,
+    "sets": [
+      { "name": "Moonlit Clouds", "elements": [] },
+      { "name": "Rejuvenating Glow", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000104,
+    "name": "Capitaneus",
+    "cost": 3,
+    "sets": [
+      { "name": "Gusts of Welkin", "elements": ["Aero"] },
+      { "name": "Eternal Radiance", "elements": ["Spectro"] },
+      { "name": "Windward Pilgrimage", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000046,
+    "name": "Carapace",
+    "cost": 3,
+    "sets": [
+      { "name": "Moonlit Clouds", "elements": [] },
+      { "name": "Sierra Gale", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 390077025,
+    "name": "Chasm Guardian",
+    "cost": 3,
+    "sets": [
+      { "name": "Lingering Tunes", "elements": [] },
+      { "name": "Rejuvenating Glow", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000079,
+    "name": "Chop Chop",
+    "cost": 3,
+    "sets": [
+      { "name": "Tidebreaking Courage", "elements": [] },
+      { "name": "Empyrean Anthem", "elements": [] },
+      { "name": "Dream of the Lost", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000120,
+    "name": "Corrosaurus",
+    "cost": 3,
+    "sets": [
+      { "name": "Flaming Clawprint", "elements": ["Fusion"] },
+      { "name": "Flamewing's Shadow", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000042,
+    "name": "Crownless",
+    "cost": 4,
+    "sets": [{ "name": "Havoc Eclipse", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 390077005,
+    "name": "Cyan-Feathered Heron",
+    "cost": 3,
+    "sets": [
+      { "name": "Sierra Gale", "elements": ["Aero"] },
+      { "name": "Celestial Light", "elements": ["Spectro"] }
+    ]
+  },
+  {
+    "id": 6000074,
+    "name": "Diurnus Knight",
+    "cost": 3,
+    "sets": [
+      { "name": "Eternal Radiance", "elements": ["Spectro"] },
+      { "name": "Tidebreaking Courage", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000084,
+    "name": "Dragon of Dirge",
+    "cost": 4,
+    "sets": [{ "name": "Tidebreaking Courage", "elements": [] }]
+  },
+  {
+    "id": 6000053,
+    "name": "Dreamless",
+    "cost": 4,
+    "sets": [{ "name": "Havoc Eclipse", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 6000060,
+    "name": "Fallacy of No Return",
+    "cost": 4,
+    "sets": [{ "name": "Rejuvenating Glow", "elements": [] }]
+  },
+  {
+    "id": 6000043,
+    "name": "Feilian Beringal",
+    "cost": 4,
+    "sets": [{ "name": "Sierra Gale", "elements": ["Aero"] }]
+  },
+  {
+    "id": 6020007,
+    "name": "Flautist",
+    "cost": 3,
+    "sets": [
+      { "name": "Lingering Tunes", "elements": [] },
+      { "name": "Void Thunder", "elements": ["Electro"] }
+    ]
+  },
+  {
+    "id": 6020017,
+    "name": "Flautist",
+    "cost": 3,
+    "sets": [
+      { "name": "Lingering Tunes", "elements": [] },
+      { "name": "Void Thunder", "elements": ["Electro"] }
+    ]
+  },
+  {
+    "id": 390077022,
+    "name": "Flautist",
+    "cost": 3,
+    "sets": [
+      { "name": "Lingering Tunes", "elements": [] },
+      { "name": "Void Thunder", "elements": ["Electro"] }
+    ]
+  },
+  {
+    "id": 6000181,
+    "name": "Flora Reindeer",
+    "cost": 3,
+    "sets": [
+      { "name": "Rite of Gilded Revelation", "elements": ["Spectro"] },
+      { "name": "Reel of Spliced Memories", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000215,
+    "name": "Fog Lionarch",
+    "cost": 3,
+    "sets": [
+      { "name": "Song of Feathered Trace", "elements": ["Glacio", "Havoc"] },
+      { "name": "Heart of Evil's Purge", "elements": ["Aero"] },
+      { "name": "Lamp of Nether Road", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000216,
+    "name": "Forbidden Bastion",
+    "cost": 3,
+    "sets": [
+      { "name": "Song of Feathered Trace", "elements": ["Glacio", "Havoc"] },
+      { "name": "Heart of Evil's Purge", "elements": ["Aero"] },
+      { "name": "Lamp of Nether Road", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 391090205,
+    "name": "Forbidden Bastion",
+    "cost": 3,
+    "sets": [
+      { "name": "Song of Feathered Trace", "elements": ["Glacio", "Havoc"] },
+      { "name": "Heart of Evil's Purge", "elements": ["Aero"] },
+      { "name": "Lamp of Nether Road", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000187,
+    "name": "Frostbite Coleoid",
+    "cost": 3,
+    "sets": [
+      { "name": "Halo of Starry Radiance", "elements": [] },
+      { "name": "Wishes of Quiet Snowfall", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6000056,
+    "name": "Glacio Dreadmane",
+    "cost": 3,
+    "sets": [
+      { "name": "Moonlit Clouds", "elements": [] },
+      { "name": "Freezing Frost", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6000195,
+    "name": "Glommoth",
+    "cost": 3,
+    "sets": [
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Wishes of Quiet Snowfall", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 390077033,
+    "name": "Havoc Dreadmane",
+    "cost": 3,
+    "sets": [
+      { "name": "Molten Rift", "elements": ["Fusion"] },
+      { "name": "Havoc Eclipse", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000085,
+    "name": "Hecate",
+    "cost": 4,
+    "sets": [{ "name": "Empyrean Anthem", "elements": [] }]
+  },
+  {
+    "id": 6000040,
+    "name": "Hoochief",
+    "cost": 3,
+    "sets": [
+      { "name": "Rejuvenating Glow", "elements": [] },
+      { "name": "Sierra Gale", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000097,
+    "name": "Hurriclaw",
+    "cost": 3,
+    "sets": [
+      { "name": "Tidebreaking Courage", "elements": [] },
+      { "name": "Gusts of Welkin", "elements": ["Aero"] },
+      { "name": "Crown of Valor", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000189,
+    "name": "Hyvatia",
+    "cost": 4,
+    "sets": [
+      { "name": "Pact of Neonlight Leap", "elements": ["Spectro"] },
+      { "name": "Rite of Gilded Revelation", "elements": ["Spectro"] }
+    ]
+  },
+  {
+    "id": 6000052,
+    "name": "Impermanence Heron",
+    "cost": 4,
+    "sets": [{ "name": "Moonlit Clouds", "elements": [] }]
+  },
+  {
+    "id": 390080007,
+    "name": "Inferno Rider",
+    "cost": 4,
+    "sets": [{ "name": "Molten Rift", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000183,
+    "name": "Ironhoof",
+    "cost": 3,
+    "sets": [
+      { "name": "Pact of Neonlight Leap", "elements": ["Spectro"] },
+      { "name": "Wishes of Quiet Snowfall", "elements": ["Glacio"] },
+      { "name": "Reel of Spliced Memories", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000059,
+    "name": "Jué",
+    "cost": 4,
+    "sets": [{ "name": "Celestial Light", "elements": ["Spectro"] }]
+  },
+  {
+    "id": 6000112,
+    "name": "Kerasaur",
+    "cost": 3,
+    "sets": [
+      { "name": "Windward Pilgrimage", "elements": ["Aero"] },
+      { "name": "Flaming Clawprint", "elements": ["Fusion"] },
+      { "name": "Flamewing's Shadow", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000193,
+    "name": "Kronablight",
+    "cost": 3,
+    "sets": [
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 391090203,
+    "name": "Kronablight",
+    "cost": 3,
+    "sets": [
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000160,
+    "name": "Lady of the Sea",
+    "cost": 4,
+    "sets": [{ "name": "Crown of Valor", "elements": [] }]
+  },
+  {
+    "id": 6000044,
+    "name": "Lampylumen Myriad",
+    "cost": 4,
+    "sets": [{ "name": "Freezing Frost", "elements": ["Glacio"] }]
+  },
+  {
+    "id": 6000058,
+    "name": "Lightcrusher",
+    "cost": 3,
+    "sets": [{ "name": "Celestial Light", "elements": ["Spectro"] }]
+  },
+  {
+    "id": 6000114,
+    "name": "Lioness of Glory",
+    "cost": 4,
+    "sets": [{ "name": "Flaming Clawprint", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000082,
+    "name": "Lorelei",
+    "cost": 4,
+    "sets": [{ "name": "Midnight Veil", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 6000057,
+    "name": "Lumiscale Construct",
+    "cost": 3,
+    "sets": [
+      { "name": "Void Thunder", "elements": ["Electro"] },
+      { "name": "Freezing Frost", "elements": ["Glacio"] }
+    ]
+  },
+  {
+    "id": 6000048,
+    "name": "Mech Abomination",
+    "cost": 4,
+    "sets": [{ "name": "Lingering Tunes", "elements": [] }]
+  },
+  {
+    "id": 6000182,
+    "name": "Mining Reindeer",
+    "cost": 3,
+    "sets": [
+      { "name": "Pact of Neonlight Leap", "elements": ["Spectro"] },
+      { "name": "Reel of Spliced Memories", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000045,
+    "name": "Mourning Aix",
+    "cost": 4,
+    "sets": [{ "name": "Celestial Light", "elements": ["Spectro"] }]
+  },
+  {
+    "id": 6000217,
+    "name": "Myriad Snare: Rustfire Chassis",
+    "cost": 4,
+    "sets": [
+      { "name": "Heart of Evil's Purge", "elements": ["Aero"] },
+      { "name": "Lamp of Nether Road", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000192,
+    "name": "Nameless Explorer",
+    "cost": 4,
+    "sets": [
+      { "name": "Sound of True Name", "elements": ["Aero"] },
+      { "name": "Reel of Spliced Memories", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000090,
+    "name": "Nightmare: Crownless",
+    "cost": 4,
+    "sets": [{ "name": "Havoc Eclipse", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 6000162,
+    "name": "Nightmare: Cyan-Feathered Heron",
+    "cost": 3,
+    "sets": [{ "name": "Law of Harmony", "elements": [] }]
+  },
+  {
+    "id": 6000086,
+    "name": "Nightmare: Feilian Beringal",
+    "cost": 4,
+    "sets": [{ "name": "Sierra Gale", "elements": ["Aero"] }]
+  },
+  {
+    "id": 6000115,
+    "name": "Nightmare: Hecate",
+    "cost": 4,
+    "sets": [{ "name": "Dream of the Lost", "elements": [] }]
+  },
+  {
+    "id": 6000087,
+    "name": "Nightmare: Impermanence Heron",
+    "cost": 4,
+    "sets": [{ "name": "Midnight Veil", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 6000091,
+    "name": "Nightmare: Inferno Rider",
+    "cost": 4,
+    "sets": [{ "name": "Molten Rift", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000113,
+    "name": "Nightmare: Kelpie",
+    "cost": 4,
+    "sets": [
+      { "name": "Gusts of Welkin", "elements": ["Aero"] },
+      { "name": "Windward Pilgrimage", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000105,
+    "name": "Nightmare: Lampylumen Myriad",
+    "cost": 4,
+    "sets": [
+      { "name": "Frosty Resolve", "elements": ["Glacio"] },
+      { "name": "Empyrean Anthem", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000092,
+    "name": "Nightmare: Mourning Aix",
+    "cost": 4,
+    "sets": [{ "name": "Eternal Radiance", "elements": ["Spectro"] }]
+  },
+  {
+    "id": 6000173,
+    "name": "Nightmare: Roseshroom",
+    "cost": 3,
+    "sets": [{ "name": "Thread of Severed Fate", "elements": ["Havoc"] }]
+  },
+  {
+    "id": 6000119,
+    "name": "Nightmare: Tambourinist",
+    "cost": 3,
+    "sets": [{ "name": "Dream of the Lost", "elements": [] }]
+  },
+  {
+    "id": 6000089,
+    "name": "Nightmare: Tempest Mephis",
+    "cost": 4,
+    "sets": [
+      { "name": "Void Thunder", "elements": ["Electro"] },
+      { "name": "Empyrean Anthem", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000088,
+    "name": "Nightmare: Thundering Mephis",
+    "cost": 4,
+    "sets": [{ "name": "Void Thunder", "elements": ["Electro"] }]
+  },
+  {
+    "id": 6000161,
+    "name": "Nightmare: Violet-Feathered Heron",
+    "cost": 3,
+    "sets": [{ "name": "Crown of Valor", "elements": [] }]
+  },
+  {
+    "id": 6000168,
+    "name": "Nightmare: Viridblaze Saurian",
+    "cost": 3,
+    "sets": [{ "name": "Flamewing's Shadow", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000075,
+    "name": "Nocturnus Knight",
+    "cost": 3,
+    "sets": [
+      { "name": "Midnight Veil", "elements": ["Havoc"] },
+      { "name": "Empyrean Anthem", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000111,
+    "name": "Pilgrim's Shell",
+    "cost": 3,
+    "sets": [
+      { "name": "Windward Pilgrimage", "elements": ["Aero"] },
+      { "name": "Flaming Clawprint", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000073,
+    "name": "Questless Knight",
+    "cost": 3,
+    "sets": [
+      { "name": "Frosty Resolve", "elements": ["Glacio"] },
+      { "name": "Midnight Veil", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000096,
+    "name": "Rage Against the Statue",
+    "cost": 3,
+    "sets": [
+      { "name": "Eternal Radiance", "elements": ["Spectro"] },
+      { "name": "Gusts of Welkin", "elements": ["Aero"] },
+      { "name": "Law of Harmony", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000190,
+    "name": "Reactor Husk",
+    "cost": 4,
+    "sets": [
+      { "name": "Halo of Starry Radiance", "elements": [] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000201,
+    "name": "Reminiscence - Nightmare: Adam Smasher",
+    "cost": 4,
+    "sets": [{ "name": "Shadow of Shattered Dreams", "elements": [] }]
+  },
+  {
+    "id": 6000200,
+    "name": "Reminiscence: Denia",
+    "cost": 4,
+    "sets": [{ "name": "Chromatic Foam", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000116,
+    "name": "Reminiscence: Fenrico",
+    "cost": 4,
+    "sets": [
+      { "name": "Dream of the Lost", "elements": [] },
+      { "name": "Law of Harmony", "elements": [] }
+    ]
+  },
+  {
+    "id": 6000106,
+    "name": "Reminiscence: Fleurdelys",
+    "cost": 4,
+    "sets": [
+      { "name": "Gusts of Welkin", "elements": ["Aero"] },
+      { "name": "Windward Pilgrimage", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000194,
+    "name": "Reminiscence: Kronaclaw",
+    "cost": 3,
+    "sets": [
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 391090204,
+    "name": "Reminiscence: Kronaclaw",
+    "cost": 3,
+    "sets": [
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000167,
+    "name": "Reminiscence: Threnodian - Leviathan",
+    "cost": 4,
+    "sets": [
+      { "name": "Flamewing's Shadow", "elements": ["Fusion"] },
+      { "name": "Thread of Severed Fate", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000199,
+    "name": "Reminiscence: Threnodian - Voidborne Construct",
+    "cost": 4,
+    "sets": [{ "name": "Wishes of Quiet Snowfall", "elements": ["Glacio"] }]
+  },
+  {
+    "id": 390077024,
+    "name": "Rocksteady Guardian",
+    "cost": 3,
+    "sets": [
+      { "name": "Rejuvenating Glow", "elements": [] },
+      { "name": "Celestial Light", "elements": ["Spectro"] }
+    ]
+  },
+  {
+    "id": 390077029,
+    "name": "Roseshroom",
+    "cost": 3,
+    "sets": [
+      { "name": "Freezing Frost", "elements": ["Glacio"] },
+      { "name": "Havoc Eclipse", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000186,
+    "name": "Sabercat Prowler",
+    "cost": 3,
+    "sets": [
+      { "name": "Pact of Neonlight Leap", "elements": ["Spectro"] },
+      { "name": "Halo of Starry Radiance", "elements": [] },
+      { "name": "Sound of True Name", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000185,
+    "name": "Sabercat Reaver",
+    "cost": 3,
+    "sets": [
+      { "name": "Pact of Neonlight Leap", "elements": ["Spectro"] },
+      { "name": "Halo of Starry Radiance", "elements": [] },
+      { "name": "Sound of True Name", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000083,
+    "name": "Sentry Construct",
+    "cost": 4,
+    "sets": [{ "name": "Frosty Resolve", "elements": ["Glacio"] }]
+  },
+  {
+    "id": 6020056,
+    "name": "Sentry Construct",
+    "cost": 4,
+    "sets": [{ "name": "Frosty Resolve", "elements": ["Glacio"] }]
+  },
+  {
+    "id": 6000191,
+    "name": "Sigillum",
+    "cost": 4,
+    "sets": [{ "name": "Trailblazing Star", "elements": ["Fusion"] }]
+  },
+  {
+    "id": 6000184,
+    "name": "Spacetrek Explorer",
+    "cost": 3,
+    "sets": [
+      { "name": "Halo of Starry Radiance", "elements": [] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] },
+      { "name": "Sound of True Name", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 390077038,
+    "name": "Spearback",
+    "cost": 3,
+    "sets": [
+      { "name": "Lingering Tunes", "elements": [] },
+      { "name": "Moonlit Clouds", "elements": [] }
+    ]
+  },
+  {
+    "id": 390077021,
+    "name": "Stonewall Bracer",
+    "cost": 3,
+    "sets": [
+      { "name": "Rejuvenating Glow", "elements": [] },
+      { "name": "Moonlit Clouds", "elements": [] }
+    ]
+  },
+  {
+    "id": 390077023,
+    "name": "Tambourinist",
+    "cost": 3,
+    "sets": [
+      { "name": "Freezing Frost", "elements": ["Glacio"] },
+      { "name": "Havoc Eclipse", "elements": ["Havoc"] }
+    ]
+  },
+  {
+    "id": 6000039,
+    "name": "Tempest Mephis",
+    "cost": 4,
+    "sets": [{ "name": "Void Thunder", "elements": ["Electro"] }]
+  },
+  {
+    "id": 6000121,
+    "name": "The False Sovereign",
+    "cost": 4,
+    "sets": [{ "name": "Crown of Valor", "elements": [] }]
+  },
+  {
+    "id": 6000218,
+    "name": "Thousand-Puppet Pavilion",
+    "cost": 4,
+    "sets": [
+      { "name": "Song of Feathered Trace", "elements": ["Glacio", "Havoc"] }
+    ]
+  },
+  {
+    "id": 390080003,
+    "name": "Thundering Mephis",
+    "cost": 4,
+    "sets": [{ "name": "Void Thunder", "elements": ["Electro"] }]
+  },
+  {
+    "id": 6000180,
+    "name": "Twin Nova: Collapsar Blade",
+    "cost": 3,
+    "sets": [
+      { "name": "Rite of Gilded Revelation", "elements": ["Spectro"] },
+      { "name": "Trailblazing Star", "elements": ["Fusion"] },
+      { "name": "Sound of True Name", "elements": ["Aero"] }
+    ]
+  },
+  {
+    "id": 6000179,
+    "name": "Twin Nova: Nebulous Cannon",
+    "cost": 3,
+    "sets": [
+      { "name": "Rite of Gilded Revelation", "elements": ["Spectro"] },
+      { "name": "Chromatic Foam", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 390077004,
+    "name": "Violet-Feathered Heron",
+    "cost": 3,
+    "sets": [
+      { "name": "Molten Rift", "elements": ["Fusion"] },
+      { "name": "Void Thunder", "elements": ["Electro"] }
+    ]
+  },
+  {
+    "id": 390077028,
+    "name": "Viridblaze Saurian",
+    "cost": 3,
+    "sets": [
+      { "name": "Moonlit Clouds", "elements": [] },
+      { "name": "Molten Rift", "elements": ["Fusion"] }
+    ]
+  },
+  {
+    "id": 6000080,
+    "name": "Vitreum Dancer",
+    "cost": 3,
+    "sets": [
+      { "name": "Empyrean Anthem", "elements": [] },
+      { "name": "Eternal Radiance", "elements": ["Spectro"] }
+    ]
+  },
+  {
+    "id": 6000198,
+    "name": "Voidwing Moth",
+    "cost": 3,
+    "sets": [{ "name": "Reel of Spliced Memories", "elements": [] }]
+  },
+  {
+    "id": 6000188,
+    "name": "Windlash Coleoid",
+    "cost": 3,
+    "sets": [
+      { "name": "Rite of Gilded Revelation", "elements": ["Spectro"] },
+      { "name": "Wishes of Quiet Snowfall", "elements": ["Glacio"] }
+    ]
+  }
+]

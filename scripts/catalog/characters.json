@@ -1,0 +1,226 @@
+[
+  { "id": 1210, "name": "Aemeath", "element": "Fusion", "weaponType": "Sword" },
+  {
+    "id": 1306,
+    "name": "Augusta",
+    "element": "Electro",
+    "weaponType": "Broadblade"
+  },
+  { "id": 1206, "name": "Brant", "element": "Fusion", "weaponType": "Sword" },
+  {
+    "id": 1301,
+    "name": "Calcharo",
+    "element": "Electro",
+    "weaponType": "Broadblade"
+  },
+  { "id": 1603, "name": "Camellya", "element": "Havoc", "weaponType": "Sword" },
+  {
+    "id": 1607,
+    "name": "Cantarella",
+    "element": "Havoc",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1107,
+    "name": "Carlotta",
+    "element": "Glacio",
+    "weaponType": "Pistols"
+  },
+  {
+    "id": 1409,
+    "name": "Cartethyia",
+    "element": "Aero",
+    "weaponType": "Sword"
+  },
+  { "id": 1205, "name": "Changli", "element": "Fusion", "weaponType": "Sword" },
+  {
+    "id": 1508,
+    "name": "Chisa",
+    "element": "Havoc",
+    "weaponType": "Broadblade"
+  },
+  {
+    "id": 1407,
+    "name": "Ciaccona",
+    "element": "Aero",
+    "weaponType": "Pistols"
+  },
+  {
+    "id": 1211,
+    "name": "Denia",
+    "element": "Fusion",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1203,
+    "name": "Encore",
+    "element": "Fusion",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1208,
+    "name": "Galbrena",
+    "element": "Fusion",
+    "weaponType": "Pistols"
+  },
+  { "id": 1108, "name": "Hiyuki", "element": "Glacio", "weaponType": "Sword" },
+  { "id": 1410, "name": "Iuno", "element": "Aero", "weaponType": "Gauntlets" },
+  {
+    "id": 1405,
+    "name": "Jianxin",
+    "element": "Aero",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1304,
+    "name": "Jinhsi",
+    "element": "Spectro",
+    "weaponType": "Broadblade"
+  },
+  {
+    "id": 1404,
+    "name": "Jiyan",
+    "element": "Aero",
+    "weaponType": "Broadblade"
+  },
+  {
+    "id": 1104,
+    "name": "Lingyang",
+    "element": "Glacio",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1109,
+    "name": "Lucilla",
+    "element": "Glacio",
+    "weaponType": "Rectifier"
+  },
+  { "id": 1511, "name": "Lucy", "element": "Spectro", "weaponType": "Pistols" },
+  {
+    "id": 1207,
+    "name": "Lupa",
+    "element": "Fusion",
+    "weaponType": "Broadblade"
+  },
+  {
+    "id": 1510,
+    "name": "Luuk Herssen",
+    "element": "Spectro",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1509,
+    "name": "Lynae",
+    "element": "Spectro",
+    "weaponType": "Pistols"
+  },
+  {
+    "id": 1209,
+    "name": "Mornye",
+    "element": "Fusion",
+    "weaponType": "Broadblade"
+  },
+  {
+    "id": 1506,
+    "name": "Phoebe",
+    "element": "Spectro",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1608,
+    "name": "Phrolova",
+    "element": "Havoc",
+    "weaponType": "Rectifier"
+  },
+  { "id": 1411, "name": "Qiuyuan", "element": "Aero", "weaponType": "Sword" },
+  {
+    "id": 1308,
+    "name": "Rebecca",
+    "element": "Electro",
+    "weaponType": "Pistols"
+  },
+  {
+    "id": 1606,
+    "name": "Roccia",
+    "element": "Havoc",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1406,
+    "name": "Rover: Aero",
+    "element": "Aero",
+    "weaponType": "Sword"
+  },
+  {
+    "id": 1309,
+    "name": "Rover: Electro",
+    "element": "Electro",
+    "weaponType": "Sword"
+  },
+  {
+    "id": 1604,
+    "name": "Rover: Havoc",
+    "element": "Havoc",
+    "weaponType": "Sword"
+  },
+  {
+    "id": 1501,
+    "name": "Rover: Spectro",
+    "element": "Spectro",
+    "weaponType": "Sword"
+  },
+  {
+    "id": 1505,
+    "name": "Shorekeeper",
+    "element": "Spectro",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1412,
+    "name": "Sigrika",
+    "element": "Aero",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1110,
+    "name": "Suisui",
+    "element": "Glacio",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1503,
+    "name": "Verina",
+    "element": "Spectro",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1305,
+    "name": "Xiangli Yao",
+    "element": "Electro",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1610,
+    "name": "Yangyang: Xuanling",
+    "element": "Havoc",
+    "weaponType": "Sword"
+  },
+  {
+    "id": 1302,
+    "name": "Yinlin",
+    "element": "Electro",
+    "weaponType": "Rectifier"
+  },
+  {
+    "id": 1507,
+    "name": "Zani",
+    "element": "Spectro",
+    "weaponType": "Gauntlets"
+  },
+  {
+    "id": 1105,
+    "name": "Zhezhi",
+    "element": "Glacio",
+    "weaponType": "Rectifier"
+  }
+]
