@@ -34,6 +34,11 @@ reorder of the committed file has no baseline but itself, so it's caught by revi
 of that artifact, not the check. See
 [ADR-0046](adr/0046-share-code-wire-ids-from-frozen-tables-not-array-position.md).
 
+Adding an entity (character, weapon, echo, echo set) is a two-step commit: add it
+to its registry, then run `pnpm gen:wire-tables` to append its id. Skip the second
+step and the guard test fails with the new id missing from coverage, never a
+silent bad code.
+
 The only residual order-dependence is reordering stages **within a single skill**
 (a local, rare edit). Stage identity keys on the skill's stable game id, so
 renaming a skill, stage, or category never breaks a code. The stage-ordinal byte
