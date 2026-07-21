@@ -85,7 +85,7 @@ async function generateEcho(name: string): Promise<void> {
   const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 
   const lines: string[] = [
-    `import type { EnrichedEcho } from '#/types/echo'`,
+    `import type { EnrichedEcho } from "#/types/echo"`,
     ``,
     `export const ${varName} = {`,
     `  id: ${echo.id},`,

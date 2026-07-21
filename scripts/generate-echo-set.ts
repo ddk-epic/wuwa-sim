@@ -9,18 +9,18 @@ const PROJECT_ROOT = path.resolve(
 )
 
 export function formatEchoSet(
-  set: EchoSet,
+  type: EchoSet["type"],
   varName: string,
   slug: string,
 ): string {
   return [
-    `import type { EchoSet } from '#/types/echo-set'`,
-    `import raw from './raw/${slug}.json'`,
+    `import type { EchoSet } from "#/types/echo-set"`,
+    `import raw from "./raw/${slug}.json"`,
     ``,
     `export const ${varName} = {`,
     `  ...raw,`,
     // JSON widens the literal to string; the resolver reads this to size the second slot.
-    `  type: raw.type as ${JSON.stringify(set.type)},`,
+    `  type: raw.type as ${JSON.stringify(type)},`,
     `  buffs: [],`,
     `} satisfies EchoSet`,
     ``,
@@ -53,10 +53,11 @@ async function generateEchoSet(name: string): Promise<void> {
     process.exit(1)
   }
 
-  const set: EchoSet = JSON.parse(raw)
+  // extract-echo strips buffs before writing raw
+  const set: Omit<EchoSet, "buffs"> = JSON.parse(raw)
   const varName = name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 
-  await fs.writeFile(outputPath, formatEchoSet(set, varName, name))
+  await fs.writeFile(outputPath, formatEchoSet(set.type, varName, name))
   console.log(`Written to src/data/echo-sets/${name}.ts`)
 }
 

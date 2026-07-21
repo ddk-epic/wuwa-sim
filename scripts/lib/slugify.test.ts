@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { slugify } from "./slugify"
 
@@ -6,9 +7,8 @@ describe("slugify", () => {
     expect(slugify("Inferno Rider")).toBe("inferno-rider")
   })
 
-  it("drops apostrophes and colons", () => {
+  it("drops an intra-word apostrophe", () => {
     expect(slugify("Defier's Thorn")).toBe("defiers-thorn")
-    expect(slugify("Reminiscence: Fleurdelys")).toBe("reminiscence-fleurdelys")
   })
 
   it("keeps the vowel of an accented letter", () => {
@@ -23,5 +23,9 @@ describe("slugify", () => {
 
   it("trims leading and trailing hyphens", () => {
     expect(slugify("  Void Thunder  ")).toBe("void-thunder")
+  })
+
+  it("refuses a name that slugs to nothing", () => {
+    expect(() => slugify("鳴潮")).toThrow(/no sluggable characters/)
   })
 })

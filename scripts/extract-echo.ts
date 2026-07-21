@@ -103,10 +103,30 @@ function mapSkill(skill: ApiSkill): EchoSkill {
 // resolve-echo models only these two tiers; a wrong type silently mis-resolves
 // the second set slot, so refuse rather than guess.
 export function deriveSetType(name: string, pieces: number[]): EchoSet["type"] {
-  const tiers = [...pieces].sort((a, b) => a - b).join(",")
+  const tiers = pieces.join(",")
   if (tiers === "2,5") return "two-five"
   if (tiers === "3") return "three-only"
   throw new Error(`Echo set "${name}" has unsupported piece tiers: ${tiers}`)
+}
+
+// EffectDescriptions is a bare parallel array: descriptions pair with FetterMap
+// by position only. Nothing to join on, so verify the shape the pairing assumes.
+export function assertAlignedTiers(
+  name: string,
+  pieces: number[],
+  descriptions: string[],
+): void {
+  if (pieces.length !== descriptions.length) {
+    throw new Error(
+      `Echo set "${name}" has ${pieces.length} piece tiers but ${descriptions.length} effect descriptions`,
+    )
+  }
+  const ascending = pieces.every((p, i) => i === 0 || pieces[i - 1] < p)
+  if (!ascending) {
+    throw new Error(
+      `Echo set "${name}" has non-ascending piece tiers: ${pieces.join(",")}`,
+    )
+  }
 }
 
 function mapEchoSets(
@@ -115,15 +135,18 @@ function mapEchoSets(
 ): EchoSet[] {
   return fetterGroupDetails.map(({ Group: group }) => {
     const effects = fetterDetails[group.FetterGroupName]
+    const pieces = group.FetterMap.map((entry) => entry.Key)
+    assertAlignedTiers(
+      group.FetterGroupName,
+      pieces,
+      effects.EffectDescriptions,
+    )
     return {
       id: group.Id,
       name: group.FetterGroupName,
-      type: deriveSetType(
-        group.FetterGroupName,
-        group.FetterMap.map((entry) => entry.Key),
-      ),
-      effects: group.FetterMap.map((entry, i) => ({
-        pieces: entry.Key,
+      type: deriveSetType(group.FetterGroupName, pieces),
+      effects: pieces.map((tier, i) => ({
+        pieces: tier,
         description: stripHtml(effects.EffectDescriptions[i]),
       })),
       buffs: [],

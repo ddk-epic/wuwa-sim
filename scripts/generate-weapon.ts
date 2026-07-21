@@ -11,7 +11,7 @@ const PROJECT_ROOT = path.resolve(
 export function formatWeapon(weapon: Weapon, varName: string): string {
   const s = (v: string) => JSON.stringify(v)
   return [
-    `import type { WeaponData } from '#/types/weapon'`,
+    `import type { WeaponData } from "#/types/weapon"`,
     ``,
     `export const ${varName} = {`,
     `  id: ${weapon.id},`,

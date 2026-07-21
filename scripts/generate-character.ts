@@ -74,7 +74,7 @@ function formatOutroStage(level: number): string {
   return [
     `${l}{`,
     `${l1}name: "Outro DMG",`,
-    `${l1}newName: '',`,
+    `${l1}newName: "",`,
     `${l1}category: "Outro Skill",`,
     `${l1}value: "0%",`,
     `${l1}actionTime: 0,`,
@@ -182,7 +182,7 @@ export function formatCharacter(char: Character, varName: string): string {
   }
 
   const lines: string[] = [
-    `import type { EnrichedCharacter } from '#/types/character'`,
+    `import type { EnrichedCharacter } from "#/types/character"`,
     ``,
     `export const ${varName} = {`,
     `  id: ${char.id},`,
@@ -202,9 +202,9 @@ export function formatCharacter(char: Character, varName: string): string {
     `  ],`,
     `  skillBonusPriority: ${s(char.skillBonusPriority ?? "Resonance Liberation")},`,
     `  template: {`,
-    `    weapon: '',`,
-    `    echo: '',`,
-    `    echoSet: '',`,
+    `    weapon: "",`,
+    `    echo: "",`,
+    `    echoSet: "",`,
     `  },`,
     `  buffs: [],`,
     `  skills: [`,

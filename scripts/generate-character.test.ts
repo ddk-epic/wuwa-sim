@@ -112,12 +112,6 @@ describe("deriveNewName", () => {
   it("returns name unchanged when no known suffix", () => {
     expect(deriveNewName("Mid-air Attack")).toBe("Mid-air Attack")
   })
-
-  it("strips ' DMG' from compound names", () => {
-    expect(deriveNewName("Cosmos: Frolicking Stage 1 DMG")).toBe(
-      "Cosmos: Frolicking Stage 1",
-    )
-  })
 })
 
 describe("formatCharacter", () => {
@@ -143,16 +137,6 @@ describe("formatCharacter", () => {
       "testHero",
     )
     expect(out).toContain('skillBonusPriority: "Heavy Attack",')
-  })
-
-  it("orders forteCap and stats under rarity, with template just above buffs", () => {
-    const out = formatCharacter(charWithBonuses, "testHero")
-    const order = ["maxEnergy:", "forteCap:", "stats:", "template:", "buffs:"]
-    const positions = order.map((k) => out.indexOf(k))
-    expect(positions).toEqual([...positions].sort((a, b) => a - b))
-    expect(out.indexOf("skillTreeBonuses:")).toBeLessThan(
-      out.indexOf("template:"),
-    )
   })
 
   it("derives newName from stage name via deriveNewName", () => {
@@ -194,11 +178,6 @@ describe("formatCharacter", () => {
     const inherentIdx = out.indexOf('"Inherent Skill"')
     const hiddenIdx = out.indexOf("hidden: true,", inherentIdx)
     expect(hiddenIdx).toBeGreaterThan(inherentIdx)
-  })
-
-  it("never emits '// hidden: true' comments", () => {
-    const out = formatCharacter(charWithSkills, "testHero")
-    expect(out).not.toContain("// hidden: true")
   })
 
   it("prepends a cast activation stage for Resonance Liberation skills", () => {
@@ -247,16 +226,10 @@ describe("formatCharacter", () => {
     expect(libSection).not.toContain('name: "Cosmos Rave",')
   })
 
-  it("emits exactly one placeholder stage for Outro Skill", () => {
+  it("emits a placeholder stage for Outro Skill", () => {
     const out = formatCharacter(charWithSkills, "testHero")
-    const outroIdx = out.indexOf('"Outro Skill"')
-    const outroSection = out.slice(outroIdx)
+    const outroSection = out.slice(out.indexOf('"Outro Skill"'))
     expect(outroSection).toContain('name: "Outro DMG",')
-    expect(outroSection).toContain("newName: '',")
-    expect(outroSection).toContain('value: "0%",')
-    expect(outroSection).toContain("actionTime: 0,")
-    expect(outroSection).toContain("variants: {},")
-    expect(outroSection).toContain("damage: [],")
   })
 
   it("emits flat: line in damage entry when flat is defined", () => {

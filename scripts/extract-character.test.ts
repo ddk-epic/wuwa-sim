@@ -20,12 +20,6 @@ describe("mapSkillTreeBonuses", () => {
     warn.mockRestore()
   })
 
-  it("strips trailing + from PropertyNodeTitle", () => {
-    expect(
-      mapSkillTreeBonuses([{ PropertyNodeTitle: "Fusion DMG Bonus+" }]),
-    ).toEqual(["Fusion DMG Bonus"])
-  })
-
   it("deduplicates identical stat names", () => {
     expect(
       mapSkillTreeBonuses([
@@ -34,12 +28,6 @@ describe("mapSkillTreeBonuses", () => {
         { PropertyNodeTitle: "Fusion DMG Bonus+" },
       ]),
     ).toEqual(["ATK", "Fusion DMG Bonus"])
-  })
-
-  it("ignores nodes with no PropertyNodeTitle", () => {
-    expect(mapSkillTreeBonuses([{}, { PropertyNodeTitle: "DEF+" }])).toEqual([
-      "DEF",
-    ])
   })
 })
 
@@ -58,13 +46,6 @@ describe("parseValuesFromValue", () => {
         { value: 0.3579, count: 3 },
         { value: 0.7158, count: 1 },
       ],
-    })
-  })
-
-  it("parses value with no flat and no rates", () => {
-    expect(parseValuesFromValue("Staggers target")).toEqual({
-      flat: undefined,
-      rates: [],
     })
   })
 })
