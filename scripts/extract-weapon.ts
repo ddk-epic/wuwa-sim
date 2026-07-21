@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Weapon, WeaponStat, WeaponStats } from "../src/types/weapon.js"
+import { slugify } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -206,11 +207,7 @@ export async function extractWeapon(id: string): Promise<void> {
     },
   }
 
-  const slug = data.WeaponName.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "")
+  const slug = slugify(data.WeaponName)
   const outputDir = path.join(PROJECT_ROOT, "src/data/weapons/raw")
   const outputPath = path.join(outputDir, `${slug}.json`)
 

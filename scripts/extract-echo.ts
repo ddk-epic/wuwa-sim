@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import type { Echo, EchoSkill } from "../src/types/echo.js"
 import type { DamageEntry, SkillType } from "../src/types/character.js"
 import type { EchoSet } from "../src/types/echo-set.js"
+import { slugify } from "./lib/slugify.js"
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -143,11 +144,7 @@ export async function extractEcho(id: string): Promise<void> {
     buffs: [],
   }
 
-  const echoSlug = data.MonsterName.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "")
+  const echoSlug = slugify(data.MonsterName)
 
   const echoDir = path.join(PROJECT_ROOT, "src/data/echoes/raw")
   const setDir = path.join(PROJECT_ROOT, "src/data/echo-sets/raw")
@@ -166,12 +163,7 @@ export async function extractEcho(id: string): Promise<void> {
   console.log(`Written to src/data/echoes/raw/${echoSlug}.json`)
 
   for (const echoSet of echoSets) {
-    const setSlug = echoSet.name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-{2,}/g, "-")
-      .replace(/^-+|-+$/g, "")
+    const setSlug = slugify(echoSet.name)
     const { buffs: _omitBuffs, ...rawSet } = echoSet
     const setPath = path.join(setDir, `${setSlug}.json`)
     try {
