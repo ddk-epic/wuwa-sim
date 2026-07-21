@@ -100,6 +100,15 @@ function mapSkill(skill: ApiSkill): EchoSkill {
   }
 }
 
+// resolve-echo models only these two tiers; a wrong type silently mis-resolves
+// the second set slot, so refuse rather than guess.
+export function deriveSetType(name: string, pieces: number[]): EchoSet["type"] {
+  const tiers = [...pieces].sort((a, b) => a - b).join(",")
+  if (tiers === "2,5") return "two-five"
+  if (tiers === "3") return "three-only"
+  throw new Error(`Echo set "${name}" has unsupported piece tiers: ${tiers}`)
+}
+
 function mapEchoSets(
   fetterGroupDetails: ApiFetterGroupDetail[],
   fetterDetails: Record<string, ApiFetterDetail>,
@@ -109,7 +118,10 @@ function mapEchoSets(
     return {
       id: group.Id,
       name: group.FetterGroupName,
-      type: "two-five" as const,
+      type: deriveSetType(
+        group.FetterGroupName,
+        group.FetterMap.map((entry) => entry.Key),
+      ),
       effects: group.FetterMap.map((entry, i) => ({
         pieces: entry.Key,
         description: stripHtml(effects.EffectDescriptions[i]),
