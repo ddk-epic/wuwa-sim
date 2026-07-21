@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 import type { EchoEntry } from "./lib/catalog"
 import {
+  characterPlaceholders,
   echoesForTier,
+  hasEmptyBuffs,
   matchCharacters,
   patchTemplate,
   wireIntoIndex,
@@ -169,5 +171,51 @@ describe("patchTemplate", () => {
     expect(() =>
       patchTemplate("no template here", { weapon: "", echo: "", echoSet: "" }),
     ).toThrow(/exactly one template block/)
+  })
+})
+
+describe("characterPlaceholders", () => {
+  it("reports each generator placeholder left for a human", () => {
+    const source = [
+      "export const x = {",
+      "  maxEnergy: 0,",
+      "  forteCap: 100,",
+      "  buffs: [],",
+      "  skills: [",
+      "    { actionTime: 0, },",
+      "    { actionTime: 0, },",
+      "  ],",
+      "}",
+    ].join("\n")
+    expect(characterPlaceholders(source)).toEqual([
+      "forteCap is 100 (default)",
+      "maxEnergy is 0 (no liberation cost found)",
+      "no buffs authored",
+      "2 stages with actionTime: 0",
+    ])
+  })
+
+  it("reports nothing once the placeholders are filled", () => {
+    const source = [
+      "export const x = {",
+      "  maxEnergy: 125,",
+      "  forteCap: 120,",
+      "  buffs: [{ id: 1 }],",
+      "  skills: [{ actionTime: 62, }],",
+      "}",
+    ].join("\n")
+    expect(characterPlaceholders(source)).toEqual([])
+  })
+})
+
+describe("hasEmptyBuffs", () => {
+  it("is true for a module whose buffs array is empty", () => {
+    expect(hasEmptyBuffs("export const x = {\n  buffs: [],\n}")).toBe(true)
+  })
+
+  it("is false once a buff is authored", () => {
+    expect(hasEmptyBuffs("export const x = {\n  buffs: [{ id: 1 }],\n}")).toBe(
+      false,
+    )
   })
 })

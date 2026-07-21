@@ -113,6 +113,26 @@ export function patchTemplate(source: string, template: Template): string {
   return source.replace(blockRe, block)
 }
 
+// --- Outstanding-work scan (pure) ---
+
+// Placeholders the character generator leaves for a human: each is authored data
+// the extractor cannot know.
+export function characterPlaceholders(source: string): string[] {
+  const items: string[] = []
+  if (/\bforteCap: 100\b/.test(source)) items.push("forteCap is 100 (default)")
+  if (/\bmaxEnergy: 0\b/.test(source)) {
+    items.push("maxEnergy is 0 (no liberation cost found)")
+  }
+  if (/\n {2}buffs: \[\],/.test(source)) items.push("no buffs authored")
+  const stages = source.match(/actionTime: 0,/g)?.length ?? 0
+  if (stages > 0) items.push(`${stages} stages with actionTime: 0`)
+  return items
+}
+
+export function hasEmptyBuffs(source: string): boolean {
+  return /\n {2}buffs: \[\],/.test(source)
+}
+
 // --- File helpers (impure) ---
 
 type WriteResult = "created" | "reused"
@@ -133,6 +153,19 @@ async function writeIfAbsent(
 async function readRaw<T>(dir: string, slug: string): Promise<T> {
   const file = path.join(DATA_DIR, dir, "raw", `${slug}.json`)
   return JSON.parse(await fs.readFile(file, "utf-8")) as T
+}
+
+async function readModule(dir: string, slug: string): Promise<string> {
+  return fs.readFile(path.join(DATA_DIR, dir, `${slug}.ts`), "utf-8")
+}
+
+async function exists(file: string): Promise<boolean> {
+  try {
+    await fs.access(file)
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function wireFile(
@@ -355,17 +388,41 @@ async function run(argv: string[]): Promise<void> {
   // done, and the generator runs on import against the now-loaded indexes.
   await import("./generate-wire-tables.js")
 
+  const outstanding: string[] = []
+  const charSource = await fs.readFile(charFile, "utf-8")
+  for (const p of characterPlaceholders(charSource)) {
+    outstanding.push(`characters/${slug}.ts: ${p}`)
+  }
+  if (hasEmptyBuffs(await readModule("weapons", weaponSlug))) {
+    outstanding.push(`weapons/${weaponSlug}.ts: no passive buff authored`)
+  }
+  if (hasEmptyBuffs(await readModule("echoes", echoSlug))) {
+    outstanding.push(`echoes/${echoSlug}.ts: no echo buff authored`)
+  }
+  if (hasEmptyBuffs(await readModule("echo-sets", setSlug))) {
+    outstanding.push(
+      `echo-sets/${setSlug}.ts: no buffs authored (${setRaw.effects.length} effects)`,
+    )
+  }
+  const testFile = path.join(DATA_DIR, "characters", `${slug}.test.ts`)
+  if (!(await exists(testFile))) {
+    outstanding.push(`characters/${slug}.test.ts: no e2e rotation test`)
+  }
+  for (const u of unresolved) {
+    outstanding.push(`template ${u} does not resolve in the catalog`)
+  }
+
   console.log(`\n${character.name}`)
   for (const [file, result] of Object.entries(created)) {
     console.log(`  ${result === "created" ? "+" : "="} ${file} (${result})`)
   }
-  console.log("  = 4 index files wired")
+  console.log("  = wired 4 index files and share wire tables")
   console.log(
-    `  template: ${template.weapon} / ${template.echo} / ${template.echoSet}`,
+    `  = template: ${template.weapon} / ${template.echo} / ${template.echoSet}`,
   )
-  if (unresolved.length > 0) {
-    console.warn(`  ! template does not resolve: ${unresolved.join(", ")}`)
-  }
+
+  console.log(`\nOutstanding (hand-authoring, out of this tool's scope):`)
+  for (const item of outstanding) console.log(`  ! ${item}`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
