@@ -170,3 +170,77 @@ describe("Windward Pilgrimage — 2pc Aero fold + 5pc Aero-Erosion hit gate", ()
     )
   })
 })
+
+describe("Gusts of Welkin — 5pc team share plus an inflicter-only bonus", () => {
+  const gustsOfWelkin = ALL_ECHO_SETS.find((s) => s.id === 16)!
+  const GW_TEAM = "echo-set.gusts-of-welkin.5pc.team-aero"
+  const GW_SELF = "echo-set.gusts-of-welkin.5pc.self-aero"
+
+  const applyErosion: BuffDef = {
+    id: "test.apply-erosion",
+    name: "Apply Erosion",
+    trigger: { event: "skillCast", skillCategory: "Resonance Skill" },
+    effects: [{ kind: "negStatus", status: "Aero Erosion", op: "apply", n: 1 }],
+  }
+
+  function makeGWEngine(pieces: 0 | 2 | 5) {
+    testEchoSets = [gustsOfWelkin]
+    testCharacters = [
+      { ...testChar, element: "Aero", buffs: [applyErosion] },
+      { ...testChar, id: 2, element: "Aero" },
+    ]
+    const engine = new BuffEngine()
+    engine.bootstrap({
+      slots: [1, 2, null],
+      loadouts: [
+        {
+          ...emptyLoadout,
+          echoSetSlot1Id: pieces >= 2 ? gustsOfWelkin.id : null,
+          echoSetSlot2Id: pieces >= 5 ? gustsOfWelkin.id : null,
+        },
+        emptyLoadout,
+        emptyLoadout,
+      ],
+    })
+    return engine
+  }
+
+  it("2pc folds Aero DMG +10% into base stats", () => {
+    const baseAero = makeGWEngine(0).resolveStats(1).elementBonus["Aero"]
+    expect(makeGWEngine(2).resolveStats(1).elementBonus["Aero"]).toBeCloseTo(
+      baseAero + 0.1,
+    )
+  })
+
+  it("5pc stacks the team share and the inflicter bonus to +30% on the inflicter", () => {
+    const engine = makeGWEngine(5)
+    const baseAero = engine.resolveStats(1).elementBonus["Aero"]
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(1)).toContain(GW_TEAM)
+    expect(engine.activeBuffIds(1)).toContain(GW_SELF)
+    expect(engine.resolveStats(1).elementBonus["Aero"]).toBeCloseTo(
+      baseAero + 0.3,
+    )
+  })
+
+  it("5pc gives a teammate the team share only, not the inflicter bonus", () => {
+    const engine = makeGWEngine(5)
+    const baseAero = engine.resolveStats(2).elementBonus["Aero"]
+    engine.onEvent({
+      kind: "skillCast",
+      characterId: 1,
+      skillCategory: "Resonance Skill",
+      frame: 0,
+    })
+    expect(engine.activeBuffIds(2)).toContain(GW_TEAM)
+    expect(engine.activeBuffIds(2)).not.toContain(GW_SELF)
+    expect(engine.resolveStats(2).elementBonus["Aero"]).toBeCloseTo(
+      baseAero + 0.15,
+    )
+  })
+})

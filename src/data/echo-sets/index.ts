@@ -1,4 +1,5 @@
 import type { EchoSet } from "#/types/echo-set"
+import { gustsOfWelkin } from "./gusts-of-welkin"
 import { havocEclipse } from "./havoc-eclipse"
 import { moltenRift } from "./molten-rift"
 import { moonlitClouds } from "./moonlit-clouds"
@@ -11,4 +12,5 @@ export const ALL_ECHO_SETS: EchoSet[] = [
   rejuvenatingGlow,
   havocEclipse,
   windwardPilgrimage,
+  gustsOfWelkin,
 ]

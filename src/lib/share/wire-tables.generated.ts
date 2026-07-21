@@ -33,6 +33,7 @@ export const ECHO_SET_WIRE: readonly number[] = [
   7, // Rejuvenating Glow
   6, // Havoc Eclipse
   17, // Windward Pilgrimage
+  16, // Gusts of Welkin
 ]
 
 // Per-character stage-bearing skill ids, in wire order. A stage's selector
