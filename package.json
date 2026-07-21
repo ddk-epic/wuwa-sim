@@ -21,6 +21,7 @@
     "gen:sim-flow": "tsx scripts/generate-sim-flow.ts",
     "gen:weapon": "tsx scripts/generate-weapon.ts",
     "gen:echo": "tsx scripts/generate-echo.ts",
+    "gen:echo-set": "tsx scripts/generate-echo-set.ts",
     "gen:sharecode": "tsx scripts/generate-sharecode.ts",
     "gen:wire-tables": "tsx scripts/generate-wire-tables.ts"
   },
