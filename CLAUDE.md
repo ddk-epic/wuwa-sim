@@ -6,6 +6,7 @@
 
 - Always strive for clean, simple solutions.
 - When suggesting solutions or implementations, always include an option that disregards blast radius (the "right" design). Don't default to the minimal-diff solution.
+- Function and variable names must be plain and functional: say what the thing does or holds, so the function is self-explanatory without comments. No abstract jargon, no clever or shape-borrowed names.
 
 ## General Preferences
 
