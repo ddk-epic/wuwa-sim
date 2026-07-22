@@ -115,8 +115,7 @@ export function patchTemplate(source: string, template: Template): string {
 
 // --- Outstanding-work scan (pure) ---
 
-// Placeholders the character generator leaves for a human: each is authored data
-// the extractor cannot know.
+// Placeholders the generator leaves for a human to author.
 export function characterPlaceholders(source: string): string[] {
   const items: string[] = []
   if (/\bforteCap: 100\b/.test(source)) items.push("forteCap is 100 (default)")
@@ -276,14 +275,29 @@ interface Flags {
   set?: string
 }
 
-function parseArgs(argv: string[]): Flags {
+const VALUE_FLAGS = ["weapon", "echo", "set"] as const
+type ValueFlag = (typeof VALUE_FLAGS)[number]
+
+function asValueFlag(arg: string): ValueFlag | undefined {
+  const name = arg.startsWith("--") ? arg.slice(2) : ""
+  return (VALUE_FLAGS as readonly string[]).includes(name)
+    ? (name as ValueFlag)
+    : undefined
+}
+
+export function parseArgs(argv: string[]): Flags {
   const flags: Flags = { fragment: "" }
   const positional: string[] = []
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--weapon") flags.weapon = argv[++i]
-    else if (argv[i] === "--echo") flags.echo = argv[++i]
-    else if (argv[i] === "--set") flags.set = argv[++i]
-    else positional.push(argv[i])
+    const flag = asValueFlag(argv[i])
+    if (flag) {
+      const value = argv[i + 1]
+      if (i + 1 >= argv.length || value.startsWith("--")) {
+        throw new Error(`--${flag} needs a value`)
+      }
+      flags[flag] = value
+      i++
+    } else positional.push(argv[i])
   }
   flags.fragment = positional.join(" ")
   return flags
@@ -377,6 +391,9 @@ async function run(argv: string[]): Promise<void> {
     patchTemplate(await fs.readFile(charFile, "utf-8"), template),
   )
 
+  // First load of the data indexes in this process: reads the just-wired files
+  // from disk. Keep it ahead of any earlier index import, else it resolves ids
+  // against a stale cached module.
   const { loadoutFromTemplate } = await import("../src/lib/loadout/template.js")
   const loadout = loadoutFromTemplate(template)
   const unresolved: string[] = []
@@ -384,8 +401,8 @@ async function run(argv: string[]): Promise<void> {
   if (loadout.echoId == null) unresolved.push("echo")
   if (loadout.echoSetSlot1Id == null) unresolved.push("echoSet")
 
-  // Regenerate share wire tables: the new ids are downstream of the wiring just
-  // done, and the generator runs on import against the now-loaded indexes.
+  // Regenerate share wire tables against the now-wired indexes; the generator
+  // runs on import.
   await import("./generate-wire-tables.js")
 
   const outstanding: string[] = []

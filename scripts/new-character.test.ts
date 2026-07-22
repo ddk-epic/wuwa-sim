@@ -1,10 +1,18 @@
+import fs from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
+import { formatCharacter } from "./generate-character"
+import { formatEcho } from "./generate-echo"
+import { formatEchoSet } from "./generate-echo-set"
+import { formatWeapon } from "./generate-weapon"
 import type { EchoEntry } from "./lib/catalog"
 import {
   characterPlaceholders,
   echoesForTier,
   hasEmptyBuffs,
   matchCharacters,
+  parseArgs,
   patchTemplate,
   wireIntoIndex,
 } from "./new-character"
@@ -208,14 +216,59 @@ describe("characterPlaceholders", () => {
   })
 })
 
-describe("hasEmptyBuffs", () => {
-  it("is true for a module whose buffs array is empty", () => {
-    expect(hasEmptyBuffs("export const x = {\n  buffs: [],\n}")).toBe(true)
+// Guards the scanners against generator drift: they match literal formatting,
+// so a change to any formatX indentation would silently break the scan. Fed
+// with real fixtures rather than hand-written strings.
+const DATA_DIR = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../src/data",
+)
+function rawFixture<T>(dir: string, slug: string): T {
+  const file = path.join(DATA_DIR, dir, "raw", `${slug}.json`)
+  return JSON.parse(fs.readFileSync(file, "utf-8")) as T
+}
+
+describe("scanners match real generator output", () => {
+  it("hasEmptyBuffs flags every freshly generated module", () => {
+    expect(
+      hasEmptyBuffs(formatWeapon(rawFixture("weapons", "defiers-thorn"), "w")),
+    ).toBe(true)
+    expect(
+      hasEmptyBuffs(
+        formatEcho(rawFixture("echoes", "reminiscence-fleurdelys"), "e"),
+      ),
+    ).toBe(true)
+    expect(
+      hasEmptyBuffs(formatEchoSet("two-five", "s", "windward-pilgrimage")),
+    ).toBe(true)
   })
 
-  it("is false once a buff is authored", () => {
-    expect(hasEmptyBuffs("export const x = {\n  buffs: [{ id: 1 }],\n}")).toBe(
-      false,
+  it("characterPlaceholders flags the generator's character defaults", () => {
+    const source = formatCharacter(
+      rawFixture("characters", "cartethyia"),
+      "cartethyia",
+    )
+    expect(characterPlaceholders(source)).toContain("forteCap is 100 (default)")
+    expect(characterPlaceholders(source)).toContain("no buffs authored")
+  })
+})
+
+describe("parseArgs", () => {
+  it("splits positional fragment from value flags", () => {
+    const flags = parseArgs(["rover", "spectro", "--weapon", "Defier's Thorn"])
+    expect(flags.fragment).toBe("rover spectro")
+    expect(flags.weapon).toBe("Defier's Thorn")
+  })
+
+  it("throws when a value flag is last with no value", () => {
+    expect(() => parseArgs(["cartethyia", "--weapon"])).toThrow(
+      /--weapon needs a value/,
+    )
+  })
+
+  it("throws rather than swallowing the next flag as a value", () => {
+    expect(() => parseArgs(["--weapon", "--echo", "Fleurdelys"])).toThrow(
+      /--weapon needs a value/,
     )
   })
 })
