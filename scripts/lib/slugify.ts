@@ -17,8 +17,7 @@ export function slugify(name: string): string {
   return slug
 }
 
-// Module export name for a slug; must match what the generators emit so index
-// wiring references the right binding.
+// Must match the name the generators emit; index wiring binds to it.
 export function toVarName(slug: string): string {
   return slug.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 }

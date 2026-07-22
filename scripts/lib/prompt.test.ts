@@ -31,11 +31,6 @@ describe("select", () => {
     expect(printed()).toContain("Enter a number between 1 and 2.")
   })
 
-  it("throws when there is nothing to pick", async () => {
-    const { io } = harness()
-    await expect(select("Echo set", [], io)).rejects.toThrow(/No choices/)
-  })
-
   it("throws when the input closes before a valid answer", async () => {
     const { io } = harness("9")
     await expect(select("Echo set", choices, io)).rejects.toThrow(

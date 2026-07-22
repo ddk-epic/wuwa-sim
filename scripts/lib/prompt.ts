@@ -15,8 +15,8 @@ function defaultIo(): PromptIo {
   return { input: process.stdin, output: process.stdout }
 }
 
-// Numbered single-choice prompt. Re-asks until the line parses to an in-range
-// index; the caller models widening ("Other") as an extra choice.
+// Re-asks until the line parses to an in-range index. Widening ("Other") is an
+// extra choice the caller appends.
 export async function select<T>(
   question: string,
   choices: Choice<T>[],
